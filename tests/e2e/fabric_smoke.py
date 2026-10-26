@@ -37,7 +37,7 @@ def main():
                 expect(page.locator('#fabric-detail')).to_contain_text('not merged')
                 import copy
                 relayed=copy.deepcopy(SNAP);relayed['providers']['relay']={'status':'OK','devices':1}
-                relayed['devices'][4]['capabilities']=[{'name':'ble_relay','level':'observe','status':'REAL_HARDWARE_VERIFIED','via':'RELAY:r1','evidence':'1 advertisers reported'}]
+                relayed['devices'][3]['capabilities']=[{'name':'ble_relay','level':'observe','status':'REAL_HARDWARE_VERIFIED','via':'RELAY:r1','evidence':'1 advertisers reported'}]
                 relayed['devices'].append({'key':'dev-buds','category':'ble','label':'Apple device (BLE)','identifier_kinds':[],'facts':{},'capabilities':[],'possibly_same_as':[],'last_seen':''})
                 relayed['links'].append({'parent':'dev-phone','child':'dev-buds','transport':'BLE','grants':['observe'],'source':'RELAY:r1'})
                 page.route('**/api/relay-pair-start',lambda r:r.fulfill(json={'state':'CODE_SHOWN_ON_DEVICE','relay_id':'r1','declared':{}}))
