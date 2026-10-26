@@ -1,0 +1,27 @@
+{
+  "source": "ADB",
+  "simulated": false,
+  "scope": "One authorized owned USB phone; one allowlisted optional app; Android user 0 only",
+  "field": "package_enabled_state",
+  "package": "org.nixgame.ruler",
+  "before": "default (enabled)",
+  "proposed": "disabled-user",
+  "observed_after_apply": "disabled-user",
+  "observed_after_undo": "default (enabled)",
+  "outcome": "VERIFIED_CHANGE_AND_UNDO",
+  "original_preserved": true,
+  "final_state": "REVERTED",
+  "events": [
+    "PREPARED",
+    "VERIFIED_BACKUP",
+    "EXECUTING",
+    "VERIFIED",
+    "REVERTING",
+    "REVERTED"
+  ],
+  "elapsed_ms": 3157,
+  "recorded_at": "2026-10-26T20:17:37.767601+01:00",
+  "verification": "Each read re-checks USB authorization and build identity, then requires the exact dumpsys user-0 enabled code to agree with pm list -e and -d. Raw dumpsys independently showed enabled=0 before and after.",
+  "privacy": "Serial, build fingerprint, address and private content excluded",
+  "limitation": "One controlled reversible app-state loop. App data is preserved by disable-user. No universal compatibility claim."
+}

@@ -100,3 +100,10 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 - New rule: the local summary must state the exact value of every referenced fact; ungrounded text such as "No changes detected." is rejected. Two new unit tests (83 total).
 - Real ADB review on Windows after the change: "Battery is 100% and 154.02 GB of storage is free." 175+76 tokens, 10.5 s CPU, digest verified, inspect_only. Receipt updated in docs/local-meta-adb-receipt.json.
+
+## First physical change and verified Undo
+
+- 90 unit/integration tests PASS (Linux VM; Windows re-run below). New package-state adapter tests: allowlist, fixed user-0 commands, inconsistent state blocks, unauthorized device blocks, denial preserves original, exact default-state restoration.
+- Real run on the owned Xiaomi phone (Android 14) for org.nixgame.ruler: default -> disabled-user -> default. Journal PREPARED, VERIFIED_BACKUP, EXECUTING, VERIFIED, REVERTING, REVERTED in 3.2 s. Raw `dumpsys package` independently showed user-0 enabled=0 before and after. Receipt: docs/physical-package-receipt.json.
+- Honest note: an earlier run of the first adapter version restored the app to "enabled" (code 1) rather than the original "default" (code 0). The app was functional throughout, but the restoration was not bit-exact. This was caught by an independent dumpsys check; the adapter was corrected to track exact codes, the original default state was restored with `pm default-state`, and the verified run above was recorded.
+- The browser still exposes no physical write route.

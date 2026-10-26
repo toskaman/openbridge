@@ -65,3 +65,7 @@ A captioned English preview is available with the [alpha.2 release](https://gith
 The digest is verified before every call; unknown or retagged models fail closed, and there is no cloud fallback. After inspecting an authorized Android phone, **Request Meta advice** sends only allowlisted numeric facts (battery, free storage, screen timeout), re-read by the server, to the local model. Output is schema-checked English advice with `inspect_only` action; it cannot change the device. A recorded CPU call on synthetic facts is in [docs/local-meta-smoke-receipt.json](docs/local-meta-smoke-receipt.json) (8.4 s, 211 tokens, $0). A local call on real ADB facts is **NOT TESTED** yet.
 
 Llama 3.2 is licensed under the Llama 3.2 Community License, Copyright © Meta Platforms, Inc. Model weights are not included in this repository.
+
+## Physical change and Undo — verified
+
+The isolated verifier `python -m dev.physical_package_smoke --confirm-owned-device --package org.nixgame.ruler` disables one allowlisted optional app for Android user 0, verifies it, then restores the exact original enabled-state code. One real run on an owned phone passed: default -> disabled-user -> default, independently confirmed with dumpsys. See [receipt](docs/physical-package-receipt.json). The browser remains physically read-only for now.

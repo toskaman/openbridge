@@ -3,7 +3,7 @@
 | Adapter | Discovery | Inspection | Write | Undo |
 |---|---|---|---|---|
 | SIMULATED Android fixture | Available | Synthetic facts | Blocked | Unavailable |
-| Physical Android / ADB | Opt-in USB inventory | Read-only, one phone verified | Blocked | Unavailable |
+| Physical Android / ADB | Opt-in USB inventory | Read-only, one phone verified | One allowlisted optional app state via isolated verifier (verified once) | Exact restore verified once |
 | Freebox public discovery | Opt-in local endpoint | Identity inspection verified | Blocked | Unavailable |
 
 The fixture is synthetic; its facts are not measurements. Inspection is deterministic, not model-generated. Physical Android inspection requires existing Android USB debugging authorization. The app never accepts the permission on the phone for you. No network scan is performed.

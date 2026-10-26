@@ -83,7 +83,7 @@ class TransactionEngine:
             raise TransactionBlocked('Unknown transaction')
         if row['resource'] != self.adapter.identity or row['snapshot_hash'] != self._hash(row['resource'],row['before_value'],row['target']):
             raise TransactionBlocked('Device identity or snapshot integrity check failed')
-        return {'id':row['id'],'source':self.adapter.source,'field':'screen_timeout_seconds',
+        return {'id':row['id'],'source':self.adapter.source,'field':getattr(self.adapter,'field','screen_timeout_seconds'),
                 'before':row['before_value'],'target':row['target'],'state':row['state']}
 
     def _state(self,transaction_id,expected,new_state):
@@ -99,11 +99,11 @@ class TransactionEngine:
         with self._exclusive():
             with self._db() as db:
                 row=db.execute("SELECT id FROM transactions WHERE resource=? AND state != 'REVERTED'",(self.adapter.identity,)).fetchone()
-            return {'source':self.adapter.source,'field':'screen_timeout_seconds',
+            return {'source':self.adapter.source,'field':getattr(self.adapter,'field','screen_timeout_seconds'),
                     'current_value':self.adapter.read_setting(),'active':self.get(row['id']) if row else None}
 
     def prepare(self,transaction_id,target,*,consent=False):
-        if consent is not True or type(target) is not int or target not in (15,30,60,120):
+        if consent is not True or type(target) is not int or target not in getattr(self.adapter,'allowed_targets',(15,30,60,120)):
             raise TransactionBlocked('Explicit consent and an approved target are required')
         if not isinstance(transaction_id,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,79}',transaction_id):
             raise TransactionBlocked('Invalid transaction identifier')
