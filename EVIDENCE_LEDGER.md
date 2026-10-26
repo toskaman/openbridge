@@ -91,7 +91,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - verify.ps1 exit: 0. Offline browser e2e exit: 1.
 - Local Meta review of real ADB facts: NOT_TESTED.
 
-## Windows run_all (2026-10-26 19:03 UTC)
+## Windows run_all (2026-10-26 19:05 UTC)
 
-- verify.ps1 exit: 0. Offline browser e2e exit: 1.
-- Local Meta review of real ADB facts: NOT_TESTED.
+- verify.ps1 exit: 0. Offline browser e2e exit: 0.
+- Local Meta review of real ADB facts: PASS - see docs/local-meta-adb-receipt.json.
