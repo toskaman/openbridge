@@ -65,7 +65,7 @@ class LocalMetaBroker:
                 'messages':[{'role':'system','content':
                     'Respond in English only, as a compact JSON object matching the schema. Review only the supplied numeric facts. '
                     'Repeat supplied numbers exactly; do not invent numbers or derive quantities. Reference only supplied fact keys. '
-                    'Give one short read-only observation and clearly state uncertainty. Do not infer device health or optimization gains. '
+                    'Give one short read-only observation that states the exact value of every fact you reference, using the form: Battery is <battery_percent>% and <storage_free_gb> GB of storage is free. Clearly state uncertainty. Do not infer device health or optimization gains. '
                     'Action must be inspect_only. No commands, setting changes, personal identifiers or external requests. '
                     'The uncertainty field must use the exact policy limitation required by the schema.'},
                     {'role':'user','content':json.dumps({'source':source,'facts':facts},sort_keys=True)}]}
@@ -91,6 +91,9 @@ class LocalMetaBroker:
                 for number in re.findall(r'(?<![\d.])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?',text):
                     if Decimal(number) not in supplied:
                         raise ModelBlocked('Local advisory introduced an unverified numeric claim')
+            stated={Decimal(n) for n in re.findall(r'(?<![\d.])\d+(?:\.\d+)?',proposal['summary'])}
+            if any(Decimal(str(facts[ref])) not in stated for ref in refs):
+                raise ModelBlocked('Local advisory summary must state every referenced value exactly')
             for key in ('prompt_eval_count','eval_count'):
                 if type(response.get(key)) is not int or not 0<=response[key]<=8192:
                     raise ModelBlocked('Local usage metadata is invalid')

@@ -95,3 +95,8 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 - verify.ps1 exit: 0. Offline browser e2e exit: 0.
 - Local Meta review of real ADB facts: PASS - see docs/local-meta-adb-receipt.json.
+
+## Grounded local Meta summaries
+
+- New rule: the local summary must state the exact value of every referenced fact; ungrounded text such as "No changes detected." is rejected. Two new unit tests (83 total).
+- Real ADB review on Windows after the change: "Battery is 100% and 154.02 GB of storage is free." 175+76 tokens, 10.5 s CPU, digest verified, inspect_only. Receipt updated in docs/local-meta-adb-receipt.json.

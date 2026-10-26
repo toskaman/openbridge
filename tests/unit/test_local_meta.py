@@ -44,6 +44,17 @@ class LocalMetaTests(unittest.TestCase):
         content=json.dumps({'summary':'Battery is 99 percent.','evidence_refs':['battery_percent'],'action':'inspect_only','uncertainty':LIMIT})
         with self.assertRaises(ModelBlocked):self.broker(content=content).recommend({'battery_percent':72})
 
+    def test_summary_must_state_every_referenced_value(self):
+        content=json.dumps({'summary':'No changes detected.','evidence_refs':['battery_percent','storage_free_gb'],'action':'inspect_only','uncertainty':LIMIT})
+        with self.assertRaises(ModelBlocked):self.broker(content=content).recommend({'battery_percent':72,'storage_free_gb':38})
+        content=json.dumps({'summary':'Battery is 72%.','evidence_refs':['battery_percent','storage_free_gb'],'action':'inspect_only','uncertainty':LIMIT})
+        with self.assertRaises(ModelBlocked):self.broker(content=content).recommend({'battery_percent':72,'storage_free_gb':38})
+
+    def test_grounded_summary_is_accepted(self):
+        content=json.dumps({'summary':'Battery is 72% and 38.5 GB of storage is free.','evidence_refs':['battery_percent','storage_free_gb'],'action':'inspect_only','uncertainty':LIMIT})
+        result=self.broker(content=content).recommend({'battery_percent':72,'storage_free_gb':38.5})
+        self.assertIn('72%',result['proposal']['summary'])
+
     def test_unknown_evidence_reference_is_rejected(self):
         content=json.dumps({'summary':'Limited facts.','evidence_refs':['private_field'],'action':'inspect_only','uncertainty':LIMIT})
         with self.assertRaises(ModelBlocked):self.broker(content=content).recommend({'battery_percent':72})

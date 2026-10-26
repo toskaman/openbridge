@@ -1,11 +1,11 @@
-﻿{
+{
     "model_id":  "llama3.2:3b-instruct-q4_K_M",
     "provider":  "Ollama local CPU",
     "model_manifest_digest":  "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
-    "request_id":  "local-d44c33a6d13d44149b31e4116d1bf100",
+    "request_id":  "local-aa8c5360e997476eb1094af7a3ced5cd",
     "source":  "ADB",
     "proposal":  {
-                     "summary":  "No changes detected.",
+                     "summary":  "Battery is 100% and 154.02 GB of storage is free.",
                      "uncertainty":  "Device health and write permission are unknown from these limited facts.",
                      "action":  "inspect_only",
                      "evidence_refs":  [
@@ -14,15 +14,14 @@
                                        ]
                  },
     "usage":  {
-                  "prompt_tokens":  143,
-                  "completion_tokens":  66
+                  "prompt_tokens":  175,
+                  "completion_tokens":  76
               },
     "estimated_cost_usd":  0.0,
     "billing":  "LOCAL_COMPUTE_NO_PROVIDER_CREDITS",
-    "elapsed_ms":  8816,
+    "elapsed_ms":  10503,
     "cpu_only_requested":  true,
     "input_sha256":  "f66fd806ea5626491a8264469d00d6492bf24377011ff6511b85b00da35aa229",
-    "browser_route_elapsed_ms":  9482,
-    "recorded_at":  "2026-10-26T19:05:13.9133392Z",
-    "note":  "Real ADB read-only facts reviewed by pinned local Meta model via /api/recommend. Device identifiers excluded. No device action."
+    "recorded_at":  "2026-10-26T19:08:08.9238371Z",
+    "note":  "Real ADB read-only facts reviewed by pinned local Meta model via /api/recommend; summary grounding enforced. Device identifiers excluded. No device action."
 }
