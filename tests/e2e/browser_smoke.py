@@ -23,6 +23,10 @@ def main():
             assert not errors, errors
             page.screenshot(path=str(artifacts / f'{width}-after.png'), full_page=True)
             assert page.locator('html').get_attribute('lang') == 'en'
+            assert page.get_by_role('button', name='Request Meta demo advice').is_disabled()
+            page.get_by_role('button',name='View recorded Meta proof').click()
+            page.get_by_text('RECORDED RUN',exact=False).wait_for()
+            assert 'no live request was made' in page.locator('#recorded-proof-result').inner_text()
             page.route('**/api/devices?source=demo', lambda route: route.abort())
             page.get_by_role('button', name='Refresh demo').click()
             page.get_by_text('Inventory failed:', exact=False).wait_for()
@@ -34,6 +38,21 @@ def main():
             assert 'SIMULATED' not in page.locator('#device').inner_text()
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.screenshot(path=str(artifacts / f'{width}-usb.png'), full_page=True)
+            if page.get_by_role('button',name='Inspect evidence').count():
+                page.get_by_role('button',name='Inspect evidence').first.click()
+                page.get_by_text('Reading complete. No device was changed.',exact=True).wait_for(timeout=70000)
+                assert 'ADB / REAL READING' in page.locator('#report').inner_text()
+            page.get_by_role('radio', name='Freebox gateway').check()
+            page.get_by_role('button', name='Identify local Freebox').click()
+            page.get_by_text('Gateway identification complete:', exact=False).wait_for()
+            assert page.get_by_role('button', name='Request Meta demo advice').is_disabled()
+            assert 'SIMULATED' not in page.locator('#device').inner_text()
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.screenshot(path=str(artifacts / f'{width}-gateway.png'), full_page=True)
+            if page.get_by_role('button',name='Inspect evidence').count():
+                page.get_by_role('button',name='Inspect evidence').click()
+                page.get_by_text('Reading complete. No device was changed.',exact=True).wait_for()
+                assert 'FREEBOX_DISCOVERY / REAL READING' in page.locator('#report').inner_text()
             page.close()
         browser.close()
     print('Browser discovery, inspection, simulation labels and overflow checks passed at 390/768/1440/3440.')

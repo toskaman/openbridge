@@ -48,6 +48,18 @@ class HTTPTests(unittest.TestCase):
             self.assertEqual(code, 200)
             self.assertEqual(json.loads(body)['status'], 'WAITING_FOR_DEVICE')
 
+    def test_freebox_discovery_is_opt_in(self):
+        with patch.object(self.server.freebox, 'discover', return_value={'devices': [], 'status': 'GATEWAY_UNAVAILABLE'}) as discover:
+            self.request('GET', '/api/devices')
+            discover.assert_not_called()
+            code, body, _ = self.request('GET', '/api/devices?source=freebox')
+            self.assertEqual(code, 200)
+            self.assertEqual(json.loads(body)['status'], 'GATEWAY_UNAVAILABLE')
+
+    def test_freebox_data_never_reaches_model(self):
+        code, _, _ = self.request('POST', '/api/recommend', '{"source":"freebox","device_id":"freebox-local"}', self.session_headers())
+        self.assertEqual(code, 400)
+
     def test_android_inspection_never_falls_back_to_fixture(self):
         with patch.object(self.server.android, 'inspect', side_effect=ValueError('Device unavailable')):
             code, _, _ = self.request('POST', '/api/inspect', '{"source":"android","device_id":"demo-android"}', self.session_headers())
@@ -57,6 +69,23 @@ class HTTPTests(unittest.TestCase):
         code, body, _ = self.request('GET', '/api/model-status')
         self.assertEqual(code, 200)
         self.assertFalse(json.loads(body)['cloud_inference_enabled'])
+
+    def test_recorded_model_proof_is_explicitly_historical(self):
+        code, body, _ = self.request('GET','/api/model-proof')
+        self.assertEqual(code,200)
+        proof=json.loads(body)
+        self.assertEqual(proof['evidence_kind'],'RECORDED_RUNTIME_CORE_CALL')
+        self.assertFalse(proof['live_request'])
+        self.assertEqual(proof['receipt']['model_id'],'muse-spark-1.3')
+
+    def test_reasoning_requires_credit_permit(self):
+        code, body, _ = self.request('POST', '/api/recommend', '{"source":"demo","device_id":"demo-android"}', self.session_headers())
+        self.assertEqual(code, 409)
+        self.assertIn('error', json.loads(body))
+
+    def test_real_device_data_cannot_be_sent_to_model(self):
+        code, _, _ = self.request('POST', '/api/recommend', '{"source":"android","device_id":"some-device"}', self.session_headers())
+        self.assertEqual(code, 400)
 
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)

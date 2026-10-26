@@ -1,1 +1,1 @@
-"""Reserved boundary for future verified Meta-only runtime integration."""
+"""Pinned Meta-only advisory runtime with supervised credit guards."""

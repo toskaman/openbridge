@@ -1,7 +1,9 @@
 # Demonstration status
 
-Available: English local workspace, clearly simulated discovery, separate Android USB inventory, real read-only inspection verified on one authorized phone, provenance labels and protected HTTP interface.
+Available: English local workspace, clearly simulated discovery, opt-in Android USB inventory, read-only inspection verified on an authorized physical phone, Freebox public identity inspection verified on the local gateway, provenance labels and protected HTTP endpoints.
 
-Meta Muse Spark 1.3 provided the visual design direction; docs/meta-design-receipt.json records the actual call. Development design assistance does not satisfy the real in-product model gate.
+Actual Meta calls: Muse Spark 1.3 provided the visual design direction; docs/meta-design-receipt.json records that development call. A separate actual call through the shipped runtime broker produced a schema-valid advisory from synthetic fixture evidence; docs/runtime-meta-receipt.json records the result. Viewing recorded proof never claims to be a live model call.
 
-Incomplete: actual runtime inference, physical action and Undo, second authenticated protocol, multiple-phone hardware tests, 3-minute video and final submission. No bonus eligibility or submission readiness is claimed.
+The browser recommendation endpoint is implemented, with integration and mocked browser tests. Default cloud access stays blocked, and no live browser-to-provider execution is claimed. The runtime-core proof does not demonstrate autonomous physical actions.
+
+Incomplete: physical action and Undo, authenticated second-protocol control, multiple-phone fault-injection evidence, live browser/provider session, 3-minute video and final submission. No bonus eligibility or organizer acceptance is claimed.

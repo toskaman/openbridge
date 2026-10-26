@@ -1,7 +1,9 @@
 # Safety and model boundaries
 
-Phase 1 calls no inference model. The ai package is an empty boundary, not a working model integration. Do not claim runtime compliance proof from an unused model registry.
+RuntimeModelBroker pins Meta Muse Spark 1.3 to the official Meta HTTPS endpoint. A supervised call through this application core succeeded on 26 October 2026 using synthetic fixture facts; docs/runtime-meta-receipt.json records the returned identity, request ID, token use and estimated cost. The live browser inference endpoint is implemented and tested with controlled responses, but no live browser-to-provider session is claimed.
 
-Future model integration must pin actual Meta deployments, verify identity, sanitize inputs and record real traces. Unknown models and opaque fallbacks must fail closed. Model advice must never execute commands directly. Each physical write requires authorized scope, an exact snapshot, deterministic checks and independent read-back and rollback verification.
+Default startup has no credential or free-credit permit and makes no cloud calls. A short-lived supervised credit observation is required for explicit requests. Unknown models, malformed proposals, unknown evidence, expired observations and exhausted durable allowances fail closed. See FREE_CREDITS.md for limits and account-wide verification limitations.
 
-No credentials, serial numbers, network identifiers or device dumps belong in public evidence. Current fixtures contain only synthetic values.
+Physical Android and Freebox facts stay local. The model receives only the synthetic demo allowlist. Output is advisory text with action=inspect_only; no model response is passed to ADB, a router or a command shell. A key is never served to the browser. The one-shot PowerShell 7 verifier passes the encrypted local credential to its child process only through standard input.
+
+No physical writes or Undo are implemented. Future changes require consent, an exact state snapshot, deterministic checks, independent read-back and verified restoration. No credentials, serial numbers, network identifiers or private device dumps belong in public evidence.

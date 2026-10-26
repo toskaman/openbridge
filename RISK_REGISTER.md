@@ -1,6 +1,6 @@
 # Current risks
 
-1. Real Meta inference is absent. Stage 1 model-use eligibility remains incomplete.
+1. A real supervised Meta runtime-core call is recorded on synthetic facts. Live browser/provider execution, autonomous physical workflows and final organizer acceptance remain unverified.
 2. One physical Android read-only inspection passed. Multiple physical phones, physical disconnect fault injection and rollback remain NOT TESTED.
 3. Loopback isolation does not protect against malicious software running as the same local user.
 4. This standard-library HTTP service is a local development demo, not an authenticated multi-user deployment.

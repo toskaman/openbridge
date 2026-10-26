@@ -1,0 +1,33 @@
+{
+  "model_id": "muse-spark-1.3",
+  "provider": "Meta Model API",
+  "request_id": "chatcmpl-01a17925-3fdf-7403-b5bb-5c0871a6bb6d",
+  "source": "SIMULATED",
+  "proposal": {
+    "summary": "Battery at 72% with 38 GB free storage and 30s screen timeout indicates adequate charge and available space for normal read-only use.",
+    "evidence_refs": [
+      "battery_percent",
+      "storage_free_gb",
+      "screen_timeout_seconds"
+    ],
+    "action": "inspect_only",
+    "uncertainty": "Facts are simulated and may not reflect actual device state."
+  },
+  "usage": {
+    "completion_tokens": 757,
+    "prompt_tokens": 110,
+    "total_tokens": 867,
+    "completion_tokens_details": {
+      "reasoning_tokens": 671
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "estimated_cost_usd": 0.00335475,
+  "reserved_usd": 0.1,
+  "elapsed_ms": 3969,
+  "input_sha256": "4c542c3b66bcf687e11cf4e5430e0434b3daa2fc317f89502eda3a54e8f923c5",
+  "recorded_at_utc": "2026-10-26T16:57:26.483955+00:00",
+  "credit_verification": "Participant-confirmed promotional balance; supervised single request"
+}
