@@ -182,3 +182,9 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 ## Vendor-aware guidance in the product
 
 - src/fabric/guidance.py turns blocked steps into vendor- and version-specific guidance (goal, why, already tried, minimal action, waiting). Companion installation is now driven from OpenBridge (/api/companion-install) with bounded retries and adb error classification; relay failures return the matching guide; the UI shows them in the non-modal guided dialog. Tests: tests/fabric/test_guidance.py (vendor variants, TV/Android-version variants, install classification, server retry loop to success).
+
+## Meta coverage advisor (real graph + ablation)
+
+- src/fabric/advisor.py: deterministic candidate steps from the graph (authorize_freebox, install_companion, pair_wifi_adb, review_duplicate); the local Meta model sees categories, counts and step ids only and must pick a listed step with a real sentence; numbers must match the graph counts. Unusable output falls back to the rule with an explicit message.
+- Real graph (participant LAN, phone unplugged so one candidate): Glimmer explained correctly with exact counts (15 devices, 12 indirect) and noted the step did not serve the Bluetooth goal; Llama 3B returned echoed ids/JSON fragments, which led to the new sentence-quality check.
+- Ablation (docs/benchmark/STATUS.md): Llama 3B 0% usable; Glimmer 93.3% valid, 53.3% goal fit vs rule 100%; deterministic across repeats.

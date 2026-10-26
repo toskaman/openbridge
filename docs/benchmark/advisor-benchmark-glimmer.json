@@ -1,0 +1,616 @@
+{
+ "route": "glimmer",
+ "graphs": 10,
+ "goals": 3,
+ "repeats": 2,
+ "attempts": 60,
+ "valid_pct": 93.3,
+ "agree_with_rule_pct": 36.7,
+ "goal_fit_pct": 53.3,
+ "median_ms": 21160.0,
+ "rule_goal_fit_pct": 100.0,
+ "synthetic_inputs_only": true,
+ "recorded_at": "2026-10-26T23:40:51+0100",
+ "rows": [
+  {
+   "graph": 0,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d1",
+   "error": "Advisor must keep the policy limitation",
+   "goal_fit": false,
+   "ms": 57565
+  },
+  {
+   "graph": 0,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor must keep the policy limitation",
+   "goal_fit": false,
+   "ms": 35535
+  },
+  {
+   "graph": 0,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 15380
+  },
+  {
+   "graph": 1,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d6",
+   "rule": "pair_wifi_adb:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 32782
+  },
+  {
+   "graph": 1,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d6",
+   "rule": "install_companion:d6",
+   "error": null,
+   "goal_fit": true,
+   "ms": 28156
+  },
+  {
+   "graph": 1,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "install_companion:d2",
+   "rule": "pair_wifi_adb:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 14957
+  },
+  {
+   "graph": 2,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d13",
+   "error": null,
+   "goal_fit": false,
+   "ms": 21730
+  },
+  {
+   "graph": 2,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d1",
+   "rule": "install_companion:d1",
+   "error": null,
+   "goal_fit": true,
+   "ms": 23403
+  },
+  {
+   "graph": 2,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d13",
+   "error": null,
+   "goal_fit": false,
+   "ms": 15152
+  },
+  {
+   "graph": 3,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "review_duplicate:d2",
+   "rule": "pair_wifi_adb:d5",
+   "error": null,
+   "goal_fit": false,
+   "ms": 14598
+  },
+  {
+   "graph": 3,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d3",
+   "rule": "install_companion:d3",
+   "error": null,
+   "goal_fit": true,
+   "ms": 20417
+  },
+  {
+   "graph": 3,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 19309
+  },
+  {
+   "graph": 4,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d9",
+   "rule": "authorize_freebox:d3",
+   "error": null,
+   "goal_fit": false,
+   "ms": 26361
+  },
+  {
+   "graph": 4,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d9",
+   "rule": "install_companion:d9",
+   "error": null,
+   "goal_fit": true,
+   "ms": 28881
+  },
+  {
+   "graph": 4,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 21585
+  },
+  {
+   "graph": 5,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d2",
+   "error": null,
+   "goal_fit": false,
+   "ms": 14141
+  },
+  {
+   "graph": 5,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d4",
+   "rule": "install_companion:d4",
+   "error": null,
+   "goal_fit": true,
+   "ms": 19189
+  },
+  {
+   "graph": 5,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "install_companion:d1",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": false,
+   "ms": 19935
+  },
+  {
+   "graph": 6,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 23902
+  },
+  {
+   "graph": 6,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 24649
+  },
+  {
+   "graph": 6,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 17562
+  },
+  {
+   "graph": 7,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 28441
+  },
+  {
+   "graph": 7,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d3",
+   "rule": "install_companion:d1",
+   "error": null,
+   "goal_fit": true,
+   "ms": 22904
+  },
+  {
+   "graph": 7,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "pair_wifi_adb:d6",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": false,
+   "ms": 22083
+  },
+  {
+   "graph": 8,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d5",
+   "rule": "authorize_freebox:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 18616
+  },
+  {
+   "graph": 8,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d10",
+   "error": null,
+   "goal_fit": true,
+   "ms": 18212
+  },
+  {
+   "graph": 8,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 18727
+  },
+  {
+   "graph": 9,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": "install_companion:d7",
+   "rule": "authorize_freebox:d11",
+   "error": null,
+   "goal_fit": false,
+   "ms": 25203
+  },
+  {
+   "graph": 9,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": "install_companion:d7",
+   "rule": "install_companion:d7",
+   "error": null,
+   "goal_fit": true,
+   "ms": 19885
+  },
+  {
+   "graph": 9,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": "authorize_freebox:d11",
+   "rule": "authorize_freebox:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 27505
+  },
+  {
+   "graph": 0,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d1",
+   "error": "Advisor must keep the policy limitation",
+   "goal_fit": false,
+   "ms": 37113
+  },
+  {
+   "graph": 0,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor must keep the policy limitation",
+   "goal_fit": false,
+   "ms": 35727
+  },
+  {
+   "graph": 0,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 15205
+  },
+  {
+   "graph": 1,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d6",
+   "rule": "pair_wifi_adb:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 33299
+  },
+  {
+   "graph": 1,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d6",
+   "rule": "install_companion:d6",
+   "error": null,
+   "goal_fit": true,
+   "ms": 29110
+  },
+  {
+   "graph": 1,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "install_companion:d2",
+   "rule": "pair_wifi_adb:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 15427
+  },
+  {
+   "graph": 2,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d13",
+   "error": null,
+   "goal_fit": false,
+   "ms": 21232
+  },
+  {
+   "graph": 2,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d1",
+   "rule": "install_companion:d1",
+   "error": null,
+   "goal_fit": true,
+   "ms": 22905
+  },
+  {
+   "graph": 2,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d13",
+   "error": null,
+   "goal_fit": false,
+   "ms": 14453
+  },
+  {
+   "graph": 3,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "review_duplicate:d2",
+   "rule": "pair_wifi_adb:d5",
+   "error": null,
+   "goal_fit": false,
+   "ms": 13736
+  },
+  {
+   "graph": 3,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d3",
+   "rule": "install_companion:d3",
+   "error": null,
+   "goal_fit": true,
+   "ms": 19193
+  },
+  {
+   "graph": 3,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 18163
+  },
+  {
+   "graph": 4,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d9",
+   "rule": "authorize_freebox:d3",
+   "error": null,
+   "goal_fit": false,
+   "ms": 25023
+  },
+  {
+   "graph": 4,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d9",
+   "rule": "install_companion:d9",
+   "error": null,
+   "goal_fit": true,
+   "ms": 27103
+  },
+  {
+   "graph": 4,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 20224
+  },
+  {
+   "graph": 5,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d2",
+   "error": null,
+   "goal_fit": false,
+   "ms": 13654
+  },
+  {
+   "graph": 5,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d4",
+   "rule": "install_companion:d4",
+   "error": null,
+   "goal_fit": true,
+   "ms": 18337
+  },
+  {
+   "graph": 5,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "install_companion:d1",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": false,
+   "ms": 18787
+  },
+  {
+   "graph": 6,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 22784
+  },
+  {
+   "graph": 6,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 23049
+  },
+  {
+   "graph": 6,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 16861
+  },
+  {
+   "graph": 7,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d1",
+   "rule": "pair_wifi_adb:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 27691
+  },
+  {
+   "graph": 7,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d3",
+   "rule": "install_companion:d1",
+   "error": null,
+   "goal_fit": true,
+   "ms": 22309
+  },
+  {
+   "graph": 7,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "pair_wifi_adb:d6",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": false,
+   "ms": 21088
+  },
+  {
+   "graph": 8,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d5",
+   "rule": "authorize_freebox:d6",
+   "error": null,
+   "goal_fit": false,
+   "ms": 17773
+  },
+  {
+   "graph": 8,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d5",
+   "rule": "install_companion:d10",
+   "error": null,
+   "goal_fit": true,
+   "ms": 17042
+  },
+  {
+   "graph": 8,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "review_duplicate:d2",
+   "rule": "review_duplicate:d2",
+   "error": null,
+   "goal_fit": true,
+   "ms": 17732
+  },
+  {
+   "graph": 9,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": "install_companion:d7",
+   "rule": "authorize_freebox:d11",
+   "error": null,
+   "goal_fit": false,
+   "ms": 24454
+  },
+  {
+   "graph": 9,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": "install_companion:d7",
+   "rule": "install_companion:d7",
+   "error": null,
+   "goal_fit": true,
+   "ms": 20287
+  },
+  {
+   "graph": 9,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": "authorize_freebox:d11",
+   "rule": "authorize_freebox:d11",
+   "error": null,
+   "goal_fit": true,
+   "ms": 27038
+  }
+ ]
+}

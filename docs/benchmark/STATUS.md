@@ -15,3 +15,15 @@ Reading the results honestly:
 - On this deliberately narrow task, a hand-written rule is as accurate. The model's added value is a grounded explanation and fewer unsafe proposals (3 vs 9), not raw accuracy. The deterministic gate is what guarantees safety: 100% of unsafe proposals from every route were refused.
 - An earlier Llama 3B run (docs/benchmark/agent-benchmark-llama3b-v1.json, 53.3% valid / 46.7% correct) led to a schema fix (separate branches for observe-only and action plans) before the runs above.
 - Inputs are synthetic. Physical results are recorded separately (docs/agent-loop-receipt.json, docs/physical-package-receipt.json). No battery, speed or storage gains are claimed.
+
+## Coverage advisor ablation (synthetic graphs, 26 Oct 2026)
+
+10 synthetic device graphs with ≥2 candidate steps × 3 owner goals × 2 repeats (`python -m dev.benchmark_advisor`). "Goal fit" = the chosen step is the goal's primary kind under the fixed priority, so the rule scores 100% by construction.
+
+| Route | Valid explanation | Goal fit | Agrees with rule | Median latency |
+|---|---|---|---|---|
+| Rule (goal priority) | n/a | 100% | 100% | 0 ms |
+| Llama 3.2 3B | **0%** (never a usable sentence; always blocked) | 0% | 0% | 7.8 s |
+| Muse Glimmer 30B | 93.3% | 53.3% | 36.7% | 21.2 s |
+
+Per goal, Glimmer picked the expected step for "find Bluetooth" in 18/20 runs; for "extend coverage" it preferred installing a companion (also extends coverage, via Bluetooth) over authorizing the router; for "tidy inventory" it sometimes chose an unrelated step. Choices were identical across repeats (30/30). Conclusion: the deterministic rule decides better on this task; Glimmer's value is a grounded explanation, and the UI always shows the rule's choice next to the model's. Results unfavourable to the models are kept on purpose.

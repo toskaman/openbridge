@@ -1,0 +1,616 @@
+{
+ "route": "llama3b",
+ "graphs": 10,
+ "goals": 3,
+ "repeats": 2,
+ "attempts": 60,
+ "valid_pct": 0.0,
+ "agree_with_rule_pct": 0.0,
+ "goal_fit_pct": 0.0,
+ "median_ms": 7750.0,
+ "rule_goal_fit_pct": 100.0,
+ "synthetic_inputs_only": true,
+ "recorded_at": "2026-10-26T23:18:14+0100",
+ "rows": [
+  {
+   "graph": 0,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 12976
+  },
+  {
+   "graph": 0,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6205
+  },
+  {
+   "graph": 0,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6165
+  },
+  {
+   "graph": 1,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 10500
+  },
+  {
+   "graph": 1,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 9089
+  },
+  {
+   "graph": 1,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6101
+  },
+  {
+   "graph": 2,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d13",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8288
+  },
+  {
+   "graph": 2,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5976
+  },
+  {
+   "graph": 2,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d13",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5782
+  },
+  {
+   "graph": 3,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d5",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6767
+  },
+  {
+   "graph": 3,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d3",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5806
+  },
+  {
+   "graph": 3,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5262
+  },
+  {
+   "graph": 4,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "authorize_freebox:d3",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 11212
+  },
+  {
+   "graph": 4,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d9",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7939
+  },
+  {
+   "graph": 4,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7200
+  },
+  {
+   "graph": 5,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 10974
+  },
+  {
+   "graph": 5,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d4",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8937
+  },
+  {
+   "graph": 5,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 9297
+  },
+  {
+   "graph": 6,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 9166
+  },
+  {
+   "graph": 6,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6134
+  },
+  {
+   "graph": 6,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7757
+  },
+  {
+   "graph": 7,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "pair_wifi_adb:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7306
+  },
+  {
+   "graph": 7,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5958
+  },
+  {
+   "graph": 7,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6177
+  },
+  {
+   "graph": 8,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "authorize_freebox:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7401
+  },
+  {
+   "graph": 8,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d10",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8692
+  },
+  {
+   "graph": 8,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7408
+  },
+  {
+   "graph": 9,
+   "goal": "extend_coverage",
+   "repeat": 0,
+   "step": null,
+   "rule": "authorize_freebox:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 9821
+  },
+  {
+   "graph": 9,
+   "goal": "find_bluetooth",
+   "repeat": 0,
+   "step": null,
+   "rule": "install_companion:d7",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8815
+  },
+  {
+   "graph": 9,
+   "goal": "tidy_inventory",
+   "repeat": 0,
+   "step": null,
+   "rule": "authorize_freebox:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8564
+  },
+  {
+   "graph": 0,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8413
+  },
+  {
+   "graph": 0,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6175
+  },
+  {
+   "graph": 0,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6143
+  },
+  {
+   "graph": 1,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 10429
+  },
+  {
+   "graph": 1,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8596
+  },
+  {
+   "graph": 1,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5992
+  },
+  {
+   "graph": 2,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d13",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8270
+  },
+  {
+   "graph": 2,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5911
+  },
+  {
+   "graph": 2,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d13",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5959
+  },
+  {
+   "graph": 3,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d5",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6020
+  },
+  {
+   "graph": 3,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d3",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 6079
+  },
+  {
+   "graph": 3,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5560
+  },
+  {
+   "graph": 4,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "authorize_freebox:d3",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8791
+  },
+  {
+   "graph": 4,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d9",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8057
+  },
+  {
+   "graph": 4,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7309
+  },
+  {
+   "graph": 5,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 10442
+  },
+  {
+   "graph": 5,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d4",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8090
+  },
+  {
+   "graph": 5,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8394
+  },
+  {
+   "graph": 6,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8879
+  },
+  {
+   "graph": 6,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5923
+  },
+  {
+   "graph": 6,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7743
+  },
+  {
+   "graph": 7,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "pair_wifi_adb:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7200
+  },
+  {
+   "graph": 7,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d1",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5866
+  },
+  {
+   "graph": 7,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 5825
+  },
+  {
+   "graph": 8,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "authorize_freebox:d6",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 9014
+  },
+  {
+   "graph": 8,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d10",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8506
+  },
+  {
+   "graph": 8,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "review_duplicate:d2",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 7109
+  },
+  {
+   "graph": 9,
+   "goal": "extend_coverage",
+   "repeat": 1,
+   "step": null,
+   "rule": "authorize_freebox:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 9596
+  },
+  {
+   "graph": 9,
+   "goal": "find_bluetooth",
+   "repeat": 1,
+   "step": null,
+   "rule": "install_companion:d7",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8925
+  },
+  {
+   "graph": 9,
+   "goal": "tidy_inventory",
+   "repeat": 1,
+   "step": null,
+   "rule": "authorize_freebox:d11",
+   "error": "Advisor explanation is not a usable sentence",
+   "goal_fit": false,
+   "ms": 8510
+  }
+ ]
+}
