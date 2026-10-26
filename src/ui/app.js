@@ -5,6 +5,9 @@ const devicePanel = document.querySelector('#device');
 let csrfToken;
 let generation = 0;
 let metaSessionConfigured = false;
+let metaLocal = false;
+let runtimeMetaModel = 'muse-spark-1.3';
+let inspectedDevice = null;
 let metaPending = false;
 const metaButton = document.querySelector('#meta-advice');
 const source = () => document.querySelector('input[name="source"]:checked').value;
@@ -20,7 +23,13 @@ function element(tag, content, className) {
   if (className) item.className = className;
   return item;
 }
-function resetEvidence() { document.querySelector('#report').replaceChildren(element('p', 'No inspection for this source.')); }
+function syncMetaControl() {
+  metaButton.disabled = !metaSessionConfigured || metaPending || !(source() === 'demo' || (metaLocal && source() === 'android' && inspectedDevice));
+}
+function resetEvidence() {
+  inspectedDevice = null; syncMetaControl();
+  document.querySelector('#report').replaceChildren(element('p', 'No inspection for this source.'));
+}
 async function inspect(device, button, selectedSource, version) {
   button.disabled = true;
   statusLine.textContent = 'Reading authorized device facts…';
@@ -31,6 +40,7 @@ async function inspect(device, button, selectedSource, version) {
       body: JSON.stringify({ device_id: device.id, source: selectedSource }),
     });
     if (version !== generation) return;
+    inspectedDevice = device.id; syncMetaControl();
     const report = document.querySelector('#report');
     report.replaceChildren(element('strong', result.summary), element('p', `${result.simulated ? 'SIMULATED / SYNTHETIC' : `${result.source} / REAL READING`} · ${result.observed_at}`));
     const facts = element('div', undefined, 'evidence-facts');
@@ -74,8 +84,8 @@ for (const radio of document.querySelectorAll('input[name="source"]')) radio.add
   document.querySelector('#device-count').textContent = 'NOT LISTED';
   const demo = source() === 'demo';
   syncTransactionControls();
-  metaButton.disabled = !demo || !metaSessionConfigured || metaPending;
-  document.querySelector('#meta-result').textContent = demo ? 'Synthetic facts only. Explicit request required.' : 'Meta requests are unavailable for real device data.';
+  syncMetaControl();
+  document.querySelector('#meta-result').textContent = demo ? 'Synthetic facts only. Explicit request required.' : metaLocal && source() === 'android' ? 'Inspect a device first. Approved numeric facts stay on this PC for local Meta review.' : 'Model requests are unavailable for this source.';
   discoverButton.textContent = demo ? 'Refresh demo ↗' : source() === 'android' ? 'List USB devices ↗' : 'Identify local Freebox ↗';
   const banner = document.querySelector('#mode-banner'); banner.classList.toggle('usb', !demo);
   banner.replaceChildren(element('strong', demo ? 'SIMULATED / DEMO' : source() === 'android' ? 'USB / READ-ONLY' : 'FREEBOX / PUBLIC IDENTITY'), element('span', demo ? 'Synthetic data. No real measurements.' : source() === 'android' ? 'Authorized ADB devices only. No writes.' : 'Documented discovery endpoint only. No pairing or router changes.'));
@@ -130,10 +140,12 @@ undoButton.addEventListener('click', () => runDemoTransaction('undo'));
 loadDemoState();
 
 request('/api/model-status').then(state => {
-  metaSessionConfigured = state.supervised_session_configured;
-  metaButton.disabled = !metaSessionConfigured || source() !== 'demo' || metaPending;
+  metaSessionConfigured = state.inference_available ?? state.supervised_session_configured;
+  metaLocal = state.inference_mode === 'local';
+  runtimeMetaModel = state.model_id || 'muse-spark-1.3';
+  syncMetaControl();
   document.querySelector('#model-state').textContent = metaSessionConfigured
-    ? 'Meta Muse Spark 1.3 · supervised requests only · credit checks enforced'
+    ? metaLocal ? 'Built with Llama · local CPU · $0 provider credits' : 'Meta Muse Spark 1.3 · supervised requests only · credit checks enforced'
     : 'Runtime model: disabled · credit verification required';
 }).catch(() => { document.querySelector('#model-state').textContent = 'Model state unavailable. Cloud requests blocked.'; });
 
@@ -147,23 +159,26 @@ document.querySelector('#recorded-meta-proof').addEventListener('click', async (
 });
 
 metaButton.addEventListener('click', async () => {
-  if (source() !== 'demo' || metaPending || !metaSessionConfigured) return;
+  syncMetaControl();
+  if (metaButton.disabled) return;
+  const selectedSource = source();
+  const deviceId = selectedSource === 'demo' ? 'demo-android' : inspectedDevice;
   const version = generation;
   const resultPanel = document.querySelector('#meta-result');
   metaButton.disabled = true;
   metaPending = true;
-  resultPanel.textContent = 'Requesting Meta Muse Spark 1.3 advice on synthetic facts…';
+  resultPanel.textContent = metaLocal ? `Requesting local Meta ${runtimeMetaModel} review… Numeric facts stay on this PC.` : 'Requesting Meta Muse Spark 1.3 advice on synthetic facts…';
   try {
     if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
     const result = await request('/api/recommend', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-      body: JSON.stringify({ source: 'demo', device_id: 'demo-android' }),
+      body: JSON.stringify({ source: selectedSource, device_id: deviceId }),
     });
     if (version !== generation) return;
     resultPanel.textContent = `${result.model_id}: ${result.proposal.summary} Evidence: ${result.proposal.evidence_refs.join(', ')}. Limits: ${result.proposal.uncertainty} Estimated cost: $${result.estimated_cost_usd.toFixed(6)}. No device action performed.`;
   } catch (error) {
     if (version === generation) resultPanel.textContent = `Meta request blocked or failed: ${error.message}`;
-  } finally { metaPending = false; metaButton.disabled = source() !== 'demo' || !metaSessionConfigured; }
+  } finally { metaPending = false; syncMetaControl(); }
 });
 function inventorySignature(result) {
   return JSON.stringify(result.devices.map(device => [device.id,device.state,device.capabilities]));

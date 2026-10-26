@@ -18,6 +18,7 @@ from src.ai.broker import RuntimeModelBroker, MetaTransport, CreditPermit, Model
 from src.core.transactions import TransactionEngine, TransactionBlocked
 from src.adapters.simulated_setting import SimulatedSetting
 from src.adapters.android_events import AndroidEventMonitor
+from src.ai.local_meta import LocalMetaBroker
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
@@ -89,9 +90,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(400, {'error': 'Unknown inventory source'})
             return self.reply(200, {'devices': discover(), 'status': 'SIMULATED'})
         if path == '/api/model-status':
+            broker=self.server.model_broker
+            local=broker is not None and getattr(broker,'local_only',False) is True
+            available=broker is not None and (not local or broker.ready())
             return self.reply(200, {'cloud_inference_enabled': False,
-                                   'supervised_session_configured': self.server.model_broker is not None,
-                                   'status': 'SUPERVISED_ONLY' if self.server.model_broker else 'CREDIT_VERIFICATION_REQUIRED',
+                                   'supervised_session_configured': broker is not None and not local,
+                                   'inference_available':available,'inference_mode':'local' if local else 'cloud' if broker else 'blocked',
+                                   'model_id':broker.model_id if local else 'muse-spark-1.3',
+                                   'status': 'LOCAL_META_READY' if local and available else 'LOCAL_META_UNAVAILABLE' if local else 'SUPERVISED_ONLY' if broker else 'CREDIT_VERIFICATION_REQUIRED',
                                    'detail': 'Automatic cloud calls disabled. Explicit supervised requests require fresh verified free credits.',
                                    'development_design_model': 'muse-spark-1.3'})
         if path == '/api/model-proof':
@@ -160,12 +166,22 @@ class Handler(BaseHTTPRequestHandler):
                 except (OSError,sqlite3.Error):
                     return self.reply(409,{'error':'Simulated journal unavailable; operation stopped'})
             if self.path == '/api/recommend':
-                if source != 'demo' or body['device_id'] != 'demo-android':
-                    raise ValueError('Only synthetic demo facts can be sent')
+                broker=self.server.model_broker
+                local=broker is not None and getattr(broker,'local_only',False) is True
+                if source=='android' and local:
+                    if not broker.ready():
+                        return self.reply(409,{'error':'Pinned local Meta model unavailable; no cloud fallback'})
+                    report=self.server.android.inspect(body['device_id'])
+                    facts={item['key']:item['value'] for item in report['evidence'] if item['key'] in ('battery_percent','storage_free_gb','screen_timeout_seconds')}
+                    evidence_source='ADB'
+                elif source=='demo' and body['device_id']=='demo-android':
+                    facts=discover()[0]['facts'];evidence_source='SIMULATED'
+                else:
+                    raise ValueError('Physical facts may only use the explicitly enabled local Meta provider')
                 if self.server.model_broker is None:
                     return self.reply(409, {'error': 'Supervised free-credit verification required; no model called'})
                 try:
-                    result = self.server.model_broker.recommend(discover()[0]['facts'])
+                    result = broker.recommend(facts,source=evidence_source) if local else broker.recommend(facts)
                     return self.reply(200, result)
                 except ModelBlocked as error:
                     return self.reply(409, {'error': str(error)})
@@ -196,9 +212,12 @@ def create_server(port=18765, model_broker=None, demo_engine=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=18765)
+    parser.add_argument('--local-meta',action='store_true',help='Use the pinned private CPU-local Meta model; never falls back to cloud')
     args = parser.parse_args()
     broker = None
-    if os.environ.get('MODEL_API_KEY') and os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
+    if args.local_meta:
+        broker=LocalMetaBroker()
+    elif os.environ.get('MODEL_API_KEY') and os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
         try:
             permit = CreditPermit(os.environ['OPENBRIDGE_CREDIT_OBSERVATION_ID'],
                                   datetime.fromisoformat(os.environ['OPENBRIDGE_CREDIT_VERIFIED_AT']),

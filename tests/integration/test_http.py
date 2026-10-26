@@ -141,6 +141,25 @@ class HTTPTests(unittest.TestCase):
         code, _, _ = self.request('POST', '/api/recommend', '{"source":"android","device_id":"some-device"}', self.session_headers())
         self.assertEqual(code, 400)
 
+    def test_local_meta_receives_only_current_allowlisted_device_facts(self):
+        broker=Mock();broker.local_only=True;broker.ready.return_value=True
+        broker.recommend.return_value={'source':'ADB','model_id':'llama3.2:3b-instruct-q4_K_M'}
+        report={'evidence':[{'key':'battery_percent','value':72},{'key':'storage_free_gb','value':38},
+                            {'key':'model','value':'PRIVATE_MODEL'},{'key':'serial','value':'PRIVATE_SERIAL'}]}
+        with patch.object(self.server,'model_broker',broker),patch.object(self.server.android,'inspect',return_value=report) as inspect:
+            body=json.dumps({'source':'android','device_id':'opaque-phone','facts':{'serial':'DO_NOT_SEND'}})
+            code,_,_=self.request('POST','/api/recommend',body,self.session_headers())
+            self.assertEqual(code,200)
+            inspect.assert_called_once_with('opaque-phone')
+            broker.recommend.assert_called_once_with({'battery_percent':72,'storage_free_gb':38},source='ADB')
+
+    def test_cloud_broker_cannot_receive_physical_device_data(self):
+        broker=Mock();broker.local_only=False
+        with patch.object(self.server,'model_broker',broker):
+            code,_,_=self.request('POST','/api/recommend','{"source":"android","device_id":"opaque"}',self.session_headers())
+            self.assertEqual(code,400)
+            broker.recommend.assert_not_called()
+
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)
 

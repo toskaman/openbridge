@@ -57,3 +57,11 @@ This isolated check starts its own temporary server and synthetic journal. It ve
 ## Evidence walkthrough preview
 
 A captioned English preview is available with the [alpha.2 release](https://github.com/toskaman/openbridge/releases/tag/v0.1.0-alpha.2). It is 177 seconds, 1080p/30fps, intentionally silent, and records actual application interactions. Its [public manifest](docs/jury/DEMO_PREVIEW.json) pins the captured source revision and states which evidence is recorded or simulated. This is a preview, not a final contest submission.
+
+## Optional local Meta reasoning — Built with Llama
+
+`python -m dev.start_local_meta --pull-model` starts a separate CPU-only Ollama service on 127.0.0.1:11437 with a private model directory and pulls Meta **Llama 3.2 3B Instruct** (`llama3.2:3b-instruct-q4_K_M`, manifest digest `a80c4f17…b8b72`, ~2 GB). Then run `python -m src.server --local-meta` (or `run.ps1 -LocalMeta`). Your existing Ollama service is left untouched.
+
+The digest is verified before every call; unknown or retagged models fail closed, and there is no cloud fallback. After inspecting an authorized Android phone, **Request Meta advice** sends only allowlisted numeric facts (battery, free storage, screen timeout), re-read by the server, to the local model. Output is schema-checked English advice with `inspect_only` action; it cannot change the device. A recorded CPU call on synthetic facts is in [docs/local-meta-smoke-receipt.json](docs/local-meta-smoke-receipt.json) (8.4 s, 211 tokens, $0). A local call on real ADB facts is **NOT TESTED** yet.
+
+Llama 3.2 is licensed under the Llama 3.2 Community License, Copyright © Meta Platforms, Inc. Model weights are not included in this repository.

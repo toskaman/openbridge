@@ -24,7 +24,7 @@ def main():
             assert not errors, errors
             page.screenshot(path=str(artifacts / f'{width}-after.png'), full_page=True)
             assert page.locator('html').get_attribute('lang') == 'en'
-            assert page.get_by_role('button', name='Request Meta demo advice').is_disabled()
+            assert page.get_by_role('button', name='Request Meta advice').is_disabled()
             page.get_by_role('button',name='View recorded Meta proof').click()
             page.get_by_text('RECORDED RUN',exact=False).wait_for()
             assert 'no live request was made' in page.locator('#recorded-proof-result').inner_text()
@@ -60,7 +60,7 @@ def main():
             page.get_by_role('radio', name='Freebox gateway').check()
             page.get_by_role('button', name='Identify local Freebox').click()
             page.get_by_text('Gateway identification complete:', exact=False).wait_for()
-            assert page.get_by_role('button', name='Request Meta demo advice').is_disabled()
+            assert page.get_by_role('button', name='Request Meta advice').is_disabled()
             assert 'SIMULATED' not in page.locator('#device').inner_text()
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.screenshot(path=str(artifacts / f'{width}-gateway.png'), full_page=True)

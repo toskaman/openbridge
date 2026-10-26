@@ -78,3 +78,10 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - The capture used a separate temporary synthetic journal; no physical setting write or model request occurred during filming. Desktop input and desktop recording were not used.
 - The encoded preview was verified as H.264, 1920x1080, 30fps, exactly 177 seconds and intentionally without an audio track. Representative Meta-proof and physical-refusal frames were visually checked for readable captions and truthful labels.
 - docs/jury/DEMO_PREVIEW.json records the captured application revision, scene timing, SHA-256 and limitations. The preview does not assert successful physical Undo or a live browser/provider inference.
+
+## Local Meta reasoning
+
+- 81 unit/integration tests PASS (Python 3.10 in the Linux VM). New coverage: pinned digest, fixed loopback endpoint, numeric privacy allowlist, schema/identity rejection, invented-number rejection, ADB vs SIMULATED source routing, one in-flight request and no cloud fallback. HTTP tests confirm only server-reread allowlisted facts reach the local broker and that a cloud broker can never receive physical data.
+- One actual CPU-only call of llama3.2:3b-instruct-q4_K_M (digest verified) on SIMULATED facts: 151 prompt + 60 completion tokens, 8403 ms, 0 bytes VRAM observed, $0 provider cost. See docs/local-meta-smoke-receipt.json.
+- Local review of real ADB facts through the browser: NOT TESTED. Windows unit run and browser e2e for this milestone: NOT RE-RUN.
+- No physical writes, no cloud model calls.

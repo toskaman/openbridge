@@ -11,7 +11,7 @@ def main():
         captured=[]
         page.route('**/api/recommend',lambda route:captured.append(route))
         page.goto('http://127.0.0.1:18765',wait_until='networkidle')
-        button=page.get_by_role('button',name='Request Meta demo advice')
+        button=page.get_by_role('button',name='Request Meta advice')
         assert button.is_enabled()
         button.click()
         page.get_by_text('Requesting Meta Muse Spark 1.3 advice',exact=False).wait_for()

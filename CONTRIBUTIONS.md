@@ -29,3 +29,7 @@ The narrow Android screen-timeout adapter and isolated verification utility were
 ## Android event handling
 
 The on-demand ADB event monitor, redacted local event stream, browser subscription lifecycle and associated tests were authored fresh during the event. The installed ADB framing protocol was verified before parser integration. Process-handoff issues found during review were reproduced in regression tests and corrected. This feature performs discovery only and does not invoke a model or writer.
+
+## Local Meta reasoning
+
+The pinned local Meta broker, private CPU-only service launcher, numeric-fact allowlist, ADB/SIMULATED source routing, schema validation and tests were authored during the event. One controlled local call on synthetic facts produced docs/local-meta-smoke-receipt.json. Llama 3.2 3B is runtime inference here (not development assistance). Claude (Cowork) assisted with finishing documentation and line-ending normalization for this milestone.

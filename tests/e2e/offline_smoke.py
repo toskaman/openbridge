@@ -30,7 +30,7 @@ def main():
                     page.get_by_role('button',name='Refresh demo').click()
                     page.get_by_role('button',name='Inspect evidence').click()
                     page.get_by_text('Inspection complete.',exact=False).wait_for()
-                    assert page.get_by_role('button',name='Request Meta demo advice').is_disabled()
+                    assert page.get_by_role('button',name='Request Meta advice').is_disabled()
                     page.get_by_role('button',name='View recorded Meta proof').click()
                     page.get_by_text('RECORDED RUN',exact=False).wait_for()
                     page.locator('#demo-consent').check()

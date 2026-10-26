@@ -1,0 +1,26 @@
+{
+  "model_id": "llama3.2:3b-instruct-q4_K_M",
+  "provider": "Ollama local CPU",
+  "model_manifest_digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+  "request_id": "local-15371fd94e9e4139b1bcb971fee1af69",
+  "source": "SIMULATED",
+  "proposal": {
+    "summary": "Read-only observation: Battery level is 72%.",
+    "uncertainty": "Device health and write permission are unknown from these limited facts.",
+    "action": "inspect_only",
+    "evidence_refs": [
+      "battery_percent",
+      "storage_free_gb"
+    ]
+  },
+  "usage": {
+    "prompt_tokens": 151,
+    "completion_tokens": 60
+  },
+  "estimated_cost_usd": 0.0,
+  "billing": "LOCAL_COMPUTE_NO_PROVIDER_CREDITS",
+  "elapsed_ms": 8403,
+  "cpu_only_requested": true,
+  "input_sha256": "4c542c3b66bcf687e11cf4e5430e0434b3daa2fc317f89502eda3a54e8f923c5",
+  "observed_size_vram_bytes": 0
+}
