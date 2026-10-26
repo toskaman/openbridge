@@ -7,3 +7,5 @@ Actual Meta calls: Muse Spark 1.3 provided the visual design direction; docs/met
 The browser recommendation endpoint is implemented, with integration and mocked browser tests. Default cloud access stays blocked, and no live browser-to-provider execution is claimed. The runtime-core proof does not demonstrate autonomous physical actions.
 
 Incomplete: physical action and Undo, authenticated second-protocol control, multiple-phone fault-injection evidence, live browser/provider session, 3-minute video and final submission. No bonus eligibility or organizer acceptance is claimed.
+
+The simulated recovery sandbox now supports a durable snapshot/change/read-back/Undo loop, including page reload recovery and injected failures. Its receipt and UI are labeled SIMULATED. This does not close the physical transaction or physical Undo evidence gap.

@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
 import os
+import sqlite3
 from datetime import datetime
 from urllib.parse import urlsplit, parse_qs
 from src.adapters.android import AndroidAdapter
@@ -13,6 +14,8 @@ from src.adapters.freebox import FreeboxAdapter
 from src.adapters.simulated import discover
 from src.core.policy import inspect_device
 from src.ai.broker import RuntimeModelBroker, MetaTransport, CreditPermit, ModelBlocked
+from src.core.transactions import TransactionEngine, TransactionBlocked
+from src.adapters.simulated_setting import SimulatedSetting
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
@@ -72,6 +75,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, {'evidence_kind':'RECORDED_RUNTIME_CORE_CALL','live_request':False,'receipt':receipt})
             except (OSError,ValueError,AttributeError):
                 return self.reply(404, {'error':'No verified recorded model proof available'})
+        if path == '/api/demo-setting':
+            if self.server.demo_engine is None:
+                return self.reply(409, {'error':'Simulated transaction journal unavailable'})
+            try:
+                return self.reply(200,self.server.demo_engine.status())
+            except (TransactionBlocked,OSError,sqlite3.Error):
+                return self.reply(409,{'error':'Simulated transaction journal is busy or unavailable'})
         if path in ASSETS:
             filename, content_type = ASSETS[path]
             return self.reply(200, (UI / filename).read_bytes(), content_type)
@@ -83,7 +93,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -101,6 +111,24 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body, dict) or not isinstance(body.get('device_id'), str):
                 raise ValueError()
             source = body.get('source', 'demo')
+            if self.path == '/api/demo-transaction':
+                if source != 'demo' or body['device_id'] != 'demo-android' or not isinstance(body.get('transaction_id'),str):
+                    raise ValueError('Only the simulated sandbox supports transactions')
+                if self.server.demo_engine is None:
+                    return self.reply(409,{'error':'Simulated transaction journal unavailable'})
+                try:
+                    if body.get('operation')=='apply':
+                        self.server.demo_engine.prepare(body['transaction_id'],body.get('target'),consent=body.get('consent'))
+                        result=self.server.demo_engine.apply(body['transaction_id'])
+                    elif body.get('operation')=='undo':
+                        result=self.server.demo_engine.revert(body['transaction_id'])
+                    else:
+                        raise ValueError('Unknown simulated operation')
+                    return self.reply(200,result)
+                except TransactionBlocked as error:
+                    return self.reply(409,{'error':str(error)})
+                except (OSError,sqlite3.Error):
+                    return self.reply(409,{'error':'Simulated journal unavailable; operation stopped'})
             if self.path == '/api/recommend':
                 if source != 'demo' or body['device_id'] != 'demo-android':
                     raise ValueError('Only synthetic demo facts can be sent')
@@ -124,12 +152,13 @@ class Handler(BaseHTTPRequestHandler):
         return self.reply(200, result)
 
 
-def create_server(port=18765, model_broker=None):
+def create_server(port=18765, model_broker=None, demo_engine=None):
     server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     server.csrf_token = secrets.token_urlsafe(32)
     server.android = AndroidAdapter()
     server.freebox = FreeboxAdapter()
     server.model_broker = model_broker
+    server.demo_engine = demo_engine
     return server
 
 
@@ -147,7 +176,13 @@ def main():
             broker = RuntimeModelBroker(private_root / 'runtime-budget.sqlite', permit, MetaTransport(os.environ['MODEL_API_KEY']))
         except (KeyError,ValueError):
             print('Supervised credit configuration invalid; runtime models disabled.', flush=True)
-    with create_server(args.port, model_broker=broker) as server:
+    private_root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
+    demo_engine=None
+    try:
+        demo_engine=TransactionEngine(private_root/'simulated-transactions.sqlite',SimulatedSetting(private_root/'simulated-setting.sqlite'))
+    except (TransactionBlocked,OSError,sqlite3.Error):
+        print('Simulated transaction journal unavailable; read-only inventory remains available.',flush=True)
+    with create_server(args.port, model_broker=broker,demo_engine=demo_engine) as server:
         print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
         try:
             server.serve_forever()

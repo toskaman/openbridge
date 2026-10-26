@@ -4,7 +4,7 @@ A local device workspace for inspecting facts, understanding permissions and mak
 
 ## Current release: read-only device workshop
 
-Working English browser workspace with an explicitly **SIMULATED** fixture and separate, opt-in **Android USB** and **Freebox gateway** sources. One authorized physical Android phone has been inspected using fixed read-only ADB commands. No device changes or physical Undo are available. Meta Muse Spark 1.3 contributed the visual design; this development use is recorded separately from an actual supervised runtime-core inference on synthetic facts. Default startup keeps cloud requests disabled. Physical actions and Undo remain unavailable.
+Working English browser workspace with an explicitly **SIMULATED** fixture and separate, opt-in **Android USB** and **Freebox gateway** sources. One authorized physical Android phone has been inspected using fixed read-only ADB commands. No physical device changes or physical Undo are available. A separate **SIMULATED change & Undo** sandbox demonstrates durable snapshots and exact restoration without accessing hardware. Meta Muse Spark 1.3 contributed the visual design; this development use is recorded separately from an actual supervised runtime-core inference on synthetic facts. Default startup keeps cloud requests disabled. Physical actions and Undo remain unavailable.
 
 ## Run on Windows
 
@@ -29,6 +29,8 @@ The server binds exclusively to loopback. Exact Host/Origin validation, a per-pr
 ## Project records
 
 Visual design attribution: **Meta Muse Spark 1.3**, actual request on 26 October 2026. See [design receipt](docs/meta-design-receipt.json) and [English design proposal](docs/visual-meta-proposal.md). Estimated token cost: **$0.01219975**, using promotional credits verified in the Meta dashboard before the supervised call. This is an estimate, not a provider invoice. A separate [runtime receipt](docs/runtime-meta-receipt.json) records a real Muse Spark 1.3 advisory call through the application broker, estimated at **$0.00335475**. The interface can display this explicitly recorded proof without spending credits. Live requests require a fresh supervised free-credit observation and conservative durable reservations; see [free-credit operation](docs/safety/FREE_CREDITS.md). A live browser-to-provider session is not claimed.
+
+The simulated recovery sandbox records its snapshot before mutation, verifies read-back, and restores the exact original value. It survives page reloads and refuses external conflicts. See [simulation receipt](docs/simulated-transaction-receipt.json). This is not physical-device rollback evidence. Reproduce the core simulation with `python -m dev.transaction_smoke`; the private journal stays outside Git.
 
 See CONTRIBUTIONS.md for origin, DEVICE_SCOPE.md for supported capabilities, EVIDENCE_LEDGER.md for checks, RISK_REGISTER.md for limitations, and docs/safety/BOUNDARIES.md for the runtime model policy. Preparation documents and utilities are maintained separately and are not included as event-built product work.
 

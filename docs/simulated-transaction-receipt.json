@@ -1,0 +1,21 @@
+{
+  "source": "SIMULATED",
+  "physical_device_access": false,
+  "physical_writes": 0,
+  "transaction_id": "sim-ccc95937d26847c99c7c0268d7b9abd0",
+  "field": "screen_timeout_seconds",
+  "before": 30,
+  "proposed": 60,
+  "observed_after_apply": 60,
+  "observed_after_undo": 30,
+  "final_state": "REVERTED",
+  "events": [
+    "PREPARED",
+    "VERIFIED_BACKUP",
+    "EXECUTING",
+    "VERIFIED",
+    "REVERTING",
+    "REVERTED"
+  ],
+  "limitation": "Synthetic state only. This is not evidence of physical-device rollback."
+}

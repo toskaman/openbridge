@@ -3,6 +3,10 @@ import json
 import threading
 import unittest
 from unittest.mock import patch
+from tempfile import TemporaryDirectory
+from pathlib import Path
+from src.adapters.simulated_setting import SimulatedSetting
+from src.core.transactions import TransactionEngine
 from src.server import create_server
 
 
@@ -82,6 +86,30 @@ class HTTPTests(unittest.TestCase):
         code, body, _ = self.request('POST', '/api/recommend', '{"source":"demo","device_id":"demo-android"}', self.session_headers())
         self.assertEqual(code, 409)
         self.assertIn('error', json.loads(body))
+
+    def test_simulated_transaction_requires_consent_and_restores_exact_value(self):
+        with TemporaryDirectory() as directory:
+            setting=SimulatedSetting(Path(directory)/'setting.sqlite')
+            engine=TransactionEngine(Path(directory)/'journal.sqlite',setting)
+            with patch.object(self.server,'demo_engine',engine):
+                payload={'source':'demo','device_id':'demo-android','operation':'apply','transaction_id':'http-demo','target':60,'consent':False}
+                code,_,_=self.request('POST','/api/demo-transaction',json.dumps(payload),self.session_headers())
+                self.assertEqual(code,409)
+                self.assertEqual(setting.read_setting(),30)
+                payload['consent']=True
+                code,body,_=self.request('POST','/api/demo-transaction',json.dumps(payload),self.session_headers())
+                self.assertEqual(code,200)
+                self.assertEqual(json.loads(body)['state'],'VERIFIED')
+                self.assertEqual(setting.read_setting(),60)
+                payload['operation']='undo'
+                code,body,_=self.request('POST','/api/demo-transaction',json.dumps(payload),self.session_headers())
+                self.assertEqual(code,200)
+                self.assertEqual(json.loads(body)['state'],'REVERTED')
+                self.assertEqual(setting.read_setting(),30)
+
+    def test_physical_source_cannot_use_simulated_transaction_route(self):
+        payload='{"source":"android","device_id":"some-phone","operation":"apply"}'
+        self.assertEqual(self.request('POST','/api/demo-transaction',payload,self.session_headers())[0],400)
 
     def test_real_device_data_cannot_be_sent_to_model(self):
         code, _, _ = self.request('POST', '/api/recommend', '{"source":"android","device_id":"some-device"}', self.session_headers())

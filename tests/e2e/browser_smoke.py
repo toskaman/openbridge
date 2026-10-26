@@ -1,6 +1,7 @@
 """Optional browser check: install Playwright and Chromium separately."""
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
+import re
 
 
 def main():
@@ -27,6 +28,20 @@ def main():
             page.get_by_role('button',name='View recorded Meta proof').click()
             page.get_by_text('RECORDED RUN',exact=False).wait_for()
             assert 'no live request was made' in page.locator('#recorded-proof-result').inner_text()
+            page.locator('#demo-consent').check()
+            change=page.get_by_role('button',name='Run simulated change')
+            expect(change).to_be_enabled()
+            initial=page.locator('#demo-setting-state').inner_text()
+            original=re.search(r'Screen timeout: (\d+)s',initial).group(1)
+            change.click()
+            expect(page.locator('#transaction-result')).to_contain_text('SIMULATED · VERIFIED.')
+            page.reload(wait_until='networkidle')
+            undo=page.get_by_role('button',name='Undo simulated change')
+            expect(undo).to_be_enabled()
+            undo.click()
+            expect(page.locator('#transaction-result')).to_contain_text('SIMULATED · REVERTED.')
+            expect(page.locator('#demo-setting-state')).to_contain_text(f'Screen timeout: {original}s.')
+            page.screenshot(path=str(artifacts / f'{width}-recovery.png'),full_page=True)
             page.route('**/api/devices?source=demo', lambda route: route.abort())
             page.get_by_role('button', name='Refresh demo').click()
             page.get_by_text('Inventory failed:', exact=False).wait_for()

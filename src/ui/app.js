@@ -73,6 +73,7 @@ for (const radio of document.querySelectorAll('input[name="source"]')) radio.add
   generation++; resetEvidence(); devicePanel.replaceChildren(element('p', 'Source changed. Start a new inventory.'));
   document.querySelector('#device-count').textContent = 'NOT LISTED';
   const demo = source() === 'demo';
+  syncTransactionControls();
   metaButton.disabled = !demo || !metaSessionConfigured || metaPending;
   document.querySelector('#meta-result').textContent = demo ? 'Synthetic facts only. Explicit request required.' : 'Meta requests are unavailable for real device data.';
   discoverButton.textContent = demo ? 'Refresh demo ↗' : source() === 'android' ? 'List USB devices ↗' : 'Identify local Freebox ↗';
@@ -80,6 +81,52 @@ for (const radio of document.querySelectorAll('input[name="source"]')) radio.add
   banner.replaceChildren(element('strong', demo ? 'SIMULATED / DEMO' : source() === 'android' ? 'USB / READ-ONLY' : 'FREEBOX / PUBLIC IDENTITY'), element('span', demo ? 'Synthetic data. No real measurements.' : source() === 'android' ? 'Authorized ADB devices only. No writes.' : 'Documented discovery endpoint only. No pairing or router changes.'));
   statusLine.textContent = 'Source selected. Inventory has not started.';
 });
+
+let demoState = null;
+let transactionPending = false;
+const consentInput = document.querySelector('#demo-consent');
+const changeButton = document.querySelector('#demo-change');
+const undoButton = document.querySelector('#demo-undo');
+function syncTransactionControls() {
+  const available = source() === 'demo' && demoState !== null && !transactionPending;
+  consentInput.disabled = source() !== 'demo' || transactionPending;
+  changeButton.disabled = !available || !consentInput.checked || Boolean(demoState.active);
+  undoButton.disabled = !available || !demoState.active;
+}
+async function loadDemoState() {
+  try {
+    demoState = await request('/api/demo-setting');
+    document.querySelector('#demo-setting-state').textContent = `SIMULATED · Screen timeout: ${demoState.current_value}s. ${demoState.active ? `Journal state: ${demoState.active.state}.` : 'No active transaction.'}`;
+  } catch (error) {
+    demoState = null;
+    document.querySelector('#demo-setting-state').textContent = `Simulated journal unavailable: ${error.message}`;
+  }
+  syncTransactionControls();
+}
+consentInput.addEventListener('change', syncTransactionControls);
+async function runDemoTransaction(operation) {
+  if (source() !== 'demo' || transactionPending || !demoState) return;
+  if (operation === 'apply' && !consentInput.checked) return;
+  transactionPending = true; syncTransactionControls();
+  const target = document.querySelector('#transaction-result');
+  target.textContent = 'SIMULATED transaction in progress…';
+  const id = operation === 'undo' ? demoState.active?.id : `ui-${crypto.randomUUID()}`;
+  try {
+    if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
+    const result = await request('/api/demo-transaction', {
+      method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},
+      body:JSON.stringify({source:'demo',device_id:'demo-android',operation,transaction_id:id,
+        target:demoState.current_value === 60 ? 30 : 60,consent:consentInput.checked}),
+    });
+    target.textContent = `SIMULATED · ${result.state}. Original: ${result.before}s. Proposed: ${result.target}s. ${result.state === 'REVERTED' ? 'Undo verified against the saved snapshot.' : 'Synthetic read-back verified. Undo is available.'} No physical device was accessed.`;
+    statusLine.textContent = `SIMULATED transaction ${result.state}. No physical device was accessed.`;
+    if (result.state === 'REVERTED') consentInput.checked = false;
+  } catch (error) { target.textContent = `SIMULATED operation blocked: ${error.message}. Check the saved journal state.`; }
+  finally { transactionPending = false; await loadDemoState(); }
+}
+changeButton.addEventListener('click', () => runDemoTransaction('apply'));
+undoButton.addEventListener('click', () => runDemoTransaction('undo'));
+loadDemoState();
 
 request('/api/model-status').then(state => {
   metaSessionConfigured = state.supervised_session_configured;

@@ -17,3 +17,7 @@ The Android adapter, tests and source-selection workflow were authored fresh dur
 The Meta-only runtime broker, durable local credit reservations, synthetic-only advisory endpoint, recorded-proof display, Freebox public-discovery adapter and associated tests were authored during the event. A real Muse Spark 1.3 request through the runtime core produced the sanitized receipt in docs/runtime-meta-receipt.json. This is separate from the earlier Meta visual-design contribution. The isolated verifier leaves the key out of the browser server and requires PowerShell 7.
 
 The browser's live-provider path has integration and mocked UI tests; only the isolated runtime-core call has real provider evidence so far. Public gateway identity was read from the owned Freebox without authentication or configuration changes. No private device identifiers or account credentials are included.
+
+## Simulated recovery milestone
+
+The SQLite transaction engine, persistent synthetic setting, simulated-only HTTP controls and change/Undo interface were freshly authored during the event. Unit fault injection and browser reload recovery were performed. The actual simulation trace is in docs/simulated-transaction-receipt.json. It is explicitly excluded from physical-device rollback claims. Read-only review identified an interrupted-preparation recovery gap; a regression test reproduced it before the fix.
