@@ -72,3 +72,14 @@ class LocalMetaTests(unittest.TestCase):
     def test_overconfident_or_missing_limit_statement_is_rejected(self):
         content=json.dumps({'summary':'Battery is 72 percent.','evidence_refs':['battery_percent'],'action':'inspect_only','uncertainty':'No uncertainty available.'})
         with self.assertRaises(ModelBlocked):self.broker(content=content).recommend({'battery_percent':72})
+
+
+class GlimmerTests(unittest.TestCase):
+    def test_glimmer_is_pinned_and_fails_closed_on_other_digest(self):
+        from src.ai.glimmer import GlimmerBroker, GLIMMER_ID, GLIMMER_DIGEST
+        b=GlimmerBroker(catalog=lambda:{'models':[{'name':GLIMMER_ID,'digest':'sha256:'+'0'*64}]},chat=lambda p:self.fail('no call'))
+        self.assertFalse(b.ready())
+        with self.assertRaises(ModelBlocked):b.recommend({'battery_percent':72})
+        b2=GlimmerBroker(catalog=lambda:{'models':[{'name':MODEL_ID,'digest':MODEL_DIGEST}]})
+        self.assertFalse(b2.ready())
+        self.assertEqual(b.endpoint,'http://127.0.0.1:11438')

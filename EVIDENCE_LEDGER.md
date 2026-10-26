@@ -116,3 +116,9 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - Real browser run (Chromium, 390 and 1440 px, tests/e2e/agent_physical_smoke.py): plan for com.miui.compass, consent, execute, Undo; no page errors or horizontal overflow. Raw dumpsys afterwards: all three candidate apps enabled=0.
 - With goal=review the model returned inspect_only (gate NO_ACTION). One plan was rejected by the grounding check before the prompt template was tightened; the system failed closed.
 - Offline browser e2e still PASS at 390/768/1440/3440.
+
+## Runtime Meta-only registry (product-enforced)
+
+- New src/ai/registry.py: the shipped runtime manifest is loaded fail-closed; non-Meta or unknown model IDs and non-Meta endpoints are rejected (matrix R04/R05/R06). `--local-meta` startup refuses a model/endpoint pair absent from the manifest. A source scan test fails on any non-Meta inference client string in src/ (R12, static only).
+- Every broker class (cloud Muse Spark, local Llama, local Muse Glimmer) is asserted to be declared in the manifest. 108 tests PASS (Linux VM).
+- Muse Glimmer broker added but fails closed: its digest is PENDING until verified from the official registry pull.

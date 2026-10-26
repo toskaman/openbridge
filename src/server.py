@@ -20,6 +20,7 @@ from src.adapters.simulated_setting import SimulatedSetting
 from src.adapters.android_events import AndroidEventMonitor
 from src.ai.local_meta import LocalMetaBroker
 from src.core.agent import DeviceAgent, AgentBlocked
+from src.ai import registry
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
@@ -241,6 +242,7 @@ def main():
     broker = None
     if args.local_meta:
         broker=LocalMetaBroker()
+        registry.require(broker.model_id,broker.endpoint)
     elif os.environ.get('MODEL_API_KEY') and os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
         try:
             permit = CreditPermit(os.environ['OPENBRIDGE_CREDIT_OBSERVATION_ID'],

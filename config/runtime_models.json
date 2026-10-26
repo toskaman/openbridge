@@ -14,8 +14,16 @@
       "provider": "ollama",
       "model_id": "llama3.2:3b-instruct-q4_K_M",
       "execution": "local",
-      "endpoint": "http://127.0.0.1:11437/api/chat",
+      "endpoint": "http://127.0.0.1:11437",
       "manifest_digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72"
+    },
+    {
+      "purpose": "explicit_local_agent_plan_open_weights",
+      "provider": "ollama",
+      "model_id": "muse-glimmer:30b-q4_K_M",
+      "execution": "local",
+      "endpoint": "http://127.0.0.1:11438",
+      "manifest_digest": "PENDING_VERIFIED_PULL"
     }
   ],
   "notes": "Default inference disabled. Explicit local Meta CPU option has no cloud fallback or provider cost. Hosted Meta accepts synthetic facts only under supervised free-credit checks. No automatic model requests."

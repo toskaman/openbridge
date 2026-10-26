@@ -18,12 +18,12 @@ GOALS={'review':'Review the device state only. Prefer inspect_only.',
 UNCERTAINTY_LIMIT='Device health and write permission are unknown from these limited facts.'
 
 
-def local_request(path,payload=None):
+def local_request(path,payload=None,endpoint=LOCAL_ENDPOINT,timeout=120):
     if path not in ('/api/tags','/api/chat'):
         raise ModelBlocked('Unapproved local model endpoint')
     data=None if payload is None else json.dumps(payload).encode()
-    request=Request(LOCAL_ENDPOINT+path,data=data,headers={'Content-Type':'application/json'},method='GET' if data is None else 'POST')
-    with build_opener(ProxyHandler({}),NoRedirect()).open(request,timeout=3 if path=='/api/tags' else 120) as response:
+    request=Request(endpoint+path,data=data,headers={'Content-Type':'application/json'},method='GET' if data is None else 'POST')
+    with build_opener(ProxyHandler({}),NoRedirect()).open(request,timeout=3 if path=='/api/tags' else timeout) as response:
         body=response.read(131073)
         if len(body)>131072:raise ModelBlocked('Local model response too large')
         return json.loads(body)
@@ -32,23 +32,29 @@ def local_request(path,payload=None):
 class LocalMetaBroker:
     local_only=True
     model_id=MODEL_ID
+    model_digest=MODEL_DIGEST
+    endpoint=LOCAL_ENDPOINT
+    provider='Ollama local CPU'
+    options={'temperature':0,'num_gpu':0,'num_thread':4,'num_ctx':2048,'num_predict':384}
+    extra={}
+    timeout=120
     inference_mode='local'
 
     def __init__(self,catalog=None,chat=None):
-        self.catalog=catalog or (lambda:local_request('/api/tags'))
-        self.chat=chat or (lambda payload:local_request('/api/chat',payload))
+        self.catalog=catalog or (lambda:local_request('/api/tags',endpoint=self.endpoint))
+        self.chat=chat or (lambda payload:local_request('/api/chat',payload,endpoint=self.endpoint,timeout=self.timeout))
         self._inflight=threading.Lock()
 
     def ready(self):
         try:
             rows=self.catalog().get('models',[])
-            match=next((row for row in rows if row.get('name')==MODEL_ID),None)
-            return bool(match and match.get('digest','').removeprefix('sha256:')==MODEL_DIGEST)
+            match=next((row for row in rows if row.get('name')==self.model_id),None)
+            return bool(match and match.get('digest','').removeprefix('sha256:')==self.model_digest)
         except Exception:return False
 
     def _call(self,payload):
         response=self.chat(payload)
-        if response.get('model')!=MODEL_ID or response.get('done') is not True or response.get('done_reason')!='stop':
+        if response.get('model')!=self.model_id or response.get('done') is not True or response.get('done_reason')!='stop':
             raise ModelBlocked('Local model identity or completion state is invalid')
         message=response['message']
         if message.get('tool_calls') or not isinstance(message.get('content'),str) or len(message['content'])>16384:
@@ -76,8 +82,8 @@ class LocalMetaBroker:
                     'action':{'type':'string','enum':['inspect_only']+(['disable_optional_app'] if eligible else [])},
                     'package':{'type':'string','enum':['']+eligible},
                     'evidence_refs':{'type':'array','minItems':1,'uniqueItems':True,'items':{'type':'string','enum':refs}}}}
-            payload={'model':MODEL_ID,'stream':False,'format':schema,'keep_alive':'30s',
-                'options':{'temperature':0,'num_gpu':0,'num_thread':4,'num_ctx':2048,'num_predict':384},
+            payload={'model':self.model_id,'stream':False,'format':schema,'keep_alive':'30s',**self.extra,
+                'options':dict(self.options),
                 'messages':[{'role':'system','content':
                     'You are the planning step of a device assistant. Respond in English only as compact JSON matching the schema. '
                     'Goal: help the owner declutter by proposing at most ONE reversible step: temporarily disabling one optional utility app from the supplied candidate list, '
@@ -113,10 +119,10 @@ class LocalMetaBroker:
             if proposal['action']=='disable_optional_app' and proposal['package'] not in proposal['summary']:
                 raise ModelBlocked('Agent plan summary must name the proposed app')
             if not self.ready():raise ModelBlocked('Local model digest changed during inference')
-            return {'model_id':MODEL_ID,'provider':'Ollama local CPU','model_manifest_digest':MODEL_DIGEST,
+            return {'model_id':self.model_id,'provider':self.provider,'model_manifest_digest':self.model_digest,
                 'request_id':'local-'+uuid.uuid4().hex,'proposal':proposal,
                 'usage':{'prompt_tokens':response['prompt_eval_count'],'completion_tokens':response['eval_count']},
-                'estimated_cost_usd':0.0,'elapsed_ms':round((time.monotonic()-started)*1000),'cpu_only_requested':True,
+                'estimated_cost_usd':0.0,'elapsed_ms':round((time.monotonic()-started)*1000),'cpu_only_requested':self.options.get('num_gpu')==0,
                 'goal':goal,'input_sha256':hashlib.sha256(json.dumps({'f':facts,'c':candidates,'g':goal},sort_keys=True).encode()).hexdigest()}
         except ModelBlocked:raise
         except Exception:
@@ -139,8 +145,8 @@ class LocalMetaBroker:
                 'properties':{'summary':{'type':'string'},'uncertainty':{'type':'string','enum':[UNCERTAINTY_LIMIT]},
                     'action':{'type':'string','enum':['inspect_only']},
                     'evidence_refs':{'type':'array','minItems':1,'uniqueItems':True,'items':{'type':'string','enum':list(facts)}}}}
-            payload={'model':MODEL_ID,'stream':False,'format':schema,'keep_alive':'30s',
-                'options':{'temperature':0,'num_gpu':0,'num_thread':4,'num_ctx':2048,'num_predict':384},
+            payload={'model':self.model_id,'stream':False,'format':schema,'keep_alive':'30s',**self.extra,
+                'options':dict(self.options),
                 'messages':[{'role':'system','content':
                     'Respond in English only, as a compact JSON object matching the schema. Review only the supplied numeric facts. '
                     'Repeat supplied numbers exactly; do not invent numbers or derive quantities. Reference only supplied fact keys. '
@@ -150,7 +156,7 @@ class LocalMetaBroker:
                     {'role':'user','content':json.dumps({'source':source,'facts':facts},sort_keys=True)}]}
             started=time.monotonic()
             response=self.chat(payload)
-            if response.get('model')!=MODEL_ID or response.get('done') is not True or response.get('done_reason')!='stop':
+            if response.get('model')!=self.model_id or response.get('done') is not True or response.get('done_reason')!='stop':
                 raise ModelBlocked('Local model identity or completion state is invalid')
             message=response['message']
             if message.get('tool_calls') or not isinstance(message.get('content'),str) or len(message['content'])>16384:
@@ -177,11 +183,11 @@ class LocalMetaBroker:
                 if type(response.get(key)) is not int or not 0<=response[key]<=8192:
                     raise ModelBlocked('Local usage metadata is invalid')
             if not self.ready():raise ModelBlocked('Local model digest changed during inference')
-            return {'model_id':MODEL_ID,'provider':'Ollama local CPU','model_manifest_digest':MODEL_DIGEST,
+            return {'model_id':self.model_id,'provider':self.provider,'model_manifest_digest':self.model_digest,
                 'request_id':'local-'+uuid.uuid4().hex,'source':source,'proposal':proposal,
                 'usage':{'prompt_tokens':response['prompt_eval_count'],'completion_tokens':response['eval_count']},
                 'estimated_cost_usd':0.0,'billing':'LOCAL_COMPUTE_NO_PROVIDER_CREDITS',
-                'elapsed_ms':round((time.monotonic()-started)*1000),'cpu_only_requested':True,
+                'elapsed_ms':round((time.monotonic()-started)*1000),'cpu_only_requested':self.options.get('num_gpu')==0,
                 'input_sha256':hashlib.sha256(json.dumps(facts,sort_keys=True).encode()).hexdigest()}
         except ModelBlocked:raise
         except Exception:
