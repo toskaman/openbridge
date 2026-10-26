@@ -21,3 +21,14 @@ A separate opt-in CLI adapter is restricted to the screen_off_timeout setting on
 ## Local Meta review
 
 With `--local-meta`, an inspected Android phone's allowlisted numeric facts may be reviewed by a pinned local Llama 3.2 3B model on this PC. Advice is inspect-only; no write path exists. Freebox data is never sent to a model.
+
+## Device Fabric scope (27 Oct 2026)
+
+| Device / protocol | Discovery | Read | Write | Undo | Status |
+|---|---|---|---|---|---|
+| LAN devices via mDNS | yes | announced services only | no | — | REAL_HARDWARE_VERIFIED |
+| Freebox (app authorized) | yes | LAN inventory, identity | blocked by policy | — | REAL_HARDWARE_VERIFIED |
+| Android phone (USB / Wi-Fi ADB) | yes | 12 facts | one allowlisted optional app state | exact | REAL (USB) / Wi-Fi via TV |
+| Android TV (ADB Wi-Fi) | yes | 11 facts | same allowlist | exact | REAL_HARDWARE_VERIFIED (inspect) |
+| BLE via Companion relay | via phone/TV | advertisement only | no | — | REAL_HARDWARE_VERIFIED |
+| BLE on the PC | needs adapter | advertisement only | no | — | NOT_SUPPORTED on test PC |

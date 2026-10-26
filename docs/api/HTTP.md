@@ -9,3 +9,13 @@
 - No other write endpoint exists. Unknown routes return 404; invalid host/origin/token returns 403; malformed input returns 400; excessive input returns 413.
 
 Only 127.0.0.1 with the configured port is an accepted Host. Static assets are limited to /, /style.css and /app.js.
+
+## Device Fabric routes
+- GET /api/fabric · POST /api/fabric-discover {device_id:'fabric', providers?} (single-flight)
+- GET /api/freebox-authorization · POST /api/freebox-authorize {device_id:'freebox-local'}
+- POST /api/tv-adb-connect {device_id:<device key>} (one connection to that TV's private IPv4:5555)
+- POST /api/companion-install {device_id:<adb handle>} · GET /api/companion-install
+- POST /api/relay-pair-start / relay-pair-confirm {code} / relay-scan {relay_id, seconds}
+- POST /api/fabric-advise {device_id:'fabric', goal}
+- GET /api/session-changes · POST /api/session-restore {device_id:'session', restore:[ids]}
+All POST routes require exact Host, Origin and the per-process CSRF token.

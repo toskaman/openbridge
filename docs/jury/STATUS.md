@@ -1,14 +1,9 @@
-# Demonstration status
+# Demonstration status (27 Oct 2026)
 
-**Verified on real hardware (one owned Android phone, Windows PC):**
-- Read-only ADB inspection, live connection events, Freebox public identity (read-only second protocol).
-- Real in-product Meta inference: pinned local Llama 3.2 3B (CPU, digest-verified) reviews real ADB facts; summaries must state exact values. Cloud Muse Spark 1.3 runtime-core call on synthetic facts (recorded).
-- Physical reversible change with exact Undo: one allowlisted optional app disabled for user 0 and restored to its exact original Android enabled-state code, independently confirmed with dumpsys (docs/physical-package-receipt.json).
-- Verifiable agent loop in the browser: observe -> Meta plan -> deterministic gate -> owner consent -> act -> independent read-back -> exact Undo (docs/agent-loop-receipt.json).
-- Product-enforced Meta-only runtime registry.
+Real hardware (author's home): Windows PC without Bluetooth, Freebox v7, Xiaomi Android 14 phone (USB), Android 11 TV (ADB Wi-Fi), LG webOS TV and other LAN devices (observed only).
 
-**Simulated and labeled:** demo fixture and the persistent change/Undo sandbox.
+Verified: mDNS discovery; Freebox app authorization and read-only LAN inventory; phone and TV inspection; strong identity merge of the TV (mDNS + ADB via Bluetooth address); BLE relay through the phone (USB) and through the TV (LAN); Meta planning and explanation with Llama 3.2 3B and Muse Glimmer 30B; consent-gated reversible change with exact Undo; crash recovery; session restore of pre-session settings; Meta-only runtime registry.
 
-**Not yet verified:** Muse Glimmer inference (download in progress; route fails closed until digest pinned), model benchmark results, multiple phones, physical unplug during a write, clean-machine reproduction, final video and submission. No bonus eligibility or organizer acceptance is claimed.
+Simulated and labelled: the demo fixture and its persistent change/Undo sandbox; hermetic UI suites in CI.
 
-The earlier screen-timeout write was refused by Android; that refusal record stays published.
+Not verified: cable unplug during a write; Bluetooth on the PC itself (no adapter); OpenWrt/FRITZ!Box/Home Assistant/ESPHome/Matter/Zigbee (not implemented); more than one phone and one Android TV model. No bonus eligibility or organizer acceptance is claimed. Final video: pending (recorded only once the project is complete).

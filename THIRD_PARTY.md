@@ -7,3 +7,6 @@ Development browser verification pins Playwright 1.63.0 (Apache-2.0), with pyee 
 Playwright package reference: https://pypi.org/project/playwright/1.63.0/.
 
 Optional local runtime model: Meta Llama 3.2 3B Instruct (`llama3.2:3b-instruct-q4_K_M`), Llama 3.2 Community License, Copyright © Meta Platforms, Inc. All Rights Reserved. Built with Llama. Weights are downloaded by the user from the official Ollama registry into a private directory and are not redistributed. Ollama is installed separately (MIT). License: https://www.llama.com/llama3_2/license/
+
+Optional PC Bluetooth: bleak 3.0.2 (MIT) with winrt-runtime on Windows, installed separately; not bundled.
+Companion build: official Android SDK command-line tools, build-tools 34.0.0 and platform android-34 (Android Software Development Kit License, accepted by the participant); the Companion uses only Android framework APIs and no third-party libraries. The SDK is not redistributed.
