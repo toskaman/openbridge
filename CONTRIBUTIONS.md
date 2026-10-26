@@ -21,3 +21,7 @@ The browser's live-provider path has integration and mocked UI tests; only the i
 ## Simulated recovery milestone
 
 The SQLite transaction engine, persistent synthetic setting, simulated-only HTTP controls and change/Undo interface were freshly authored during the event. Unit fault injection and browser reload recovery were performed. The actual simulation trace is in docs/simulated-transaction-receipt.json. It is explicitly excluded from physical-device rollback claims. Read-only review identified an interrupted-preparation recovery gap; a regression test reproduced it before the fix.
+
+## Physical refusal handling
+
+The narrow Android screen-timeout adapter and isolated verification utility were freshly authored with mocked safety tests before one authorized physical attempt. That attempt was refused by Android; the journal recovered to the original state, which was independently checked. The public record explicitly reports failure rather than claiming physical Undo. This work used no additional model API calls or external device-data transfer.

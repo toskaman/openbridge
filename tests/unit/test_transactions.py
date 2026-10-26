@@ -48,6 +48,12 @@ class TransactionTests(unittest.TestCase):
                 self.prepare(target=value,consent=consent)
         self.assertFalse(self.adapter.writes)
 
+    def test_physical_adapter_requires_explicit_opt_in(self):
+        self.adapter.source='ADB'
+        with self.assertRaises(TransactionBlocked):TransactionEngine(self.path,self.adapter)
+        engine=TransactionEngine(self.path,self.adapter,allow_physical=True)
+        self.assertEqual(engine.prepare('physical-test',60,consent=True)['source'],'ADB')
+
     def test_backup_is_durable_before_write(self):
         self.prepare()
         def write(value):

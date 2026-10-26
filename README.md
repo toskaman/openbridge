@@ -35,3 +35,9 @@ The simulated recovery sandbox records its snapshot before mutation, verifies re
 See CONTRIBUTIONS.md for origin, DEVICE_SCOPE.md for supported capabilities, EVIDENCE_LEDGER.md for checks, RISK_REGISTER.md for limitations, and docs/safety/BOUNDARIES.md for the runtime model policy. Preparation documents and utilities are maintained separately and are not included as event-built product work.
 
 MIT licensed. Python's standard library and browser-native APIs are the only runtime dependencies.
+
+## Controlled physical-write status
+
+An isolated, explicitly opted-in verifier exists for one authorized USB phone's screen timeout. The tested phone **rejected the write**. The exact original value was independently read back and preserved; no successful physical change or physical Undo is claimed. See [recorded blocked attempt](docs/physical-transaction-attempt.json).
+
+The web interface remains physically read-only, even if a physical engine is accidentally supplied to its simulated sandbox route. Do not retry the physical verifier without reviewing the existing evidence and the device's normal authorization. It never roots a phone or bypasses protected consent. Recovery-only mode can inspect/restore an interrupted journal without initiating a new change: `python -m dev.physical_transaction_smoke --confirm-owned-device --recover-only`.

@@ -76,7 +76,7 @@ class Handler(BaseHTTPRequestHandler):
             except (OSError,ValueError,AttributeError):
                 return self.reply(404, {'error':'No verified recorded model proof available'})
         if path == '/api/demo-setting':
-            if self.server.demo_engine is None:
+            if self.server.demo_engine is None or self.server.demo_engine.adapter.source != 'SIMULATED':
                 return self.reply(409, {'error':'Simulated transaction journal unavailable'})
             try:
                 return self.reply(200,self.server.demo_engine.status())
@@ -114,7 +114,7 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == '/api/demo-transaction':
                 if source != 'demo' or body['device_id'] != 'demo-android' or not isinstance(body.get('transaction_id'),str):
                     raise ValueError('Only the simulated sandbox supports transactions')
-                if self.server.demo_engine is None:
+                if self.server.demo_engine is None or self.server.demo_engine.adapter.source != 'SIMULATED':
                     return self.reply(409,{'error':'Simulated transaction journal unavailable'})
                 try:
                     if body.get('operation')=='apply':

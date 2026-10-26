@@ -2,7 +2,7 @@ import http.client
 import json
 import threading
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from src.adapters.simulated_setting import SimulatedSetting
@@ -110,6 +110,14 @@ class HTTPTests(unittest.TestCase):
     def test_physical_source_cannot_use_simulated_transaction_route(self):
         payload='{"source":"android","device_id":"some-phone","operation":"apply"}'
         self.assertEqual(self.request('POST','/api/demo-transaction',payload,self.session_headers())[0],400)
+
+    def test_misconfigured_physical_engine_cannot_be_called_from_demo_route(self):
+        engine=Mock()
+        engine.adapter.source='ADB'
+        with patch.object(self.server,'demo_engine',engine):
+            payload='{"source":"demo","device_id":"demo-android","operation":"apply","transaction_id":"test","consent":true,"target":60}'
+            self.assertEqual(self.request('POST','/api/demo-transaction',payload,self.session_headers())[0],409)
+            engine.prepare.assert_not_called()
 
     def test_real_device_data_cannot_be_sent_to_model(self):
         code, _, _ = self.request('POST', '/api/recommend', '{"source":"android","device_id":"some-device"}', self.session_headers())

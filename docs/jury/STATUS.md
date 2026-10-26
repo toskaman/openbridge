@@ -9,3 +9,5 @@ The browser recommendation endpoint is implemented, with integration and mocked 
 Incomplete: physical action and Undo, authenticated second-protocol control, multiple-phone fault-injection evidence, live browser/provider session, 3-minute video and final submission. No bonus eligibility or organizer acceptance is claimed.
 
 The simulated recovery sandbox now supports a durable snapshot/change/read-back/Undo loop, including page reload recovery and injected failures. Its receipt and UI are labeled SIMULATED. This does not close the physical transaction or physical Undo evidence gap.
+
+One controlled physical setting attempt was refused by Android. The original setting was preserved and independently verified. This adds real permission-refusal evidence, not physical action/Undo success. Continue the read-only multi-device demonstration unless normal device authorization later supports a separately reviewed reversible operation.

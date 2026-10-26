@@ -1,4 +1,4 @@
-"""Durable, simulated-only reversible-setting transactions. No hardware writer."""
+"""Durable reversible-setting transactions; physical adapters require explicit opt-in."""
 from contextlib import contextmanager, closing
 import hashlib
 import json
@@ -15,9 +15,10 @@ class TransactionBlocked(ValueError):
 
 
 class TransactionEngine:
-    def __init__(self, journal_path, adapter):
-        if getattr(adapter,'source',None) != 'SIMULATED':
-            raise TransactionBlocked('This transaction milestone is simulated-only')
+    def __init__(self, journal_path, adapter, *, allow_physical=False):
+        source=getattr(adapter,'source',None)
+        if source != 'SIMULATED' and not (source=='ADB' and allow_physical is True):
+            raise TransactionBlocked('Physical adapters require explicit transaction opt-in')
         self.path=Path(journal_path)
         self.path.parent.mkdir(parents=True,exist_ok=True)
         self.adapter=adapter
@@ -82,7 +83,7 @@ class TransactionEngine:
             raise TransactionBlocked('Unknown transaction')
         if row['resource'] != self.adapter.identity or row['snapshot_hash'] != self._hash(row['resource'],row['before_value'],row['target']):
             raise TransactionBlocked('Device identity or snapshot integrity check failed')
-        return {'id':row['id'],'source':'SIMULATED','field':'screen_timeout_seconds',
+        return {'id':row['id'],'source':self.adapter.source,'field':'screen_timeout_seconds',
                 'before':row['before_value'],'target':row['target'],'state':row['state']}
 
     def _state(self,transaction_id,expected,new_state):
@@ -98,7 +99,7 @@ class TransactionEngine:
         with self._exclusive():
             with self._db() as db:
                 row=db.execute("SELECT id FROM transactions WHERE resource=? AND state != 'REVERTED'",(self.adapter.identity,)).fetchone()
-            return {'source':'SIMULATED','field':'screen_timeout_seconds',
+            return {'source':self.adapter.source,'field':'screen_timeout_seconds',
                     'current_value':self.adapter.read_setting(),'active':self.get(row['id']) if row else None}
 
     def prepare(self,transaction_id,target,*,consent=False):

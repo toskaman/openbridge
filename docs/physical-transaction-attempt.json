@@ -1,0 +1,23 @@
+{
+  "source": "ADB",
+  "simulated": false,
+  "outcome": "PHYSICAL_WRITE_BLOCKED",
+  "field": "screen_timeout_seconds",
+  "original": 600,
+  "proposed": 60,
+  "observed_after_attempt": 600,
+  "original_preserved": true,
+  "applied_target_verified": false,
+  "journal_state": "REVERTED",
+  "events": [
+    "PREPARED",
+    "VERIFIED_BACKUP",
+    "EXECUTING",
+    "QUARANTINED",
+    "REVERTED"
+  ],
+  "platform_diagnostic": "WRITE_SETTINGS operation rejection observed",
+  "new_write_attempts_during_verification": 0,
+  "recorded_at": "2026-10-26T18:22:13.130509+01:00",
+  "limitation": "This proves safe refusal and original-state preservation, not successful physical change or Undo."
+}
