@@ -85,3 +85,8 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - One actual CPU-only call of llama3.2:3b-instruct-q4_K_M (digest verified) on SIMULATED facts: 151 prompt + 60 completion tokens, 8403 ms, 0 bytes VRAM observed, $0 provider cost. See docs/local-meta-smoke-receipt.json.
 - Local review of real ADB facts through the browser: NOT TESTED. Windows unit run and browser e2e for this milestone: NOT RE-RUN.
 - No physical writes, no cloud model calls.
+
+## Windows run_all (2026-10-26 19:03 UTC)
+
+- verify.ps1 exit: 0. Offline browser e2e exit: 1.
+- Local Meta review of real ADB facts: NOT_TESTED.
