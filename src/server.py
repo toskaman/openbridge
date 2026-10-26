@@ -133,7 +133,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -182,6 +182,8 @@ class Handler(BaseHTTPRequestHandler):
                         goal=body.get('goal','review')
                         if goal not in ('review','declutter'):raise ValueError()
                         return self.reply(200,agent.plan(body['device_id'],goal))
+                    if self.path=='/api/agent-recover':
+                        return self.reply(200,{'recovered':agent.recover(body['device_id'])})
                     plan_id=body.get('plan_id')
                     if not isinstance(plan_id,str):raise ValueError()
                     if self.path=='/api/agent-execute':

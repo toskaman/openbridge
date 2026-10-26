@@ -29,7 +29,28 @@ class DeviceAgent:
             except ValueError:continue  # Not installed or unverifiable: never a candidate.
         return found
 
+    def pending(self,handle):
+        """Allowlisted packages with an unfinished journaled change (e.g. after a server restart)."""
+        out=[]
+        for package,(adapter,_) in self._adapters(handle).items():
+            if self.engine_factory(adapter).status()['active']:out.append(package)
+        return out
+
+    def recover(self,handle):
+        """Restore every unfinished change to its exact journaled original. Never starts a new change."""
+        results=[]
+        for package,(adapter,_) in self._adapters(handle).items():
+            engine=self.engine_factory(adapter);active=engine.status()['active']
+            if not active:continue
+            done=engine.revert(active['id']);after=adapter.read_setting()
+            exact=done['state']=='REVERTED' and after==active['before']
+            if not exact:raise AgentBlocked(f'Recovery of {package} could not be verified')
+            results.append({'package':package,'state':'REVERTED','restored_code':after,'exact':True})
+        return results
+
     def plan(self,handle,goal='review'):
+        if self.pending(handle):
+            raise AgentBlocked('An earlier change is still journaled; recover it before planning')
         trace=[{'step':'OBSERVE','at':time.time()}]
         report=self.android.inspect(handle)
         facts={i['key']:i['value'] for i in report['evidence'] if i['key'] in FACT_KEYS}

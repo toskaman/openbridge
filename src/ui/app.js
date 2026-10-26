@@ -300,7 +300,10 @@ document.querySelector('#agent-plan').addEventListener('click', async event => {
       document.querySelector('#agent-consent-row').hidden = false; agentExecute.hidden = false; agentExecute.disabled = true;
       agentResult.textContent = 'Review the step. Execution requires your explicit consent.';
     } else agentResult.textContent = 'No action will run. The agent stops here safely.';
-  } catch (error) { agentResult.textContent = `Agent stopped safely: ${error.message}`; }
+  } catch (error) {
+    agentResult.textContent = `Agent stopped safely: ${error.message}`;
+    if (error.message.includes('recover it')) document.querySelector('#agent-recover').hidden = false;
+  }
   finally { syncAgent(); }
 });
 agentConsent.addEventListener('change', () => { agentExecute.disabled = !agentConsent.checked || !agentPlan; });
@@ -321,4 +324,14 @@ agentUndo.addEventListener('click', async () => {
     agentUndo.hidden = true; agentResult.textContent = 'Loop complete: plan → gate → consent → act → verify → exact Undo.';
   } catch (error) { agentStep('Undo', error.message, 'deny'); }
   finally { agentUndo.disabled = false; }
+});
+
+document.querySelector('#agent-recover').addEventListener('click', async event => {
+  const button = event.currentTarget; button.disabled = true;
+  try {
+    const r = await agentPost('/api/agent-recover', {});
+    for (const item of r.recovered) agentStep('Recover', `${item.package}: exact original state restored from the journal (Android state ${item.restored_code - 1})`, 'ok');
+    button.hidden = true; agentResult.textContent = 'Recovery complete. You can plan again.';
+  } catch (error) { agentStep('Recover', error.message, 'deny'); }
+  finally { button.disabled = false; }
 });

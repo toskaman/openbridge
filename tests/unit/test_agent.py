@@ -117,3 +117,28 @@ class AgentLoopTests(unittest.TestCase):
         with self.assertRaises(AgentBlocked):a.execute('plan-nope',consent=True)
         p=a.plan('h')
         with self.assertRaises(AgentBlocked):a.undo(p['plan_id'])
+
+
+class AgentRecoveryTests(unittest.TestCase):
+    def setUp(self):
+        FakePackage.states={RULER:DEFAULT};FakePackage.deny=False
+        self.dir=tempfile.TemporaryDirectory();self.addCleanup(self.dir.cleanup)
+    def agent(self):
+        return DeviceAgent(broker(plan()),FakeAndroid(),Path(self.dir.name),package_factory=FakePackage)
+
+    def test_restart_after_execute_recovers_exact_state_from_journal(self):
+        first=self.agent();p=first.plan('h');first.execute(p['plan_id'],consent=True)
+        self.assertEqual(FakePackage.states[RULER],DISABLED)
+        restarted=self.agent()   # new process: in-memory plans are gone
+        self.assertEqual(restarted.pending('h'),[RULER])
+        result=restarted.recover('h')
+        self.assertEqual(result,[{'package':RULER,'state':'REVERTED','restored_code':DEFAULT,'exact':True}])
+        self.assertEqual(FakePackage.states[RULER],DEFAULT)
+        self.assertEqual(restarted.pending('h'),[])
+
+    def test_recover_with_nothing_pending_changes_nothing(self):
+        self.assertEqual(self.agent().recover('h'),[]);self.assertEqual(FakePackage.states[RULER],DEFAULT)
+
+    def test_new_plan_blocked_while_recovery_pending(self):
+        first=self.agent();p=first.plan('h');first.execute(p['plan_id'],consent=True)
+        with self.assertRaises(AgentBlocked):self.agent().plan('h')

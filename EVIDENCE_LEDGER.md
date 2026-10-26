@@ -140,3 +140,10 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - Server `--local-meta --glimmer --agent`; Chromium at 390 and 1440 px (tests/e2e/agent_physical_smoke.py). Glimmer planned "temporarily disable com.miui.compass" with exact facts (100%, 154.13 GB); gate REVIEW_REQUIRED; consent; execute verified (Android state 0 -> 3); Undo exact (state 0). Plan latency 63.3 s (cold load) and 39.6 s (warm) on the shared desktop GPU.
 - Raw dumpsys afterwards: compass, stopwatch and ruler all user-0 enabled=0. Participant's own Ollama model was unloaded for the run and reloaded with its original infinite keep-alive.
 - Screens: docs/jury/screens/agent-glimmer-390-plan.png, docs/jury/screens/agent-glimmer-1440-undone.png (no identifiers visible).
+
+## Restart-after-change recovery (real phone)
+
+- Gap found in review: plans lived only in server memory, so a crash after a change would leave Undo unreachable from the browser. Added DeviceAgent.pending/recover, /api/agent-recover and a UI "Recover exact original state" action; planning is refused while a journaled change is pending. Three new unit tests + HTTP route test.
+- Real fault injection: Llama-planned change to com.miui.compass verified (raw dumpsys enabled=0 -> 3); server process force-killed before Undo; after restart, planning was blocked; recovery restored the exact original (raw enabled=0). Receipt: docs/crash-recovery-receipt.json. Cable unplug mid-write remains NOT TESTED on hardware.
+- Pre-event reuse audit (kit audit_submission.py) against the participant's pre-event v0.8 archive: 0 exact matches, 0 near matches, 0 secrets across 110 tracked files. The v0.9 archive was not found on this PC.
+- Anonymous fresh clone of the public repository at 6a36803 on a clean Linux machine: all unit/integration tests, offline e2e and guided e2e PASS; no device serials or local usernames in the tree. GitHub CI green for every pushed commit through 29087f1.

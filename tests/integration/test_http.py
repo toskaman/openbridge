@@ -177,6 +177,8 @@ class HTTPTests(unittest.TestCase):
             self.assertEqual(self.request('POST','/api/agent-execute',body,self.session_headers())[0],200)
             agent.execute.assert_called_once_with('plan-1',True)
             self.assertEqual(self.request('POST','/api/agent-undo',body,self.session_headers())[0],200)
+            agent.recover.return_value=[]
+            self.assertEqual(self.request('POST','/api/agent-recover','{"source":"android","device_id":"h"}',self.session_headers())[0],200)
 
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)

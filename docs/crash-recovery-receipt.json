@@ -1,0 +1,23 @@
+{
+  "evidence_kind": "REAL_PHYSICAL_FAULT_INJECTION",
+  "source": "ADB",
+  "simulated": false,
+  "recorded_at": "2026-10-26T21:50+01:00",
+  "scenario": "Consented agent change executed, then the OpenBridge server process was force-killed before Undo and restarted.",
+  "plan": "REVIEW_REQUIRED com.miui.compass",
+  "raw_before": "enabled=0",
+  "execute": "VERIFIED verified=True",
+  "raw_after_execute": "enabled=3",
+  "crash": "server process killed before Undo",
+  "plan_after_restart": "blocked: {\"error\": \"An earlier change is still journaled; recover it before planning\"}",
+  "recover": {
+    "package": "com.miui.compass",
+    "state": "REVERTED",
+    "restored_code": 1,
+    "exact": true
+  },
+  "raw_after_recover": "enabled=0",
+  "result": "New plans were blocked until recovery; recovery restored the exact journaled original state, confirmed by raw dumpsys.",
+  "privacy": "No device identifiers.",
+  "limitation": "Process crash only; physical cable unplug during a write remains covered by mocked tests, not hardware."
+}
