@@ -548,7 +548,9 @@ document.querySelector('#session-finish').addEventListener('click', async () => 
     const { changes } = await request('/api/session-changes');
     list.replaceChildren(...(changes.length ? changes.map(c => {
       const li = element('li'); const box = document.createElement('input'); box.type = 'checkbox'; box.checked = true; box.value = c.id; box.id = 'chg-' + c.id;
-      const label = element('label'); label.htmlFor = box.id; label.append(element('strong', c.title), element('small', `${REDACT ? 'device' : c.device} · before: ${c.before} · now: ${c.after}`));
+      const label = element('label'); label.htmlFor = box.id; const state = v => c.kind === 'system_package_enabled' ? ({ 0: 'default', 1: 'enabled', 3: 'disabled' }[v] ?? v) : v;
+      const what = c.kind === 'system_package_enabled' && c.target && c.target.package ? ` (${c.target.package.replace('com.android.', '')})` : '';
+      label.append(element('strong', c.title + what), element('small', `${REDACT ? c.kind.split('_')[0] + ' device' : c.device} · before: ${state(c.before)} → now: ${state(c.after)}`));
       li.append(box, label); return li;
     }) : [element('li', 'No settings were changed outside reversible transactions. Nothing to restore.')]));
     document.querySelector('#finish-restore').hidden = !changes.length;
