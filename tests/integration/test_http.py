@@ -1,0 +1,67 @@
+import http.client
+import json
+import threading
+import unittest
+from src.server import create_server
+
+
+class HTTPTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = create_server(0)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+        cls.port = cls.server.server_port
+        cls.origin = f'http://127.0.0.1:{cls.port}'
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+        cls.thread.join()
+
+    def request(self, method, path, body=None, headers=None):
+        conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=5)
+        conn.request(method, path, body=body, headers=headers or {})
+        response = conn.getresponse()
+        result = response.status, response.read(), dict(response.getheaders())
+        conn.close()
+        return result
+
+    def test_home_and_security_headers(self):
+        code, body, headers = self.request('GET', '/')
+        self.assertEqual(code, 200)
+        self.assertIn(b'SIMULATED', body)
+        self.assertIn("default-src 'self'", headers['Content-Security-Policy'])
+
+    def test_discovery(self):
+        code, body, _ = self.request('GET', '/api/devices')
+        self.assertEqual(code, 200)
+        self.assertTrue(json.loads(body)['devices'][0]['simulated'])
+
+    def test_dns_rebinding_host_denied(self):
+        self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)
+
+    def test_cross_origin_and_missing_token_denied(self):
+        for headers in ({}, {'Origin': self.origin}, {'Origin': 'https://attacker.example'}):
+            self.assertEqual(self.request('POST', '/api/inspect', '{}', headers)[0], 403)
+
+    def session_headers(self):
+        token = json.loads(self.request('GET', '/api/session')[1])['csrf_token']
+        return {'Origin': self.origin, 'X-CSRF-Token': token, 'Content-Type': 'application/json'}
+
+    def test_inspection_with_token(self):
+        code, body, _ = self.request('POST', '/api/inspect', '{"device_id":"demo-android"}', self.session_headers())
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)['model_status'], 'NOT_CONNECTED')
+
+    def test_invalid_json_and_unknown_device(self):
+        for body in ('invalid', '[]', '{"device_id":"other"}'):
+            self.assertEqual(self.request('POST', '/api/inspect', body, self.session_headers())[0], 400)
+
+    def test_no_write_route_or_file_traversal(self):
+        self.assertEqual(self.request('POST', '/api/write', '{}', self.session_headers())[0], 404)
+        self.assertEqual(self.request('GET', '/../README.md')[0], 404)
+
+    def test_oversized_body_denied(self):
+        self.assertEqual(self.request('POST', '/api/inspect', 'x' * 9000, self.session_headers())[0], 413)

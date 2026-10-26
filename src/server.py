@@ -1,0 +1,99 @@
+"""Loopback-only demo server with explicit host/origin and CSRF boundaries."""
+import argparse
+import hmac
+import json
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+import secrets
+from urllib.parse import urlsplit
+from src.adapters.simulated import discover
+from src.core.policy import inspect_device
+
+UI = Path(__file__).parent / 'ui'
+ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
+
+
+class Handler(BaseHTTPRequestHandler):
+    protocol_version = 'HTTP/1.0'
+
+    def log_message(self, *_):
+        pass  # Avoid recording request paths or identifiers.
+
+    def reply(self, status, value, content_type='application/json'):
+        data = value if isinstance(value, bytes) else json.dumps(value).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', content_type)
+        self.send_header('Content-Length', str(len(data)))
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Referrer-Policy', 'no-referrer')
+        self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+        self.end_headers()
+        self.wfile.write(data)
+
+    def host_allowed(self):
+        hosts = self.headers.get_all('Host', [])
+        return len(hosts) == 1 and hosts[0] == f'127.0.0.1:{self.server.server_port}'
+
+    def do_GET(self):
+        if not self.host_allowed():
+            return self.reply(403, {'error': 'Untrusted host'})
+        path = urlsplit(self.path).path
+        if path == '/api/session':
+            return self.reply(200, {'csrf_token': self.server.csrf_token})
+        if path == '/api/devices':
+            return self.reply(200, {'devices': discover()})
+        if path in ASSETS:
+            filename, content_type = ASSETS[path]
+            return self.reply(200, (UI / filename).read_bytes(), content_type)
+        return self.reply(404, {'error': 'Not found'})
+
+    def do_POST(self):
+        origin = f'http://127.0.0.1:{self.server.server_port}'
+        token = self.headers.get('X-CSRF-Token', '')
+        if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
+                or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
+            return self.reply(403, {'error': 'Origin or CSRF check failed'})
+        if self.path != '/api/inspect':
+            return self.reply(404, {'error': 'Operation unavailable'})
+        if self.headers.get('Content-Type') != 'application/json':
+            return self.reply(415, {'error': 'JSON required'})
+        try:
+            lengths = self.headers.get_all('Content-Length', [])
+            if len(lengths) != 1 or self.headers.get('Transfer-Encoding'):
+                raise ValueError()
+            length = int(lengths[0])
+            if length < 0:
+                raise ValueError()
+            if length > 8192:
+                return self.reply(413, {'error': 'Request too large'})
+            self.connection.settimeout(5)
+            body = json.loads(self.rfile.read(length))
+            if not isinstance(body, dict) or not isinstance(body.get('device_id'), str):
+                raise ValueError()
+            result = inspect_device(body['device_id'])
+        except (ValueError, UnicodeError, TimeoutError):
+            return self.reply(400, {'error': 'Invalid request or unknown device'})
+        return self.reply(200, result)
+
+
+def create_server(port=18765):
+    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    server.csrf_token = secrets.token_urlsafe(32)
+    return server
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--port', type=int, default=18765)
+    args = parser.parse_args()
+    with create_server(args.port) as server:
+        print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+
+
+if __name__ == '__main__':
+    main()
