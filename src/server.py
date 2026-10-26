@@ -144,7 +144,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -184,6 +184,25 @@ class Handler(BaseHTTPRequestHandler):
                 if body['device_id'] != 'freebox-local':
                     raise ValueError()
                 return self.reply(*self.server.start_freebox_authorization())
+            if self.path == '/api/fabric-advise':
+                from src.fabric import advisor
+                goal = body.get('goal')
+                if body['device_id'] != 'fabric' or goal not in advisor.GOALS:
+                    raise ValueError()
+                snap = self.server.fabric_snapshot
+                if not snap:
+                    return self.reply(409, {'error': 'Run discovery first'})
+                steps, _ = advisor.candidate_steps(snap)
+                broker = self.server.model_broker
+                rules = {'step': advisor.rule_choice(steps, goal) if steps else None, 'source': 'rules', 'candidates': [s['id'] for s in steps]}
+                if broker is None or getattr(broker, 'local_only', False) is not True:
+                    return self.reply(200, dict(rules, summary='Local Meta model not enabled; deterministic rule shown.'))
+                if not broker.ready():
+                    return self.reply(409, {'error': 'Pinned local Meta model unavailable; no cloud fallback'})
+                try:
+                    return self.reply(200, advisor.advise(broker, snap, goal))
+                except ModelBlocked as error:
+                    return self.reply(200, dict(rules, summary=f'Meta advice rejected by validation ({error}); deterministic rule shown.'))
             if self.path == '/api/companion-install':
                 return self.reply(*self.server.start_companion_install(body['device_id']))
             if self.path.startswith('/api/relay-'):

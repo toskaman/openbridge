@@ -486,3 +486,15 @@ document.querySelector('#freebox-authorize').addEventListener('click', async eve
   finally { button.disabled = false; }
 });
 request('/api/fabric').then(snap => { if (snap.status !== 'NOT_RUN') renderFabric(snap); }).catch(() => {});
+
+document.querySelector('#fabric-advise').addEventListener('click', async event => {
+  const button = event.currentTarget; button.disabled = true; const out = document.querySelector('#fabric-advice');
+  out.textContent = 'Asking the local Meta model (it sees categories and counts only)…';
+  try {
+    const r = await postJson('/api/fabric-advise', { device_id: 'fabric', goal: document.querySelector('#fabric-goal').value });
+    if (!r.step) { out.textContent = r.summary || 'No further step available.'; return; }
+    const agree = r.rule_choice ? (r.rule_choice === r.step ? ' · same as the simple rule' : ` · simple rule would pick ${r.rule_choice}`) : '';
+    out.textContent = `${r.source}: next step ${r.step}. ${r.summary || ''}${agree}`;
+  } catch (error) { out.textContent = `Advice unavailable: ${error.message}`; }
+  finally { button.disabled = false; }
+});
