@@ -85,7 +85,7 @@ def ingest_android(registry, adapter, salt):
             registry.capability(key, Capability('inspect', 'read', 'BLOCKED', device['transport'], f'adb state {device["state"]}'))
 
 
-def run(adapters, salt, providers=('mdns', 'android', 'freebox'), mdns_timeout=2.5, mdns_fn=mdns.discover):
+def run(adapters, salt, providers=('mdns', 'ssdp', 'android', 'freebox'), mdns_timeout=2.5, mdns_fn=mdns.discover):
     started = time.monotonic()
     registry, report = Registry(), {}
     if 'mdns' in providers:
@@ -95,6 +95,11 @@ def run(adapters, salt, providers=('mdns', 'android', 'freebox'), mdns_timeout=2
     if 'android' in providers and adapters.get('android'):
         ingest_android(registry, adapters['android'], salt)
         report['android'] = {'status': 'OK'}
+    if 'ssdp' in providers:
+        from src.fabric import ssdp
+        res = adapters.get('ssdp_discover', ssdp.discover)()
+        report['ssdp'] = {'status': res['status'], 'devices': len(res['devices'])}
+        ingest_ssdp(registry, res, salt)
     if 'ble' in providers:
         from src.fabric import ble_local
         res = adapters.get('ble_scan', ble_local.scan)()
@@ -132,3 +137,26 @@ def ingest_ble(registry, result, salt, observer='pc', source='BLE:pc'):
         key = registry.upsert(ids, category='ble', label=label, observations=obs,
                               weak=[('ble_addr', opaque('ble_address', dev['address'].lower(), salt))])
         registry.link(Link(observer, key, 'BLE', ('observe',), source))
+
+
+UPNP_CATEGORY = (('MediaRenderer', 'media'), ('InternetGatewayDevice', 'router'), ('MediaServer', 'nas'), ('Printer', 'printer'),
+                 ('dial', 'tv'), ('Basic', 'iot'))
+
+
+def ingest_ssdp(registry, result, salt):
+    """UPnP devices: the UDN is a stable strong identifier; IP is weak. Observe-only links; no SOAP control is ever used."""
+    t = now()
+    for d in result.get('devices', []):
+        desc = d.get('description') or {}
+        ids = [Identifier('upnp_udn', opaque('upnp_udn', (desc.get('udn') or d['uuid']).lower(), salt), True)]
+        joined = ' '.join(d['types'] + [desc.get('device_type', '')])
+        category = next((c for key, c in UPNP_CATEGORY if key.lower() in joined.lower()), 'unknown')
+        obs = [DeviceObservation('upnp_types', d['types'][:6], 'SSDP', 'LAN', t, False, 0.8)]
+        for k in ('manufacturer', 'model'):
+            if desc.get(k):
+                obs.append(DeviceObservation(k, desc[k], 'SSDP', 'LAN', t, False, 0.8))
+        key = registry.upsert(ids, category=category, label=desc.get('friendly_name') or desc.get('model') or 'UPnP device',
+                              observations=obs, weak=[('ip', d['ip'])])
+        registry.link(Link('pc', key, 'LAN', ('observe',), 'SSDP'))
+        if category == 'router':
+            registry.capability(key, Capability('upnp_igd_control', 'write', 'BLOCKED', 'SSDP', 'port mapping/SOAP never used'))

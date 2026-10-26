@@ -254,8 +254,8 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == '/api/fabric-discover':
                 if body['device_id'] != 'fabric':
                     raise ValueError()
-                providers=body.get('providers',['mdns','android','freebox','ble'])
-                if not isinstance(providers,list) or not set(providers) <= {'mdns','android','freebox','ble'}:
+                providers=body.get('providers',['mdns','ssdp','android','freebox','ble'])
+                if not isinstance(providers,list) or not set(providers) <= {'mdns','ssdp','android','freebox','ble'}:
                     raise ValueError()
                 if not self.server.fabric_lock.acquire(blocking=False):
                     return self.reply(409,{'error':'A discovery is already running'})

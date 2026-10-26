@@ -212,3 +212,9 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 - New session journal + "Finish session…" dialog: lists every change made outside reversible transactions with its original state and restores the owner's selection with verified fixed commands; non-invertible items (Freebox authorization, Bluetooth on) are reported as MANUAL with steps. Tests: tests/fabric/test_session.py, HTTP route test.
 - Real use: the four changes made during the 27 Oct TV tests (system Bluetooth app re-enabled on the TV, Companion on TV and phone, ADB Wi-Fi connection) were recorded retroactively (dev/record_test_changes.py, because they had been made through the dev bridge) and the owner chose to restore all of them. Result through the product UI: TV com.android.bluetooth back to disabled-user (enabled=3, re-read), Companion uninstalled from both devices (package absent), ADB Wi-Fi disconnected. Not restored by software: TV location services (turned on by the owner) and the Freebox authorization (revocable in Freebox OS).
+
+## SSDP/UPnP and endurance
+
+- src/fabric/ssdp.py: read-only M-SEARCH (sent twice, TTL 1, LAN interface), replies grouped by description LOCATION, description XML fetched once with DTD/entity refusal and size cap; UPnP UDN is a strong identifier; IGD control is BLOCKED (no SOAP, no port mapping). Real network: the Freebox announced 10 UPnP service types, first shown as 3 devices (embedded sub-devices) and fixed to 1; the Android TV answered DIAL in 1 of 3 runs (it was likely entering standby).
+- Endurance (dev/endurance.py, docs/benchmark/STATUS.md): 1,500 nodes, 20 rounds, 5,000 malformed packets, relay churn — bounded time/memory, no crash, no leaked threads.
+- README rewritten for the jury around the Device Fabric scenario (old README kept as docs/README_HISTORY.md).

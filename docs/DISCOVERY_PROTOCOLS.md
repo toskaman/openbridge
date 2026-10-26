@@ -9,7 +9,8 @@
 | Freebox authenticated LAN | REAL_HARDWARE_VERIFIED | official app authorization, GET lan/browser/pub/ | GET allowlist, 2 MB response cap |
 | BLE (PC) | NOT_SUPPORTED on this PC (no adapter); code INTEGRATION_VERIFIED | bleak passive scan | 10 s, 300 devices, never connects |
 | BLE via relay | REAL_HARDWARE_VERIFIED (Android phone) | relay protocol v1 + Android Companion | 15 s, 200 observations, owner-enabled only |
-| SSDP/UPnP, ARP table | NOT_SUPPORTED (not implemented) | — | deliberately not added: mDNS + Freebox inventory already cover the LAN graph |
+| SSDP/UPnP | REAL_HARDWARE_VERIFIED (Freebox IGD with 10 service types grouped as one device; Android TV DIAL seen in 1 of 3 runs, likely standby) | stdlib M-SEARCH ×2, description XML GET only (no DTD, 64 KB, private scope) | 6 s, 200 replies; SOAP/port mapping never used (IGD control BLOCKED) |
+| ARP table | NOT_SUPPORTED | — | Freebox inventory provides the same view with names |
 | Port scanning | NOT_SUPPORTED by design | — | never performed |
 
 Concurrency: `/api/fabric-discover` is single-flight (409 when busy); providers run sequentially with their own timeouts; sockets are closed in `finally`.
