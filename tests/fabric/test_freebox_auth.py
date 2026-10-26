@@ -78,10 +78,10 @@ class FreeboxGraphTests(unittest.TestCase):
             def discover(self):return {'status':'READY','devices':[{'facts':{'api_version':'12.1','device_family':'FreeboxServer9,1','api_base_path':'/api/'}}]}
         v=MemVault();v.put(TOKEN_NAME,'TOKEN');r=Registry()
         rep=ingest_freebox(r,{'public':Pub(),'session':FreeboxSession(v,12,transport=FakeBox())},b'salt')
-        self.assertEqual((rep['status'],rep['lan_hosts']),('AUTHENTICATED',2))
+        self.assertEqual((rep['status'],rep['lan_hosts'],rep['inactive_hidden']),('AUTHENTICATED',1,1))
         snap=r.snapshot()
         inv=[l for l in snap['links'] if l['transport']=='INVENTORY']
-        self.assertEqual(len(inv),2);self.assertTrue(all(l['grants']==['observe'] for l in inv))
+        self.assertEqual(len(inv),1);self.assertTrue(all(l['grants']==['observe'] for l in inv))
         self.assertNotIn('00:1a:2b',str(snap));self.assertNotIn('da:11',str(snap))
         box=[d for d in snap['devices'] if d['category']=='router'][0]
         self.assertTrue(any(c['name']=='wifi_settings' and c['status']=='BLOCKED' for c in box['capabilities']))

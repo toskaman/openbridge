@@ -46,7 +46,8 @@ def ingest_freebox(registry, adapters, salt):
     registry.capability(box, Capability('lan_inventory', 'read', 'REAL_HARDWARE_VERIFIED', 'FREEBOX_API', 'GET lan/browser/pub/'))
     for capability in ('router_settings', 'wifi_settings', 'dhcp', 'firewall'):
         registry.capability(box, Capability(capability, 'write', 'BLOCKED', 'FREEBOX_API', 'read-only by policy: no independent recovery path'))
-    for host in hosts:
+    inactive = sum(1 for h in hosts if not h['active'])
+    for host in (h for h in hosts if h['active']):
         ids = []
         if host['mac'] and not mac_is_randomized(host['mac']):
             ids.append(Identifier('mac_global', opaque('mac_global', host['mac'].lower(), salt), True))
@@ -59,5 +60,5 @@ def ingest_freebox(registry, adapters, salt):
         key = registry.upsert(ids, category=CATEGORY.get(host['type'], 'unknown'), label=host['name'] or host['vendor'] or 'LAN host',
                               observations=hobs, weak=[('ip', ip) for ip in host['ipv4']] + ([('name', host['name'].lower())] if host['name'] else []))
         registry.link(_L(box, key, 'INVENTORY', ('observe',), 'FREEBOX_API:lan'))
-    report.update(status='AUTHENTICATED', lan_hosts=len(hosts))
+    report.update(status='AUTHENTICATED', lan_hosts=len(hosts) - inactive, inactive_hidden=inactive)
     return report

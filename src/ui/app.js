@@ -348,7 +348,7 @@ function renderFabric(snap) {
   const providers = document.querySelector('#fabric-providers'); providers.replaceChildren();
   for (const [name, info] of Object.entries(snap.providers || {})) {
     const ok = ['OK', 'AUTHENTICATED'].includes(info.status);
-    const extra = info.instances !== undefined ? ` · ${info.instances} services` : info.devices !== undefined ? ` · ${info.devices} devices` : info.lan_hosts !== undefined ? ` · ${info.lan_hosts} LAN hosts` : '';
+    const extra = info.instances !== undefined ? ` · ${info.instances} services` : info.devices !== undefined ? ` · ${info.devices} devices` : info.lan_hosts !== undefined ? ` · ${info.lan_hosts} active LAN hosts${info.inactive_hidden ? ' (+' + info.inactive_hidden + ' inactive hidden)' : ''}` : '';
     providers.append(element('li', `${name.toUpperCase()}: ${info.status}${info.authorization ? ' (' + info.authorization + ')' : ''}${extra}`, ok ? 'ok' : (info.status || '').match(/UNAVAILABLE|NOT_SUPPORTED|BLOCKED|ERROR/) ? 'blocked' : ''));
   }
   const children = new Map();

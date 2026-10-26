@@ -165,3 +165,9 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - BLE (src/fabric/ble_local.py, optional bleak 3.0.2): passive, bounded, never connects; only static-random addresses are strong identity. This PC has no Bluetooth adapter -> BLE_UNAVAILABLE reported honestly; the phone's Bluetooth is off. BLE hardware: NOT TESTED.
 - Device Fabric API (/api/fabric, /api/fabric-discover single-flight with provider allowlist, /api/freebox-authorize, /api/freebox-authorization) and UI section: provider status, topology tree with per-transport grants, duplicate hints, device sheet with sources and capability statuses, guided Freebox approval dialog.
 - Real browser run on the participant's network (tests/e2e/fabric_real_smoke.py, not CI): 6 devices / 10 links at 390/768/1440/3440, no overflow or page errors; screenshots docs/jury/screens/fabric-real-*.png checked visually. Hermetic tests/e2e/fabric_smoke.py added to CI.
+
+## Freebox authenticated LAN inventory (real)
+
+- The participant approved "OpenBridge Device Fabric" on the Freebox Server front panel (second request; the first timed out). Token stored with Windows DPAPI. Granted permissions exclude `settings`; OpenBridge only calls allowlisted GET endpoints.
+- Real read: 127 known LAN hosts, 12 active, 37 with randomized MACs (never used as strong identity). The graph shows the 12 active hosts as Freebox -> host INVENTORY links with observe-only grants (inactive hosts counted, not drawn): 18 devices / 22 links in 4.2 s. The LG TV seen by the Freebox and by mDNS is flagged as a possible duplicate rather than merged; the PC and the ADB phone also appear in the Freebox inventory and are not merged (no shared strong identifier). REAL_HARDWARE_VERIFIED.
+- Screenshot of this run is kept private (household device names); public screenshots use the earlier run.
