@@ -1,8 +1,8 @@
 # Current risks
 
-1. A real supervised Meta runtime-core call is recorded on synthetic facts. Live browser/provider execution, autonomous physical workflows and final organizer acceptance remain unverified.
-2. One physical Android read-only inspection passed. A controlled timeout write was refused; its original state was independently confirmed intact. Physical action/Undo success, multiple-phone behavior and physical disconnect fault injection remain unproven.
-3. Loopback isolation does not protect against malicious software running as the same local user.
-4. This standard-library HTTP service is a local development demo, not an authenticated multi-user deployment.
-5. Event-start confirmation is participant-reported; no organizer announcement was independently retrieved.
-6. Muse names and provider access from preparation notes are unverified here. Do not claim model availability or prize eligibility until verified with real deployment evidence.
+1. Evidence comes from one owned phone (Xiaomi, Android 14). Other vendors may refuse `pm disable-user` or report state differently; the adapter fails closed on inconsistency.
+2. Physical unplug or authorization loss mid-write is covered by mocked tests and the durable journal, not yet by a physical fault-injection run.
+3. The local 3B model needed an explicit sentence template to pass grounding checks; plans that fail validation are blocked, which can make the agent unhelpful but not unsafe.
+4. Muse Glimmer (Open Weight bonus route) is unverified until a pinned pull, real inference and benchmark exist. The GPU is shared with other workloads, so offload performance must be measured, not assumed.
+5. Loopback isolation does not protect against malicious software running as the same local user. This is a single-user local tool, not an authenticated deployment.
+6. Event-start confirmation is participant-reported; organizer answers to the office-hours questions are pending.

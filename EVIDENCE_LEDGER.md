@@ -122,3 +122,8 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - New src/ai/registry.py: the shipped runtime manifest is loaded fail-closed; non-Meta or unknown model IDs and non-Meta endpoints are rejected (matrix R04/R05/R06). `--local-meta` startup refuses a model/endpoint pair absent from the manifest. A source scan test fails on any non-Meta inference client string in src/ (R12, static only).
 - Every broker class (cloud Muse Spark, local Llama, local Muse Glimmer) is asserted to be declared in the manifest. 108 tests PASS (Linux VM).
 - Muse Glimmer broker added but fails closed: its digest is PENDING until verified from the official registry pull.
+
+## Guided UX and pinned Muse Glimmer
+
+- Guided states (WAITING_FOR_DEVICE, REQUIRES_USER_ACTION, COMPLETE, BLOCKED) with a non-modal guidance dialog that closes by itself when the live re-check sees an authorized phone. tests/e2e/guided_smoke.py PASS at 390/768/1440/3440 on Windows (controlled responses, zero device/model calls); screenshots visually checked at 390 and 1440. Added to CI. Offline e2e still PASS.
+- Muse Glimmer `muse-glimmer:30b-q4_K_M` pulled from the official Ollama registry into a private service on 127.0.0.1:11438 (27.9B, Q4_K_M, 18.2 GB). Local digest de878ce3...64c1 equals the SHA-256 of the official registry manifest; pinned in src/ai/glimmer.py and the runtime manifest. Inference not yet measured.

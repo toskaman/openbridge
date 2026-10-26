@@ -98,6 +98,7 @@ for (const radio of document.querySelectorAll('input[name="source"]')) radio.add
   banner.replaceChildren(element('strong', demo ? 'SIMULATED / DEMO' : source() === 'android' ? 'USB / READ-ONLY' : 'FREEBOX / PUBLIC IDENTITY'), element('span', demo ? 'Synthetic data. No real measurements.' : source() === 'android' ? 'Authorized ADB devices only. No writes.' : 'Documented discovery endpoint only. No pairing or router changes.'));
   statusLine.textContent = 'Source selected. Inventory has not started.';
   updateAndroidStream();
+  if (guide.open) guide.close();
 });
 
 let demoState = null;
@@ -194,6 +195,28 @@ function inventorySignature(result) {
 }
 let androidStream = null;
 let lastAndroidSignature = null;
+const guide = document.querySelector('#guide');
+const GUIDES = {
+  REQUIRES_USER_ACTION: ['Approve USB debugging on your phone', ['Unlock the phone.', 'Accept the "Allow USB debugging?" prompt (tick "Always allow from this computer" only if this is your PC).', 'If no prompt appears, unplug and reconnect the cable.']],
+  WAITING_FOR_DEVICE: ['Connect your Android phone', ['Plug the phone in with a data-capable USB cable.', 'Enable Developer options › USB debugging if not already on.', 'Approve the prompt on the phone.']],
+};
+function guideFor(result, selectedSource) {
+  if (selectedSource !== 'android') return null;
+  if (result.devices.some(d => d.state === 'device')) return 'COMPLETE';
+  if (result.devices.some(d => d.state === 'unauthorized')) return 'REQUIRES_USER_ACTION';
+  if (result.status === 'ADB_MISSING' || result.status === 'ADB_UNAVAILABLE') return 'BLOCKED';
+  return 'WAITING_FOR_DEVICE';
+}
+function showGuide(state) {
+  if (!GUIDES[state]) { if (guide.open) guide.close(); return; }
+  const [title, steps] = GUIDES[state];
+  document.querySelector('#guide-state').textContent = state.replaceAll('_', ' ');
+  document.querySelector('#guide-title').textContent = title;
+  document.querySelector('#guide-steps').replaceChildren(...steps.map(text => element('li', text)));
+  if (!guide.open) guide.show();
+}
+document.querySelector('#guide-close').addEventListener('click', () => guide.close());
+document.querySelector('#guide-recheck').addEventListener('click', () => discoverButton.click());
 function renderInventory(result, selectedSource, version) {
   if (version !== generation) return;
   const devices = result.devices;
@@ -204,6 +227,7 @@ function renderInventory(result, selectedSource, version) {
     const messages = { ADB_MISSING:'ADB is missing. Install the official Android platform tools.', ADB_UNAVAILABLE:'ADB is unavailable. Check the connection and retry.', WAITING_FOR_DEVICE:'No device detected. Connect a phone and authorize USB debugging.', GATEWAY_UNAVAILABLE:'No compatible Freebox responded. Check your local connection; no network scan was performed.' };
     devicePanel.append(element('p', messages[result.status] || 'No device available.'));
   }
+  showGuide(guideFor(result, selectedSource));
   statusLine.textContent = selectedSource === 'demo' ? 'Demo loaded. No real measurements.' : selectedSource === 'freebox' ? `Gateway identification complete: ${devices.length} public identity response(s).` : `Inventory complete: ${devices.filter(d => d.state === 'device').length} authorized device(s).`;
 }
 function updateAndroidStream() {

@@ -2,7 +2,7 @@
 from src.ai.local_meta import LocalMetaBroker
 
 GLIMMER_ID='muse-glimmer:30b-q4_K_M'
-GLIMMER_DIGEST='PENDING_VERIFIED_PULL'  # Set only from the digest observed after the official registry pull.
+GLIMMER_DIGEST='de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1'  # Verified 2026-10-26: equals sha256 of the official registry manifest for 30b-q4_K_M.
 GLIMMER_ENDPOINT='http://127.0.0.1:11438'
 
 
