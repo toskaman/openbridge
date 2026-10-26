@@ -47,3 +47,9 @@ The web interface remains physically read-only, even if a physical engine is acc
 Selecting **Android USB** starts a local ADB event stream. Plugging in, unplugging or authorizing a device refreshes the redacted inventory without periodic device polling. Switching sources closes the stream; manual listing remains available if tracking fails. Connection changes invalidate pending inspection results so stale device evidence is not displayed as current.
 
 Tracking uses an owned `adb track-devices` subprocess, starts only with an opted-in subscriber, and shuts down when subscriptions end. It sends no device data to a model and triggers no writes. An offline emulator may appear separately from USB phones; its transport label identifies it explicitly.
+
+## Optional browser verification
+
+Runtime needs no third-party Python packages. For the pinned browser-test environment, run `python -m pip install -r requirements-dev.txt`, then `python -m playwright install chromium` and `python -m tests.e2e.offline_smoke`.
+
+This isolated check starts its own temporary server and synthetic journal. It verifies the English interface, recorded model proof, simulated change/reload/Undo and missing-device guidance at four widths. Hardware responses are controlled and no provider calls are made. The same check runs in the Linux CI browser job; unit/integration tests run on Windows and Linux.
