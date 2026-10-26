@@ -155,7 +155,7 @@ request('/api/model-status').then(state => {
   runtimeMetaModel = state.model_id || 'muse-spark-1.3';
   syncMetaControl();
   document.querySelector('#model-state').textContent = metaSessionConfigured
-    ? metaLocal ? 'Built with Llama · local CPU · $0 provider credits' : 'Meta Muse Spark 1.3 · supervised requests only · credit checks enforced'
+    ? metaLocal ? (runtimeMetaModel.startsWith('muse-glimmer') ? 'Meta Muse Glimmer (open weights) · local GPU/CPU · $0 provider credits' : 'Built with Llama · local CPU · $0 provider credits') : 'Meta Muse Spark 1.3 · supervised requests only · credit checks enforced'
     : 'Runtime model: disabled · credit verification required';
 }).catch(() => { document.querySelector('#model-state').textContent = 'Model state unavailable. Cloud requests blocked.'; });
 

@@ -19,6 +19,7 @@ from src.core.transactions import TransactionEngine, TransactionBlocked
 from src.adapters.simulated_setting import SimulatedSetting
 from src.adapters.android_events import AndroidEventMonitor
 from src.ai.local_meta import LocalMetaBroker
+from src.ai.glimmer import GlimmerBroker
 from src.core.agent import DeviceAgent, AgentBlocked
 from src.ai import registry
 
@@ -236,12 +237,13 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=18765)
+    parser.add_argument('--glimmer',action='store_true',help='With --local-meta: use pinned Meta Muse Glimmer (open weights, local GPU/CPU) instead of Llama 3.2 3B')
     parser.add_argument('--agent',action='store_true',help='Enable the consent-gated physical agent (requires --local-meta)')
     parser.add_argument('--local-meta',action='store_true',help='Use the pinned private CPU-local Meta model; never falls back to cloud')
     args = parser.parse_args()
     broker = None
     if args.local_meta:
-        broker=LocalMetaBroker()
+        broker=GlimmerBroker() if args.glimmer else LocalMetaBroker()
         registry.require(broker.model_id,broker.endpoint)
     elif os.environ.get('MODEL_API_KEY') and os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
         try:

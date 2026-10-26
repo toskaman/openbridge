@@ -73,3 +73,7 @@ The isolated verifier `python -m dev.physical_package_smoke --confirm-owned-devi
 ## Verifiable device agent (local Meta)
 
 Start with `python -m src.server --local-meta --agent`. Inspect an authorized Android phone, choose an owner goal (Review only / Declutter optional apps) and select **Ask Meta for a plan**. The pinned local Llama 3.2 3B proposes at most one reversible step; a deterministic gate decides; nothing runs without explicit consent; the change is read back independently and **Undo** restores the exact original Android state. A real run is recorded in [docs/agent-loop-receipt.json](docs/agent-loop-receipt.json) (raw dumpsys `enabled=0 -> 3 -> 0`). The real-hardware browser check is `tests/e2e/agent_physical_smoke.py` (not part of CI).
+
+## Meta Muse Glimmer (open weights, local)
+
+`python -m dev.start_glimmer --pull-model` starts a private Ollama service on 127.0.0.1:11438 and pulls `muse-glimmer:30b-q4_K_M` (18 GB). Its digest `de878ce3…64c1` equals the SHA-256 of the official registry manifest and is pinned; any other digest fails closed. Then run `python -m src.server --local-meta --glimmer --agent`. Measured on an RTX 4060 Ti 16 GB (78% of weights in VRAM): about 17 s per agent plan, $0. Receipt: [docs/glimmer-smoke-receipt.json](docs/glimmer-smoke-receipt.json). Ablation against Llama 3.2 3B and a rules-only baseline: [docs/benchmark/STATUS.md](docs/benchmark/STATUS.md).

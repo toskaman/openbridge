@@ -1,0 +1,41 @@
+{
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "provider": "Ollama local GPU/CPU offload",
+  "model_manifest_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "request_id": "local-454910c3ec714989bbb27434a2e6a007",
+  "proposal": {
+    "summary": "Battery is 72% and 38.5 GB of storage is free. Proposed: temporarily disable org.nixgame.ruler.",
+    "action": "disable_optional_app",
+    "package": "org.nixgame.ruler",
+    "evidence_refs": [
+      "battery_percent",
+      "storage_free_gb",
+      "app:org.nixgame.ruler"
+    ],
+    "uncertainty": "Device health and write permission are unknown from these limited facts."
+  },
+  "usage": {
+    "prompt_tokens": 282,
+    "completion_tokens": 99
+  },
+  "estimated_cost_usd": 0.0,
+  "elapsed_ms": 18124,
+  "cpu_only_requested": false,
+  "goal": "declutter",
+  "input_sha256": "3d6a6815638c428b4dbc889c6ee210b2b1840f4f506d593b2323ac0447a79437",
+  "wall_ms": 18246,
+  "loaded": [
+    {
+      "name": "muse-glimmer:30b-q4_K_M",
+      "size": 17361430113,
+      "size_vram": 13522163464
+    }
+  ],
+  "evidence_kind": "REAL_LOCAL_OPEN_WEIGHTS_INFERENCE",
+  "input": "SYNTHETIC facts and candidates",
+  "vram_fraction": 0.779,
+  "hardware": "RTX 4060 Ti 16 GB, 32 GB RAM (shared desktop)",
+  "recorded_at": "2026-10-26T21:10+01:00",
+  "registry_verification": "Local digest equals SHA-256 of the official Ollama registry manifest library/muse-glimmer:30b-q4_K_M",
+  "note": "Ollama appended a literal <|eot|> template token after the JSON; only that exact suffix is stripped before validation."
+}

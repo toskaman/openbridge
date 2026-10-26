@@ -33,3 +33,9 @@ The on-demand ADB event monitor, redacted local event stream, browser subscripti
 ## Local Meta reasoning
 
 The pinned local Meta broker, private CPU-only service launcher, numeric-fact allowlist, ADB/SIMULATED source routing, schema validation and tests were authored during the event. One controlled local call on synthetic facts produced docs/local-meta-smoke-receipt.json. Llama 3.2 3B is runtime inference here (not development assistance). Claude (Cowork) assisted with finishing documentation and line-ending normalization for this milestone.
+
+## Physical reversible change, agent loop, registry, guided UX, Glimmer route
+
+Authored during the event (26 October 2026): the allowlisted optional-app state adapter and isolated verifier, exact Android enabled-state restoration, the deterministic action gate, the consent-gated agent orchestrator and HTTP routes, the agent browser panel, the guided device-state dialog, the product-enforced Meta-only runtime registry, the pinned Muse Glimmer broker and the agent-planning benchmark harness, with their tests.
+
+Development assistance for these milestones: Claude (Cowork) wrote and ran the code, tests and evidence collection through a local PowerShell bridge on the participant's PC at the participant's request. This is build-time assistance only; Claude is not a runtime model. Runtime inference is Meta-only: Llama 3.2 3B and Muse Glimmer locally, Muse Spark 1.3 for the recorded cloud call.

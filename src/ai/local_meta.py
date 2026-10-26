@@ -13,6 +13,7 @@ from src.ai.broker import ModelBlocked,NoRedirect,ALLOWED_FACTS
 MODEL_ID='llama3.2:3b-instruct-q4_K_M'
 MODEL_DIGEST='a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72'
 LOCAL_ENDPOINT='http://127.0.0.1:11437'
+END_OF_TURN='<|eot|>'
 GOALS={'review':'Review the device state only. Prefer inspect_only.',
     'declutter':'The owner wants to declutter: propose temporarily disabling the single least essential optional app from the candidates, unless none is enabled.'}
 UNCERTAINTY_LIMIT='Device health and write permission are unknown from these limited facts.'
@@ -62,7 +63,9 @@ class LocalMetaBroker:
         for key in ('prompt_eval_count','eval_count'):
             if type(response.get(key)) is not int or not 0<=response[key]<=8192:
                 raise ModelBlocked('Local usage metadata is invalid')
-        return json.loads(message['content']),response
+        content=message['content']
+        if content.endswith(END_OF_TURN):content=content[:-len(END_OF_TURN)]  # exact known template token only
+        return json.loads(content),response
 
     def plan(self,facts,candidates,goal='review'):
         """Agent planning step. candidates: {package: 'enabled'|'disabled'} limited to the reviewed allowlist."""
@@ -77,13 +80,15 @@ class LocalMetaBroker:
         try:
             if not self.ready():raise ModelBlocked('Pinned Meta model is unavailable or its digest does not match')
             refs=list(facts)+['app:'+k for k in eligible]
-            schema={'type':'object','additionalProperties':False,'required':['summary','action','package','evidence_refs','uncertainty'],
-                'properties':{'summary':{'type':'string'},'uncertainty':{'type':'string','enum':[UNCERTAINTY_LIMIT]},
-                    'action':{'type':'string','enum':['inspect_only']+(['disable_optional_app'] if eligible else [])},
-                    'package':{'type':'string','enum':['']+eligible},
-                    'evidence_refs':{'type':'array','minItems':1,'uniqueItems':True,'items':{'type':'string','enum':refs}}}}
+            def branch(action,packages):
+                return {'type':'object','additionalProperties':False,'required':['summary','action','package','evidence_refs','uncertainty'],
+                    'properties':{'summary':{'type':'string'},'action':{'type':'string','enum':[action]},
+                        'package':{'type':'string','enum':packages},
+                        'evidence_refs':{'type':'array','minItems':1,'uniqueItems':True,'items':{'type':'string','enum':refs}},
+                        'uncertainty':{'type':'string','enum':[UNCERTAINTY_LIMIT]}}}
+            schema={'anyOf':[branch('inspect_only',[''])]+([branch('disable_optional_app',eligible)] if eligible else [])}
             payload={'model':self.model_id,'stream':False,'format':schema,'keep_alive':'30s',**self.extra,
-                'options':dict(self.options),
+                'options':{**self.options,'num_predict':max(self.options.get('num_predict',384),512)},
                 'messages':[{'role':'system','content':
                     'You are the planning step of a device assistant. Respond in English only as compact JSON matching the schema. '
                     'Goal: help the owner declutter by proposing at most ONE reversible step: temporarily disabling one optional utility app from the supplied candidate list, '

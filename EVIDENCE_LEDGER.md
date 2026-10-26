@@ -127,3 +127,10 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 - Guided states (WAITING_FOR_DEVICE, REQUIRES_USER_ACTION, COMPLETE, BLOCKED) with a non-modal guidance dialog that closes by itself when the live re-check sees an authorized phone. tests/e2e/guided_smoke.py PASS at 390/768/1440/3440 on Windows (controlled responses, zero device/model calls); screenshots visually checked at 390 and 1440. Added to CI. Offline e2e still PASS.
 - Muse Glimmer `muse-glimmer:30b-q4_K_M` pulled from the official Ollama registry into a private service on 127.0.0.1:11438 (27.9B, Q4_K_M, 18.2 GB). Local digest de878ce3...64c1 equals the SHA-256 of the official registry manifest; pinned in src/ai/glimmer.py and the runtime manifest. Inference not yet measured.
+
+## Muse Glimmer inference and planning ablation
+
+- First real Muse Glimmer call (digest-pinned, private service 127.0.0.1:11438): valid grounded plan in 18.1 s, 282+99 tokens, 13.5 of 17.4 GB in VRAM. Receipt: docs/glimmer-smoke-receipt.json. Ollama appended a literal `<|eot|>` after the JSON; only that exact suffix is now stripped (unit test covers exact/extra/other tokens).
+- To fit the 18 GB model, the participant's own unrelated Ollama model (port 11434, infinite keep-alive) was temporarily unloaded, then reloaded with the same infinite keep-alive and verified. No model files were removed.
+- Ablation, 30 synthetic cases × 3 repeats: rules 90.0% correct (9 unsafe proposals); Llama 3B 60.0% valid / 53.3% correct (6 unsafe); Muse Glimmer 90.0% valid / 86.7% correct (3 unsafe). Gate refused 100% of unsafe proposals for all routes. Details and honest interpretation: docs/benchmark/STATUS.md.
+- Product option `--local-meta --glimmer` added; registry enforces the declared Glimmer endpoint.
