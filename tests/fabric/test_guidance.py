@@ -29,7 +29,7 @@ class ServerGuidanceTests(unittest.TestCase):
         from src.server import create_server
         from src.fabric.registry import Registry
         from src.fabric.contracts import DeviceObservation,now
-        server=create_server(0,fabric_salt=b's')
+        server=create_server(0,fabric_salt=b's',session_journal=__import__('src.fabric.session',fromlist=['x']).SessionJournal(__import__('tempfile').mkdtemp()+'/s.json'))
         try:
             reg=Registry();k=reg.upsert([],category='phone',observations=[DeviceObservation('manufacturer','Xiaomi','ADB','USB',now(),True),DeviceObservation('sdk','34','ADB','USB',now(),True)])
             reg.devices[k]['handles']={'USB':'h'};server.fabric_registry=reg

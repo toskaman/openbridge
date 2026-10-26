@@ -108,6 +108,8 @@ class Handler(BaseHTTPRequestHandler):
                                    'detail': 'Automatic cloud calls disabled. Explicit supervised requests require fresh verified free credits.',
                                    'agent_enabled': self.server.agent is not None,
                                    'development_design_model': 'muse-spark-1.3'})
+        if path == '/api/session-changes':
+            return self.reply(200, {'changes': self.server.session_journal.open_changes()})
         if path == '/api/companion-install':
             return self.reply(200, dict(self.server.companion_install))
         if path == '/api/freebox-authorization':
@@ -144,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect', '/api/session-restore'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -184,6 +186,28 @@ class Handler(BaseHTTPRequestHandler):
                 if body['device_id'] != 'freebox-local':
                     raise ValueError()
                 return self.reply(*self.server.start_freebox_authorization())
+            if self.path == '/api/session-restore':
+                from src.fabric.session import restore
+                ids = body.get('restore')
+                if body['device_id'] != 'session' or not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
+                    raise ValueError()
+                results = []
+                for change in self.server.session_journal.open_changes():
+                    if change['id'] in ids:
+                        try:
+                            state, detail = restore(change, self.server.android._run)
+                        except (ValueError, OSError) as error:
+                            state, detail = 'FAILED', str(error)[:120]
+                        if state == 'MANUAL' and change['kind'] == 'freebox_app_authorized':
+                            from src.fabric.credential_vault import Vault
+                            Vault().delete('freebox-app-token')
+                        if state != 'FAILED':
+                            self.server.session_journal.close(change['id'], state, detail)
+                    else:
+                        state, detail = 'KEPT', 'Kept by the owner'
+                        self.server.session_journal.close(change['id'], 'KEPT', detail)
+                    results.append({'id': change['id'], 'title': change['title'], 'device': change['device'], 'state': state, 'detail': detail})
+                return self.reply(200, {'results': results})
             if self.path == '/api/tv-adb-connect':
                 from src.fabric.guidance import guide
                 reg = self.server.fabric_registry
@@ -194,7 +218,10 @@ class Handler(BaseHTTPRequestHandler):
                 if not ips:
                     return self.reply(409, {'error': 'No local IPv4 address known for this TV'})
                 manufacturer = (reg.best_value(dev['key'], 'manufacturer') or type('o', (), {'value': None})).value
+                was_connected = any(f'{ips[0]}:5555' == k for k in self.server.android._handles)
                 state = self.server.android.connect_network(ips[0])
+                if state == 'AUTHORIZED' and not was_connected:
+                    self.server.session_journal.record('adb_network_connected', dev['label'], {'address': f'{ips[0]}:5555'}, 'not connected', 'connected')
                 issue = {'PORT_CLOSED': 'tv_network_debugging', 'WAITING_FOR_TV_APPROVAL': 'tv_debug_prompt', 'CONNECT_FAILED': 'tv_network_debugging'}.get(state)
                 tried = [f'adb connect {ips[0]}:5555 -> {state}']
                 return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None})
@@ -294,7 +321,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.reply(200, result)
 
 
-def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None):
+def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None, session_journal=None):
     server = LocalServer(('127.0.0.1', port), Handler)
     server.csrf_token = secrets.token_urlsafe(32)
     server.android = AndroidAdapter()
@@ -303,6 +330,8 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.model_broker = model_broker
     server.demo_engine = demo_engine
     server.fabric_snapshot = None
+    from src.fabric.session import SessionJournal
+    server.session_journal = session_journal or SessionJournal()
     server.fabric_lock = threading.Lock()
     server.fabric_salt = fabric_salt if fabric_salt is not None else fabric_discovery.install_salt()
     def fabric_adapters():
@@ -341,6 +370,8 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 except Exception as error:
                     server.freebox_auth = {'state': 'FAILED', 'detail': str(error)[:120]}; return
                 if st in ('granted', 'denied', 'timeout'):
+                    if st == 'granted':
+                        server.session_journal.record('freebox_app_authorized', 'Freebox', {'app_id': 'fr.openbridge.devicefabric'}, 'not authorized', 'authorized (read-only)')
                     server.freebox_auth = {'state': st.upper()}; return
                 time.sleep(2)
             server.freebox_auth = {'state': 'TIMEOUT'}
@@ -425,6 +456,11 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             return 409, {'error': 'Installation already in progress'}
         if not server.companion_apk.exists():
             return 409, {'error': 'Companion APK not built. Run: python -m dev.build_companion'}
+        serial0 = next((k for k, v in server.android._handles.items() if v == handle), None)
+        try:
+            was_installed = bool(serial0) and 'package:fr.openbridge.companion' in server.android._run(['-s', serial0, 'shell', 'pm', 'list', 'packages', 'fr.openbridge.companion']).split()
+        except (ValueError, OSError):
+            was_installed = False
         def worker():
             import time
             for attempt in range(attempts):
@@ -433,6 +469,9 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 except (ValueError, OSError, subprocess.SubprocessError):
                     code, issue = 'DEVICE_UNAVAILABLE', 'usb_authorization_pending'
                 if code == 'SUCCESS':
+                    serial = next((k for k, v in server.android._handles.items() if v == handle), None)
+                    if serial and not was_installed:
+                        server.session_journal.record('companion_installed', handle, {'serial': serial}, 'not installed', 'installed')
                     server.companion_install = {'state': 'INSTALLED', 'attempts': attempt + 1}; return
                 g = guide(issue, tried=[f'adb install attempt {attempt + 1}: {code}'], **device_profile(handle)) if issue else None
                 server.companion_install = {'state': 'RETRYING' if issue else 'FAILED', 'code': code, 'attempts': attempt + 1, 'guide': g}

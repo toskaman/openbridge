@@ -11,7 +11,7 @@ STATES={'waiting':{'status':'WAITING_FOR_DEVICE','devices':[]},
 
 def main():
     out=Path('artifacts/guided');out.mkdir(parents=True,exist_ok=True)
-    server=create_server(0,fabric_salt=b'e2e');worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+    server=create_server(0,fabric_salt=b'e2e',session_journal=__import__('src.fabric.session',fromlist=['x']).SessionJournal(__import__('tempfile').mkdtemp()+'/s.json'));worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
     url=f'http://127.0.0.1:{server.server_port}'
     try:
         with sync_playwright() as p:

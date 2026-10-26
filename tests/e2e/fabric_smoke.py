@@ -18,7 +18,7 @@ SNAP={'schema_version':1,'elapsed_ms':12,'providers':{'mdns':{'status':'OK','ins
 
 
 def main():
-    server=create_server(0,fabric_salt=b'e2e');w=threading.Thread(target=server.serve_forever,daemon=True);w.start()
+    server=create_server(0,fabric_salt=b'e2e',session_journal=__import__('src.fabric.session',fromlist=['x']).SessionJournal(__import__('tempfile').mkdtemp()+'/s.json'));w=threading.Thread(target=server.serve_forever,daemon=True);w.start()
     try:
         with sync_playwright() as p:
             b=p.chromium.launch(headless=True)

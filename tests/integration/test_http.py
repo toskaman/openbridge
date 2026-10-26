@@ -15,7 +15,7 @@ from src.server import create_server
 class HTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = create_server(0, fabric_salt=b'test-salt')
+        cls.server = create_server(0, fabric_salt=b'test-salt',session_journal=__import__('src.fabric.session',fromlist=['x']).SessionJournal(__import__('tempfile').mkdtemp()+'/s.json'))
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.port = cls.server.server_port
@@ -209,6 +209,14 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(json.loads(self.request('GET','/api/freebox-authorization')[1])['state'],'GRANTED')
         self.server.freebox_auth={'state':'IDLE'}
         self.assertEqual(self.request('POST','/api/freebox-authorize','{"device_id":"other"}',self.session_headers())[0],400)
+
+    def test_session_changes_listed_and_kept_on_request(self):
+        j=self.server.session_journal;cid=j.record('adb_network_connected','TV',{'address':'192.168.1.9:5555'},'not connected','connected')
+        self.assertIn(cid,[c['id'] for c in json.loads(self.request('GET','/api/session-changes')[1])['changes']])
+        code,body,_=self.request('POST','/api/session-restore','{"device_id":"session","restore":[]}',self.session_headers())
+        self.assertEqual(code,200);self.assertEqual(json.loads(body)['results'][0]['state'],'KEPT')
+        self.assertEqual(j.open_changes(),[])
+        self.assertEqual(self.request('POST','/api/session-restore','{"device_id":"x","restore":[]}',self.session_headers())[0],400)
 
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)

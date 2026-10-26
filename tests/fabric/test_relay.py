@@ -95,7 +95,7 @@ class ServerRelayFlowTests(unittest.TestCase):
         from unittest.mock import patch
         from src.server import create_server
         from src.fabric.registry import Registry
-        server=create_server(0,fabric_salt=b's')
+        server=create_server(0,fabric_salt=b's',session_journal=__import__('src.fabric.session',fromlist=['x']).SessionJournal(__import__('tempfile').mkdtemp()+'/s.json'))
         try:
             state={'code':None,'key':None,'seen':set(),'owner':True}
             def send(_r,msg):

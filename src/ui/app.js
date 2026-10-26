@@ -540,3 +540,29 @@ function tvPanel(device) {
   panel.append(element('h3', 'Android TV connection'), info, connect, tutorial, result);
   return panel;
 }
+
+const finish = document.querySelector('#finish');
+document.querySelector('#session-finish').addEventListener('click', async () => {
+  const list = document.querySelector('#finish-list'); const out = document.querySelector('#finish-result'); out.textContent = '';
+  try {
+    const { changes } = await request('/api/session-changes');
+    list.replaceChildren(...(changes.length ? changes.map(c => {
+      const li = element('li'); const box = document.createElement('input'); box.type = 'checkbox'; box.checked = true; box.value = c.id; box.id = 'chg-' + c.id;
+      const label = element('label'); label.htmlFor = box.id; label.append(element('strong', c.title), element('small', `${REDACT ? 'device' : c.device} · before: ${c.before} · now: ${c.after}`));
+      li.append(box, label); return li;
+    }) : [element('li', 'No settings were changed outside reversible transactions. Nothing to restore.')]));
+    document.querySelector('#finish-restore').hidden = !changes.length;
+    finish.showModal();
+  } catch (error) { statusLine.textContent = `Session changes unavailable: ${error.message}`; }
+});
+document.querySelector('#finish-cancel').addEventListener('click', () => finish.close());
+document.querySelector('#finish-restore').addEventListener('click', async event => {
+  const button = event.currentTarget; button.disabled = true; const out = document.querySelector('#finish-result');
+  const restore = [...document.querySelectorAll('#finish-list input:checked')].map(b => b.value);
+  try {
+    const r = await postJson('/api/session-restore', { device_id: 'session', restore });
+    out.textContent = r.results.map(x => `${x.title}: ${x.state}${x.detail ? ' (' + x.detail + ')' : ''}`).join(' · ');
+    button.hidden = true;
+  } catch (error) { out.textContent = `Restore stopped: ${error.message}`; }
+  finally { button.disabled = false; }
+});

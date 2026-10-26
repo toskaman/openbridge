@@ -207,3 +207,8 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - Real TV relay scan over the LAN: 6 BLE advertisers in 8.3 s; through the UI the TV node gets 6 BLE children (observe-only) and ble_relay REAL_HARDWARE_VERIFIED.
 - Companion UX per owner request: modern card/checklist design, one "Set up everything" flow that walks through Android's own dialogs (also on first launch), scans enabled automatically after pairing (pausable), "Don't ask again" permissions redirect to the app's permission page.
 - Privacy mode `?redact` replaces household device names by category numbers; docs/jury/screens/fabric-tv-relay-redacted-1440.png was captured in that mode from the real network.
+
+## Session restore (owner rule: always offer to restore pre-session settings)
+
+- New session journal + "Finish session…" dialog: lists every change made outside reversible transactions with its original state and restores the owner's selection with verified fixed commands; non-invertible items (Freebox authorization, Bluetooth on) are reported as MANUAL with steps. Tests: tests/fabric/test_session.py, HTTP route test.
+- Real use: the four changes made during the 27 Oct TV tests (system Bluetooth app re-enabled on the TV, Companion on TV and phone, ADB Wi-Fi connection) were recorded retroactively (dev/record_test_changes.py, because they had been made through the dev bridge) and the owner chose to restore all of them. Result through the product UI: TV com.android.bluetooth back to disabled-user (enabled=3, re-read), Companion uninstalled from both devices (package absent), ADB Wi-Fi disconnected. Not restored by software: TV location services (turned on by the owner) and the Freebox authorization (revocable in Freebox OS).
