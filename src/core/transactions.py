@@ -130,6 +130,9 @@ class TransactionEngine:
                 raise TransactionBlocked('Cannot obtain the original setting; no write performed') from None
             if type(before) is not int or not 0 < before <= 86400:
                 raise TransactionBlocked('Original setting cannot be safely restored')
+            can_restore=getattr(self.adapter,'can_restore',None)
+            if can_restore is not None and not can_restore(before):
+                raise TransactionBlocked('Exact restoration is not supported on this device; no write performed')
             resource=self.adapter.identity
             try:
                 with self._db() as db:

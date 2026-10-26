@@ -147,3 +147,12 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - Real fault injection: Llama-planned change to com.miui.compass verified (raw dumpsys enabled=0 -> 3); server process force-killed before Undo; after restart, planning was blocked; recovery restored the exact original (raw enabled=0). Receipt: docs/crash-recovery-receipt.json. Cable unplug mid-write remains NOT TESTED on hardware.
 - Pre-event reuse audit (kit audit_submission.py) against the participant's pre-event v0.8 archive: 0 exact matches, 0 near matches, 0 secrets across 110 tracked files. The v0.9 archive was not found on this PC.
 - Anonymous fresh clone of the public repository at 6a36803 on a clean Linux machine: all unit/integration tests, offline e2e and guided e2e PASS; no device serials or local usernames in the tree. GitHub CI green for every pushed commit through 29087f1.
+
+## Device Fabric phase A — Android compatibility fixes
+
+- Baseline audit recorded in docs/DEVICE_FABRIC_BASELINE.md (HEAD 78b6692, tests PASS, CI green).
+- Wi-Fi ADB (`ip:port`, `adb-…._adb-tls-connect._tcp`) now listed as WIFI instead of skipped/mislabelled. OpenBridge never pairs or connects Wi-Fi ADB itself. Wi-Fi ADB hardware: NOT TESTED (needs owner pairing on the phone).
+- Inspection is per-fact tolerant: a missing property, absent battery (TV boxes) or failed command marks only that fact `unavailable`. New read-only facts: CPU ABI, security patch, RAM, screen timeout, television (leanback) and Bluetooth LE features. The test now enforces an exact allowlist of read-only shell commands.
+- Two real-hardware regressions caught during this change and fixed: on the Xiaomi, `df -k /data` reports /data under a bind-mount point, and `pm has-feature` exits 1 for "false". Now parsed from the single df row and from `pm list features`. Real phone: all 12 facts read, none unavailable.
+- Package writes: allowed over USB, Wi-Fi ADB or emulator (ADB authorization remains the trust boundary); refused unless the active Android user is 0; the transaction engine refuses before any write when exact restoration is impossible (default state before Android 9). Real stopwatch loop re-verified with the user check (default -> disabled-user -> default).
+- 119 unit/integration tests PASS (Linux VM).

@@ -11,12 +11,14 @@ PKG='org.nixgame.ruler'
 
 class AndroidPackageTests(unittest.TestCase):
     def setUp(self):
-        self.calls=[];self.code=0;self.state='device';self.fingerprint='build';self.deny=False;self.installed=True
+        self.calls=[];self.code=0;self.sdk='34';self.user='0';self.state='device';self.fingerprint='build';self.deny=False;self.installed=True
         def run(args,**kwargs):
             self.calls.append(args);tail=args[3:]
             if args[1:]==['devices','-l']:out=f'List of devices attached\nPRIVATE_SERIAL {self.state}\n'
             elif tail==['get-state']:out=self.state
             elif tail==['shell','getprop','ro.build.fingerprint']:out=self.fingerprint
+            elif tail==['shell','getprop','ro.build.version.sdk']:out=self.sdk
+            elif tail==['shell','am','get-current-user']:out=self.user
             elif tail[:4]==['shell','pm','list','packages'] and tail[-1]==PKG:
                 flag=tail[4]
                 dis=self.code==3
@@ -81,6 +83,29 @@ class AndroidPackageTests(unittest.TestCase):
             self.assertEqual(self.code,0)
             self.code=1;engine.prepare('t2',DISABLED,consent=True);engine.apply('t2');engine.revert('t2')
             self.assertEqual(self.code,1)
+
+    def test_other_android_user_blocks_writes(self):
+        a=self.adapter();self.user='10'
+        with self.assertRaises(ValueError):a.write_setting(DISABLED)
+        self.assertEqual(self.code,0)
+
+    def test_pre_android_9_default_state_blocks_before_any_write(self):
+        self.sdk='27'
+        with tempfile.TemporaryDirectory() as d:
+            engine=TransactionEngine(Path(d)/'j.sqlite',self.adapter(),allow_physical=True)
+            with self.assertRaises(TransactionBlocked):engine.prepare('t',DISABLED,consent=True)
+            self.assertFalse(any('disable-user' in c for c in self.calls))
+            self.code=1   # explicitly enabled can be restored with `pm enable`
+            engine2=TransactionEngine(Path(d)/'j2.sqlite',self.adapter(),allow_physical=True)
+            engine2.prepare('t2',DISABLED,consent=True);engine2.apply('t2');engine2.revert('t2');self.assertEqual(self.code,1)
+
+    def test_wifi_transport_allowed_for_package_writes(self):
+        out='List of devices attached\n192.168.1.9:5555 device\n'
+        def run(args,**kw):
+            if args[1:]==['devices','-l']:return subprocess.CompletedProcess(args,0,out,'')
+            return self.adb.runner(args,**kw)
+        adb=AndroidAdapter(executable='adb',runner=run);h=adb.discover()['devices'][0]['id']
+        a=AndroidPackageState(adb,h,PKG);a.write_setting(DISABLED);self.assertEqual(self.code,3)
 
     def test_engine_rejects_timeout_targets_for_package_adapter(self):
         with tempfile.TemporaryDirectory() as d:

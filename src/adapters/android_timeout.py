@@ -5,16 +5,17 @@ import re
 
 class AndroidTimeoutSetting:
     source='ADB'
+    write_transports=('USB',)
 
     def __init__(self,adb,handle):
         self._adb=adb
         devices=adb.discover()['devices']
-        device=next((d for d in devices if d['id']==handle and d['state']=='device' and d['transport']=='USB'),None)
+        device=next((d for d in devices if d['id']==handle and d['state']=='device' and d['transport'] in self.write_transports),None)
         if device is None:
             raise ValueError('An authorized USB phone is required')
         self._serial=next(key for key,value in adb._handles.items() if value==handle)
-        if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}',self._serial):
-            raise ValueError('Unsupported USB identifier')
+        if not re.fullmatch(r'[A-Za-z0-9_][A-Za-z0-9_.:-]{0,127}',self._serial):
+            raise ValueError('Unsupported device identifier')
         self._fingerprint=self._read_fingerprint()
         self.identity='android-timeout-'+hashlib.sha256((self._serial+'\0'+self._fingerprint).encode()).hexdigest()
 
@@ -30,7 +31,7 @@ class AndroidTimeoutSetting:
     def _preflight(self):
         devices=self._adb.discover()['devices']
         handle=self._adb._handles.get(self._serial)
-        if not any(d['id']==handle and d['state']=='device' and d['transport']=='USB' for d in devices):
+        if not any(d['id']==handle and d['state']=='device' and d['transport'] in self.write_transports for d in devices):
             raise ValueError('Owned USB phone unavailable or no longer authorized')
         if self._command('get-state') != 'device' or self._read_fingerprint()!=self._fingerprint:
             raise ValueError('Device identity or authorization changed')

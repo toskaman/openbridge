@@ -14,6 +14,7 @@ ALLOWED_PACKAGES=frozenset({'org.nixgame.ruler','one.vik.stopwatch','com.miui.co
 class AndroidPackageState(AndroidTimeoutSetting):
     source='ADB'
     allowed_targets=(DEFAULT,ENABLED,DISABLED)
+    write_transports=('USB','WIFI','EMULATOR')  # ADB authorization is the trust boundary; Wi-Fi must already be paired by the owner
     field='package_enabled_state'
 
     def __init__(self,adb,handle,package):
@@ -21,7 +22,19 @@ class AndroidPackageState(AndroidTimeoutSetting):
             raise ValueError('Package is not on the reviewed optional-app allowlist')
         self.package=package
         super().__init__(adb,handle)
+        sdk=self._command('shell','getprop','ro.build.version.sdk')
+        self.sdk=int(sdk) if sdk.isdigit() else 0
         self.identity='android-package-'+hashlib.sha256((self._serial+'\0'+self._fingerprint+'\0'+package).encode()).hexdigest()
+
+    def _preflight(self):
+        super()._preflight()
+        user=self._command('shell','am','get-current-user')
+        if user!='0':
+            raise ValueError('The active Android user is not user 0; refusing to act on another profile')
+
+    def can_restore(self,value):
+        # `pm default-state` exists from Android 9 (API 28). Before that the default code cannot be re-created exactly.
+        return value!=DEFAULT or self.sdk>=28
 
     def _listed(self,flag):
         out=self._command('shell','pm','list','packages',flag,self.package)
