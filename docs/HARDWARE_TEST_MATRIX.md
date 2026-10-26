@@ -6,7 +6,8 @@
 | Android ADB Wi-Fi | IMPLEMENTED_UNVERIFIED | needs owner-paired wireless debugging |
 | Optional-app change + exact Undo | REAL_HARDWARE_VERIFIED | physical-package-receipt.json, agent-loop-receipt.json |
 | Crash during transaction + recovery | REAL_HARDWARE_VERIFIED | crash-recovery-receipt.json |
-| Android TV authorized / not authorized | NOT TESTED (TV visible via mDNS only) | — |
+| Android TV over ADB Wi-Fi (authorized after on-screen prompt) | REAL_HARDWARE_VERIFIED | EVIDENCE_LEDGER TV section |
+| Android TV as BLE relay over LAN | REAL_HARDWARE_VERIFIED (6 advertisers) | fabric-tv-relay-redacted-1440.png |
 | TV with/without BLE permission | INTEGRATION_VERIFIED (companion status logic) | — |
 | Freebox unauthenticated | REAL_HARDWARE_VERIFIED | public API + mDNS |
 | Freebox authorized LAN inventory | REAL_HARDWARE_VERIFIED | 127 hosts / 12 active |

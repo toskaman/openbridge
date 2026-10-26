@@ -144,7 +144,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -184,6 +184,20 @@ class Handler(BaseHTTPRequestHandler):
                 if body['device_id'] != 'freebox-local':
                     raise ValueError()
                 return self.reply(*self.server.start_freebox_authorization())
+            if self.path == '/api/tv-adb-connect':
+                from src.fabric.guidance import guide
+                reg = self.server.fabric_registry
+                dev = reg.devices.get(body['device_id']) if reg else None
+                if dev is None or dev['category'] not in ('tv', 'media'):
+                    return self.reply(409, {'error': 'Select a TV from the current discovery first'})
+                ips = sorted({v for k, v in dev['weak'] if k == 'ip' and '.' in v})
+                if not ips:
+                    return self.reply(409, {'error': 'No local IPv4 address known for this TV'})
+                manufacturer = (reg.best_value(dev['key'], 'manufacturer') or type('o', (), {'value': None})).value
+                state = self.server.android.connect_network(ips[0])
+                issue = {'PORT_CLOSED': 'tv_network_debugging', 'WAITING_FOR_TV_APPROVAL': 'tv_debug_prompt', 'CONNECT_FAILED': 'tv_network_debugging'}.get(state)
+                tried = [f'adb connect {ips[0]}:5555 -> {state}']
+                return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None})
             if self.path == '/api/fabric-advise':
                 from src.fabric import advisor
                 goal = body.get('goal')
@@ -398,6 +412,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
         from src.fabric.guidance import guide
         m = message.lower()
         issue = ('companion_not_running' if ('refused' in m and 'relay' not in m) or 'connection' in m or 'not an openbridge' in m or 'unreachable' in m else
+                 'bluetooth_service_disabled' if 'system bluetooth app is disabled' in m else
                  'bluetooth_off' if 'bluetooth is off' in m else 'ble_permission' if 'permission not granted' in m else
                  'owner_scan_disabled' if 'owner has not enabled' in m or 'lacks permission' in m else None)
         return guide(issue, tried=[message[:120]], **device_profile(handle)) if issue else None

@@ -45,12 +45,21 @@ final class RelayServer {
     interface Ui { void status(String text); void code(String code); }
 
     private final Context ctx;
-    private final Ui ui;
+    private volatile Ui ui;
     private final SharedPreferences prefs;
     private final SecureRandom random = new SecureRandom();
     private final Set<String> seen = new HashSet<>();
     private final ArrayDeque<String> seenOrder = new ArrayDeque<>();
     private volatile boolean running;
+    private static RelayServer instance;
+    volatile boolean foreground;
+
+    /** One relay per process: survives the activity being destroyed while a settings screen is open (low-RAM TVs). */
+    static synchronized RelayServer get(Context ctx, Ui ui) {
+        if (instance == null) instance = new RelayServer(ctx.getApplicationContext(), ui);
+        instance.ui = ui;
+        return instance;
+    }
     private ServerSocket server;
     private String pendingCode, pendingRelayNonce, pendingPcNonce;
     private long pendingUntil;
@@ -76,6 +85,19 @@ final class RelayServer {
     boolean scanPermission() {
         if (Build.VERSION.SDK_INT >= 31) return ctx.checkSelfPermission("android.permission.BLUETOOTH_SCAN") == PackageManager.PERMISSION_GRANTED;
         return ctx.checkSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_GRANTED;
+    }
+    boolean locationOn() {
+        if (Build.VERSION.SDK_INT >= 31) return true;   // not required with neverForLocation on Android 12+
+        android.location.LocationManager lm = (android.location.LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
+        try { return lm != null && (lm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) || lm.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)); }
+        catch (Exception e) { return false; }
+    }
+    /** False when the system Bluetooth app itself is disabled (seen on a debloated Android TV): nothing can turn the radio on. */
+    boolean bluetoothServiceEnabled() {
+        try {
+            int st = ctx.getPackageManager().getApplicationEnabledSetting("com.android.bluetooth");
+            return st != PackageManager.COMPONENT_ENABLED_STATE_DISABLED && st != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER;
+        } catch (Exception e) { return true; }   // package not visible: assume vendor stack
     }
     boolean bluetoothOn() {
         BluetoothManager m = (BluetoothManager) ctx.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -151,6 +173,7 @@ final class RelayServer {
                 int seconds = p.getInt("seconds");
                 if (!"ble".equals(p.optString("radio")) || seconds < 1 || seconds > MAX_SCAN_SECONDS) throw new SecurityException("bounds");
                 if (!ownerEnabled()) throw new SecurityException("owner has not enabled scanning on this device");
+                if (!foreground) throw new SecurityException("open the OpenBridge Companion app on the device to allow scans");
                 params.put("observations", scan(seconds)); break;
             }
             case "stop_discovery": scanning = false; break;
@@ -162,7 +185,7 @@ final class RelayServer {
 
     private JSONObject status() throws Exception {
         JSONObject perms = new JSONObject();
-        perms.put("BLUETOOTH_SCAN", scanPermission()).put("owner_enabled", ownerEnabled()).put("bluetooth_on", bluetoothOn());
+        perms.put("BLUETOOTH_SCAN", scanPermission()).put("owner_enabled", ownerEnabled()).put("bluetooth_on", bluetoothOn()).put("location_on", locationOn()).put("bluetooth_service", bluetoothServiceEnabled());
         JSONArray caps = new JSONArray();
         if (bleHardware()) caps.put("ble_scan");
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
@@ -206,8 +229,9 @@ final class RelayServer {
         byte[] k = derive(pendingCode, pendingRelayNonce, pendingPcNonce);
         JSONObject body;
         try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
-        prefs.edit().putString("key", hex(k)).apply(); pendingCode = null; ui.code(null);
-        ui.status("Paired with OpenBridge. Scanning stays off until you enable it here.");
+        // Pairing with the on-screen code is the owner's consent: scans are enabled right away (pausable in the app).
+        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).apply(); pendingCode = null; ui.code(null);
+        ui.status("Paired with OpenBridge. Bluetooth scans are available while this app is open.");
         return body;
     }
 
@@ -224,7 +248,9 @@ final class RelayServer {
         if (!scanPermission()) throw new SecurityException("BLE scan permission not granted on this device");
         BluetoothManager m = (BluetoothManager) ctx.getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter a = m.getAdapter();
+        if (!bluetoothServiceEnabled()) throw new SecurityException("The system Bluetooth app is disabled on this device");
         if (a == null || !a.isEnabled()) throw new SecurityException("Bluetooth is off on this device");
+        if (!locationOn()) throw new SecurityException("Location is off; Android 11 and older require it for Bluetooth scans");
         BluetoothLeScanner s = a.getBluetoothLeScanner();
         Map<String, JSONObject> found = new LinkedHashMap<>();
         ScanCallback cb = new ScanCallback() {

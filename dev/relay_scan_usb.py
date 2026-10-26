@@ -5,9 +5,12 @@ from src.adapters.android import AndroidAdapter
 from src.fabric import relay as R
 from src.fabric.ble_local import address_kind
 
-cfg=json.loads((Path.home()/'AppData/Local/OpenBridge/relay-test.json').read_text());key=bytes.fromhex(cfg['key']);rid=cfg['relay_id']
-a=AndroidAdapter();d=[x for x in a.discover()['devices'] if x['state']=='device' and x['transport']=='USB'][0]
-send=R.http_transport(a.forward_companion(d['id']))
+tv=len(sys.argv)>2
+cfg=json.loads((Path.home()/('AppData/Local/OpenBridge/relay-test'+('-tv' if tv else '')+'.json')).read_text());key=bytes.fromhex(cfg['key']);rid=cfg['relay_id']
+if tv:send=R.http_transport('http://'+sys.argv[2]+':47800')
+else:
+    a=AndroidAdapter();d=[x for x in a.discover()['devices'] if x['state']=='device' and x['transport']=='USB'][0]
+    send=R.http_transport(a.forward_companion(d['id']))
 seen=set()
 status=R.verify(key,send(None,R.command(key,rid,'get_status')),seen)['params']
 print('status',json.dumps(status['permissions']))

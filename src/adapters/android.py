@@ -96,6 +96,44 @@ class AndroidAdapter:
                 self._run(['-s', serial, 'shell', 'am', 'start', '-n', 'fr.openbridge.companion/.MainActivity'])
             return output[-2000:]
 
+    def bluetooth_identifier(self, handle, salt):
+        """Read-only `settings get secure bluetooth_address` -> opaque mac_global, so a TV seen over ADB merges with its
+        mDNS announcement (androidtvremote2 'bt'). None when hidden (most phones on Android 12+) or randomized."""
+        import hashlib, hmac
+        from src.fabric.contracts import mac_is_randomized
+        with self._lock:
+            serial = next((k for k, v in self._handles.items() if v == handle), None)
+            if serial is None:
+                return None
+            try:
+                mac = self._run(['-s', serial, 'shell', 'settings', 'get', 'secure', 'bluetooth_address']).strip().lower()
+            except (OSError, ValueError, subprocess.SubprocessError):
+                return None
+        if not re.fullmatch(r'([0-9a-f]{2}:){5}[0-9a-f]{2}', mac) or mac_is_randomized(mac):
+            return None
+        return 'mac_global:' + hmac.new(salt, f'mac_global\0{mac}'.encode(), hashlib.sha256).hexdigest()[:24]
+
+    def connect_network(self, ip, port=5555):
+        """One owner-triggered `adb connect` to a device already in the graph. Private IPv4 only; no scanning."""
+        import ipaddress, socket
+        address = ipaddress.ip_address(ip)
+        if address.version != 4 or not address.is_private or address.is_loopback:
+            raise ValueError('Only private IPv4 addresses on the local network')
+        probe = socket.socket(); probe.settimeout(2)
+        try:
+            if probe.connect_ex((str(address), port)) != 0:
+                return 'PORT_CLOSED'
+        finally:
+            probe.close()
+        out = self._run(['connect', f'{address}:{port}']).strip().lower()
+        state = next((d['state'] for d in self.discover()['devices'] if d['transport'] == 'WIFI' and
+                      any(k == f'{address}:{port}' for k, v in self._handles.items() if v == d['id'])), None)
+        if state == 'device':
+            return 'AUTHORIZED'
+        if state == 'unauthorized' or 'authenticate' in out:
+            return 'WAITING_FOR_TV_APPROVAL'
+        return 'CONNECT_FAILED'
+
     def forward_companion(self, handle, port=47800):
         """Fixed `adb forward tcp:<port> tcp:47800` so the PC reaches the Companion over USB without exposing it on Wi-Fi."""
         if not isinstance(port, int) or not 1024 < port < 65536:

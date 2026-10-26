@@ -20,7 +20,7 @@ def run(*args):
 def main():
     shutil.rmtree(OUT, ignore_errors=True); (OUT / 'classes').mkdir(parents=True)
     sources = sorted(str(p) for p in (SRC / 'src').rglob('*.java'))
-    run('javac', '--release', '11', '-Xlint:-options', '-classpath', JAR, '-d', OUT / 'classes', *sources)
+    run('javac', '-encoding', 'UTF-8', '--release', '11', '-Xlint:-options', '-classpath', JAR, '-d', OUT / 'classes', *sources)
     classes = sorted(str(p) for p in (OUT / 'classes').rglob('*.class'))
     run(BT / 'd8.bat', '--release', '--min-api', '26', '--lib', JAR, '--output', OUT, *classes)
     run(BT / 'aapt2.exe', 'link', '--manifest', SRC / 'AndroidManifest.xml', '-I', JAR, '-o', OUT / 'base.apk')

@@ -44,5 +44,37 @@ class ServerGuidanceTests(unittest.TestCase):
                 while server.companion_install['state']!='INSTALLED' and time.time()<deadline:time.sleep(0.05)
                 self.assertEqual(server.companion_install['state'],'INSTALLED')
             g=server.guide_for_error('Relay refused: Bluetooth is off on this device','h');self.assertEqual(g['issue'],'bluetooth_off')
+            self.assertEqual(server.guide_for_error('Relay refused: The system Bluetooth app is disabled on this device','h')['issue'],'bluetooth_service_disabled')
             self.assertEqual(server.guide_for_error('[WinError 10061] connection refused','h')['issue'],'companion_not_running')
         finally:server.server_close()
+
+
+class TvTests(unittest.TestCase):
+    def test_tv_tutorials_by_brand(self):
+        nv=guide('tv_network_debugging','NVIDIA',television=True);self.assertIn('Network debugging',' '.join(nv['steps']))
+        gg=guide('tv_network_debugging','Google',television=True);self.assertIn('Android TV OS build',' '.join(gg['steps']))
+        self.assertIn('Always allow',' '.join(guide('tv_debug_prompt','Sony',television=True)['steps']))
+
+    def test_connect_network_only_private_and_probe_first(self):
+        import subprocess
+        from src.adapters.android import AndroidAdapter
+        a=AndroidAdapter(executable='adb',runner=lambda *x,**k:subprocess.CompletedProcess(x,0,'',''))
+        for bad in ('8.8.8.8','127.0.0.1','fe80::1'):
+            with self.assertRaises(ValueError):a.connect_network(bad)
+        self.assertEqual(a.connect_network('192.168.255.254',port=1),'PORT_CLOSED')
+
+    def test_tv_and_adb_view_merge_on_bluetooth_address(self):
+        from src.fabric.discovery import ingest_mdns, ingest_android
+        from src.fabric.registry import Registry
+        r=Registry()
+        ingest_mdns(r,{'instances':[{'service':'_androidtvremote2._tcp','instance':'TV','host':'tv-a.local','port':6466,'addresses':['192.168.1.15'],'txt':{'bt':'00:1A:2B:3C:4D:5E'},'category':'tv'}]},b's')
+        class A:
+            _handles={'192.168.1.15:5555':'h'}
+            def discover(s):return {'devices':[{'id':'h','state':'device','transport':'WIFI','name':'x'}]}
+            def stable_identifier(s,h,salt):return 'android_serial:abc'
+            def bluetooth_identifier(s,h,salt):
+                from src.fabric.contracts import opaque;return opaque('mac_global','00:1a:2b:3c:4d:5e',salt)
+            def inspect(s,h):return {'evidence':[{'key':'model','value':'Android TV','observed_at':'t'},{'key':'is_television','value':True,'observed_at':'t'}]}
+        ingest_android(r,A(),b's')
+        snap=r.snapshot();tvs=[d for d in snap['devices'] if d['category']=='tv']
+        self.assertEqual(len(tvs),1);self.assertEqual(sorted(l['transport'] for l in snap['links']),['LAN','WIFI'])

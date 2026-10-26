@@ -1,7 +1,7 @@
 # Known limitations
 
 - One owned phone (Xiaomi, Android 14) for all physical evidence; other vendors may behave differently and adapters fail closed.
-- Wi-Fi ADB and Android TV (ADB or Companion) are not hardware-verified. BLE is verified only through the phone relay; this PC has no Bluetooth adapter.
+- BLE is verified through the phone and TV relays only; this PC has no Bluetooth adapter. Android TV evidence comes from one TV (Android 11).
 - SSDP/UPnP, OpenWrt, FRITZ!Box, Home Assistant, ESPHome, Matter, Thread and Zigbee adapters are not implemented.
 - Router/box configuration is read-only by policy.
 - Cable unplug during a write is covered by mocked tests only.

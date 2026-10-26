@@ -57,6 +57,11 @@ def guide(issue, manufacturer=None, sdk=None, television=False, tried=()):
         g = ('Turn Bluetooth on', 'Scanning needs the device radio; OpenBridge never turns it on silently.',
              ['Settings > Remotes & Accessories (TV) or the quick-settings panel (phone): turn Bluetooth on.' if tv else 'Swipe down the quick-settings panel and turn Bluetooth on.'],
              'The next scan request checks the radio again.')
+    elif issue == 'bluetooth_service_disabled':
+        g = ('Re-enable the system Bluetooth app', 'Android\'s own Bluetooth app is disabled on this device, so the radio cannot start (often after removing pre-installed apps).',
+             ['Settings > Apps > See all apps > Show system apps > Bluetooth > Enable.' if not tv else 'Settings > Apps > See all apps > Show system apps > Bluetooth > Enable (use the remote).',
+              'Then select "Set up everything" in the OpenBridge Companion.'],
+             'OpenBridge never re-enables system apps on its own.')
     elif issue == 'ble_permission':
         perm = 'Nearby devices' if (sdk or 0) >= 31 else 'Location'
         g = ('Allow Bluetooth scanning in the Companion', f'Android protects scanning with the "{perm}" permission.',
@@ -64,12 +69,28 @@ def guide(issue, manufacturer=None, sdk=None, television=False, tried=()):
              (['Android 11 or older: Location services must also be on during scans.'] if (sdk or 99) < 31 else []),
              'Status in the Companion updates immediately.')
     elif issue == 'owner_scan_disabled':
-        g = ('Enable scans for OpenBridge', 'Pairing alone grants nothing; scanning is an explicit owner choice on the device.',
-             ['In the Companion app, select "Enable scans for OpenBridge".'], 'You can disable it again at any time.')
+        g = ('Resume scans in the Companion', 'Scans were paused on the device by its owner.',
+             ['In the Companion app, select "Resume scans".'], 'You can pause them again at any time.')
     elif issue == 'wifi_adb_pairing':
         g = ('Pair wireless debugging', 'Some devices (TVs) are only reachable over Wi-Fi debugging.',
              [f'Open {dev}.', 'Turn on "Wireless debugging" and select "Pair device with pairing code".', 'Keep that screen open; OpenBridge will ask for the code.'],
              'Only devices you pair yourself are used; OpenBridge never scans ports.')
+    elif issue == 'tv_network_debugging':
+        brand = (manufacturer or '').lower()
+        about = ('Settings > System > About > select "Android TV OS build" 7 times' if 'google' in brand or 'chromecast' in brand
+                 else 'Settings > Device Preferences > About > select "Build" 7 times with the remote OK button')
+        toggle = ('In Developer options turn on "Network debugging".' if 'nvidia' in brand or 'shield' in brand
+                  else 'In Developer options turn on "USB debugging" (on most Android TVs it also enables debugging over the network) and, if listed, "Network debugging" or "ADB over network".')
+        g = ('Enable debugging on the TV', 'OpenBridge reads TV facts through Android\'s official debugging bridge over your home network.',
+             [about + ' until "You are now a developer" appears.',
+              'Go back: Developer options now appear under Device Preferences (or System).', toggle,
+              'Google TV 12 or newer without that option: use "Wireless debugging" > "Pair device with pairing code".',
+              'Then select "Connect over ADB Wi-Fi" again in OpenBridge.'],
+             'Only this TV is contacted, on its local address and debugging port; nothing is scanned.')
+    elif issue == 'tv_debug_prompt':
+        g = ('Accept debugging on the TV screen', 'Android asks the owner to trust each computer once.',
+             ['A dialog "Allow debugging?" is shown on the TV.', 'With the remote, tick "Always allow from this computer".', 'Select OK.'],
+             'OpenBridge checks every few seconds and continues automatically.')
     elif issue == 'freebox_pending':
         g = ('Approve OpenBridge on your Freebox', 'The Freebox only issues app tokens after a press on its front panel.',
              ['Wake the Freebox Server display with an arrow key.', 'Select ✓ for "OpenBridge Device Fabric".'],

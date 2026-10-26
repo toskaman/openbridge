@@ -58,6 +58,9 @@ def ingest_android(registry, adapter, salt):
     for device in inventory.get('devices', []):
         ident = adapter.stable_identifier(device['id'], salt) if device['state'] == 'device' else None
         ids = [Identifier('android_serial', ident, True)] if ident else []
+        bt = adapter.bluetooth_identifier(device['id'], salt) if device['state'] == 'device' and hasattr(adapter, 'bluetooth_identifier') else None
+        if bt:
+            ids.append(Identifier('mac_global', bt, True))
         obs, category = [], 'android'
         if device['state'] == 'device':
             try:
@@ -68,7 +71,8 @@ def ingest_android(registry, adapter, salt):
             except ValueError:
                 pass
         label = next((o.value for o in obs if o.key == 'model'), device['name'])
-        key = registry.upsert(ids, category=category, label=str(label), observations=obs)
+        serial_ip = next((k.split(':')[0] for k, v in getattr(adapter, '_handles', {}).items() if v == device['id'] and ':' in k), None)
+        key = registry.upsert(ids, category=category, label=str(label), observations=obs, weak=[('ip', serial_ip)] if serial_ip else [])
         grants = ('read', 'control') if device['state'] == 'device' else ('observe',)
         registry.link(Link('pc', key, device['transport'], grants, 'ADB:' + device['state']))
         registry.devices[key].setdefault('handles', {})[device['transport']] = device['id']

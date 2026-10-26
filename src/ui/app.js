@@ -351,6 +351,16 @@ document.querySelector('#agent-recover').addEventListener('click', async event =
 const fabricTree = document.querySelector('#fabric-tree');
 const fabricDetail = document.querySelector('#fabric-detail');
 let fabric = null;
+const REDACT = new URLSearchParams(location.search).has('redact');   // demo/privacy mode: hide household device names
+let redactNames = new Map();
+function displayLabel(device) {
+  if (!REDACT || ['router'].includes(device.category)) return device.label;
+  if (!redactNames.has(device.key)) {
+    const n = [...redactNames.keys()].filter(k => (fabric.devices.find(d => d.key === k) || {}).category === device.category).length + 1;
+    redactNames.set(device.key, `${device.category[0].toUpperCase()}${device.category.slice(1)} ${n}`);
+  }
+  return redactNames.get(device.key);
+}
 function chip(text, cls) { return element('span', text, cls); }
 function renderFabric(snap) {
   fabric = snap;
@@ -372,7 +382,7 @@ function renderFabric(snap) {
       const device = devices.get(child); if (!device || seen.has(child)) continue;
       const li = element('li');
       const node = element('button', undefined, 'fabric-node'); node.type = 'button'; node.setAttribute('aria-pressed', 'false');
-      node.append(chip(device.category, 'cat'), element('span', device.label));
+      node.append(chip(device.category, 'cat'), element('span', displayLabel(device)));
       if (device.possibly_same_as && device.possibly_same_as.length) node.append(chip('possible duplicate', 'grant observe'));
       const rank = { observe: 0, read: 1, control: 2 }; const perTransport = new Map();
       for (const link of links) {
@@ -397,12 +407,13 @@ function showDevice(device, links) {
   const row = (k, v) => { const tr = element('tr'); tr.append(element('td', k), element('td', v)); table.append(tr); };
   row('Category', device.category);
   row('Identity', device.identifier_kinds.length ? `strong: ${device.identifier_kinds.join(', ')} (pseudonymized)` : 'no strong identifier: never merged automatically');
-  if (device.possibly_same_as && device.possibly_same_as.length) row('Possibly the same device as', device.possibly_same_as.map(k => (fabric.devices.find(d => d.key === k) || {}).label || k).join(', ') + ' (weak signal such as a shared IP; not merged, no action can target both)');
+  if (device.possibly_same_as && device.possibly_same_as.length) row('Possibly the same device as', device.possibly_same_as.map(k => displayLabel(fabric.devices.find(d => d.key === k) || { key: k, label: k, category: 'device' })).join(', ') + ' (weak signal such as a shared IP; not merged, no action can target both)');
   row('Reached via', links.map(l => `${l.transport} (${l.grants.join('/')}) from ${l.source}`).join('; '));
-  for (const [k, f] of Object.entries(device.facts)) row(k, `${Array.isArray(f.value) ? f.value.join(', ') : f.value} · ${f.sources.join(' + ')}${f.verified ? '' : ' · reported, not verified'}`);
+  for (const [k, f] of Object.entries(device.facts)) if (!(REDACT && ['model', 'security_patch'].includes(k) && device.category !== 'router')) row(k, `${Array.isArray(f.value) ? f.value.join(', ') : f.value} · ${f.sources.join(' + ')}${f.verified ? '' : ' · reported, not verified'}`);
   const caps = element('div');
   for (const c of device.capabilities) { const p = element('p'); p.append(element('strong', c.name + ' '), chip(c.status, 'status ' + c.status), document.createTextNode(` ${c.level} via ${c.via}${c.evidence ? ' · ' + c.evidence : ''}`)); caps.append(p); }
-  fabricDetail.replaceChildren(element('h3', device.label), table, element('h3', 'Capabilities'), caps.childElementCount ? caps : element('p', 'No verified capability. Observed only.'));
+  fabricDetail.replaceChildren(element('h3', displayLabel(device)), table, element('h3', 'Capabilities'), caps.childElementCount ? caps : element('p', 'No verified capability. Observed only.'));
+  if (['tv', 'media'].includes(device.category) && !(device.handles || {}).WIFI) fabricDetail.append(tvPanel(device));
   const handle = (device.handles || {}).USB || (device.handles || {}).WIFI;
   if (handle && device.capabilities.some(c => c.name === 'ble_relay')) fabricDetail.append(relayPanel(device, handle));
 }
@@ -457,7 +468,7 @@ function relayPanel(device, handle) {
     scan.disabled = true; result.textContent = 'The device is scanning (8 s)…';
     try { const snap = await postJson('/api/relay-scan', { device_id: handle, relay_id: relayId, seconds: 8 }); renderFabric(snap);
       const updated = snap.devices.find(d => d.key === device.key);
-      if (updated) { showDevice(updated, snap.links.filter(l => l.child === device.key)); fabricDetail.querySelector('.relay-panel p[role=status]').textContent = `${snap.providers.relay.devices} Bluetooth advertiser(s) added under ${device.label} (observe only).`; }
+      if (updated) { showDevice(updated, snap.links.filter(l => l.child === device.key)); fabricDetail.querySelector('.relay-panel p[role=status]').textContent = `${snap.providers.relay.devices} Bluetooth advertiser(s) added under ${displayLabel(device)} (observe only).`; }
       return; }
     catch (error) { result.textContent = `Scan not performed: ${error.message}`; showGuideObject(error.guide); }
     finally { scan.disabled = false; }
@@ -502,3 +513,30 @@ document.querySelector('#fabric-advise').addEventListener('click', async event =
   } catch (error) { out.textContent = `Advice unavailable: ${error.message}`; }
   finally { button.disabled = false; }
 });
+
+function tvPanel(device) {
+  const panel = element('div', undefined, 'relay-panel');
+  const info = element('p', 'This TV was found on your network. OpenBridge can read its details over Android debugging on your home network (ADB Wi-Fi), after you allow it on the TV.');
+  const connect = element('button', 'Connect over ADB Wi-Fi', 'secondary');
+  const tutorial = element('button', 'How do I enable ADB on my TV?', 'secondary');
+  const result = element('p', '', 'muted'); result.setAttribute('role', 'status');
+  tutorial.addEventListener('click', async () => {
+    try { const r = await postJson('/api/tv-adb-connect', { device_id: device.key }); if (r.guide) showGuideObject(r.guide); else result.textContent = 'This TV already accepts debugging.'; }
+    catch (error) { result.textContent = error.message; }
+  });
+  connect.addEventListener('click', async () => {
+    connect.disabled = true; result.textContent = 'Contacting the TV on its debugging port…';
+    try {
+      let r = await postJson('/api/tv-adb-connect', { device_id: device.key });
+      for (let i = 0; i < 40 && r.state === 'WAITING_FOR_TV_APPROVAL'; i++) {
+        showGuideObject(r.guide); result.textContent = 'Waiting for you to accept on the TV…';
+        await new Promise(res => setTimeout(res, 3000)); r = await postJson('/api/tv-adb-connect', { device_id: device.key });
+      }
+      if (r.state === 'AUTHORIZED') { if (guide.open) guide.close(); result.textContent = 'Connected. Refreshing the environment…'; document.querySelector('#fabric-discover').click(); }
+      else { showGuideObject(r.guide); result.textContent = r.state === 'PORT_CLOSED' ? 'Debugging is not enabled on this TV yet. Follow the steps shown, then try again.' : `Not connected (${r.state}).`; }
+    } catch (error) { result.textContent = `Connection not attempted: ${error.message}`; }
+    finally { connect.disabled = false; }
+  });
+  panel.append(element('h3', 'Android TV connection'), info, connect, tutorial, result);
+  return panel;
+}
