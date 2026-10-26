@@ -1,0 +1,80 @@
+{
+  "artifact": "openbridge-demo-preview-177s.mp4",
+  "status": "PREVIEW_NOT_FINAL_SUBMISSION",
+  "source_revision": "4a8ae0476208e45278986bf532bd5b892241e822",
+  "language": "English",
+  "duration_seconds": 177,
+  "codec": "H.264",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "audio": "Intentionally silent; burned-in English captions",
+  "file_bytes": 6699033,
+  "sha256": "89978f88a559992a8d12f738613f552395166e00a11c82c3c3557492815319d3",
+  "scenes": [
+    {
+      "at_seconds": 0.01,
+      "name": "problem",
+      "caption": "USB phones and local gateways expose different permissions. OpenBridge makes their facts, sources and limits visible."
+    },
+    {
+      "at_seconds": 13.02,
+      "name": "real-android",
+      "caption": "A real, authorized USB phone. These facts are read from Android; private device identifiers stay hidden."
+    },
+    {
+      "at_seconds": 33.12,
+      "name": "recorded-meta",
+      "caption": "Meta Muse Spark 1.3: a real recorded runtime-core inference on synthetic facts. Viewing this proof makes no new API call."
+    },
+    {
+      "at_seconds": 49.0,
+      "name": "meta-boundaries",
+      "caption": "The model result carries evidence references and uncertainty. Physical device data stays local; default cloud requests are blocked."
+    },
+    {
+      "at_seconds": 65.11,
+      "name": "simulated-change",
+      "caption": "SIMULATED recovery sandbox: save the exact original value, apply a bounded change, then verify the read-back. No phone setting changes here."
+    },
+    {
+      "at_seconds": 89.58,
+      "name": "durable-recovery",
+      "caption": "After a page reload, the saved transaction still exists. The original value has not been lost."
+    },
+    {
+      "at_seconds": 99.11,
+      "name": "simulated-undo",
+      "caption": "SIMULATED Undo restores the exact saved value. This demonstrates durable recovery, not physical-device rollback."
+    },
+    {
+      "at_seconds": 111.43,
+      "name": "real-gateway",
+      "caption": "A second real protocol: Freebox public identity discovery. No pairing, credentials or router configuration is used."
+    },
+    {
+      "at_seconds": 135.3,
+      "name": "real-refusal-record",
+      "caption": "RECORDED PHYSICAL ATTEMPT: Android refused the write. A separate read confirmed the original setting remained intact. Physical Undo success is not claimed."
+    },
+    {
+      "at_seconds": 155.63,
+      "name": "validation",
+      "caption": "71 unit/integration tests. Green Windows, Linux and offline-browser CI. Event-created source and sanitized evidence are public on GitHub."
+    },
+    {
+      "at_seconds": 166.0,
+      "name": "closing",
+      "caption": "OpenBridge \u00b7 github.com/toskaman/openbridge. Read-only physical devices. Verified simulated recovery. Meta Muse Spark 1.3 design and runtime evidence."
+    }
+  ],
+  "physical_write_requests_during_capture": 0,
+  "model_requests_during_capture": 0,
+  "limitations": [
+    "Meta proof is recorded, not a live browser/provider request.",
+    "Recovery sandbox is simulated.",
+    "The actual physical write was refused; original state was preserved.",
+    "Only one authorized physical USB phone was available."
+  ],
+  "release_url": "https://github.com/toskaman/openbridge/releases/tag/v0.1.0-alpha.2"
+}

@@ -53,3 +53,7 @@ Tracking uses an owned `adb track-devices` subprocess, starts only with an opted
 Runtime needs no third-party Python packages. For the pinned browser-test environment, run `python -m pip install -r requirements-dev.txt`, then `python -m playwright install chromium` and `python -m tests.e2e.offline_smoke`.
 
 This isolated check starts its own temporary server and synthetic journal. It verifies the English interface, recorded model proof, simulated change/reload/Undo and missing-device guidance at four widths. Hardware responses are controlled and no provider calls are made. The same check runs in the Linux CI browser job; unit/integration tests run on Windows and Linux.
+
+## Evidence walkthrough preview
+
+A captioned English preview is available with the [alpha.2 release](https://github.com/toskaman/openbridge/releases/tag/v0.1.0-alpha.2). It is 177 seconds, 1080p/30fps, intentionally silent, and records actual application interactions. Its [public manifest](docs/jury/DEMO_PREVIEW.json) pins the captured source revision and states which evidence is recorded or simulated. This is a preview, not a final contest submission.

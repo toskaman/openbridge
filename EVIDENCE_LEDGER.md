@@ -71,3 +71,10 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - The isolated offline browser suite passed locally at 390/768/1440/3440 using Playwright 1.63.0. It verifies synthetic inspection, historical proof labels, durable simulated Undo after reload, missing ADB, unavailable gateway and English layout without overflow.
 - Device responses are controlled; this suite performs zero physical-device or model-provider requests. A temporary server and journal are cleaned up after the test.
 - Optional test dependencies are pinned separately from the dependency-free application runtime. A new Ubuntu 24.04 browser CI job installs these and runs the same isolated suite. Remote job results are tracked separately from local PASS results.
+
+## Captioned evidence preview
+
+- A direct headless browser recording captured actual Android read-only inspection, historical Meta proof, the simulated change/reload/Undo loop, actual Freebox public discovery and the recorded physical-write refusal.
+- The capture used a separate temporary synthetic journal; no physical setting write or model request occurred during filming. Desktop input and desktop recording were not used.
+- The encoded preview was verified as H.264, 1920x1080, 30fps, exactly 177 seconds and intentionally without an audio track. Representative Meta-proof and physical-refusal frames were visually checked for readable captions and truthful labels.
+- docs/jury/DEMO_PREVIEW.json records the captured application revision, scene timing, SHA-256 and limitations. The preview does not assert successful physical Undo or a live browser/provider inference.
