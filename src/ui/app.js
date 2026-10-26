@@ -335,3 +335,86 @@ document.querySelector('#agent-recover').addEventListener('click', async event =
   } catch (error) { agentStep('Recover', error.message, 'deny'); }
   finally { button.disabled = false; }
 });
+
+// ---- Device Fabric ----
+const fabricTree = document.querySelector('#fabric-tree');
+const fabricDetail = document.querySelector('#fabric-detail');
+let fabric = null;
+function chip(text, cls) { return element('span', text, cls); }
+function renderFabric(snap) {
+  fabric = snap;
+  const devices = new Map(snap.devices.map(d => [d.key, d]));
+  document.querySelector('#fabric-meta').textContent = `${snap.devices.length} DEVICE(S) · ${snap.links.length} LINK(S)${snap.elapsed_ms !== undefined ? ' · ' + snap.elapsed_ms + ' MS' : ''}`;
+  const providers = document.querySelector('#fabric-providers'); providers.replaceChildren();
+  for (const [name, info] of Object.entries(snap.providers || {})) {
+    const ok = ['OK', 'AUTHENTICATED'].includes(info.status);
+    const extra = info.instances !== undefined ? ` · ${info.instances} services` : info.devices !== undefined ? ` · ${info.devices} devices` : info.lan_hosts !== undefined ? ` · ${info.lan_hosts} LAN hosts` : '';
+    providers.append(element('li', `${name.toUpperCase()}: ${info.status}${info.authorization ? ' (' + info.authorization + ')' : ''}${extra}`, ok ? 'ok' : (info.status || '').match(/UNAVAILABLE|NOT_SUPPORTED|BLOCKED|ERROR/) ? 'blocked' : ''));
+  }
+  const children = new Map();
+  for (const link of snap.links) { if (!children.has(link.parent)) children.set(link.parent, []); children.get(link.parent).push(link); }
+  const build = (parent, depth, seen) => {
+    const list = element('ul');
+    const groups = new Map();
+    for (const link of children.get(parent) || []) { if (!groups.has(link.child)) groups.set(link.child, []); groups.get(link.child).push(link); }
+    for (const [child, links] of groups) {
+      const device = devices.get(child); if (!device || seen.has(child)) continue;
+      const li = element('li');
+      const node = element('button', undefined, 'fabric-node'); node.type = 'button'; node.setAttribute('aria-pressed', 'false');
+      node.append(chip(device.category, 'cat'), element('span', device.label));
+      if (device.possibly_same_as && device.possibly_same_as.length) node.append(chip('possible duplicate', 'grant observe'));
+      const rank = { observe: 0, read: 1, control: 2 }; const perTransport = new Map();
+      for (const link of links) {
+        const best = link.grants.includes('control') ? 'control' : link.grants.includes('read') ? 'read' : 'observe';
+        if (!perTransport.has(link.transport) || rank[best] > rank[perTransport.get(link.transport)]) perTransport.set(link.transport, best);
+      }
+      for (const [transport, best] of perTransport) node.append(chip(transport, 'via'), chip(best, 'grant ' + best));
+      node.addEventListener('click', () => { for (const n of fabricTree.querySelectorAll('.fabric-node')) n.setAttribute('aria-pressed', 'false'); node.setAttribute('aria-pressed', 'true'); showDevice(device, links); });
+      li.append(node);
+      if (depth < 4) { const sub = build(child, depth + 1, new Set([...seen, child])); if (sub.childElementCount) li.append(sub); }
+      list.append(li);
+    }
+    return list;
+  };
+  const root = element('li'); const pc = element('div', 'This PC (OpenBridge)', 'fabric-node'); root.append(pc, build('pc', 0, new Set()));
+  fabricTree.replaceChildren(root);
+  const box = snap.devices.find(d => d.category === 'router' && d.capabilities.some(c => c.name === 'lan_inventory' && c.status === 'BLOCKED'));
+  document.querySelector('#freebox-authorize').hidden = !box;
+}
+function showDevice(device, links) {
+  const table = element('table');
+  const row = (k, v) => { const tr = element('tr'); tr.append(element('td', k), element('td', v)); table.append(tr); };
+  row('Category', device.category);
+  row('Identity', device.identifier_kinds.length ? `strong: ${device.identifier_kinds.join(', ')} (pseudonymized)` : 'no strong identifier: never merged automatically');
+  if (device.possibly_same_as && device.possibly_same_as.length) row('Possibly the same device as', device.possibly_same_as.map(k => (fabric.devices.find(d => d.key === k) || {}).label || k).join(', ') + ' (weak signal such as a shared IP; not merged, no action can target both)');
+  row('Reached via', links.map(l => `${l.transport} (${l.grants.join('/')}) from ${l.source}`).join('; '));
+  for (const [k, f] of Object.entries(device.facts)) row(k, `${Array.isArray(f.value) ? f.value.join(', ') : f.value} · ${f.sources.join(' + ')}${f.verified ? '' : ' · reported, not verified'}`);
+  const caps = element('div');
+  for (const c of device.capabilities) { const p = element('p'); p.append(element('strong', c.name + ' '), chip(c.status, 'status ' + c.status), document.createTextNode(` ${c.level} via ${c.via}${c.evidence ? ' · ' + c.evidence : ''}`)); caps.append(p); }
+  fabricDetail.replaceChildren(element('h3', device.label), table, element('h3', 'Capabilities'), caps.childElementCount ? caps : element('p', 'No verified capability. Observed only.'));
+}
+document.querySelector('#fabric-discover').addEventListener('click', async event => {
+  const button = event.currentTarget; button.disabled = true;
+  document.querySelector('#fabric-meta').textContent = 'DISCOVERING…';
+  try {
+    if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
+    renderFabric(await request('/api/fabric-discover', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ device_id: 'fabric' }) }));
+  } catch (error) { document.querySelector('#fabric-meta').textContent = 'DISCOVERY FAILED'; statusLine.textContent = `Discovery stopped: ${error.message}`; }
+  finally { button.disabled = false; }
+});
+GUIDES.FREEBOX_PENDING = ['Approve OpenBridge on your Freebox', ['Look at the Freebox Server front-panel screen.', 'A request from "OpenBridge Device Fabric" is shown.', 'Press the right arrow to select ✓ (Yes) within a few minutes.']];
+GUIDES.FREEBOX_DENIED = ['Freebox access was not granted', ['Nothing was changed. OpenBridge stays on public identity only.', 'You can retry at any time with "Authorize read-only Freebox inventory".']];
+document.querySelector('#freebox-authorize').addEventListener('click', async event => {
+  const button = event.currentTarget; button.disabled = true;
+  try {
+    if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
+    let state = (await request('/api/freebox-authorize', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify({ device_id: 'freebox-local' }) })).state;
+    showGuide('FREEBOX_PENDING');
+    document.querySelector('#guide-steps').append(element('li', 'Read-only: LAN inventory only. Wi-Fi, DHCP, DNS and firewall stay blocked. The token is stored encrypted by Windows.'));
+    for (let i = 0; i < 160 && state === 'PENDING'; i++) { await new Promise(r => setTimeout(r, 2000)); state = (await request('/api/freebox-authorization')).state; }
+    if (state === 'GRANTED') { guide.close(); document.querySelector('#fabric-discover').click(); }
+    else showGuide('FREEBOX_DENIED');
+  } catch (error) { statusLine.textContent = `Freebox authorization stopped: ${error.message}`; }
+  finally { button.disabled = false; }
+});
+request('/api/fabric').then(snap => { if (snap.status !== 'NOT_RUN') renderFabric(snap); }).catch(() => {});

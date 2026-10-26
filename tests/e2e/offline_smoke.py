@@ -12,7 +12,7 @@ def main():
     with TemporaryDirectory() as directory:
         adapter=SimulatedSetting(Path(directory)/'setting.sqlite')
         engine=TransactionEngine(Path(directory)/'journal.sqlite',adapter)
-        server=create_server(0,demo_engine=engine)
+        server=create_server(0,demo_engine=engine,fabric_salt=b'e2e')
         worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
         url=f'http://127.0.0.1:{server.server_port}'
         try:

@@ -15,7 +15,7 @@ from src.server import create_server
 class HTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = create_server(0)
+        cls.server = create_server(0, fabric_salt=b'test-salt')
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.port = cls.server.server_port
@@ -179,6 +179,36 @@ class HTTPTests(unittest.TestCase):
             self.assertEqual(self.request('POST','/api/agent-undo',body,self.session_headers())[0],200)
             agent.recover.return_value=[]
             self.assertEqual(self.request('POST','/api/agent-recover','{"source":"android","device_id":"h"}',self.session_headers())[0],200)
+
+    def test_fabric_routes_csrf_validation_and_single_flight(self):
+        self.assertEqual(json.loads(self.request('GET','/api/fabric')[1])['status'],'NOT_RUN')
+        self.assertEqual(self.request('POST','/api/fabric-discover','{"device_id":"fabric"}',{'Content-Type':'application/json'})[0],403)
+        self.assertEqual(self.request('POST','/api/fabric-discover','{"device_id":"fabric","providers":["portscan"]}',self.session_headers())[0],400)
+        snap={'schema_version':1,'devices':[{'key':'dev-1'}],'links':[],'possible_duplicates':[],'providers':{}}
+        with patch('src.server.fabric_discovery.run',return_value=(snap,None)) as run:
+            code,body,_=self.request('POST','/api/fabric-discover','{"device_id":"fabric","providers":["mdns"]}',self.session_headers())
+            self.assertEqual(code,200);self.assertEqual(run.call_args.kwargs['providers'],('mdns',))
+        self.assertEqual(json.loads(self.request('GET','/api/fabric')[1])['devices'][0]['key'],'dev-1')
+        self.server.fabric_lock.acquire()
+        try:self.assertEqual(self.request('POST','/api/fabric-discover','{"device_id":"fabric"}',self.session_headers())[0],409)
+        finally:self.server.fabric_lock.release()
+
+    def test_freebox_authorization_flow_states(self):
+        class S:
+            def __init__(s):s.n=0
+            def state(s):return 'NOT_AUTHORIZED'
+            def request_authorization(s):return 1
+            def poll_authorization(s):
+                s.n+=1;return 'granted' if s.n>1 else 'pending'
+        sess=S()
+        code,body=self.server.start_freebox_authorization(lambda:sess)
+        self.assertEqual((code,body['state']),(202,'PENDING'))
+        self.assertEqual(self.server.start_freebox_authorization(lambda:sess)[0],409)
+        import time;deadline=time.time()+6
+        while self.server.freebox_auth['state']=='PENDING' and time.time()<deadline:time.sleep(0.2)
+        self.assertEqual(json.loads(self.request('GET','/api/freebox-authorization')[1])['state'],'GRANTED')
+        self.server.freebox_auth={'state':'IDLE'}
+        self.assertEqual(self.request('POST','/api/freebox-authorize','{"device_id":"other"}',self.session_headers())[0],400)
 
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)

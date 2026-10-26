@@ -26,3 +26,4 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python -m tests.e2e.offline_smoke
       - run: python -m tests.e2e.guided_smoke
+      - run: python -m tests.e2e.fabric_smoke

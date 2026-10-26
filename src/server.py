@@ -5,6 +5,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
+import threading
 import os
 import sqlite3
 import queue
@@ -22,6 +23,7 @@ from src.ai.local_meta import LocalMetaBroker
 from src.ai.glimmer import GlimmerBroker
 from src.core.agent import DeviceAgent, AgentBlocked
 from src.ai import registry
+from src.fabric import discovery as fabric_discovery
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
@@ -104,6 +106,11 @@ class Handler(BaseHTTPRequestHandler):
                                    'detail': 'Automatic cloud calls disabled. Explicit supervised requests require fresh verified free credits.',
                                    'agent_enabled': self.server.agent is not None,
                                    'development_design_model': 'muse-spark-1.3'})
+        if path == '/api/freebox-authorization':
+            return self.reply(200, dict(self.server.freebox_auth))
+        if path == '/api/fabric':
+            snap=self.server.fabric_snapshot
+            return self.reply(200, snap if snap else {'schema_version':1,'devices':[],'links':[],'possible_duplicates':[],'providers':{},'status':'NOT_RUN'})
         if path == '/api/model-proof':
             try:
                 receipt_path=UI.parents[1] / 'docs' / 'runtime-meta-receipt.json'
@@ -133,7 +140,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -169,6 +176,24 @@ class Handler(BaseHTTPRequestHandler):
                     return self.reply(409,{'error':str(error)})
                 except (OSError,sqlite3.Error):
                     return self.reply(409,{'error':'Simulated journal unavailable; operation stopped'})
+            if self.path == '/api/freebox-authorize':
+                if body['device_id'] != 'freebox-local':
+                    raise ValueError()
+                return self.reply(*self.server.start_freebox_authorization())
+            if self.path == '/api/fabric-discover':
+                if body['device_id'] != 'fabric':
+                    raise ValueError()
+                providers=body.get('providers',['mdns','android','freebox','ble'])
+                if not isinstance(providers,list) or not set(providers) <= {'mdns','android','freebox','ble'}:
+                    raise ValueError()
+                if not self.server.fabric_lock.acquire(blocking=False):
+                    return self.reply(409,{'error':'A discovery is already running'})
+                try:
+                    snap,_=fabric_discovery.run(self.server.fabric_adapters(),self.server.fabric_salt,providers=tuple(providers))
+                finally:
+                    self.server.fabric_lock.release()
+                self.server.fabric_snapshot=snap
+                return self.reply(200,snap)
             if self.path.startswith('/api/agent-'):
                 agent=self.server.agent
                 if agent is None:
@@ -224,7 +249,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.reply(200, result)
 
 
-def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None):
+def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None):
     server = LocalServer(('127.0.0.1', port), Handler)
     server.csrf_token = secrets.token_urlsafe(32)
     server.android = AndroidAdapter()
@@ -232,6 +257,51 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.freebox = FreeboxAdapter()
     server.model_broker = model_broker
     server.demo_engine = demo_engine
+    server.fabric_snapshot = None
+    server.fabric_lock = threading.Lock()
+    server.fabric_salt = fabric_salt if fabric_salt is not None else fabric_discovery.install_salt()
+    def fabric_adapters():
+        from src.adapters.freebox_auth import FreeboxSession
+        from src.fabric.credential_vault import Vault
+        session=None
+        try:
+            facts=server.freebox.discover()['devices'][0]['facts']
+            session=FreeboxSession(Vault(),facts['api_version'].split('.')[0])
+        except (IndexError,KeyError,ValueError):
+            pass
+        return {'android':server.android,'freebox':{'public':server.freebox,'session':session}}
+    server.fabric_adapters = fabric_adapters
+    server.freebox_auth = {'state': 'IDLE'}
+    def start_freebox_authorization(session_factory=None):
+        if server.freebox_auth.get('state') == 'PENDING':
+            return 409, {'error': 'Authorization already pending on the Freebox screen'}
+        session = (session_factory or (lambda: fabric_adapters()['freebox']['session']))()
+        if session is None:
+            return 409, {'error': 'Freebox not reachable on this network'}
+        if session.state() == 'AUTHORIZED':
+            server.freebox_auth = {'state': 'GRANTED', 'detail': 'Already authorized'}
+            return 200, server.freebox_auth
+        try:
+            session.request_authorization()
+        except Exception as error:
+            server.freebox_auth = {'state': 'FAILED', 'detail': str(error)[:120]}
+            return 409, server.freebox_auth
+        server.freebox_auth = {'state': 'PENDING', 'detail': 'Press the check mark on the Freebox front panel'}
+        def poll():
+            import time
+            deadline = time.monotonic() + 300
+            while time.monotonic() < deadline:
+                try:
+                    st = session.poll_authorization()
+                except Exception as error:
+                    server.freebox_auth = {'state': 'FAILED', 'detail': str(error)[:120]}; return
+                if st in ('granted', 'denied', 'timeout'):
+                    server.freebox_auth = {'state': st.upper()}; return
+                time.sleep(2)
+            server.freebox_auth = {'state': 'TIMEOUT'}
+        threading.Thread(target=poll, daemon=True).start()
+        return 202, server.freebox_auth
+    server.start_freebox_authorization = start_freebox_authorization
     server.agent = DeviceAgent(model_broker,server.android,agent_dir) if agent_dir is not None and getattr(model_broker,'local_only',False) is True else None
     return server
 

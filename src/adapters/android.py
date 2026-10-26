@@ -83,6 +83,21 @@ class AndroidAdapter:
         except (OSError, ValueError, subprocess.SubprocessError):
             return {'status': 'ADB_UNAVAILABLE', 'devices': []}
 
+    def stable_identifier(self, handle, salt):
+        """Opaque per-install identifier from ro.serialno (same value over USB and Wi-Fi ADB). None if unreadable."""
+        import hashlib, hmac
+        with self._lock:
+            serial = next((k for k, v in self._handles.items() if v == handle), None)
+            if serial is None:
+                return None
+            try:
+                value = self._run(['-s', serial, 'shell', 'getprop', 'ro.serialno']).strip()
+            except (OSError, ValueError, subprocess.SubprocessError):
+                return None
+            if not value or value == 'unknown' or len(value) > 128:
+                return None
+            return 'android_serial:' + hmac.new(salt, f'android_serial\0{value}'.encode(), hashlib.sha256).hexdigest()[:24]
+
     def inspect(self, handle):
         with self._lock:
             inventory = self.discover()
