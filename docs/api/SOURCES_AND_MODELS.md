@@ -11,3 +11,9 @@ POST /api/recommend accepts only source=demo and device_id=demo-android. The ser
 GET /api/model-proof reads the fixed public sanitized runtime receipt. evidence_kind=RECORDED_RUNTIME_CORE_CALL and live_request=false distinguish historical evidence from a new model response. Viewing this proof makes no provider request and consumes no credits.
 
 The one-shot Windows verifier requires PowerShell 7 (`pwsh`). After directly confirming current promotional credits, an operator can invoke `pwsh -File scripts/verify/meta_runtime_smoke.ps1 -ObservedAt <UTC-ISO-TIMESTAMP> -FreeCredits <BALANCE> -ObservationId <UNIQUE-ID>`. It requires the participant's separately stored Windows-user-encrypted credential. Never commit that file or place the key on the command line. The timestamp must describe the real observation, not be refreshed to bypass expiry. No automatic retry is performed.
+
+## Android connection events
+
+GET /api/device-events?source=android is an explicitly selected local event stream. It emits JSON inventory events in text/event-stream format; payloads contain the adapter's redacted devices, never raw tracking output. Duplicate frames are suppressed. A safe unavailable event tells the browser to stop live tracking and retain manual listing as a fallback. Normal Host validation applies; no cross-origin access is granted.
+
+One owned tracking subprocess is shared among subscribers and closed during final subscription/server cleanup. Heartbeats detect closed browser connections without polling devices. No endpoint parameter can choose a command, external host or model.

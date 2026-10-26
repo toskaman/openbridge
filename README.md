@@ -41,3 +41,9 @@ MIT licensed. Python's standard library and browser-native APIs are the only run
 An isolated, explicitly opted-in verifier exists for one authorized USB phone's screen timeout. The tested phone **rejected the write**. The exact original value was independently read back and preserved; no successful physical change or physical Undo is claimed. See [recorded blocked attempt](docs/physical-transaction-attempt.json).
 
 The web interface remains physically read-only, even if a physical engine is accidentally supplied to its simulated sandbox route. Do not retry the physical verifier without reviewing the existing evidence and the device's normal authorization. It never roots a phone or bypasses protected consent. Recovery-only mode can inspect/restore an interrupted journal without initiating a new change: `python -m dev.physical_transaction_smoke --confirm-owned-device --recover-only`.
+
+## Live Android connection updates
+
+Selecting **Android USB** starts a local ADB event stream. Plugging in, unplugging or authorizing a device refreshes the redacted inventory without periodic device polling. Switching sources closes the stream; manual listing remains available if tracking fails. Connection changes invalidate pending inspection results so stale device evidence is not displayed as current.
+
+Tracking uses an owned `adb track-devices` subprocess, starts only with an opted-in subscriber, and shuts down when subscriptions end. It sends no device data to a model and triggers no writes. An offline emulator may appear separately from USB phones; its transport label identifies it explicitly.

@@ -56,3 +56,12 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - One actual controlled screen-timeout attempt was blocked by the owned phone. Journal events were PREPARED -> VERIFIED_BACKUP -> EXECUTING -> QUARANTINED -> REVERTED. The proposed value was never verified. A separate read-only check confirmed the original setting remains intact.
 - Android's WRITE_SETTINGS diagnostic recorded a rejection. No permission bypass or automatic write retry was attempted. docs/physical-transaction-attempt.json records the failure and original-state preservation without device identifiers.
 - Physical change and physical Undo success remain UNPROVEN. This is evidence of safe refusal/recovery, not a successful optimization. The browser remains physically read-only.
+
+## Event-driven Android connection handling
+
+- 71 unit/integration tests PASS on Windows. Event coverage includes fixed tracking command, raw-identifier exclusion, duplicate-frame suppression, bounded queues, missing ADB, owned-process cleanup and two reconnect/termination handoff races.
+- The installed ADB client was measured to emit four-hex-length-prefixed frames. The actual binary parser consumed a real tracking frame and published only the adapter's redacted inventory. The measured inventory included one authorized USB phone and an offline emulator; no claim of two physical phones is made.
+- Controlled Chromium events verify unauthorized -> authorized -> offline handling, stale inspection rejection and stream closure on source change. These are controlled event tests, not physical unplug fault-injection evidence.
+- Real browser source/inspection/recovery checks continue to pass at 390/768/1440/3440. Closing streams on Windows now releases subscriptions without a connection-abort traceback.
+- Read-only review identified both stopped-worker and natural-exit handoff races. Failing regression tests reproduced them before lifecycle-lock fixes. All six monitor tests pass after review.
+- No additional model calls, physical setting writes or permission changes were performed for this milestone.

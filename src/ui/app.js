@@ -80,6 +80,7 @@ for (const radio of document.querySelectorAll('input[name="source"]')) radio.add
   const banner = document.querySelector('#mode-banner'); banner.classList.toggle('usb', !demo);
   banner.replaceChildren(element('strong', demo ? 'SIMULATED / DEMO' : source() === 'android' ? 'USB / READ-ONLY' : 'FREEBOX / PUBLIC IDENTITY'), element('span', demo ? 'Synthetic data. No real measurements.' : source() === 'android' ? 'Authorized ADB devices only. No writes.' : 'Documented discovery endpoint only. No pairing or router changes.'));
   statusLine.textContent = 'Source selected. Inventory has not started.';
+  updateAndroidStream();
 });
 
 let demoState = null;
@@ -164,22 +165,59 @@ metaButton.addEventListener('click', async () => {
     if (version === generation) resultPanel.textContent = `Meta request blocked or failed: ${error.message}`;
   } finally { metaPending = false; metaButton.disabled = source() !== 'demo' || !metaSessionConfigured; }
 });
+function inventorySignature(result) {
+  return JSON.stringify(result.devices.map(device => [device.id,device.state,device.capabilities]));
+}
+let androidStream = null;
+let lastAndroidSignature = null;
+function renderInventory(result, selectedSource, version) {
+  if (version !== generation) return;
+  const devices = result.devices;
+  if (selectedSource === 'android') lastAndroidSignature = inventorySignature(result);
+  document.querySelector('#device-count').textContent = `${devices.length} ${selectedSource === 'demo' ? 'SIMULATED DEVICE' : selectedSource === 'android' ? 'ADB DEVICE(S)' : 'LOCAL GATEWAY(S)'}`;
+  devicePanel.replaceChildren(...devices.map(device => renderDevice(device, selectedSource, version)));
+  if (!devices.length) {
+    const messages = { ADB_MISSING:'ADB is missing. Install the official Android platform tools.', ADB_UNAVAILABLE:'ADB is unavailable. Check the connection and retry.', WAITING_FOR_DEVICE:'No device detected. Connect a phone and authorize USB debugging.', GATEWAY_UNAVAILABLE:'No compatible Freebox responded. Check your local connection; no network scan was performed.' };
+    devicePanel.append(element('p', messages[result.status] || 'No device available.'));
+  }
+  statusLine.textContent = selectedSource === 'demo' ? 'Demo loaded. No real measurements.' : selectedSource === 'freebox' ? `Gateway identification complete: ${devices.length} public identity response(s).` : `Inventory complete: ${devices.filter(d => d.state === 'device').length} authorized device(s).`;
+}
+function updateAndroidStream() {
+  if (androidStream) { androidStream.close(); androidStream = null; }
+  lastAndroidSignature = null;
+  if (source() !== 'android') return;
+  const stream = new EventSource('/api/device-events?source=android');
+  androidStream = stream;
+  const unavailable = () => {
+    if (androidStream !== stream) return;
+    stream.close(); androidStream = null;
+    statusLine.textContent = 'Live Android updates unavailable. Manual listing remains available.';
+  };
+  stream.onmessage = event => {
+    if (source() !== 'android' || androidStream !== stream) return;
+    try {
+      const result = JSON.parse(event.data);
+      if (!Array.isArray(result.devices)) throw new Error('Invalid inventory event');
+      if (result.type === 'unavailable') {
+        resetEvidence(); renderInventory(result,'android',++generation); unavailable(); return;
+      }
+      const signature = inventorySignature(result);
+      if (signature === lastAndroidSignature) return;
+      resetEvidence(); renderInventory(result,'android',++generation);
+    } catch { unavailable(); }
+  };
+  stream.onerror = unavailable;
+}
+window.addEventListener('pagehide', () => { if (androidStream) androidStream.close(); });
+
 discoverButton.addEventListener('click', async () => {
   discoverButton.disabled = true;
   const selectedSource = source(); const version = ++generation;
   resetEvidence(); devicePanel.replaceChildren(element('p', 'Listing devices…')); statusLine.textContent = 'Listing devices…';
+  if (selectedSource === 'android' && !androidStream) updateAndroidStream();
   try {
     const result = await request(`/api/devices?source=${selectedSource}`);
-    if (version !== generation) return;
-    const devices = result.devices;
-    document.querySelector('#device-count').textContent = `${devices.length} ${selectedSource === 'demo' ? 'SIMULATED DEVICE' : selectedSource === 'android' ? 'ADB DEVICE(S)' : 'LOCAL GATEWAY(S)'}`;
-    devicePanel.replaceChildren(...devices.map(device => renderDevice(device, selectedSource, version)));
-    if (!devices.length) {
-      const messages = { ADB_MISSING: 'ADB is missing. Install the official Android platform tools.', ADB_UNAVAILABLE: 'ADB is unavailable. Check the connection and retry.', WAITING_FOR_DEVICE: 'No device detected. Connect a phone and authorize USB debugging.' };
-      messages.GATEWAY_UNAVAILABLE = 'No compatible Freebox responded. Check your local connection; no network scan was performed.';
-      devicePanel.append(element('p', messages[result.status] || 'No device available.'));
-    }
-    statusLine.textContent = selectedSource === 'demo' ? 'Demo loaded. No real measurements.' : selectedSource === 'freebox' ? `Gateway identification complete: ${devices.length} public identity response(s).` : `Inventory complete: ${devices.filter(d => d.state === 'device').length} authorized device(s).`;
+    renderInventory(result,selectedSource,version);
   } catch (error) { if (version === generation) statusLine.textContent = `Inventory failed: ${error.message}. Try again.`; }
   finally { discoverButton.disabled = false; }
 });

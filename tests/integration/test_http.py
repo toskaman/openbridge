@@ -5,6 +5,8 @@ import unittest
 from unittest.mock import patch, Mock
 from tempfile import TemporaryDirectory
 from pathlib import Path
+from contextlib import contextmanager
+import queue
 from src.adapters.simulated_setting import SimulatedSetting
 from src.core.transactions import TransactionEngine
 from src.server import create_server
@@ -51,6 +53,22 @@ class HTTPTests(unittest.TestCase):
             code, body, _ = self.request('GET', '/api/devices?source=android')
             self.assertEqual(code, 200)
             self.assertEqual(json.loads(body)['status'], 'WAITING_FOR_DEVICE')
+
+    def test_android_event_stream_is_explicit_and_redacted(self):
+        class Monitor:
+            @contextmanager
+            def subscribe(self):
+                events=queue.Queue()
+                events.put({'type':'inventory','status':'READY','devices':[]})
+                events.put({'type':'closed'})
+                yield events
+        with patch.object(self.server,'android_events',Monitor()):
+            code,body,headers=self.request('GET','/api/device-events?source=android')
+            self.assertEqual(code,200)
+            self.assertEqual(headers['Content-Type'],'text/event-stream')
+            self.assertIn(b'data:',body)
+            self.assertIn(b'"type": "inventory"',body)
+        self.assertEqual(self.request('GET','/api/device-events?source=demo')[0],400)
 
     def test_freebox_discovery_is_opt_in(self):
         with patch.object(self.server.freebox, 'discover', return_value={'devices': [], 'status': 'GATEWAY_UNAVAILABLE'}) as discover:

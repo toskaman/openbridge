@@ -25,3 +25,7 @@ The SQLite transaction engine, persistent synthetic setting, simulated-only HTTP
 ## Physical refusal handling
 
 The narrow Android screen-timeout adapter and isolated verification utility were freshly authored with mocked safety tests before one authorized physical attempt. That attempt was refused by Android; the journal recovered to the original state, which was independently checked. The public record explicitly reports failure rather than claiming physical Undo. This work used no additional model API calls or external device-data transfer.
+
+## Android event handling
+
+The on-demand ADB event monitor, redacted local event stream, browser subscription lifecycle and associated tests were authored fresh during the event. The installed ADB framing protocol was verified before parser integration. Process-handoff issues found during review were reproduced in regression tests and corrected. This feature performs discovery only and does not invoke a model or writer.

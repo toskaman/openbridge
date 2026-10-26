@@ -7,6 +7,7 @@ from pathlib import Path
 import secrets
 import os
 import sqlite3
+import queue
 from datetime import datetime
 from urllib.parse import urlsplit, parse_qs
 from src.adapters.android import AndroidAdapter
@@ -16,9 +17,17 @@ from src.core.policy import inspect_device
 from src.ai.broker import RuntimeModelBroker, MetaTransport, CreditPermit, ModelBlocked
 from src.core.transactions import TransactionEngine, TransactionBlocked
 from src.adapters.simulated_setting import SimulatedSetting
+from src.adapters.android_events import AndroidEventMonitor
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
+
+
+class LocalServer(ThreadingHTTPServer):
+    def server_close(self):
+        monitor=getattr(self,'android_events',None)
+        if monitor is not None:monitor.close()
+        super().server_close()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -47,6 +56,27 @@ class Handler(BaseHTTPRequestHandler):
         if not self.host_allowed():
             return self.reply(403, {'error': 'Untrusted host'})
         path = urlsplit(self.path).path
+        if path == '/api/device-events':
+            if parse_qs(urlsplit(self.path).query).get('source') != ['android']:
+                return self.reply(400,{'error':'Explicit Android event source required'})
+            self.send_response(200)
+            self.send_header('Content-Type','text/event-stream')
+            self.send_header('Cache-Control','no-store')
+            self.send_header('X-Content-Type-Options','nosniff')
+            self.end_headers()
+            self.connection.settimeout(10)
+            try:
+                with self.server.android_events.subscribe() as subscription:
+                    while True:
+                        try:event=subscription.get(timeout=5)
+                        except queue.Empty:
+                            self.wfile.write(b': heartbeat\n\n');self.wfile.flush()
+                            continue
+                        if event.get('type')=='closed':break
+                        self.wfile.write(('data: '+json.dumps(event)+'\n\n').encode())
+                        self.wfile.flush()
+            except (ConnectionError,TimeoutError,ValueError):pass
+            return
         if path == '/api/session':
             return self.reply(200, {'csrf_token': self.server.csrf_token})
         if path == '/api/devices':
@@ -153,9 +183,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def create_server(port=18765, model_broker=None, demo_engine=None):
-    server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    server = LocalServer(('127.0.0.1', port), Handler)
     server.csrf_token = secrets.token_urlsafe(32)
     server.android = AndroidAdapter()
+    server.android_events = AndroidEventMonitor(server.android)
     server.freebox = FreeboxAdapter()
     server.model_broker = model_broker
     server.demo_engine = demo_engine
