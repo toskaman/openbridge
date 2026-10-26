@@ -19,6 +19,7 @@ from src.core.transactions import TransactionEngine, TransactionBlocked
 from src.adapters.simulated_setting import SimulatedSetting
 from src.adapters.android_events import AndroidEventMonitor
 from src.ai.local_meta import LocalMetaBroker
+from src.core.agent import DeviceAgent, AgentBlocked
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
@@ -99,6 +100,7 @@ class Handler(BaseHTTPRequestHandler):
                                    'model_id':broker.model_id if local else 'muse-spark-1.3',
                                    'status': 'LOCAL_META_READY' if local and available else 'LOCAL_META_UNAVAILABLE' if local else 'SUPERVISED_ONLY' if broker else 'CREDIT_VERIFICATION_REQUIRED',
                                    'detail': 'Automatic cloud calls disabled. Explicit supervised requests require fresh verified free credits.',
+                                   'agent_enabled': self.server.agent is not None,
                                    'development_design_model': 'muse-spark-1.3'})
         if path == '/api/model-proof':
             try:
@@ -129,7 +131,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -165,6 +167,26 @@ class Handler(BaseHTTPRequestHandler):
                     return self.reply(409,{'error':str(error)})
                 except (OSError,sqlite3.Error):
                     return self.reply(409,{'error':'Simulated journal unavailable; operation stopped'})
+            if self.path.startswith('/api/agent-'):
+                agent=self.server.agent
+                if agent is None:
+                    return self.reply(409,{'error':'Physical agent disabled. Start with --local-meta --agent.'})
+                if source!='android':
+                    raise ValueError('Agent works on an authorized Android USB device only')
+                try:
+                    if self.path=='/api/agent-plan':
+                        if not agent.broker.ready():
+                            return self.reply(409,{'error':'Pinned local Meta model unavailable; no cloud fallback'})
+                        goal=body.get('goal','review')
+                        if goal not in ('review','declutter'):raise ValueError()
+                        return self.reply(200,agent.plan(body['device_id'],goal))
+                    plan_id=body.get('plan_id')
+                    if not isinstance(plan_id,str):raise ValueError()
+                    if self.path=='/api/agent-execute':
+                        return self.reply(200,agent.execute(plan_id,body.get('consent')))
+                    return self.reply(200,agent.undo(plan_id))
+                except (AgentBlocked,ModelBlocked,TransactionBlocked) as error:
+                    return self.reply(409,{'error':str(error)})
             if self.path == '/api/recommend':
                 broker=self.server.model_broker
                 local=broker is not None and getattr(broker,'local_only',False) is True
@@ -198,7 +220,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.reply(200, result)
 
 
-def create_server(port=18765, model_broker=None, demo_engine=None):
+def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None):
     server = LocalServer(('127.0.0.1', port), Handler)
     server.csrf_token = secrets.token_urlsafe(32)
     server.android = AndroidAdapter()
@@ -206,12 +228,14 @@ def create_server(port=18765, model_broker=None, demo_engine=None):
     server.freebox = FreeboxAdapter()
     server.model_broker = model_broker
     server.demo_engine = demo_engine
+    server.agent = DeviceAgent(model_broker,server.android,agent_dir) if agent_dir is not None and getattr(model_broker,'local_only',False) is True else None
     return server
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=18765)
+    parser.add_argument('--agent',action='store_true',help='Enable the consent-gated physical agent (requires --local-meta)')
     parser.add_argument('--local-meta',action='store_true',help='Use the pinned private CPU-local Meta model; never falls back to cloud')
     args = parser.parse_args()
     broker = None
@@ -232,7 +256,8 @@ def main():
         demo_engine=TransactionEngine(private_root/'simulated-transactions.sqlite',SimulatedSetting(private_root/'simulated-setting.sqlite'))
     except (TransactionBlocked,OSError,sqlite3.Error):
         print('Simulated transaction journal unavailable; read-only inventory remains available.',flush=True)
-    with create_server(args.port, model_broker=broker,demo_engine=demo_engine) as server:
+    agent_dir=private_root/'agent' if args.agent and args.local_meta else None
+    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir) as server:
         print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
         try:
             server.serve_forever()

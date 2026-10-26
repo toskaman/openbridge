@@ -10,7 +10,7 @@
       "endpoint": "https://api.meta.ai/v1/chat/completions"
     },
     {
-      "purpose": "explicit_local_numeric_evidence_advisory",
+      "purpose": "explicit_local_numeric_evidence_advisory_and_agent_plan",
       "provider": "ollama",
       "model_id": "llama3.2:3b-instruct-q4_K_M",
       "execution": "local",

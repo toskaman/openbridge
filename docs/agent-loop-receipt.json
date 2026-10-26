@@ -1,0 +1,90 @@
+{
+  "evidence_kind": "REAL_AGENT_LOOP",
+  "source": "ADB",
+  "simulated": false,
+  "recorded_at": "2026-10-26T19:25Z (approx., Windows run via HTTP API)",
+  "flow": "OBSERVE -> META_PLAN (local Llama 3.2 3B) -> deterministic GATE -> owner consent -> EXECUTE -> independent read-back -> exact UNDO",
+  "goal": "declutter",
+  "facts": {
+    "battery_percent": 100,
+    "storage_free_gb": 154.02
+  },
+  "candidates": {
+    "com.miui.compass": "enabled",
+    "one.vik.stopwatch": "enabled",
+    "org.nixgame.ruler": "enabled"
+  },
+  "model": {
+    "model_id": "llama3.2:3b-instruct-q4_K_M",
+    "provider": "Ollama local CPU",
+    "model_manifest_digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+    "request_id": "local-90e0d88843854312be2d3d642a64a85a",
+    "proposal": {
+      "summary": "Battery is 100% and 154.02 GB of storage is free. Proposed: temporarily disable org.nixgame.ruler.",
+      "uncertainty": "Device health and write permission are unknown from these limited facts.",
+      "action": "disable_optional_app",
+      "package": "org.nixgame.ruler",
+      "evidence_refs": [
+        "app:org.nixgame.ruler",
+        "app:com.miui.compass",
+        "app:one.vik.stopwatch"
+      ]
+    },
+    "usage": {
+      "prompt_tokens": 286,
+      "completion_tokens": 113
+    },
+    "estimated_cost_usd": 0.0,
+    "elapsed_ms": 11363,
+    "cpu_only_requested": true,
+    "goal": "declutter",
+    "input_sha256": "8b99cc2be13487178aa5ddd390d3876f87da4f82bf1e27dd842290a3a0f4047a"
+  },
+  "gate": {
+    "decision": "REVIEW_REQUIRED",
+    "reasons": [
+      "Allowlisted optional app, installed, currently enabled.",
+      "Reversible: exact Android enabled-state code is snapshotted before any change.",
+      "Owner consent is required before execution."
+    ]
+  },
+  "trace": [
+    {
+      "step": "OBSERVE"
+    },
+    {
+      "step": "CANDIDATES",
+      "count": 3
+    },
+    {
+      "step": "META_PLAN",
+      "model_id": "llama3.2:3b-instruct-q4_K_M",
+      "request_id": "local-90e0d88843854312be2d3d642a64a85a"
+    },
+    {
+      "step": "GATE",
+      "decision": "REVIEW_REQUIRED"
+    }
+  ],
+  "execute": {
+    "plan_id": "plan-54cd0fe4aa7c4941abfd9084d11f70da",
+    "state": "VERIFIED",
+    "package": "org.nixgame.ruler",
+    "before_code": 1,
+    "observed_code": 4,
+    "verified": true
+  },
+  "undo": {
+    "plan_id": "plan-54cd0fe4aa7c4941abfd9084d11f70da",
+    "state": "REVERTED",
+    "restored_code": 1,
+    "exact": true
+  },
+  "independent_raw_dumpsys_user0": {
+    "before": "enabled=0",
+    "after_execute": "enabled=3",
+    "after_undo": "enabled=0"
+  },
+  "privacy": "Device handle, serial, fingerprint and addresses excluded",
+  "limitation": "One real run on one owned phone. A prior run with goal=review correctly produced inspect_only; one run was blocked by the grounding check before the prompt template was tightened. No claim of performance or battery gains."
+}

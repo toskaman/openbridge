@@ -23,7 +23,14 @@ function element(tag, content, className) {
   if (className) item.className = className;
   return item;
 }
+let agentEnabled = false;
+let agentPlan = null;
+function syncAgent() {
+  const b = document.querySelector('#agent-plan');
+  if (b) b.disabled = !(agentEnabled && source() === 'android' && inspectedDevice);
+}
 function syncMetaControl() {
+  syncAgent();
   metaButton.disabled = !metaSessionConfigured || metaPending || !(source() === 'demo' || (metaLocal && source() === 'android' && inspectedDevice));
 }
 function resetEvidence() {
@@ -142,6 +149,8 @@ loadDemoState();
 request('/api/model-status').then(state => {
   metaSessionConfigured = state.inference_available ?? state.supervised_session_configured;
   metaLocal = state.inference_mode === 'local';
+  agentEnabled = state.agent_enabled === true;
+  if (agentEnabled) document.querySelector('#agent-result').textContent = 'Agent ready. Inspect an authorized Android phone, choose a goal, then ask Meta for a plan.';
   runtimeMetaModel = state.model_id || 'muse-spark-1.3';
   syncMetaControl();
   document.querySelector('#model-state').textContent = metaSessionConfigured
@@ -235,4 +244,57 @@ discoverButton.addEventListener('click', async () => {
     renderInventory(result,selectedSource,version);
   } catch (error) { if (version === generation) statusLine.textContent = `Inventory failed: ${error.message}. Try again.`; }
   finally { discoverButton.disabled = false; }
+});
+
+const agentSteps = document.querySelector('#agent-steps');
+const agentResult = document.querySelector('#agent-result');
+const agentExecute = document.querySelector('#agent-execute');
+const agentUndo = document.querySelector('#agent-undo');
+const agentConsent = document.querySelector('#agent-consent');
+function agentStep(label, text, cls) {
+  const li = element('li', undefined, cls); li.append(element('strong', label + ': '), document.createTextNode(text)); agentSteps.append(li);
+}
+async function agentPost(path, extra) {
+  if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
+  return request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+    body: JSON.stringify({ source: 'android', device_id: inspectedDevice, ...extra }) });
+}
+document.querySelector('#agent-plan').addEventListener('click', async event => {
+  const button = event.currentTarget; button.disabled = true; agentPlan = null;
+  agentSteps.replaceChildren(); agentExecute.hidden = true; agentUndo.hidden = true;
+  document.querySelector('#agent-consent-row').hidden = true; agentConsent.checked = false;
+  const goal = document.querySelector('input[name="agent-goal"]:checked').value;
+  agentResult.textContent = 'Observing the phone and asking the local Meta model for a plan… (about 10 s on CPU)';
+  try {
+    const plan = await agentPost('/api/agent-plan', { goal });
+    agentStep('Observe', `ADB facts ${Object.entries(plan.facts).map(([k, v]) => k + '=' + v).join(', ')}; ${Object.keys(plan.candidates).length} allowlisted optional apps found`);
+    agentStep('Meta plan', `${plan.model.model_id} (${plan.model.elapsed_ms} ms, $0): ${plan.model.proposal.summary}`);
+    const allowed = plan.gate.decision === 'REVIEW_REQUIRED';
+    agentStep('Policy gate', `${plan.gate.decision} — ${plan.gate.reasons.join(' ')}`, allowed ? 'ok' : (plan.gate.decision === 'DENY' ? 'deny' : ''));
+    agentPlan = plan;
+    if (allowed) {
+      document.querySelector('#agent-consent-row').hidden = false; agentExecute.hidden = false; agentExecute.disabled = true;
+      agentResult.textContent = 'Review the step. Execution requires your explicit consent.';
+    } else agentResult.textContent = 'No action will run. The agent stops here safely.';
+  } catch (error) { agentResult.textContent = `Agent stopped safely: ${error.message}`; }
+  finally { syncAgent(); }
+});
+agentConsent.addEventListener('change', () => { agentExecute.disabled = !agentConsent.checked || !agentPlan; });
+agentExecute.addEventListener('click', async () => {
+  agentExecute.disabled = true; agentResult.textContent = 'Snapshotting exact state, executing, reading back…';
+  try {
+    const r = await agentPost('/api/agent-execute', { plan_id: agentPlan.plan_id, consent: agentConsent.checked });
+    agentStep('Act + verify', `${r.package} is now disabled-user; independent read-back verified (Android state ${r.before_code - 1} → ${r.observed_code - 1})`, 'ok');
+    agentExecute.hidden = true; document.querySelector('#agent-consent-row').hidden = true; agentUndo.hidden = false;
+    agentResult.textContent = 'Change verified on the phone. Undo restores the exact original state.';
+  } catch (error) { agentStep('Act', error.message, 'deny'); agentResult.textContent = 'Execution blocked; original state preserved.'; }
+});
+agentUndo.addEventListener('click', async () => {
+  agentUndo.disabled = true;
+  try {
+    const r = await agentPost('/api/agent-undo', { plan_id: agentPlan.plan_id });
+    agentStep('Undo', `exact original state restored and verified (Android state ${r.restored_code - 1})`, 'ok');
+    agentUndo.hidden = true; agentResult.textContent = 'Loop complete: plan → gate → consent → act → verify → exact Undo.';
+  } catch (error) { agentStep('Undo', error.message, 'deny'); }
+  finally { agentUndo.disabled = false; }
 });

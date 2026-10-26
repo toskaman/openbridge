@@ -160,6 +160,24 @@ class HTTPTests(unittest.TestCase):
             self.assertEqual(code,400)
             broker.recommend.assert_not_called()
 
+    def test_agent_disabled_by_default_and_requires_android_and_csrf(self):
+        code,_,_=self.request('POST','/api/agent-plan','{"source":"android","device_id":"x"}',self.session_headers())
+        self.assertEqual(code,409)
+        code,_,_=self.request('POST','/api/agent-plan','{"source":"android","device_id":"x"}',{'Content-Type':'application/json'})
+        self.assertEqual(code,403)
+
+    def test_agent_routes_delegate_and_reject_non_android(self):
+        agent=Mock();agent.broker.ready.return_value=True
+        agent.plan.return_value={'plan_id':'plan-1','gate':{'decision':'REVIEW_REQUIRED'}}
+        agent.execute.return_value={'verified':True};agent.undo.return_value={'exact':True}
+        with patch.object(self.server,'agent',agent):
+            self.assertEqual(self.request('POST','/api/agent-plan','{"source":"demo","device_id":"demo-android"}',self.session_headers())[0],400)
+            self.assertEqual(self.request('POST','/api/agent-plan','{"source":"android","device_id":"h"}',self.session_headers())[0],200)
+            body='{"source":"android","device_id":"h","plan_id":"plan-1","consent":true}'
+            self.assertEqual(self.request('POST','/api/agent-execute',body,self.session_headers())[0],200)
+            agent.execute.assert_called_once_with('plan-1',True)
+            self.assertEqual(self.request('POST','/api/agent-undo',body,self.session_headers())[0],200)
+
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)
 

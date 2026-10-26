@@ -107,3 +107,12 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - Real run on the owned Xiaomi phone (Android 14) for org.nixgame.ruler: default -> disabled-user -> default. Journal PREPARED, VERIFIED_BACKUP, EXECUTING, VERIFIED, REVERTING, REVERTED in 3.2 s. Raw `dumpsys package` independently showed user-0 enabled=0 before and after. Receipt: docs/physical-package-receipt.json.
 - Honest note: an earlier run of the first adapter version restored the app to "enabled" (code 1) rather than the original "default" (code 0). The app was functional throughout, but the restoration was not bit-exact. This was caught by an independent dumpsys check; the adapter was corrected to track exact codes, the original default state was restored with `pm default-state`, and the verified run above was recorded.
 - The browser still exposes no physical write route.
+
+## Verifiable agent loop (real phone)
+
+- 102 unit/integration tests PASS on Windows, three consecutive runs. One earlier Windows run reported a single error that did not reproduce; recorded here rather than hidden.
+- New tests: deterministic gate decisions, plan schema/privacy/grounding/eligibility rejection, fixed goal enum, consent and gate enforcement, refusal restores original, no double execution, undo-without-change blocked, HTTP opt-in/CSRF/source checks.
+- Real HTTP run (goal=declutter): local Llama 3.2 3B proposed disabling org.nixgame.ruler (11.4 s CPU, 286+113 tokens, $0); gate REVIEW_REQUIRED; consented execute verified; Undo exact. Raw dumpsys user-0 `enabled=0 -> 3 -> 0`. Receipt: docs/agent-loop-receipt.json.
+- Real browser run (Chromium, 390 and 1440 px, tests/e2e/agent_physical_smoke.py): plan for com.miui.compass, consent, execute, Undo; no page errors or horizontal overflow. Raw dumpsys afterwards: all three candidate apps enabled=0.
+- With goal=review the model returned inspect_only (gate NO_ACTION). One plan was rejected by the grounding check before the prompt template was tightened; the system failed closed.
+- Offline browser e2e still PASS at 390/768/1440/3440.

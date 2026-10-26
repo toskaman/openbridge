@@ -69,3 +69,7 @@ Llama 3.2 is licensed under the Llama 3.2 Community License, Copyright © Meta P
 ## Physical change and Undo — verified
 
 The isolated verifier `python -m dev.physical_package_smoke --confirm-owned-device --package org.nixgame.ruler` disables one allowlisted optional app for Android user 0, verifies it, then restores the exact original enabled-state code. One real run on an owned phone passed: default -> disabled-user -> default, independently confirmed with dumpsys. See [receipt](docs/physical-package-receipt.json). The browser remains physically read-only for now.
+
+## Verifiable device agent (local Meta)
+
+Start with `python -m src.server --local-meta --agent`. Inspect an authorized Android phone, choose an owner goal (Review only / Declutter optional apps) and select **Ask Meta for a plan**. The pinned local Llama 3.2 3B proposes at most one reversible step; a deterministic gate decides; nothing runs without explicit consent; the change is read back independently and **Undo** restores the exact original Android state. A real run is recorded in [docs/agent-loop-receipt.json](docs/agent-loop-receipt.json) (raw dumpsys `enabled=0 -> 3 -> 0`). The real-hardware browser check is `tests/e2e/agent_physical_smoke.py` (not part of CI).
