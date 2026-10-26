@@ -134,3 +134,9 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - To fit the 18 GB model, the participant's own unrelated Ollama model (port 11434, infinite keep-alive) was temporarily unloaded, then reloaded with the same infinite keep-alive and verified. No model files were removed.
 - Ablation, 30 synthetic cases × 3 repeats: rules 90.0% correct (9 unsafe proposals); Llama 3B 60.0% valid / 53.3% correct (6 unsafe); Muse Glimmer 90.0% valid / 86.7% correct (3 unsafe). Gate refused 100% of unsafe proposals for all routes. Details and honest interpretation: docs/benchmark/STATUS.md.
 - Product option `--local-meta --glimmer` added; registry enforces the declared Glimmer endpoint.
+
+## Muse Glimmer drives the real-phone agent loop (browser)
+
+- Server `--local-meta --glimmer --agent`; Chromium at 390 and 1440 px (tests/e2e/agent_physical_smoke.py). Glimmer planned "temporarily disable com.miui.compass" with exact facts (100%, 154.13 GB); gate REVIEW_REQUIRED; consent; execute verified (Android state 0 -> 3); Undo exact (state 0). Plan latency 63.3 s (cold load) and 39.6 s (warm) on the shared desktop GPU.
+- Raw dumpsys afterwards: compass, stopwatch and ruler all user-0 enabled=0. Participant's own Ollama model was unloaded for the run and reloaded with its original infinite keep-alive.
+- Screens: docs/jury/screens/agent-glimmer-390-plan.png, docs/jury/screens/agent-glimmer-1440-undone.png (no identifiers visible).

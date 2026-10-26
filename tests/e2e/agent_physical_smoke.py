@@ -22,17 +22,17 @@ def main():
             page.get_by_text('Reading complete. No device was changed.',exact=True).wait_for(timeout=70000)
             page.get_by_role('radio',name='Declutter optional apps').check()
             page.get_by_role('button',name='Ask Meta for a plan').click()
-            page.get_by_text('Policy gate:',exact=False).wait_for(timeout=120000)
+            page.get_by_text('Policy gate:',exact=False).wait_for(timeout=170000)
             page.locator('#agent').screenshot(path=str(out/f'{width}-plan.png'))
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'horizontal overflow'
             if act and page.get_by_role('button',name='Execute approved step').is_visible():
                 assert page.get_by_role('button',name='Execute approved step').is_disabled()
                 page.locator('#agent-consent').check()
                 page.get_by_role('button',name='Execute approved step').click()
-                page.get_by_text('Change verified on the phone.',exact=False).wait_for(timeout=60000)
+                page.get_by_text('Change verified on the phone.',exact=False).wait_for(timeout=90000)
                 page.locator('#agent').screenshot(path=str(out/f'{width}-executed.png'))
                 page.get_by_role('button',name='Undo exactly').click()
-                page.get_by_text('Loop complete',exact=False).wait_for(timeout=60000)
+                page.get_by_text('Loop complete',exact=False).wait_for(timeout=90000)
                 page.locator('#agent').screenshot(path=str(out/f'{width}-undone.png'))
                 print('AGENT_UI_LOOP_PASS')
             assert not errors,errors
