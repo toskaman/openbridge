@@ -83,6 +83,19 @@ class AndroidAdapter:
         except (OSError, ValueError, subprocess.SubprocessError):
             return {'status': 'ADB_UNAVAILABLE', 'devices': []}
 
+    def install_companion(self, handle, apk_path):
+        """Fixed `adb install -r <OpenBridge Companion APK>`; returns raw adb output for classification (never raises on refusal)."""
+        with self._lock:
+            serial = next((k for k, v in self._handles.items() if v == handle), None)
+            if serial is None:
+                raise ValueError('Unknown device')
+            result = self.runner([self.executable, '-s', serial, 'install', '-r', str(apk_path)], capture_output=True, text=True,
+                                 encoding='utf-8', errors='replace', timeout=120, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            output = (result.stdout or '') + (result.stderr or '')
+            if 'Success' in output:
+                self._run(['-s', serial, 'shell', 'am', 'start', '-n', 'fr.openbridge.companion/.MainActivity'])
+            return output[-2000:]
+
     def forward_companion(self, handle, port=47800):
         """Fixed `adb forward tcp:<port> tcp:47800` so the PC reaches the Companion over USB without exposing it on Wi-Fi."""
         if not isinstance(port, int) or not 1024 < port < 65536:

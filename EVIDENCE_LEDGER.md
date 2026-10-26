@@ -178,3 +178,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - companion/android: native Java Android app (minSdk 26, targetSdk 34, TV leanback + D-pad UI, runtime BLE permission requests only, scans only while open and owner-enabled). Built and signed reproducibly with the official SDK tools (dev/build_companion.py; 33 KB APK). Android SDK licence accepted with the owner's explicit approval in chat.
 - Installation on the Xiaomi: refused with INSTALL_FAILED_USER_RESTRICTED until MIUI "Install via USB" is enabled by the owner. Hardware relay scan: NOT TESTED yet.
 - Device Fabric documentation added: UNIVERSAL_DEVICE_ARCHITECTURE, DISCOVERY_PROTOCOLS, DEVICE_IDENTITY_AND_DEDUPLICATION, FREEBOX_INTEGRATION, RELAY_SECURITY, ANDROID_COMPANION, KNOWN_LIMITATIONS.
+
+## Vendor-aware guidance in the product
+
+- src/fabric/guidance.py turns blocked steps into vendor- and version-specific guidance (goal, why, already tried, minimal action, waiting). Companion installation is now driven from OpenBridge (/api/companion-install) with bounded retries and adb error classification; relay failures return the matching guide; the UI shows them in the non-modal guided dialog. Tests: tests/fabric/test_guidance.py (vendor variants, TV/Android-version variants, install classification, server retry loop to success).

@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
 import threading
+import subprocess
 import os
 import sqlite3
 import queue
@@ -107,6 +108,8 @@ class Handler(BaseHTTPRequestHandler):
                                    'detail': 'Automatic cloud calls disabled. Explicit supervised requests require fresh verified free credits.',
                                    'agent_enabled': self.server.agent is not None,
                                    'development_design_model': 'muse-spark-1.3'})
+        if path == '/api/companion-install':
+            return self.reply(200, dict(self.server.companion_install))
         if path == '/api/freebox-authorization':
             return self.reply(200, dict(self.server.freebox_auth))
         if path == '/api/fabric':
@@ -141,7 +144,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -181,11 +184,13 @@ class Handler(BaseHTTPRequestHandler):
                 if body['device_id'] != 'freebox-local':
                     raise ValueError()
                 return self.reply(*self.server.start_freebox_authorization())
+            if self.path == '/api/companion-install':
+                return self.reply(*self.server.start_companion_install(body['device_id']))
             if self.path.startswith('/api/relay-'):
                 try:
                     return self.reply(200, self.server.relay_action(self.path, body))
-                except fabric_relay.RelayError as error:
-                    return self.reply(409, {'error': str(error)})
+                except (fabric_relay.RelayError, OSError, ValueError) as error:
+                    return self.reply(409, {'error': str(error)[:160], 'guide': self.server.guide_for_error(str(error), body.get('device_id'))})
             if self.path == '/api/fabric-discover':
                 if body['device_id'] != 'fabric':
                     raise ValueError()
@@ -357,6 +362,51 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             return snap
         raise ValueError()
     server.relay_action = relay_action
+    def device_profile(handle):
+        reg = server.fabric_registry
+        if reg is None:
+            return {}
+        for key, dev in reg.devices.items():
+            if handle in dev.get('handles', {}).values():
+                val = lambda f: (reg.best_value(key, f).value if reg.best_value(key, f) else None)
+                sdk = val('sdk')
+                return {'manufacturer': val('manufacturer'), 'sdk': int(sdk) if str(sdk).isdigit() else None, 'television': bool(val('is_television'))}
+        return {}
+    def guide_for_error(message, handle=None):
+        from src.fabric.guidance import guide
+        m = message.lower()
+        issue = ('companion_not_running' if ('refused' in m and 'relay' not in m) or 'connection' in m or 'not an openbridge' in m or 'unreachable' in m else
+                 'bluetooth_off' if 'bluetooth is off' in m else 'ble_permission' if 'permission not granted' in m else
+                 'owner_scan_disabled' if 'owner has not enabled' in m or 'lacks permission' in m else None)
+        return guide(issue, tried=[message[:120]], **device_profile(handle)) if issue else None
+    server.guide_for_error = guide_for_error
+    server.companion_install = {'state': 'IDLE'}
+    server.companion_apk = Path(os.environ.get('OPENBRIDGE_COMPANION_APK', 'artifacts/companion/openbridge-companion.apk'))
+    def start_companion_install(handle, attempts=40, delay=15):
+        from src.fabric.guidance import classify_install, guide
+        if server.companion_install.get('state') == 'RETRYING':
+            return 409, {'error': 'Installation already in progress'}
+        if not server.companion_apk.exists():
+            return 409, {'error': 'Companion APK not built. Run: python -m dev.build_companion'}
+        def worker():
+            import time
+            for attempt in range(attempts):
+                try:
+                    code, issue = classify_install(server.android.install_companion(handle, server.companion_apk))
+                except (ValueError, OSError, subprocess.SubprocessError):
+                    code, issue = 'DEVICE_UNAVAILABLE', 'usb_authorization_pending'
+                if code == 'SUCCESS':
+                    server.companion_install = {'state': 'INSTALLED', 'attempts': attempt + 1}; return
+                g = guide(issue, tried=[f'adb install attempt {attempt + 1}: {code}'], **device_profile(handle)) if issue else None
+                server.companion_install = {'state': 'RETRYING' if issue else 'FAILED', 'code': code, 'attempts': attempt + 1, 'guide': g}
+                if not issue:
+                    return
+                time.sleep(delay)
+            server.companion_install = dict(server.companion_install, state='GAVE_UP')
+        server.companion_install = {'state': 'RETRYING', 'attempts': 0}
+        threading.Thread(target=worker, daemon=True).start()
+        return 202, server.companion_install
+    server.start_companion_install = start_companion_install
     server.agent = DeviceAgent(model_broker,server.android,agent_dir) if agent_dir is not None and getattr(model_broker,'local_only',False) is True else None
     return server
 
