@@ -106,6 +106,11 @@ def run(adapters, salt, providers=('mdns', 'android', 'freebox'), mdns_timeout=2
     return snap, registry
 
 
+# Bluetooth SIG company identifiers (assigned numbers) for common manufacturers; used only for display labels.
+BLE_COMPANIES = {6: 'Microsoft', 76: 'Apple', 89: 'Nordic Semiconductor', 117: 'Samsung', 135: 'Garmin', 224: 'Google', 301: 'Sony',
+                 343: 'Xiaomi', 637: 'Huawei', 1177: 'OnePlus', 2949: 'Tile', 911: 'Xiaomi', 741: 'Bose', 87: 'Harman', 2312: 'Amazfit/Zepp'}
+
+
 def ingest_ble(registry, result, salt, observer='pc', source='BLE:pc'):
     """BLE advertisers. Addresses are weak identity (private addresses rotate). Link grants 'observe' only."""
     t = now()
@@ -118,6 +123,8 @@ def ingest_ble(registry, result, salt, observer='pc', source='BLE:pc'):
             obs.append(DeviceObservation('ble_company_ids', dev['company_ids'], source, 'BLE', t, True))
         if dev['service_uuids']:
             obs.append(DeviceObservation('ble_services', dev['service_uuids'], source, 'BLE', t, True))
-        key = registry.upsert(ids, category='ble', label=dev['name'] or 'BLE advertiser', observations=obs,
+        company = next((BLE_COMPANIES[c] for c in dev['company_ids'] if c in BLE_COMPANIES), None)
+        label = dev['name'] or (f'{company} device (BLE)' if company else 'BLE advertiser')
+        key = registry.upsert(ids, category='ble', label=label, observations=obs,
                               weak=[('ble_addr', opaque('ble_address', dev['address'].lower(), salt))])
         registry.link(Link(observer, key, 'BLE', ('observe',), source))

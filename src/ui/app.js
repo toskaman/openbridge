@@ -410,7 +410,9 @@ async function postJson(path, body) {
   if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
   return request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(body) });
 }
+const relayIds = {};
 function relayPanel(device, handle) {
+  let relayId = relayIds[handle] || null;
   const panel = element('div', undefined, 'relay-panel');
   const info = element('p', 'This device has Bluetooth LE. With the OpenBridge Companion app open on it, it can scan nearby Bluetooth devices for this PC.');
   const start = element('button', 'Use as Bluetooth relay', 'secondary');
@@ -418,13 +420,12 @@ function relayPanel(device, handle) {
   const label = element('label', 'Code shown on the device'); const input = document.createElement('input');
   input.inputMode = 'numeric'; input.maxLength = 6; input.autocomplete = 'off'; input.id = 'relay-code'; label.htmlFor = 'relay-code';
   const confirm = element('button', 'Pair', 'secondary'); codeRow.append(label, input, confirm);
-  const scan = element('button', 'Scan nearby Bluetooth (8 s)', 'secondary'); scan.hidden = true;
+  const scan = element('button', 'Scan nearby Bluetooth (8 s)', 'secondary'); scan.hidden = !relayId;
   const install = element('button', 'Install the OpenBridge Companion on this device', 'secondary'); install.hidden = true;
   const result = element('p', '', 'muted'); result.setAttribute('role', 'status');
-  let relayId = null;
   start.addEventListener('click', async () => {
     start.disabled = true; result.textContent = 'Contacting the Companion over USB…';
-    try { const r = await postJson('/api/relay-pair-start', { device_id: handle }); relayId = r.relay_id; codeRow.hidden = false; input.focus(); result.textContent = 'Enter the 6-digit code displayed by the Companion app.'; }
+    try { const r = await postJson('/api/relay-pair-start', { device_id: handle }); relayId = r.relay_id; relayIds[handle] = relayId; codeRow.hidden = false; input.focus(); result.textContent = 'Enter the 6-digit code displayed by the Companion app.'; }
     catch (error) { result.textContent = `Companion not reachable: ${error.message}`; install.hidden = false; showGuideObject(error.guide); }
     finally { start.disabled = false; }
   });
@@ -454,7 +455,10 @@ function relayPanel(device, handle) {
   });
   scan.addEventListener('click', async () => {
     scan.disabled = true; result.textContent = 'The device is scanning (8 s)…';
-    try { const snap = await postJson('/api/relay-scan', { device_id: handle, relay_id: relayId, seconds: 8 }); renderFabric(snap); result.textContent = `${snap.providers.relay.devices} Bluetooth advertiser(s) added under ${device.label} (observe only).`; }
+    try { const snap = await postJson('/api/relay-scan', { device_id: handle, relay_id: relayId, seconds: 8 }); renderFabric(snap);
+      const updated = snap.devices.find(d => d.key === device.key);
+      if (updated) { showDevice(updated, snap.links.filter(l => l.child === device.key)); fabricDetail.querySelector('.relay-panel p[role=status]').textContent = `${snap.providers.relay.devices} Bluetooth advertiser(s) added under ${device.label} (observe only).`; }
+      return; }
     catch (error) { result.textContent = `Scan not performed: ${error.message}`; showGuideObject(error.guide); }
     finally { scan.disabled = false; }
   });

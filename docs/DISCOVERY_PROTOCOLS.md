@@ -8,7 +8,7 @@
 | Freebox public API | REAL_HARDWARE_VERIFIED | GET /api_version | 4 s |
 | Freebox authenticated LAN | REAL_HARDWARE_VERIFIED | official app authorization, GET lan/browser/pub/ | GET allowlist, 2 MB response cap |
 | BLE (PC) | NOT_SUPPORTED on this PC (no adapter); code INTEGRATION_VERIFIED | bleak passive scan | 10 s, 300 devices, never connects |
-| BLE via relay | INTEGRATION_VERIFIED; hardware pending | relay protocol v1 + Android Companion | 15 s, 200 observations, owner-enabled only |
+| BLE via relay | REAL_HARDWARE_VERIFIED (Android phone) | relay protocol v1 + Android Companion | 15 s, 200 observations, owner-enabled only |
 | SSDP/UPnP, ARP table | NOT_SUPPORTED (not implemented) | — | deliberately not added: mDNS + Freebox inventory already cover the LAN graph |
 | Port scanning | NOT_SUPPORTED by design | — | never performed |
 

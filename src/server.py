@@ -375,6 +375,9 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             if observer is None:
                 raise fabric_relay.RelayError('Relay device not found in the current graph')
             fabric_discovery.ingest_ble(registry, {'devices': observations}, server.fabric_salt, observer=observer, source='RELAY:' + rid)
+            caps = registry.devices[observer]['capabilities']
+            for k in [k for k in caps if k[0] == 'ble_relay']:
+                del caps[k]      # the proven relay replaces the earlier 'requires Companion' entry
             registry.capability(observer, __import__('src.fabric.contracts', fromlist=['Capability']).Capability('ble_relay', 'observe', 'REAL_HARDWARE_VERIFIED', 'RELAY:' + rid, f'{len(observations)} advertisers reported'))
             snap = registry.snapshot(); snap['providers'] = dict((server.fabric_snapshot or {}).get('providers', {}), relay={'status': 'OK', 'devices': len(observations)})
             server.fabric_snapshot = snap

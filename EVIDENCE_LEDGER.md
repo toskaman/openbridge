@@ -188,3 +188,12 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - src/fabric/advisor.py: deterministic candidate steps from the graph (authorize_freebox, install_companion, pair_wifi_adb, review_duplicate); the local Meta model sees categories, counts and step ids only and must pick a listed step with a real sentence; numbers must match the graph counts. Unusable output falls back to the rule with an explicit message.
 - Real graph (participant LAN, phone unplugged so one candidate): Glimmer explained correctly with exact counts (15 devices, 12 indirect) and noted the step did not serve the Bluetooth goal; Llama 3B returned echoed ids/JSON fragments, which led to the new sentence-quality check.
 - Ablation (docs/benchmark/STATUS.md): Llama 3B 0% usable; Glimmer 93.3% valid, 53.3% goal fit vs rule 100%; deterministic across repeats.
+
+## Real Bluetooth relay through the phone (indirect discovery)
+
+- Companion installed on the Xiaomi from OpenBridge after the owner enabled MIUI "Install via USB" (earlier attempts: INSTALL_FAILED_USER_RESTRICTED, now covered by the Xiaomi guide).
+- Pairing over USB (adb forward, no Wi-Fi exposure): Java canonical JSON + PBKDF2 + HMAC-SHA256 interoperate with the Python side. The phone reported Bluetooth on and the "Nearby devices" permission granted (owner tapped Allow).
+- Safety check on hardware: before the owner enabled scans in the app, a signed scan request was refused by the phone ("owner has not enabled scanning on this device").
+- After the owner enabled scans: real 8 s relay scan found 9 BLE advertisers (4 with manufacturer IDs; 4 resolvable-private, 4 public/non-resolvable, 1 static-random addresses). The PC itself has no Bluetooth radio.
+- Through the product UI (tests/e2e/relay_real_smoke.py, not CI): discover -> phone sheet -> pair with the on-screen code -> scan; 8–13 advertisers appeared under the phone as BLE/observe-only children, labelled by name or Bluetooth SIG company (e.g. Apple, Microsoft, a named pair of earbuds). The phone's ble_relay capability became REAL_HARDWARE_VERIFIED. Re-pairing an already paired phone failed at first (stored key took precedence); fixed in the Companion so a fresh on-screen code can replace the old key, never the reverse.
+- Screenshots kept private (household device names). Hermetic relay UI flow (pair, scan, guided Bluetooth-off error) added to tests/e2e/fabric_smoke.py in CI.

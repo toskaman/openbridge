@@ -13,7 +13,7 @@
 | Freebox token revoked | INTEGRATION_VERIFIED | test_freebox_auth.py |
 | OpenWrt / unknown router | NOT_SUPPORTED | not implemented |
 | BLE local (PC) | NOT_SUPPORTED on this PC (no adapter) | ble_local status BLE_UNAVAILABLE |
-| BLE via Android relay | INTEGRATION_VERIFIED; hardware pending install | test_relay.py |
+| BLE via Android relay | REAL_HARDWARE_VERIFIED (Xiaomi phone, 9–13 advertisers) | EVIDENCE_LEDGER relay section |
 | BLE via ESPHome proxy | NOT_SUPPORTED | not implemented |
 | Same device via several transports | REAL_HARDWARE_VERIFIED (Freebox: mDNS ×3 + API) | fabric screenshots |
 | Device seen only in LAN inventory | REAL_HARDWARE_VERIFIED | 12 Freebox-only hosts |

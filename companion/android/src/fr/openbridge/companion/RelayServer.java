@@ -132,7 +132,14 @@ final class RelayServer {
             if (cmd == null) throw new SecurityException("not paired");
             key = key();
         } else {
-            cmd = verify(key, msg);
+            JSONObject viaPending = null;
+            try { cmd = verify(key, msg); }
+            catch (SecurityException e) {
+                // Re-pairing: a fresh on-screen code may replace the old key, never the reverse.
+                viaPending = pendingCode != null ? confirmPairing(msg) : null;
+                if (viaPending == null) throw e;
+                cmd = viaPending; key = key();
+            }
         }
         String op = cmd.getString("op");
         JSONObject params = new JSONObject();

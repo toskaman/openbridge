@@ -30,3 +30,9 @@ class BleTests(unittest.TestCase):
         snap,_=run({'ble_scan':lambda:ble_local.scan(1,scanner=none)},b's',providers=('mdns','ble'),mdns_fn=fake_mdns)
         self.assertEqual(snap['providers']['mdns']['instances'],1);self.assertEqual(snap['providers']['ble']['status'],'OK')
         self.assertEqual(snap['devices'][0]['label'],'Salon')
+
+
+class LabelTests(unittest.TestCase):
+    def test_company_label_without_name(self):
+        r=Registry();ingest_ble(r,{'devices':[ble_local.normalize('4A:00:00:00:00:01','',-50,{76:b''},[],{})]},b's')
+        self.assertEqual(r.snapshot()['devices'][0]['label'],'Apple device (BLE)')
