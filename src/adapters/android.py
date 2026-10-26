@@ -83,6 +83,17 @@ class AndroidAdapter:
         except (OSError, ValueError, subprocess.SubprocessError):
             return {'status': 'ADB_UNAVAILABLE', 'devices': []}
 
+    def forward_companion(self, handle, port=47800):
+        """Fixed `adb forward tcp:<port> tcp:47800` so the PC reaches the Companion over USB without exposing it on Wi-Fi."""
+        if not isinstance(port, int) or not 1024 < port < 65536:
+            raise ValueError('Invalid port')
+        with self._lock:
+            serial = next((k for k, v in self._handles.items() if v == handle), None)
+            if serial is None:
+                raise ValueError('Unknown device')
+            self._run(['-s', serial, 'forward', f'tcp:{port}', 'tcp:47800'])
+        return f'http://127.0.0.1:{port}'
+
     def stable_identifier(self, handle, salt):
         """Opaque per-install identifier from ro.serialno (same value over USB and Wi-Fi ADB). None if unreadable."""
         import hashlib, hmac

@@ -1,0 +1,265 @@
+package fr.openbridge.companion;
+
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.ParcelUuid;
+import android.util.SparseArray;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.crypto.Mac;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+/** OpenBridge relay protocol v1, relay side. Closed operation set, HMAC-SHA256, nonce + expiry, bounded BLE scans. */
+final class RelayServer {
+    static final String PROTOCOL = "openbridge-relay/1";
+    static final int PORT = 47800;
+    static final int MAX_SCAN_SECONDS = 15;
+    static final int MAX_OBSERVATIONS = 200;
+    private static final int MAX_BODY = 16384;
+
+    interface Ui { void status(String text); void code(String code); }
+
+    private final Context ctx;
+    private final Ui ui;
+    private final SharedPreferences prefs;
+    private final SecureRandom random = new SecureRandom();
+    private final Set<String> seen = new HashSet<>();
+    private final ArrayDeque<String> seenOrder = new ArrayDeque<>();
+    private volatile boolean running;
+    private ServerSocket server;
+    private String pendingCode, pendingRelayNonce, pendingPcNonce;
+    private long pendingUntil;
+    private int failedPairing;
+    private volatile boolean scanning;
+
+    RelayServer(Context ctx, Ui ui) {
+        this.ctx = ctx; this.ui = ui;
+        this.prefs = ctx.getSharedPreferences("relay", Context.MODE_PRIVATE);
+    }
+
+    boolean paired() { return prefs.contains("key"); }
+    boolean ownerEnabled() { return prefs.getBoolean("owner_enabled", false); }
+    void setOwnerEnabled(boolean v) { prefs.edit().putBoolean("owner_enabled", v).apply(); }
+    String relayId() {
+        String id = prefs.getString("relay_id", null);
+        if (id == null) { id = "relay-" + hex(bytes(6)); prefs.edit().putString("relay_id", id).apply(); }
+        return id;
+    }
+    void unpair() { prefs.edit().remove("key").putBoolean("owner_enabled", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
+
+    boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
+    boolean scanPermission() {
+        if (Build.VERSION.SDK_INT >= 31) return ctx.checkSelfPermission("android.permission.BLUETOOTH_SCAN") == PackageManager.PERMISSION_GRANTED;
+        return ctx.checkSelfPermission("android.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_GRANTED;
+    }
+    boolean bluetoothOn() {
+        BluetoothManager m = (BluetoothManager) ctx.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter a = m == null ? null : m.getAdapter();
+        return a != null && a.isEnabled();
+    }
+
+    void start() {
+        if (running) return;
+        running = true;
+        new Thread(() -> {
+            try (ServerSocket s = new ServerSocket(PORT, 8, InetAddress.getByName("0.0.0.0"))) {
+                server = s;
+                ui.status("Listening for OpenBridge on port " + PORT + (paired() ? " · paired" : " · not paired"));
+                while (running) {
+                    try (Socket c = s.accept()) { c.setSoTimeout(5000); handle(c); } catch (Exception ignored) { }
+                }
+            } catch (Exception e) { ui.status("Relay could not start: " + e.getClass().getSimpleName()); running = false; }
+        }, "openbridge-relay").start();
+    }
+
+    void stop() { running = false; try { if (server != null) server.close(); } catch (Exception ignored) { } }
+
+    private void handle(Socket c) throws Exception {
+        BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8));
+        String line; int length = -1;
+        String request = in.readLine();
+        if (request == null || !request.startsWith("POST /ob ")) { respond(c, 404, "{\"error\":\"not found\"}"); return; }
+        while ((line = in.readLine()) != null && !line.isEmpty()) {
+            if (line.toLowerCase().startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
+        }
+        if (length < 0 || length > MAX_BODY) { respond(c, 413, "{\"error\":\"size\"}"); return; }
+        char[] buf = new char[length]; int read = 0;
+        while (read < length) { int n = in.read(buf, read, length - read); if (n < 0) break; read += n; }
+        JSONObject msg = new JSONObject(new String(buf, 0, read));
+        JSONObject reply;
+        try { reply = dispatch(msg); } catch (SecurityException e) { respond(c, 403, new JSONObject().put("error", e.getMessage()).toString()); return; }
+        respond(c, 200, reply.toString());
+    }
+
+    private void respond(Socket c, int code, String body) throws Exception {
+        byte[] b = body.getBytes(StandardCharsets.UTF_8);
+        OutputStream out = c.getOutputStream();
+        out.write(("HTTP/1.0 " + code + " X\r\nContent-Type: application/json\r\nContent-Length: " + b.length + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
+        out.write(b); out.flush();
+    }
+
+    private JSONObject dispatch(JSONObject msg) throws Exception {
+        if ("pair_request".equals(msg.optString("op"))) return pairRequest(msg);
+        byte[] key = key();
+        JSONObject cmd;
+        if (key == null) {
+            cmd = confirmPairing(msg);                       // first signed command proves knowledge of the on-screen code
+            if (cmd == null) throw new SecurityException("not paired");
+            key = key();
+        } else {
+            cmd = verify(key, msg);
+        }
+        String op = cmd.getString("op");
+        JSONObject params = new JSONObject();
+        switch (op) {
+            case "discover_capabilities": case "get_status": case "get_permissions":
+                params = status(); break;
+            case "start_discovery": {
+                JSONObject p = cmd.getJSONObject("params");
+                int seconds = p.getInt("seconds");
+                if (!"ble".equals(p.optString("radio")) || seconds < 1 || seconds > MAX_SCAN_SECONDS) throw new SecurityException("bounds");
+                if (!ownerEnabled()) throw new SecurityException("owner has not enabled scanning on this device");
+                params.put("observations", scan(seconds)); break;
+            }
+            case "stop_discovery": scanning = false; break;
+            case "revoke_access": unpair(); break;
+            default: throw new SecurityException("unknown op");
+        }
+        return signed(key, cmd.getString("relay_id"), params);
+    }
+
+    private JSONObject status() throws Exception {
+        JSONObject perms = new JSONObject();
+        perms.put("BLUETOOTH_SCAN", scanPermission()).put("owner_enabled", ownerEnabled()).put("bluetooth_on", bluetoothOn());
+        JSONArray caps = new JSONArray();
+        if (bleHardware()) caps.put("ble_scan");
+        boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
+                .put("sdk", Build.VERSION.SDK_INT).put("television", tv);
+    }
+
+    private synchronized JSONObject pairRequest(JSONObject msg) throws Exception {
+        if (failedPairing >= 5) throw new SecurityException("pairing locked; reopen the app");
+        String pcNonce = msg.optString("pc_nonce");
+        if (!pcNonce.matches("[0-9a-f]{16,64}")) throw new SecurityException("bad nonce");
+        pendingCode = String.format("%06d", random.nextInt(1_000_000));
+        pendingRelayNonce = hex(bytes(16)); pendingPcNonce = pcNonce; pendingUntil = System.currentTimeMillis() + 120_000;
+        ui.code(pendingCode);
+        return new JSONObject().put("protocol", PROTOCOL).put("relay_id", relayId()).put("relay_nonce", pendingRelayNonce).put("declared", status());
+    }
+
+    private byte[] key() {
+        String k = prefs.getString("key", null);
+        if (k != null) return unhex(k);
+        return null;
+    }
+
+    private JSONObject verify(byte[] key, JSONObject msg) throws Exception {
+        String mac = msg.optString("mac");
+        JSONObject body = new JSONObject(msg.toString()); body.remove("mac");
+        if (!MessageDigest.isEqual(hex(hmac(key, Canon.of(body))).getBytes(), mac.getBytes())) throw new SecurityException("bad signature");
+        long now = System.currentTimeMillis() / 1000;
+        if (!PROTOCOL.equals(body.optString("protocol")) || now < body.getLong("issued_at") - 5 || now > body.getLong("expires_at")) throw new SecurityException("expired");
+        String nonce = body.getString("nonce");
+        synchronized (seen) {
+            if (!seen.add(nonce)) throw new SecurityException("replay");
+            seenOrder.add(nonce); if (seenOrder.size() > 512) seen.remove(seenOrder.poll());
+        }
+        return body;
+    }
+
+    /** First signed command after pair_request proves the PC knows the code shown on this screen. */
+    private synchronized JSONObject confirmPairing(JSONObject msg) throws Exception {
+        if (pendingCode == null || System.currentTimeMillis() > pendingUntil) return null;
+        byte[] k = derive(pendingCode, pendingRelayNonce, pendingPcNonce);
+        JSONObject body;
+        try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
+        prefs.edit().putString("key", hex(k)).apply(); pendingCode = null; ui.code(null);
+        ui.status("Paired with OpenBridge. Scanning stays off until you enable it here.");
+        return body;
+    }
+
+    private JSONObject signed(byte[] key, String relayId, JSONObject params) throws Exception {
+        long now = System.currentTimeMillis() / 1000;
+        JSONObject r = new JSONObject().put("protocol", PROTOCOL).put("relay_id", relayId).put("op", "reply").put("params", params)
+                .put("nonce", hex(bytes(12))).put("issued_at", now).put("expires_at", now + 30);
+        return r.put("mac", hex(hmac(key, Canon.of(r))));
+    }
+
+    @SuppressLint("MissingPermission")
+    private JSONArray scan(int seconds) throws Exception {
+        if (!bleHardware()) throw new SecurityException("no BLE hardware");
+        if (!scanPermission()) throw new SecurityException("BLE scan permission not granted on this device");
+        BluetoothManager m = (BluetoothManager) ctx.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter a = m.getAdapter();
+        if (a == null || !a.isEnabled()) throw new SecurityException("Bluetooth is off on this device");
+        BluetoothLeScanner s = a.getBluetoothLeScanner();
+        Map<String, JSONObject> found = new LinkedHashMap<>();
+        ScanCallback cb = new ScanCallback() {
+            @Override public void onScanResult(int type, ScanResult r) {
+                synchronized (found) {
+                    if (found.size() >= MAX_OBSERVATIONS && !found.containsKey(r.getDevice().getAddress())) return;
+                    try {
+                        JSONObject o = new JSONObject().put("address", r.getDevice().getAddress()).put("rssi", r.getRssi());
+                        if (r.getScanRecord() != null) {
+                            String name = r.getScanRecord().getDeviceName();
+                            if (name != null) o.put("name", name.length() > 60 ? name.substring(0, 60) : name);
+                            JSONArray ids = new JSONArray(); SparseArray<byte[]> md = r.getScanRecord().getManufacturerSpecificData();
+                            for (int i = 0; md != null && i < md.size() && i < 8; i++) ids.put(md.keyAt(i));
+                            o.put("company_ids", ids);
+                            JSONArray uu = new JSONArray();
+                            if (r.getScanRecord().getServiceUuids() != null) for (ParcelUuid u : r.getScanRecord().getServiceUuids()) { if (uu.length() < 12) uu.put(u.toString()); }
+                            o.put("service_uuids", uu);
+                        }
+                        found.put(r.getDevice().getAddress(), o);
+                    } catch (Exception ignored) { }
+                }
+            }
+        };
+        scanning = true;
+        ui.status("Scanning Bluetooth LE for " + seconds + " s at OpenBridge's request…");
+        s.startScan(null, new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), cb);
+        long end = System.currentTimeMillis() + seconds * 1000L;
+        while (scanning && System.currentTimeMillis() < end) Thread.sleep(100);
+        s.stopScan(cb); scanning = false;
+        ui.status("Scan finished. " + found.size() + " advertiser(s) reported to OpenBridge.");
+        JSONArray out = new JSONArray(); synchronized (found) { for (JSONObject o : found.values()) out.put(o); }
+        return out;
+    }
+
+    static byte[] derive(String code, String relayNonce, String pcNonce) throws Exception {
+        PBEKeySpec spec = new PBEKeySpec(code.toCharArray(), (relayNonce + pcNonce).getBytes(StandardCharsets.UTF_8), 200_000, 256);
+        return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+    }
+    static byte[] hmac(byte[] key, String body) throws Exception {
+        Mac m = Mac.getInstance("HmacSHA256"); m.init(new SecretKeySpec(key, "HmacSHA256")); return m.doFinal(body.getBytes(StandardCharsets.UTF_8));
+    }
+    private byte[] bytes(int n) { byte[] b = new byte[n]; random.nextBytes(b); return b; }
+    static String hex(byte[] b) { StringBuilder s = new StringBuilder(); for (byte x : b) s.append(String.format("%02x", x)); return s.toString(); }
+    static byte[] unhex(String s) { byte[] b = new byte[s.length() / 2]; for (int i = 0; i < b.length; i++) b[i] = (byte) Integer.parseInt(s.substring(2 * i, 2 * i + 2), 16); return b; }
+}

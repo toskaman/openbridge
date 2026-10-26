@@ -171,3 +171,10 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - The participant approved "OpenBridge Device Fabric" on the Freebox Server front panel (second request; the first timed out). Token stored with Windows DPAPI. Granted permissions exclude `settings`; OpenBridge only calls allowlisted GET endpoints.
 - Real read: 127 known LAN hosts, 12 active, 37 with randomized MACs (never used as strong identity). The graph shows the 12 active hosts as Freebox -> host INVENTORY links with observe-only grants (inactive hosts counted, not drawn): 18 devices / 22 links in 4.2 s. The LG TV seen by the Freebox and by mDNS is flagged as a possible duplicate rather than merged; the PC and the ADB phone also appear in the Freebox inventory and are not merged (no shared strong identifier). REAL_HARDWARE_VERIFIED.
 - Screenshot of this run is kept private (household device names); public screenshots use the earlier run.
+
+## Relay protocol v1 and Android Companion
+
+- src/fabric/relay.py: pairing by on-screen 6-digit code (PBKDF2), HMAC-SHA256 signed commands from a closed set with nonce/expiry/replay protection, bounded BLE scans (≤15 s, ≤200 observations), untrusted-reply validation, capability- and permission-based relay selection (mains power preferred), offline after 3 failures, revocation, loopback/private-only HTTP transport. 10 relay tests including pairing with a reference relay.
+- companion/android: native Java Android app (minSdk 26, targetSdk 34, TV leanback + D-pad UI, runtime BLE permission requests only, scans only while open and owner-enabled). Built and signed reproducibly with the official SDK tools (dev/build_companion.py; 33 KB APK). Android SDK licence accepted with the owner's explicit approval in chat.
+- Installation on the Xiaomi: refused with INSTALL_FAILED_USER_RESTRICTED until MIUI "Install via USB" is enabled by the owner. Hardware relay scan: NOT TESTED yet.
+- Device Fabric documentation added: UNIVERSAL_DEVICE_ARCHITECTURE, DISCOVERY_PROTOCOLS, DEVICE_IDENTITY_AND_DEDUPLICATION, FREEBOX_INTEGRATION, RELAY_SECURITY, ANDROID_COMPANION, KNOWN_LIMITATIONS.

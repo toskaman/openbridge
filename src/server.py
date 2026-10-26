@@ -24,6 +24,7 @@ from src.ai.glimmer import GlimmerBroker
 from src.core.agent import DeviceAgent, AgentBlocked
 from src.ai import registry
 from src.fabric import discovery as fabric_discovery
+from src.fabric import relay as fabric_relay
 
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
@@ -140,7 +141,7 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -180,6 +181,11 @@ class Handler(BaseHTTPRequestHandler):
                 if body['device_id'] != 'freebox-local':
                     raise ValueError()
                 return self.reply(*self.server.start_freebox_authorization())
+            if self.path.startswith('/api/relay-'):
+                try:
+                    return self.reply(200, self.server.relay_action(self.path, body))
+                except fabric_relay.RelayError as error:
+                    return self.reply(409, {'error': str(error)})
             if self.path == '/api/fabric-discover':
                 if body['device_id'] != 'fabric':
                     raise ValueError()
@@ -193,6 +199,7 @@ class Handler(BaseHTTPRequestHandler):
                 finally:
                     self.server.fabric_lock.release()
                 self.server.fabric_snapshot=snap
+                self.server.fabric_registry=_
                 return self.reply(200,snap)
             if self.path.startswith('/api/agent-'):
                 agent=self.server.agent
@@ -302,6 +309,54 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
         threading.Thread(target=poll, daemon=True).start()
         return 202, server.freebox_auth
     server.start_freebox_authorization = start_freebox_authorization
+    server.fabric_registry = None
+    server.relays = fabric_relay.RelayManager(lambda relay, msg: relay['send'](relay, msg))
+    server.relay_pending = {}
+    def relay_action(path, body, transport_factory=fabric_relay.http_transport):
+        if path == '/api/relay-pair-start':
+            handle = body['device_id']
+            url = server.android.forward_companion(handle)
+            send = transport_factory(url)
+            pc_nonce = secrets.token_hex(16)
+            hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
+            if hello.get('protocol') != fabric_relay.PROTOCOL:
+                raise fabric_relay.RelayError('Not an OpenBridge Companion')
+            server.relay_pending = {'send': send, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle}
+            return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': hello['relay_id'], 'declared': hello.get('declared', {})}
+        if path == '/api/relay-pair-confirm':
+            pending = server.relay_pending
+            code = body.get('code')
+            if not pending or not isinstance(code, str):
+                raise fabric_relay.RelayError('No pairing in progress')
+            key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
+            rid = pending['hello']['relay_id']
+            reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
+            declared = fabric_relay.verify(key, reply, set()).get('params', {})
+            server.relays.enroll(rid, key, pending['handle'], declared)
+            server.relays.relays[rid]['send'] = pending['send']
+            server.relay_pending = {}
+            return {'state': 'PAIRED', 'relay_id': rid, 'declared': declared, 'eligible_for_ble': rid in server.relays.eligible('ble_scan')}
+        if path == '/api/relay-scan':
+            rid = body.get('relay_id')
+            relay = server.relays.relays.get(rid)
+            if relay is None:
+                raise fabric_relay.RelayError('Unknown relay')
+            status = fabric_relay.verify(relay['key'], relay['send'](relay, fabric_relay.command(relay['key'], rid, 'get_status')), relay['seen']).get('params', {})
+            relay['permissions'] = dict(status.get('permissions', {}))
+            rid, observations = server.relays.scan(int(body.get('seconds', 8)), relay_id=rid)
+            registry = server.fabric_registry
+            if registry is None:
+                raise fabric_relay.RelayError('Run discovery first so the relay device is in the graph')
+            observer = next((k for k, d in registry.devices.items() if relay['device_key'] in d.get('handles', {}).values()), None)
+            if observer is None:
+                raise fabric_relay.RelayError('Relay device not found in the current graph')
+            fabric_discovery.ingest_ble(registry, {'devices': observations}, server.fabric_salt, observer=observer, source='RELAY:' + rid)
+            registry.capability(observer, __import__('src.fabric.contracts', fromlist=['Capability']).Capability('ble_relay', 'observe', 'REAL_HARDWARE_VERIFIED', 'RELAY:' + rid, f'{len(observations)} advertisers reported'))
+            snap = registry.snapshot(); snap['providers'] = dict((server.fabric_snapshot or {}).get('providers', {}), relay={'status': 'OK', 'devices': len(observations)})
+            server.fabric_snapshot = snap
+            return snap
+        raise ValueError()
+    server.relay_action = relay_action
     server.agent = DeviceAgent(model_broker,server.android,agent_dir) if agent_dir is not None and getattr(model_broker,'local_only',False) is True else None
     return server
 

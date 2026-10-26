@@ -101,7 +101,7 @@ class Registry:
                                   'verified': self.best_value(dev['key'], f).verified}
                               for f, obs in dev['observations'].items()},
                     'capabilities': [vars(c) for c in dev['capabilities'].values()],
-                    'last_seen': dev['last_seen']})
+                    'handles': dict(dev.get('handles', {})), 'last_seen': dev['last_seen']})
             links = [vars(l) | {'grants': list(l.grants)} for l in self.links.values()]
             hints = [sorted(h) for h in self.hints]
             for d in devices:
