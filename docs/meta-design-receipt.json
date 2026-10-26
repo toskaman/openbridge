@@ -1,0 +1,23 @@
+{
+  "usage": {
+    "completion_tokens": 2792,
+    "prompt_tokens": 267,
+    "total_tokens": 3059,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1444
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "recorded_at_utc": "2026-10-26T16:39:21.5932898Z",
+  "estimated_cost_usd": 0.01219975,
+  "model_returned": "muse-spark-1.3",
+  "model_requested": "muse-spark-1.3",
+  "request_id": "chatcmpl-01a17914-b1c6-758a-adc8-d9892a66cc0f",
+  "pricing_url": "https://dev.meta.ai/docs/pricing-rate-limits",
+  "reserved_usd": 0.1,
+  "credit_source": "Promotional balance verified in dashboard before this supervised request",
+  "purpose": "development-visual-design",
+  "prompt_sha256": "ECCA6FC6B3AB35C9735D38B6E3F924BA0FDC8D168F2E2AA7323D563650C9455C"
+}

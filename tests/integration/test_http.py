@@ -2,6 +2,7 @@ import http.client
 import json
 import threading
 import unittest
+from unittest.mock import patch
 from src.server import create_server
 
 
@@ -38,6 +39,24 @@ class HTTPTests(unittest.TestCase):
         code, body, _ = self.request('GET', '/api/devices')
         self.assertEqual(code, 200)
         self.assertTrue(json.loads(body)['devices'][0]['simulated'])
+
+    def test_android_inventory_is_opt_in(self):
+        with patch.object(self.server.android, 'discover', return_value={'devices': [], 'status': 'WAITING_FOR_DEVICE'}) as discover:
+            self.request('GET', '/api/devices')
+            discover.assert_not_called()
+            code, body, _ = self.request('GET', '/api/devices?source=android')
+            self.assertEqual(code, 200)
+            self.assertEqual(json.loads(body)['status'], 'WAITING_FOR_DEVICE')
+
+    def test_android_inspection_never_falls_back_to_fixture(self):
+        with patch.object(self.server.android, 'inspect', side_effect=ValueError('Device unavailable')):
+            code, _, _ = self.request('POST', '/api/inspect', '{"source":"android","device_id":"demo-android"}', self.session_headers())
+            self.assertEqual(code, 400)
+
+    def test_runtime_cloud_is_explicitly_blocked(self):
+        code, body, _ = self.request('GET', '/api/model-status')
+        self.assertEqual(code, 200)
+        self.assertFalse(json.loads(body)['cloud_inference_enabled'])
 
     def test_dns_rebinding_host_denied(self):
         self.assertEqual(self.request('GET', '/api/session', headers={'Host': 'attacker.example'})[0], 403)

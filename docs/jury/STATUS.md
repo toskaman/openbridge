@@ -1,5 +1,7 @@
 # Demonstration status
 
-Available: local simulated discovery, fact inspection, source labels, deterministic write refusal, protected HTTP interface.
+Available: English local workspace, clearly simulated discovery, separate Android USB inventory, real read-only inspection verified on one authorized phone, provenance labels and protected HTTP interface.
 
-Incomplete: actual Meta inference, physical device adapter, verified action and Undo, multi-protocol evidence, 3-minute video and final submission. This release is not submission-ready and does not claim bonus eligibility.
+Meta Muse Spark 1.3 provided the visual design direction; docs/meta-design-receipt.json records the actual call. Development design assistance does not satisfy the real in-product model gate.
+
+Incomplete: actual runtime inference, physical action and Undo, second authenticated protocol, multiple-phone hardware tests, 3-minute video and final submission. No bonus eligibility or submission readiness is claimed.

@@ -5,3 +5,9 @@ New repository initialized on 26 October 2026 after participant confirmation tha
 Phase 1 source, UI, tests, scripts and product documents were authored fresh in this repository. No historical application source, tests or screenshots were copied. A separate private planning kit supplied requirements, not submitted product code.
 
 Development assistance: Codex authored and verified this initial implementation at the participant's direction. This is build-time assistance. Application runtime invokes no models in phase 1. Future inference must use a verified Meta model exclusively.
+
+## Meta design contribution
+
+Meta Muse Spark 1.3 was actually called through the official Meta API on 26 October 2026 to propose visual direction, palette, responsive layout and source-state labels. Its returned identity, usage, request ID and estimated cost are recorded in docs/meta-design-receipt.json. Codex adapted and implemented the proposal, then converted the entire interface and public proposal to English at the participant's request. The published brief now requests English; the receipt hash identifies the original submitted version, retained in the private delta backup. No second Meta generation is claimed for translation. This design call is development assistance and does not establish in-product model use.
+
+The Android adapter, tests and source-selection workflow were authored fresh during the event. One authorized USB phone has been read without modifying it. Device identifiers and actual private measurements are excluded from the repository.

@@ -14,14 +14,26 @@ def main():
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto('http://127.0.0.1:18765', wait_until='networkidle')
             page.screenshot(path=str(artifacts / f'{width}-before.png'), full_page=True)
-            page.get_by_role('button', name='Discover demo device').click()
-            page.get_by_role('button', name='Inspect device evidence').click()
+            page.get_by_role('button', name='Refresh demo').click()
+            page.get_by_role('button', name='Inspect evidence').click()
             page.get_by_text('Inspection complete.', exact=False).wait_for()
             assert page.get_by_text('Meta inference', exact=True).is_visible()
             assert page.locator('.check .badge').all_text_contents().count('NOT_TESTED') == 2
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert not errors, errors
             page.screenshot(path=str(artifacts / f'{width}-after.png'), full_page=True)
+            assert page.locator('html').get_attribute('lang') == 'en'
+            page.route('**/api/devices?source=demo', lambda route: route.abort())
+            page.get_by_role('button', name='Refresh demo').click()
+            page.get_by_text('Inventory failed:', exact=False).wait_for()
+            assert page.get_by_role('button', name='Inspect evidence').count() == 0
+            page.unroute('**/api/devices?source=demo')
+            page.get_by_role('radio', name='Android USB').check()
+            page.get_by_role('button', name='List USB devices').click()
+            page.get_by_text('Inventory complete', exact=False).wait_for()
+            assert 'SIMULATED' not in page.locator('#device').inner_text()
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.screenshot(path=str(artifacts / f'{width}-usb.png'), full_page=True)
             page.close()
         browser.close()
     print('Browser discovery, inspection, simulation labels and overflow checks passed at 390/768/1440/3440.')

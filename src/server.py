@@ -5,7 +5,8 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
+from src.adapters.android import AndroidAdapter
 from src.adapters.simulated import discover
 from src.core.policy import inspect_device
 
@@ -42,7 +43,17 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/session':
             return self.reply(200, {'csrf_token': self.server.csrf_token})
         if path == '/api/devices':
-            return self.reply(200, {'devices': discover()})
+            source = parse_qs(urlsplit(self.path).query).get('source', ['demo'])
+            if source == ['android']:
+                return self.reply(200, self.server.android.discover())
+            if source != ['demo']:
+                return self.reply(400, {'error': 'Unknown inventory source'})
+            return self.reply(200, {'devices': discover(), 'status': 'SIMULATED'})
+        if path == '/api/model-status':
+            return self.reply(200, {'cloud_inference_enabled': False,
+                                   'status': 'CREDIT_VERIFICATION_REQUIRED',
+                                   'detail': 'Runtime cloud calls blocked until free-credit checks are available.',
+                                   'development_design_model': 'muse-spark-1.3'})
         if path in ASSETS:
             filename, content_type = ASSETS[path]
             return self.reply(200, (UI / filename).read_bytes(), content_type)
@@ -71,7 +82,13 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length))
             if not isinstance(body, dict) or not isinstance(body.get('device_id'), str):
                 raise ValueError()
-            result = inspect_device(body['device_id'])
+            source = body.get('source', 'demo')
+            if source == 'android':
+                result = self.server.android.inspect(body['device_id'])
+            elif source == 'demo':
+                result = inspect_device(body['device_id'])
+            else:
+                raise ValueError('Unknown source')
         except (ValueError, UnicodeError, TimeoutError):
             return self.reply(400, {'error': 'Invalid request or unknown device'})
         return self.reply(200, result)
@@ -80,6 +97,7 @@ class Handler(BaseHTTPRequestHandler):
 def create_server(port=18765):
     server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
     server.csrf_token = secrets.token_urlsafe(32)
+    server.android = AndroidAdapter()
     return server
 
 
