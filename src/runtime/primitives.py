@@ -27,6 +27,12 @@ def _s(type_, **kw):
     return dict(type=type_, **kw)
 
 
+ARGS_SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
+    'key': {'type': 'string', 'maxLength': 24}, 'text': {'type': 'string', 'maxLength': 100}, 'package': {'type': 'string', 'maxLength': 120},
+    'url': {'type': 'string', 'maxLength': 300}, 'setting': {'type': 'string', 'maxLength': 32}, 'value': {'type': 'integer', 'minimum': 0, 'maximum': 1800000},
+    'x': {'type': 'number'}, 'y': {'type': 'number'}, 'x1': {'type': 'number'}, 'y1': {'type': 'number'}, 'x2': {'type': 'number'}, 'y2': {'type': 'number'},
+    'ms': {'type': 'integer', 'minimum': 0, 'maximum': 10000}}}
+
 PRIMITIVES = {p.primitive_id: p for p in (
     ActionDescriptor('read_facts', 'Read diagnostics from one device',
                      {'type': 'object', 'properties': {}, 'additionalProperties': False},
@@ -116,6 +122,24 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('owner consent for this command',), ('owner-linked Tuya key', 'value in the command allowlist', 'manual moves end with stop after <= 3 s'),
                      ('device acted on the command',), 'status read after the command; momentary commands report verified=null', '',
                      R.IRREVERSIBLE.value, ('NOT_LINKED', 'BLOCKED'), 30, 'single-per-device', True),
+    ActionDescriptor('device_capabilities', 'Measure which typed actions an Android phone, TV or watch supports (read-only probe)',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('read grant on a current ADB link',), ('identity re-verified',), ('none: read-only',),
+                     'each entry measured on the device now', '', R.NONE.value, ('DEVICE_UNAVAILABLE',), 60, 'single-per-device', False),
+    ActionDescriptor('device_action', 'Run one typed action on an Android phone, TV or watch (remote keys, mouse, text, apps, URL, settings)',
+                     {'type': 'object', 'properties': {'action': _s('string', enum=sorted(['key', 'text', 'tap', 'swipe', 'long_press', 'launch_app', 'open_url', 'set', 'get', 'restore', 'list_apps', 'screen_state'])),
+                                                       'args': ARGS_SCHEMA}, 'required': ['action'], 'additionalProperties': False},
+                     ('owner consent for this action',), ('identity re-verified', 'args valid for the action'),
+                     ('device acted; settings read back',), 'settings: independent read-back (undo = device_action with action=restore); other actions report the screen state', '',
+                     R.IRREVERSIBLE.value, ('DEVICE_UNAVAILABLE', 'INVALID_ACTION'), 60, 'single-per-device', True),
+    ActionDescriptor('device_macro', 'Run a short sequence of typed actions (a new feature built from the catalog) under one consent listing every step',
+                     {'type': 'object', 'properties': {'steps': _s('array', maxItems=20, items={'type': 'object', 'properties': {
+                         'action': _s('string', enum=sorted(['key', 'text', 'tap', 'swipe', 'long_press', 'launch_app', 'open_url', 'set', 'get', 'restore', 'screen_state', 'wait'])),
+                         'args': ARGS_SCHEMA}, 'required': ['action'], 'additionalProperties': False})},
+                      'required': ['steps'], 'additionalProperties': False},
+                     ('owner consent for the whole listed sequence',), ('identity re-verified', 'at most 20 steps, waits <= 10 s each'),
+                     ('steps ran in order; stops at the first failure',), 'per-step result returned', '', R.IRREVERSIBLE.value,
+                     ('DEVICE_UNAVAILABLE', 'INVALID_ACTION'), 300, 'single-per-device', True),
     ActionDescriptor('pc_job', 'Run one owner-typed command on a client PC through its BridgeWindows agent',
                      {'type': 'object', 'properties': {'command': _s('string', maxLength=2000), 'shell': _s('string', enum=['cmd', 'powershell']),
                                                        'timeout_s': _s('integer', minimum=1, maximum=600)},
@@ -539,7 +563,57 @@ class Executor:
         state = 'FAILED' if r['verified'] is False else 'VERIFIED' if r['verified'] else 'EXECUTED_UNVERIFIED'
         return state, r['status_before'], r['status_after'], bool(r['verified']), r
 
-    RUNNERS = {'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def _actions(self, key):
+        from src.fabric.android_actions import AndroidActions
+        dev = self._device(key)
+        if dev['category'] not in ('phone', 'tv', 'android', 'watch'):
+            raise PrimitiveError('INVALID_ACTION', 'typed actions exist for Android phones, TVs and watches')
+        handle = self._adb_handle(key)
+        serial = next(s for s, h in self.ctx.android._handles.items() if h == handle)
+        cache = self.__dict__.setdefault('_action_sessions', {})
+        a = cache.get(key)
+        if a is None or a.serial != serial:
+            a = AndroidActions(lambda *args: self.ctx.android._run(['-s', serial, 'shell', *args], max_bytes=2097152), dev['category'])
+            a.serial = serial
+            cache[key] = a
+        return a
+
+    def _device_capabilities(self, key, params):
+        p = self._actions(key).probe()
+        return 'VERIFIED', None, None, True, p
+
+    def _one(self, a, action, args):
+        from src.fabric.android_actions import ActionError
+        try:
+            return a.run(action, args or {})
+        except ActionError as e:
+            raise PrimitiveError('INVALID_ACTION', str(e)) from None
+
+    def _device_action(self, key, params):
+        a = self._actions(key)
+        r = self._one(a, params['action'], params.get('args'))
+        ok = r.get('verified', r.get('exact', True)) is not False
+        state = 'REVERTED' if params['action'] == 'restore' else 'VERIFIED' if 'verified' in r else 'EXECUTED'
+        return (state if ok else 'FAILED'), r.get('before'), r.get('after', r.get('restored')), ok, r
+
+    def _device_macro(self, key, params):
+        import time as _t
+        a = self._actions(key)
+        done = []
+        for i, st in enumerate(params['steps']):
+            if st['action'] == 'wait':
+                ms = (st.get('args') or {}).get('ms', 500)
+                (getattr(self, '_sleep', None) or _t.sleep)(min(ms, 10000) / 1000)
+                done.append({'step': i + 1, 'action': 'wait', 'ms': ms}); continue
+            try:
+                r = self._one(a, st['action'], st.get('args'))
+            except PrimitiveError as e:
+                done.append({'step': i + 1, 'action': st['action'], 'error': str(e)})
+                return 'PARTIAL', None, f'stopped at step {i + 1}', False, {'steps': done}
+            done.append({'step': i + 1, 'action': st['action'], **r})
+        return 'EXECUTED', None, f'{len(done)} steps', True, {'steps': done}
+
+    RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
