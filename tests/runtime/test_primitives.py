@@ -207,6 +207,8 @@ class Http(unittest.TestCase):
             self.assertEqual(get('/api/v2/contract')['version'], '1.0.0')
             self.assertEqual(len(get('/api/v2/primitives')['primitives']), len(PRIMITIVES))
             self.assertIn('pending_transactions', get('/api/v2/recovery'))
+            self.assertEqual(get('/api/v2/relays'), {'routes': [], 'advertisers': []})
+            self.assertEqual(get('/api/v2/diagnosis')['findings'][0]['value'], 'empty')
             body = json.dumps({'primitive_id': 'read_facts', 'device_key': 'x'}).encode()
             req = urllib.request.Request(base + '/api/v2/execute', body, {'Content-Type': 'application/json'})
             with self.assertRaises(urllib.error.HTTPError) as e:

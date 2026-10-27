@@ -401,6 +401,8 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.start_freebox_authorization = start_freebox_authorization
     server.fabric_registry = None
     server.relays = fabric_relay.RelayManager(lambda relay, msg: relay['send'](relay, msg))
+    from src.runtime.relay_health import RelayLedger
+    server.relay_ledger = RelayLedger()
     server.relay_pending = {}
     def relay_action(path, body, transport_factory=fabric_relay.http_transport):
         if path == '/api/relay-pair-start':
@@ -434,6 +436,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             status = fabric_relay.verify(relay['key'], relay['send'](relay, fabric_relay.command(relay['key'], rid, 'get_status')), relay['seen']).get('params', {})
             relay['permissions'] = dict(status.get('permissions', {}))
             rid, observations = server.relays.scan(int(body.get('seconds', 8)), relay_id=rid)
+            server.relay_ledger.record(rid, observations)
             registry = server.fabric_registry
             if registry is None:
                 raise fabric_relay.RelayError('Run discovery first so the relay device is in the graph')

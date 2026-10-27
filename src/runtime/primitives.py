@@ -34,7 +34,7 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('none: read-only',), 'each finding names its source; INFERRED findings state their basis', '',
                      R.NONE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'NOT_READABLE'), 60, 'single-per-device', False),
     ActionDescriptor('bounded_discovery', 'Run one bounded local discovery',
-                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox']), maxItems=4)},
+                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble']), maxItems=5)},
                       'additionalProperties': False},
                      (), ('no discovery already running',), ('graph replaced by a fresh snapshot',), 'snapshot returned with per-provider status', '',
                      R.NONE.value, ('BUSY',), 60, 'single-global', False),

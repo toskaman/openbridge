@@ -7,7 +7,7 @@ from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
 GET_ROUTES = ('/api/v2/contract', '/api/v2/graph', '/api/v2/capabilities', '/api/v2/facts', '/api/v2/routes',
-              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events')
+              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis')
 POST_ROUTES = ('/api/v2/execute',)
 
 
@@ -34,9 +34,16 @@ def routes(server):
     out = []
     for rid, r in server.relays.relays.items():
         key = next((k for k, d in (reg.devices.items() if reg else ()) if r['device_key'] in d.get('handles', {}).values()), '')
+        led = getattr(server, 'relay_ledger', None)
+        last = (led.routes.get(rid) or {}).get('last_success_at') if led else None
         out.append(RelayRoute('*', key, rid, 'ble', r['permissions'].get('BLUETOOTH_SCAN') is True,
-                              r['permissions'].get('owner_enabled') is True, bool(r['online']), r.get('last_success_at')))
+                              r['permissions'].get('owner_enabled') is True, bool(r['online']), last))
     return out
+
+
+def route_rows(server):
+    led = getattr(server, 'relay_ledger', None)
+    return [dict(to_json(r), status=led.route_status(r.relay_id, r.online) if led else 'UNKNOWN') for r in routes(server)]
 
 
 def get(server, path, query):
@@ -55,7 +62,15 @@ def get(server, path, query):
             return 400, {'error': 'since must be an integer'}
         return 200, {'events': ex.events_since(since)}
     if path == '/api/v2/routes':
-        return 200, {'routes': [to_json(r) for r in routes(server)]}
+        return 200, {'routes': route_rows(server)}
+    if path == '/api/v2/relays':
+        snap = server.fabric_snapshot or {'devices': []}
+        strong = [d['label'] for d in snap['devices'] if d['category'] != 'ble' and d.get('identifier_kinds')]
+        led = getattr(server, 'relay_ledger', None)
+        return 200, {'routes': route_rows(server), 'advertisers': led.advertisers(strong) if led else []}
+    if path == '/api/v2/diagnosis':
+        from src.runtime.fabric_diagnosis import diagnose
+        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), to_json(ex.recovery()))}
     snap = server.fabric_snapshot
     if snap is None:
         return 409, {'error': 'No graph yet; execute bounded_discovery first'}
