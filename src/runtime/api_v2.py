@@ -6,10 +6,21 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract', '/api/v2/graph', '/api/v2/capabilities', '/api/v2/facts', '/api/v2/routes',
-              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis', '/api/v2/watches',
-              '/api/v2/timeline', '/api/v2/hypotheses')
-POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm')
+GET_ROUTES = ('/api/v2/contract',
+              '/api/v2/graph',
+              '/api/v2/capabilities',
+              '/api/v2/facts',
+              '/api/v2/routes',
+              '/api/v2/primitives',
+              '/api/v2/recovery',
+              '/api/v2/events',
+              '/api/v2/relays',
+              '/api/v2/diagnosis',
+              '/api/v2/watches',
+              '/api/v2/timeline',
+              '/api/v2/hypotheses',
+              '/api/v2/relays/samples')
+POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm',)
 
 
 def executor(server):
@@ -83,6 +94,16 @@ def get(server, path, query):
         return 200, hypotheses.analyze(tl.rows(), dev, window)
     if path == '/api/v2/routes':
         return 200, {'routes': route_rows(server)}
+    if path == '/api/v2/relays/samples':
+        gid = (q.get('id') or [''])[0]
+        if not gid.startswith(('addr:', 'rot:')) or len(gid) > 40:
+            return 400, {'error': 'id must be an advertiser id from /api/v2/relays'}
+        try:
+            since = int((q.get('since_s') or ['120'])[0])
+        except ValueError:
+            return 400, {'error': 'since_s must be an integer'}
+        led = getattr(server, 'relay_ledger', None)
+        return 200, {'id': gid, 'samples': led.samples(gid, min(max(since, 1), 3600)) if led else []}
     if path == '/api/v2/relays':
         snap = server.fabric_snapshot or {'devices': []}
         strong = [d['label'] for d in snap['devices'] if d['category'] != 'ble' and d.get('identifier_kinds')]
