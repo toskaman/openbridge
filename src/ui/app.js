@@ -650,3 +650,57 @@ document.querySelector('#watch-pair').addEventListener('click', async event => {
   } catch (error) { result.textContent = error.message; }
   finally { button.disabled = false; }
 });
+// ---------- V4-10 voice / text command: proposal only, the owner runs it ----------
+(function voicePanel() {
+  const host = document.querySelector('#fabric'); if (!host) return;
+  const box = element('div', undefined, 'voice-panel');
+  const lang = element('select'); for (const [v, t] of [['fr', 'Français'], ['en', 'English']]) { const o = element('option', t); o.value = v; lang.append(o); }
+  const talk = element('button', 'Hold to talk (max 15 s)', 'secondary');
+  const text = element('input'); text.placeholder = 'Or type: "Find Bluetooth devices through the TV"'; text.maxLength = 400;
+  const go = element('button', 'Propose', 'secondary');
+  const out = element('div'); out.setAttribute('role', 'status');
+  let rec = null;
+  const propose = async () => {
+    try {
+      const p = await postJson('/api/v2/voice/intent', { text: text.value });
+      out.replaceChildren();
+      if (!p.intent || p.needs_target) { out.append(element('p', p.reason)); return; }
+      out.append(element('p', `Proposal: ${p.says} (${p.primitive_id}). ${p.note}`));
+      const consentRow = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
+      consentRow.append(c, document.createTextNode(' I reviewed the transcript and approve this one step.'));
+      const run = element('button', 'Run', 'secondary'); run.disabled = true; c.addEventListener('change', () => { run.disabled = !c.checked; });
+      run.addEventListener('click', async () => {
+        if (p.primitive_id === 'session_cleanup') { document.querySelector('#session-finish').click(); return; }
+        const params = p.primitive_id === 'diagnostic_probe' ? { device_keys: [p.device_key], samples: 3, interval_s: 10 } : {};
+        if (p.primitive_id === 'relay_ble_scan') { out.append(element('p', 'Choose the relay in the device panel to scan (relay id is never taken from speech).')); return; }
+        const r = await postJson('/api/v2/execute', { primitive_id: p.primitive_id, device_key: p.device_key, params, consent: true });
+        out.append(element('p', `${r.state}${r.verified ? ' · verified' : ''} · receipt ${r.transaction_id}`));
+      });
+      out.append(consentRow, run);
+    } catch (e) { out.replaceChildren(element('p', e.message)); }
+  };
+  go.addEventListener('click', propose);
+  talk.addEventListener('pointerdown', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const ctx = new AudioContext(); const src = ctx.createMediaStreamSource(stream); const proc = ctx.createScriptProcessor(4096, 1, 1);
+      const chunks = []; proc.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      src.connect(proc); proc.connect(ctx.destination);
+      rec = { stream, ctx, chunks, rate: ctx.sampleRate, t: setTimeout(() => talk.dispatchEvent(new Event('pointerup')), 15000) };
+      talk.textContent = 'Listening… release to send to Meta (audio only)';
+    } catch (e) { out.replaceChildren(element('p', 'Microphone unavailable: type the command instead.')); }
+  });
+  talk.addEventListener('pointerup', async () => {
+    if (!rec) return; const r = rec; rec = null; clearTimeout(r.t);
+    r.stream.getTracks().forEach(t => t.stop()); await r.ctx.close(); talk.textContent = 'Hold to talk (max 15 s)';
+    const all = r.chunks.reduce((a, c) => { const m = new Float32Array(a.length + c.length); m.set(a); m.set(c, a.length); return m; }, new Float32Array());
+    const n = Math.floor(all.length * 16000 / r.rate); const pcm = new Int16Array(n);
+    for (let i = 0; i < n; i++) pcm[i] = Math.max(-1, Math.min(1, all[Math.floor(i * r.rate / 16000)])) * 32767;
+    let bin = ''; const u8 = new Uint8Array(pcm.buffer); for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+    out.replaceChildren(element('p', 'Transcribing with Meta Muse Voice Transcribe…'));
+    try { const t = await postJson('/api/v2/voice/transcribe', { audio_b64: btoa(bin), language: lang.value }); text.value = t.transcript; out.replaceChildren(element('p', 'Review the transcript, edit it if needed, then press Propose.')); }
+    catch (e) { out.replaceChildren(element('p', `${e.message}. Type the command instead.`)); }
+  });
+  box.append(element('h3', 'Voice or text command'), element('p', 'Push-to-talk sends only the audio clip to Meta (muse-voice-transcribe-1.0). Voice never authorizes anything: you review the transcript and press Run.'), lang, talk, text, go, out);
+  host.append(box);
+})();
