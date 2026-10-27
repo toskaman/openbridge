@@ -8,7 +8,7 @@ VENDORS = {
 
 
 def vendor_of(manufacturer):
-    m = (manufacturer or '').lower()
+    m = (manufacturer if isinstance(manufacturer, str) else '').lower()
     return next((v for v, names in VENDORS.items() if any(n in m for n in names)), 'generic')
 
 

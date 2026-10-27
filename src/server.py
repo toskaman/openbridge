@@ -423,30 +423,47 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.relays = fabric_relay.RelayManager(lambda relay, msg: relay['send'](relay, msg))
     from src.runtime.relay_health import RelayLedger
     server.relay_ledger = RelayLedger()
-    server.relay_pending = {}
+    server.relay_pending = {}          # device handle -> pairing in progress (isolated per device)
+    server.relay_pending_lock = threading.Lock()
+    PAIRING_TTL = 120                  # mirrors the Companion 2-minute code expiry
     def relay_action(path, body, transport_factory=fabric_relay.http_transport):
+        import time
         if path == '/api/relay-pair-start':
-            handle = body['device_id']
+            handle = body.get('device_id')
+            if not isinstance(handle, str) or not handle:
+                raise fabric_relay.RelayError('Unknown device handle')
             url = server.android.forward_companion(handle)
             send = transport_factory(url)
             pc_nonce = secrets.token_hex(16)
             hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
-            if hello.get('protocol') != fabric_relay.PROTOCOL:
+            if hello.get('protocol') != fabric_relay.PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
                 raise fabric_relay.RelayError('Not an OpenBridge Companion')
-            server.relay_pending = {'send': send, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle}
+            with server.relay_pending_lock:
+                now = time.monotonic()
+                for h in [h for h, p in server.relay_pending.items() if now - p['started_at'] > PAIRING_TTL]:
+                    del server.relay_pending[h]
+                server.relay_pending[handle] = {'send': send, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
             return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': hello['relay_id'], 'declared': hello.get('declared', {})}
         if path == '/api/relay-pair-confirm':
-            pending = server.relay_pending
+            handle = body.get('device_id')
             code = body.get('code')
-            if not pending or not isinstance(code, str):
-                raise fabric_relay.RelayError('No pairing in progress')
+            if not isinstance(handle, str) or not handle or not isinstance(code, str):
+                raise fabric_relay.RelayError('No pairing in progress for this device')
+            with server.relay_pending_lock:
+                pending = server.relay_pending.get(handle)
+                if pending is None:
+                    raise fabric_relay.RelayError('No pairing in progress for this device')
+                if time.monotonic() - pending['started_at'] > PAIRING_TTL:
+                    del server.relay_pending[handle]
+                    raise fabric_relay.RelayError('Pairing code expired; start pairing again')
             key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
             rid = pending['hello']['relay_id']
             reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
             declared = fabric_relay.verify(key, reply, set()).get('params', {})
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
-            server.relay_pending = {}
+            with server.relay_pending_lock:
+                server.relay_pending.pop(handle, None)
             return {'state': 'PAIRED', 'relay_id': rid, 'declared': declared, 'eligible_for_ble': rid in server.relays.eligible('ble_scan')}
         if path == '/api/relay-scan':
             rid = body.get('relay_id')

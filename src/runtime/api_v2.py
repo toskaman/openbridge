@@ -97,6 +97,8 @@ def get(server, path, query):
         else:
             # Source-specific view: only what this one source reported, with its own value and time (no aggregation).
             reg = server.fabric_registry
+            if reg is None or dev not in reg.devices:
+                return 409, {'error': 'Graph changed during the read; run discovery again'}
             facts = [EvidenceFact(dev, name, o.value, (o.source,), o.observed_at, bool(o.verified))
                      for name, by_src in sorted(reg.devices[dev]['observations'].items()) for o in [by_src.get(source)] if o is not None]
         return 200, {'device': dev, 'facts': [to_json(f) for f in facts]}

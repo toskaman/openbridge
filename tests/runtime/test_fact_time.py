@@ -42,6 +42,24 @@ class FactTime(unittest.TestCase):
         finally:
             s.server_close()
 
+    def test_source_specific_facts_fail_closed_on_snapshot_registry_skew(self):
+        s = create_server(0, fabric_salt=b'x', session_journal=SessionJournal(tempfile.mkdtemp() + '/s.json'))
+        try:
+            reg = Registry()
+            obs = [{'address': 'C0:00:00:00:00:01', 'address_kind': 'static_random', 'rssi': -61, 'name': '', 'company_ids': [], 'service_uuids': []}]
+            with mock.patch('src.fabric.discovery.now', return_value='2026-10-27T00:00:00+00:00'):
+                discovery.ingest_ble(reg, {'devices': obs}, b'x', observer='pc', source='RELAY:r1')
+            key = next(iter(reg.devices))
+            s.fabric_snapshot = reg.snapshot()
+            s.fabric_registry = Registry()          # skew: snapshot kept, registry dropped/replaced
+            with self.assertRaises(LookupError):
+                api_v2.reader(s)('/api/v2/facts?device=' + key + '&source=RELAY%3Ar1')
+            s.fabric_registry = None
+            with self.assertRaises(LookupError):
+                api_v2.reader(s)('/api/v2/facts?device=' + key + '&source=RELAY%3Ar1')
+        finally:
+            s.server_close()
+
 
 if __name__ == '__main__':
     unittest.main()
