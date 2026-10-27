@@ -426,3 +426,5 @@ See docs/DEVICE_CAPABILITIES.md: catalog probed on TV and phone; vacuum water le
 Second sweep (TV awake): Android TV remote keys (volume, mute, D-pad, channel ±, info, back, home), touchpad swipe/tap, YouTube launch (focused app read back), power off (asleep) and power on (awake) all executed on hardware. Xiaomi phone: input/settings writes still denied by MIUI until the ADB authorization is renewed.
 
 Galaxy Watch7 sweep (23:16 and 23:20): remote keys, touch swipe/tap, Settings launch with focused-app read-back, exact media volume change and restore via volume keys. Xiaomi phone: still INJECT_EVENTS / WRITE_SETTINGS denied.
+
+Second phone (Blackview BV9300 Pro, paired over ADB wireless debugging 23:2x): full remote-control sweep verified — keys, touch, YouTube launch, exact media volume and brightness change + restore.
