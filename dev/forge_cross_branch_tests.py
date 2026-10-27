@@ -12,7 +12,7 @@ with tempfile.TemporaryDirectory(prefix='openbridge-contract-integration-') as d
  assert build.resolve().parent==Path(tempfile.gettempdir()).resolve() and build.name.startswith('openbridge-contract-integration-')
  with zipfile.ZipFile(io.BytesIO(subprocess.check_output(['git','archive','--format=zip',revision],cwd=runtime))) as archive:archive.extractall(build)
  overlays=['tests/integration/test_http.py','tests/fabric/test_guidance.py','config/runtime_models.json']
- overlays+=['dev/forge_runtime_integration.py','dev/controlled_io_guard.py']
+ overlays+=['dev/forge_runtime_integration.py','dev/forge_tv_glimmer_journey.py','dev/controlled_io_guard.py']
  for folder in ('src/forge','tests/forge'):
   overlays+=sorted(p.relative_to(forge).as_posix() for p in (forge/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts)
  for name in ('forge_smoke','forge_publication_failure_smoke','forge_runtime_smoke','forge_expiry_smoke','forge_injected_sim_smoke','forge_model_memory_smoke','forge_revocation_during_plan_smoke'):
