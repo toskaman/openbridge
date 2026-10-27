@@ -89,3 +89,15 @@ class RelayLedger:
                         'rssi_median': median(rssis) if rssis else None, 'samples': len(es),
                         'flags': [dict(f, kind='INFERRED') for f in flags]})
         return sorted(out, key=lambda a: (a['stale'], a['last_seen_s_ago']))
+
+    def samples(self, group_id, since_s=None):
+        """Per-relay RSSI samples of ONE advertiser group the owner selected (calibration / zone estimate only)."""
+        now = self.clock()
+        with self._lock:
+            entries = list(self.entries)
+        out = []
+        for t, rid, addr, fp, rssi, kind, name, cids in entries:
+            gid = ('addr:' + addr) if kind in ('public', 'static_random') else ('rot:' + fp)
+            if gid == group_id and rssi is not None and (since_s is None or now - t <= since_s):
+                out.append({'t': t, 'relay_id': rid, 'rssi': rssi})
+        return out

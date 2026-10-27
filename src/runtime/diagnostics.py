@@ -18,7 +18,7 @@ ANDROID_READS = (('dumpsys', 'battery'), ('df', '-k', '/data'), ('cat', '/proc/u
                  ('settings', 'get', 'global', 'airplane_mode_on'), ('cat', '/sys/devices/system/cpu/possible'),
                  ('cat', '/proc/meminfo'), ('am', 'get-current-user'), ('getprop', 'ro.build.version.security_patch'),
                  ('getprop', 'ro.build.version.release'), ('pm', 'list', 'packages', '-3'),
-                 ('dumpsys', 'power'), ('dumpsys', 'thermalservice'))
+                 ('dumpsys', 'power'), ('dumpsys', 'thermalservice'), ('pm', 'list', 'features'))
 LARGE_READS = (('dumpsys', 'power'), ('dumpsys', 'thermalservice'))
 THERMAL = ('none', 'light', 'moderate', 'severe', 'critical', 'emergency', 'shutdown')
 HEALTH = {1: 'unknown', 2: 'good', 3: 'overheat', 4: 'dead', 5: 'over voltage', 6: 'failure', 7: 'cold'}
@@ -223,4 +223,23 @@ def freebox(session, state_dir=None):
         except (OSError, ValueError, KeyError):
             pass
         path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps({'at': time.time(), 'hosts': hashed}))
+    return out
+
+
+# ---------------- Generic gateway: UPnP-IGD (read-only) ----------------
+def igd(status):
+    """status: src.adapters.upnp_igd.read() result. UNSUPPORTED fields are reported as such, never guessed."""
+    src = 'UPnP-IGD (read-only)'
+    out = []
+    for k in ('connection_status', 'connection_type', 'wan_access_type', 'link_status', 'external_ipv4', 'last_connection_error'):
+        out.append(finding('igd_' + k, status.get(k, 'UNSUPPORTED'), '', src))
+    if isinstance(status.get('uptime_s'), int):
+        out.append(finding('igd_wan_uptime', round(status['uptime_s'] / 3600, 1), 'h', src))
+    for k in ('max_bitrate_down_mbps', 'max_bitrate_up_mbps'):
+        if isinstance(status.get(k), (int, float)):
+            out.append(finding('igd_' + k.replace('_mbps', ''), status[k], 'Mbit/s', src))
+    if status.get('connection_status') not in (None, 'UNSUPPORTED', 'Connected'):
+        out.append(finding('internet_down', True, '', 'igd_connection_status', True, f"IGD reports {status.get('connection_status')}", 'warning'))
+    if str(status.get('external_ipv4', '')).startswith('present, private'):
+        out.append(finding('double_nat_likely', True, '', 'igd_external_ipv4', True, 'WAN address of this gateway is private', 'info'))
     return out

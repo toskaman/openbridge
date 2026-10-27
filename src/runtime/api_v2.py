@@ -6,9 +6,21 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract', '/api/v2/graph', '/api/v2/capabilities', '/api/v2/facts', '/api/v2/routes',
-              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis', '/api/v2/watches')
-POST_ROUTES = ('/api/v2/execute',)
+GET_ROUTES = ('/api/v2/contract',
+              '/api/v2/graph',
+              '/api/v2/capabilities',
+              '/api/v2/facts',
+              '/api/v2/routes',
+              '/api/v2/primitives',
+              '/api/v2/recovery',
+              '/api/v2/events',
+              '/api/v2/relays',
+              '/api/v2/diagnosis',
+              '/api/v2/watches',
+              '/api/v2/timeline',
+              '/api/v2/hypotheses',
+              '/api/v2/relays/samples')
+POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
 def executor(server):
@@ -63,8 +75,35 @@ def get(server, path, query):
         return 200, {'events': ex.events_since(since)}
     if path == '/api/v2/watches':
         return 200, {'watches': ex.watchers().list()}
+    if path in ('/api/v2/timeline', '/api/v2/hypotheses'):
+        tl = ex.timeline()
+        tl.ingest_routes(route_rows(server))
+        dev = (q.get('device') or [None])[0]
+        try:
+            since = int((q.get('since_s') or ['0'])[0]) or None
+            window = int((q.get('window_s') or ['90'])[0])
+        except ValueError:
+            return 400, {'error': 'since_s and window_s must be integers'}
+        if path == '/api/v2/timeline':
+            return 200, {'entries': tl.rows(dev, since)}
+        if not dev:
+            return 400, {'error': 'device is required'}
+        if not 10 <= window <= 600:
+            return 400, {'error': 'window_s out of range'}
+        from src.runtime import hypotheses
+        return 200, hypotheses.analyze(tl.rows(), dev, window)
     if path == '/api/v2/routes':
         return 200, {'routes': route_rows(server)}
+    if path == '/api/v2/relays/samples':
+        gid = (q.get('id') or [''])[0]
+        if not gid.startswith(('addr:', 'rot:')) or len(gid) > 40:
+            return 400, {'error': 'id must be an advertiser id from /api/v2/relays'}
+        try:
+            since = int((q.get('since_s') or ['120'])[0])
+        except ValueError:
+            return 400, {'error': 'since_s must be an integer'}
+        led = getattr(server, 'relay_ledger', None)
+        return 200, {'id': gid, 'samples': led.samples(gid, min(max(since, 1), 3600)) if led else []}
     if path == '/api/v2/relays':
         snap = server.fabric_snapshot or {'devices': []}
         strong = [d['label'] for d in snap['devices'] if d['category'] != 'ble' and d.get('identifier_kinds')]
@@ -105,7 +144,76 @@ def get(server, path, query):
     return 404, {'error': 'Not found'}
 
 
+def escalation(server):
+    if getattr(server, 'cloud_escalation', None) is None:
+        from src.ai.cloud_escalation import CloudEscalation
+        b = getattr(server, 'model_broker', None)
+        server.cloud_escalation = CloudEscalation(b if callable(getattr(b, '_reserve', None)) else None)
+    return server.cloud_escalation
+
+
+def cloud(server, path, body):
+    from src.ai.broker import ModelBlocked
+    from src.runtime import hypotheses
+    from src.runtime.redact import LeakDetected
+    esc = escalation(server)
+    try:
+        if path == '/api/v2/cloud/preview':
+            if set(body) - {'device_key', 'window_s'} or not isinstance(body.get('device_key'), str):
+                return 400, {'error': 'device_key required; no other fields'}
+            w = body.get('window_s', hypotheses.DEFAULT_WINDOW_S)
+            if isinstance(w, bool) or not isinstance(w, int) or not 10 <= w <= 600:
+                return 400, {'error': 'window_s out of range'}
+            rows = executor(server).timeline().rows(limit=4000)
+            return 200, esc.preview(hypotheses.analyze(rows, body['device_key'], w), rows)
+        if set(body) - {'preview_id', 'sha256', 'consent'}:
+            return 400, {'error': 'Unexpected fields'}
+        return 200, esc.confirm(str(body.get('preview_id', ''))[:40], str(body.get('sha256', ''))[:64], body.get('consent'))
+    except LeakDetected as e:
+        return 409, {'error': 'Blocked: ' + str(e), 'state': 'BLOCKED_LEAK'}
+    except ModelBlocked as e:
+        return 409, {'error': str(e), 'state': 'BLOCKED'}
+
+
+def _meta_key():
+    import os
+    k = os.environ.get('MODEL_API_KEY')
+    if not k:
+        try:
+            from src.fabric.credential_vault import Vault
+            k = Vault().get('meta-api-key')
+        except Exception:
+            k = None
+    return k
+
+
+def voice(server, path, body):
+    from src.ai import voice_intent, voice_stt
+    if path == '/api/v2/voice/intent':
+        if set(body) != {'text'}:
+            return 400, {'error': 'text only'}
+        snap = server.fabric_snapshot or {'devices': []}
+        return 200, voice_intent.compile_intent(body['text'], [{'key': d['key'], 'category': d['category']} for d in snap['devices']])
+    if set(body) - {'audio_b64', 'language'} or not isinstance(body.get('audio_b64'), str):
+        return 400, {'error': 'audio_b64 required'}
+    import base64, binascii
+    try:
+        pcm = base64.b64decode(body['audio_b64'], validate=True)
+    except (binascii.Error, ValueError):
+        return 400, {'error': 'invalid audio'}
+    try:
+        return 200, voice_stt.transcribe(pcm, _meta_key(), body.get('language', 'fr'))
+    except voice_stt.STTBlocked as e:
+        return 409, {'error': str(e), 'fallback': 'type the command instead'}
+    except OSError as e:
+        return 503, {'error': f'Meta STT unreachable ({type(e).__name__})', 'fallback': 'type the command instead'}
+
+
 def post(server, path, body):
+    if path.startswith('/api/v2/voice/') and isinstance(body, dict):
+        return voice(server, path, body)
+    if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
+        return cloud(server, path, body)
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent'}

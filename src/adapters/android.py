@@ -56,6 +56,17 @@ class AndroidAdapter:
             raise ValueError('ADB operation unavailable')
         return result.stdout
 
+    def screencap(self, serial, max_bytes=8 * 1024 * 1024):
+        """One PNG frame (binary). Read-only; used only by the consent-gated visual read-back."""
+        if not re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', serial):
+            raise ValueError('invalid serial')
+        result = self.runner([self.executable, '-s', serial, 'exec-out', 'screencap', '-p'], capture_output=True, timeout=10,
+                             creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        start = result.stdout.find(b'\x89PNG\r\n\x1a\n')      # some TV builds print log lines before the PNG
+        if result.returncode or start < 0 or start > 4096 or len(result.stdout) > max_bytes:
+            raise ValueError('Screen capture unavailable')
+        return result.stdout[start:]
+
     def discover(self):
         if not self.executable:
             return {'status': 'ADB_MISSING', 'devices': []}
