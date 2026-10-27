@@ -18,6 +18,7 @@ def main():
    for width in (390,768,1440,3440):
     planner.calls=[];planner.fail=False;page=b.new_page(viewport={'width':width,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');assert planner.calls==[]
+    page.get_by_text('Local planner memory',exact=True).click()
     page.get_by_role('button',name='Prepare local planner',exact=True).click();expect(page.locator('#local-model-status')).to_contain_text('prepared')
     page.get_by_role('button',name='Release planner memory',exact=True).click();expect(page.locator('#local-model-status')).to_contain_text('released')
     assert planner.calls==['prepare','release'];planner.fail=True;page.get_by_role('button',name='Prepare local planner',exact=True).click();expect(page.locator('#local-model-status')).to_contain_text('not confirmed')

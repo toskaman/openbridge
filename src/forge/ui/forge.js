@@ -1,14 +1,15 @@
 'use strict';
 let token,busy=false,planned=false,published=false,available=false,simulation=true,fixtureReset=false,observationPath=null,modelControls=false,removing=false,contextVersion=0;
 const $=s=>document.querySelector(s);
-function controls(){ $('#model-memory-controls').hidden=!modelControls;$('#model-prepare').disabled=busy;$('#model-release').disabled=busy; $('#refresh-main').hidden=available;$('#refresh-main').disabled=busy;$('#refresh-main').textContent=fixtureReset?'Refresh demo evidence':'Refresh source availability'; $('#planner').disabled=busy;$('#refresh-fixture').hidden=!fixtureReset;$('#refresh-fixture').disabled=busy;$('#refresh-source').disabled=busy;$('#plan').disabled=busy||!available;$('#publish').disabled=busy||!available||!planned||!$('#consent').checked||published;$('#remove').disabled=removing||!published;$('#test').disabled=busy||!published||!available;$('#documents').disabled=busy||!published||!available; }
+function updateJourney(){const step=published?2:planned?1:0;document.querySelectorAll('[data-flow-step]').forEach((item,index)=>{item.classList.toggle('is-current',index===step);item.classList.toggle('is-complete',index<step);if(index===step)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');});}
+function controls(){updateJourney(); $('#model-memory-controls').hidden=!modelControls;$('#model-prepare').disabled=busy;$('#model-release').disabled=busy; $('#refresh-main').hidden=available;$('#refresh-main').disabled=busy;$('#refresh-main').textContent=fixtureReset?'Refresh demo evidence':'Refresh source availability'; $('#planner').disabled=busy;$('#refresh-fixture').hidden=!fixtureReset;$('#refresh-fixture').disabled=busy;$('#refresh-source').disabled=busy;$('#plan').disabled=busy||!available;$('#publish').disabled=busy||!available||!planned||!$('#consent').checked||published;$('#remove').disabled=removing||!published;$('#test').disabled=busy||!published||!available;$('#documents').disabled=busy||!published||!available; }
 async function api(path,body){const headers={'Authorization':'Bearer '+token};if(body!==undefined)headers['Content-Type']='application/json';const r=await fetch(path,{method:body===undefined?'GET':'POST',headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});const v=await r.json();if(!r.ok)throw Error(v.error||'Request failed');return v;}
 async function requestForContext(path,body,version){
  try{const result=await api(path,body);return version===contextVersion?result:null;}
  catch(error){if(version===contextVersion)throw error;return null;}
 }
 function sourceLabels(v){
- simulation=v.mode==='SIMULATED';fixtureReset=v.fixture_reset_enabled===true;
+ simulation=v.mode==='SIMULATED';document.body.dataset.sourceMode=simulation?'simulated':'physical';fixtureReset=v.fixture_reset_enabled===true;
  $('#source-pill').textContent=simulation?'SIMULATED FIXTURE':'PHYSICAL / READ-ONLY';
  $('#source-mode').textContent=simulation?'SIMULATED / CONTRACT DEMO':'TRUSTED RUNTIME / READ-ONLY';
  $('#source-description').textContent=simulation?'This walkthrough uses synthetic observations. It does not discover, scan or change physical devices.':'Observations come from the trusted runtime provider. Every read rechecks provenance, permissions and freshness. No scan or device change is started here.';
