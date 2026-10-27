@@ -4,7 +4,7 @@ All fixtures are synthetic. Cases and gold labels were frozen before inference. 
 
 | Route | Total correct | Actual model calls / successful proposals | Development | Heldout | Median actual call | Input/output tokens | Provider cost |
 |---|---|---|---|---|---|---|---|
-| rules | 80/80 | 0 / 0 | 40/40; 0/0 model proposals | 40/40; 0/0 model proposals | None ms | 0/0 | $0 |
+| rules | 80/80 | 0 / 0 | 40/40; no model call | 40/40; no model call | n/a | 0/0 | $0 |
 | llama | 80/80 | 25 / 25 | 40/40; 12/12 model proposals | 40/40; 13/13 model proposals | 8647 ms | 6560/2298 | $0 |
 | glimmer | 80/80 | 25 / 25 | 40/40; 12/12 model proposals | 40/40; 13/13 model proposals | 76061 ms | 6635/2005 | $0 |
 
