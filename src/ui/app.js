@@ -709,39 +709,53 @@ document.querySelector('#watch-pair').addEventListener('click', async event => {
 })();
 
 function tuyaPanel(device) {
-  // One allowlisted reversible setting with read-back and exact Undo; movement is blocked by policy.
   const box = element('div', undefined, 'diagnosis-panel');
-  const setting = element('select'); for (const v of ['suction', 'volume']) { const o = element('option', v); o.value = v; setting.append(o); }
-  const value = element('select');
+  let busy = false; let undoSetting = null;
+  const setting = element('select'); setting.setAttribute('aria-label', 'Robot setting');
+  for (const v of ['suction', 'volume']) { const o = element('option', v); o.value = v; setting.append(o); }
+  const value = element('select'); value.setAttribute('aria-label', 'Robot setting value');
   const opts = { suction: ['gentle', 'normal', 'strong'], volume: ['vol_mute', 'vol_normal', 'vol_max'] };
   const fill = () => { value.replaceChildren(...opts[setting.value].map(v => { const o = element('option', v); o.value = v; return o; })); };
-  setting.addEventListener('change', fill); fill();
+  fill();
   const row = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
-  row.append(c, document.createTextNode(' I own this robot and approve this single reversible change.'));
+  row.append(c, document.createTextNode(' I own this robot and approve the next selected action once. Commands cannot be undone.'));
+  setting.addEventListener('change', () => { fill(); c.checked = false; });
+  value.addEventListener('change', () => { c.checked = false; });
   const go = element('button', 'Change with read-back', 'secondary'); const undo = element('button', 'Undo exactly', 'secondary'); undo.hidden = true;
   const out = element('p'); out.setAttribute('role', 'status');
+  const lock = state => { busy = state; box.querySelectorAll('button,input,select').forEach(control => { control.disabled = state; }); };
   go.addEventListener('click', async () => {
+    if (busy) return;
     if (!c.checked) { out.textContent = 'Consent required.'; return; }
-    try { const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_setting', device_key: device.key, params: { setting: setting.value, value: value.value }, consent: true });
-      out.textContent = `${r.state}: ${r.before} → ${r.after}${r.verified ? ' (read back)' : ''}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`; undo.hidden = !r.verified; }
-    catch (e) { out.textContent = e.message; }
+    const selectedSetting = setting.value; const selectedValue = value.value;
+    c.checked = false; undoSetting = null; undo.hidden = true; lock(true);
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_setting', device_key: device.key, params: { setting: selectedSetting, value: selectedValue }, consent: true });
+      out.textContent = `${r.state}: ${r.before} → ${r.after}${r.verified ? ' (read back)' : ''}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`;
+      if (r.verified) { undoSetting = selectedSetting; undo.hidden = false; }
+    } catch (e) { out.textContent = e.message; } finally { lock(false); }
   });
   undo.addEventListener('click', async () => {
-    const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_undo', device_key: device.key, params: { setting: setting.value }, consent: true });
-    out.textContent = `${r.state}: restored ${r.after}${r.verified ? ' (exact)' : ' (NOT exact — check the robot)'}`; undo.hidden = r.verified;
+    if (busy || !undoSetting) return;
+    const selectedSetting = undoSetting; c.checked = false; lock(true);
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_undo', device_key: device.key, params: { setting: selectedSetting }, consent: true });
+      out.textContent = `${r.state}: restored ${r.after}${r.verified ? ' (exact)' : ' (NOT exact — check the robot)'}`;
+      if (r.verified) { undoSetting = null; undo.hidden = true; }
+    } catch (e) { out.textContent = e.message; } finally { lock(false); }
   });
   const ctl = element('div');
   const send = async (command, v) => {
+    if (busy) return;
     if (!c.checked) { out.textContent = 'Consent required.'; return; }
+    c.checked = false; lock(true);
     try { const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_command', device_key: device.key, params: v === undefined ? { command } : { command, value: v }, consent: true });
-      out.textContent = `${command}${v ? ' ' + v : ''}: ${r.state} · status ${r.before} → ${r.after}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`; }
-    catch (e) { out.textContent = e.message; }
+      out.textContent = `${command}${v ? ' ' + v : ''}: ${r.state} · status ${r.before} → ${r.after}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`;
+    } catch (e) { out.textContent = e.message; } finally { lock(false); }
   };
   for (const [label, cmd, v] of [['Start', 'start'], ['Pause', 'pause'], ['Dock', 'dock'], ['Find (beep)', 'seek'], ['Empty dust', 'empty_dust'],
       ['▲', 'move', 'forward'], ['▼', 'move', 'backward'], ['◀', 'move', 'turn_left'], ['▶', 'move', 'turn_right'], ['■ Stop', 'move', 'stop']]) {
     const b = element('button', label, 'secondary'); b.addEventListener('click', () => send(cmd, v)); ctl.append(b);
   }
-  box.append(element('h3', 'Robot'), element('p', 'Settings: reversible with exact Undo. Commands: irreversible, consent applies to each click; manual moves stop by themselves after 1 s.'), setting, value, row, go, undo, ctl, out);
+  box.append(element('h3', 'Robot'), element('p', 'Settings: reversible with exact Undo. Commands: irreversible, fresh consent for each click; manual moves stop by themselves after 1 s.'), setting, value, row, go, undo, ctl, out);
   return box;
 }
 
@@ -753,13 +767,18 @@ function jobPanel(device) {
   const row = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
   row.append(c, document.createTextNode(' I approve running exactly this command once on this PC.'));
   cmd.addEventListener('input', () => { c.checked = false; });
+  shell.addEventListener('change', () => { c.checked = false; });
+  shell.setAttribute('aria-label', 'Command shell');
+  cmd.setAttribute('aria-label', 'Exact command to run');
   const go = element('button', 'Run on this PC', 'secondary'); const out = element('pre');
   go.addEventListener('click', async () => {
     if (!c.checked) { out.textContent = 'Consent required for this exact command.'; return; }
+    const command = cmd.value; const commandShell = shell.value;
+    c.checked = false; c.disabled = true; cmd.disabled = true; shell.disabled = true;
     go.disabled = true; out.textContent = 'Running…';
-    try { const r = await postJson('/api/v2/execute', { primitive_id: 'pc_job', device_key: device.key, params: { command: cmd.value, shell: shell.value, timeout_s: 120 }, consent: true });
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'pc_job', device_key: device.key, params: { command, shell: commandShell, timeout_s: 120 }, consent: true });
       const x = r.result || {}; out.textContent = `${r.state} · exit ${x.exit_code ?? '?'}${x.timed_out ? ' · TIMED OUT' : ''} · ${x.duration_s ?? '?'} s\n${x.stdout || ''}${x.stderr ? '\n[stderr]\n' + x.stderr : ''}${r.errors.length ? '\n' + r.errors.join('; ') : ''}`; }
-    catch (e) { out.textContent = e.message; } finally { go.disabled = false; c.checked = false; }
+    catch (e) { out.textContent = e.message; } finally { go.disabled = false; c.disabled = false; cmd.disabled = false; shell.disabled = false; c.checked = false; }
   });
   box.append(element('h3', 'Run a job on this PC'), element('p', 'Irreversible by nature: OpenBridge records the command hash, exit code and output; it cannot undo what the command does.'), shell, cmd, row, go, out);
   return box;
