@@ -73,7 +73,8 @@ Evidence for every item: `EVIDENCE_LEDGER.md` and `docs/HARDWARE_TEST_MATRIX.md`
 | Visual read-back (V4-07) | Screenshot (status bar cropped) judged by local Muse Glimmer vs structured screen state; disagreement = INCONCLUSIVE | SIMULATED_VERIFIED; real TV run pending |
 | Voice (V4-10) | Push-to-talk → `muse-voice-transcribe-1.0` → typed FR/EN intent proposal; owner reviews and presses Run | IMPLEMENTED_UNVERIFIED (no live STT receipt yet) |
 | Wear OS manifest (V4-08) | Watch capabilities derived from reported features on every read; control BLOCKED | SIMULATED_VERIFIED; Watch7 run pending |
-| Inference scheduler (V4-12) | Second PC used only as a pinned-digest Meta inference endpoint; raw data never leaves this PC | SIMULATED_VERIFIED; benchmark pending |
+| PC 2 as a client (V4-12) | Runs owner-typed jobs (consent per command, exit code + output returned) and serves pinned Meta models for the scheduler; raw device data never leaves this PC | SIMULATED_VERIFIED; real job + benchmark pending |
+| Tuya robot vacuum | Owner-linked via the owner's Tuya IoT project; status reads; suction/volume with exact Undo; movement blocked | SIMULATED_VERIFIED; real run pending |
 
 Claim-by-claim evidence: [docs/jury/CLAIM_EVIDENCE_MATRIX.md](docs/jury/CLAIM_EVIDENCE_MATRIX.md).
 

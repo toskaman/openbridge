@@ -420,6 +420,7 @@ function showDevice(device, links) {
   if (handle && device.capabilities.some(c => c.name === 'ble_relay')) fabricDetail.append(relayPanel(device, handle));
   if (['phone', 'tv', 'android', 'router', 'computer', 'vacuum', 'watch'].includes(device.category)) fabricDetail.append(diagnosisPanel(device));
   if (device.category === 'vacuum') fabricDetail.append(tuyaPanel(device));
+  if (device.category === 'computer') fabricDetail.append(jobPanel(device));
 }
 function diagnosisPanel(device) {
   // V4-01 timeline + hypotheses, V4-05 privacy-preserving cloud review. Read-only; nothing here changes a device.
@@ -729,5 +730,25 @@ function tuyaPanel(device) {
     out.textContent = `${r.state}: restored ${r.after}${r.verified ? ' (exact)' : ' (NOT exact — check the robot)'}`; undo.hidden = r.verified;
   });
   box.append(element('h3', 'Robot settings (reversible only)'), element('p', 'Start, stop, movement and "find my robot" are blocked: a moving robot has no exact Undo.'), setting, value, row, go, undo, out);
+  return box;
+}
+
+function jobPanel(device) {
+  // The client PC runs what the owner asks: one typed command, consent per command, output shown as returned.
+  const box = element('div', undefined, 'diagnosis-panel');
+  const shell = element('select'); for (const v of ['powershell', 'cmd']) { const o = element('option', v); o.value = v; shell.append(o); }
+  const cmd = element('textarea'); cmd.maxLength = 2000; cmd.rows = 3; cmd.placeholder = 'Command to run on this PC';
+  const row = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
+  row.append(c, document.createTextNode(' I approve running exactly this command once on this PC.'));
+  cmd.addEventListener('input', () => { c.checked = false; });
+  const go = element('button', 'Run on this PC', 'secondary'); const out = element('pre');
+  go.addEventListener('click', async () => {
+    if (!c.checked) { out.textContent = 'Consent required for this exact command.'; return; }
+    go.disabled = true; out.textContent = 'Running…';
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'pc_job', device_key: device.key, params: { command: cmd.value, shell: shell.value, timeout_s: 120 }, consent: true });
+      const x = r.result || {}; out.textContent = `${r.state} · exit ${x.exit_code ?? '?'}${x.timed_out ? ' · TIMED OUT' : ''} · ${x.duration_s ?? '?'} s\n${x.stdout || ''}${x.stderr ? '\n[stderr]\n' + x.stderr : ''}${r.errors.length ? '\n' + r.errors.join('; ') : ''}`; }
+    catch (e) { out.textContent = e.message; } finally { go.disabled = false; c.checked = false; }
+  });
+  box.append(element('h3', 'Run a job on this PC'), element('p', 'Irreversible by nature: OpenBridge records the command hash, exit code and output; it cannot undo what the command does.'), shell, cmd, row, go, out);
   return box;
 }

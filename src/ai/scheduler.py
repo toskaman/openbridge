@@ -1,8 +1,8 @@
 """Cost-aware Meta inference scheduler (V4-12), narrow by design.
 
-The second PC is used as an *inference worker* only: an Ollama endpoint on the LAN serving the same pinned Meta
-weights. OpenBridge sends it a chat request, exactly like the local endpoint; nothing is executed on that PC, so
-the BridgeWindows agent stays read-only and no job/exec type is introduced.
+The second PC is a client device like the others. For Meta inference it is used as an Ollama endpoint on the LAN
+serving the same pinned weights (this module). Arbitrary owner jobs go through the separate, consent-gated
+`pc_job` primitive (BridgeWindows exec.run), not through this scheduler.
 
 A LAN worker must be declared by the owner in a local file (never committed):
     %LOCALAPPDATA%/OpenBridge/workers.json  ->  {"workers": [{"endpoint": "http://192.168.1.20:11438", "model_id": "...", "label": "PC 2"}]}

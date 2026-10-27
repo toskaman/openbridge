@@ -1,6 +1,8 @@
 """Read-only adapter for the owner's BridgeWindows agent (protocol 3.x: 4-byte big-endian length + JSON-RPC 2.0).
 
-The agent dials the PC (reverse TCP). OpenBridge plays the master side but exposes ONLY an allowlist of read methods.
+The agent dials the PC (reverse TCP). OpenBridge plays the master side. `call()` exposes ONLY an allowlist of read
+methods; the one exception is `run_job()`, reachable only from the consent-gated `pc_job` primitive (the client PC
+runs what the owner asks, like any other client device).
 The agent's own command, file, registry-write, input and update methods are never sent: the allowlist is enforced
 here before any byte leaves the PC. Listening is bound to the LAN interface (never 0.0.0.0), one agent at a time,
 frames capped at 1 MiB, every call time-bounded. The pre-shared key comes from the OS vault or the environment
@@ -134,6 +136,18 @@ class WindowsBridge:
             self.last_error = f'{type(e).__name__}: {str(e)[:80]}'
             self._drop(conn)
 
+    # ---------- jobs (owner-requested, consent-gated by the pc_job primitive) ----------
+    def run_job(self, command, shell, timeout_s):
+        """Run ONE owner-typed command on the client PC through the agent's exec.run. Only reachable through the
+        pc_job primitive (owner consent per job); bounds checked here too."""
+        if not isinstance(command, str) or not 0 < len(command) <= 2000 or '\x00' in command:
+            raise BridgeUnavailable('command must be 1..2000 characters')
+        if shell not in ('cmd', 'powershell'):
+            raise BridgeUnavailable('shell must be cmd or powershell')
+        if not isinstance(timeout_s, int) or not 1 <= timeout_s <= 600:
+            raise BridgeUnavailable('timeout must be 1..600 s')
+        return self._send('exec.run', {'command': command, 'shell': shell, 'timeout_ms': timeout_s * 1000}, timeout_s + 15)
+
     # ---------- calls ----------
     def call(self, method, params=None, timeout=CALL_TIMEOUT):
         if method not in ALLOWED_METHODS:
@@ -142,6 +156,9 @@ class WindowsBridge:
             key = (params or {}).get('hive'), (params or {}).get('subkey'), (params or {}).get('value_name')
             if key not in REG_ALLOWLIST:
                 raise BridgeUnavailable('registry value not allowlisted')
+        return self._send(method, params, timeout)
+
+    def _send(self, method, params, timeout):
         conn = self._conn
         if conn is None or self.hello is None:
             raise BridgeUnavailable('no authenticated agent connected')

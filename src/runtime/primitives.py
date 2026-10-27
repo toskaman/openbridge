@@ -108,6 +108,13 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      {'type': 'object', 'properties': {'setting': _s('string', enum=['suction', 'volume'])}, 'required': ['setting'], 'additionalProperties': False},
                      ('owner consent',), ('a change was recorded',), ('setting equals the recorded before value',),
                      'independent status read equals before value', '', R.EXACT.value, ('NOTHING_TO_UNDO', 'RESTORE_NOT_EXACT'), 30, 'single-per-device', True),
+    ActionDescriptor('pc_job', 'Run one owner-typed command on a client PC through its BridgeWindows agent',
+                     {'type': 'object', 'properties': {'command': _s('string', maxLength=2000), 'shell': _s('string', enum=['cmd', 'powershell']),
+                                                       'timeout_s': _s('integer', minimum=1, maximum=600)},
+                      'required': ['command'], 'additionalProperties': False},
+                     ('owner consent for this exact command',), ('agent connected', 'identity re-verified'),
+                     ('the command ran once on that PC',), 'exit code and captured output returned; nothing is retried', '',
+                     R.IRREVERSIBLE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'FAILED'), 630, 'single-per-device', True),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -491,7 +498,29 @@ class Executor:
             raise PrimitiveError('NOTHING_TO_UNDO', str(e)) from None
         return 'REVERTED', None, r['restored'], r['exact'], r
 
-    RUNNERS = {'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def _pc_job(self, key, params):
+        import base64, hashlib, time as _t
+        from src.adapters.windows_bridge import BridgeUnavailable
+        dev = self._device(key)
+        bridge = (self.ctx.fabric_adapters(('windows',)) or {}).get('windows')
+        if bridge is None or not bridge.connected():
+            raise PrimitiveError('DEVICE_UNAVAILABLE', 'Windows agent not connected')
+        known = {i.value for i in dev['identifiers'] if i.strong}
+        try:
+            if bridge.identity(self.ctx.fabric_salt) not in known:
+                raise PrimitiveError('IDENTITY_CHANGED', 'A different Windows PC is now connected; re-run discovery')
+            t0 = _t.monotonic()
+            r = bridge.run_job(params['command'], params.get('shell', 'powershell'), params.get('timeout_s', 120))
+        except BridgeUnavailable as e:
+            raise PrimitiveError('FAILED', str(e)[:120]) from None
+        dec = lambda k: base64.b64decode(r.get(k) or b'').decode('utf-8', 'replace')[-8000:]
+        out = {'command_sha256': hashlib.sha256(params['command'].encode()).hexdigest(), 'exit_code': r.get('exit_code'),
+               'timed_out': bool(r.get('timed_out')), 'stdout': dec('stdout_b64'), 'stderr': dec('stderr_b64'),
+               'duration_s': round(_t.monotonic() - t0, 1)}
+        ok = out['exit_code'] == 0 and not out['timed_out']
+        return ('VERIFIED' if ok else 'FAILED'), None, out['exit_code'], ok, out
+
+    RUNNERS = {'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 

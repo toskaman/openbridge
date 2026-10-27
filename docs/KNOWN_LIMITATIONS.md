@@ -27,3 +27,4 @@ The agent's current authentication is a static pre-shared key sent in clear over
 - Visual read-back depends on local Glimmer (~minutes on CPU offload); without it the result is STRUCTURED_ONLY.
 - Voice: the Muse Voice Transcribe client follows the documented realtime events but has no live receipt yet; audio leaves the PC when used.
 - LAN inference worker must be declared by the owner; it is not in the default runtime manifest.
+- PC jobs (`pc_job`) run arbitrary owner-typed commands and cannot be undone. The BridgeWindows link uses a static key in clear over TCP: use it only on a trusted LAN until the agent signs requests.
