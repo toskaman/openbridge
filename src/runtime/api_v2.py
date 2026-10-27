@@ -20,7 +20,7 @@ GET_ROUTES = ('/api/v2/contract',
               '/api/v2/timeline',
               '/api/v2/hypotheses',
               '/api/v2/relays/samples')
-POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm',)
+POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
 def executor(server):
@@ -173,7 +173,43 @@ def cloud(server, path, body):
         return 409, {'error': str(e), 'state': 'BLOCKED'}
 
 
+def _meta_key():
+    import os
+    k = os.environ.get('MODEL_API_KEY')
+    if not k:
+        try:
+            from src.fabric.credential_vault import Vault
+            k = Vault().get('meta-api-key')
+        except Exception:
+            k = None
+    return k
+
+
+def voice(server, path, body):
+    from src.ai import voice_intent, voice_stt
+    if path == '/api/v2/voice/intent':
+        if set(body) != {'text'}:
+            return 400, {'error': 'text only'}
+        snap = server.fabric_snapshot or {'devices': []}
+        return 200, voice_intent.compile_intent(body['text'], [{'key': d['key'], 'category': d['category']} for d in snap['devices']])
+    if set(body) - {'audio_b64', 'language'} or not isinstance(body.get('audio_b64'), str):
+        return 400, {'error': 'audio_b64 required'}
+    import base64, binascii
+    try:
+        pcm = base64.b64decode(body['audio_b64'], validate=True)
+    except (binascii.Error, ValueError):
+        return 400, {'error': 'invalid audio'}
+    try:
+        return 200, voice_stt.transcribe(pcm, _meta_key(), body.get('language', 'fr'))
+    except voice_stt.STTBlocked as e:
+        return 409, {'error': str(e), 'fallback': 'type the command instead'}
+    except OSError as e:
+        return 503, {'error': f'Meta STT unreachable ({type(e).__name__})', 'fallback': 'type the command instead'}
+
+
 def post(server, path, body):
+    if path.startswith('/api/v2/voice/') and isinstance(body, dict):
+        return voice(server, path, body)
     if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
         return cloud(server, path, body)
     if path != '/api/v2/execute' or not isinstance(body, dict):
