@@ -1,0 +1,40 @@
+{
+ "tv_channel_change": {
+  "target": "tv",
+  "top": "router_radio_change",
+  "top_confidence": "high"
+ },
+ "wan_outage": {
+  "target": "tv",
+  "top_any_of": [
+   "wan_outage",
+   "shared_outage"
+  ],
+  "must_include": [
+   "wan_outage",
+   "shared_outage"
+  ]
+ },
+ "tv_sleep": {
+  "target": "tv",
+  "top": "device_sleep"
+ },
+ "phone_wifi_off": {
+  "target": "phone",
+  "top": "device_radio_off"
+ },
+ "no_symptom": {
+  "target": "tv",
+  "verdict": "UNKNOWN_NOT_ENOUGH_DATA"
+ },
+ "unexplained": {
+  "target": "tv",
+  "top": "device_local_link",
+  "top_confidence": "low"
+ },
+ "coincidence_once": {
+  "target": "tv",
+  "top": "router_radio_change",
+  "top_confidence": "low"
+ }
+}
