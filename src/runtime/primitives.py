@@ -91,6 +91,13 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('none: read-only; timeline gains the new samples',),
                      'every sample is a normal read_facts receipt; hypotheses recomputed before/after', '', R.NONE.value,
                      ('DEVICE_UNKNOWN', 'INVALID_PARAMS'), 180, 'single-global', False),
+    ActionDescriptor('visual_readback', 'Capture one screenshot and compare a local Muse Glimmer reading with the structured screen state',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent (screenshots are sensitive)', 'read grant on a current ADB link'),
+                     ('identity re-verified', 'local Glimmer only; no cloud path'),
+                     ('none: read-only; frame kept as a hash only',),
+                     'CONFIRMED only when structured read and screenshot agree; disagreement is INCONCLUSIVE', '', R.NONE.value,
+                     ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED'), 330, 'single-per-device', True),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -421,7 +428,24 @@ class Executor:
         self.timeline().ingest_receipt(k, self._category(k), r)
         return r
 
-    RUNNERS = {'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def _visual(self, key, params):
+        from src.ai import visual_readback
+        handle = self._adb_handle(key)
+        serial = next(s for s, h in self.ctx.android._handles.items() if h == handle)
+        allowed = (('dumpsys', 'power'), ('dumpsys', 'window', 'windows'))
+        def read(*a):
+            if a not in allowed:
+                raise ValueError('not in read allowlist')
+            return self.ctx.android._run(['-s', serial, 'shell', *a], max_bytes=2097152)
+        broker = getattr(self.ctx, 'vision_broker', None)
+        if broker is None:
+            from src.ai.glimmer import GlimmerBroker
+            broker = GlimmerBroker()
+        r = visual_readback.readback(lambda: self.ctx.android.screencap(serial), read, broker)
+        state = 'VERIFIED' if r['verdict'] == 'CONFIRMED' else 'PARTIAL'
+        return state, None, r['verdict'], r['verdict'] == 'CONFIRMED', r
+
+    RUNNERS = {'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
