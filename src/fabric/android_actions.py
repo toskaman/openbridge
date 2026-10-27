@@ -137,6 +137,10 @@ class AndroidActions:
             if s not in SETTINGS:
                 raise ActionError('unknown setting')
             lo, hi = SETTINGS[s][2]
+            if s == 'media_volume':
+                m = re.search(r'range \[(\d+)\.\.(\d+)\]', self.shell(*SETTINGS[s][0]) or '')
+                if m:
+                    lo, hi = int(m[1]), int(m[2])
             v = int(_num(p.get('value'), lo, hi, 'value'))
             before = self.get(s)
             if before is None:
