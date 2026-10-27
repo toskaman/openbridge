@@ -110,6 +110,49 @@ def android(read, today=None):
     return out
 
 
+# ---------------- Windows PC (BridgeWindows agent, read-only) ----------------
+def windows(call):
+    """call(method, params=None) -> result dict, or raises. Only allowlisted read methods reach the agent."""
+    out = []
+    try:
+        d = call('sys.diag')
+    except Exception:
+        d = None
+    if d:
+        src = 'agent sys.diag'
+        if isinstance(d.get('os_build'), int):
+            out.append(finding('os_build', d['os_build'], '', src))
+        if d.get('architecture'):
+            out.append(finding('architecture', str(d['architecture']).split()[0][:8], '', src))
+        if isinstance(d.get('cpu_cores'), int):
+            out.append(finding('cpu_cores', d['cpu_cores'], '', src))
+        if isinstance(d.get('cpu_load_percent'), (int, float)):
+            out.append(finding('cpu_load', round(d['cpu_load_percent'], 1), '%', src))
+        tot, av = d.get('ram_total_bytes'), d.get('ram_avail_bytes')
+        if isinstance(tot, int) and isinstance(av, int) and tot > 0:
+            out += [finding('memory_total', round(tot / 1024 ** 3, 2), 'GB', src), finding('memory_available', round(av / 1024 ** 3, 2), 'GB', src)]
+            if av / tot < 0.10:
+                out.append(finding('memory_pressure', True, '', 'memory_available/memory_total', True, 'less than 10% RAM available', 'warning'))
+        if isinstance(d.get('uptime_seconds'), (int, float)):
+            out.append(finding('uptime', round(d['uptime_seconds'] / 3600, 1), 'h', src))
+        for disk in (d.get('disks') or [])[:8]:
+            if isinstance(disk, dict) and isinstance(disk.get('total_bytes'), int) and disk['total_bytes'] > 0 and isinstance(disk.get('free_bytes'), int):
+                m = str(disk.get('mount', '?'))[:4].rstrip(':\\/') or '?'
+                out.append(finding(f'disk_{m}_free', round(disk['free_bytes'] / 1024 ** 3, 1), 'GB', src))
+                if disk['free_bytes'] / disk['total_bytes'] < 0.10:
+                    out.append(finding(f'disk_{m}_low', True, '', f'disk_{m}_free', True, 'less than 10% free', 'warning'))
+        if isinstance(d.get('gpu_temp_c'), (int, float)) and d['gpu_temp_c'] > 0:
+            out.append(finding('gpu_temperature', d['gpu_temp_c'], '°C', src))
+    try:
+        p = call('proc.list')
+        procs = p.get('processes') if isinstance(p, dict) else None
+        if isinstance(procs, list):
+            out.append(finding('process_count', len(procs), '', 'agent proc.list'))   # names are not returned
+    except Exception:
+        pass
+    return out
+
+
 # ---------------- Freebox ----------------
 def freebox(session, state_dir=None):
     out = []

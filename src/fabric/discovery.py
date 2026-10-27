@@ -105,6 +105,8 @@ def run(adapters, salt, providers=('mdns', 'ssdp', 'android', 'freebox'), mdns_t
         res = adapters.get('ble_scan', ble_local.scan)()
         report['ble'] = {'status': res['status'], 'devices': len(res['devices'])}
         ingest_ble(registry, res, salt)
+    if 'windows' in providers and adapters.get('windows'):
+        report['windows'] = ingest_windows(registry, adapters['windows'], salt)
     if 'freebox' in providers and adapters.get('freebox'):
         from src.fabric.freebox_ingest import ingest_freebox
         report['freebox'] = ingest_freebox(registry, adapters['freebox'], salt)
@@ -160,3 +162,26 @@ def ingest_ssdp(registry, result, salt):
         registry.link(Link('pc', key, 'LAN', ('observe',), 'SSDP'))
         if category == 'router':
             registry.capability(key, Capability('upnp_igd_control', 'write', 'BLOCKED', 'SSDP', 'port mapping/SOAP never used'))
+
+
+def ingest_windows(registry, bridge, salt):
+    """One authenticated BridgeWindows agent -> one 'computer' device with a strong machine identity."""
+    if not bridge.connected():
+        return {'status': 'NO_AGENT'}
+    try:
+        ident = bridge.identity(salt)
+        diag = bridge.call('sys.diag')
+    except ValueError as e:
+        return {'status': 'UNAVAILABLE', 'detail': str(e)[:80]}
+    if not ident:
+        return {'status': 'NO_IDENTITY'}
+    t = now()
+    obs = [DeviceObservation(k, diag[k], 'WINDOWS_AGENT', 'LAN', t, True) for k in ('os_build', 'architecture', 'cpu_cores') if k in diag]
+    key = registry.upsert([Identifier('windows_machine_guid', ident, True)], category='computer', label='Windows PC (agent)',
+                          observations=obs, weak=[('ip', bridge.peer_ip)] if bridge.peer_ip else [])
+    registry.link(Link('pc', key, 'LAN', ('observe', 'read'), 'WINDOWS_AGENT'))
+    registry.devices[key].setdefault('handles', {})['WINDOWS_AGENT'] = 'windows-agent'
+    registry.capability(key, Capability('windows_diagnostics', 'read', 'REAL_HARDWARE_VERIFIED', 'WINDOWS_AGENT', 'allowlisted read methods only'))
+    for cap in ('run_command', 'file_write', 'registry_write', 'input_injection', 'agent_update'):
+        registry.capability(key, Capability(cap, 'write', 'BLOCKED', 'WINDOWS_AGENT', 'not exposed: no bounded inverse'))
+    return {'status': 'OK', 'agent_version': bridge.hello.get('version')}

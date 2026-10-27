@@ -34,7 +34,7 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('none: read-only',), 'each finding names its source; INFERRED findings state their basis', '',
                      R.NONE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'NOT_READABLE'), 60, 'single-per-device', False),
     ActionDescriptor('bounded_discovery', 'Run one bounded local discovery',
-                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble']), maxItems=5)},
+                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble', 'windows']), maxItems=6)},
                       'additionalProperties': False},
                      (), ('no discovery already running',), ('graph replaced by a fresh snapshot',), 'snapshot returned with per-provider status', '',
                      R.NONE.value, ('BUSY',), 60, 'single-global', False),
@@ -188,6 +188,18 @@ class Executor:
             if session is None or session.state() != 'AUTHORIZED':
                 raise PrimitiveError('NOT_READABLE', 'Freebox app not authorized (read-only authorization required)')
             facts = diagnostics.freebox(session)
+        elif any(n == 'windows_diagnostics' for n, _ in dev['capabilities']):
+            bridge = (self.ctx.fabric_adapters(('windows',)) or {}).get('windows')
+            if bridge is None or not bridge.connected():
+                raise PrimitiveError('DEVICE_UNAVAILABLE', 'Windows agent not connected')
+            known = {i.value for i in dev['identifiers'] if i.strong}
+            try:
+                ident = bridge.identity(self.ctx.fabric_salt)
+            except ValueError as e:
+                raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:80]) from None
+            if ident not in known:
+                raise PrimitiveError('IDENTITY_CHANGED', 'A different Windows PC is now connected; re-run discovery')
+            facts = diagnostics.windows(bridge.call)
         elif dev['category'] in ('phone', 'tv', 'android'):
             handle = self._adb_handle(key)
             serial = next(s for s, h in self.ctx.android._handles.items() if h == handle)
