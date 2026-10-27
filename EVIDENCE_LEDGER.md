@@ -228,3 +228,12 @@ Reproduce: `python -m dev.runtime_v2_smoke` (read-only; prints counts and findin
 - REAL_HARDWARE_VERIFIED (refusals): free-form primitive → UNKNOWN_PRIMITIVE; write without consent → CONSENT_REQUIRED. `/api/v2/diagnosis` stated `ble_unreachable` (INFERRED: no adapter and no relay candidate at that moment).
 - Preflight on the same PC (`python -m src.runtime.preflight`): READY; bleak 3.0.2 and Playwright 1.63.0 match pins; Llama 3.2 3B and Muse Glimmer digests equal the pinned full SHA-256.
 - NOT TESTED on hardware in this session: Android diagnostics and USB-unplug-during-write (phone not connected, TV off). Simulated coverage only (tests/runtime).
+
+## Device Runtime v2 — Android diagnostics and real transport loss on the Android TV (27 Oct 2026)
+
+- REAL_HARDWARE_VERIFIED: `read_facts` on the Android TV over ADB Wi-Fi (`python -m dev.runtime_v2_smoke`): 10 OBSERVED findings (no battery, 4.3 GB storage / 1.25 GB free, uptime 132.7 h, Wi-Fi on, 4 cores, 0.35 GB RAM available, user 0, patch 2025-08-01, 11 user apps) + 1 INFERRED (`security_patch_outdated` = 14 months).
+- REAL_HARDWARE_VERIFIED, transport loss (`python -m dev.transport_loss_smoke <tv>:5555`): link dropped with `adb disconnect` 0.4 s into the read.
+  - First run exposed two defects. The cut-short read was reported VERIFIED with 5 of 11 facts, and the TV was refused after reconnecting because ADB issued a new handle.
+  - Fix: a link check after the reads (a cut-short read is now PARTIAL, not verified) and re-attachment by strong identity only.
+  - Re-run: PARTIAL (5 facts, verified=false) → BLOCKED DEVICE_UNAVAILABLE on the dead link → VERIFIED with 11 facts after reconnect. Simulated regression tests were added for both.
+- USB unplug during a write: still NOT TESTED physically (the phone was not visible to ADB).
