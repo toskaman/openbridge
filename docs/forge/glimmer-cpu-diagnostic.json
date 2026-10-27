@@ -1,0 +1,18 @@
+{
+  "evidence_kind": "ACTUAL_LOCAL_META_CPU_DIAGNOSTIC",
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "execution_options": {
+    "temperature": 0,
+    "num_ctx": 1024,
+    "num_predict": 512,
+    "num_gpu": 0,
+    "num_batch": 32,
+    "num_thread": 4
+  },
+  "provider_cost_usd": 0.0,
+  "http_status": 500,
+  "error_body": "Local runtime returned HTTP 500: failed to load the CLIP projector from the private model store. Private absolute filesystem path redacted.",
+  "error": "META_RESPONSE_FAILED",
+  "elapsed_ms": 55322
+}

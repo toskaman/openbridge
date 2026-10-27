@@ -1,0 +1,10 @@
+{
+  "runtime_contract_version": "1.0.0",
+  "runtime_schema_sha256": "53f08aa050218ca39de394cc186975a36ef08cb08061d7684fd1d749aae4f610",
+  "runtime_revision_observed": "9787c0d",
+  "consumer": "src/forge/runtime_bridge.py",
+  "tests": "tests/forge/test_runtime_bridge.py",
+  "verification": "SIMULATED_VERIFIED",
+  "physical_binding_enabled": false,
+  "pending_gate": "True per-fact RSSI observation time, authenticated runtime bridge integration and live grant revocation tests"
+}

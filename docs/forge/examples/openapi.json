@@ -1,0 +1,184 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "OpenBridge Capability Forge",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:18766"
+    }
+  ],
+  "security": [
+    {
+      "LocalBearer": []
+    }
+  ],
+  "paths": {
+    "/v1/services/ble-observations/observations": {
+      "get": {
+        "operationId": "read_observations",
+        "summary": "Read verified relay observations",
+        "responses": {
+          "200": {
+            "description": "Fresh approved observations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObservationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Service removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Permission, provenance or freshness denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "LocalBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Ephemeral local token; never embedded in generated documents"
+      }
+    },
+    "schemas": {
+      "Observation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observation_id",
+          "rssi_dbm"
+        ],
+        "properties": {
+          "observation_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "rssi_dbm": {
+            "type": "integer",
+            "minimum": -127,
+            "maximum": 20
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "manufacturer_data_hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2}){0,64}$"
+          }
+        }
+      },
+      "ObservationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "service_id",
+          "device_id",
+          "relay_id",
+          "source",
+          "simulation",
+          "observed_at",
+          "evidence_refs",
+          "observations"
+        ],
+        "properties": {
+          "service_id": {
+            "const": "ble-observations"
+          },
+          "device_id": {
+            "const": "beacon-demo"
+          },
+          "relay_id": {
+            "const": "tv-demo"
+          },
+          "source": {
+            "const": "RELAY:tv-demo"
+          },
+          "simulation": {
+            "const": true
+          },
+          "observed_at": {
+            "type": "number"
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "x-openbridge-capability": {
+    "version": 1,
+    "capability_id": "tv.ble.observations",
+    "device_id": "beacon-demo",
+    "relay_id": "tv-demo",
+    "source": "RELAY:tv-demo",
+    "status": "SIMULATED_VERIFIED",
+    "simulation": true,
+    "evidence_refs": [
+      "evidence-relay",
+      "evidence-signal"
+    ],
+    "max_age_seconds": 120,
+    "required_permissions": [
+      "observe",
+      "read"
+    ],
+    "availability": "revalidated-on-every-read",
+    "owner_consent_required": true
+  }
+}

@@ -19,6 +19,8 @@ def main():
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),width
                 page.get_by_role('button',name='Find a safe path').click()
                 expect(page.locator('#operation')).to_contain_text('META_UNAVAILABLE')
+                page.get_by_role('button',name='Refresh simulated fixture').click()
+                expect(page.locator('#operation')).to_contain_text('fixture refreshed')
                 page.select_option('#planner','rules');page.get_by_role('button',name='Find a safe path').click()
                 expect(page.locator('#plan-result')).to_contain_text('Path proposed')
                 assert page.locator('#publish').is_disabled()

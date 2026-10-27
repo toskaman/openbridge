@@ -1,0 +1,7 @@
+{
+  "evidence_kind": "ACTUAL_LOCAL_META_FAILED_ATTEMPT",
+  "error": "META_RESPONSE_FAILED",
+  "recorded_at_unix": 1793059626.7184112,
+  "hardware_proof": false,
+  "provider_cost_usd": 0.0
+}

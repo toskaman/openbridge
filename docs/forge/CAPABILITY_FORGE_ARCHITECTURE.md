@@ -11,3 +11,5 @@ The compiler (`src/forge/compiler.py`) accepts one strict version-1 manifest and
 `demo_host.py` is a separate loopback-only host so Claude-owned integration files are untouched. It uses MemoryProvider exclusively and is labeled SIMULATED throughout. Production integration must replace that provider with a trusted adapter bridge using the final Claude contract. Accepting an untrusted HTTP manifest as provider truth is forbidden.
 
 Dependencies: Python standard library at runtime; optional existing local Ollama Meta brokers for planning. Tests: tests/forge. Proofs: browser-verification.json, screenshots and benchmark JSON. Limits: one approved observation primitive, fixed two-step composition, no live hardware binding, no main-site navigation integration yet.
+
+The v1 consumer bridge is now implemented in runtime_bridge.py. It is tested against additive-field runtime fixtures and never dispatches actions. It has not been mounted into the main server. Physical publication is gated on true per-fact RSSI timestamps, final permission review and a real authenticated relay test.

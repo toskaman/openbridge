@@ -24,7 +24,10 @@ class ForgeService:
         self._events.append({'operation':operation,'service_id':sid,'outcome':outcome,'at':self.clock()})
         self._events=self._events[-200:]
     def _current(self,requested):
-        current=eligible(self.provider.snapshot(requested['capability_id']),self.clock())
+        try:snapshot=self.provider.snapshot(requested['capability_id'])
+        except ForgeError:raise
+        except Exception:raise ForgeError('PROVIDER_UNAVAILABLE') from None
+        current=eligible(snapshot,self.clock())
         if binding(current)!=binding(requested):raise ForgeError('PROVENANCE_CHANGED')
         return current
     def publish(self,manifest,*,consent=False):

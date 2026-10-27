@@ -47,7 +47,8 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(404,{'error':'UNKNOWN_ROUTE'})
     def do_POST(self):
         if not self.guard(True) or not self.authorized():return
-        if self.path not in ('/api/publish','/api/remove','/api/plan'):return self.reply(404,{'error':'UNKNOWN_ROUTE'})
+        if self.path not in ('/api/publish','/api/remove','/api/plan','/api/reset-fixture'):return self.reply(404,{'error':'UNKNOWN_ROUTE'})
+        if self.headers.get('Content-Type')!='application/json':return self.reply(415,{'error':'JSON_CONTENT_TYPE_REQUIRED'})
         try:
             length=int(self.headers.get('Content-Length','0'))
             if self.headers.get('Transfer-Encoding') or not 0<length<=8192:return self.reply(413,{'error':'BODY_SIZE_DENIED'})
@@ -59,6 +60,10 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=='/api/remove':
                 if body!={}:raise ForgeError('INVALID_BODY')
                 self.server.forge.remove('ble-observations');return self.reply(200,{'state':'removed'})
+            if self.path=='/api/reset-fixture':
+                if body!={}:raise ForgeError('INVALID_BODY')
+                self.server.forge.close();self.server.provider.current=manifest()
+                return self.reply(200,{'mode':'SIMULATED','state':'fixture-refreshed','physical_read':False})
             if set(body)!={'planner'} or body['planner'] not in ('rules','glimmer'):raise ForgeError('INVALID_BODY')
             snapshots=[self.server.provider.snapshot('tv.ble.observations')]
             if body['planner']=='rules':return self.reply(200,{'plan':rules_plan(snapshots,time.time()),'source':'RULES','authorizes_execution':False})

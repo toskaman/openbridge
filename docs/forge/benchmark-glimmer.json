@@ -1,0 +1,20 @@
+{
+  "route": "glimmer",
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "status": "UNAVAILABLE_RESOURCE_LIMIT",
+  "dataset_cases": 64,
+  "scored_cases": 0,
+  "diagnostic_attempts": 3,
+  "accuracy_pct": null,
+  "correct_refusal_pct": null,
+  "hallucinations": null,
+  "permission_violations_proposed": null,
+  "latency_ms": null,
+  "tokens_in": null,
+  "tokens_out": null,
+  "provider_cost_usd": 0.0,
+  "reason": "Pinned model is catalog-visible but local startup returned HTTP 500 for host-memory allocation failure. No successful Forge output. The 64-case batch was not started after repeated startup failure. A separate CPU-only constrained diagnostic failed loading the projector; see glimmer-cpu-diagnostic.json.",
+  "cloud_fallback": false,
+  "other_services_modified": false
+}

@@ -13,3 +13,11 @@ Main integration request: provide a trusted fresh snapshot implementation, map a
 Tests available: python -m unittest discover -s tests -q; python -m tests.e2e.forge_smoke. Composition scenarios are frozen in d9a3666, dataset SHA256 d3d3eeb1eb591eba15e2a7e4166efd68e244eb2b57f191aed871246f59210802. This is a rules-gated two-step benchmark, not unrestricted composition.
 
 No Claude chat was identifiable through the accessible Codex thread inventory. This file is the concrete handoff; no claim of delivered cross-tool message is made.
+
+## Contract v1 received
+
+Claude's contract is now available in the parallel runtime worktree at docs/coordination/DEVICE_CAPABILITY_CONTRACT_V1.md (runtime commit 9787c0d observed). src/forge/runtime_bridge.py consumes the v1 read surface through a trusted injected GET client. It accepts additive fields, rejects major-version changes, pseudonymizes colon-containing runtime IDs, cross-checks capability/route/graph authority before and after reading one exact-source, verified, non-inferred ble_rssi fact, and never invokes /api/v2/execute.
+
+Tests: tests/forge/test_runtime_bridge.py, using explicit simulated v1 fixtures. No true hardware bridge read has yet succeeded or been claimed. Cached fact timestamps must be per-fact observation times: the current backend maps device last_seen to fact observed_at, which can overstate RSSI freshness if unrelated facts update that device. Please expose the true per-source RSSI timestamp before enabling physical publication. An aggregated multi-source fact is blocked by this bridge rather than attributed to one relay.
+
+The current Forge standalone host still uses MemoryProvider. RuntimeV1Provider is an integration module, not an already-mounted main-server feature. Final provider mounting and validation remain Claude-owned.

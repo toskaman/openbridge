@@ -14,6 +14,7 @@ class ForgeHTTPTests(unittest.TestCase):
     def fetch(self,path,method='GET',data=None,token=True,origin=True,headers=None):
         h={'Authorization':'Bearer '+self.token} if token and hasattr(self,'token') else {}
         if origin:h['Origin']=self.base
+        if data is not None:h['Content-Type']='application/json'
         h.update(headers or {})
         req=Request(self.base+path,data=None if data is None else json.dumps(data).encode(),headers=h,method=method)
         try:r=urlopen(req,timeout=3)
@@ -36,6 +37,13 @@ class ForgeHTTPTests(unittest.TestCase):
     def test_unavailable_meta_is_explicit(self):
         code,result=self.fetch('/api/plan','POST',{'planner':'glimmer'})
         self.assertEqual(code,409);self.assertIn('META_UNAVAILABLE',result['error'])
+    def test_fixture_refresh_is_explicit_and_simulated(self):
+        self.server.provider.current['observed_at']=0
+        self.assertEqual(self.fetch('/api/publish','POST',{'consent':True})[0],409)
+        self.assertEqual(self.fetch('/api/reset-fixture','POST',{})[0],200)
+        self.assertEqual(self.fetch('/api/publish','POST',{'consent':True})[0],200)
+    def test_wrong_content_type_is_rejected(self):
+        self.assertEqual(self.fetch('/api/publish','POST',{'consent':True},headers={'Content-Type':'text/plain'})[0],415)
     def test_body_and_query_bounds(self):
         self.assertEqual(self.fetch('/api/publish','POST',{'consent':True,'padding':'x'*9000})[0],413)
         self.assertEqual(self.fetch('/api/catalog?url=http://evil.invalid')[0],404)

@@ -1,0 +1,10 @@
+{
+  "diagnostic_only": true,
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "provider_cost_usd": 0.0,
+  "http_status": 500,
+  "transport_error_body": "{\"error\":\"llama-server startup failed before projector CPU offload retry: llama-server reported out-of-memory during startup: ggml_backend_cpu_buffer_type_alloc_buffer: failed to allocate buffer of size 3994822656\\nggml_backend_buft_alloc_buffer_n_default: failed to allocate CUDA_Host buffer of size 3994822656\\nerror loading model: unable to allocate CUDA_Host buffer",
+  "planner_error": "META_RESPONSE_FAILED",
+  "redaction": "Trailing OS-localized process-cleanup detail omitted; original preserved in mandatory delta backup."
+}

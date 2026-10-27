@@ -9,3 +9,5 @@ Evidence: browser-verification.json and eight before/after screenshots; frozen c
 Not proven: actual off-PC beacon observation through a real TV in Forge; final Device Fabric integration; physical Undo in Forge; a multi-primitive compositional intelligence advantage; final contest submission; bonus eligibility; new Forge video. These are explicit gates, not completed features.
 
 The prior project agent benchmark remains unfavorable to models: rules 90%, Glimmer 86.7%, Llama 3B about 53%. New gate-and-selection results must not replace that history or be marketed as unrestricted reasoning performance.
+
+Additional executed evidence: api-client-receipt.json records a real authenticated loopback read using the fixed generated client and HTTP 404 after service removal, with synthetic data. runtime_bridge.py passes three v1 contract mapping tests against simulated fixtures. meta-ux-review-receipt.json records an actual Llama UX review. Glimmer attempts failed under current resource/projector constraints; no actual Glimmer Forge plan is claimed.

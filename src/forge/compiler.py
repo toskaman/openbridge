@@ -66,6 +66,7 @@ def compile_manifest(value):
          'paths':{path:{'get':{'operationId':'read_observations','summary':'Read verified relay observations','responses':responses}}},
          'components':{'securitySchemes':{'LocalBearer':{'type':'http','scheme':'bearer','description':'Ephemeral local token; never embedded in generated documents'}},'schemas':schemas}}
 
+    api['x-openbridge-capability']={**{k:copy.deepcopy(m[k]) for k in ('version','capability_id','device_id','relay_id','source','status','simulation','evidence_refs','max_age_seconds')},'required_permissions':['observe','read'],'availability':'revalidated-on-every-read','owner_consent_required':True}
     client='''"""Fixed read-only local client; supply token separately."""\nimport json\nfrom urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHandler\nclass NoRedirect(HTTPRedirectHandler):\n    def redirect_request(self, *args, **kwargs): return None\ndef read_observations(token):\n    req=Request(URL,headers={"Authorization":"Bearer "+token})\n    with build_opener(ProxyHandler({}),NoRedirect()).open(req,timeout=5) as response:\n        return json.loads(response.read(131072))\n'''.replace('URL',repr('http://127.0.0.1:18766'+path))
     canonical=json.dumps(m,sort_keys=True,separators=(',',':')).encode()
     standalone={name:{'$schema':'https://json-schema.org/draft/2020-12/schema','$defs':{'Observation':copy.deepcopy(OBSERVATION_SCHEMA)},**json.loads(json.dumps(schema).replace('#/components/schemas/Observation','#/$defs/Observation'))} for name,schema in schemas.items()}

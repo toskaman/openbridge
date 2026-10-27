@@ -32,6 +32,15 @@ class ForgeTests(unittest.TestCase):
     def test_nested_malformed_permissions_are_rejected_cleanly(self):
         self.m['permissions']=[{}]
         with self.assertRaises(ForgeError):compile_manifest(self.m)
+    def test_provider_failure_is_safe_and_no_service_is_published(self):
+        def failed(_):raise OSError('private network detail')
+        self.provider.snapshot=failed
+        with self.assertRaisesRegex(ForgeError,'PROVIDER_UNAVAILABLE'):self.service.publish(self.m,consent=True)
+        self.assertEqual(self.service.list_services(),[])
+    def test_contract_contains_capability_provenance(self):
+        metadata=compile_manifest(self.m)['openapi']['x-openbridge-capability']
+        self.assertEqual(metadata['relay_id'],'tv-demo')
+        self.assertEqual(metadata['required_permissions'],['observe','read'])
     def test_consent_is_required_and_exact(self):
         with self.assertRaises(ForgeError):self.service.publish(self.m,consent=False)
         with self.assertRaises(ForgeError):self.service.publish(self.m,consent='true')
