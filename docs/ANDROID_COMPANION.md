@@ -6,4 +6,4 @@ Native Android app in Java (companion/android), no third-party libraries, built 
 - Bluetooth: `hasSystemFeature(FEATURE_BLUETOOTH_LE)`; Android 12+ `BLUETOOTH_SCAN` with `neverForLocation`; Android 8–11 legacy BLUETOOTH/ADMIN + ACCESS_FINE_LOCATION (maxSdk 30). Permissions are requested through the system dialog only; never granted silently.
 - Runs only while the app is open; scans only on signed PC request, only after the owner enables scans; stop on request; "Remove pairing" revokes.
 - Server: TCP 47800, `POST /ob`, 16 KB request cap. Canonical JSON matches Python `json.dumps(sort_keys=True, separators=(',', ':'))`.
-Status: REAL_HARDWARE_VERIFIED on the participant Xiaomi (Android 14): install, pairing, refused scan before owner consent, real BLE scans. Android TV companion: NOT TESTED.
+Status: REAL_HARDWARE_VERIFIED on the participant Xiaomi (Android 14): install, pairing, refused scan before owner consent, real BLE scans. Android TV companion: REAL_HARDWARE_VERIFIED (BLE relay over the LAN, 5 advertisers, consumed by Forge; EVIDENCE_LEDGER 27 Oct).

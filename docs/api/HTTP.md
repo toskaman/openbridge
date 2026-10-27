@@ -19,3 +19,10 @@ Only 127.0.0.1 with the configured port is an accepted Host. Static assets are l
 - POST /api/fabric-advise {device_id:'fabric', goal}
 - GET /api/session-changes · POST /api/session-restore {device_id:'session', restore:[ids]}
 All POST routes require exact Host, Origin and the per-process CSRF token.
+
+## Runtime v2 (contract v1) — loopback only
+GET (Host check): `/api/v2/contract`, `/api/v2/graph`, `/api/v2/capabilities[?device=]`, `/api/v2/facts?device=[&source=RELAY:<id>]`, `/api/v2/routes`, `/api/v2/relays`, `/api/v2/primitives`, `/api/v2/recovery`, `/api/v2/events?since=`, `/api/v2/diagnosis`, `/api/v2/watches`.
+POST (Host + Origin + CSRF, JSON ≤ 8 KiB): `/api/v2/execute` `{primitive_id, device_key, params, consent}` → TransactionReceipt. Primitives: `read_facts`, `bounded_discovery`, `relay_ble_scan`, `relay_revoke`, `android_optional_app_state`, `undo_transaction`, `session_cleanup`, `diagnostic_report`, `watch_start`, `watch_stop`. Unknown primitive or extra field → 409 BLOCKED; no free-form commands.
+
+## Smartwatch pairing
+POST `/api/watch-pair` `{device_id:"watch", address:"<private IPv4>:<port>", code:"<6 digits>"}` → `{state: AUTHORIZED|PAIR_FAILED|PAIRED_NOT_ADVERTISED|CONNECT_FAILED|NEED_INPUT, guide}`. Without address/code it returns the tutorial. Connections are recorded in the session journal.

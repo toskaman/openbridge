@@ -14,6 +14,6 @@ Optional `--glimmer` uses the existing pinned local Meta service. Current Forge 
 
 Tests: `python -m unittest discover -s tests -q` (202 passing on the delivery check), then `python -m tests.e2e.forge_smoke` after installing the repository's pinned browser-test requirements and Chromium. No hardware or provider is needed for these tests. Optional jsonschema 4.26.0 enables full standalone schema validation and is installed by Forge CI.
 
-Start with CAPABILITY_FORGE_ARCHITECTURE.md, CAPABILITY_FORGE_API.md and CAPABILITY_FORGE_SECURITY.md. INTEGRATION_HANDOFF.md identifies the v1 bridge and outstanding true per-fact timestamp/authenticated hardware gates. The source/compiler/client path works over real loopback HTTP with synthetic observations; actual remote TV/beacon publication is not yet proven.
+Start with CAPABILITY_FORGE_ARCHITECTURE.md, CAPABILITY_FORGE_API.md and CAPABILITY_FORGE_SECURITY.md. INTEGRATION_HANDOFF.md identifies the v1 bridge and outstanding true per-fact timestamp/authenticated hardware gates. The source/compiler/client path works over real loopback HTTP with synthetic observations; actual remote TV relay publication was later proven on hardware (PR #14, EVIDENCE_LEDGER).
 
 DEMO_VIDEO.json describes the 170-second English-captioned fallback recording. It is a preview, not a final hackathon submission or proof of successful Glimmer planning.
