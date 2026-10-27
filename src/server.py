@@ -252,7 +252,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None})
             if self.path == '/api/watch-pair':
                 from src.fabric.guidance import guide
-                if body['device_id'] != 'watch':
+                if body['device_id'] not in ('watch', 'android'):
                     raise ValueError()
                 addr, code = str(body.get('address', '')), str(body.get('code', ''))
                 m = __import__('re').fullmatch(r'(\d{1,3}(?:\.\d{1,3}){3}):(\d{2,5})', addr.strip())
@@ -260,7 +260,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.reply(200, {'state': 'NEED_INPUT', 'guide': guide('watch_wireless_debugging', manufacturer=body.get('manufacturer'))})
                 state, target = self.server.android.pair_wireless(m.group(1), int(m.group(2)), code.strip())
                 if state == 'AUTHORIZED':
-                    self.server.session_journal.record('adb_network_connected', 'Smartwatch', {'address': target}, 'not connected', 'connected')
+                    self.server.session_journal.record('adb_network_connected', 'Smartwatch' if body['device_id'] == 'watch' else 'Android device', {'address': target}, 'not connected', 'connected')
                 issue = {'PAIR_FAILED': 'watch_pair_failed', 'PAIRED_NOT_ADVERTISED': 'watch_wireless_debugging', 'CONNECT_FAILED': 'watch_wireless_debugging'}.get(state)
                 return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=body.get('manufacturer')) if issue else None})
             if self.path == '/api/fabric-advise':
