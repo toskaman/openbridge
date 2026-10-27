@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright, expect
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = (ROOT / 'src/ui/app.js').read_text(encoding='utf-8')
 HELPER = SOURCE[SOURCE.index('function element('):SOURCE.index('\n}', SOURCE.index('function element(')) + 2]
-PANELS = SOURCE[SOURCE.index('function tuyaPanel('):SOURCE.index('function remotePanel(')]
+PANELS = SOURCE[SOURCE.index('function tuyaPanel('):]
 
 
 def mount(page, kind):
@@ -56,6 +56,23 @@ def main():
             page.get_by_role('button', name='Start', exact=True).click()
             expect(page.get_by_role('checkbox')).not_to_be_checked()
             assert page.evaluate('calls.length') == 3
+            mount(page, 'remote')
+            page.get_by_role('checkbox').check()
+            page.get_by_role('button', name='Set volume (exact undo)', exact=True).click()
+            assert page.evaluate('calls.length') == 0, 'Blank volume must not become a zero-volume command'
+            page.locator('input[type=number]').fill('3.5')
+            page.get_by_role('button', name='Set volume (exact undo)', exact=True).click()
+            assert page.evaluate('calls.length') == 0, 'Fractional volume must not be silently truncated'
+            page.locator('input[type=number]').fill('0')
+            page.get_by_role('button', name='Set volume (exact undo)', exact=True).click()
+            assert page.evaluate('calls[0].params.args.value') == 0
+            page.get_by_role('button', name='Launch', exact=True).click()
+            assert page.evaluate('calls.length') == 1, 'No empty package launch'
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            page.get_by_role('button', name='Load apps', exact=True).click()
+            expect(page.get_by_role('status')).to_contain_text('No launchable apps')
+            assert not errors, errors
             page.close()
         browser.close()
     print('Exact job consent, in-flight locking and robot Undo binding passed at four widths; zero device/model calls.')

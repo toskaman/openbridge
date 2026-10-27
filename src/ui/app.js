@@ -800,19 +800,37 @@ function remotePanel(device) {
   const tv = device.category === 'tv';
   for (const [label, key] of [['⏻', 'power'], ['⌂', 'home'], ['↩', 'back'], ['▲', 'up'], ['◀', 'left'], ['OK', 'ok'], ['▶', 'right'], ['▼', 'down'],
       ['🔉', 'volume_down'], ['🔊', 'volume_up'], ['🔇', 'mute'], ['⏯', 'play_pause'], ...(tv ? [['CH+', 'channel_up'], ['CH−', 'channel_down'], ['Input', 'tv_input'], ['Guide', 'guide']] : [])]) {
-    const b = element('button', label, 'secondary'); b.title = key; b.addEventListener('click', () => act('key', { key })); keys.append(b);
+    const b = element('button', label, 'secondary'); b.title = key; b.setAttribute('aria-label', key.replaceAll('_', ' ')); b.addEventListener('click', () => act('key', { key })); keys.append(b);
   }
   const pad = element('div', undefined, 'touchpad'); pad.title = 'Click = tap at that point of the device screen';
   pad.style.cssText = 'aspect-ratio:16/9;max-width:320px;border:1px solid currentColor;border-radius:8px;margin:.5rem 0;cursor:crosshair';
   pad.addEventListener('click', e => { const r = pad.getBoundingClientRect(); act('tap', { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }); });
   const text = element('input'); text.placeholder = 'Type text on the device'; text.maxLength = 100;
   const send = element('button', 'Send text', 'secondary'); send.addEventListener('click', () => act('text', { text: text.value }));
-  const apps = element('select'); const loadApps = element('button', 'Load apps', 'secondary'); const launch = element('button', 'Launch', 'secondary');
-  loadApps.addEventListener('click', async () => { const r = await act('list_apps'); if (r && r.result.apps) apps.replaceChildren(...r.result.apps.map(a => { const o = element('option', a); o.value = a; return o; })); });
-  launch.addEventListener('click', () => act('launch_app', { package: apps.value }));
-  const vol = element('input'); vol.type = 'number'; vol.min = 0; vol.max = 100; vol.placeholder = 'volume';
+  const apps = element('select'); apps.setAttribute('aria-label', 'Launchable app');
+  const loadApps = element('button', 'Load apps', 'secondary'); const launch = element('button', 'Launch', 'secondary');
+  loadApps.addEventListener('click', async () => {
+    apps.replaceChildren();
+    const r = await act('list_apps');
+    if (!r) return;
+    const packages = Array.isArray(r.result?.apps) ? r.result.apps.filter(a => typeof a === 'string' && /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)+$/.test(a)) : [];
+    apps.replaceChildren(...packages.map(a => { const o = element('option', a); o.value = a; return o; }));
+    if (!packages.length) out.textContent = 'No launchable apps returned. Refresh the list before launching.';
+  });
+  launch.addEventListener('click', () => {
+    if (!apps.value) { out.textContent = 'Load and select a launchable app first.'; return; }
+    act('launch_app', { package: apps.value });
+  });
+  const vol = element('input'); vol.type = 'number'; vol.min = 0; vol.max = 100; vol.step = 1; vol.placeholder = 'volume'; vol.setAttribute('aria-label', 'Media volume');
   const setVol = element('button', 'Set volume (exact undo)', 'secondary'); const undoVol = element('button', 'Undo volume', 'secondary');
-  setVol.addEventListener('click', () => act('set', { setting: 'media_volume', value: Number(vol.value) }));
+  setVol.addEventListener('click', () => {
+    const raw = vol.value.trim(); const value = Number(raw);
+    if (!raw || !Number.isInteger(value) || value < 0 || value > 100) {
+      out.textContent = 'Enter a whole-number volume from 0 to 100. The device may enforce a narrower range.';
+      return;
+    }
+    act('set', { setting: 'media_volume', value });
+  });
   undoVol.addEventListener('click', () => act('restore', { setting: 'media_volume' }));
   box.append(element('h3', 'Remote control'), row, keys, pad, text, send, element('br'), loadApps, apps, launch, element('br'), vol, setVol, undoVol, out);
   return box;
