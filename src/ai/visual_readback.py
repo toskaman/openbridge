@@ -107,7 +107,7 @@ def glimmer_classify(broker, png):
     out, resp = broker._call(payload)
     if not isinstance(out, dict) or out.get('screen') not in SCREEN_CLASSES or out.get('confidence') not in ('low', 'medium', 'high'):
         raise ModelBlocked('Invalid visual classification')
-    return {'screen': out['screen'], 'confidence': out['confidence'], 'evidence': str(out.get('evidence', ''))[:160],
+    return {'screen': out['screen'], 'confidence': out['confidence'], 'evidence_words': len(str(out.get('evidence', '')).split()),   # free text may quote on-screen personal text: not kept
             'model_id': broker.model_id, 'elapsed_ms': round((time.monotonic() - started) * 1000)}
 
 

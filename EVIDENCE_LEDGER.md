@@ -378,3 +378,10 @@ Same night, owner-requested movement run (commit 363b538): `start` → status sm
 
 ## 27 Oct 2026 (night) — PC 2 as a client, real hardware
 OpenBridge server with `--windows-bridge` (commit 363b538 tree): the PC 2 agent (BridgeWindows 3.7.1, Windows 10 build 17763) connected, discovery `windows` OK, identity re-verified, `pc_job` `hostname & ver` (cmd, consent) → VERIFIED, exit code 0, output returned (host name and Windows version). Vacuum read at the same time: charging, 91 %.
+
+## 27 Oct 2026 (night) — V4 hardware batch
+- Router: Freebox read through its authorized API (FTTH up, optical RX −17.5 dBm, 14 active hosts) and, separately, the **generic read-only UPnP-IGD adapter** on the same LAN: SSDP found 6 UPnP devices; the IGD gateway answered GetStatusInfo/GetExternalIPAddress/GetCommonLinkProperties (Connected, IP_Routed, link Up, external IPv4 public — masked). The IGD's own bit-rate fields (25/1 Mbit/s, "DSL") are the gateway's IGD defaults, not the real FTTH line: shown as reported, never used as truth.
+- Cross-transport timeline: 10 min, 5 devices (TV, 2 router views, phone, vacuum), 16 rounds, 206 change entries. One **induced** symptom (TV ADB-Wi-Fi link dropped by OpenBridge at 21:03:27, restored 40 s later). Hypotheses for the TV: `device_local_link` and `unobserved_cause`, both low — correct for a drop caused on the link itself, with no false router/WAN hypothesis.
+- Cloud escalation preview from that real timeline: 701 bytes, 0 identifier-like strings left by the scanner. Not sent (no fresh supervised credit permit).
+- Visual read-back on the Android TV (local Muse Glimmer, 91.8 s): structured state = screensaver (DreamActivity, wakefulness Dreaming); Glimmer said home_launcher (high) → **INCONCLUSIVE**, as designed. Glimmer's free-text evidence also quoted on-screen text (a photo credit); free-text evidence is now not stored in receipts.
+- Voice: Windows speech synthesis of "Trouve les appareils Bluetooth via la télé du salon" → live `muse-voice-transcribe-1.0` (official realtime protocol) → exact transcript in 6.4 s → typed intent `ble_scan_via_tv` (proposal only).
