@@ -1,5 +1,9 @@
 """BridgeWindows adapter against a fake agent speaking the real framing over loopback (SIMULATED_VERIFIED)."""
+import base64
+import hashlib
+import hmac
 import json
+import secrets
 import socket
 import struct
 import threading
@@ -13,28 +17,56 @@ from src.runtime import diagnostics
 from src.runtime.primitives import Executor
 from types import SimpleNamespace
 
-DIAG = {'hostname': 'PC2', 'version': '3.7.1', 'architecture': 'x86', 'os_build': 19045, 'cpu_cores': 4, 'cpu_load_percent': 12.5,
+DIAG = {'hostname': 'PC2', 'version': '4.0.0', 'architecture': 'x86', 'os_build': 19045, 'cpu_cores': 4, 'cpu_load_percent': 12.5,
         'ram_total_bytes': 4 * 1024 ** 3, 'ram_avail_bytes': 300 * 1024 ** 2, 'uptime_seconds': 7200,
         'disks': [{'mount': 'C:\\', 'total_bytes': 100 * 1024 ** 3, 'free_bytes': 5 * 1024 ** 3}], 'gpu_temp_c': 0}
 
 
 class FakeAgent:
-    def __init__(self, port, token='psk', guid='GUID-1', version='3.7.1'):
+    def __init__(self, port, token='psk', guid='GUID-1', version='4.0.0'):
         self.port, self.token, self.guid, self.version = port, token, guid, version
         self.methods = []
+        self._sess = None
         self.sock = socket.create_connection(('127.0.0.1', port))
-        self.sock.sendall(frame({'jsonrpc': '2.0', 'method': 'agent.hello', 'params': {'version': version, 'arch': 'x86', 'pid': 1, 'token': token}}))
+        try:
+            a_nonce = secrets.token_hex(16)
+            self.sock.sendall(frame({'jsonrpc': '2.0', 'method': 'agent.hello',
+                                     'params': {'version': version, 'arch': 'x86', 'pid': 1,
+                                                'agent_id': 'TESTPC', 'agent_nonce': a_nonce}}))
+            ch = self._frame()
+            m_nonce = ch['params'].get('master_nonce') if ch.get('method') == 'auth.challenge' else None
+            if m_nonce is None:
+                raise OSError('handshake rejected')
+            self.sock.sendall(frame({'jsonrpc': '2.0', 'method': 'auth.response', 'params': {
+                'agent_id': 'TESTPC', 'hmac': hmac.new(
+                    token.encode(), (a_nonce + m_nonce + 'TESTPC').encode(), hashlib.sha256).hexdigest()}}))
+            cf = self._frame()
+            expect = hmac.new(token.encode(), (m_nonce + a_nonce + 'TESTPC').encode(), hashlib.sha256).hexdigest()
+            if cf.get('method') != 'auth.confirm' or not hmac.compare_digest(cf['params'].get('hmac', ''), expect):
+                raise OSError('master failed authentication')      # v4 agent verifies the master too
+            self._sess = hashlib.sha256(token.encode() + a_nonce.encode() + m_nonce.encode()).digest()
+        except (OSError, ValueError, KeyError):
+            try:
+                self.sock.close()
+            except OSError:
+                pass
+            return
         threading.Thread(target=self.loop, daemon=True).start()
+
+    def _frame(self):
+        (n,) = struct.unpack('!I', self._r(4))
+        return json.loads(self._r(n))
 
     def loop(self):
         try:
             while True:
-                (n,) = struct.unpack('!I', self._r(4))
-                req = json.loads(self._r(n))
+                env = self._frame()
+                mac = hmac.new(self._sess, env['body_b64'].encode('ascii'), hashlib.sha256).hexdigest()
+                if env.get('v') != 4 or not hmac.compare_digest(mac, env.get('mac', '')):
+                    break
+                req = json.loads(base64.b64decode(env['body_b64'], validate=True).decode('utf-8'))
                 self.methods.append(req['method'])
-                if req.get('token') != self.token:
-                    res = {'error': {'code': -32003, 'message': 'Invalid PSK token'}}
-                elif req['method'] == 'sys.diag':
+                if req['method'] == 'sys.diag':
                     res = {'result': DIAG}
                 elif req['method'] == 'reg.read':
                     name = req['params']['value_name']
@@ -43,14 +75,17 @@ class FakeAgent:
                     else:
                         res = {'result': {'value': {'MachineGuid': self.guid, 'HwProfileGuid': '{hw-1}'}.get(name), 'reg_type': 1}}
                 elif req['method'] == 'exec.run':
-                    import base64
                     res = {'result': {'pid': 9, 'exit_code': 0, 'timed_out': False, 'stdout_b64': base64.b64encode(b'hello from PC2').decode(), 'stderr_b64': ''}}
                 elif req['method'] == 'proc.list':
                     res = {'result': {'processes': [{'name': 'secret.exe', 'pid': 1}] * 3}}
                 else:
                     res = {'result': {}}
-                self.sock.sendall(frame(dict(jsonrpc='2.0', id=req['id'], **res)))
-        except OSError:
+                inner = json.dumps(dict(jsonrpc='2.0', id=req['id'], **res), separators=(',', ':')).encode()
+                b64 = base64.b64encode(inner).decode('ascii')
+                self.sock.sendall(frame({'v': 4, 'body_b64': b64,
+                                         'mac': hmac.new(self._sess, b64.encode('ascii'),
+                                                         hashlib.sha256).hexdigest()}))
+        except (OSError, ValueError, KeyError, UnicodeDecodeError):
             pass
 
     def _r(self, n):
