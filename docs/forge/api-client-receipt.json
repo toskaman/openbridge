@@ -1,0 +1,31 @@
+{
+  "evidence_kind": "ACTUAL_LOOPBACK_HTTP_SIMULATED_DATA",
+  "recorded_at_unix": 1793059924.365489,
+  "client": "examples/client.py",
+  "fixed_template_not_model_generated": true,
+  "publication": "passed",
+  "authenticated_client_read": "passed",
+  "removal_http_status": 404,
+  "response": {
+    "service_id": "ble-observations",
+    "device_id": "beacon-demo",
+    "relay_id": "tv-demo",
+    "source": "RELAY:tv-demo",
+    "simulation": true,
+    "observed_at": 1793059924.1499622,
+    "evidence_refs": [
+      "evidence-relay",
+      "evidence-signal"
+    ],
+    "observations": [
+      {
+        "observation_id": "obs-1",
+        "name": "Demo beacon",
+        "rssi_dbm": -62,
+        "manufacturer_data_hex": "0102"
+      }
+    ]
+  },
+  "hardware_access": false,
+  "model_calls": 0
+}

@@ -1,0 +1,36 @@
+name: Capability Forge
+on:
+  push:
+    branches: [feat/capability-forge]
+  pull_request:
+    paths:
+      - 'src/forge/**'
+      - 'tests/forge/**'
+      - 'tests/e2e/forge_smoke.py'
+      - '.github/workflows/forge.yml'
+permissions:
+  contents: read
+jobs:
+  contracts-and-browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - run: python -m pip install -r requirements-dev.txt jsonschema==4.26.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python -m unittest discover -s tests -q
+      - run: python -m tests.e2e.forge_smoke
+      - run: python -m tests.e2e.forge_runtime_smoke
+      - run: python -m tests.e2e.forge_expiry_smoke
+      - run: python -m tests.e2e.forge_injected_sim_smoke
+      - run: python -m tests.e2e.forge_model_memory_smoke
+      - run: python -m tests.e2e.forge_revocation_during_plan_smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forge-browser-evidence
+          path: |
+            artifacts/forge-browser/
+            artifacts/forge-runtime-browser/

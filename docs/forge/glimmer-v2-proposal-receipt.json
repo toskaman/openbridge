@@ -1,0 +1,42 @@
+{
+  "evidence_kind": "ACTUAL_LOCAL_META_V2_PROPOSAL",
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "endpoint": "http://127.0.0.1:11439",
+  "input": "SIMULATED",
+  "provider_cost_usd": 0.0,
+  "benchmark_score": false,
+  "raw_proposal": {
+    "goal": "expose_remote_ble_observations",
+    "decision": "propose",
+    "steps": [
+      {
+        "capability_id": "tv.ble.observations",
+        "operation": "read_observations"
+      },
+      {
+        "capability_id": "tv.ble.observations",
+        "operation": "publish_readonly"
+      }
+    ],
+    "evidence_refs": [
+      "evidence-relay",
+      "evidence-signal"
+    ],
+    "requires_consent": true
+  },
+  "usage": {
+    "prompt_tokens": 218,
+    "completion_tokens": 68
+  },
+  "status": "FAILED",
+  "error": "UNKNOWN_CAPABILITY_OR_TRANSITION",
+  "observed_model_memory": [
+    {
+      "name": "muse-glimmer:30b-q4_K_M",
+      "size": 17078765483,
+      "size_vram": 0
+    }
+  ],
+  "wall_ms": 92167
+}

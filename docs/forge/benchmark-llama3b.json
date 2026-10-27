@@ -1,0 +1,2180 @@
+{
+  "route": "llama3b",
+  "model_id": "llama3.2:3b-instruct-q4_K_M",
+  "model_digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+  "cases": 64,
+  "accuracy_pct": 0.0,
+  "correct_refusal_pct": 0.0,
+  "complete_plan_success_pct": 0.0,
+  "hallucinations": 0,
+  "permission_violations_proposed": 0,
+  "unnecessary_steps": 0,
+  "median_latency_ms": 4331.0,
+  "tokens_in": 11016,
+  "tokens_out": 3976,
+  "provider_cost_usd": 0.0,
+  "rows": [
+    {
+      "case": "forge-00",
+      "category": "single_relay",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-0.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-0"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 8956,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 52
+      },
+      "python_peak_allocated_bytes": 613385,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-01",
+      "category": "single_relay",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-1.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-1"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4091,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 48
+      },
+      "python_peak_allocated_bytes": 458602,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-02",
+      "category": "single_relay",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-2.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-2"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 3960,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 48
+      },
+      "python_peak_allocated_bytes": 457562,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-03",
+      "category": "single_relay",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-3.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-3"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 3876,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 48
+      },
+      "python_peak_allocated_bytes": 456586,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-04",
+      "category": "multiple_routes",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-0.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "phone-0.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "tv-0.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "evidence-0",
+          "phone-evidence-0"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 8936,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 457950,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-05",
+      "category": "multiple_routes",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-1.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "phone-1.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "tv-1.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "evidence-1",
+          "phone-evidence-1"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 8598,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 457058,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-06",
+      "category": "multiple_routes",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-2.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "phone-2.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "tv-2.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "phone-evidence-2",
+          "evidence-2"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 8597,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 456018,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-07",
+      "category": "multiple_routes",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-3.ble.observations",
+      "raw_plan": null,
+      "error": "META_RESPONSE_FAILED",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 27124,
+      "usage": null,
+      "python_peak_allocated_bytes": 447634,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-08",
+      "category": "permission_missing",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4187,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 51
+      },
+      "python_peak_allocated_bytes": 451929,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-09",
+      "category": "permission_missing",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4104,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452673,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-10",
+      "category": "permission_missing",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4206,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452621,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-11",
+      "category": "permission_missing",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4155,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-12",
+      "category": "relay_offline",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4399,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-13",
+      "category": "relay_offline",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4227,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-14",
+      "category": "relay_offline",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4236,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-15",
+      "category": "relay_offline",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4065,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452621,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-16",
+      "category": "stale_observation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4059,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452673,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-17",
+      "category": "stale_observation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4065,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-18",
+      "category": "stale_observation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4373,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-19",
+      "category": "stale_observation",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4642,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-20",
+      "category": "identity_conflict",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4564,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452574,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-21",
+      "category": "identity_conflict",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4316,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452621,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-22",
+      "category": "identity_conflict",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4229,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452621,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-23",
+      "category": "identity_conflict",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4256,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-24",
+      "category": "device_removed",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4536,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452621,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-25",
+      "category": "device_removed",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4612,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452674,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-26",
+      "category": "device_removed",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4516,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452567,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-27",
+      "category": "device_removed",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4983,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 445561,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-28",
+      "category": "unverified_capability",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 3881,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 445962,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-29",
+      "category": "unverified_capability",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4311,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 450002,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-30",
+      "category": "unverified_capability",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4567,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 450706,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-31",
+      "category": "unverified_capability",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4526,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 450599,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-32",
+      "category": "partial_data",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4363,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452133,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-33",
+      "category": "partial_data",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4205,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452439,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-34",
+      "category": "partial_data",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4326,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-35",
+      "category": "partial_data",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4298,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-36",
+      "category": "forged_source",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4215,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-37",
+      "category": "forged_source",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4110,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-38",
+      "category": "forged_source",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4440,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-39",
+      "category": "forged_source",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4414,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452443,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-40",
+      "category": "unsupported_measurement",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4336,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-41",
+      "category": "unsupported_measurement",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4265,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452496,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-42",
+      "category": "unsupported_measurement",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4526,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452439,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-43",
+      "category": "unsupported_measurement",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4429,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-44",
+      "category": "incompatible_operation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 5093,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-45",
+      "category": "incompatible_operation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4555,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452546,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-46",
+      "category": "incompatible_operation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4579,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-47",
+      "category": "incompatible_operation",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4309,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-48",
+      "category": "future_observation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4319,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-49",
+      "category": "future_observation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4346,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-50",
+      "category": "future_observation",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4099,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-51",
+      "category": "future_observation",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "unavailable",
+      "expected_capability": null,
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "none",
+          "none"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 3896,
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 57
+      },
+      "python_peak_allocated_bytes": 452493,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-52",
+      "category": "alternate_valid_route",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-0.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "phone-evidence-0"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4293,
+      "usage": {
+        "prompt_tokens": 202,
+        "completion_tokens": 53
+      },
+      "python_peak_allocated_bytes": 453743,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-53",
+      "category": "alternate_valid_route",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-1.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "phone-1.ble.observations",
+            "operation": "publish_readonly"
+          }
+        ],
+        "evidence_refs": [
+          "phone-evidence-1"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 5954,
+      "usage": {
+        "prompt_tokens": 202,
+        "completion_tokens": 82
+      },
+      "python_peak_allocated_bytes": 453861,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-54",
+      "category": "alternate_valid_route",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-2.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "phone-2.ble.observations",
+            "operation": "publish_readonly"
+          }
+        ],
+        "evidence_refs": [
+          "phone-evidence-2"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 6975,
+      "usage": {
+        "prompt_tokens": 202,
+        "completion_tokens": 82
+      },
+      "python_peak_allocated_bytes": 446976,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-55",
+      "category": "alternate_valid_route",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "phone-3.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "phone-evidence-3"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 5159,
+      "usage": {
+        "prompt_tokens": 202,
+        "completion_tokens": 53
+      },
+      "python_peak_allocated_bytes": 446666,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-56",
+      "category": "real_vs_simulated",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-0.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "tv-0.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "phone-0.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "evidence-0",
+          "phone-evidence-0"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 9126,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 452874,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-57",
+      "category": "real_vs_simulated",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-1.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "tv-1.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "phone-1.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "evidence-1",
+          "phone-evidence-1"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 9371,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 453191,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-58",
+      "category": "real_vs_simulated",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-2.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "tv-2.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "phone-2.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "evidence-2",
+          "phone-evidence-2"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 9364,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 453911,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-59",
+      "category": "real_vs_simulated",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-3.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [
+          {
+            "capability_id": "tv-3.ble.observations",
+            "operation": "read_observations"
+          },
+          {
+            "capability_id": "phone-3.ble.observations",
+            "operation": "read_observations"
+          }
+        ],
+        "evidence_refs": [
+          "evidence-3",
+          "phone-evidence-3"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 9665,
+      "usage": {
+        "prompt_tokens": 248,
+        "completion_tokens": 116
+      },
+      "python_peak_allocated_bytes": 455164,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-60",
+      "category": "contradictory_routes",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-0.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-0"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 3900,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 52
+      },
+      "python_peak_allocated_bytes": 452934,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-61",
+      "category": "contradictory_routes",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-1.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-1"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4169,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 48
+      },
+      "python_peak_allocated_bytes": 453336,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-62",
+      "category": "contradictory_routes",
+      "split": "development",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-2.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-2"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4235,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 48
+      },
+      "python_peak_allocated_bytes": 453386,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    },
+    {
+      "case": "forge-63",
+      "category": "contradictory_routes",
+      "split": "held-out",
+      "correct": false,
+      "expected_decision": "propose",
+      "expected_capability": "tv-3.ble.observations",
+      "raw_plan": {
+        "goal": "expose_remote_ble_observations",
+        "decision": "unavailable",
+        "steps": [],
+        "evidence_refs": [
+          "evidence-3"
+        ],
+        "requires_consent": true
+      },
+      "error": "INCORRECT_REFUSAL",
+      "hallucination": false,
+      "permission_violation_proposed": false,
+      "unnecessary_steps": 0,
+      "elapsed_ms": 4158,
+      "usage": {
+        "prompt_tokens": 201,
+        "completion_tokens": 48
+      },
+      "python_peak_allocated_bytes": 453332,
+      "model_memory_bytes": {
+        "size": 2330848131,
+        "size_vram": 0
+      },
+      "provider_cost_usd": 0.0
+    }
+  ],
+  "dataset_sha256": "d3d3eeb1eb591eba15e2a7e4166efd68e244eb2b57f191aed871246f59210802",
+  "scope": "Rules-gated two-step observation publication; not unrestricted multi-device reasoning. Synthetic scenarios only. Held-out cases frozen before model execution, no prompt tuning on results."
+}

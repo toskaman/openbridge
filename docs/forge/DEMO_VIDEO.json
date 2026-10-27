@@ -1,0 +1,69 @@
+{
+  "source_revision": "da49f64bbef0593352d2f56a074b79b62f96f4e0",
+  "mode": "SIMULATED",
+  "capture": "actual headless Chromium session, no desktop control",
+  "audio": "none, intentional English captions",
+  "model_calls_during_capture": 0,
+  "hardware_calls_during_capture": 0,
+  "scenes": [
+    {
+      "at_seconds": 0.01,
+      "name": "problem",
+      "caption": "Capability Forge turns verified observations into a reusable local service. This entire walkthrough is SIMULATED: no physical TV or beacon is being scanned."
+    },
+    {
+      "at_seconds": 20.04,
+      "name": "path",
+      "caption": "The workspace has no direct observation in this fixture. An approved TV relay supplies signal observations. A relay path never implies control of the beacon."
+    },
+    {
+      "at_seconds": 39.09,
+      "name": "unavailable",
+      "caption": "Honest model state: the local Glimmer route is unavailable here. Separate recorded startup attempts failed. No model success is simulated and no cloud fallback occurs."
+    },
+    {
+      "at_seconds": 57.08,
+      "name": "explicit-rules",
+      "caption": "We explicitly choose deterministic rules. The validated plan reads existing relay observations, then proposes publication. It cannot grant consent or execute a hardware action."
+    },
+    {
+      "at_seconds": 78.26,
+      "name": "publish",
+      "caption": "After refreshing only the synthetic fixture, the owner approves publication. A real local HTTP service is created from a fixed read-only primitive, with current permission and freshness checks."
+    },
+    {
+      "at_seconds": 100.1,
+      "name": "read",
+      "caption": "The local API returns actual fixture data: signal strength, relay provenance, observation time and evidence references. This is not a temperature or battery measurement."
+    },
+    {
+      "at_seconds": 120.09,
+      "name": "contract",
+      "caption": "The compiler emits OpenAPI 3.1, standalone JSON Schemas and a fixed Python client. Model-generated code is never executed. A separate client test verified this route and its revocation."
+    },
+    {
+      "at_seconds": 137.1,
+      "name": "revocation",
+      "caption": "Stop and remove: the service is REVOKED. Its observation route returns 404. No device setting was changed, so physical Undo is neither needed nor claimed."
+    },
+    {
+      "at_seconds": 151.02,
+      "name": "results",
+      "caption": "Measured results remain visible: rules 64/64 accepted plans; Llama 0/64; Glimmer unavailable. No intelligence advantage is claimed. Provider credits used for these local tests: $0."
+    },
+    {
+      "at_seconds": 163.0,
+      "name": "close",
+      "caption": "OpenBridge \u00b7 github.com/toskaman/openbridge \u00b7 feat/capability-forge. Tested contracts and real loopback API; simulated observations. Physical relay integration remains gated on runtime evidence and timestamps."
+    }
+  ],
+  "filename": "openbridge-capability-forge-170s.mp4",
+  "duration_seconds": 170.0,
+  "codec": "H.264",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "sha256": "be2c2b41664c3434dfd85476b2e122dc9df25eeab328403468f87396a5aa76f3",
+  "bytes": 5118638,
+  "scope": "simulated fallback demonstration; actual local HTTP service; rules route explicitly selected; no live hardware or successful Glimmer plan claimed"
+}

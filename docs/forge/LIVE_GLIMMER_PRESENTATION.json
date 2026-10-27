@@ -1,0 +1,24 @@
+{
+  "filename": "openbridge-live-glimmer-presentation.mp4",
+  "duration_seconds": 95.766667,
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "codec": "H.264",
+  "sha256": "a3af962f8aaa0affd6b3c50234fc2bfd509f5e33a2af4cdb079c5369554853df",
+  "bytes": 3104328,
+  "source_revision": "0342d063fe80d1659cf39fcb196ecb6da4d2f749",
+  "source_raw_video": "openbridge-live-glimmer-170s.mp4",
+  "source_raw_sha256": "f7da7353f106a4ef8bae2f4278d891a6875cb1100312b78a0abfe5461a1f210a",
+  "edits": [
+    "Middle CPU-wait segment accelerated 8x with on-screen label of the actual 97.95-second inference",
+    "Actual validated-plan frame held five seconds with explicit readability label"
+  ],
+  "model_calls_in_source": 1,
+  "data": "SIMULATED",
+  "hardware_calls": 0,
+  "cloud_calls": 0,
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "provider_cost_usd": 0.0,
+  "no_synthetic_product_or_hardware_footage": true
+}

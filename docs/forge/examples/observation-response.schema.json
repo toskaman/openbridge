@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation_id",
+        "rssi_dbm"
+      ],
+      "properties": {
+        "observation_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "rssi_dbm": {
+          "type": "integer",
+          "minimum": -127,
+          "maximum": 20
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "manufacturer_data_hex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2}){0,64}$"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "service_id",
+    "device_id",
+    "relay_id",
+    "source",
+    "simulation",
+    "observed_at",
+    "evidence_refs",
+    "observations"
+  ],
+  "properties": {
+    "service_id": {
+      "const": "ble-observations"
+    },
+    "device_id": {
+      "const": "beacon-demo"
+    },
+    "relay_id": {
+      "const": "tv-demo"
+    },
+    "source": {
+      "const": "RELAY:tv-demo"
+    },
+    "simulation": {
+      "const": true
+    },
+    "observed_at": {
+      "type": "number"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Observation"
+      }
+    }
+  }
+}

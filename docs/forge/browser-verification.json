@@ -1,0 +1,42 @@
+{
+  "mode": "SIMULATED",
+  "desktop_control": false,
+  "rows": [
+    {
+      "width": 390,
+      "horizontal_overflow": false,
+      "javascript_errors": [],
+      "unavailable_model_state": "passed",
+      "consent_publish_read_contract_remove": "passed",
+      "keyboard_focus": "passed",
+      "popups": "none designed"
+    },
+    {
+      "width": 768,
+      "horizontal_overflow": false,
+      "javascript_errors": [],
+      "unavailable_model_state": "passed",
+      "consent_publish_read_contract_remove": "passed",
+      "keyboard_focus": "passed",
+      "popups": "none designed"
+    },
+    {
+      "width": 1440,
+      "horizontal_overflow": false,
+      "javascript_errors": [],
+      "unavailable_model_state": "passed",
+      "consent_publish_read_contract_remove": "passed",
+      "keyboard_focus": "passed",
+      "popups": "none designed"
+    },
+    {
+      "width": 3440,
+      "horizontal_overflow": false,
+      "javascript_errors": [],
+      "unavailable_model_state": "passed",
+      "consent_publish_read_contract_remove": "passed",
+      "keyboard_focus": "passed",
+      "popups": "none designed"
+    }
+  ]
+}
