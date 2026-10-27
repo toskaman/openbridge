@@ -66,6 +66,19 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('owner consent',), ('open session changes exist',), ('selected changes restored, others marked KEPT',),
                      'per-change restore result read back where the device allows it', '', R.SESSION_CLEANUP.value,
                      ('PARTIAL',), 120, 'single-global', True),
+    ActionDescriptor('watch_start', 'Watch one diagnostic finding on a device and raise an event when it crosses a threshold',
+                     {'type': 'object', 'properties': {
+                         'finding': _s('string', maxLength=48), 'op': _s('string', enum=['lt', 'le', 'gt', 'ge', 'eq', 'ne']),
+                         'threshold_number': _s('number'), 'threshold_text': _s('string', maxLength=32),
+                         'interval_s': _s('integer', minimum=30, maximum=3600), 'lifetime_s': _s('integer', minimum=30, maximum=86400)},
+                      'required': ['finding', 'op', 'interval_s'], 'additionalProperties': False},
+                     ('owner consent',), ('device present in the graph', 'at most 16 running watches'),
+                     ('periodic read_facts on this device; events only, never an action',),
+                     'watch listed RUNNING in /api/v2/watches; every run is a normal read_facts receipt', 'watch_stop',
+                     R.SESSION_CLEANUP.value, ('INVALID_WATCH', 'DEVICE_UNKNOWN'), 10, 'single-global', True),
+    ActionDescriptor('watch_stop', 'Stop a watch',
+                     {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
+                     (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
 )}
 
 GLOBAL_KEY = 'fabric'
@@ -79,6 +92,7 @@ def validate(schema, value, path='params'):
     """Small strict JSON-schema subset: object/array/string/integer/boolean, enum, bounds, required, no extras."""
     t = schema.get('type')
     ok = {'object': lambda v: isinstance(v, dict), 'array': lambda v: isinstance(v, list),
+          'number': lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) < 1e12,
           'string': lambda v: isinstance(v, str), 'boolean': lambda v: isinstance(v, bool),
           'integer': lambda v: isinstance(v, int) and not isinstance(v, bool)}[t](value)
     if not ok:
@@ -175,7 +189,8 @@ class Executor:
             def read(*a):
                 if a not in diagnostics.ANDROID_READS:
                     raise ValueError('not in read allowlist')
-                return self.ctx.android._run(['-s', serial, 'shell', *a])
+                big = a in diagnostics.LARGE_READS     # verbose system dumps, still allowlisted and capped
+                return self.ctx.android._run(['-s', serial, 'shell', *a], **({'max_bytes': 2097152} if big else {}))
             failures = []
             def counted(*a):
                 try:
@@ -280,7 +295,34 @@ class Executor:
             results.append({'id': change['id'], 'title': change['title'], 'state': state, 'detail': detail})
         return ('VERIFIED' if not failed else 'PARTIAL'), None, None, not failed, {'results': results}
 
-    RUNNERS = {'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def watchers(self):
+        from src.runtime.watchers import Watchers
+        with self._guard:
+            if getattr(self, '_watchers', None) is None:
+                self._watchers = Watchers(self)
+            return self._watchers
+
+    def _watch_start(self, key, params):
+        from src.runtime.watchers import WatchError
+        self._device(key)
+        if ('threshold_number' in params) == ('threshold_text' in params):
+            raise PrimitiveError('INVALID_WATCH', 'exactly one of threshold_number / threshold_text')
+        thr = params.get('threshold_number', params.get('threshold_text'))
+        try:
+            w = self.watchers().start(key, params['finding'], params['op'], thr, params['interval_s'], params.get('lifetime_s', 3600))
+        except WatchError as e:
+            raise PrimitiveError('INVALID_WATCH', str(e)) from None
+        return 'VERIFIED', None, 'RUNNING', True, {'watch_id': w['watch_id']}
+
+    def _watch_stop(self, key, params):
+        from src.runtime.watchers import WatchError
+        try:
+            w = self.watchers().stop(params['watch_id'])
+        except WatchError as e:
+            raise PrimitiveError('UNKNOWN_WATCH', str(e)) from None
+        return 'VERIFIED', 'RUNNING', w['state'], w['state'] == 'STOPPED', {}
+
+    RUNNERS = {'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 

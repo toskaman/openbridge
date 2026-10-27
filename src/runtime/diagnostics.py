@@ -17,7 +17,10 @@ def finding(name, value, unit='', source='', inferred=False, basis='', level='in
 ANDROID_READS = (('dumpsys', 'battery'), ('df', '-k', '/data'), ('cat', '/proc/uptime'), ('cmd', 'wifi', 'status'),
                  ('settings', 'get', 'global', 'airplane_mode_on'), ('cat', '/sys/devices/system/cpu/possible'),
                  ('cat', '/proc/meminfo'), ('am', 'get-current-user'), ('getprop', 'ro.build.version.security_patch'),
-                 ('getprop', 'ro.build.version.release'), ('pm', 'list', 'packages', '-3'))
+                 ('getprop', 'ro.build.version.release'), ('pm', 'list', 'packages', '-3'),
+                 ('dumpsys', 'power'), ('dumpsys', 'thermalservice'))
+LARGE_READS = (('dumpsys', 'power'), ('dumpsys', 'thermalservice'))
+THERMAL = ('none', 'light', 'moderate', 'severe', 'critical', 'emergency', 'shutdown')
 HEALTH = {1: 'unknown', 2: 'good', 3: 'overheat', 4: 'dead', 5: 'over voltage', 6: 'failure', 7: 'cold'}
 STATUS = {1: 'unknown', 2: 'charging', 3: 'discharging', 4: 'not charging', 5: 'full'}
 
@@ -92,6 +95,18 @@ def android(read, today=None):
     p = safe('pm', 'list', 'packages', '-3')
     if p is not None:
         out.append(finding('user_installed_apps', sum(1 for l in p.splitlines() if l.startswith('package:')), '', 'pm list packages -3'))
+    pw = safe('dumpsys', 'power')
+    if pw:
+        w = re.search(r'mWakefulness=(\w+)', pw)
+        if w:
+            out.append(finding('power_state', w[1].lower(), '', 'dumpsys power'))
+    th = safe('dumpsys', 'thermalservice')
+    if th:
+        t = re.search(r'^Thermal Status: (\d)\s*$', th, re.M)
+        if t and int(t[1]) < len(THERMAL):
+            out.append(finding('thermal_status', THERMAL[int(t[1])], '', 'dumpsys thermalservice'))
+            if int(t[1]) >= 2:
+                out.append(finding('thermal_throttling_likely', True, '', 'thermal_status', True, 'Android thermal status moderate or worse', 'warning'))
     return out
 
 
