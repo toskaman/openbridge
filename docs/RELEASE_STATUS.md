@@ -1,5 +1,7 @@
 # Current release evidence update — 27 October 2026
 
+Current prioritized work and ownership: [remaining work](REMAINING_WORK.md). Latest source audit: `038f463` (including Watch7/Blackview evidence); older checkpoint counts and revisions below remain historical.
+
 This update supersedes conflicting historical checkpoints below. Integration base: `437dfa3`; newer runtime work is preserved, not re-authored here. Final verification of this base is being recorded separately.
 
 - [Physical trusted selector journey](forge/WORKSPACE_JOURNEY.md): selected TV observation, Rules plan, consent, publish/read/docs 200; revoke read 409, remove 200 then 404, close 200; remote Companion UI changed to unpaired. Existing Android permissions and owner-authorized automation were used. This is one tested device, not universal remote erasure or fresh human permission-dialog proof.
