@@ -1,0 +1,36 @@
+{
+  "screenshots": "screens/final-{390,768,1440,3440}.png",
+  "mode": "SIMULATED",
+  "keyboard_plan_consent_publish_read_revoke": "passed",
+  "colors": [
+    {
+      "element": "body",
+      "foreground": "#f0eee5",
+      "background": "#101313",
+      "contrast_ratio": 16.06,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "element": "panel muted text",
+      "foreground": "#b3beb8",
+      "background": "#171c1b",
+      "contrast_ratio": 9.01,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "element": "accent text",
+      "foreground": "#f49965",
+      "background": "#171c1b",
+      "contrast_ratio": 7.87,
+      "normal_text_4_5_pass": true
+    },
+    {
+      "element": "button text",
+      "foreground": "#201910",
+      "background": "#f49965",
+      "contrast_ratio": 7.94,
+      "normal_text_4_5_pass": true
+    }
+  ],
+  "scope": "Checks selected specified foreground/background pairs; not a full accessibility audit."
+}
