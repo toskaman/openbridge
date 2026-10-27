@@ -16,15 +16,33 @@ def main():
     c = json.loads(Path(a.config).read_text(encoding='utf-8'))
     import tinytuya
     cloud = c['cloud']
-    devs = tinytuya.Cloud(apiRegion=cloud.get('region', 'eu'), apiKey=cloud['api_key'], apiSecret=cloud['api_secret']).getdevices()
-    dev = next((d for d in devs or [] if isinstance(d, dict) and d.get('id') == c['device_id']), None)
-    if not dev or len(dev.get('key', '')) != 16:
-        raise SystemExit('Device not found in your Tuya IoT project (link the Tuya Smart account in iot.tuya.com first).')
+    key, source = None, None
+    try:
+        cl = tinytuya.Cloud(apiRegion=cloud.get('region', 'eu'), apiKey=cloud['api_key'], apiSecret=cloud['api_secret'])
+        r = cl.cloudrequest('/v1.0/devices/' + c['device_id'])
+        if isinstance(r, dict) and r.get('success') and len((r.get('result') or {}).get('local_key', '')) == 16:
+            key, source = r['result']['local_key'], 'Tuya IoT Cloud project (official, live)'
+        else:
+            print('Tuya cloud:', (r or {}).get('msg') if isinstance(r, dict) else r)
+    except Exception as e:
+        print('Tuya cloud unreachable:', type(e).__name__)
+    if key is None and isinstance(c.get('local_key'), str) and len(c['local_key']) == 16:
+        # Key the owner already saved from the same Tuya IoT project; the local handshake below proves it is right.
+        key, source = c['local_key'], "owner's saved Tuya IoT project config (cloud not used)"
+    if key is None:
+        raise SystemExit('No local key: renew the free IoT Core subscription of your Tuya project, then retry.')
+    dev = {'key': key}
     out = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge' / 'tuya.json'
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({'device_id': c['device_id'], 'ip': c['ip_address'], 'local_key': dev['key'],
-                               'version': str(c.get('protocol_version', '3.4')), 'source': 'Tuya IoT Cloud project (official)'}))
-    print(f"Linked {c['device_id'][:4]}… key ****{dev['key'][-2:]} (matches local config: {dev['key'] == c.get('local_key')}) -> {out}")
+                               'version': str(c.get('protocol_version', '3.4')), 'source': source}))
+    d = tinytuya.Device(c['device_id'], c['ip_address'], key, version=float(c.get('protocol_version', '3.4')))
+    d.set_socketTimeout(4)
+    st = d.status()
+    ok = isinstance(st, dict) and 'dps' in st
+    print(f"Linked {c['device_id'][:4]}… source: {source} -> {out}; local handshake: {'OK, ' + str(len(st['dps'])) + ' DPs' if ok else st}")
+    if not ok:
+        raise SystemExit(2)
 
 
 if __name__ == '__main__':
