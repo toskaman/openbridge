@@ -26,6 +26,8 @@ def main():
                 assert page.locator('#publish').is_disabled()
                 page.locator('#consent').check();page.get_by_role('button',name='Build local service').click()
                 expect(page.locator('#operation')).to_contain_text('published')
+                expect(page.locator('#operation')).to_contain_text('First observation read verified')
+                expect(page.locator('#output')).to_contain_text('rssi_dbm')
                 page.get_by_role('button',name='Test the local service').click();expect(page.locator('#output')).to_contain_text('rssi_dbm')
                 page.get_by_role('button',name='View API contract').click();expect(page.locator('#output')).to_contain_text('3.1.0')
                 page.get_by_role('button',name='Stop & remove service').click();expect(page.locator('#operation')).to_contain_text('Stopped and removed')

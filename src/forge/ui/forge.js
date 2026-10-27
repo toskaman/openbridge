@@ -54,7 +54,20 @@ $('#refresh-main').addEventListener('click',()=>{if(fixtureReset)return refreshF
 $('#consent').addEventListener('change',controls);
 $('#planner').addEventListener('change',()=>{planned=false;$('#plan-result').textContent='Planning method changed. Run a new plan.';controls();});
 $('#plan').addEventListener('click',()=>perform(async()=>{const version=contextVersion;planned=false;$('#plan-result').textContent='Checking the capability path…';const v=await requestForContext('/api/plan',{planner:$('#planner').value},version);if(!v)return;planned=v.plan.decision==='propose';$('#plan-result').textContent=planned?'Path proposed by '+(v.source==='LOCAL_META'?v.model_id:'deterministic rules')+'. Read relay observations → publish a read-only service. Your consent is still required.':'No safe path is currently available.';$('#path-state').textContent=planned?(fixtureReset?'Selected: workspace → simulated TV → simulated beacon':simulation?'Selected: workspace → fixture relay → simulated signal':'Selected: workspace → authorized relay → verified signal observation'):'Unavailable: requirements are not satisfied';$('#output').textContent=JSON.stringify(v,null,2);$('#operation').textContent='Planning complete. No device action performed.';}));
-$('#publish').addEventListener('click',()=>perform(async()=>{if(!planned||!$('#consent').checked)return;await api('/api/publish',{consent:true});published=true;$('#operation').textContent=(simulation?'SIMULATED service':'Read-only observation service')+' published on this PC. Test it below.';}));
+$('#publish').addEventListener('click',()=>perform(async()=>{
+ if(!planned||!$('#consent').checked)return;
+ let v;
+ try{v=await api('/api/publish',{consent:true});}
+ catch(error){
+  if(error.message==='PUBLICATION_VERIFICATION_FAILED'){
+   published=false;planned=false;$('#consent').checked=false;
+   $('#output').textContent='First observation verification failed. The newly created service was removed. Refresh source availability and create a new plan before granting consent again.';
+  }
+  throw error;
+ }
+ published=true;$('#output').textContent=JSON.stringify(v.verification,null,2);
+ $('#operation').textContent=(simulation?'SIMULATED service':'Read-only observation service')+' published on this PC. First observation read verified; evidence shown below.';
+}));
 $('#test').addEventListener('click',()=>perform(async()=>{const v=await requestForContext(observationPath,undefined,contextVersion);if(!v)return;$('#output').textContent=JSON.stringify(v,null,2);$('#operation').textContent='Local read succeeded. '+(simulation?'Synthetic':'Trusted runtime')+' relay provenance and freshness checked.';}));
 $('#documents').addEventListener('click',()=>perform(async()=>{const v=await requestForContext('/api/documents',undefined,contextVersion);if(!v)return;$('#output').textContent=JSON.stringify(v,null,2);}));
 $('#remove').addEventListener('click',async()=>{
