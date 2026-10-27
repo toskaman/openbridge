@@ -179,7 +179,7 @@ class Executor:
     def _read_facts(self, key, params):
         dev = self._device(key)
         if dev['category'] == 'router':
-            session = (self.ctx.fabric_adapters().get('freebox') or {}).get('session')
+            session = (self.ctx.fabric_adapters(('freebox',)).get('freebox') or {}).get('session')
             if session is None or session.state() != 'AUTHORIZED':
                 raise PrimitiveError('NOT_READABLE', 'Freebox app not authorized (read-only authorization required)')
             facts = diagnostics.freebox(session)
@@ -218,8 +218,8 @@ class Executor:
         if not self.ctx.fabric_lock.acquire(blocking=False):
             raise PrimitiveError('BUSY', 'A discovery is already running')
         try:
-            snap, reg = discovery.run(self.ctx.fabric_adapters(), self.ctx.fabric_salt,
-                                      providers=tuple(params.get('providers') or ('mdns', 'ssdp', 'android', 'freebox')))
+            providers = tuple(params.get('providers') or ('mdns', 'ssdp', 'android', 'freebox'))
+            snap, reg = discovery.run(self.ctx.fabric_adapters(providers), self.ctx.fabric_salt, providers=providers)
         finally:
             self.ctx.fabric_lock.release()
         self.ctx.fabric_snapshot, self.ctx.fabric_registry = snap, reg
