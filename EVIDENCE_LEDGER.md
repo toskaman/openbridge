@@ -218,3 +218,13 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - src/fabric/ssdp.py: read-only M-SEARCH (sent twice, TTL 1, LAN interface), replies grouped by description LOCATION, description XML fetched once with DTD/entity refusal and size cap; UPnP UDN is a strong identifier; IGD control is BLOCKED (no SOAP, no port mapping). Real network: the Freebox announced 10 UPnP service types, first shown as 3 devices (embedded sub-devices) and fixed to 1; the Android TV answered DIAL in 1 of 3 runs (it was likely entering standby).
 - Endurance (dev/endurance.py, docs/benchmark/STATUS.md): 1,500 nodes, 20 rounds, 5,000 malformed packets, relay churn — bounded time/memory, no crash, no leaked threads.
 - README rewritten for the jury around the Device Fabric scenario (old README kept as docs/README_HISTORY.md).
+
+## Device Runtime v2 — /api/v2 on the participant LAN (27 Oct 2026, branch feat/device-runtime-v2)
+
+Reproduce: `python -m dev.runtime_v2_smoke` (read-only; prints counts and finding kinds only). Base commit 055c48a, Windows 11, Python 3.14.4.
+
+- REAL_HARDWARE_VERIFIED: `bounded_discovery` primitive through `POST /api/v2/execute` (CSRF + Origin) → receipt VERIFIED; providers mDNS OK, SSDP OK, ADB OK, Freebox AUTHENTICATED, PC BLE unavailable (no adapter). Graph: 14 devices; 22 capability descriptors (16 REAL_HARDWARE_VERIFIED, 6 BLOCKED — offline emulator), 0 controllable because no authorized Android device was connected.
+- REAL_HARDWARE_VERIFIED: `read_facts` on the Freebox (v7, fw 4.13.1) → 13 OBSERVED findings (connection, FTTH optics, uptime, LAN hosts) + 1 INFERRED (presence changes since previous run).
+- REAL_HARDWARE_VERIFIED (refusals): free-form primitive → UNKNOWN_PRIMITIVE; write without consent → CONSENT_REQUIRED. `/api/v2/diagnosis` stated `ble_unreachable` (INFERRED: no adapter and no relay candidate at that moment).
+- Preflight on the same PC (`python -m src.runtime.preflight`): READY; bleak 3.0.2 and Playwright 1.63.0 match pins; Llama 3.2 3B and Muse Glimmer digests equal the pinned full SHA-256.
+- NOT TESTED on hardware in this session: Android diagnostics and USB-unplug-during-write (phone not connected, TV off). Simulated coverage only (tests/runtime).
