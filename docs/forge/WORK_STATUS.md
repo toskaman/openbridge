@@ -1,3 +1,11 @@
+# Website redesign checkpoint — 27 October 2026
+
+Active branch: feat/meta-website-redesign; based on main f5b2459. Both interfaces now share Meta Muse Wonder 1.0 theme modules, compiled into existing CSS asset paths. Main discovery is primary; Forge has Plan/Approve/Use progression. Existing control IDs and authorization behavior are preserved. Model memory and historical evaluation use native disclosure panels. No video or desktop automation.
+
+One development-only Wonder request consumed estimated $0.073192 of promotional credits, with a retained $0.10 reservation. Owner confirmed $149; that observation is now stale. Do not request more hosted inference without a fresh eligible observation. Receipt honestly retains truncated final explanatory field and complete CSS extraction. Next: finish responsive/screenshots and regression verification, review, GitHub publication, then resume runtime-owned Forge mounting. Main service 18765 still serves the runtime checkout; Forge preview 18766 serves this worktree. Do not overwrite runtime owner's concurrent changes.
+
+---
+
 # Resume checkpoint - 27 October 2026
 
 ## Owner constraints

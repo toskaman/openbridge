@@ -39,3 +39,9 @@ The pinned local Meta broker, private CPU-only service launcher, numeric-fact al
 Authored during the event (26 October 2026): the allowlisted optional-app state adapter and isolated verifier, exact Android enabled-state restoration, the deterministic action gate, the consent-gated agent orchestrator and HTTP routes, the agent browser panel, the guided device-state dialog, the product-enforced Meta-only runtime registry, the pinned Muse Glimmer broker and the agent-planning benchmark harness, with their tests.
 
 Development assistance for these milestones: Claude (Cowork) wrote and ran the code, tests and evidence collection through a local PowerShell bridge on the participant's PC at the participant's request. This is build-time assistance only; Claude is not a runtime model. Runtime inference is Meta-only: Llama 3.2 3B and Muse Glimmer locally, Muse Spark 1.3 for the recorded cloud call.
+
+## Website redesign with Meta Muse Wonder 1.0
+
+The current visual foundation was authored by **Meta Muse Wonder 1.0** through the official Meta API on 27 October 2026: design tokens, workspace shell, and component CSS. Codex adapted the markup, wrote the integration layer, preserved existing controls, and performed verification. The original Meta-authored modules are in `src/ui/theme/`; compile them with `python -m dev.build_web_theme`.
+
+The [generation receipt](docs/forge/meta-web-design-receipt.json) records 798 input and 3,500 output tokens, an estimated $0.073192 promotional-credit cost, and `finish_reason: length`. The final explanatory field was truncated; only the five fully decoded fields were extracted. The three complete CSS fields were retained verbatim. This is a real build-time Meta contribution, not a claim that Meta authored all application code or a new runtime model integration. No second provider request was made.
