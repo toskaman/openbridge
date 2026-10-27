@@ -161,7 +161,13 @@ def ingest_ssdp(registry, result, salt):
                               observations=obs, weak=[('ip', d['ip'])])
         registry.link(Link('pc', key, 'LAN', ('observe',), 'SSDP'))
         if category == 'router':
-            registry.capability(key, Capability('upnp_igd_control', 'write', 'BLOCKED', 'SSDP', 'port mapping/SOAP never used'))
+            registry.capability(key, Capability('upnp_igd_control', 'write', 'BLOCKED', 'SSDP', 'port mapping and every write action refused'))
+            if any('InternetGatewayDevice' in t or 'WANIPConnection' in t or 'WANPPPConnection' in t for t in d['types'] + [desc.get('device_type', '')]):
+                # Kept off the snapshot (the URL contains an address); used only by read_facts.
+                registry.devices[key]['igd_location'] = d['location']
+                registry.capability(key, Capability('igd_status', 'read', 'IMPLEMENTED_UNVERIFIED', 'UPNP_IGD',
+                                                    'allowlisted read-only IGD queries; external IP masked'))
+                registry.link(Link('pc', key, 'LAN', ('observe', 'read'), 'UPNP_IGD'))
 
 
 def ingest_windows(registry, bridge, salt):

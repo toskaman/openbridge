@@ -361,6 +361,8 @@ function displayLabel(device) {
   }
   return redactNames.get(device.key);
 }
+const ROUTER_LABEL = 'ISP Router API (e.g., Freebox OS / UPnP-IGD)';
+function categoryLabel(c) { return c === 'router' ? ROUTER_LABEL : c; }
 function chip(text, cls) { return element('span', text, cls); }
 function renderFabric(snap) {
   fabric = snap;
@@ -382,7 +384,7 @@ function renderFabric(snap) {
       const device = devices.get(child); if (!device || seen.has(child)) continue;
       const li = element('li');
       const node = element('button', undefined, 'fabric-node'); node.type = 'button'; node.setAttribute('aria-pressed', 'false');
-      node.append(chip(device.category, 'cat'), element('span', displayLabel(device)));
+      node.append(chip(categoryLabel(device.category), 'cat'), element('span', displayLabel(device)));
       if (device.possibly_same_as && device.possibly_same_as.length) node.append(chip('possible duplicate', 'grant observe'));
       const rank = { observe: 0, read: 1, control: 2 }; const perTransport = new Map();
       for (const link of links) {
@@ -405,7 +407,7 @@ function renderFabric(snap) {
 function showDevice(device, links) {
   const table = element('table');
   const row = (k, v) => { const tr = element('tr'); tr.append(element('td', k), element('td', v)); table.append(tr); };
-  row('Category', device.category);
+  row('Category', categoryLabel(device.category));
   row('Identity', device.identifier_kinds.length ? `strong: ${device.identifier_kinds.join(', ')} (pseudonymized)` : 'no strong identifier: never merged automatically');
   if (device.possibly_same_as && device.possibly_same_as.length) row('Possibly the same device as', device.possibly_same_as.map(k => displayLabel(fabric.devices.find(d => d.key === k) || { key: k, label: k, category: 'device' })).join(', ') + ' (weak signal such as a shared IP; not merged, no action can target both)');
   row('Reached via', links.map(l => `${l.transport} (${l.grants.join('/')}) from ${l.source}`).join('; '));

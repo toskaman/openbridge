@@ -198,7 +198,15 @@ class Executor:
     # ---------- runners: return (state, before, after, verified, result) ----------
     def _read_facts(self, key, params):
         dev = self._device(key)
-        if dev['category'] == 'router' and any(n == 'lan_inventory' and via == 'FREEBOX_API' for n, via in dev['capabilities']):
+        if dev['category'] == 'router' and dev.get('igd_location') and not any(via == 'FREEBOX_API' for _, via in dev['capabilities']):
+            from src.adapters import upnp_igd
+            from src.fabric.mdns import default_scope
+            try:
+                status = (getattr(self.ctx, 'igd_read', None) or upnp_igd.read)(dev['igd_location'], default_scope())
+            except (upnp_igd.IGDBlocked, OSError, ValueError, SyntaxError) as e:
+                raise PrimitiveError('NOT_READABLE', f'IGD not readable: {type(e).__name__}') from None
+            facts = diagnostics.igd(status)
+        elif dev['category'] == 'router' and any(n == 'lan_inventory' and via == 'FREEBOX_API' for n, via in dev['capabilities']):
             session = (self.ctx.fabric_adapters(('freebox',)).get('freebox') or {}).get('session')
             if session is None or session.state() != 'AUTHORIZED':
                 raise PrimitiveError('NOT_READABLE', 'Freebox app not authorized (read-only authorization required)')
