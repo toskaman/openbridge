@@ -1,6 +1,7 @@
 """Explicit owner-authorized TV/Meta verification; requires an already-ready Companion.
 
-No installation, permission grants, package changes, activity launch, screenshots or video.
+No installation, permission grants, package changes, screenshots or video.
+Optional --open-companion brings only the installed Companion activity forward.
 Uses product pairing/scan/revocation APIs, one local Meta plan and the actual Forge UI.
 Run only with --hardware. Receipts omit device addresses, pairing secrets and tokens.
 """
@@ -25,9 +26,18 @@ def require(condition, code):
     if not condition: raise JourneyBlocked(code)
 
 
+def verify_revoked_read(page,forge):
+    """Verify server denial even when the UI correctly disables its Test button."""
+    response=page.request.get('http://127.0.0.1:'+str(forge.server_port)+forge.observation_path,
+                              headers={'Authorization':'Bearer '+forge.token})
+    require(response.status==409,'REVOKED_SOURCE_READ_NOT_DENIED')
+    return response.status
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--hardware',action='store_true',help='Use the owner-authorized connected TV; no automatic setup')
+    parser.add_argument('--open-companion',action='store_true',help='Bring the installed Companion forward if needed; no install/grant')
     args=parser.parse_args()
     if not args.hardware:parser.error('Explicit --hardware is required')
     from playwright.sync_api import sync_playwright,expect
@@ -45,7 +55,7 @@ def main():
             'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
             'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'model_provider_cost_usd':0.0,'model_calls':0,'app_installs':0,'permission_grants':0,
-            'device_setting_changes_outside_pairing':0,'screenshots':0,'videos':0,'stages':[],'cleanup':{}}
+            'device_setting_changes_outside_pairing':0,'activity_launches':0,'screenshots':0,'videos':0,'stages':[],'cleanup':{}}
     runtime=forge=worker=executor=rid=serial=None
     broker=IsolatedGlimmerCPU();planner=SchemaConstrainedPlanner(broker)
     loaded_before=True;prepare_attempted=False;forward_created=False;xml_path=None;permission_before=None
@@ -67,6 +77,10 @@ def main():
         tv=tvs[0];handle=next(iter(runtime.fabric_registry.devices[tv]['handles'].values()))
         serial=next(s for s,h in runtime.android._handles.items() if h==handle)
         activity=runtime.android._run(['-s',serial,'shell','dumpsys','activity','activities'])
+        if args.open_companion and re.search(r'(?:mResumedActivity|topResumedActivity).*fr\.openbridge\.companion',activity) is None:
+            runtime.android._run(['-s',serial,'shell','am','start','-W','-n','fr.openbridge.companion/.MainActivity'])
+            report['activity_launches']=1
+            activity=runtime.android._run(['-s',serial,'shell','dumpsys','activity','activities'])
         require(re.search(r'(?:mResumedActivity|topResumedActivity).*fr\.openbridge\.companion',activity) is not None,'COMPANION_MUST_ALREADY_BE_FOREGROUND')
         disabled=runtime.android._run(['-s',serial,'shell','pm','list','packages','-d'])
         require('com.android.bluetooth' not in disabled,'TV_BLUETOOTH_PACKAGE_DISABLED')
@@ -80,6 +94,7 @@ def main():
         with opener.open(broker.endpoint+'/api/ps',timeout=5) as response:
             resident=json.load(response)['models']
         loaded_before=any(m.get('name',m.get('model'))==broker.model_id for m in resident)
+        report['model_initially_loaded']=loaded_before
         stage('preparing_local_meta_without_device_data')
         prepare_attempted=True
         report['model_prepare']=planner.prepare()
@@ -115,6 +130,7 @@ def main():
                 page.on('pageerror',lambda error:errors.append(type(error).__name__))
                 page.goto(base,wait_until='networkidle')
                 expect(page.locator('#source-pill')).to_contain_text('PHYSICAL')
+                report['model_calls']=None  # Request outcome is ambiguous until its response is validated.
                 with page.expect_response(lambda r:r.url==base+'/api/plan' and r.request.method=='POST',timeout=240000) as planned:
                     page.locator('#plan').click()
                 plan_response=planned.value;plan=plan_response.json()
@@ -130,24 +146,29 @@ def main():
                 page.locator('#consent').check()
                 with page.expect_response(lambda r:r.url==base+'/api/publish') as published:page.locator('#publish').click()
                 require(published.value.status==200,'PUBLICATION_NOT_VERIFIED')
+                report['http']={'publish':published.value.status}
                 publication=published.value.json()
                 require(publication['simulation'] is False and publication['verification']['read']['simulation'] is False,'PHYSICAL_PUBLICATION_MISLABELED')
                 expect(page.locator('#operation')).to_contain_text('First observation read verified')
                 with page.expect_response(lambda r:r.url==base+forge.observation_path) as observed:page.locator('#test').click()
                 require(observed.value.status==200 and observed.value.json()['simulation'] is False,'AUTHENTICATED_PHYSICAL_READ_FAILED')
+                report['http']['read']=observed.value.status
                 with page.expect_response(lambda r:r.url==base+'/api/documents') as documents:page.locator('#documents').click()
                 require(documents.value.status==200 and documents.value.json()['openapi']['openapi']=='3.1.0','DOCUMENT_EXPORT_FAILED')
+                report['http']['documents']=documents.value.status
                 stage('consent_publication_fresh_read_and_documents_verified')
                 revoked=executor.execute('relay_revoke',tv,{'relay_id':rid},consent=True)
                 require(revoked['state']=='VERIFIED','RELAY_REVOCATION_NOT_VERIFIED')
                 report['cleanup']['local_relay_key_removed']=True
                 report['remote_companion_unpairing']='Not independently verified; the runtime primitive checks local key removal only.'
-                with page.expect_response(lambda r:r.url==base+forge.observation_path) as denied:page.locator('#test').click()
-                require(denied.value.status==409,'REVOKED_SOURCE_READ_NOT_DENIED')
+                stage('verifying_authenticated_denial_after_local_revocation')
+                report['http']['after_relay_revocation']=verify_revoked_read(page,forge)
                 with page.expect_response(lambda r:r.url==base+'/api/remove') as removed:page.locator('#remove').click()
                 require(removed.value.status==200,'SERVICE_REMOVAL_NOT_CONFIRMED')
+                report['http']['remove']=removed.value.status
                 response=page.request.get(base+forge.observation_path,headers={'Authorization':'Bearer '+forge.token})
                 require(response.status==404,'REMOVED_SERVICE_STILL_ACCESSIBLE')
+                report['http']['after_removal']=response.status
                 require(not errors,'BROWSER_SCRIPT_ERRORS')
                 report['http']={'publish':200,'read':200,'documents':200,'after_relay_revocation':409,'remove':200,'after_removal':404}
                 report['consent_source']='Owner-authorized headless UI driver; not a new human Android permission-dialog acceptance.'
