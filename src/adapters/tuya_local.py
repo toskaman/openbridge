@@ -5,10 +5,11 @@ Credentials: the owner's device id + local key obtained from the owner's own Tuy
 %LOCALAPPDATA%/OpenBridge/tuya.json and never returned by any API. No key is ever extracted from the app, its
 cache or network traffic.
 
-Scope: read status DPs; one reversible setting at a time from a small allowlist (suction power, voice volume),
-with read-before, write, independent read-back and exact Undo. Everything that moves the robot or starts/stops a
-job (power, mode, direction, seek, dust collection, consumable resets) is BLOCKED: a moving robot has no exact
-undo. Optional dependency: tinytuya (MIT), like bleak for PC Bluetooth.
+Scope: read status DPs; reversible settings (suction, volume) with read-back and exact Undo; and, by owner
+decision, full control of the robot (start/pause, mode, dock, manual moves, find-my-robot beep, dust emptying,
+consumable resets, water level, work mode). Those commands are IRREVERSIBLE (a robot that moved cannot be put back):
+each needs owner consent, is typed (no raw DP numbers from clients), read back when the device reports it, and manual
+moves always end with an automatic `stop` after at most 3 s. Optional dependency: tinytuya (MIT).
 """
 import json
 import os
@@ -20,7 +21,6 @@ READ_DPS = {'5': 'vacuum_status', '6': 'battery_level', '7': 'main_brush_life', 
             '24': 'work_mode', '104': 'volume'}
 UNITS = {'battery_level': '%', 'main_brush_life': '%', 'side_brush_life': '%', 'filter_life': '%', 'clean_time_min': 'min', 'clean_area_m2': 'm²'}
 WRITABLE = {'suction': ('14', ('gentle', 'normal', 'strong')), 'volume': ('104', ('vol_mute', 'vol_normal', 'vol_max'))}
-BLOCKED_DPS = {'2': 'power', '3': 'mode', '4': 'direction', '11': 'reset', '12': 'reset', '13': 'reset', '101': 'seek', '102': 'dust_collection'}
 _sleep = time.sleep
 BUSY = ('smart_clean', 'cleaning', 'mop_clean', 'wall_clean', 'spot_clean', 'goto_charge')
 
@@ -100,8 +100,48 @@ class TuyaVacuum:
         return {'setting': setting, 'restored': now, 'exact': now == target}
 
 
+# Typed commands -> (dp, allowed values or None for bool True). Irreversible; owner consent per command.
+COMMANDS = {
+    'start': ('2', (True,)), 'pause': ('2', (False,)),
+    'mode': ('3', ('smart', 'wall_follow', 'spiral', 'bow', 'partial_bow', 'mop', 'random', 'chargego')),
+    'dock': ('3', ('chargego',)),
+    'move': ('4', ('forward', 'backward', 'turn_left', 'turn_right', 'stop')),
+    'seek': ('101', (True,)), 'empty_dust': ('102', (True,)),
+    'reset_side_brush': ('11', (True,)), 'reset_main_brush': ('12', (True,)), 'reset_filter': ('13', (True,)),
+    'water_level': ('20', ('closed', 'low', 'middle', 'high')), 'work_mode': ('24', ('both_work', 'only_sweep', 'only_mop')),
+}
+EXPECT_STATUS = {'start': None, 'pause': ('paused', 'standby'), 'dock': ('goto_charge', 'charging', 'charge_done')}
+MAX_MOVE_S = 3.0
+
+
 def refuse_dp(dp):
-    """Any request for a movement/job DP is refused before a byte is sent."""
-    if str(dp) in BLOCKED_DPS:
-        raise TuyaBlocked(f'{BLOCKED_DPS[str(dp)]} moves the robot or starts a job; blocked (no exact undo)')
-    raise TuyaBlocked('unknown DP')
+    """Raw DP numbers are never accepted from clients: only the typed COMMANDS / WRITABLE names."""
+    raise TuyaBlocked('raw DP writes are not accepted; use a typed command')
+
+
+def command(vac, name, value=None, move_s=1.0):
+    if name not in COMMANDS:
+        raise TuyaBlocked('unknown command')
+    dp, allowed = COMMANDS[name]
+    v = allowed[0] if len(allowed) == 1 and value is None else value
+    if v not in allowed:
+        raise TuyaBlocked('value not allowed for this command')
+    before = vac.dps()
+    dev = vac._dev()
+    dev.set_value(int(dp), v)
+    stopped = None
+    if name == 'move' and v != 'stop':
+        _sleep(max(0.2, min(float(move_s), MAX_MOVE_S)))
+        dev.set_value(4, 'stop'); stopped = True               # always end a manual move
+    _sleep(1.5)
+    after = vac.dps()
+    if name in EXPECT_STATUS and EXPECT_STATUS[name]:
+        verified = after.get('5') in EXPECT_STATUS[name]
+    elif name == 'start':
+        verified = after.get('2') is True or after.get('5') in BUSY
+    elif dp in after and not isinstance(v, bool) and name != 'move':
+        verified = after.get(dp) == v
+    else:
+        verified = None                                     # momentary command: device reports no lasting state
+    return {'command': name, 'value': v, 'status_before': before.get('5'), 'status_after': after.get('5'),
+            'auto_stopped': stopped, 'verified': verified, 'reversible': False}

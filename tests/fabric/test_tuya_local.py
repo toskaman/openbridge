@@ -54,14 +54,27 @@ class Tuya(unittest.TestCase):
         with self.assertRaises(t.TuyaBlocked):
             v.undo('suction')
 
-    def test_movement_and_bad_values_blocked_before_sending(self):
+    def test_full_control_commands(self):
+        v = vac()
+        r = t.command(v, 'move', 'forward', move_s=10)
+        self.assertEqual(FakeDev.sets[-2:], [(4, 'forward'), (4, 'stop')])     # auto-stop, capped duration
+        self.assertTrue(r['auto_stopped']); self.assertFalse(r['reversible'])
+        t.command(v, 'start'); self.assertEqual(FakeDev.sets[-1], (2, True))
+        FakeDev.dps['5'] = 'goto_charge'
+        self.assertTrue(t.command(v, 'dock')['verified'])
+        self.assertTrue(t.command(v, 'water_level', 'high')['verified'])
+        self.assertIsNone(t.command(v, 'seek')['verified'])
+        for name, val in (('move', 'jump'), ('mode', 'turbo'), ('format', None)):
+            with self.subTest(name=name), self.assertRaises(t.TuyaBlocked):
+                t.command(v, name, val)
+        with self.assertRaises(t.TuyaBlocked):
+            t.refuse_dp(2)
+
+    def test_bad_values_blocked_before_sending(self):
         v = vac()
         for s, val in (('mode', 'smart'), ('suction', 'turbo'), ('power', True)):
             with self.subTest(s=s), self.assertRaises(t.TuyaBlocked):
                 v.set_reversible(s, val)
-        for dp in (2, 3, 4, 101, 102, 11):
-            with self.assertRaises(t.TuyaBlocked):
-                t.refuse_dp(dp)
         FakeDev.dps['5'] = 'cleaning'
         with self.assertRaises(t.TuyaBlocked):
             v.set_reversible('volume', 'vol_mute')
@@ -81,6 +94,8 @@ class Tuya(unittest.TestCase):
         self.assertEqual((r['state'], r['before'], r['after']), ('VERIFIED', 'vol_normal', 'vol_mute'))
         r = ex.execute('tuya_undo', key, {'setting': 'volume'}, consent=True)
         self.assertEqual((r['state'], r['verified']), ('REVERTED', True))
+        self.assertEqual(ex.execute('tuya_command', key, {'command': 'seek'})['state'], 'BLOCKED')
+        self.assertEqual(ex.execute('tuya_command', key, {'command': 'seek'}, consent=True)['state'], 'EXECUTED_UNVERIFIED')
 
 
 if __name__ == '__main__':

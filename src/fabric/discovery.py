@@ -185,7 +185,7 @@ def ingest_tuya(registry, vacuum, salt):
     registry.link(Link('pc', key, 'LAN', ('observe', 'read', 'control'), 'TUYA_LOCAL'))
     registry.capability(key, Capability('tuya_status', 'read', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'local protocol 3.4, owner-linked key'))
     registry.capability(key, Capability('tuya_setting', 'write', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'suction / volume, exact Undo'))
-    registry.capability(key, Capability('movement', 'write', 'BLOCKED', 'TUYA_LOCAL', 'start, stop, direction, seek: no exact undo'))
+    registry.capability(key, Capability('robot_control', 'write', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'start, pause, dock, moves (auto-stop), seek, dust, resets: irreversible, consent per command'))
     return {'status': 'OK', 'devices': 1}
 
 

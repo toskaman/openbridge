@@ -108,6 +108,14 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      {'type': 'object', 'properties': {'setting': _s('string', enum=['suction', 'volume'])}, 'required': ['setting'], 'additionalProperties': False},
                      ('owner consent',), ('a change was recorded',), ('setting equals the recorded before value',),
                      'independent status read equals before value', '', R.EXACT.value, ('NOTHING_TO_UNDO', 'RESTORE_NOT_EXACT'), 30, 'single-per-device', True),
+    ActionDescriptor('tuya_command', 'Send one typed command to the Tuya robot (start, pause, dock, mode, move, seek, empty dust, resets, water, work mode)',
+                     {'type': 'object', 'properties': {'command': _s('string', enum=['start', 'pause', 'mode', 'dock', 'move', 'seek', 'empty_dust',
+                                                                                        'reset_side_brush', 'reset_main_brush', 'reset_filter', 'water_level', 'work_mode']),
+                                                       'value': _s('string', maxLength=16), 'move_s': _s('number')},
+                      'required': ['command'], 'additionalProperties': False},
+                     ('owner consent for this command',), ('owner-linked Tuya key', 'value in the command allowlist', 'manual moves end with stop after <= 3 s'),
+                     ('device acted on the command',), 'status read after the command; momentary commands report verified=null', '',
+                     R.IRREVERSIBLE.value, ('NOT_LINKED', 'BLOCKED'), 30, 'single-per-device', True),
     ActionDescriptor('pc_job', 'Run one owner-typed command on a client PC through its BridgeWindows agent',
                      {'type': 'object', 'properties': {'command': _s('string', maxLength=2000), 'shell': _s('string', enum=['cmd', 'powershell']),
                                                        'timeout_s': _s('integer', minimum=1, maximum=600)},
@@ -519,7 +527,18 @@ class Executor:
         ok = out['exit_code'] == 0 and not out['timed_out']
         return ('VERIFIED' if ok else 'FAILED'), None, out['exit_code'], ok, out
 
-    RUNNERS = {'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def _tuya_command(self, key, params):
+        from src.adapters.tuya_local import TuyaBlocked, command
+        if self._device(key)['category'] != 'vacuum':
+            raise PrimitiveError('BLOCKED', 'not a Tuya vacuum')
+        try:
+            r = command(self._tuya(), params['command'], params.get('value'), params.get('move_s', 1.0))
+        except TuyaBlocked as e:
+            raise PrimitiveError('BLOCKED', str(e)) from None
+        state = 'FAILED' if r['verified'] is False else 'VERIFIED' if r['verified'] else 'EXECUTED_UNVERIFIED'
+        return state, r['status_before'], r['status_after'], bool(r['verified']), r
+
+    RUNNERS = {'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
