@@ -13,6 +13,7 @@ for _ in range(60):
     time.sleep(1)
 out['agent_connected'] = s.windows_bridge.connected()
 out['agent'] = s.windows_bridge.hello
+out['last_error'] = s.windows_bridge.last_error
 if out['agent_connected']:
     ex = api_v2.executor(s)
     d = ex.execute('bounded_discovery', 'fabric', {'providers': ['windows']})

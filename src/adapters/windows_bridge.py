@@ -21,6 +21,7 @@ REG_ALLOWLIST = {
     ('HKLM', r'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'ProductName'),
     ('HKLM', r'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'DisplayVersion'),
     ('HKLM', r'SOFTWARE\Microsoft\Windows NT\CurrentVersion', 'CurrentBuild'),
+    ('HKLM', r'SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0001', 'HwProfileGuid'),
 }
 ALLOWED_METHODS = ('sys.ping', 'sys.diag', 'proc.list', 'reg.read')
 
@@ -49,6 +50,7 @@ class WindowsBridge:
         self.peer_ip = None
         self._listener = None
         self._stop = threading.Event()
+        self.last_error = None          # why the last agent link ended (never contains secrets)
 
     # ---------- lifecycle ----------
     def start(self):
@@ -128,7 +130,8 @@ class WindowsBridge:
                 if pend:
                     pend['reply'] = msg
                     pend['event'].set()
-        except (OSError, ValueError, ConnectionError, struct.error):
+        except (OSError, ValueError, ConnectionError, struct.error) as e:
+            self.last_error = f'{type(e).__name__}: {str(e)[:80]}'
             self._drop(conn)
 
     # ---------- calls ----------
@@ -167,8 +170,22 @@ class WindowsBridge:
         return reply.get('result') or {}
 
     def identity(self, salt):
-        r = self.call('reg.read', {'hive': 'HKLM', 'subkey': r'SOFTWARE\Microsoft\Cryptography', 'value_name': 'MachineGuid'})
-        guid = str(r.get('data') or r.get('value') or '').strip()
-        if not guid:
+        """Opaque per-install identity. MachineGuid when readable; a 32-bit agent on 64-bit Windows sees the
+        WOW64 registry view where it is absent; HKLM\\SYSTEM is not redirected, so fall back to the per-install
+        hardware-profile GUID. Values are hashed with the install salt, never stored raw."""
+        def read(sub, name):
+            try:
+                v = self.call('reg.read', {'hive': 'HKLM', 'subkey': sub, 'value_name': name}).get('value')
+                return str(v).strip() if v not in (None, '') else None
+            except BridgeUnavailable as e:
+                if 'agent error' in str(e):
+                    return None
+                raise
+        guid = read(r'SOFTWARE\Microsoft\Cryptography', 'MachineGuid')
+        raw = ('guid\0' + guid) if guid else None
+        if raw is None:
+            hw = read(r'SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0001', 'HwProfileGuid')
+            raw = ('hwprofile\0' + hw) if hw else None
+        if raw is None:
             return None
-        return 'windows_machine_guid:' + hmac.new(salt, f'windows_machine_guid\0{guid}'.encode(), hashlib.sha256).hexdigest()[:24]
+        return 'windows_machine_guid:' + hmac.new(salt, f'windows_machine_guid\0{raw}'.encode(), hashlib.sha256).hexdigest()[:24]
