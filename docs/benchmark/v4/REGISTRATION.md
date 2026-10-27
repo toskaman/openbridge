@@ -26,3 +26,13 @@ Primary: top-1 accuracy over cases × repeats (3 repeats for model arms, tempera
 
 ## Result at registration (rules arm)
 top-1 accuracy **0.833** (20/24). All 4 failures are `wan_outage` cases ranked `shared_outage` first: two devices dropping together is correctly seen, but the router's WAN state change is not preferred over it. This is the gap the model arms are tested on. Run: `python -m dev.benchmark_v4_ablation --arms rules,llama,glimmer,spark --repeats 3` (results land next to this file).
+
+## Results, model arms (27 Oct 2026, 21:00 UTC, owner's PC, local, temperature 0, 3 repeats; `ablation-20261027T210021Z.json`)
+| Arm | n | Top-1 | Errors | Median latency |
+|---|---|---|---|---|
+| rules | 24 | **0.833** | 0 | <1 ms |
+| Llama 3.2 3B (local) | 72 | **0.833** | 0 | 5.1 s |
+| Muse Glimmer 30B (local) | 72 | 0.722 | 8 (answers rejected by the validator) | 32.6 s |
+| Muse Spark 1.3 | — | not run | — | the supervised budget ($0.10 reserved per call, $1 ceiling) allows ~9 calls, not 72 |
+
+Unfavourable result kept as registered: **no model arm beat the rules**. Every arm failed all 12 `wan_outage` repeats (the rules put `shared_outage` first and both models kept that order). Llama re-ranked nothing away from the rules' choice; Glimmer lost 6 `device_sleep` and 2 `router_radio_change` repeats, 8 of them through invalid answers. The re-ranking design (models may only reorder rule hypotheses) gives models little room on cases the rules already get right; this is a finding, not a tuning target for these frozen cases.
