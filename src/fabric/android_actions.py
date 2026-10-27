@@ -82,10 +82,36 @@ class AndroidActions:
             raise ActionError('unknown setting')
         return _int_out(self.shell(*SETTINGS[setting][0]).split('volume is')[-1] if setting == 'media_volume' else self.shell(*SETTINGS[setting][0]))
 
+    def _apply(self, s, v):
+        """Write a setting; for media volume fall back to volume keys (some builds ignore media_session --set)."""
+        self.shell(*[a.format(v=v) for a in SETTINGS[s][1]])
+        now = self.get(s)
+        if s != 'media_volume' or now == v or now is None:
+            return now
+        for _ in range(40):
+            if now == v:
+                break
+            key = 'volume_up' if now < v else 'volume_down'
+            try:
+                self.shell('input', 'keyevent', str(KEYS[key]))
+            except (ValueError, OSError):
+                break
+            nxt = self.get(s)
+            if nxt is None or nxt == now or (key == 'volume_up' and nxt > v) or (key == 'volume_down' and nxt < v):
+                now = nxt if nxt is not None else now
+                break                         # cannot move, or the step size skips the exact value
+            now = nxt
+        return now
+
     def apps(self):
         cat = 'android.intent.category.LEANBACK_LAUNCHER' if self.category == 'tv' else 'android.intent.category.LAUNCHER'
         out = self.shell('cmd', 'package', 'query-activities', '--brief', '-a', 'android.intent.action.MAIN', '-c', cat) or ''
-        return sorted({l.strip().split('/')[0] for l in out.splitlines() if '/' in l and PKG.match(l.strip().split('/')[0])})
+        self._components = {}
+        for l in out.splitlines():
+            l = l.strip()
+            if '/' in l and PKG.match(l.split('/')[0]) and re.fullmatch(r'[A-Za-z0-9_.$/]+', l):
+                self._components.setdefault(l.split('/')[0], l)
+        return sorted(self._components)
 
     def screen_state(self):
         p = re.search(r'mWakefulness=(\w+)', self.shell('dumpsys', 'power') or '')
@@ -122,7 +148,7 @@ class AndroidActions:
             pkg = p.get('package')
             if not isinstance(pkg, str) or not PKG.match(pkg) or pkg not in self.apps():
                 raise ActionError('package not installed or not launchable')
-            self.shell('monkey', '-p', pkg, '-c', 'android.intent.category.LEANBACK_LAUNCHER' if self.category == 'tv' else 'android.intent.category.LAUNCHER', '1')
+            self.shell('am', 'start', '-n', self._components[pkg])          # fast and exact (monkey is slow on watches)
             return {'launched': pkg, 'screen': self.screen_state()}
         if action == 'open_url':
             u = p.get('url')
@@ -146,16 +172,14 @@ class AndroidActions:
             if before is None:
                 raise ActionError('setting not readable on this device')
             self.before[s] = before
-            self.shell(*[a.format(v=v) for a in SETTINGS[s][1]])
-            after = self.get(s)
+            after = self._apply(s, v)
             return {'setting': s, 'before': before, 'after': after, 'verified': after == v}
         if action == 'restore':
             s = p.get('setting')
             if s not in self.before:
                 raise ActionError('nothing to restore')
             b = self.before[s]
-            self.shell(*[a.format(v=b) for a in SETTINGS[s][1]])
-            now = self.get(s)
+            now = self._apply(s, b)
             if now == b:
                 self.before.pop(s)
             return {'setting': s, 'restored': now, 'exact': now == b}
