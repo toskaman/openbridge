@@ -70,7 +70,7 @@ def ctx(tmp):
     relays.revoke = lambda rid: (relays.revoked.append(rid), relays.relays.pop(rid, None))
     c = SimpleNamespace(fabric_registry=reg, fabric_salt=b's', android=FakeAndroid(), relays=relays, agent=FakeAgent(),
                         session_journal=SessionJournal(tmp + '/s.json'), fabric_lock=threading.Lock(),
-                        fabric_adapters=lambda: {}, fabric_snapshot=reg.snapshot())
+                        fabric_adapters=lambda providers=None: {}, fabric_snapshot=reg.snapshot())
     c.relay_action = lambda path, body: {'providers': {'relay': {'devices': 4}}}
     return c, key
 
@@ -235,13 +235,13 @@ class Http(unittest.TestCase):
             req = urllib.request.Request(base + '/api/v2/execute', body, {'Content-Type': 'application/json'})
             with self.assertRaises(urllib.error.HTTPError) as e:
                 urllib.request.urlopen(req)
-            self.assertEqual(e.exception.code, 403)
+            self.assertEqual(e.exception.code, 403); e.exception.close()
             csrf = get('/api/session')['csrf_token']
             req = urllib.request.Request(base + '/api/v2/execute', body, {'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'Origin': base})
             with self.assertRaises(urllib.error.HTTPError) as e:
                 urllib.request.urlopen(req)
             self.assertEqual(e.exception.code, 409)
-            self.assertIn('DEVICE_UNKNOWN', json.loads(e.exception.read())['errors'][0])
+            self.assertIn('DEVICE_UNKNOWN', json.loads(e.exception.read())['errors'][0]); e.exception.close()
         finally:
             s.shutdown(); s.server_close()
 
