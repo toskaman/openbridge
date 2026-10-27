@@ -10,7 +10,7 @@ from src.adapters.freebox_auth import FreeboxSession
 
 
 class FakeAndroid:
-    _handles={'S1':'h1','192.168.1.15:5555':'h2'}
+    _handles={'S1':'h1','192.0.2.15:5555':'h2'}
     def discover(s):return {'devices':[{'id':'h1','state':'device','transport':'USB','name':'a'},{'id':'h2','state':'device','transport':'WIFI','name':'b'},{'id':'h3','state':'unauthorized','transport':'USB','name':'c'}]}
     def stable_identifier(s,h,salt):return 'android_serial:'+h
     def bluetooth_identifier(s,h,salt):return None
@@ -23,7 +23,7 @@ class Pub:
 
 def full_registry():
     r=Registry()
-    ingest_mdns(r,{'instances':[{'service':'_googlecast._tcp','instance':'TV','host':'tv.local','port':8009,'addresses':['192.168.1.15'],'txt':{'id':'c1'},'category':'media'}]},b's')
+    ingest_mdns(r,{'instances':[{'service':'_googlecast._tcp','instance':'TV','host':'tv.local','port':8009,'addresses':['192.0.2.15'],'txt':{'id':'c1'},'category':'media'}]},b's')
     ingest_android(r,FakeAndroid(),b's')
     ingest_ble(r,{'devices':[normalize('C1:00:00:00:00:01','Sensor',-70,{},[],{})]},b's')
     ingest_ssdp(r,{'devices':[{'uuid':'uuid:1','ip':'192.168.1.254','location':'x','types':['urn:schemas-upnp-org:device:InternetGatewayDevice:1'],'description':None}]},b's')

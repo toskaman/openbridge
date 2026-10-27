@@ -48,3 +48,27 @@ Verification status: REAL_HARDWARE_VERIFIED, INTEGRATION_VERIFIED, SIMULATED_VER
  "source":"RELAY:relay-b29262ca4f6a","freshness_s":12,"limitations":["Companion must be open on the device"],
  "reversibility":"SESSION_CLEANUP"}
 ```
+
+## Implementation status (feat/device-runtime-v2)
+
+All `/api/v2/*` routes above are implemented in `src/runtime/api_v2.py` (hook: two lines in `src/server.py`).
+Loopback Host check on every route; `POST /api/v2/execute` also requires Origin + CSRF, JSON ≤ 8 KiB, and only the
+fields `primitive_id`, `device_key`, `params`, `consent`. HTTP 409 = receipt with state `BLOCKED`.
+
+| Primitive | Reversibility | Consent | Concurrency | Runs through |
+|---|---|---|---|---|
+| read_facts | NONE | no | per device | ADB read allowlist (`diagnostics.ANDROID_READS`) / Freebox read-only paths |
+| bounded_discovery | NONE | no | global | `fabric.discovery.run` (existing lock) |
+| relay_ble_scan | SESSION_CLEANUP | yes | per device | signed relay protocol (`relay_action`) |
+| relay_revoke | IRREVERSIBLE | yes | per device | `RelayManager.revoke` |
+| android_optional_app_state | EXACT | yes | per device | agent plan → deterministic gate → transaction engine → read-back |
+| undo_transaction | EXACT | yes | per device | transaction engine revert + exact read-back |
+| session_cleanup | SESSION_CLEANUP | yes | global | session journal restore |
+
+Executor guarantees (tests: `tests/runtime/test_primitives.py`, SIMULATED_VERIFIED):
+strict schema (no extra fields), consent, ADB identity re-check before every device action (device replaced on the same
+link → `IDENTITY_CHANGED`), one action per device, timeout → `UNKNOWN_TIMEOUT` (never success; the lock stays held until
+the worker really ends), adapter exception mid-write → `FAILED` + listed in `/api/v2/recovery`, event ring buffer.
+
+Receipt states: `VERIFIED`, `REVERTED`, `PARTIAL`, `FAILED`, `BLOCKED`, `UNKNOWN_TIMEOUT`. `verified` is true only after
+an independent read-back.
