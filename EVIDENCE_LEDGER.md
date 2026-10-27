@@ -422,3 +422,5 @@ OpenBridge server with `--windows-bridge` (commit 363b538 tree): the PC 2 agent 
 - Backups: D:\DevBackups\Hackaton-BWv4\Hackaton-BWv4_2026-10-27_21-50-30.zip (3 files) + Hackaton-BWv4_2026-10-27_22-41-44.zip (6 files).
 ## 27 Oct 2026 (night) — capability sweep
 See docs/DEVICE_CAPABILITIES.md: catalog probed on TV and phone; vacuum water level / volume / seek and PC 2 jobs verified; TV input hung in deep standby and MIUI blocked input injection — both reported, not hidden.
+
+Second sweep (TV awake): Android TV remote keys (volume, mute, D-pad, channel ±, info, back, home), touchpad swipe/tap, YouTube launch (focused app read back), power off (asleep) and power on (awake) all executed on hardware. Xiaomi phone: input/settings writes still denied by MIUI until the ADB authorization is renewed.

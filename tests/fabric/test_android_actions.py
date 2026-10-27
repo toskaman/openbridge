@@ -46,7 +46,7 @@ class Catalog(unittest.TestCase):
         sh = FakeShell(); a = AndroidActions(sh, 'tv')
         bad = [('key', {'key': 'reboot'}), ('text', {'text': 'a;rm -rf /'}), ('tap', {'x': 2, 'y': 0}), ('launch_app', {'package': 'com.evil.notinstalled'}),
                ('open_url', {'url': 'file:///sdcard'}), ('open_url', {'url': 'https://x.org/$(id)'}), ('set', {'setting': 'adb_enabled', 'value': 0}),
-               ('set', {'setting': 'media_volume', 'value': 500}), ('shell', {})]
+               ('set', {'setting': 'media_volume', 'value': 16}), ('shell', {})]
         n = len([c for c in sh.calls if c[0] in ('input', 'am', 'monkey') or '--set' in c or 'put' in c])
         for act, args in bad:
             with self.subTest(act=act, args=args), self.assertRaises(ActionError):
