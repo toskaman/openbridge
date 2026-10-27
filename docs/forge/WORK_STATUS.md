@@ -1,41 +1,43 @@
-# Active work constraints
+# Resume checkpoint - 27 October 2026
 
-Owner instruction, 27 October 2026: **do not generate any video until the owner explicitly requests it**. Recording, editing, rendering and new video publication are paused. Existing artifacts remain historical; do not run the video helpers unless the owner explicitly requests video work.
+## Owner constraints
 
-Continue product implementation, runtime integration, safety/contract tests, browser checks and evidence. Keep all content English. Do not edit the runtime owner's protected backend, hardware, Companion, permission or recovery files. Keep main unchanged pending integration validation.
+- No video generation, recording, editing, rendering or new publication until a new explicit owner request, including after project completion.
+- All responses, product content and public docs in English. No desktop keyboard/mouse automation.
+- Runtime inference uses Meta models only. Cloud requests may use promotional credits only with fresh verification; no paid fallback. The earlier $148 confirmation is stale. Keep the DPAPI-protected key out of logs, arguments, browser state and Git.
+- Runtime owner retains hardware adapters, main server integration, Companion, permissions, transactions and recovery. This branch changes only Forge, tests, CI, tooling and docs.
+- Targeted delta backup before changing existing files to D:/DevBackups/OpenBridge; purge archives older than 90 days; report files/location. Required compact English Discord changelog after a completed milestone.
 
-The runtime owner has now recorded the authenticated phone-relay HTTP lifecycle in b5f1ab8 (publish/read 200, denied after relay revocation, removed route 404). Remaining gates include final runtime integration, the TV/inaccessible-device scenario, stronger composition evaluation and the remaining requested product features. A successful synthetic Glimmer proposal does not mark these gates complete.
+## Workspace and services
 
-Latest controlled integration: runtime 6231b0e plus current Forge overlay passes 266 unit/integration tests and six browser modules, with the self-tested I/O guard recording zero forbidden attempts. See cross-branch-current-test-receipt.json. These are controlled tests, not new hardware or model evidence. Two runtime fixture HTTPError cleanup warnings remain. The injected-source path label is now tested through planning.
+Worktree: C:/Users/TheBox/Desktop/Hackaton/OpenBridge-capability-forge. Branch: feat/forge-verified-publication, based on already-merged Forge work. Reuse this isolated worktree. Check git status/log and GitHub checks before continuing.
 
+Forge preview restarted at http://127.0.0.1:18766 with python -m src.forge.demo_host --glimmer-cpu-v2 (managed command session 47996). SIMULATED observations, no hardware. Local CPU Meta endpoint 11439 is separately running; startup made no inference request. Fixture evidence expires after 120 seconds: explicit fixture refresh required. Do not stop unrelated model services. The main app was not listening on 18765 when checked; mounting/restart coordination remains runtime-owned.
 
-## Resume checkpoint â€” Meta evaluation and cross-device diagnosis
+## Completed foundations
 
-Owner update: no video generation without a new explicit request, including after project completion. All responses, product content and documentation remain English. Continue from feat/capability-forge in OpenBridge-capability-forge; last published core commit 06198ce / draft PR #1. No desktop keyboard/mouse automation.
+- Forge PR #1 merged as 767dcdb; its last checked CI jobs passed.
+- README correction PR #7 merged as dcb71c3: measured Glimmer explanations 56/60 (93.3%) first, rules have no scored prose output, full planning/goal-fit results retained. No invented superiority or diagnosis score.
+- Runtime-owner physical phone HTTP proof: publish/read/docs 200, read 409 after revocation, removed route 404. TV provider accepted 5/5 targets, then refused after revocation (e50c708). TV permission involved a dev-harness grant and journaled changes, not complete product-consent proof.
+- Spark diagnostic implemented and mocked-tested. One live attempt BLOCKED, one $0.10 reservation retained, no retry; accepted diagnosis/usage/cost unknown. Stale $148 balance cannot authorize another call. See SPARK_DIAGNOSTIC.md.
+- Windows bridge PR #8 merged on main; do not duplicate adapter work.
 
-Current task: lead the README evaluation with the measured Glimmer coverage-explanation result (56/60, 93.3%), retain planning scores and advisor goal-fit, and avoid relabeling explanation validity as complex reasoning accuracy. Rules emit step IDs but have no measured free-text explanation success rate; do not invent a 0% reasoning baseline. Add an opt-in Muse Spark 1.3 synthetic multi-transport diagnostic using the existing durable credit reservations. Preserve raw evidence and label mocked vs live tests. Cloud permits expire after five minutes; never reuse an old balance as current or expose the key.
+## Current change: verified publication
 
-Next core work after this milestone: final runtime/provider mounting coordination; TV/inaccessible-device Forge journey and physical Glimmer journey; richer composition evaluation. Protected runtime/backend/hardware files remain runtime-owner owned. Historical physical phone relay proof is valid, not TV proof. Keep draft until integration validated. Current standalone preview is port 18766; local CPU Glimmer endpoint 11439; do not stop unrelated model services.
+ForgeService.publish_verified requires exact consent, rejects an existing service ID, creates a service and independently rereads trusted evidence under its lifecycle lock. Failed verification removes only the new service and returns PUBLICATION_VERIFICATION_FAILED. Low-level publish remains for staged integrations. This verifies provider/lifecycle data, not HTTP transport or a new scan.
 
+Standalone POST /api/publish uses this flow and refuses false consent before provider access. UI displays the verified read automatically. Failed verification clears plan/consent, explains removal and requires an explicit new attempt. Test service remains a separate authenticated HTTP read.
 
-## Latest completed checkpoint
+Tests cover freshness, permission/provenance/provider failures, preservation of existing services, concurrency, intermediate-state isolation, HTTP cleanup and four-width recovery. Review found no important publication defects. Its receipt-provenance issue was fixed: archive the captured runtime revision, freeze overlay bytes and record hashes. Runner now handles already-merged Forge folders, backing up only differing existing overlay files.
 
-README correction is isolated in PR #7 (docs/meta-evaluation-20261027), based on remote main. Wait for its checks, then merge the README-only correction independently of Forge. Branch creation and README update used the GitHub API; the remote original README is in delta backup OpenBridge_2026-10-27_11-40-23.zip.
+Pinned runtime dee5ba1 plus current overlay passed 294 tests, authenticated runtime HTTP lifecycle and seven browser modules; zero forbidden attempts in the self-tested Python I/O guard. Controlled evidence, not new hardware/model proof. See verified-publication-test-receipt.json. Artifacts and exact backup file lists: artifacts/forge-publication/. Check new branch CI/PR status after publication.
 
-SparkDiagnostic now exists with a supervised CLI and PowerShell credential wrapper. Six mocked tests and all 227 local tests pass. One live request was blocked, one $0.10 reservation is retained, no retry, usage/cost unknown. Safe failure detail was added after the first attempt. No accepted Spark diagnostic or advantage score is claimed. Owner confirmed $148 promotional balance for that attempt; never reuse this as a fresh verification.
+## Next
 
-Latest runtime e50c708 includes a physical Android TV relay proof: five advertisers accepted by Forge's provider, denied after revocation. This resolves TV-provider proof, not the combined TV HTTP/Glimmer journey or main mounting. Location grant came from the dev harness; TV changes remain in the owner's session journal. Next core step: consume the runtime's new source-filtered fact route to prevent mixed-relay aggregation from blocking valid bound observations. Keep response source/time/permission checks and fail closed if filtering is unsupported.
+1. Publish/finish the verified-publication PR after checks, preserving its exact evidence scope.
+2. Coordinate main-process mounting with trusted runtime reader and explicitly bound relay/target; no silent physical source selection or protected server edits.
+3. Complete physical TV HTTP + local Glimmer product journey with fresh evidence; distinguish device consent from harness grants.
+4. Expand composition evaluation beyond narrow two-step selection; preserve frozen v1 results.
+5. No video work without a new explicit owner request.
 
-Guarded combined build now passes 274 tests and six browser modules; zero forbidden I/O attempts. Receipt: cross-branch-spark-test-receipt.json. This remains controlled evidence.
-
-
-## Ready-to-resume state after README correction
-
-PR #7 merged to main as dcb71c3: explanation-first evaluation, 56/60 measured Glimmer outputs, baseline not scored for prose, full planning/goal-fit results retained. README in Forge now matches main exactly to resolve the sole merge conflict without touching protected runtime code. Experimental Spark details remain in docs/forge/SPARK_DIAGNOSTIC.md and draft PR #1. No videos until a new explicit owner request.
-
-Source-filter consumption is implemented: bound relay source is URL-encoded into the fact query; exact response source and freshness are still checked, authority rechecked, no aggregate fallback. Regression tests cover mixed sources, stale selected evidence and unsupported filtering. Actual controlled runtime handlers return bound -61 while another source's aggregate -20 is ignored. Read-after-revoke remains 409, after removal 404. Guarded integration: 277 tests + HTTP scenario + six browser modules pass, zero forbidden attempts. Receipt: cross-branch-source-filter-test-receipt.json. Independent review found no important defects.
-
-Next: final mounting coordination with the runtime owner; physical TV HTTP + Glimmer journey and richer composition evaluation. Spark diagnostic remains live-unconfirmed after one blocked attempt with retained $0.10 reservation; do not retry automatically or reuse the old $148 credit confirmation. Keep credentials private, all public content English, and no keyboard/mouse automation.
-
-
-Final checkpoint: published Forge diagnostic commit 096eb06, source-filter fix 25fb082, then merged the already-reviewed origin/main history into this branch as 812880b to resolve the README line-ending conflict. The local README now retains the same displayed content as main; Git history records conflict resolution. This merge changed no main checkout and is not the final Forge integration. All 277 local unit/integration tests pass after the merge. Source worktree is clean apart from this checkpoint update. Push/check the draft PR head before resuming final mounting coordination. PR #7 is already merged and its six checks passed.
+Earlier checkpoint history remains in Git; this file describes current state.

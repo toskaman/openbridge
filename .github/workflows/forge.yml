@@ -1,12 +1,12 @@
 name: Capability Forge
 on:
   push:
-    branches: [feat/capability-forge]
+    branches: [feat/capability-forge, 'feat/forge-*']
   pull_request:
     paths:
       - 'src/forge/**'
       - 'tests/forge/**'
-      - 'tests/e2e/forge_smoke.py'
+      - 'tests/e2e/forge_*.py'
       - '.github/workflows/forge.yml'
 permissions:
   contents: read
@@ -22,6 +22,7 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python -m unittest discover -s tests -q
       - run: python -m tests.e2e.forge_smoke
+      - run: python -m tests.e2e.forge_publication_failure_smoke
       - run: python -m tests.e2e.forge_runtime_smoke
       - run: python -m tests.e2e.forge_expiry_smoke
       - run: python -m tests.e2e.forge_injected_sim_smoke
@@ -34,3 +35,4 @@ jobs:
           path: |
             artifacts/forge-browser/
             artifacts/forge-runtime-browser/
+            artifacts/forge-publication/
