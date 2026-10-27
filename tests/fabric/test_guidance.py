@@ -10,6 +10,10 @@ class GuidanceTests(unittest.TestCase):
         self.assertTrue(all(k in x for k in ('title','why','steps','waiting')))
         self.assertNotIn('Install via USB',' '.join(guide('companion_install_blocked','Google')['steps'][:1]))
 
+    def test_non_string_manufacturer_falls_back_to_generic(self):
+        self.assertEqual(vendor_of(['Xiaomi']),'generic');self.assertEqual(vendor_of({'m':'x'}),'generic');self.assertEqual(vendor_of(34),'generic')
+        g=guide('watch_wireless_debugging',manufacturer=['x']);self.assertTrue(all(k in g for k in ('title','why','steps','waiting')))
+
     def test_tv_and_android_version_variants(self):
         self.assertIn('Device Preferences',' '.join(guide('usb_debugging_off','Sony',30,television=True)['steps']))
         self.assertIn('Nearby devices',guide('ble_permission','Samsung',33)['why'])

@@ -61,7 +61,7 @@ class SparkDiagnostic(RuntimeModelBroker):
         require(MODEL_ID, ENDPOINT)
         if self.transport is None: raise ModelBlocked('Meta transport unavailable')
         case = fixture()
-        payload = {'model': MODEL_ID, 'max_completion_tokens': 900, 'messages': [
+        payload = {'model': MODEL_ID, 'max_completion_tokens': 4000, 'messages': [
             {'role': 'developer', 'content':
              'Return only compact JSON with exactly summary (string), hypotheses (1-3 objects with explanation and evidence_refs), '
              'checks (1-3 objects with id, reason, evidence_refs), uncertainty (exactly '+LIMIT+'), authorizes_execution (false). '

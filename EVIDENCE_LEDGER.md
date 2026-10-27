@@ -1,5 +1,7 @@
 # Evidence ledger — 26 October 2026
 
+Current interpretation: this ledger is chronological. Counts, failures and statements such as NOT TESTED describe their recorded milestone; later sections may supersede them. See [release status](docs/RELEASE_STATUS.md) for the current backlog. Hosted-credit guards are $0.10 reserved per explicit request, $0.20 per fresh observation and $1 persistent local lifetime allowance; none is an account-wide provider billing cap.
+
 ## Phase 1 local checks
 
 - Python 3.14.4 on Windows: 12 unit/integration tests PASS. Covers fixture provenance, write refusal, unknown device, exact Host, Origin, CSRF, malformed input, oversized body and fixed asset routing.
@@ -369,6 +371,24 @@ Each recovery ran in a fresh process that read the durable journal and the phone
 
 - Bug: `muse-spark-1.3` is a reasoning model; the broker's 900-token completion cap was fully consumed by reasoning (`reasoning_tokens` ≈ 898), so `content` came back empty and `recommend()` failed as "Meta call failed".
 - Fix (`src/ai/broker.py`): `max_completion_tokens` raised to 4000; empty/whitespace content is now an explicit `ModelBlocked('Model returned no content…')`; the $0.10 reservation and $1 total ceiling are unchanged. `src/server.py` now reads the key from the OS vault (`meta-api-key`) when `MODEL_API_KEY` is not in the environment.
+- REAL (Meta Model API, synthetic facts only, no personal data): one live call returned `muse-spark-1.3` id chatcmpl-01a17d97…, a schema-valid `inspect_only` advisory citing the three supplied keys, usage 110 prompt + 625 completion (533 reasoning), estimated cost **$0.0028**. Within the owner's free promotional credits; the broker enforces a $1 persistent local reservation ceiling, not a provider-wide hard billing cap.
+- Only free credits are used: each explicit request reserves $0.10, each fresh observation allows $0.20 and the persistent local lifetime ceiling is $1; no automatic retries; failures keep their reservation.
+
+## Hardening + signature slice (27 Oct 2026, evening)
+
+- Fixes (TDD, 8 new tests RED->GREEN): relay pairings isolated per device handle + lock + 120 s expiry (src/server.py); relay nonce sets bounded FIFO 512 (src/fabric/relay.py, MAX_NONCES); Executor receipts bounded 512 sparing recovery states (src/runtime/primitives.py); 409 fail-closed on snapshot/registry skew for source-specific v2 facts (src/runtime/api_v2.py); vendor_of falls back to generic on non-string manufacturer (src/fabric/guidance.py).
+- New: read-only MCP stdio server, 3 tools over loopback v2 reads (src/mcp/server.py, 8/8 protocol tests incl. subprocess end-to-end); grounded identity kernel, challenge/confirm/HMAC-handle + spoof rig (src/runtime/grounded.py, 8/8); Manual2Skill compiler slice, cited guards + provenance + trace replay (src/forge/manual_skill.py, 4/4).
+- Gates: 376/376 unittest + compileall OK; browser smokes 4/4 at 390/768/1440/3440; seeded demo (python -m dev.seeded_signature_demo) PASS (SIMULATED, no hardware, no model calls) -> artifacts/seeded_demo_receipt.json.
+- Benchmarks: rules route reproduced 90.0% / 9 unsafe / 100% refused (docs/benchmark/agent-benchmark-rules.json); llama3b repeats=1 rerun in progress, canonical receipts preserved (see backups).
+- Pre-modification delta backups: D:\DevBackups\OpenBridge\OpenBridge_2026-10-27_20-37-24.zip (9 files), 20-48-25.zip (2 files), 20-55-50.zip (1 file).
+- Not done: live hardware receipts (phone/TV/Freebox/BLE), Glimmer/Spark reruns with CIs, physical challenge adapters (camera/Companion), demo video, submission form.
+
+## Agent benchmark rerun completed (27 Oct 2026, evening)
+
+- llama3b repeats=1 (30 synthetic attempts, pinned local model 127.0.0.1:11437): schema_valid 60.0%, decision_correct 53.3%, 2 unsafe proposals, 100% refused by gate, median 10685 ms, 4846/1783 tokens, $0. Consistent with the committed repeats=3 run (53.3%, 6 unsafe over 90). Small sample: indicative, not decisive (see critic note on the 3-run gap, Wilson CIs still open).
+- Files: canonical docs/benchmark/agent-benchmark-llama3b.json preserved (repeats=3); fresh run archived as docs/benchmark/agent-benchmark-llama3b-2026-10-27-repeats1.json; rules receipt refreshed in place (identical 90.0% / 9 unsafe / 100% refused, new timestamp).
+- Still open: Glimmer/Spark reruns with more seeds + Wilson CIs + per-case diffs (GPU time, no contention with this run now that it is complete).
+- Pre-modification delta backup for this entry: D:\DevBackups\OpenBridge\OpenBridge_2026-10-27_20-58-25.zip (1 file).
 - REAL (Meta Model API, synthetic facts only, no personal data): one live call returned `muse-spark-1.3` id chatcmpl-01a17d97…, a schema-valid `inspect_only` advisory citing the three supplied keys, usage 110 prompt + 625 completion (533 reasoning), estimated cost **$0.0028**. Within the owner's free promotional credits; the broker caps total spend at $1.
 - Only free credits are used: the per-session budget is $0.10 and the durable local ceiling is $1; no automatic retries; failures keep their reservation.
 

@@ -48,6 +48,9 @@ def command(key, relay_id, op, params=None, now=None):
     return {**msg, 'mac': sign(key, msg)}
 
 
+MAX_NONCES = 512   # mirrors the Companion nonce-cache prune; bounds long-lived relay replay windows
+
+
 def verify(key, message, seen_nonces, now=None):
     """Used by relays (and by the PC on relay replies). Rejects bad MAC, expiry, replay and unknown ops."""
     now = time.time() if now is None else now
@@ -60,7 +63,14 @@ def verify(key, message, seen_nonces, now=None):
         raise RelayError('Expired command')
     if msg['nonce'] in seen_nonces:
         raise RelayError('Replay')
-    seen_nonces.add(msg['nonce'])
+    if isinstance(seen_nonces, dict):   # long-lived insertion-ordered set: FIFO eviction
+        seen_nonces[msg['nonce']] = True
+        while len(seen_nonces) > MAX_NONCES:
+            seen_nonces.pop(next(iter(seen_nonces)))
+    else:                               # ephemeral caller-owned set
+        seen_nonces.add(msg['nonce'])
+        while len(seen_nonces) > MAX_NONCES:
+            seen_nonces.pop()
     return msg
 
 
@@ -93,7 +103,7 @@ class RelayManager:
         caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan',)}
         self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
                                  'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
-                                 'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': set()}
+                                 'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}
 
     def eligible(self, capability):
         out = []

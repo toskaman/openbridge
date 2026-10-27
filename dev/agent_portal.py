@@ -109,7 +109,7 @@ PAGE = r"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>OpenBridge Companion</title>
 <style>
 :root{--bg:#101419;--panel:#1a212a;--line:#394656;--text:#f5f0e3;--muted:#aebbc7;--accent:#ff6b1a;--ok:#5fd08a;--wait:#f5c06b}
-*{box-sizing:border-box}html{color-scheme:dark}
+*{box-sizing:border-box}html{color-scheme:dark}[hidden]{display:none!important}
 body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1b2633,var(--bg));color:var(--text);
 font:15px/1.6 "Segoe UI",system-ui,sans-serif;min-height:100vh}
 .wrap{max-width:720px;margin:0 auto;padding:40px 20px 60px}

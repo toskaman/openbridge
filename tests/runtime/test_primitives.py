@@ -217,6 +217,11 @@ class Reliability(unittest.TestCase):
         self.assertEqual([e['kind'] for e in ev], ['started', 'receipt'])
         self.assertEqual(self.ex.events_since(ev[-1]['seq']), [])
 
+    def test_receipts_are_bounded(self):
+        for _ in range(600):
+            self.ex.execute('no-such-primitive', self.key, {})
+        self.assertLessEqual(len(self.ex.receipts), 512)
+
 
 class Http(unittest.TestCase):
     def test_v2_routes_local_and_csrf(self):

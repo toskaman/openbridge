@@ -113,8 +113,8 @@ class ServerRelayFlowTests(unittest.TestCase):
                 start=server.relay_action('/api/relay-pair-start',{'device_id':'android-h'},transport_factory=lambda u:send)
             self.assertEqual(start['state'],'CODE_SHOWN_ON_DEVICE')
             with self.assertRaises(R.RelayError):server.relay_action('/api/relay-pair-confirm',{'code':'000000'},transport_factory=None)
-            server.relay_pending={'send':send,'hello':{'protocol':R.PROTOCOL,'relay_id':'phone','relay_nonce':'cd'*8},'pc_nonce':state['pc'],'handle':'android-h'}
-            conf=server.relay_action('/api/relay-pair-confirm',{'code':'314159'})
+            server.relay_pending={'android-h':{'send':send,'hello':{'protocol':R.PROTOCOL,'relay_id':'phone','relay_nonce':'cd'*8},'pc_nonce':state['pc'],'handle':'android-h','started_at':time.monotonic()}}
+            conf=server.relay_action('/api/relay-pair-confirm',{'device_id':'android-h','code':'314159'})
             self.assertEqual((conf['state'],conf['eligible_for_ble']),('PAIRED',True))
             snap=server.relay_action('/api/relay-scan',{'relay_id':'phone','seconds':5})
             child=[d for d in snap['devices'] if d['label']=='Sensor'][0]
@@ -124,3 +124,78 @@ class ServerRelayFlowTests(unittest.TestCase):
             with self.assertRaises(R.RelayError):server.relay_action('/api/relay-scan',{'relay_id':'phone'})
         finally:
             server.server_close()
+
+
+class PairingIsolationTests(unittest.TestCase):
+    def setUp(self):
+        from unittest.mock import patch
+        from src.server import create_server
+        from src.fabric.session import SessionJournal
+        import tempfile
+        self.server = create_server(0, fabric_salt=b's', session_journal=SessionJournal(tempfile.mkdtemp() + '/s.json'))
+        reg = Registry()
+        reg.devices[reg.upsert([], category='phone', label='Phone')]['handles'] = {'USB': 'android-h1'}
+        reg.devices[reg.upsert([], category='tv', label='TV')]['handles'] = {'WIFI': 'android-h2'}
+        self.server.fabric_registry = reg; self.server.fabric_snapshot = reg.snapshot()
+        self._patch = patch.object(self.server.android, 'forward_companion', return_value='http://127.0.0.1:47800')
+        self._patch.start(); self.addCleanup(self._patch.stop); self.addCleanup(self.server.server_close)
+
+    def companion(self, relay_id, code, relay_nonce):
+        state = {}
+        def send(_r, msg):
+            if msg.get('op') == 'pair_request':
+                state['pc'] = msg['pc_nonce']
+                return {'protocol': R.PROTOCOL, 'relay_id': relay_id, 'relay_nonce': relay_nonce, 'declared': {}}
+            key = R.derive_key(code, relay_nonce, state['pc']); R.verify(key, msg, set())
+            now = int(time.time())
+            rep = {'protocol': R.PROTOCOL, 'relay_id': relay_id, 'op': 'reply',
+                   'params': {'capabilities': ['ble_scan'], 'permissions': {'BLUETOOTH_SCAN': True, 'owner_enabled': True}},
+                   'nonce': R.secrets.token_hex(6), 'issued_at': now, 'expires_at': now + 30}
+            return {**rep, 'mac': R.sign(key, rep)}
+        return send
+
+    def start(self, handle, relay_id, code, nonce):
+        return self.server.relay_action('/api/relay-pair-start', {'device_id': handle},
+                                        transport_factory=lambda u: self.companion(relay_id, code, nonce))
+
+    def test_two_pairings_in_progress_do_not_clobber_each_other(self):
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        self.start('android-h2', 'tv', '222222', 'bb' * 8)
+        pending = self.server.relay_pending
+        self.assertIn('android-h1', pending); self.assertIn('android-h2', pending)
+        c1 = self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
+        c2 = self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h2', 'code': '222222'})
+        self.assertEqual((c1['state'], c1['relay_id'], c2['state'], c2['relay_id']), ('PAIRED', 'phone', 'PAIRED', 'tv'))
+        self.assertEqual(self.server.relays.relays['phone']['device_key'], 'android-h1')
+        self.assertEqual(self.server.relays.relays['tv']['device_key'], 'android-h2')
+        self.assertEqual(self.server.relay_pending, {})
+
+    def test_confirm_requires_the_pairing_device_handle(self):
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        with self.assertRaises(R.RelayError):
+            self.server.relay_action('/api/relay-pair-confirm', {'code': '111111'})
+        with self.assertRaises(R.RelayError):
+            self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h2', 'code': '111111'})
+        conf = self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
+        self.assertEqual(conf['state'], 'PAIRED')
+
+    def test_stale_pairing_code_is_rejected_and_cleared(self):
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        pending = self.server.relay_pending
+        self.assertIn('android-h1', pending)
+        pending['android-h1']['started_at'] -= 600
+        with self.assertRaises(R.RelayError):
+            self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
+        self.assertNotIn('android-h1', self.server.relay_pending)
+
+
+class NonceBoundTests(unittest.TestCase):
+    def test_seen_nonces_are_bounded_fifo(self):
+        m = manager(FakeRelay()); seen = m.relays['tv']['seen']
+        cmds = [R.command(KEY, 'tv', 'get_status') for _ in range(600)]
+        for c in cmds:
+            R.verify(KEY, c, seen, now=c['issued_at'])
+        self.assertLessEqual(len(seen), 512)
+        with self.assertRaises(R.RelayError):
+            R.verify(KEY, cmds[-1], seen, now=cmds[-1]['issued_at'])
+        R.verify(KEY, cmds[0], seen, now=cmds[0]['issued_at'])

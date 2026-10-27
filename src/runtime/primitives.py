@@ -177,6 +177,7 @@ class Executor:
         self._locks = {}
         self._guard = threading.Lock()
         self.receipts = {}
+        self._receipt_order = deque()
 
     # ---------- events ----------
     def emit(self, kind, **data):
@@ -548,7 +549,17 @@ class Executor:
         p = PRIMITIVES.get(primitive_id)
         def receipt(state, before=None, after=None, verified=False, errors=(), result=None):
             r = TransactionReceipt(tx, primitive_id, str(device_key)[:64], state, before, after, verified, started, _now(), tuple(errors))
-            self.receipts[tx] = r
+            with self._guard:
+                self.receipts[tx] = r
+                self._receipt_order.append(tx)
+                while len(self.receipts) > 512:   # bound in-memory growth; spare recovery-relevant states (see recovery())
+                    victim = next((t for t in self._receipt_order if t in self.receipts
+                                   and self.receipts[t].state not in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')), None)
+                    if victim is None:
+                        victim = self._receipt_order.popleft()
+                    else:
+                        self._receipt_order.remove(victim)
+                    self.receipts.pop(victim, None)
             self.emit('receipt', transaction_id=tx, primitive_id=primitive_id, state=state, verified=verified)
             return dict(to_json(r), result=result or {})
         try:

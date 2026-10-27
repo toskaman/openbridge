@@ -14,4 +14,4 @@ Data flow: providers -> Registry.upsert/observe/link/capability -> snapshot (pse
 
 Graph semantics: `pc -> device` for direct transports, `freebox -> host` (INVENTORY, observe) for devices the box sees, `relay device -> BLE device` (BLE, observe) for relayed scans. Seeing a device never implies reachability or control from the PC.
 
-Runtime AI: Meta only (Llama 3.2 3B local, Muse Glimmer local, Muse Spark 1.3 cloud), enforced by src/ai/registry.py. Development assistance: Claude (Cowork) via a local PowerShell bridge; Codex and Meta Muse Spark earlier (see CONTRIBUTIONS.md).
+Runtime AI: Meta only (Llama 3.2 3B local, Muse Glimmer local, Muse Spark 1.3 cloud), enforced by src/ai/registry.py. Development assistance: Codex and Meta Muse Spark earlier (see CONTRIBUTIONS.md).

@@ -1,5 +1,11 @@
 # Capability Forge proof ledger
 
+Current release status (27 October 2026): see [release index](../RELEASE_STATUS.md). The notes below preserve earlier milestones and their original scores/failures; they are historical unless explicitly reaffirmed in that index.
+
+Physical phone and TV publication and the combined TV → local Muse Glimmer → Forge HTTP lifecycle are now proven: [TV journey](TV_GLIMMER_JOURNEY.md). Local authority removal returned 409; removed route returned 404. Automated owner-authorized consent did not demonstrate a fresh human Android permission dialog; remote Companion unpairing was not independently verified. Latest recorded redesigned release validation is 314 local tests and seven passing CI checks for merged PR #20 (`715da96`), not a new test run. Product entrypoint integration and broader reasoning evaluation remain open. No video work until a new explicit owner request, even after project completion.
+
+## Historical proof ledger
+
 Latest extension: 214 unit/integration tests pass. The trusted-provider host supports dynamic service IDs, immutable provenance, outage handling and removal. Cross-branch controlled HTTP tests use the runtime owner's actual reader. Four-width runtime-mode browser tests are explicitly watermarked as controlled test data, not hardware evidence.
 
 The runtime owner fixed per-fact timestamps and recorded real phone-relay snapshots accepted by the bridge then denied after revocation. A separate actual CPU-only Glimmer v2 proposal and live browser consent/publish/read/remove workflow now pass on synthetic data. Earlier failures and the v1 benchmark remain preserved. No successful TV relay or physical HTTP-publication proof is inferred by combining these separate results.
@@ -8,7 +14,7 @@ Implemented: strict read-only manifest compiler; deterministic OpenAPI/JSON Sche
 
 Reproduce: python -m unittest discover -s tests -q. Focused Forge tests live under tests/forge. Run python -m src.forge.demo_host; select rules explicitly if local Glimmer is not configured. Approve publication, test read, view contract, remove service. No hardware is needed or accessed.
 
-Evidence: browser-verification.json and eight before/after screenshots; frozen composition-scenarios.json; per-route benchmark JSON when available. Results distinguish model output from deterministic validation and simulation from hardware. Each source code module is under src/forge; no Claude-owned backend/hardware/transaction files are changed.
+Evidence: browser-verification.json and eight before/after screenshots; frozen composition-scenarios.json; per-route benchmark JSON when available. Results distinguish model output from deterministic validation and simulation from hardware. Each source code module is under src/forge; no core backend/hardware/transaction files are changed.
 
 Not proven: actual off-PC beacon observation through a real TV in Forge; final Device Fabric integration; physical Undo in Forge; a multi-primitive compositional intelligence advantage; final contest submission; bonus eligibility; real-hardware Forge video. These are explicit gates, not completed features.
 

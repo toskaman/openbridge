@@ -8,7 +8,7 @@ The compiler (`src/forge/compiler.py`) accepts one strict version-1 manifest and
 
 `src/forge/planner.py` validates complete two-step JSON plans. `meta_planner.py` uses pinned local Meta Glimmer by default when explicitly configured. A proposal does not execute or authorize publication. The rules route is selected explicitly and remains available independently.
 
-`demo_host.py` is a separate loopback-only host so Claude-owned integration files are untouched. It uses MemoryProvider exclusively and is labeled SIMULATED throughout. Production integration must replace that provider with a trusted adapter bridge using the final Claude contract. Accepting an untrusted HTTP manifest as provider truth is forbidden.
+`demo_host.py` is a separate loopback-only host so core integration files are untouched. It uses MemoryProvider exclusively and is labeled SIMULATED throughout. Production integration must replace that provider with a trusted adapter bridge using the final runtime contract. Accepting an untrusted HTTP manifest as provider truth is forbidden.
 
 Dependencies: Python standard library at runtime; optional existing local Ollama Meta brokers for planning. Tests: tests/forge. Proofs: browser-verification.json, screenshots and benchmark JSON. Limits: one approved observation primitive, fixed two-step composition, no live hardware binding, no main-site navigation integration yet.
 
