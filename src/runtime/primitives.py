@@ -231,7 +231,7 @@ class Executor:
             if ident not in known:
                 raise PrimitiveError('IDENTITY_CHANGED', 'A different Windows PC is now connected; re-run discovery')
             facts = diagnostics.windows(bridge.call)
-        elif dev['category'] in ('phone', 'tv', 'android'):
+        elif dev['category'] in ('phone', 'tv', 'android', 'watch'):
             handle = self._adb_handle(key)
             serial = next(s for s, h in self.ctx.android._handles.items() if h == handle)
             def read(*a):
@@ -246,6 +246,14 @@ class Executor:
                 except (ValueError, OSError) as e:
                     failures.append(str(e)[:80]); raise
             facts = diagnostics.android(counted)
+            manifest = None
+            if dev['category'] == 'watch':
+                from src.fabric import wear_manifest
+                try:
+                    pm = counted('pm', 'list', 'features')
+                except (ValueError, OSError):
+                    pm = ''
+                manifest = wear_manifest.build(pm, facts)
             # Link check after the reads: a read set cut short by a lost link is PARTIAL, never VERIFIED.
             try:
                 self.ctx.android.discover()
@@ -254,6 +262,8 @@ class Executor:
                 still = False
             if not still:
                 return 'PARTIAL', None, None, False, {'facts': facts, 'lost_link': True, 'failed_reads': len(failures)}
+            if manifest is not None:
+                return 'VERIFIED', None, None, True, {'facts': facts, 'wear_manifest': manifest}
         else:
             reg = self.ctx.fabric_registry
             facts = [diagnostics.finding(f, reg.best_value(key, f).value, source=', '.join(sorted(obs))[:80])

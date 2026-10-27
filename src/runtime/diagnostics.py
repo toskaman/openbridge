@@ -18,7 +18,7 @@ ANDROID_READS = (('dumpsys', 'battery'), ('df', '-k', '/data'), ('cat', '/proc/u
                  ('settings', 'get', 'global', 'airplane_mode_on'), ('cat', '/sys/devices/system/cpu/possible'),
                  ('cat', '/proc/meminfo'), ('am', 'get-current-user'), ('getprop', 'ro.build.version.security_patch'),
                  ('getprop', 'ro.build.version.release'), ('pm', 'list', 'packages', '-3'),
-                 ('dumpsys', 'power'), ('dumpsys', 'thermalservice'))
+                 ('dumpsys', 'power'), ('dumpsys', 'thermalservice'), ('pm', 'list', 'features'))
 LARGE_READS = (('dumpsys', 'power'), ('dumpsys', 'thermalservice'))
 THERMAL = ('none', 'light', 'moderate', 'severe', 'critical', 'emergency', 'shutdown')
 HEALTH = {1: 'unknown', 2: 'good', 3: 'overheat', 4: 'dead', 5: 'over voltage', 6: 'failure', 7: 'cold'}
