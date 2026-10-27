@@ -42,3 +42,15 @@ Historical (26 Oct), all since completed — see EVIDENCE_LEDGER. Former pending
 | Windows PC via BridgeWindows agent, read-only; 64-bit agent self-update | REAL_HARDWARE_VERIFIED | PR #8, #11 |
 | Live Meta Model API advisory (`muse-spark-1.3`, synthetic facts) | REAL (live API) | PR #16 |
 | Tuya robot vacuum | DISCOVERED only (Freebox inventory) | needs the owner's Tuya IoT local key; never bypassed |
+
+## Subsequent hardware updates — 27 October 2026
+
+The original rows above describe their recorded revisions. Newer [device capability sweeps](DEVICE_CAPABILITIES.md) and the [evidence ledger](../EVIDENCE_LEDGER.md) record:
+
+- Android TV keys, app launch, touch and power state exercised while awake; the earlier standby failure is retained.
+- Blackview BV9300 Pro: keys, touch, YouTube launch, exact volume and brightness change/restore.
+- Galaxy Watch7: direct PC-to-watch ADB actions and exact volume restore while awake; dozing can time out. This is not proof of Watch-to-TV control.
+- Xiaomi: input/settings writes remained denied; readable facts and permitted app launch are separate results.
+- BridgeWindows v4: mutual authentication and message MACs, without payload encryption; historical v3 rows do not describe the current protocol. OpenBridge multi-PC integration remains unimplemented.
+
+These are existing contributor-recorded hardware results, not newly repeated hardware experiments during this audit. See [remaining work](REMAINING_WORK.md) for open integration gates.
