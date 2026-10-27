@@ -14,7 +14,9 @@ def main():
    for button,endpoint,response in cases:
     server.forge.publish(server.snapshot(),consent=True)
     page=b.new_page();pending=[];page.route('**'+endpoint,lambda route:pending.append(route))
-    page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.locator(button).click()
+    page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
+    if button.startswith('#model-'):page.get_by_text('Local planner memory',exact=True).click()
+    page.locator(button).click()
     expect(page.locator('#remove')).to_be_enabled(timeout=3000)
     page.locator('#remove').click();expect(page.locator('#operation')).to_contain_text('Stopped and removed');assert server.forge.list_services()==[]
     pending[0].fulfill(json=response)
