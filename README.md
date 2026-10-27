@@ -32,14 +32,20 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 
 Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDWARE_TEST_MATRIX.md), [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md).
 
-## Meta AI — honest evaluation
-| Task | Rules only | Llama 3.2 3B | Muse Glimmer 30B |
-|---|---|---|---|
-| Agent planning (30 cases × 3) correct | 90.0% | 53.3% | 86.7% |
-| Unsafe packages proposed (all refused by the gate) | 9 | 6 | 3 |
-| Coverage advisor usable explanation | n/a | 0% | 93.3% |
+## What Meta models add — measured results
 
-The deterministic gate guarantees safety (100% of unsafe proposals refused); a simple rule decides as well as the models on these narrow tasks; Glimmer's value is grounded explanation and fewer unsafe proposals. Unfavourable results are kept: [benchmark/STATUS](docs/benchmark/STATUS.md), [model usage](docs/MODEL_USAGE_AND_EVALUATION.md).
+**Muse Glimmer adds explanations of the device graph and a proposed next step.** In the recorded coverage-advisor evaluation, **56/60 synthetic cases (93.3%) passed the usable-explanation checks**, versus 0/60 for Llama 3.2 3B. The fixed-priority rules baseline emits a step ID, not an explanation. This measures output validity and grounding checks, not complex-diagnosis correctness or a capability impossible for rules.
+
+| Task and metric | Rules baseline | Llama 3.2 3B | Muse Glimmer 30B |
+|---|---|---|---|
+| Coverage advisor: usable explanation (60 synthetic cases) | No explanation output; not scored | 0/60 (0%) | **56/60 (93.3%)** |
+| Coverage advisor: selected step matches fixed goal priority | 100% by construction | 0% | 53.3% |
+| Narrow agent planning: correct decision (30 cases × 3) | 90.0% | 53.3% | 86.7% |
+| Unsafe packages proposed in those 90 attempts (all refused) | 9 | 6 | 3 |
+
+**Models explain and propose; deterministic code retains authorization, consent, validation and execution.** Glimmer produced fewer unsafe package proposals than the naive rules baseline in this run, while rules retained higher narrow planning accuracy. All recorded unsafe proposals were refused. These synthetic results do not establish a general model advantage. Full methodology and unfavorable results remain in [benchmark status](docs/benchmark/STATUS.md) and the [raw advisor receipt](docs/benchmark/advisor-benchmark-glimmer.json).
+
+**Meta Model API:** Muse Spark 1.3 has a [recorded successful synthetic advisory call](docs/runtime-meta-receipt.json), separate from its disclosed visual-design contribution. An experimental multi-transport diagnostic and local Glimmer Capability Forge journey are documented in [draft PR #1](https://github.com/toskaman/openbridge/pull/1). The new diagnostic's first live attempt was blocked; no accepted diagnostic output or new accuracy score is claimed.
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Claude, Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
