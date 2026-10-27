@@ -37,7 +37,15 @@ class BrokerTests(unittest.TestCase):
         result = self.broker(permit=self.permit).recommend({'battery_percent':72})
         self.assertEqual(result['model_id'], 'muse-spark-1.3')
         self.assertEqual(result['proposal']['action'], 'inspect_only')
-        self.assertEqual(self.calls[0]['max_completion_tokens'], 900)
+        self.assertEqual(self.calls[0]['max_completion_tokens'], 4000)
+
+    def test_empty_content_reasoning_exhausted_blocks(self):
+        # muse-spark-1.3 reasoning model can spend the whole budget on reasoning and return content=None
+        for content in (None, '', '   '):
+            response = {'model': 'muse-spark-1.3', 'id': 'x', 'usage': {'prompt_tokens': 110, 'completion_tokens': 4000},
+                        'choices': [{'message': {'content': content}}]}
+            with self.assertRaises(ModelBlocked):
+                self.broker(response=response, permit=self.permit).recommend({'battery_percent': 72})
 
     def test_unknown_evidence_and_write_proposal_rejected(self):
         for content in ('{"summary":"x","evidence_refs":["private"],"action":"inspect_only","uncertainty":"x"}',
