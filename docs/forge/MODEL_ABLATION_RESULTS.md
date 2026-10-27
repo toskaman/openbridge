@@ -1,5 +1,7 @@
 # Forge model ablation results
 
+This report below is the frozen **v1** evaluation. Subsequent CPU-only execution completed inference, and a separate schema-constrained v2 proposal and live browser lifecycle passed on synthetic data. Earlier failed attempts remain preserved. V2 moves impossible-case decisions to rules and limits output transitions, so these smoke tests are not replacement benchmark scores or evidence of superior reasoning. See META_CAPABILITY_PLANNER.md and live-glimmer-browser-receipt.json. No held-out v2 accuracy is claimed yet.
+
 Frozen dataset: 64 synthetic scenarios across 16 categories; 48 development and 16 held-out variants. SHA256: d3d3eeb1eb591eba15e2a7e4166efd68e244eb2b57f191aed871246f59210802. Dataset committed in d9a3666 before these model runs. No prompt tuning followed the scores. Held-out means not presented to models during prompt design; the author generated both splits, so this is not an independently authored blind evaluation.
 
 | Route | Scored cases | Accepted exact plans | Correct validated refusals | Provider cost |

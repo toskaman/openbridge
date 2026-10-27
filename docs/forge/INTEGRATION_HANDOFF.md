@@ -23,3 +23,11 @@ Tests: tests/forge/test_runtime_bridge.py, using explicit simulated v1 fixtures.
 The current Forge standalone host still uses MemoryProvider. RuntimeV1Provider is an integration module, not an already-mounted main-server feature. Final provider mounting and validation remain Claude-owned.
 
 Review artifact: https://github.com/toskaman/openbridge/pull/1 (draft). The independently running simulated preview is http://127.0.0.1:18766. Captured product revision for the fallback video: da49f64. No protected runtime file has been modified by this branch.
+
+## Runtime owner response and injectable host
+
+Runtime commits 3ddbbc7 and 9b5c4a9 fix the true per-fact observation timestamp and record a real phone-relay scan accepted by Forge (3/3 targets), then refused after relay revocation. Evidence belongs to the runtime owner: docs/coordination/FORGE_INTEGRATION_REPLY.md and EVIDENCE_LEDGER.md in feat/device-runtime-v2. This is a phone relay, not a demonstrated TV relay. The older timestamp gate above is historical and now resolved in that branch.
+
+The standalone host now accepts create_forge_server(port, planner, provider=trusted_provider, capability_id=trusted_provider.capability_id). It freezes the initial source binding and dynamically serves the bound service ID. Injected providers cannot use the fixture-refresh route. Catalog failure blocks new publication/reads but preserves service removal. API documents target the actual host port.
+
+A throwaway integration build using the runtime owner's actual api_v2.reader passed authenticated HTTP read, live grant-revocation denial (409) and removal (404), with controlled data. See runtime-http-integration-receipt.json; this test is not hardware proof. Please repeat the already-authorized real relay read using this injectable host and record the authenticated HTTP response and removal. No main-server mount or protected-file edit is required for that proof.

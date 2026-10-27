@@ -1,5 +1,9 @@
 # Capability Forge integration preview
 
+Latest: the runtime timestamp gate is fixed in the runtime owner's branch. This branch now accepts a trusted runtime provider in the standalone host. See CAPABILITY_FORGE_API.md and INTEGRATION_HANDOFF.md for the integration interface and controlled HTTP proof. Protected backend files remain untouched.
+
+An actual isolated CPU Muse Glimmer v2 proposal and browser lifecycle succeeded on synthetic data at $0 provider cost. Start `python -m dev.forge_glimmer_cpu_service` in a foreground terminal, then `python -m src.forge.demo_host --glimmer-cpu-v2`. The old v1 scores and 170-second preview remain historical. These new proofs establish an execution path, not an intelligence advantage or completed physical interoperability. Latest local test count: 214.
+
 Worktree branch: feat/capability-forge. Review: https://github.com/toskaman/openbridge/pull/1 (draft; no main merge).
 
 Run `python -m src.forge.demo_host`, then open http://127.0.0.1:18766. The page is entirely SIMULATED and starts with no configured model. Explicitly select Rules for the demonstrated workflow. Refresh the simulated fixture if it expires, request a plan, approve publication, build, test, inspect the contract and remove the service.

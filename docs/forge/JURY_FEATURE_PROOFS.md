@@ -1,5 +1,9 @@
 # Capability Forge proof ledger
 
+Latest extension: 214 unit/integration tests pass. The trusted-provider host supports dynamic service IDs, immutable provenance, outage handling and removal. Cross-branch controlled HTTP tests use the runtime owner's actual reader. Four-width runtime-mode browser tests are explicitly watermarked as controlled test data, not hardware evidence.
+
+The runtime owner fixed per-fact timestamps and recorded real phone-relay snapshots accepted by the bridge then denied after revocation. A separate actual CPU-only Glimmer v2 proposal and live browser consent/publish/read/remove workflow now pass on synthetic data. Earlier failures and the v1 benchmark remain preserved. No successful TV relay or physical HTTP-publication proof is inferred by combining these separate results.
+
 Implemented: strict read-only manifest compiler; deterministic OpenAPI/JSON Schema/fixed Python client; provider boundary; current permission/freshness/provenance checks; consent-gated service lifecycle; plan-reference validation; optional pinned local Meta proposal transport; standalone English simulated walkthrough.
 
 Reproduce: python -m unittest discover -s tests -q. Focused Forge tests live under tests/forge. Run python -m src.forge.demo_host; select rules explicitly if local Glimmer is not configured. Approve publication, test read, view contract, remove service. No hardware is needed or accessed.

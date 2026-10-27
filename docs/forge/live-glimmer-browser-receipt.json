@@ -1,0 +1,43 @@
+{
+  "evidence_kind": "ACTUAL_BROWSER_LOCAL_META_SIMULATED_LIFECYCLE",
+  "model_trace": {
+    "plan": {
+      "goal": "expose_remote_ble_observations",
+      "decision": "propose",
+      "steps": [
+        {
+          "capability_id": "tv.ble.observations",
+          "operation": "read_observations"
+        },
+        {
+          "capability_id": "pc.virtual_api.publish",
+          "operation": "publish_readonly"
+        }
+      ],
+      "evidence_refs": [
+        "evidence-relay",
+        "evidence-signal"
+      ],
+      "requires_consent": true
+    },
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "source": "LOCAL_META",
+    "model_called": true,
+    "planner_version": 2,
+    "eligibility_source": "DETERMINISTIC_RULES",
+    "authorizes_execution": false,
+    "elapsed_ms": 77918,
+    "usage": {
+      "prompt_tokens": 218,
+      "completion_tokens": 67
+    },
+    "provider_cost_usd": 0.0
+  },
+  "browser_elapsed_ms": 78432,
+  "consent_publish_read_remove": "passed",
+  "javascript_errors": [],
+  "hardware_calls": 0,
+  "cloud_calls": 0,
+  "provider_cost_usd": 0.0
+}
