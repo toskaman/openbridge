@@ -2,7 +2,8 @@
 import json
 from pathlib import Path
 import threading
-from playwright.sync_api import sync_playwright,expect
+from playwright.sync_api import sync_playwright,expect,TimeoutError as BrowserTimeout
+from dev.forge_tv_glimmer_journey import verify_revoked_read
 from src.forge.fixtures import manifest
 from src.forge.service import MemoryProvider
 from src.forge.demo_host import create_forge_server
@@ -29,7 +30,12 @@ def main():
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
     provider.current['available']=False;page.locator('#refresh-source').click();expect(page.locator('#freshness')).to_contain_text('Unavailable:')
     assert page.locator('#publish').is_disabled() and page.locator('#test').is_disabled()
+    try:page.locator('#test').click(timeout=200)
+    except BrowserTimeout:pass
+    else:raise AssertionError('Revoked UI unexpectedly allowed a Test click')
+    assert verify_revoked_read(page,server)==409
     expect(page.locator('#remove')).to_be_enabled();page.locator('#remove').click();expect(page.locator('#operation')).to_contain_text('Stopped and removed')
+    assert page.request.get(f'http://127.0.0.1:{server.server_port}'+server.observation_path,headers={'Authorization':'Bearer '+server.token}).status==404
     assert not errors,errors
     rows.append({'width':width,'data':'CONTROLLED_FIXTURE_NOT_HARDWARE','source_label':'passed','fixture_reset_hidden':'passed','dynamic_route':'passed','outage_blocks_reads':'passed','remove_during_outage':'passed','javascript_errors':errors});page.close()
    browser.close()
