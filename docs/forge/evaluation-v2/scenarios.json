@@ -1,0 +1,4723 @@
+{
+  "cases": [
+    {
+      "category": "single_route",
+      "expected_capability": "v2.cap-0-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-000",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-0-a",
+          "device_id": "target-0",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-0-a",
+            "v2-signal-0-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 0",
+              "observation_id": "v2-obs-0-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801000000,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-00-a",
+          "service_id": "svc-0-a",
+          "simulation": true,
+          "source": "RELAY:v2-00-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801000000,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "single_route",
+      "expected_capability": "v2.cap-1-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-001",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-1-a",
+          "device_id": "target-1",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-1-a",
+            "v2-signal-1-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 1",
+              "observation_id": "v2-obs-1-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801000996,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-01-a",
+          "service_id": "svc-1-a",
+          "simulation": true,
+          "source": "RELAY:v2-01-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801000997,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "single_route",
+      "expected_capability": "v2.cap-2-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-002",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-2-a",
+          "device_id": "target-2",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-2-a",
+            "v2-signal-2-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 2",
+              "observation_id": "v2-obs-2-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801001992,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-02-a",
+          "service_id": "svc-2-a",
+          "simulation": true,
+          "source": "RELAY:v2-02-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801001994,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "single_route",
+      "expected_capability": "v2.cap-3-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-003",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-3-a",
+          "device_id": "target-3",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-3-a",
+            "v2-signal-3-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 3",
+              "observation_id": "v2-obs-3-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801002988,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-03-a",
+          "service_id": "svc-3-a",
+          "simulation": true,
+          "source": "RELAY:v2-03-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801002991,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "single_route",
+      "expected_capability": "v2.cap-4-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-004",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-4-a",
+          "device_id": "target-4",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-4-a",
+            "v2-signal-4-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 4",
+              "observation_id": "v2-obs-4-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801003984,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-04-a",
+          "service_id": "svc-4-a",
+          "simulation": true,
+          "source": "RELAY:v2-04-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801003988,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "multiple_routes",
+      "expected_capability": "v2.cap-5-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-005",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-5-b",
+          "device_id": "target-5",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-5-b",
+            "v2-signal-5-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 5",
+              "observation_id": "v2-obs-5-b",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801004985,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-05-b",
+          "service_id": "svc-5-b",
+          "simulation": true,
+          "source": "RELAY:v2-05-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-5-a",
+          "device_id": "target-5",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-5-a",
+            "v2-signal-5-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 5",
+              "observation_id": "v2-obs-5-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801004985,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-05-a",
+          "service_id": "svc-5-a",
+          "simulation": true,
+          "source": "RELAY:v2-05-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801004985,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "multiple_routes",
+      "expected_capability": "v2.cap-6-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-006",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-6-b",
+          "device_id": "target-6",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-6-b",
+            "v2-signal-6-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 6",
+              "observation_id": "v2-obs-6-b",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801005981,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-06-b",
+          "service_id": "svc-6-b",
+          "simulation": true,
+          "source": "RELAY:v2-06-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-6-a",
+          "device_id": "target-6",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-6-a",
+            "v2-signal-6-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 6",
+              "observation_id": "v2-obs-6-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801005981,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-06-a",
+          "service_id": "svc-6-a",
+          "simulation": true,
+          "source": "RELAY:v2-06-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801005982,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "multiple_routes",
+      "expected_capability": "v2.cap-7-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-007",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-7-b",
+          "device_id": "target-7",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-7-b",
+            "v2-signal-7-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 7",
+              "observation_id": "v2-obs-7-b",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801006977,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-07-b",
+          "service_id": "svc-7-b",
+          "simulation": true,
+          "source": "RELAY:v2-07-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-7-a",
+          "device_id": "target-7",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-7-a",
+            "v2-signal-7-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 7",
+              "observation_id": "v2-obs-7-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801006977,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-07-a",
+          "service_id": "svc-7-a",
+          "simulation": true,
+          "source": "RELAY:v2-07-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801006979,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "multiple_routes",
+      "expected_capability": "v2.cap-8-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-008",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-8-b",
+          "device_id": "target-8",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-8-b",
+            "v2-signal-8-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 8",
+              "observation_id": "v2-obs-8-b",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801007973,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-08-b",
+          "service_id": "svc-8-b",
+          "simulation": true,
+          "source": "RELAY:v2-08-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-8-a",
+          "device_id": "target-8",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-8-a",
+            "v2-signal-8-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 8",
+              "observation_id": "v2-obs-8-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801007973,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-08-a",
+          "service_id": "svc-8-a",
+          "simulation": true,
+          "source": "RELAY:v2-08-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801007976,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "multiple_routes",
+      "expected_capability": "v2.cap-9-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-009",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-9-b",
+          "device_id": "target-9",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-9-b",
+            "v2-signal-9-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 9",
+              "observation_id": "v2-obs-9-b",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801008969,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-09-b",
+          "service_id": "svc-9-b",
+          "simulation": true,
+          "source": "RELAY:v2-09-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-9-a",
+          "device_id": "target-9",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-9-a",
+            "v2-signal-9-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 9",
+              "observation_id": "v2-obs-9-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801008969,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-09-a",
+          "service_id": "svc-9-a",
+          "simulation": true,
+          "source": "RELAY:v2-09-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801008973,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "real_over_simulated",
+      "expected_capability": "v2.cap-10-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-010",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-10-a",
+          "device_id": "target-10",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-10-a",
+            "v2-signal-10-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 10",
+              "observation_id": "v2-obs-10-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801009970,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-10-a",
+          "service_id": "svc-10-a",
+          "simulation": true,
+          "source": "RELAY:v2-10-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-10-b",
+          "device_id": "target-10",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-10-b",
+            "v2-signal-10-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 10",
+              "observation_id": "v2-obs-10-b",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801009970,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-10-b",
+          "service_id": "svc-10-b",
+          "simulation": false,
+          "source": "RELAY:v2-10-b",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801009970,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "real_over_simulated",
+      "expected_capability": "v2.cap-11-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-011",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-11-a",
+          "device_id": "target-11",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-11-a",
+            "v2-signal-11-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 11",
+              "observation_id": "v2-obs-11-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801010966,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-11-a",
+          "service_id": "svc-11-a",
+          "simulation": true,
+          "source": "RELAY:v2-11-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-11-b",
+          "device_id": "target-11",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-11-b",
+            "v2-signal-11-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 11",
+              "observation_id": "v2-obs-11-b",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801010966,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-11-b",
+          "service_id": "svc-11-b",
+          "simulation": false,
+          "source": "RELAY:v2-11-b",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801010967,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "real_over_simulated",
+      "expected_capability": "v2.cap-12-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-012",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-12-a",
+          "device_id": "target-12",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-12-a",
+            "v2-signal-12-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 12",
+              "observation_id": "v2-obs-12-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801011962,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-12-a",
+          "service_id": "svc-12-a",
+          "simulation": true,
+          "source": "RELAY:v2-12-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-12-b",
+          "device_id": "target-12",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-12-b",
+            "v2-signal-12-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 12",
+              "observation_id": "v2-obs-12-b",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801011962,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-12-b",
+          "service_id": "svc-12-b",
+          "simulation": false,
+          "source": "RELAY:v2-12-b",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801011964,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "real_over_simulated",
+      "expected_capability": "v2.cap-13-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-013",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-13-a",
+          "device_id": "target-13",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-13-a",
+            "v2-signal-13-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 13",
+              "observation_id": "v2-obs-13-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801012958,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-13-a",
+          "service_id": "svc-13-a",
+          "simulation": true,
+          "source": "RELAY:v2-13-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-13-b",
+          "device_id": "target-13",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-13-b",
+            "v2-signal-13-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 13",
+              "observation_id": "v2-obs-13-b",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801012958,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-13-b",
+          "service_id": "svc-13-b",
+          "simulation": false,
+          "source": "RELAY:v2-13-b",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801012961,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "real_over_simulated",
+      "expected_capability": "v2.cap-14-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-014",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-14-a",
+          "device_id": "target-14",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-14-a",
+            "v2-signal-14-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 14",
+              "observation_id": "v2-obs-14-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801013954,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-14-a",
+          "service_id": "svc-14-a",
+          "simulation": true,
+          "source": "RELAY:v2-14-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-14-b",
+          "device_id": "target-14",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-14-b",
+            "v2-signal-14-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 14",
+              "observation_id": "v2-obs-14-b",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801013954,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-14-b",
+          "service_id": "svc-14-b",
+          "simulation": false,
+          "source": "RELAY:v2-14-b",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801013958,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "source_mismatch",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-015",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-15-a",
+          "device_id": "target-15",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-15-a",
+            "v2-signal-15-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 15",
+              "observation_id": "v2-obs-15-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801014955,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-15-a",
+          "service_id": "svc-15-a",
+          "simulation": true,
+          "source": "RELAY:unrelated-source",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801014955,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "source_mismatch",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-016",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-16-a",
+          "device_id": "target-16",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-16-a",
+            "v2-signal-16-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 16",
+              "observation_id": "v2-obs-16-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801015951,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-16-a",
+          "service_id": "svc-16-a",
+          "simulation": true,
+          "source": "RELAY:unrelated-source",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801015952,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "source_mismatch",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-017",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-17-a",
+          "device_id": "target-17",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-17-a",
+            "v2-signal-17-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 17",
+              "observation_id": "v2-obs-17-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801016947,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-17-a",
+          "service_id": "svc-17-a",
+          "simulation": true,
+          "source": "RELAY:unrelated-source",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801016949,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "source_mismatch",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-018",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-18-a",
+          "device_id": "target-18",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-18-a",
+            "v2-signal-18-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 18",
+              "observation_id": "v2-obs-18-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801017943,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-18-a",
+          "service_id": "svc-18-a",
+          "simulation": true,
+          "source": "RELAY:unrelated-source",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801017946,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "source_mismatch",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-019",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-19-a",
+          "device_id": "target-19",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-19-a",
+            "v2-signal-19-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 19",
+              "observation_id": "v2-obs-19-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801018939,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-19-a",
+          "service_id": "svc-19-a",
+          "simulation": true,
+          "source": "RELAY:unrelated-source",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801018943,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "identity_conflict",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-020",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-20-a",
+          "device_id": "target-20",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-20-a",
+            "v2-signal-20-a"
+          ],
+          "identity_conflict": true,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 20",
+              "observation_id": "v2-obs-20-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801019940,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-20-a",
+          "service_id": "svc-20-a",
+          "simulation": true,
+          "source": "RELAY:v2-20-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801019940,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "identity_conflict",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-021",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-21-a",
+          "device_id": "target-21",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-21-a",
+            "v2-signal-21-a"
+          ],
+          "identity_conflict": true,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 21",
+              "observation_id": "v2-obs-21-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801020936,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-21-a",
+          "service_id": "svc-21-a",
+          "simulation": true,
+          "source": "RELAY:v2-21-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801020937,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "identity_conflict",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-022",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-22-a",
+          "device_id": "target-22",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-22-a",
+            "v2-signal-22-a"
+          ],
+          "identity_conflict": true,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 22",
+              "observation_id": "v2-obs-22-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801021932,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-22-a",
+          "service_id": "svc-22-a",
+          "simulation": true,
+          "source": "RELAY:v2-22-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801021934,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "identity_conflict",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-023",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-23-a",
+          "device_id": "target-23",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-23-a",
+            "v2-signal-23-a"
+          ],
+          "identity_conflict": true,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 23",
+              "observation_id": "v2-obs-23-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801022928,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-23-a",
+          "service_id": "svc-23-a",
+          "simulation": true,
+          "source": "RELAY:v2-23-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801022931,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "identity_conflict",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-024",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-24-a",
+          "device_id": "target-24",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-24-a",
+            "v2-signal-24-a"
+          ],
+          "identity_conflict": true,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 24",
+              "observation_id": "v2-obs-24-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801023924,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-24-a",
+          "service_id": "svc-24-a",
+          "simulation": true,
+          "source": "RELAY:v2-24-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801023928,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "offline_relay",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-025",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-25-a",
+          "device_id": "target-25",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-25-a",
+            "v2-signal-25-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 25",
+              "observation_id": "v2-obs-25-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801024925,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-25-a",
+          "service_id": "svc-25-a",
+          "simulation": true,
+          "source": "RELAY:v2-25-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801024925,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "offline_relay",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-026",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-26-a",
+          "device_id": "target-26",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-26-a",
+            "v2-signal-26-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 26",
+              "observation_id": "v2-obs-26-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801025921,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-26-a",
+          "service_id": "svc-26-a",
+          "simulation": true,
+          "source": "RELAY:v2-26-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801025922,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "offline_relay",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-027",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-27-a",
+          "device_id": "target-27",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-27-a",
+            "v2-signal-27-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 27",
+              "observation_id": "v2-obs-27-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801026917,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-27-a",
+          "service_id": "svc-27-a",
+          "simulation": true,
+          "source": "RELAY:v2-27-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801026919,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "offline_relay",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-028",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-28-a",
+          "device_id": "target-28",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-28-a",
+            "v2-signal-28-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 28",
+              "observation_id": "v2-obs-28-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801027913,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-28-a",
+          "service_id": "svc-28-a",
+          "simulation": true,
+          "source": "RELAY:v2-28-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801027916,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "offline_relay",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-029",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-29-a",
+          "device_id": "target-29",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-29-a",
+            "v2-signal-29-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 29",
+              "observation_id": "v2-obs-29-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801028909,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-29-a",
+          "service_id": "svc-29-a",
+          "simulation": true,
+          "source": "RELAY:v2-29-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801028913,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "missing_permission",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-030",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-30-a",
+          "device_id": "target-30",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-30-a",
+            "v2-signal-30-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 30",
+              "observation_id": "v2-obs-30-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801029910,
+          "operation": "read_observations",
+          "permissions": [
+            "read"
+          ],
+          "relay_id": "v2-30-a",
+          "service_id": "svc-30-a",
+          "simulation": true,
+          "source": "RELAY:v2-30-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801029910,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "missing_permission",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-031",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-31-a",
+          "device_id": "target-31",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-31-a",
+            "v2-signal-31-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 31",
+              "observation_id": "v2-obs-31-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801030906,
+          "operation": "read_observations",
+          "permissions": [
+            "observe"
+          ],
+          "relay_id": "v2-31-a",
+          "service_id": "svc-31-a",
+          "simulation": true,
+          "source": "RELAY:v2-31-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801030907,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "missing_permission",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-032",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-32-a",
+          "device_id": "target-32",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-32-a",
+            "v2-signal-32-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 32",
+              "observation_id": "v2-obs-32-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801031902,
+          "operation": "read_observations",
+          "permissions": [
+            "read"
+          ],
+          "relay_id": "v2-32-a",
+          "service_id": "svc-32-a",
+          "simulation": true,
+          "source": "RELAY:v2-32-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801031904,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "missing_permission",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-033",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-33-a",
+          "device_id": "target-33",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-33-a",
+            "v2-signal-33-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 33",
+              "observation_id": "v2-obs-33-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801032898,
+          "operation": "read_observations",
+          "permissions": [
+            "observe"
+          ],
+          "relay_id": "v2-33-a",
+          "service_id": "svc-33-a",
+          "simulation": true,
+          "source": "RELAY:v2-33-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801032901,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "missing_permission",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-034",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-34-a",
+          "device_id": "target-34",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-34-a",
+            "v2-signal-34-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 34",
+              "observation_id": "v2-obs-34-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801033894,
+          "operation": "read_observations",
+          "permissions": [
+            "read"
+          ],
+          "relay_id": "v2-34-a",
+          "service_id": "svc-34-a",
+          "simulation": true,
+          "source": "RELAY:v2-34-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801033898,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "stale_fact",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-035",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-35-a",
+          "device_id": "target-35",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-35-a",
+            "v2-signal-35-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 35",
+              "observation_id": "v2-obs-35-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801034594,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-35-a",
+          "service_id": "svc-35-a",
+          "simulation": true,
+          "source": "RELAY:v2-35-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801034895,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "stale_fact",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-036",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-36-a",
+          "device_id": "target-36",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-36-a",
+            "v2-signal-36-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 36",
+              "observation_id": "v2-obs-36-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801035590,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-36-a",
+          "service_id": "svc-36-a",
+          "simulation": true,
+          "source": "RELAY:v2-36-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801035892,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "stale_fact",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-037",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-37-a",
+          "device_id": "target-37",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-37-a",
+            "v2-signal-37-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 37",
+              "observation_id": "v2-obs-37-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801036586,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-37-a",
+          "service_id": "svc-37-a",
+          "simulation": true,
+          "source": "RELAY:v2-37-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801036889,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "stale_fact",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-038",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-38-a",
+          "device_id": "target-38",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-38-a",
+            "v2-signal-38-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 38",
+              "observation_id": "v2-obs-38-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801037582,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-38-a",
+          "service_id": "svc-38-a",
+          "simulation": true,
+          "source": "RELAY:v2-38-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801037886,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "stale_fact",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-039",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-39-a",
+          "device_id": "target-39",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-39-a",
+            "v2-signal-39-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 39",
+              "observation_id": "v2-obs-39-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801038578,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-39-a",
+          "service_id": "svc-39-a",
+          "simulation": true,
+          "source": "RELAY:v2-39-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801038883,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "incompatible_primitive",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-040",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-40-a",
+          "device_id": "target-40",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-40-a",
+            "v2-signal-40-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 40",
+              "observation_id": "v2-obs-40-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801039880,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-40-a",
+          "service_id": "svc-40-a",
+          "simulation": true,
+          "source": "RELAY:v2-40-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801039880,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "incompatible_primitive",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-041",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-41-a",
+          "device_id": "target-41",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-41-a",
+            "v2-signal-41-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 41",
+              "observation_id": "v2-obs-41-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801040876,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-41-a",
+          "service_id": "svc-41-a",
+          "simulation": true,
+          "source": "RELAY:v2-41-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801040877,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "incompatible_primitive",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-042",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-42-a",
+          "device_id": "target-42",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-42-a",
+            "v2-signal-42-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 42",
+              "observation_id": "v2-obs-42-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801041872,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-42-a",
+          "service_id": "svc-42-a",
+          "simulation": true,
+          "source": "RELAY:v2-42-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801041874,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "incompatible_primitive",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-043",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-43-a",
+          "device_id": "target-43",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-43-a",
+            "v2-signal-43-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 43",
+              "observation_id": "v2-obs-43-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801042868,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-43-a",
+          "service_id": "svc-43-a",
+          "simulation": true,
+          "source": "RELAY:v2-43-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801042871,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "incompatible_primitive",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-044",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-44-a",
+          "device_id": "target-44",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-44-a",
+            "v2-signal-44-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 44",
+              "observation_id": "v2-obs-44-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801043864,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-44-a",
+          "service_id": "svc-44-a",
+          "simulation": true,
+          "source": "RELAY:v2-44-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801043868,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "partial_availability",
+      "expected_capability": "v2.cap-45-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-045",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-45-a",
+          "device_id": "target-45",
+          "device_present": false,
+          "evidence_refs": [
+            "v2-evidence-45-a",
+            "v2-signal-45-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 45",
+              "observation_id": "v2-obs-45-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801044865,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-45-a",
+          "service_id": "svc-45-a",
+          "simulation": true,
+          "source": "RELAY:v2-45-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-45-b",
+          "device_id": "target-45",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-45-b",
+            "v2-signal-45-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 45",
+              "observation_id": "v2-obs-45-b",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801044865,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-45-b",
+          "service_id": "svc-45-b",
+          "simulation": true,
+          "source": "RELAY:v2-45-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801044865,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "partial_availability",
+      "expected_capability": "v2.cap-46-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-046",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-46-a",
+          "device_id": "target-46",
+          "device_present": false,
+          "evidence_refs": [
+            "v2-evidence-46-a",
+            "v2-signal-46-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 46",
+              "observation_id": "v2-obs-46-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801045861,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-46-a",
+          "service_id": "svc-46-a",
+          "simulation": true,
+          "source": "RELAY:v2-46-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-46-b",
+          "device_id": "target-46",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-46-b",
+            "v2-signal-46-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 46",
+              "observation_id": "v2-obs-46-b",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801045861,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-46-b",
+          "service_id": "svc-46-b",
+          "simulation": true,
+          "source": "RELAY:v2-46-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801045862,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "partial_availability",
+      "expected_capability": "v2.cap-47-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-047",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-47-a",
+          "device_id": "target-47",
+          "device_present": false,
+          "evidence_refs": [
+            "v2-evidence-47-a",
+            "v2-signal-47-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 47",
+              "observation_id": "v2-obs-47-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801046857,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-47-a",
+          "service_id": "svc-47-a",
+          "simulation": true,
+          "source": "RELAY:v2-47-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-47-b",
+          "device_id": "target-47",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-47-b",
+            "v2-signal-47-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 47",
+              "observation_id": "v2-obs-47-b",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801046857,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-47-b",
+          "service_id": "svc-47-b",
+          "simulation": true,
+          "source": "RELAY:v2-47-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801046859,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "partial_availability",
+      "expected_capability": "v2.cap-48-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-048",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-48-a",
+          "device_id": "target-48",
+          "device_present": false,
+          "evidence_refs": [
+            "v2-evidence-48-a",
+            "v2-signal-48-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 48",
+              "observation_id": "v2-obs-48-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801047853,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-48-a",
+          "service_id": "svc-48-a",
+          "simulation": true,
+          "source": "RELAY:v2-48-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-48-b",
+          "device_id": "target-48",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-48-b",
+            "v2-signal-48-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 48",
+              "observation_id": "v2-obs-48-b",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801047853,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-48-b",
+          "service_id": "svc-48-b",
+          "simulation": true,
+          "source": "RELAY:v2-48-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801047856,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "partial_availability",
+      "expected_capability": "v2.cap-49-b",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-049",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-49-a",
+          "device_id": "target-49",
+          "device_present": false,
+          "evidence_refs": [
+            "v2-evidence-49-a",
+            "v2-signal-49-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 49",
+              "observation_id": "v2-obs-49-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801048849,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-49-a",
+          "service_id": "svc-49-a",
+          "simulation": true,
+          "source": "RELAY:v2-49-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-49-b",
+          "device_id": "target-49",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-49-b",
+            "v2-signal-49-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 49",
+              "observation_id": "v2-obs-49-b",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801048849,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-49-b",
+          "service_id": "svc-49-b",
+          "simulation": true,
+          "source": "RELAY:v2-49-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801048853,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "all_unavailable",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-050",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-50-a",
+          "device_id": "target-50",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-50-a",
+            "v2-signal-50-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 50",
+              "observation_id": "v2-obs-50-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801049850,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-50-a",
+          "service_id": "svc-50-a",
+          "simulation": true,
+          "source": "RELAY:v2-50-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-50-b",
+          "device_id": "target-50",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-50-b",
+            "v2-signal-50-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 50",
+              "observation_id": "v2-obs-50-b",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801049850,
+          "operation": "read_observations",
+          "permissions": [],
+          "relay_id": "v2-50-b",
+          "service_id": "svc-50-b",
+          "simulation": true,
+          "source": "RELAY:v2-50-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801049850,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "all_unavailable",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-051",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-51-a",
+          "device_id": "target-51",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-51-a",
+            "v2-signal-51-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 51",
+              "observation_id": "v2-obs-51-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801050846,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-51-a",
+          "service_id": "svc-51-a",
+          "simulation": true,
+          "source": "RELAY:v2-51-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-51-b",
+          "device_id": "target-51",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-51-b",
+            "v2-signal-51-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 51",
+              "observation_id": "v2-obs-51-b",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801050846,
+          "operation": "read_observations",
+          "permissions": [],
+          "relay_id": "v2-51-b",
+          "service_id": "svc-51-b",
+          "simulation": true,
+          "source": "RELAY:v2-51-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801050847,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "all_unavailable",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-052",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-52-a",
+          "device_id": "target-52",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-52-a",
+            "v2-signal-52-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 52",
+              "observation_id": "v2-obs-52-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801051842,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-52-a",
+          "service_id": "svc-52-a",
+          "simulation": true,
+          "source": "RELAY:v2-52-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-52-b",
+          "device_id": "target-52",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-52-b",
+            "v2-signal-52-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 52",
+              "observation_id": "v2-obs-52-b",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801051842,
+          "operation": "read_observations",
+          "permissions": [],
+          "relay_id": "v2-52-b",
+          "service_id": "svc-52-b",
+          "simulation": true,
+          "source": "RELAY:v2-52-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801051844,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "all_unavailable",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-053",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-53-a",
+          "device_id": "target-53",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-53-a",
+            "v2-signal-53-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 53",
+              "observation_id": "v2-obs-53-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801052838,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-53-a",
+          "service_id": "svc-53-a",
+          "simulation": true,
+          "source": "RELAY:v2-53-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-53-b",
+          "device_id": "target-53",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-53-b",
+            "v2-signal-53-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 53",
+              "observation_id": "v2-obs-53-b",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801052838,
+          "operation": "read_observations",
+          "permissions": [],
+          "relay_id": "v2-53-b",
+          "service_id": "svc-53-b",
+          "simulation": true,
+          "source": "RELAY:v2-53-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801052841,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "all_unavailable",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-054",
+      "manifests": [
+        {
+          "available": false,
+          "capability_id": "v2.cap-54-a",
+          "device_id": "target-54",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-54-a",
+            "v2-signal-54-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 54",
+              "observation_id": "v2-obs-54-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801053834,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-54-a",
+          "service_id": "svc-54-a",
+          "simulation": true,
+          "source": "RELAY:v2-54-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-54-b",
+          "device_id": "target-54",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-54-b",
+            "v2-signal-54-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 54",
+              "observation_id": "v2-obs-54-b",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801053834,
+          "operation": "read_observations",
+          "permissions": [],
+          "relay_id": "v2-54-b",
+          "service_id": "svc-54-b",
+          "simulation": true,
+          "source": "RELAY:v2-54-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801053838,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "undo_request",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-055",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-55-a",
+          "device_id": "target-55",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-55-a",
+            "v2-signal-55-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 55",
+              "observation_id": "v2-obs-55-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801054835,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-55-a",
+          "service_id": "svc-55-a",
+          "simulation": true,
+          "source": "RELAY:v2-55-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801054835,
+      "requested_execution": "fixed_route",
+      "requested_goal": "undo_physical_optional_app",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "undo_request",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-056",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-56-a",
+          "device_id": "target-56",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-56-a",
+            "v2-signal-56-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 56",
+              "observation_id": "v2-obs-56-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801055831,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-56-a",
+          "service_id": "svc-56-a",
+          "simulation": true,
+          "source": "RELAY:v2-56-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801055832,
+      "requested_execution": "fixed_route",
+      "requested_goal": "undo_physical_optional_app",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "undo_request",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-057",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-57-a",
+          "device_id": "target-57",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-57-a",
+            "v2-signal-57-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 57",
+              "observation_id": "v2-obs-57-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801056827,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-57-a",
+          "service_id": "svc-57-a",
+          "simulation": true,
+          "source": "RELAY:v2-57-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801056829,
+      "requested_execution": "fixed_route",
+      "requested_goal": "undo_physical_optional_app",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "undo_request",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-058",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-58-a",
+          "device_id": "target-58",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-58-a",
+            "v2-signal-58-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 58",
+              "observation_id": "v2-obs-58-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801057823,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-58-a",
+          "service_id": "svc-58-a",
+          "simulation": true,
+          "source": "RELAY:v2-58-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801057826,
+      "requested_execution": "fixed_route",
+      "requested_goal": "undo_physical_optional_app",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "undo_request",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-059",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-59-a",
+          "device_id": "target-59",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-59-a",
+            "v2-signal-59-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 59",
+              "observation_id": "v2-obs-59-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801058819,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-59-a",
+          "service_id": "svc-59-a",
+          "simulation": true,
+          "source": "RELAY:v2-59-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801058823,
+      "requested_execution": "fixed_route",
+      "requested_goal": "undo_physical_optional_app",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "cloud_required",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-060",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-60-a",
+          "device_id": "target-60",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-60-a",
+            "v2-signal-60-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 60",
+              "observation_id": "v2-obs-60-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801059820,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-60-a",
+          "service_id": "svc-60-a",
+          "simulation": true,
+          "source": "RELAY:v2-60-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801059820,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations_using_hosted_model",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "cloud_required",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-061",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-61-a",
+          "device_id": "target-61",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-61-a",
+            "v2-signal-61-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 61",
+              "observation_id": "v2-obs-61-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801060816,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-61-a",
+          "service_id": "svc-61-a",
+          "simulation": true,
+          "source": "RELAY:v2-61-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801060817,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations_using_hosted_model",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "cloud_required",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-062",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-62-a",
+          "device_id": "target-62",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-62-a",
+            "v2-signal-62-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 62",
+              "observation_id": "v2-obs-62-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801061812,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-62-a",
+          "service_id": "svc-62-a",
+          "simulation": true,
+          "source": "RELAY:v2-62-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801061814,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations_using_hosted_model",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "cloud_required",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-063",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-63-a",
+          "device_id": "target-63",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-63-a",
+            "v2-signal-63-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 63",
+              "observation_id": "v2-obs-63-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801062808,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-63-a",
+          "service_id": "svc-63-a",
+          "simulation": true,
+          "source": "RELAY:v2-63-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801062811,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations_using_hosted_model",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "cloud_required",
+      "expected_capability": null,
+      "expected_decision": "scope_refusal",
+      "expected_error": null,
+      "id": "forge-v2-064",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-64-a",
+          "device_id": "target-64",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-64-a",
+            "v2-signal-64-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 64",
+              "observation_id": "v2-obs-64-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801063804,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-64-a",
+          "service_id": "svc-64-a",
+          "simulation": true,
+          "source": "RELAY:v2-64-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801063808,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations_using_hosted_model",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "local_only",
+      "expected_capability": "v2.cap-65-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-065",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-65-b",
+          "device_id": "target-65",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-65-b",
+            "v2-signal-65-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 65",
+              "observation_id": "v2-obs-65-b",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801064805,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-65-b",
+          "service_id": "svc-65-b",
+          "simulation": true,
+          "source": "RELAY:v2-65-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-65-a",
+          "device_id": "target-65",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-65-a",
+            "v2-signal-65-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 65",
+              "observation_id": "v2-obs-65-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801064805,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-65-a",
+          "service_id": "svc-65-a",
+          "simulation": true,
+          "source": "RELAY:v2-65-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801064805,
+      "requested_execution": "local_only",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "local_only",
+      "expected_capability": "v2.cap-66-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-066",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-66-b",
+          "device_id": "target-66",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-66-b",
+            "v2-signal-66-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 66",
+              "observation_id": "v2-obs-66-b",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801065801,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-66-b",
+          "service_id": "svc-66-b",
+          "simulation": true,
+          "source": "RELAY:v2-66-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-66-a",
+          "device_id": "target-66",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-66-a",
+            "v2-signal-66-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 66",
+              "observation_id": "v2-obs-66-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801065801,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-66-a",
+          "service_id": "svc-66-a",
+          "simulation": true,
+          "source": "RELAY:v2-66-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801065802,
+      "requested_execution": "local_only",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "local_only",
+      "expected_capability": "v2.cap-67-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-067",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-67-b",
+          "device_id": "target-67",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-67-b",
+            "v2-signal-67-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 67",
+              "observation_id": "v2-obs-67-b",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801066797,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-67-b",
+          "service_id": "svc-67-b",
+          "simulation": true,
+          "source": "RELAY:v2-67-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-67-a",
+          "device_id": "target-67",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-67-a",
+            "v2-signal-67-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 67",
+              "observation_id": "v2-obs-67-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801066797,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-67-a",
+          "service_id": "svc-67-a",
+          "simulation": true,
+          "source": "RELAY:v2-67-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801066799,
+      "requested_execution": "local_only",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "local_only",
+      "expected_capability": "v2.cap-68-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-068",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-68-b",
+          "device_id": "target-68",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-68-b",
+            "v2-signal-68-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 68",
+              "observation_id": "v2-obs-68-b",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801067793,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-68-b",
+          "service_id": "svc-68-b",
+          "simulation": true,
+          "source": "RELAY:v2-68-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-68-a",
+          "device_id": "target-68",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-68-a",
+            "v2-signal-68-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 68",
+              "observation_id": "v2-obs-68-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801067793,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-68-a",
+          "service_id": "svc-68-a",
+          "simulation": true,
+          "source": "RELAY:v2-68-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801067796,
+      "requested_execution": "local_only",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "local_only",
+      "expected_capability": "v2.cap-69-a",
+      "expected_decision": "propose",
+      "expected_error": null,
+      "id": "forge-v2-069",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-69-b",
+          "device_id": "target-69",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-69-b",
+            "v2-signal-69-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 69",
+              "observation_id": "v2-obs-69-b",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801068789,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-69-b",
+          "service_id": "svc-69-b",
+          "simulation": true,
+          "source": "RELAY:v2-69-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-69-a",
+          "device_id": "target-69",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-69-a",
+            "v2-signal-69-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 69",
+              "observation_id": "v2-obs-69-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801068789,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-69-a",
+          "service_id": "svc-69-a",
+          "simulation": true,
+          "source": "RELAY:v2-69-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801068793,
+      "requested_execution": "local_only",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "ambiguous_identity",
+      "expected_capability": null,
+      "expected_decision": "policy_block",
+      "expected_error": "AMBIGUOUS_CAPABILITY_ID",
+      "id": "forge-v2-070",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-70-a",
+          "device_id": "target-70",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-70-a",
+            "v2-signal-70-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 70",
+              "observation_id": "v2-obs-70-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801069790,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-70-a",
+          "service_id": "svc-70-a",
+          "simulation": true,
+          "source": "RELAY:v2-70-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-70-a",
+          "device_id": "target-70",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-70-b",
+            "v2-signal-70-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 70",
+              "observation_id": "v2-obs-70-b",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801069790,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-70-b",
+          "service_id": "svc-70-b",
+          "simulation": true,
+          "source": "RELAY:v2-70-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801069790,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "ambiguous_identity",
+      "expected_capability": null,
+      "expected_decision": "policy_block",
+      "expected_error": "AMBIGUOUS_CAPABILITY_ID",
+      "id": "forge-v2-071",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-71-a",
+          "device_id": "target-71",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-71-a",
+            "v2-signal-71-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 71",
+              "observation_id": "v2-obs-71-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801070786,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-71-a",
+          "service_id": "svc-71-a",
+          "simulation": true,
+          "source": "RELAY:v2-71-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-71-a",
+          "device_id": "target-71",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-71-b",
+            "v2-signal-71-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 71",
+              "observation_id": "v2-obs-71-b",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801070786,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-71-b",
+          "service_id": "svc-71-b",
+          "simulation": true,
+          "source": "RELAY:v2-71-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801070787,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "ambiguous_identity",
+      "expected_capability": null,
+      "expected_decision": "policy_block",
+      "expected_error": "AMBIGUOUS_CAPABILITY_ID",
+      "id": "forge-v2-072",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-72-a",
+          "device_id": "target-72",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-72-a",
+            "v2-signal-72-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 72",
+              "observation_id": "v2-obs-72-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801071782,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-72-a",
+          "service_id": "svc-72-a",
+          "simulation": true,
+          "source": "RELAY:v2-72-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-72-a",
+          "device_id": "target-72",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-72-b",
+            "v2-signal-72-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 72",
+              "observation_id": "v2-obs-72-b",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801071782,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-72-b",
+          "service_id": "svc-72-b",
+          "simulation": true,
+          "source": "RELAY:v2-72-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801071784,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "ambiguous_identity",
+      "expected_capability": null,
+      "expected_decision": "policy_block",
+      "expected_error": "AMBIGUOUS_CAPABILITY_ID",
+      "id": "forge-v2-073",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-73-a",
+          "device_id": "target-73",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-73-a",
+            "v2-signal-73-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 73",
+              "observation_id": "v2-obs-73-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801072778,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-73-a",
+          "service_id": "svc-73-a",
+          "simulation": true,
+          "source": "RELAY:v2-73-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-73-a",
+          "device_id": "target-73",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-73-b",
+            "v2-signal-73-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 73",
+              "observation_id": "v2-obs-73-b",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801072778,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-73-b",
+          "service_id": "svc-73-b",
+          "simulation": true,
+          "source": "RELAY:v2-73-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801072781,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "ambiguous_identity",
+      "expected_capability": null,
+      "expected_decision": "policy_block",
+      "expected_error": "AMBIGUOUS_CAPABILITY_ID",
+      "id": "forge-v2-074",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-74-a",
+          "device_id": "target-74",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-74-a",
+            "v2-signal-74-a"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 74",
+              "observation_id": "v2-obs-74-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801073774,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-74-a",
+          "service_id": "svc-74-a",
+          "simulation": true,
+          "source": "RELAY:v2-74-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        },
+        {
+          "available": true,
+          "capability_id": "v2.cap-74-a",
+          "device_id": "target-74",
+          "device_present": true,
+          "evidence_refs": [
+            "v2-evidence-74-b",
+            "v2-signal-74-b"
+          ],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 74",
+              "observation_id": "v2-obs-74-b",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801073774,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-74-b",
+          "service_id": "svc-74-b",
+          "simulation": true,
+          "source": "RELAY:v2-74-b",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801073778,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "malformed_evidence",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-075",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-75-a",
+          "device_id": "target-75",
+          "device_present": true,
+          "evidence_refs": [],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 75",
+              "observation_id": "v2-obs-75-a",
+              "rssi_dbm": -40
+            }
+          ],
+          "observed_at": 1801074775,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-75-a",
+          "service_id": "svc-75-a",
+          "simulation": true,
+          "source": "RELAY:v2-75-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801074775,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "malformed_evidence",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-076",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-76-a",
+          "device_id": "target-76",
+          "device_present": true,
+          "evidence_refs": [],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 76",
+              "observation_id": "v2-obs-76-a",
+              "rssi_dbm": -51
+            }
+          ],
+          "observed_at": 1801075771,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-76-a",
+          "service_id": "svc-76-a",
+          "simulation": true,
+          "source": "RELAY:v2-76-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801075772,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "malformed_evidence",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-077",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-77-a",
+          "device_id": "target-77",
+          "device_present": true,
+          "evidence_refs": [],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 77",
+              "observation_id": "v2-obs-77-a",
+              "rssi_dbm": -62
+            }
+          ],
+          "observed_at": 1801076767,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-77-a",
+          "service_id": "svc-77-a",
+          "simulation": true,
+          "source": "RELAY:v2-77-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801076769,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    },
+    {
+      "category": "malformed_evidence",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-078",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-78-a",
+          "device_id": "target-78",
+          "device_present": true,
+          "evidence_refs": [],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 78",
+              "observation_id": "v2-obs-78-a",
+              "rssi_dbm": -73
+            }
+          ],
+          "observed_at": 1801077763,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-78-a",
+          "service_id": "svc-78-a",
+          "simulation": true,
+          "source": "RELAY:v2-78-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801077766,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "development",
+      "synthetic": true
+    },
+    {
+      "category": "malformed_evidence",
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "expected_error": null,
+      "id": "forge-v2-079",
+      "manifests": [
+        {
+          "available": true,
+          "capability_id": "v2.cap-79-a",
+          "device_id": "target-79",
+          "device_present": true,
+          "evidence_refs": [],
+          "identity_conflict": false,
+          "max_age_seconds": 300,
+          "observations": [
+            {
+              "manufacturer_data_hex": "0102",
+              "name": "SYNTHETIC variant 79",
+              "observation_id": "v2-obs-79-a",
+              "rssi_dbm": -84
+            }
+          ],
+          "observed_at": 1801078759,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "relay_id": "v2-79-a",
+          "service_id": "svc-79-a",
+          "simulation": true,
+          "source": "RELAY:v2-79-a",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "version": 1
+        }
+      ],
+      "now": 1801078763,
+      "requested_execution": "fixed_route",
+      "requested_goal": "expose_remote_ble_observations",
+      "split": "heldout",
+      "synthetic": true
+    }
+  ],
+  "frozen_before_model_calls": true,
+  "scope": "Fixed two-step observation publication; unsupported goals are separately measured harness/API scope refusals. All facts synthetic, including REAL_HARDWARE_VERIFIED status used only to exercise policy branches.",
+  "split_policy": "80 IDs; even IDs development, odd IDs heldout; 40 each. Freeze committed bytes before any model call. No tuning after scores.",
+  "version": 2
+}
