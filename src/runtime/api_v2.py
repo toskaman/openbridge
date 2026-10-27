@@ -90,8 +90,15 @@ def get(server, path, query):
         if d is None:
             return 404, {'error': 'Unknown device'}
         # observed_at is the time of the observation whose value is returned, never the device's last_seen.
-        facts = [EvidenceFact(dev, name, f['value'], tuple(f['sources']), f.get('observed_at') or '', bool(f['verified']))
-                 for name, f in sorted(d.get('facts', {}).items())]
+        source = (q.get('source') or [None])[0]
+        if source is None:
+            facts = [EvidenceFact(dev, name, f['value'], tuple(f['sources']), f.get('observed_at') or '', bool(f['verified']))
+                     for name, f in sorted(d.get('facts', {}).items())]
+        else:
+            # Source-specific view: only what this one source reported, with its own value and time (no aggregation).
+            reg = server.fabric_registry
+            facts = [EvidenceFact(dev, name, o.value, (o.source,), o.observed_at, bool(o.verified))
+                     for name, by_src in sorted(reg.devices[dev]['observations'].items()) for o in [by_src.get(source)] if o is not None]
         return 200, {'device': dev, 'facts': [to_json(f) for f in facts]}
     return 404, {'error': 'Not found'}
 

@@ -283,7 +283,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not self.server.fabric_lock.acquire(blocking=False):
                     return self.reply(409,{'error':'A discovery is already running'})
                 try:
-                    snap,_=fabric_discovery.run(self.server.fabric_adapters(),self.server.fabric_salt,providers=tuple(providers))
+                    snap,_=fabric_discovery.run(self.server.fabric_adapters(tuple(providers)),self.server.fabric_salt,providers=tuple(providers))
                 finally:
                     self.server.fabric_lock.release()
                 self.server.fabric_snapshot=snap
@@ -357,10 +357,12 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.session_journal = session_journal or SessionJournal()
     server.fabric_lock = threading.Lock()
     server.fabric_salt = fabric_salt if fabric_salt is not None else fabric_discovery.install_salt()
-    def fabric_adapters():
+    def fabric_adapters(providers=None):
         from src.adapters.freebox_auth import FreeboxSession
         from src.fabric.credential_vault import Vault
         session=None
+        if providers is not None and 'freebox' not in providers:   # never probe the gateway unless asked
+            return {'android':server.android,'freebox':None}
         try:
             facts=server.freebox.discover()['devices'][0]['facts']
             session=FreeboxSession(Vault(),facts['api_version'].split('.')[0])
