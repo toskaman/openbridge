@@ -556,13 +556,19 @@ def main():
     if args.local_meta:
         broker=GlimmerBroker() if args.glimmer else LocalMetaBroker()
         registry.require(broker.model_id,broker.endpoint)
-    elif os.environ.get('MODEL_API_KEY') and os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
+    elif os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
         try:
+            api_key = os.environ.get('MODEL_API_KEY')
+            if not api_key:
+                from src.fabric.credential_vault import Vault
+                api_key = Vault().get('meta-api-key')        # owner stores it in the OS vault
+            if not api_key:
+                raise KeyError('no Meta API key in env or vault')
             permit = CreditPermit(os.environ['OPENBRIDGE_CREDIT_OBSERVATION_ID'],
                                   datetime.fromisoformat(os.environ['OPENBRIDGE_CREDIT_VERIFIED_AT']),
                                   float(os.environ['OPENBRIDGE_FREE_CREDITS_USD']), 0.20)
             private_root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
-            broker = RuntimeModelBroker(private_root / 'runtime-budget.sqlite', permit, MetaTransport(os.environ['MODEL_API_KEY']))
+            broker = RuntimeModelBroker(private_root / 'runtime-budget.sqlite', permit, MetaTransport(api_key))
         except (KeyError,ValueError):
             print('Supervised credit configuration invalid; runtime models disabled.', flush=True)
     private_root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'

@@ -364,3 +364,10 @@ REAL_HARDWARE_VERIFIED, 5/5:
 | during_revert | REVERTING | **changed (disabled)** | REVERTED | yes |
 
 Each recovery ran in a fresh process that read the durable journal and the phone independently (2.7–5.4 s per drill). This is crash recovery for one supported reversible setting, not atomicity across devices.
+
+## Live Meta cloud advisory fixed and verified (27 Oct 2026)
+
+- Bug: `muse-spark-1.3` is a reasoning model; the broker's 900-token completion cap was fully consumed by reasoning (`reasoning_tokens` ≈ 898), so `content` came back empty and `recommend()` failed as "Meta call failed".
+- Fix (`src/ai/broker.py`): `max_completion_tokens` raised to 4000; empty/whitespace content is now an explicit `ModelBlocked('Model returned no content…')`; the $0.10 reservation and $1 total ceiling are unchanged. `src/server.py` now reads the key from the OS vault (`meta-api-key`) when `MODEL_API_KEY` is not in the environment.
+- REAL (Meta Model API, synthetic facts only, no personal data): one live call returned `muse-spark-1.3` id chatcmpl-01a17d97…, a schema-valid `inspect_only` advisory citing the three supplied keys, usage 110 prompt + 625 completion (533 reasoning), estimated cost **$0.0028**. Within the owner's free promotional credits; the broker caps total spend at $1.
+- Only free credits are used: the per-session budget is $0.10 and the durable local ceiling is $1; no automatic retries; failures keep their reservation.
