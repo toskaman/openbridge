@@ -171,7 +171,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
         if self.path.startswith('/api/v2/'):
             return self.v2_post()
-        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect', '/api/session-restore'):
+        if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect', '/api/session-restore', '/api/watch-pair'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
@@ -250,6 +250,19 @@ class Handler(BaseHTTPRequestHandler):
                 issue = {'PORT_CLOSED': 'tv_network_debugging', 'WAITING_FOR_TV_APPROVAL': 'tv_debug_prompt', 'CONNECT_FAILED': 'tv_network_debugging'}.get(state)
                 tried = [f'adb connect {ips[0]}:5555 -> {state}']
                 return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None})
+            if self.path == '/api/watch-pair':
+                from src.fabric.guidance import guide
+                if body['device_id'] != 'watch':
+                    raise ValueError()
+                addr, code = str(body.get('address', '')), str(body.get('code', ''))
+                m = __import__('re').fullmatch(r'(\d{1,3}(?:\.\d{1,3}){3}):(\d{2,5})', addr.strip())
+                if not m:
+                    return self.reply(200, {'state': 'NEED_INPUT', 'guide': guide('watch_wireless_debugging', manufacturer=body.get('manufacturer'))})
+                state, target = self.server.android.pair_wireless(m.group(1), int(m.group(2)), code.strip())
+                if state == 'AUTHORIZED':
+                    self.server.session_journal.record('adb_network_connected', 'Smartwatch', {'address': target}, 'not connected', 'connected')
+                issue = {'PAIR_FAILED': 'watch_pair_failed', 'PAIRED_NOT_ADVERTISED': 'watch_wireless_debugging', 'CONNECT_FAILED': 'watch_wireless_debugging'}.get(state)
+                return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=body.get('manufacturer')) if issue else None})
             if self.path == '/api/fabric-advise':
                 from src.fabric import advisor
                 goal = body.get('goal')
