@@ -15,7 +15,7 @@ APP_ID = 'fr.openbridge.devicefabric'
 APP_NAME = 'OpenBridge Device Fabric'
 APP_VERSION = '0.2'
 BASE = 'http://mafreebox.freebox.fr'
-READ_ONLY_PATHS = ('lan/browser/interfaces/', 'lan/browser/pub/', 'system/', 'connection/')
+READ_ONLY_PATHS = ('lan/browser/interfaces/', 'lan/browser/pub/', 'system/', 'connection/', 'connection/ftth/', 'wifi/config/', 'wifi/ap/')
 TOKEN_NAME = 'freebox-app-token'
 
 

@@ -218,3 +218,75 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - src/fabric/ssdp.py: read-only M-SEARCH (sent twice, TTL 1, LAN interface), replies grouped by description LOCATION, description XML fetched once with DTD/entity refusal and size cap; UPnP UDN is a strong identifier; IGD control is BLOCKED (no SOAP, no port mapping). Real network: the Freebox announced 10 UPnP service types, first shown as 3 devices (embedded sub-devices) and fixed to 1; the Android TV answered DIAL in 1 of 3 runs (it was likely entering standby).
 - Endurance (dev/endurance.py, docs/benchmark/STATUS.md): 1,500 nodes, 20 rounds, 5,000 malformed packets, relay churn — bounded time/memory, no crash, no leaked threads.
 - README rewritten for the jury around the Device Fabric scenario (old README kept as docs/README_HISTORY.md).
+
+## Device Runtime v2 — /api/v2 on the participant LAN (27 Oct 2026, branch feat/device-runtime-v2)
+
+Reproduce: `python -m dev.runtime_v2_smoke` (read-only; prints counts and finding kinds only). Base commit 055c48a, Windows 11, Python 3.14.4.
+
+- REAL_HARDWARE_VERIFIED: `bounded_discovery` primitive through `POST /api/v2/execute` (CSRF + Origin) → receipt VERIFIED; providers mDNS OK, SSDP OK, ADB OK, Freebox AUTHENTICATED, PC BLE unavailable (no adapter). Graph: 14 devices; 22 capability descriptors (16 REAL_HARDWARE_VERIFIED, 6 BLOCKED — offline emulator), 0 controllable because no authorized Android device was connected.
+- REAL_HARDWARE_VERIFIED: `read_facts` on the Freebox (v7, fw 4.13.1) → 13 OBSERVED findings (connection, FTTH optics, uptime, LAN hosts) + 1 INFERRED (presence changes since previous run).
+- REAL_HARDWARE_VERIFIED (refusals): free-form primitive → UNKNOWN_PRIMITIVE; write without consent → CONSENT_REQUIRED. `/api/v2/diagnosis` stated `ble_unreachable` (INFERRED: no adapter and no relay candidate at that moment).
+- Preflight on the same PC (`python -m src.runtime.preflight`): READY; bleak 3.0.2 and Playwright 1.63.0 match pins; Llama 3.2 3B and Muse Glimmer digests equal the pinned full SHA-256.
+- NOT TESTED on hardware in this session: Android diagnostics and USB-unplug-during-write (phone not connected, TV off). Simulated coverage only (tests/runtime).
+
+## Device Runtime v2 — Android diagnostics and real transport loss on the Android TV (27 Oct 2026)
+
+- REAL_HARDWARE_VERIFIED: `read_facts` on the Android TV over ADB Wi-Fi (`python -m dev.runtime_v2_smoke`): 10 OBSERVED findings (no battery, 4.3 GB storage / 1.25 GB free, uptime 132.7 h, Wi-Fi on, 4 cores, 0.35 GB RAM available, user 0, patch 2025-08-01, 11 user apps) + 1 INFERRED (`security_patch_outdated` = 14 months).
+- REAL_HARDWARE_VERIFIED, transport loss (`python -m dev.transport_loss_smoke <tv>:5555`): link dropped with `adb disconnect` 0.4 s into the read.
+  - First run exposed two defects. The cut-short read was reported VERIFIED with 5 of 11 facts, and the TV was refused after reconnecting because ADB issued a new handle.
+  - Fix: a link check after the reads (a cut-short read is now PARTIAL, not verified) and re-attachment by strong identity only.
+  - Re-run: PARTIAL (5 facts, verified=false) → BLOCKED DEVICE_UNAVAILABLE on the dead link → VERIFIED with 11 facts after reconnect. Simulated regression tests were added for both.
+- USB unplug during a write: still NOT TESTED physically (the phone was not visible to ADB).
+
+## Device Runtime v2 — phone diagnostics and transport reset during a real write (27 Oct 2026)
+
+- REAL_HARDWARE_VERIFIED: `read_facts` on the Xiaomi phone over USB → 13 OBSERVED findings (battery 100 %, 21 °C, health good, charging, 224 GB / 154 GB free, uptime 34 h, Wi-Fi on, 8 cores, 1.8 GB RAM available, user 0, patch 2025-02-01, 74 user apps) + 1 INFERRED (`security_patch_outdated` = 20 months).
+- REAL_HARDWARE_VERIFIED, ADB transport reset during a write (`python -m dev.link_loss_write_smoke 0.05 --confirm-owned-device`). This was a host-side `adb reconnect` 50 ms into disabling one allowlisted optional app, not a physical cable pull.
+  - Apply → BLOCKED "Transaction quarantined".
+  - Immediate revert → refused: the state could not be read, so the external state was not overwritten.
+  - Journal state → QUARANTINED. No success was reported at any point.
+  - Once the phone was visible again: recovery → REVERTED, read-back equal to the recorded original value (enabled).
+  - Reproduced twice.
+- Observed limitation: after `adb reconnect` the phone did not reappear until the ADB server was restarted (`adb kill-server`). The TV over Wi-Fi then needed a new `adb connect`. Recovery is safe meanwhile: the transaction stays QUARANTINED in the journal until then.
+- Physical cable pull: still NOT TESTED (needs the owner's hand).
+
+## Device Runtime v2 — physical USB cable pull during real writes (27 Oct 2026, 01:24 Paris)
+
+Reproduce: `python -m dev.cable_pull_smoke --confirm-owned-device`, then the owner pulls the phone's cable while the loop runs. Allowlisted optional app, Android user 0, Xiaomi phone.
+
+REAL_HARDWARE_VERIFIED:
+
+- The script ran continuous exact loops (prepare → apply → read-back → revert → read-back); 8 complete verified loops finished before the pull.
+- The owner pulled the cable by hand. It landed during the **revert** phase, while the app was still disabled.
+- Engine response: "Recovery quarantined; external state was not overwritten"; journal state QUARANTINED. No success was reported for the interrupted transaction.
+- The owner re-plugged after about 20 s; the phone reappeared to ADB without restarting the server. The journal still showed QUARANTINED, and normal recovery → REVERTED with read-back equal to the original value (enabled). original_preserved = true.
+
+## Real relay → Capability Forge, end to end on hardware (27 Oct 2026)
+
+Reproduce: `python dev/relay_forge_real.py` from a throwaway copy of this tree that also contains Forge's `src/forge` from feat/capability-forge @ 39e6ed4, unmodified. Xiaomi phone over USB.
+
+REAL_HARDWARE_VERIFIED, all through product code paths:
+
+1. Discovery primitive.
+2. Companion installed by the server's install worker, journaled as a session change.
+3. Owner-equivalent `pm grant` of BLUETOOTH_SCAN and BLUETOOTH_CONNECT. These are dev-harness steps; in the product the Android dialogs ask the owner.
+4. Pairing through `relay_action`, with the code read from the phone's screen.
+5. `relay_ble_scan` primitive (consent) → VERIFIED, 3 advertisers.
+6. `/api/v2/capabilities` showed ble_relay readable+controllable, REAL_HARDWARE_VERIFIED, SESSION_CLEANUP; the route was FRESH, permission granted, owner enabled.
+7. Forge's `RuntimeV1Provider`, via `api_v2.reader`, accepted 3/3 targets as REAL_HARDWARE_VERIFIED, fact age 0.0 s.
+8. `relay_revoke` primitive → the next Forge snapshot was refused (RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN).
+
+The Companion stays installed and is listed in the session journal for the owner's "Finish session" choice.
+
+### Physical publication through Forge's HTTP host (same day, phone unlocked by the owner)
+
+REAL_HARDWARE_VERIFIED. The run used the unmodified Forge `create_forge_server` (current Forge worktree) with `provider=RuntimeV1Provider(api_v2.reader(server), …)` bound to a target seen by the real phone relay.
+
+1. Catalog mode was PHYSICAL_READ_ONLY.
+2. `POST /api/publish {consent:true}` → 200, `simulation: false`.
+3. Observation route → 200 with 1 relay observation, source `RELAY:…`.
+4. `/api/documents` → 200 (OpenAPI, schemas, client).
+5. Runtime `relay_revoke` primitive, then the observation route → 409 RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN.
+6. `POST /api/remove` → 200; the observation route → 404 SERVICE_REMOVED.
+
+Before this run, a locked phone blocked the on-screen code read, so the harness failed closed and never paired.
