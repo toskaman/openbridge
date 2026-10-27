@@ -18,3 +18,11 @@ In a throwaway merged copy, Forge's unmodified `RuntimeV1Provider` was run again
 1. ~~Authenticated relay read on hardware followed by a Forge snapshot~~ — DONE, REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER "Real relay → Capability Forge"): 3/3 snapshots accepted at 0 s age, refused after `relay_revoke`.
 2. Mounting: Forge routes in the main server. Proposal: Forge keeps its own host; main server exposes only the v2 read model, plus a later `POST /api/forge/*` behind the same Host/Origin/CSRF checks. To be agreed before merge.
 3. Merge order: runtime branch first, then Forge rebased on it. No direct merge of Forge by the runtime owner.
+
+## Update — physical HTTP publication through the Forge host: DONE
+REAL_HARDWARE_VERIFIED on the phone relay; details in EVIDENCE_LEDGER under "Physical publication through Forge's HTTP host".
+- publish 200 (simulation=false), read 200, documents 200;
+- after the runtime `relay_revoke`: read 409;
+- after remove: 404.
+
+From the runtime side, no gate remains for Forge's read-only physical mode. Mounting proposal unchanged: keep the Forge host separate and bind its provider via `api_v2.reader(server)` from the main process.

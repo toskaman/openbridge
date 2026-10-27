@@ -277,3 +277,16 @@ REAL_HARDWARE_VERIFIED, all through product code paths:
 8. `relay_revoke` primitive → the next Forge snapshot was refused (RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN).
 
 The Companion stays installed and is listed in the session journal for the owner's "Finish session" choice.
+
+### Physical publication through Forge's HTTP host (same day, phone unlocked by the owner)
+
+REAL_HARDWARE_VERIFIED. The run used the unmodified Forge `create_forge_server` (current Forge worktree) with `provider=RuntimeV1Provider(api_v2.reader(server), …)` bound to a target seen by the real phone relay.
+
+1. Catalog mode was PHYSICAL_READ_ONLY.
+2. `POST /api/publish {consent:true}` → 200, `simulation: false`.
+3. Observation route → 200 with 1 relay observation, source `RELAY:…`.
+4. `/api/documents` → 200 (OpenAPI, schemas, client).
+5. Runtime `relay_revoke` primitive, then the observation route → 409 RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN.
+6. `POST /api/remove` → 200; the observation route → 404 SERVICE_REMOVED.
+
+Before this run, a locked phone blocked the on-screen code read, so the harness failed closed and never paired.
