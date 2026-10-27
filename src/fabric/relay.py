@@ -63,10 +63,12 @@ def verify(key, message, seen_nonces, now=None):
         raise RelayError('Expired command')
     if msg['nonce'] in seen_nonces:
         raise RelayError('Replay')
-    if isinstance(seen_nonces, dict):   # long-lived insertion-ordered set: FIFO eviction
-        seen_nonces[msg['nonce']] = True
-        while len(seen_nonces) > MAX_NONCES:
-            seen_nonces.pop(next(iter(seen_nonces)))
+    if isinstance(seen_nonces, dict):   # long-lived: nonce -> expires_at; forget a nonce only once its message has expired
+        for n in [n for n, exp in seen_nonces.items() if not (isinstance(exp, (int, float)) and exp >= now)]:
+            del seen_nonces[n]
+        if len(seen_nonces) >= MAX_NONCES:
+            raise RelayError('Too many live commands; retry after they expire')   # never evict a live nonce
+        seen_nonces[msg['nonce']] = msg.get('expires_at', now)
     else:                               # ephemeral caller-owned set
         seen_nonces.add(msg['nonce'])
         while len(seen_nonces) > MAX_NONCES:

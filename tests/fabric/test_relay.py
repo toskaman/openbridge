@@ -190,12 +190,34 @@ class PairingIsolationTests(unittest.TestCase):
 
 
 class NonceBoundTests(unittest.TestCase):
-    def test_seen_nonces_are_bounded_fifo(self):
+    def test_seen_nonces_bounded_without_reopening_replay(self):
         m = manager(FakeRelay()); seen = m.relays['tv']['seen']
         cmds = [R.command(KEY, 'tv', 'get_status') for _ in range(600)]
+        accepted = 0
         for c in cmds:
-            R.verify(KEY, c, seen, now=c['issued_at'])
-        self.assertLessEqual(len(seen), 512)
-        with self.assertRaises(R.RelayError):
-            R.verify(KEY, cmds[-1], seen, now=cmds[-1]['issued_at'])
-        R.verify(KEY, cmds[0], seen, now=cmds[0]['issued_at'])
+            try:
+                R.verify(KEY, c, seen, now=c['issued_at']); accepted += 1
+            except R.RelayError as e:
+                self.assertIn('Too many live', str(e))
+        self.assertEqual(accepted, 512); self.assertLessEqual(len(seen), 512)
+        with self.assertRaises(R.RelayError):          # a live, already-seen nonce is never forgotten
+            R.verify(KEY, cmds[0], seen, now=cmds[0]['issued_at'])
+        later = cmds[0]['expires_at'] + 1               # once those commands expired, the cache drains
+        fresh = R.command(KEY, 'tv', 'get_status', now=later)
+        R.verify(KEY, fresh, seen, now=later)
+        self.assertEqual(len(seen), 1)
+        with self.assertRaises(R.RelayError):           # and an old command is still refused (expired)
+            R.verify(KEY, cmds[0], seen, now=later)
+
+
+class ReceiptBoundTests(unittest.TestCase):
+    def test_unresolved_receipts_are_never_evicted(self):
+        from types import SimpleNamespace
+        from src.runtime.primitives import Executor
+        from src.runtime.contract import TransactionReceipt
+        ex = Executor(SimpleNamespace(fabric_registry=None))
+        for i in range(600):
+            ex.receipts[f'u{i}'] = TransactionReceipt(f'u{i}', 'pc_job', 'k', 'UNKNOWN_TIMEOUT', None, None, False, '', '', ())
+            ex._receipt_order.append(f'u{i}')
+        ex.execute('read_facts', 'k', {})                 # triggers the bound
+        self.assertEqual(sum(1 for r in ex.receipts.values() if r.state == 'UNKNOWN_TIMEOUT'), 600)

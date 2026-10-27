@@ -18,6 +18,7 @@ SUPPORTED_PROTOCOL_VERSIONS = ('2025-06-18', '2025-03-26', '2024-11-05')
 MAX_LINE = 1_000_000
 MAX_REPLY = 1_000_000
 HTTP_TIMEOUT = 10
+SHOW_NAMES = False
 
 TOOLS = (
     {'name': 'openbridge_get_graph', 'path': '/api/v2/graph',
@@ -103,7 +104,10 @@ def call_tool(base_url, mid, params):
     if tool['name'] == 'openbridge_get_facts' and 'device' not in query:
         return _tool_result(mid, "Argument 'device' is required (a device key from openbridge_get_graph).", True)
     try:
-        return _tool_result(mid, json.dumps(_get(base_url, tool['path'], query)), False)
+        body = _get(base_url, tool['path'], query)
+        if not SHOW_NAMES:
+            body = redact_graph(body)
+        return _tool_result(mid, json.dumps(body), False)
     except _ToolError as error:
         return _tool_result(mid, str(error), True)
 
@@ -155,12 +159,37 @@ def serve(base_url, stdin=None, stdout=None):
             stdout.flush()
 
 
+LOOPBACK = ('127.0.0.1', '::1', 'localhost')
+
+
+def loopback_only(base_url):
+    from urllib.parse import urlsplit
+    u = urlsplit(base_url)
+    if u.scheme != 'http' or u.hostname not in LOOPBACK:
+        raise SystemExit('openbridge-mcp only talks to an OpenBridge server on this machine (http://127.0.0.1:<port>)')
+    return base_url.rstrip('/')
+
+
+def redact_graph(body):
+    """Household device names never reach the MCP client unless the owner passes --show-names."""
+    counters = {}
+    for d in body.get('devices', []) if isinstance(body, dict) else []:
+        cat = d.get('category', 'device')
+        counters[cat] = counters.get(cat, 0) + 1
+        if 'label' in d:
+            d['label'] = f'{cat} {counters[cat]}'
+    return body
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description='OpenBridge read-only MCP server (stdio). Queries a running OpenBridge over loopback HTTP.')
     ap.add_argument('--base-url', default=None)
     ap.add_argument('--port', type=int, default=18765)
+    ap.add_argument('--show-names', action='store_true', help='Send real device labels to the MCP client (default: category + ordinal)')
     args = ap.parse_args(argv)
-    serve((args.base_url or f'http://127.0.0.1:{args.port}').rstrip('/'))
+    global SHOW_NAMES
+    SHOW_NAMES = args.show_names
+    serve(loopback_only(args.base_url or f'http://127.0.0.1:{args.port}'))
 
 
 if __name__ == '__main__':

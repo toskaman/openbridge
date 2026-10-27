@@ -110,3 +110,14 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual([r.get('id') for r in replies], [1, 2, 3])
         self.assertEqual(replies[0]['result']['serverInfo']['name'], 'openbridge-mcp')
         self.assertTrue(json.loads(replies[2]['result']['content'][0]['text'])['devices'])
+
+
+class Hardening(unittest.TestCase):
+    def test_loopback_only_and_redacted_labels(self):
+        from src.mcp import server as m
+        self.assertEqual(m.loopback_only('http://127.0.0.1:18765/'), 'http://127.0.0.1:18765')
+        for bad in ('http://192.168.1.5:18765', 'https://127.0.0.1:1', 'http://example.org'):
+            with self.assertRaises(SystemExit):
+                m.loopback_only(bad)
+        body = m.redact_graph({'devices': [{'key': 'a', 'category': 'tv', 'label': "Marie's TV"}, {'key': 'b', 'category': 'tv', 'label': 'Salon'}]})
+        self.assertEqual([d['label'] for d in body['devices']], ['tv 1', 'tv 2'])

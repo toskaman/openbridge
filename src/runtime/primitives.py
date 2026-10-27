@@ -626,13 +626,12 @@ class Executor:
             with self._guard:
                 self.receipts[tx] = r
                 self._receipt_order.append(tx)
-                while len(self.receipts) > 512:   # bound in-memory growth; spare recovery-relevant states (see recovery())
+                while len(self.receipts) > 512:   # bound in-memory growth; recovery-relevant states are never evicted
                     victim = next((t for t in self._receipt_order if t in self.receipts
                                    and self.receipts[t].state not in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')), None)
                     if victim is None:
-                        victim = self._receipt_order.popleft()
-                    else:
-                        self._receipt_order.remove(victim)
+                        break                     # only unresolved outcomes remain: keep them all (recovery() must see them)
+                    self._receipt_order.remove(victim)
                     self.receipts.pop(victim, None)
             self.emit('receipt', transaction_id=tx, primitive_id=primitive_id, state=state, verified=verified)
             return dict(to_json(r), result=result or {})
