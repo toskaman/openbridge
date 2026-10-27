@@ -310,3 +310,20 @@ Reproduce: `python -m dev.report_smoke`.
 - Two defects were found on the first hardware run and fixed:
   - LAN-inventory hosts with no read grant appeared as BLOCKED sections.
   - A second gateway seen via SSDP was given the Freebox's API facts. Freebox reads now require that device's own `lan_inventory` capability via FREEBOX_API.
+
+## Android TV relay → Capability Forge on hardware (27 Oct 2026)
+
+Reproduce: `python dev/tv_relay_forge.py` from a merged copy with Forge `src/forge`. The TV was on Wi-Fi ADB; the relay was reached over the LAN.
+
+REAL_HARDWARE_VERIFIED, through product paths:
+
+1. The TV system Bluetooth app (disabled by the earlier session restore) was re-enabled and journaled as "System app re-enabled".
+2. Companion installed by the server worker (journaled).
+3. Location permission granted from the dev harness; the product asks through the Android dialog.
+4. Pairing code read from the TV screen → PAIRED, eligible.
+5. `relay_ble_scan` primitive (10 s, consent) → VERIFIED, 5 advertisers.
+6. Forge `RuntimeV1Provider` accepted 5/5 targets as REAL_HARDWARE_VERIFIED.
+7. The source-specific facts route returned `ble_rssi` for this relay only.
+8. `relay_revoke` → Forge snapshot refused (RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN).
+
+Both TV changes stay open in the session journal for the owner's Finish session choice.
