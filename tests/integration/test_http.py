@@ -185,9 +185,9 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(self.request('POST','/api/fabric-discover','{"device_id":"fabric"}',{'Content-Type':'application/json'})[0],403)
         self.assertEqual(self.request('POST','/api/fabric-discover','{"device_id":"fabric","providers":["portscan"]}',self.session_headers())[0],400)
         snap={'schema_version':1,'devices':[{'key':'dev-1'}],'links':[],'possible_duplicates':[],'providers':{}}
-        with patch('src.server.fabric_discovery.run',return_value=(snap,None)) as run:
+        with patch('src.server.fabric_discovery.run',return_value=(snap,None)) as run, patch.object(self.server.freebox,'discover',side_effect=AssertionError('Unit test attempted a live gateway probe')) as gateway, patch.object(self.server,'fabric_adapters',return_value={}):
             code,body,_=self.request('POST','/api/fabric-discover','{"device_id":"fabric","providers":["mdns"]}',self.session_headers())
-            self.assertEqual(code,200);self.assertEqual(run.call_args.kwargs['providers'],('mdns',))
+            self.assertEqual(code,200);self.assertEqual(run.call_args.kwargs['providers'],('mdns',));gateway.assert_not_called()
         self.assertEqual(json.loads(self.request('GET','/api/fabric')[1])['devices'][0]['key'],'dev-1')
         self.server.fabric_lock.acquire()
         try:self.assertEqual(self.request('POST','/api/fabric-discover','{"device_id":"fabric"}',self.session_headers())[0],409)
