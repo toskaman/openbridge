@@ -1,5 +1,7 @@
 # Capability Forge demonstration storyboard
 
+Updated recording: LIVE_GLIMMER_DEMO_VIDEO.json pins a second 170-second actual browser walkthrough. It includes one live local Muse Glimmer v2 call, owner consent, publication, authenticated read, contract view and an actual authenticated HTTP 404 probe after removal. All source observations remain explicitly SIMULATED. The captured product revision is 0342d063fe80d1659cf39fcb196ecb6da4d2f749. The call took 97,950 ms; no physical or cloud request occurred. The earlier video below remains historical evidence of the unavailable-model/rules fallback.
+
 Target: 175 seconds, English captions. Current implementable fallback is entirely SIMULATED and must keep that banner visible.
 
 0–25: explain a workspace without a direct observation route; show the simulated relay path. Do not assert the real PC lacks Bluetooth without hardware evidence.

@@ -1,0 +1,115 @@
+{
+  "source_revision": "0342d063fe80d1659cf39fcb196ecb6da4d2f749",
+  "mode": "SIMULATED",
+  "model_calls": 1,
+  "hardware_calls": 0,
+  "cloud_calls": 0,
+  "model_trace": {
+    "plan": {
+      "goal": "expose_remote_ble_observations",
+      "decision": "propose",
+      "steps": [
+        {
+          "capability_id": "tv.ble.observations",
+          "operation": "read_observations"
+        },
+        {
+          "capability_id": "pc.virtual_api.publish",
+          "operation": "publish_readonly"
+        }
+      ],
+      "evidence_refs": [
+        "evidence-relay",
+        "evidence-signal"
+      ],
+      "requires_consent": true
+    },
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "source": "LOCAL_META",
+    "model_called": true,
+    "planner_version": 2,
+    "eligibility_source": "DETERMINISTIC_RULES",
+    "authorizes_execution": false,
+    "elapsed_ms": 97950,
+    "usage": {
+      "prompt_tokens": 218,
+      "completion_tokens": 67
+    },
+    "provider_cost_usd": 0.0
+  },
+  "revocation_probe": {
+    "verification_probe": true,
+    "http_status": 404,
+    "response": {
+      "error": "SERVICE_REMOVED"
+    }
+  },
+  "scenes": [
+    {
+      "at_seconds": 0.0,
+      "name": "intro",
+      "caption": "OpenBridge Capability Forge. This is the SIMULATED fallback: a real local service and a live local Meta call, using synthetic relay observations. No physical scan or change occurs."
+    },
+    {
+      "at_seconds": 5.15,
+      "name": "live-meta",
+      "caption": "LIVE REQUEST: pinned Meta Muse Glimmer, running locally on CPU. No provider credits or cloud fallback. The model may propose a plan; it cannot authorize publication."
+    },
+    {
+      "at_seconds": 25.03,
+      "name": "path",
+      "caption": "A workspace reads through an approved relay. The fixture TV observes a nearby signal source. Permissions, provenance and freshness are checked by deterministic policy."
+    },
+    {
+      "at_seconds": 45.01,
+      "name": "waiting",
+      "caption": "The local model is processing the complete structured proposal. Even a valid proposal cannot grant consent, invent an approved primitive, or change a device."
+    },
+    {
+      "at_seconds": 103.68,
+      "name": "validated",
+      "caption": "ACTUAL GLIMMER OUTPUT: read the verified relay observations, then publish a read-only local service. Exact IDs, transition order, evidence and post-inference freshness passed validation."
+    },
+    {
+      "at_seconds": 106.13,
+      "name": "consent",
+      "caption": "Only now does the owner consent. The host rereads the source before publishing; model text is never executed as code."
+    },
+    {
+      "at_seconds": 114.09,
+      "name": "http-read",
+      "caption": "The authenticated local API returns signal strength, source, observation time and evidence. The response explicitly says simulation=true. No temperature or battery measurement is invented."
+    },
+    {
+      "at_seconds": 120.05,
+      "name": "contract",
+      "caption": "A deterministic compiler emits OpenAPI 3.1, standalone schemas and a fixed Python client. This service uses approved read primitives only."
+    },
+    {
+      "at_seconds": 131.15,
+      "name": "revoked",
+      "caption": "A real authenticated verification probe now returns HTTP 404: SERVICE_REMOVED. Removing this virtual service does not alter the runtime relay or a phone setting."
+    },
+    {
+      "at_seconds": 145.03,
+      "name": "limits",
+      "caption": "The unfavorable v1 benchmark is retained. This constrained v2 development success is not an intelligence-advantage claim. Physical phone-relay snapshots are separate runtime-owner evidence; this recording stays synthetic."
+    },
+    {
+      "at_seconds": 160.0,
+      "name": "closing",
+      "caption": "github.com/toskaman/openbridge \u00b7 feat/capability-forge \u00b7 Meta Muse Glimmer actually used locally. Provider cost: $0. Validated proposal, owner consent, local API, and clean revocation."
+    }
+  ],
+  "audio": "intentionally silent, English captions",
+  "filename": "openbridge-live-glimmer-170s.mp4",
+  "duration_seconds": 170.0,
+  "codec": "H.264",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "sha256": "f7da7353f106a4ef8bae2f4278d891a6875cb1100312b78a0abfe5461a1f210a",
+  "bytes": 5081626,
+  "claim": "Actual live local Glimmer proposal and authenticated virtual API lifecycle; SIMULATED observations only; not benchmark or physical relay proof"
+}
