@@ -35,6 +35,8 @@ class LocalServer(ThreadingHTTPServer):
     def server_close(self):
         monitor=getattr(self,'android_events',None)
         if monitor is not None:monitor.close()
+        ex=getattr(self,'runtime_executor',None)
+        if ex is not None and getattr(ex,'_watchers',None) is not None:ex._watchers.stop_all()   # session-scoped watches
         super().server_close()
 
 
