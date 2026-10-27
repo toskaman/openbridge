@@ -249,3 +249,14 @@ Reproduce: `python -m dev.runtime_v2_smoke` (read-only; prints counts and findin
   - Reproduced twice.
 - Observed limitation: after `adb reconnect` the phone did not reappear until the ADB server was restarted (`adb kill-server`). The TV over Wi-Fi then needed a new `adb connect`. Recovery is safe meanwhile: the transaction stays QUARANTINED in the journal until then.
 - Physical cable pull: still NOT TESTED (needs the owner's hand).
+
+## Device Runtime v2 — physical USB cable pull during real writes (27 Oct 2026, 01:24 Paris)
+
+Reproduce: `python -m dev.cable_pull_smoke --confirm-owned-device`, then the owner pulls the phone's cable while the loop runs. Allowlisted optional app, Android user 0, Xiaomi phone.
+
+REAL_HARDWARE_VERIFIED:
+
+- The script ran continuous exact loops (prepare → apply → read-back → revert → read-back); 8 complete verified loops finished before the pull.
+- The owner pulled the cable by hand. It landed during the **revert** phase, while the app was still disabled.
+- Engine response: "Recovery quarantined; external state was not overwritten"; journal state QUARANTINED. No success was reported for the interrupted transaction.
+- The owner re-plugged after about 20 s; the phone reappeared to ADB without restarting the server. The journal still showed QUARANTINED, and normal recovery → REVERTED with read-back equal to the original value (enabled). original_preserved = true.
