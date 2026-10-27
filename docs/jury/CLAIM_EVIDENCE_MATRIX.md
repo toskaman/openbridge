@@ -23,13 +23,13 @@ Every public claim, its status and where to check it. A claim without evidence i
 | Reversible write with exact Undo and read-back | REAL_HARDWARE_VERIFIED | docs/physical-package-receipt.json |
 | Crash-recoverable physical workflows (not ACID): 5 kill points | REAL_HARDWARE_VERIFIED | crash drill 5/5, EVIDENCE_LEDGER.md |
 | Cross-transport timeline + competing hypotheses + read-only probe | REAL_HARDWARE_VERIFIED (10-min capture, induced link drop) + CI drills | tests/runtime/test_timeline.py, drills + independent labels |
-| Privacy-preserving cloud escalation (never "zero-knowledge") | SIMULATED_VERIFIED | tests/runtime/test_redact.py (golden corpus), tests/runtime/test_cloud_escalation.py |
+| Privacy-preserving cloud escalation (never "zero-knowledge") | LIVE VERIFIED (one consented muse-spark-1.3 call, EVIDENCE_LEDGER) + golden corpus | tests/runtime/test_redact.py (golden corpus), tests/runtime/test_cloud_escalation.py |
 | Meta Model API live call (muse-spark-1.3) | REAL (synthetic facts) | docs/runtime-meta-receipt.json, EVIDENCE_LEDGER 27 Oct |
 | Registered ablation, rules vs Llama vs Glimmer vs Spark | rules MEASURED; models pending | docs/benchmark/v4/REGISTRATION.md |
 | Visual read-back with local Glimmer | REAL_HARDWARE_VERIFIED (TV run: INCONCLUSIVE, Glimmer misread a screensaver) | tests/unit/test_visual_readback.py; `python -m dev.visual_readback_tv` (pending) |
 | BLE zone proximity (zones, not positions) | SIMULATED_VERIFIED | tests/runtime/test_ble_zones.py; `python -m dev.ble_zone_calibrate` (pending) |
 | Voice command via Muse Voice Transcribe | LIVE VERIFIED (synthetic speech clip, exact transcript) | tests/unit/test_voice.py (fake WebSocket) |
-| Wear OS dynamic manifest | SIMULATED_VERIFIED | tests/fabric/test_wear_manifest.py |
+| Wear OS dynamic manifest | REAL_HARDWARE_VERIFIED (Galaxy Watch7) | tests/fabric/test_wear_manifest.py |
 | PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | jobs REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER); inference worker SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
 | Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/moves/dock) | tests/fabric/test_tuya_local.py; owner link `python -m dev.tuya_link` + real run (pending) |
 | Meta-only runtime | VERIFIED (static + network trace) | src/ai/registry.py, tests/unit/test_meta_only_network_trace.py |
