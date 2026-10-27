@@ -30,7 +30,7 @@ Every public claim, its status and where to check it. A claim without evidence i
 | BLE zone proximity (zones, not positions) | SIMULATED_VERIFIED | tests/runtime/test_ble_zones.py; `python -m dev.ble_zone_calibrate` (pending) |
 | Voice command via Muse Voice Transcribe | IMPLEMENTED_UNVERIFIED | tests/unit/test_voice.py (fake WebSocket) |
 | Wear OS dynamic manifest | SIMULATED_VERIFIED | tests/fabric/test_wear_manifest.py |
-| PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
+| PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | jobs REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER); inference worker SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
 | Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/moves/dock) | tests/fabric/test_tuya_local.py; owner link `python -m dev.tuya_link` + real run (pending) |
 | Meta-only runtime | VERIFIED (static + network trace) | src/ai/registry.py, tests/unit/test_meta_only_network_trace.py |
 
