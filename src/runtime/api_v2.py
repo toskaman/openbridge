@@ -7,7 +7,7 @@ from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
 GET_ROUTES = ('/api/v2/contract', '/api/v2/graph', '/api/v2/capabilities', '/api/v2/facts', '/api/v2/routes',
-              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis')
+              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis', '/api/v2/watches')
 POST_ROUTES = ('/api/v2/execute',)
 
 
@@ -61,6 +61,8 @@ def get(server, path, query):
         except ValueError:
             return 400, {'error': 'since must be an integer'}
         return 200, {'events': ex.events_since(since)}
+    if path == '/api/v2/watches':
+        return 200, {'watches': ex.watchers().list()}
     if path == '/api/v2/routes':
         return 200, {'routes': route_rows(server)}
     if path == '/api/v2/relays':

@@ -37,7 +37,11 @@ class AndroidDiag(unittest.TestCase):
             ('cat', '/sys/devices/system/cpu/possible'): '0-7\n', ('am', 'get-current-user'): '0',
             ('cat', '/proc/meminfo'): 'MemTotal: 8000000 kB\nMemAvailable: 2097152 kB\n',
             ('getprop', 'ro.build.version.security_patch'): '2024-05-01',
-            ('pm', 'list', 'packages', '-3'): 'package:a\npackage:b\n'}), today=date(2026, 10, 27)))
+            ('pm', 'list', 'packages', '-3'): 'package:a\npackage:b\n',
+            ('dumpsys', 'power'): 'POWER\n  mWakefulness=Dozing\n', ('dumpsys', 'thermalservice'): 'IsStatusOverride: false\nThermal Status: 3\n'}), today=date(2026, 10, 27)))
+        self.assertEqual(r['power_state']['value'], 'dozing')
+        self.assertEqual(r['thermal_status']['value'], 'severe')
+        self.assertEqual(r['thermal_throttling_likely']['kind'], 'INFERRED')
         self.assertEqual(r['battery_level']['value'], 88)
         self.assertEqual(r['battery_temperature']['value'], 46.2)
         self.assertEqual(r['battery_hot']['kind'], 'INFERRED')
