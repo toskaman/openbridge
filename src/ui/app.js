@@ -420,6 +420,7 @@ function showDevice(device, links) {
   if (handle && device.capabilities.some(c => c.name === 'ble_relay')) fabricDetail.append(relayPanel(device, handle));
   if (['phone', 'tv', 'android', 'router', 'computer', 'vacuum', 'watch'].includes(device.category)) fabricDetail.append(diagnosisPanel(device));
   if (device.category === 'vacuum') fabricDetail.append(tuyaPanel(device));
+  if (['tv', 'phone', 'watch', 'android'].includes(device.category)) fabricDetail.append(remotePanel(device));
   if (device.category === 'computer') fabricDetail.append(jobPanel(device));
 }
 function diagnosisPanel(device) {
@@ -761,5 +762,39 @@ function jobPanel(device) {
     catch (e) { out.textContent = e.message; } finally { go.disabled = false; c.checked = false; }
   });
   box.append(element('h3', 'Run a job on this PC'), element('p', 'Irreversible by nature: OpenBridge records the command hash, exit code and output; it cannot undo what the command does.'), shell, cmd, row, go, out);
+  return box;
+}
+
+function remotePanel(device) {
+  // Remote control, touchpad (mouse), text and apps through typed device_action calls; each click is consented by the checkbox.
+  const box = element('div', undefined, 'diagnosis-panel');
+  const row = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
+  row.append(c, document.createTextNode(' I own this device and allow these remote actions now.'));
+  const out = element('p'); out.setAttribute('role', 'status');
+  const act = async (action, args) => {
+    if (!c.checked) { out.textContent = 'Tick the consent box first.'; return null; }
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'device_action', device_key: device.key, params: { action, args: args || {} }, consent: true });
+      out.textContent = `${action}${args && args.key ? ' ' + args.key : ''}: ${r.state}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`; return r; }
+    catch (e) { out.textContent = e.message; return null; }
+  };
+  const keys = element('div');
+  const tv = device.category === 'tv';
+  for (const [label, key] of [['⏻', 'power'], ['⌂', 'home'], ['↩', 'back'], ['▲', 'up'], ['◀', 'left'], ['OK', 'ok'], ['▶', 'right'], ['▼', 'down'],
+      ['🔉', 'volume_down'], ['🔊', 'volume_up'], ['🔇', 'mute'], ['⏯', 'play_pause'], ...(tv ? [['CH+', 'channel_up'], ['CH−', 'channel_down'], ['Input', 'tv_input'], ['Guide', 'guide']] : [])]) {
+    const b = element('button', label, 'secondary'); b.title = key; b.addEventListener('click', () => act('key', { key })); keys.append(b);
+  }
+  const pad = element('div', undefined, 'touchpad'); pad.title = 'Click = tap at that point of the device screen';
+  pad.style.cssText = 'aspect-ratio:16/9;max-width:320px;border:1px solid currentColor;border-radius:8px;margin:.5rem 0;cursor:crosshair';
+  pad.addEventListener('click', e => { const r = pad.getBoundingClientRect(); act('tap', { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }); });
+  const text = element('input'); text.placeholder = 'Type text on the device'; text.maxLength = 100;
+  const send = element('button', 'Send text', 'secondary'); send.addEventListener('click', () => act('text', { text: text.value }));
+  const apps = element('select'); const loadApps = element('button', 'Load apps', 'secondary'); const launch = element('button', 'Launch', 'secondary');
+  loadApps.addEventListener('click', async () => { const r = await act('list_apps'); if (r && r.result.apps) apps.replaceChildren(...r.result.apps.map(a => { const o = element('option', a); o.value = a; return o; })); });
+  launch.addEventListener('click', () => act('launch_app', { package: apps.value }));
+  const vol = element('input'); vol.type = 'number'; vol.min = 0; vol.max = 100; vol.placeholder = 'volume';
+  const setVol = element('button', 'Set volume (exact undo)', 'secondary'); const undoVol = element('button', 'Undo volume', 'secondary');
+  setVol.addEventListener('click', () => act('set', { setting: 'media_volume', value: Number(vol.value) }));
+  undoVol.addEventListener('click', () => act('restore', { setting: 'media_volume' }));
+  box.append(element('h3', 'Remote control'), row, keys, pad, text, send, element('br'), loadApps, apps, launch, element('br'), vol, setVol, undoVol, out);
   return box;
 }
