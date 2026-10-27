@@ -145,6 +145,28 @@ class AndroidAdapter:
             self._run(['-s', serial, 'forward', f'tcp:{port}', 'tcp:47800'])
         return f'http://127.0.0.1:{port}'
 
+    def pair_wireless(self, ip, pair_port, code):
+        """Owner-typed Wear OS / Android 11+ wireless-debugging pairing: `adb pair` with the code shown on the device,
+        then connect to the port the device advertises over mDNS. Private IPv4 only; no scanning."""
+        import ipaddress, re as _re
+        address = ipaddress.ip_address(ip)
+        if address.version != 4 or not address.is_private or address.is_loopback:
+            raise ValueError('Only private IPv4 addresses on the local network')
+        if not (isinstance(pair_port, int) and 1024 < pair_port < 65536) or not _re.fullmatch(r'\d{6}', str(code)):
+            raise ValueError('Pairing needs the port and the 6-digit code shown on the device')
+        out = self._run(['pair', f'{address}:{pair_port}', str(code)])
+        if 'successfully paired' not in out.lower():
+            return 'PAIR_FAILED', None
+        services = self._run(['mdns', 'services'])
+        m = _re.search(rf'_adb-tls-connect\._tcp\s+{_re.escape(str(address))}:(\d+)', services)
+        if not m:
+            return 'PAIRED_NOT_ADVERTISED', None
+        target = f'{address}:{m.group(1)}'
+        self._run(['connect', target])
+        state = next((d['state'] for d in self.discover()['devices'] if
+                      any(k == target for k, v in self._handles.items() if v == d['id'])), None)
+        return ('AUTHORIZED' if state == 'device' else 'CONNECT_FAILED'), target
+
     def stable_identifier(self, handle, salt):
         """Opaque per-install identifier from ro.serialno (same value over USB and Wi-Fi ADB). None if unreadable."""
         import hashlib, hmac
@@ -229,6 +251,7 @@ class AndroidAdapter:
                 optional('screen_timeout_seconds', timeout)
                 optional('ram_total_gb', ram)
                 optional('is_television', feature('android.software.leanback'))
+                optional('is_watch', feature('android.hardware.type.watch'))
                 optional('bluetooth_le', feature('android.hardware.bluetooth_le'))
                 if not facts:
                     raise ValueError('No readable facts')

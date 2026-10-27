@@ -67,7 +67,7 @@ def ingest_android(registry, adapter, salt):
                 report = adapter.inspect(device['id'])
                 obs = [DeviceObservation(e['key'], e['value'], 'ADB', device['transport'], e['observed_at'], True) for e in report['evidence']]
                 facts = {e['key']: e['value'] for e in report['evidence']}
-                category = 'tv' if facts.get('is_television') else 'phone'
+                category = 'tv' if facts.get('is_television') else 'watch' if facts.get('is_watch') else 'phone'
             except ValueError:
                 pass
         label = next((o.value for o in obs if o.key == 'model'), device['name'])
