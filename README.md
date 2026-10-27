@@ -72,7 +72,7 @@ Evidence for every item: `EVIDENCE_LEDGER.md` and `docs/HARDWARE_TEST_MATRIX.md`
 | Voice (V4-10) | Push-to-talk → `muse-voice-transcribe-1.0` → typed FR/EN intent proposal; owner reviews and presses Run | IMPLEMENTED_UNVERIFIED (no live STT receipt yet) |
 | Wear OS manifest (V4-08) | Watch capabilities derived from reported features on every read; control BLOCKED | SIMULATED_VERIFIED; Watch7 run pending |
 | PC 2 as a client (V4-12) | Runs owner-typed jobs (consent per command, exit code + output returned) and serves pinned Meta models for the scheduler; raw device data never leaves this PC | SIMULATED_VERIFIED; real job + benchmark pending |
-| Tuya robot vacuum | Owner-linked via the owner's Tuya IoT project; status reads; suction/volume with exact Undo; full robot control (start, pause, dock, moves with auto-stop, seek, dust, resets) with consent per command | REAL_HARDWARE_VERIFIED for reads and suction change + exact Undo (docs/tuya-hardware-receipt.json); movement commands SIMULATED_VERIFIED |
+| Tuya robot vacuum | Owner-linked via the owner's Tuya IoT project; status reads; suction/volume with exact Undo; full robot control (start, pause, dock, moves with auto-stop, seek, dust, resets) with consent per command | REAL_HARDWARE_VERIFIED: reads, suction change + exact Undo, start/pause, manual moves and return to dock (EVIDENCE_LEDGER) |
 
 Claim-by-claim evidence: [docs/jury/CLAIM_EVIDENCE_MATRIX.md](docs/jury/CLAIM_EVIDENCE_MATRIX.md).
 
