@@ -52,6 +52,14 @@ Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDW
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Claude, Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
+## What's new (27 Oct 2026)
+- **Runtime contract v1 and `/api/v2`**: a versioned read model and one execute endpoint over named safe primitives (schema, consent, identity re-check, per-device locking, honest timeouts). See `docs/api/HTTP.md`.
+- **More devices, all owner-authorized**: Galaxy Watch7 (wireless-debugging pairing with an in-app tutorial), a second Windows PC through the owner's agent (read-only), Android phone and TV Companion relays feeding Capability Forge.
+- **Crash-recoverable writes**: five process-kill points during a real change on the phone, each recovered from the journal with exact read-back (5/5).
+- **Live Meta Model API**: `muse-spark-1.3` advisory verified live on synthetic facts within free credits; local Llama 3.2 3B and Muse Glimmer remain the default.
+- **Read-only watchers and a redacted multi-device report.**
+Evidence for every item: `EVIDENCE_LEDGER.md` and `docs/HARDWARE_TEST_MATRIX.md`. Limits: `docs/KNOWN_LIMITATIONS.md`.
+
 ## Run it
 Requirements: Windows or Linux, Python 3.14 (no third-party runtime packages), Android platform-tools for ADB. Optional: Ollama for local Meta models, `bleak` for PC Bluetooth.
 

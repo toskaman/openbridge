@@ -6,3 +6,5 @@
 4. Relay security relies on on-screen pairing and the Companion being in the foreground; a compromised paired device could report false observations (they are observe-only and never trigger actions).
 5. Loopback isolation does not protect against malicious software running as the same local user.
 6. Event-start confirmation is participant-reported; organizer answers to office-hours questions are pending.
+
+| Start-date eligibility (repo created 26 Oct) | Participant reports organizer confirmation that building could start at first push; keep CONTRIBUTIONS.md disclosure | 27 Oct |

@@ -3,7 +3,7 @@
 | Scenario | Status | Evidence |
 |---|---|---|
 | Android USB discovery, inspection (12 facts) | REAL_HARDWARE_VERIFIED | Xiaomi 11T Pro (Android 14); EVIDENCE_LEDGER phase A |
-| Android ADB Wi-Fi (classic `adb connect <ip>:5555`) | REAL_HARDWARE_VERIFIED | Android TV, EVIDENCE_LEDGER TV section; phone wireless-debugging pairing (`_adb-tls-connect`): NOT TESTED |
+| Android ADB Wi-Fi (classic `adb connect <ip>:5555`) | REAL_HARDWARE_VERIFIED | Android TV, EVIDENCE_LEDGER TV section; wireless-debugging pairing (`_adb-tls-connect`): REAL_HARDWARE_VERIFIED on a Galaxy Watch7 (owner-typed code) |
 | Optional-app change + exact Undo | REAL_HARDWARE_VERIFIED | physical-package-receipt.json, agent-loop-receipt.json |
 | Crash during transaction + recovery | REAL_HARDWARE_VERIFIED | crash-recovery-receipt.json |
 | Android TV over ADB Wi-Fi (authorized after on-screen prompt) | REAL_HARDWARE_VERIFIED | EVIDENCE_LEDGER TV section |
@@ -19,7 +19,7 @@
 | Same device via several transports | REAL_HARDWARE_VERIFIED (Freebox: mDNS ×3 + API) | fabric screenshots |
 | Device seen only in LAN inventory | REAL_HARDWARE_VERIFIED | 12 Freebox-only hosts |
 
-Exact pending hardware procedures: (1) enable MIUI "Install via USB", install Companion from the relay panel, turn Bluetooth on, allow "Nearby devices", pair with the on-screen code, enable scans, scan 8 s; (2) on the Android TV enable Developer options > Wireless debugging and pair; (3) unplug the USB cable during the EXECUTING state of an app-state change and verify journal recovery.
+Historical (26 Oct), all since completed — see EVIDENCE_LEDGER. Former pending hardware procedures: (1) enable MIUI "Install via USB", install Companion from the relay panel, turn Bluetooth on, allow "Nearby devices", pair with the on-screen code, enable scans, scan 8 s; (2) on the Android TV enable Developer options > Wireless debugging and pair; (3) unplug the USB cable during the EXECUTING state of an app-state change and verify journal recovery.
 
 ## Device Runtime v2 (branch feat/device-runtime-v2)
 
@@ -33,3 +33,12 @@ Exact pending hardware procedures: (1) enable MIUI "Install via USB", install Co
 | Relay disappears / revoked, TV off, timeout, concurrent requests, inconsistent read-back, server restart | SIMULATED_VERIFIED | `tests/runtime/test_primitives.py` |
 | Relay staleness, rotating addresses, anti-spoofing flags | SIMULATED_VERIFIED | `tests/runtime/test_relay_health.py` |
 | Windows PC through the owner's BridgeWindows agent (read-only allowlist: sys.diag, proc.list count, 4 registry values) | REAL_HARDWARE_VERIFIED (second PC, Windows 10 build 17763 x64, agent 3.7.1 x86) | `python -m dev.windows_bridge_smoke` + `tests/runtime/test_windows_bridge.py` |
+
+## 27 Oct additions
+| Scenario | Status | Evidence |
+|---|---|---|
+| Galaxy Watch7 44 mm (SM-L310, Android 16) paired over wireless debugging, category `watch`, read_facts 15 findings | REAL_HARDWARE_VERIFIED | PR #15 |
+| Crash drill: 5 process-kill points during a real write, journal recovery with exact read-back | REAL_HARDWARE_VERIFIED (phone, 5/5) | PR #12, #13 |
+| Windows PC via BridgeWindows agent, read-only; 64-bit agent self-update | REAL_HARDWARE_VERIFIED | PR #8, #11 |
+| Live Meta Model API advisory (`muse-spark-1.3`, synthetic facts) | REAL (live API) | PR #16 |
+| Tuya robot vacuum | DISCOVERED only (Freebox inventory) | needs the owner's Tuya IoT local key; never bypassed |
