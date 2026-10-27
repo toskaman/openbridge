@@ -19,7 +19,8 @@ GET_ROUTES = ('/api/v2/contract',
               '/api/v2/watches',
               '/api/v2/timeline',
               '/api/v2/hypotheses',
-              '/api/v2/relays/samples')
+              '/api/v2/relays/samples',
+              '/api/v2/catalog')
 POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
@@ -73,6 +74,16 @@ def get(server, path, query):
         except ValueError:
             return 400, {'error': 'since must be an integer'}
         return 200, {'events': ex.events_since(since)}
+    if path == '/api/v2/catalog':
+        from src.fabric import android_actions as aa
+        from src.adapters import tuya_local as tl
+        return 200, {'android': {'actions': aa.ACTIONS, 'keys': sorted(aa.KEYS), 'tv_only_keys': sorted(aa.TV_ONLY),
+                                 'settings': {k: {'range': v[2]} for k, v in aa.SETTINGS.items()},
+                                 'primitives': ['device_capabilities', 'device_action', 'device_macro']},
+                     'tuya_vacuum': {'commands': {k: list(v[1]) for k, v in tl.COMMANDS.items()}, 'settings': {k: list(v[1]) for k, v in tl.WRITABLE.items()},
+                                     'primitives': ['tuya_command', 'tuya_setting', 'tuya_undo']},
+                     'windows_pc': {'primitives': ['pc_job'], 'shells': ['cmd', 'powershell']},
+                     'note': 'Compose new features with device_macro (Android) or sequences of these primitives; every write needs owner consent.'}
     if path == '/api/v2/watches':
         return 200, {'watches': ex.watchers().list()}
     if path in ('/api/v2/timeline', '/api/v2/hypotheses'):

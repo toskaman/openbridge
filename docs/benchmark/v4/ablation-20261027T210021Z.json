@@ -1,0 +1,1562 @@
+{
+ "at": "2026-10-27T21:00:21+00:00",
+ "cases_sha256": "acf7224aef0d34a18d91d1ff45fda8dc5e5aef3e5dd68572dd6dbc1fd1a166a8",
+ "summary": {
+  "rules": {
+   "n": 24,
+   "top1_accuracy": 0.833,
+   "errors": 0,
+   "median_ms": 0
+  },
+  "llama": {
+   "n": 72,
+   "top1_accuracy": 0.833,
+   "errors": 0,
+   "median_ms": 5133
+  },
+  "glimmer": {
+   "n": 72,
+   "top1_accuracy": 0.722,
+   "errors": 8,
+   "median_ms": 32630
+  }
+ },
+ "arms": {
+  "rules": {
+   "n": 24,
+   "top1_accuracy": 0.833,
+   "errors": 0,
+   "median_ms": 0,
+   "rows": [
+    {
+     "case": "device_radio_off_0",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 0
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 0
+    }
+   ]
+  },
+  "llama": {
+   "n": 72,
+   "top1_accuracy": 0.833,
+   "errors": 0,
+   "median_ms": 5133,
+   "rows": [
+    {
+     "case": "device_radio_off_0",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 14018
+    },
+    {
+     "case": "device_radio_off_0",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 5133
+    },
+    {
+     "case": "device_radio_off_0",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 5264
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 12122
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 9824
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 9598
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 4803
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 16340
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 4439
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 4339
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 4487
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 4328
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 8392
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 1,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 5146
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 2,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 5182
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 9012
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 1,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 4707
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 2,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 4667
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 7933
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 1,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 5047
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 2,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 5053
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 7338
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 1,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 4716
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 2,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 4862
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 6852
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4984
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 5013
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4705
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4869
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4902
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4685
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4773
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4663
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4606
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4645
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4688
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 8425
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 5034
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 5088
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 8002
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 5544
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 5452
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 9179
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 6277
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 6392
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 6828
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 4984
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 5286
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 5273
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4900
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4656
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4582
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4565
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4812
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4670
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4666
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4743
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4639
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4648
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 4777
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 11234
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 7904
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 7902
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 10990
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 8219
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 8229
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 11718
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 8229
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 7150
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 10576
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 7298
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 7226
+    }
+   ]
+  },
+  "glimmer": {
+   "n": 72,
+   "top1_accuracy": 0.722,
+   "errors": 8,
+   "median_ms": 32630,
+   "rows": [
+    {
+     "case": "device_radio_off_0",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 42848
+    },
+    {
+     "case": "device_radio_off_0",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 20396
+    },
+    {
+     "case": "device_radio_off_0",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 18626
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 25181
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 22855
+    },
+    {
+     "case": "device_radio_off_1",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 23172
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 23322
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 22678
+    },
+    {
+     "case": "device_radio_off_2",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 22661
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 0,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 22980
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 1,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 22949
+    },
+    {
+     "case": "device_radio_off_3",
+     "rep": 2,
+     "pred": "device_radio_off",
+     "label": "device_radio_off",
+     "ok": true,
+     "error": null,
+     "ms": 22604
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 22714
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 1,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 24420
+    },
+    {
+     "case": "device_sleep_0",
+     "rep": 2,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 26693
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 0,
+     "pred": null,
+     "label": "device_sleep",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 35169
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 1,
+     "pred": null,
+     "label": "device_sleep",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 33345
+    },
+    {
+     "case": "device_sleep_1",
+     "rep": 2,
+     "pred": null,
+     "label": "device_sleep",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 34443
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 0,
+     "pred": null,
+     "label": "device_sleep",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 32159
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 1,
+     "pred": null,
+     "label": "device_sleep",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 29686
+    },
+    {
+     "case": "device_sleep_2",
+     "rep": 2,
+     "pred": null,
+     "label": "device_sleep",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 29281
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 0,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 26560
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 1,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 26395
+    },
+    {
+     "case": "device_sleep_3",
+     "rep": 2,
+     "pred": "device_sleep",
+     "label": "device_sleep",
+     "ok": true,
+     "error": null,
+     "ms": 26595
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35371
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35765
+    },
+    {
+     "case": "distractor_ble_0",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 34712
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 34950
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35205
+    },
+    {
+     "case": "distractor_ble_1",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35553
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35771
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 34475
+    },
+    {
+     "case": "distractor_ble_2",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 33002
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 33490
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35609
+    },
+    {
+     "case": "distractor_ble_3",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 36506
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 36592
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 34047
+    },
+    {
+     "case": "router_radio_change_0",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 32630
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 34218
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 31006
+    },
+    {
+     "case": "router_radio_change_1",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 31367
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 37477
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 1,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 35176
+    },
+    {
+     "case": "router_radio_change_2",
+     "rep": 2,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 34997
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 0,
+     "pred": "router_radio_change",
+     "label": "router_radio_change",
+     "ok": true,
+     "error": null,
+     "ms": 41860
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 1,
+     "pred": null,
+     "label": "router_radio_change",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 31033
+    },
+    {
+     "case": "router_radio_change_3",
+     "rep": 2,
+     "pred": null,
+     "label": "router_radio_change",
+     "ok": false,
+     "error": "ModelBlocked",
+     "ms": 30693
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35646
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35745
+    },
+    {
+     "case": "unobserved_cause_0",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35707
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35257
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35228
+    },
+    {
+     "case": "unobserved_cause_1",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35194
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 33983
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35112
+    },
+    {
+     "case": "unobserved_cause_2",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35337
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 0,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 34876
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 1,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 34718
+    },
+    {
+     "case": "unobserved_cause_3",
+     "rep": 2,
+     "pred": "device_local_link",
+     "label": "unobserved_cause",
+     "ok": true,
+     "error": null,
+     "ms": 35003
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 27943
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 28529
+    },
+    {
+     "case": "wan_outage_0",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 28213
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 16512
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 16003
+    },
+    {
+     "case": "wan_outage_1",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 15934
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 16622
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 19016
+    },
+    {
+     "case": "wan_outage_2",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 18310
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 0,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 16609
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 1,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 16592
+    },
+    {
+     "case": "wan_outage_3",
+     "rep": 2,
+     "pred": "shared_outage",
+     "label": "wan_outage",
+     "ok": false,
+     "error": null,
+     "ms": 15476
+    }
+   ]
+  }
+ }
+}

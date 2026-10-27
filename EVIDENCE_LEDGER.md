@@ -419,3 +419,5 @@ OpenBridge server with `--windows-bridge` (commit 363b538 tree): the PC 2 agent 
 - REAL interop (uncommitted probe, needs the binary): real agent.exe (C) <-> WindowsBridge over loopback: handshake agent_id REALPC v4.0.0, real sys.diag (Win10 build 19045, 16 cores, 31.9 GB RAM), real hashed MachineGuid identity, exec.run blocked client-side.
 - Honest limits: second PHYSICAL PC over LAN not yet tested (2-agent proof is loopback; Wireshark no-PSK capture still open); agent.exe --token argv exposes PSK in process list -> prefer BRIDGE_PSK env (README); self-update reconnect is a retry storm (~350 incoming, works but noisy, P2); secure_v4.inc X25519 design deprecated in-file (not shipped).
 - Backups: D:\DevBackups\Hackaton-BWv4\Hackaton-BWv4_2026-10-27_21-50-30.zip (3 files) + Hackaton-BWv4_2026-10-27_22-41-44.zip (6 files).
+## 27 Oct 2026 (night) — capability sweep
+See docs/DEVICE_CAPABILITIES.md: catalog probed on TV and phone; vacuum water level / volume / seek and PC 2 jobs verified; TV input hung in deep standby and MIUI blocked input injection — both reported, not hidden.

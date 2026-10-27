@@ -25,7 +25,7 @@ Every public claim, its status and where to check it. A claim without evidence i
 | Cross-transport timeline + competing hypotheses + read-only probe | REAL_HARDWARE_VERIFIED (10-min capture, induced link drop) + CI drills | tests/runtime/test_timeline.py, drills + independent labels |
 | Privacy-preserving cloud escalation (never "zero-knowledge") | LIVE VERIFIED (one consented muse-spark-1.3 call, EVIDENCE_LEDGER) + golden corpus | tests/runtime/test_redact.py (golden corpus), tests/runtime/test_cloud_escalation.py |
 | Meta Model API live call (muse-spark-1.3) | REAL (synthetic facts) | docs/runtime-meta-receipt.json, EVIDENCE_LEDGER 27 Oct |
-| Registered ablation, rules vs Llama vs Glimmer vs Spark | rules MEASURED; models pending | docs/benchmark/v4/REGISTRATION.md |
+| Registered ablation, rules vs Llama vs Glimmer vs Spark | MEASURED: rules 0.833, Llama 0.833, Glimmer 0.722; Spark not run (budget) | docs/benchmark/v4/REGISTRATION.md |
 | Visual read-back with local Glimmer | REAL_HARDWARE_VERIFIED (TV run: INCONCLUSIVE, Glimmer misread a screensaver) | tests/unit/test_visual_readback.py; `python -m dev.visual_readback_tv` (pending) |
 | BLE zone proximity (zones, not positions) | SIMULATED_VERIFIED | tests/runtime/test_ble_zones.py; `python -m dev.ble_zone_calibrate` (pending) |
 | Voice command via Muse Voice Transcribe | LIVE VERIFIED (synthetic speech clip, exact transcript) | tests/unit/test_voice.py (fake WebSocket) |
