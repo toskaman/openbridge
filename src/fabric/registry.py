@@ -98,7 +98,8 @@ class Registry:
                     'identifier_kinds': sorted({i.kind for i in dev['identifiers']}),
                     'facts': {f: {'value': self.best_value(dev['key'], f).value,
                                   'sources': sorted(o.source for o in obs.values()),
-                                  'verified': self.best_value(dev['key'], f).verified}
+                                  'verified': self.best_value(dev['key'], f).verified,
+                                  'observed_at': self.best_value(dev['key'], f).observed_at}
                               for f, obs in dev['observations'].items()},
                     'capabilities': [vars(c) for c in dev['capabilities'].values()],
                     'handles': dict(dev.get('handles', {})), 'last_seen': dev['last_seen']})

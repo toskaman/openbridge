@@ -1,3 +1,4 @@
+import os
 """Real-hardware relay UI check (not CI): server on 127.0.0.1:18799, phone with the Companion open and scans enabled.
 The pairing code is read from the phone screen via uiautomator (owner-authorized test automation)."""
 import re, subprocess, time
@@ -14,7 +15,7 @@ def screen_code(serial):
         time.sleep(1)
     raise SystemExit('code not visible')
 
-def main(serial='f8eed1f3',node='2107113SG',tag='phone'):
+def main(serial=os.environ.get('OPENBRIDGE_PHONE_SERIAL',''),node='2107113SG',tag='phone'):
     out=Path('artifacts/relay');out.mkdir(parents=True,exist_ok=True)
     with sync_playwright() as p:
         b=p.chromium.launch(headless=True);page=b.new_page(viewport={'width':1440,'height':1100});errors=[]
