@@ -42,6 +42,9 @@ class FakeAgent:
                         res = {'error': {'code': -32010, 'message': 'RegQueryValueExA failed'}}
                     else:
                         res = {'result': {'value': {'MachineGuid': self.guid, 'HwProfileGuid': '{hw-1}'}.get(name), 'reg_type': 1}}
+                elif req['method'] == 'exec.run':
+                    import base64
+                    res = {'result': {'pid': 9, 'exit_code': 0, 'timed_out': False, 'stdout_b64': base64.b64encode(b'hello from PC2').decode(), 'stderr_b64': ''}}
                 elif req['method'] == 'proc.list':
                     res = {'result': {'processes': [{'name': 'secret.exe', 'pid': 1}] * 3}}
                 else:
@@ -100,6 +103,19 @@ class Bridge(unittest.TestCase):
         with self.assertRaises(BridgeUnavailable):
             self.b.call('reg.read', {'hive': 'HKLM', 'subkey': r'SAM\SAM', 'value_name': 'x'})
         self.assertEqual(a.methods, [])                    # nothing forbidden ever reached the agent
+        a.close()
+
+    def test_job_only_through_run_job_with_bounds(self):
+        a = FakeAgent(self.port)
+        self.assertTrue(wait(self.b.connected))
+        r = self.b.run_job('Get-Date', 'powershell', 30)
+        self.assertEqual(r['exit_code'], 0)
+        for args in (('', 'cmd', 5), ('x' * 2001, 'cmd', 5), ('dir', 'bash', 5), ('dir', 'cmd', 0), ('dir', 'cmd', 601)):
+            with self.assertRaises(BridgeUnavailable):
+                self.b.run_job(*args)
+        with self.assertRaises(BridgeUnavailable):
+            self.b.call('exec.run', {'command': 'dir'})
+        self.assertEqual(a.methods.count('exec.run'), 1)
         a.close()
 
     def test_diagnostics_identity_and_privacy(self):
@@ -163,3 +179,26 @@ class Bridge(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class PcJobPrimitive(unittest.TestCase):
+    def test_consent_identity_and_receipt(self):
+        import base64
+        from types import SimpleNamespace
+        from src.fabric.contracts import Identifier
+        from src.fabric.registry import Registry
+        from src.runtime.primitives import Executor
+        reg = Registry()
+        key = reg.upsert([Identifier('windows_machine_guid', 'id-pc2', True)], category='computer', label='PC 2')
+        class B:
+            def connected(self): return True
+            def identity(self, salt): return self.ident
+            def run_job(self, c, sh, t): return {'exit_code': 0, 'timed_out': False, 'stdout_b64': base64.b64encode(b'ok').decode(), 'stderr_b64': ''}
+        b = B(); b.ident = 'id-pc2'
+        ex = Executor(SimpleNamespace(fabric_registry=reg, fabric_salt=b's', fabric_adapters=lambda p=None: {'windows': b}))
+        self.assertEqual(ex.execute('pc_job', key, {'command': 'hostname'})['state'], 'BLOCKED')
+        r = ex.execute('pc_job', key, {'command': 'hostname'}, consent=True)
+        self.assertEqual((r['state'], r['result']['stdout']), ('VERIFIED', 'ok'))
+        self.assertEqual(len(r['result']['command_sha256']), 64)
+        b.ident = 'other'
+        self.assertEqual(ex.execute('pc_job', key, {'command': 'hostname'}, consent=True)['state'], 'BLOCKED')
