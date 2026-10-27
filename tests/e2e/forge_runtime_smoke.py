@@ -18,7 +18,7 @@ def main():
     provider.current['available']=True
     page=browser.new_page(viewport={'width':width,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
-    page.evaluate("""()=>{const p=document.createElement('p');p.textContent='CONTROLLED CONTRACT TEST / NO HARDWARE EVIDENCE';Object.assign(p.style,{position:'fixed',top:'0',left:'0',margin:'0',padding:'8px',background:'#ffe1a9',color:'#151812',zIndex:'9999',fontSize:'12px'});document.body.append(p)}""")
+    page.evaluate("""()=>{const p=document.createElement('p');p.textContent='CONTROLLED CONTRACT TEST / NO HARDWARE EVIDENCE';Object.assign(p.style,{position:'static',margin:'0',padding:'8px',background:'#ffe1a9',color:'#151812',zIndex:'9999',fontSize:'12px'});document.body.prepend(p)}""")
     expect(page.locator('#source-pill')).to_have_text('PHYSICAL / READ-ONLY')
     assert page.locator('#refresh-fixture').is_hidden()
     assert 'Living-room TV' not in page.locator('#relay-title').inner_text()
