@@ -9,7 +9,7 @@ from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFa
 GET_ROUTES = ('/api/v2/contract', '/api/v2/graph', '/api/v2/capabilities', '/api/v2/facts', '/api/v2/routes',
               '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis', '/api/v2/watches',
               '/api/v2/timeline', '/api/v2/hypotheses')
-POST_ROUTES = ('/api/v2/execute',)
+POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm')
 
 
 def executor(server):
@@ -121,7 +121,40 @@ def get(server, path, query):
     return 404, {'error': 'Not found'}
 
 
+def escalation(server):
+    if getattr(server, 'cloud_escalation', None) is None:
+        from src.ai.cloud_escalation import CloudEscalation
+        b = getattr(server, 'model_broker', None)
+        server.cloud_escalation = CloudEscalation(b if callable(getattr(b, '_reserve', None)) else None)
+    return server.cloud_escalation
+
+
+def cloud(server, path, body):
+    from src.ai.broker import ModelBlocked
+    from src.runtime import hypotheses
+    from src.runtime.redact import LeakDetected
+    esc = escalation(server)
+    try:
+        if path == '/api/v2/cloud/preview':
+            if set(body) - {'device_key', 'window_s'} or not isinstance(body.get('device_key'), str):
+                return 400, {'error': 'device_key required; no other fields'}
+            w = body.get('window_s', hypotheses.DEFAULT_WINDOW_S)
+            if isinstance(w, bool) or not isinstance(w, int) or not 10 <= w <= 600:
+                return 400, {'error': 'window_s out of range'}
+            rows = executor(server).timeline().rows(limit=4000)
+            return 200, esc.preview(hypotheses.analyze(rows, body['device_key'], w), rows)
+        if set(body) - {'preview_id', 'sha256', 'consent'}:
+            return 400, {'error': 'Unexpected fields'}
+        return 200, esc.confirm(str(body.get('preview_id', ''))[:40], str(body.get('sha256', ''))[:64], body.get('consent'))
+    except LeakDetected as e:
+        return 409, {'error': 'Blocked: ' + str(e), 'state': 'BLOCKED_LEAK'}
+    except ModelBlocked as e:
+        return 409, {'error': str(e), 'state': 'BLOCKED'}
+
+
 def post(server, path, body):
+    if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
+        return cloud(server, path, body)
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent'}

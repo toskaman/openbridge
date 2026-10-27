@@ -416,6 +416,65 @@ function showDevice(device, links) {
   if (['tv', 'media'].includes(device.category) && !(device.handles || {}).WIFI) fabricDetail.append(tvPanel(device));
   const handle = (device.handles || {}).USB || (device.handles || {}).WIFI;
   if (handle && device.capabilities.some(c => c.name === 'ble_relay')) fabricDetail.append(relayPanel(device, handle));
+  if (['phone', 'tv', 'android', 'router', 'computer'].includes(device.category)) fabricDetail.append(diagnosisPanel(device));
+}
+function diagnosisPanel(device) {
+  // V4-01 timeline + hypotheses, V4-05 privacy-preserving cloud review. Read-only; nothing here changes a device.
+  const box = element('div', undefined, 'diagnosis-panel');
+  const out = element('div', undefined, 'diagnosis-out');
+  const probe = element('button', 'Re-measure (read-only, 3 × 10 s)', 'secondary');
+  const why = element('button', 'Why did it disconnect?', 'secondary');
+  const cloud = element('button', 'Prepare Meta cloud review…', 'secondary');
+  const showHyp = (a) => {
+    out.replaceChildren();
+    if (a.verdict !== 'HYPOTHESES') { out.append(element('p', 'Unknown: not enough data. No link loss, Wi-Fi-off or WAN-down entry for this device in the timeline yet.')); return; }
+    const ol = element('ol');
+    for (const h of a.hypotheses) {
+      const li = element('li');
+      li.append(element('strong', `${h.confidence.toUpperCase()} · `), document.createTextNode(`${h.statement} — ${h.claim}. Cites ${h.cites.join(', ')}`));
+      if (h.counterexamples && Object.keys(h.counterexamples).length) li.append(element('small', ` · counterexamples: ${h.counterexamples.symptoms_without_it} symptom(s) without it, ${h.counterexamples.occurrences_without_symptom} occurrence(s) without symptom`));
+      ol.append(li);
+    }
+    out.append(element('p', `INFERRED from ${a.symptoms.length} symptom(s) in a ±${a.window_s} s window. Correlation in time, not proof.`), ol);
+  };
+  why.addEventListener('click', async () => {
+    try { showHyp(await request(`/api/v2/hypotheses?device=${encodeURIComponent(device.key)}`)); } catch (e) { out.replaceChildren(element('p', e.message)); }
+  });
+  probe.addEventListener('click', async () => {
+    probe.disabled = true; out.replaceChildren(element('p', 'Re-measuring… (read-only)'));
+    try {
+      const r = await postJson('/api/v2/execute', { primitive_id: 'diagnostic_probe', device_key: device.key, params: { device_keys: [device.key], samples: 3, interval_s: 10 } });
+      if (r.state === 'BLOCKED') throw new Error(r.errors.join('; '));
+      showHyp(r.result.after);
+      out.prepend(element('p', `${r.result.reads.filter(x => x.verified).length}/${r.result.reads.length} reads verified · receipt ${r.transaction_id}`));
+    } catch (e) { out.replaceChildren(element('p', e.message)); } finally { probe.disabled = false; }
+  });
+  cloud.addEventListener('click', async () => {
+    try {
+      const pv = await postJson('/api/v2/cloud/preview', { device_key: device.key });
+      const split = element('div', undefined, 'payload-split');
+      const left = element('div'); left.append(element('h4', 'Local projection (stays here)'), element('pre', JSON.stringify(pv.local_projection, null, 1)));
+      const right = element('div'); right.append(element('h4', `Outgoing to ${pv.model} · ${pv.bytes} bytes · sha256 ${pv.sha256.slice(0, 12)}…`), element('pre', pv.outgoing_payload));
+      split.append(left, right);
+      const diff = element('ul'); for (const d of pv.diff) diff.append(element('li', `${d.action} ${d.kind} at ${d.path}`));
+      const cats = element('ul'); for (const c of pv.categories_shared) cats.append(element('li', c));
+      const consentRow = element('label', undefined, 'transaction-consent'); const consent = element('input'); consent.type = 'checkbox';
+      consentRow.append(consent, document.createTextNode(' I reviewed these exact bytes and agree to send them once to Meta.'));
+      const send = element('button', pv.live_available ? 'Send exactly these bytes' : 'Meta cloud unavailable (no key / credit permit)', 'secondary');
+      send.disabled = true; consent.addEventListener('change', () => { send.disabled = !consent.checked || !pv.live_available; });
+      const res = element('p'); res.setAttribute('role', 'status');
+      send.addEventListener('click', async () => {
+        send.disabled = true;
+        try {
+          const r = await postJson('/api/v2/cloud/confirm', { preview_id: pv.preview_id, sha256: pv.sha256, consent: true });
+          res.textContent = `LIVE ${r.model} · ranking: ${r.answer.ranking.join(' > ')} · ${r.answer.summary} · uncertainty: ${r.answer.uncertainty} · next read-only check: ${r.answer.next_read_only_check}`;
+        } catch (e) { res.textContent = e.message; }
+      });
+      out.replaceChildren(element('p', pv.disclosure), element('h4', 'Categories shared'), cats, split, element('h4', 'What was removed or aliased'), diff, consentRow, send, res);
+    } catch (e) { out.replaceChildren(element('p', e.message)); }
+  });
+  box.append(element('h3', 'Diagnose across transports'), why, probe, cloud, out);
+  return box;
 }
 async function postJson(path, body) {
   if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
