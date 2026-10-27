@@ -1,0 +1,2 @@
+# Optional PC Bluetooth LE observation (MIT). Not needed when an Android Companion relays BLE.
+bleak==3.0.2
