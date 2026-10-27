@@ -35,6 +35,8 @@ class LocalServer(ThreadingHTTPServer):
     def server_close(self):
         monitor=getattr(self,'android_events',None)
         if monitor is not None:monitor.close()
+        ex=getattr(self,'runtime_executor',None)
+        if ex is not None and getattr(ex,'_watchers',None) is not None:ex._watchers.stop_all()   # session-scoped watches
         super().server_close()
 
 
@@ -56,6 +58,22 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def v2_post(self):
+        from src.runtime import api_v2
+        if self.path not in api_v2.POST_ROUTES:
+            return self.reply(404, {'error': 'Operation unavailable'})
+        if self.headers.get('Content-Type') != 'application/json':
+            return self.reply(415, {'error': 'JSON required'})
+        try:
+            lengths = self.headers.get_all('Content-Length', [])
+            if len(lengths) != 1 or self.headers.get('Transfer-Encoding') or not 0 <= int(lengths[0]) <= 8192:
+                raise ValueError()
+            self.connection.settimeout(5)
+            body = json.loads(self.rfile.read(int(lengths[0])))
+        except (ValueError, OSError):
+            return self.reply(400, {'error': 'Invalid request'})
+        return self.reply(*api_v2.post(self.server, self.path, body))
+
     def host_allowed(self):
         hosts = self.headers.get_all('Host', [])
         return len(hosts) == 1 and hosts[0] == f'127.0.0.1:{self.server.server_port}'
@@ -64,6 +82,9 @@ class Handler(BaseHTTPRequestHandler):
         if not self.host_allowed():
             return self.reply(403, {'error': 'Untrusted host'})
         path = urlsplit(self.path).path
+        if path.startswith('/api/v2/'):
+            from src.runtime import api_v2
+            return self.reply(*api_v2.get(self.server, path, urlsplit(self.path).query))
         if path == '/api/device-events':
             if parse_qs(urlsplit(self.path).query).get('source') != ['android']:
                 return self.reply(400,{'error':'Explicit Android event source required'})
@@ -146,6 +167,8 @@ class Handler(BaseHTTPRequestHandler):
         if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
+        if self.path.startswith('/api/v2/'):
+            return self.v2_post()
         if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect', '/api/session-restore'):
             return self.reply(404, {'error': 'Operation unavailable'})
         if self.headers.get('Content-Type') != 'application/json':
@@ -260,7 +283,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not self.server.fabric_lock.acquire(blocking=False):
                     return self.reply(409,{'error':'A discovery is already running'})
                 try:
-                    snap,_=fabric_discovery.run(self.server.fabric_adapters(),self.server.fabric_salt,providers=tuple(providers))
+                    snap,_=fabric_discovery.run(self.server.fabric_adapters(tuple(providers)),self.server.fabric_salt,providers=tuple(providers))
                 finally:
                     self.server.fabric_lock.release()
                 self.server.fabric_snapshot=snap
@@ -334,10 +357,12 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.session_journal = session_journal or SessionJournal()
     server.fabric_lock = threading.Lock()
     server.fabric_salt = fabric_salt if fabric_salt is not None else fabric_discovery.install_salt()
-    def fabric_adapters():
+    def fabric_adapters(providers=None):
         from src.adapters.freebox_auth import FreeboxSession
         from src.fabric.credential_vault import Vault
         session=None
+        if providers is not None and 'freebox' not in providers:   # never probe the gateway unless asked
+            return {'android':server.android,'freebox':None}
         try:
             facts=server.freebox.discover()['devices'][0]['facts']
             session=FreeboxSession(Vault(),facts['api_version'].split('.')[0])
@@ -380,6 +405,8 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.start_freebox_authorization = start_freebox_authorization
     server.fabric_registry = None
     server.relays = fabric_relay.RelayManager(lambda relay, msg: relay['send'](relay, msg))
+    from src.runtime.relay_health import RelayLedger
+    server.relay_ledger = RelayLedger()
     server.relay_pending = {}
     def relay_action(path, body, transport_factory=fabric_relay.http_transport):
         if path == '/api/relay-pair-start':
@@ -413,6 +440,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             status = fabric_relay.verify(relay['key'], relay['send'](relay, fabric_relay.command(relay['key'], rid, 'get_status')), relay['seen']).get('params', {})
             relay['permissions'] = dict(status.get('permissions', {}))
             rid, observations = server.relays.scan(int(body.get('seconds', 8)), relay_id=rid)
+            server.relay_ledger.record(rid, observations)
             registry = server.fabric_registry
             if registry is None:
                 raise fabric_relay.RelayError('Run discovery first so the relay device is in the graph')

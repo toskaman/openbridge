@@ -48,11 +48,11 @@ class AndroidAdapter:
         self._handles = {}
         self._lock = threading.RLock()
 
-    def _run(self, args):
+    def _run(self, args, max_bytes=131072):
         result = self.runner([self.executable, *args], capture_output=True, text=True,
                              encoding='utf-8', errors='replace', timeout=8,
                              creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        if result.returncode or len(result.stdout) > 131072:
+        if result.returncode or len(result.stdout) > min(max_bytes, 2097152):
             raise ValueError('ADB operation unavailable')
         return result.stdout
 
