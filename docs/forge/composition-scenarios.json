@@ -1,0 +1,3230 @@
+{
+  "version": 1,
+  "scope": "two-step read-observations to publish-readonly only",
+  "cases": [
+    {
+      "id": "forge-00",
+      "category": "single_relay",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-0.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-01",
+      "category": "single_relay",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-1.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-02",
+      "category": "single_relay",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-2.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-03",
+      "category": "single_relay",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-3.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-04",
+      "category": "multiple_routes",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-0",
+          "capability_id": "phone-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-0",
+          "source": "RELAY:phone-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-0.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-05",
+      "category": "multiple_routes",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-1",
+          "capability_id": "phone-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-1",
+          "source": "RELAY:phone-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-1.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-06",
+      "category": "multiple_routes",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-2",
+          "capability_id": "phone-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-2",
+          "source": "RELAY:phone-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-2.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-07",
+      "category": "multiple_routes",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-3",
+          "capability_id": "phone-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-3",
+          "source": "RELAY:phone-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-3.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-08",
+      "category": "permission_missing",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-09",
+      "category": "permission_missing",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-10",
+      "category": "permission_missing",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-11",
+      "category": "permission_missing",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-12",
+      "category": "relay_offline",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-13",
+      "category": "relay_offline",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-14",
+      "category": "relay_offline",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-15",
+      "category": "relay_offline",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-16",
+      "category": "stale_observation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1799999699,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-17",
+      "category": "stale_observation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1799999698,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-18",
+      "category": "stale_observation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1799999697,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-19",
+      "category": "stale_observation",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1799999696,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-20",
+      "category": "identity_conflict",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-21",
+      "category": "identity_conflict",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-22",
+      "category": "identity_conflict",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-23",
+      "category": "identity_conflict",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-24",
+      "category": "device_removed",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": false,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-25",
+      "category": "device_removed",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": false,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-26",
+      "category": "device_removed",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": false,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-27",
+      "category": "device_removed",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": false,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-28",
+      "category": "unverified_capability",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": false,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-29",
+      "category": "unverified_capability",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": false,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-30",
+      "category": "unverified_capability",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": false,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-31",
+      "category": "unverified_capability",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": false,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-32",
+      "category": "partial_data",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-33",
+      "category": "partial_data",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-34",
+      "category": "partial_data",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-35",
+      "category": "partial_data",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-36",
+      "category": "forged_source",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "ADB",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-37",
+      "category": "forged_source",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "ADB",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-38",
+      "category": "forged_source",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "ADB",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-39",
+      "category": "forged_source",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "ADB",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-40",
+      "category": "unsupported_measurement",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "temperature_c": 22
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-41",
+      "category": "unsupported_measurement",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "temperature_c": 22
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-42",
+      "category": "unsupported_measurement",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "temperature_c": 22
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-43",
+      "category": "unsupported_measurement",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "temperature_c": 22
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-44",
+      "category": "incompatible_operation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-45",
+      "category": "incompatible_operation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-46",
+      "category": "incompatible_operation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-47",
+      "category": "incompatible_operation",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "set_temperature",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-48",
+      "category": "future_observation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000010,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-49",
+      "category": "future_observation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000011,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-50",
+      "category": "future_observation",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000012,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-51",
+      "category": "future_observation",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000013,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": null,
+      "expected_decision": "unavailable",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-52",
+      "category": "alternate_valid_route",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-0",
+          "capability_id": "phone-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-0",
+          "source": "RELAY:phone-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-0.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-53",
+      "category": "alternate_valid_route",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-1",
+          "capability_id": "phone-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-1",
+          "source": "RELAY:phone-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-1.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-54",
+      "category": "alternate_valid_route",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-2",
+          "capability_id": "phone-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-2",
+          "source": "RELAY:phone-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-2.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-55",
+      "category": "alternate_valid_route",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": false,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-3",
+          "capability_id": "phone-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-3",
+          "source": "RELAY:phone-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "phone-3.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-56",
+      "category": "real_vs_simulated",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": false
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-0",
+          "capability_id": "phone-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-0",
+          "source": "RELAY:phone-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-0.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-57",
+      "category": "real_vs_simulated",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": false
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-1",
+          "capability_id": "phone-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-1",
+          "source": "RELAY:phone-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-1.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-58",
+      "category": "real_vs_simulated",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": false
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-2",
+          "capability_id": "phone-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-2",
+          "source": "RELAY:phone-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-2.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-59",
+      "category": "real_vs_simulated",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "REAL_HARDWARE_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": false
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-3",
+          "capability_id": "phone-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-3",
+          "source": "RELAY:phone-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-3.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-60",
+      "category": "contradictory_routes",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-0",
+          "capability_id": "tv-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-0",
+          "source": "RELAY:tv-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-0",
+          "capability_id": "phone-0.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-0",
+          "source": "RELAY:phone-0",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-0"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -45,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-0.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-61",
+      "category": "contradictory_routes",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-1",
+          "capability_id": "tv-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-1",
+          "source": "RELAY:tv-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-1",
+          "capability_id": "phone-1.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-1",
+          "source": "RELAY:phone-1",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-1"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -52,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-1.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-62",
+      "category": "contradictory_routes",
+      "split": "development",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-2",
+          "capability_id": "tv-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-2",
+          "source": "RELAY:tv-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-2",
+          "capability_id": "phone-2.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-2",
+          "source": "RELAY:phone-2",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-2"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -59,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-2.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    },
+    {
+      "id": "forge-63",
+      "category": "contradictory_routes",
+      "split": "held-out",
+      "now": 1800000000,
+      "manifests": [
+        {
+          "version": 1,
+          "service_id": "observations-3",
+          "capability_id": "tv-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "tv-3",
+          "source": "RELAY:tv-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": false,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        },
+        {
+          "version": 1,
+          "service_id": "phone-observations-3",
+          "capability_id": "phone-3.ble.observations",
+          "device_id": "beacon-demo",
+          "relay_id": "phone-3",
+          "source": "RELAY:phone-3",
+          "status": "SIMULATED_VERIFIED",
+          "verified": true,
+          "operation": "read_observations",
+          "permissions": [
+            "observe",
+            "read"
+          ],
+          "available": true,
+          "device_present": true,
+          "identity_conflict": true,
+          "observed_at": 1800000000,
+          "max_age_seconds": 120,
+          "evidence_refs": [
+            "phone-evidence-3"
+          ],
+          "observations": [
+            {
+              "observation_id": "obs-1",
+              "name": "Demo beacon",
+              "rssi_dbm": -66,
+              "manufacturer_data_hex": "0102"
+            }
+          ],
+          "simulation": true
+        }
+      ],
+      "expected_capability": "tv-3.ble.observations",
+      "expected_decision": "propose",
+      "synthetic_scenario": true
+    }
+  ]
+}
