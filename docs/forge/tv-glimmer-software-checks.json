@@ -1,0 +1,98 @@
+{
+  "runtime_revision": "f0de183c6ad1330f3756b6bf80a8883179ade9aa",
+  "forge_revision": "9af35cf27cca467fde3d7b76f4a853ff1d2b17a9",
+  "build": "disposable integration copy; source checkouts unchanged",
+  "overlay_sha256": {
+    "tests/integration/test_http.py": "0ff86fa9e4e2c8789f1b7b57c134d522f9f82768fa64b43ad16d541ba745d339",
+    "tests/fabric/test_guidance.py": "cc9f3a68e48da2d07a7036d140d612e9e5f5f9e3888652f429fb8948981ed656",
+    "config/runtime_models.json": "5098da4415675c2806a57425205b20391c942c03e2714e6d1fc724ff05c20599",
+    "dev/forge_runtime_integration.py": "c89a9f4d901999eb0b8253a35a43fafc71a5b07df07f4c873e59ec50c20b94dc",
+    "dev/forge_tv_glimmer_journey.py": "6d94952aaad866e67ae0df19165f9e43588b2b205276178c66db81c256f9d634",
+    "dev/controlled_io_guard.py": "ede0ede888aa4cbc23fc10e9ea06f6951f7c2470def47d685868b915af478655",
+    "src/forge/__init__.py": "a3c4e4e625ce6b2cbda87c85d1e8bd3330d8218e21462a7895501d2326c3ff10",
+    "src/forge/compiler.py": "effc2e06d19137a400a41274b18478bd133c93390d1f2da33a01d7c6fe6e7d33",
+    "src/forge/demo_host.py": "3d653a0df5d999fc7195284530d78a239cfad4a1bb85b82a98620c3e525f0b81",
+    "src/forge/fixtures.py": "5dcb858e55eed9654f136c6cca965dc0eb4d98453cf06147dfc1e4fc1b13c3d7",
+    "src/forge/local_models.py": "3f65ddb66d4dd7413cc681eff8b9828048ed93f49e53e8a4dc090011937d13d8",
+    "src/forge/meta_planner.py": "436aa6dde0b4a7522bf88f64168d6989f94479944b434c3c10d7aae99ddb2480",
+    "src/forge/planner.py": "189bafc18ff55a20a76fad696ac363d808ebe5d51042e073c35cf12f75e81878",
+    "src/forge/planner_v2.py": "b4c65244cf6edfa38f840fceb37e3d6f2da2d466ddcd0e5b790bf40645c2ec0b",
+    "src/forge/runtime_bridge.py": "472865b261dc627595d5eb1d5e87beeb48a908ed8fe63d85c38d57eb2ed82938",
+    "src/forge/service.py": "64148b82c820547c4f70282ce704a26cc1573791e1e8f16c6a340cc8459ab6bc",
+    "src/forge/spark_diagnostic.py": "d7c98945b73e65812aae55f2f5b4aa635efbfc7c6547a4644d4a61f06a99583c",
+    "src/forge/ui/forge.css": "f2582c4f6320095d9d90fd446f5bb9d595a2238e5b1bc8ad843e8a7190ada0cf",
+    "src/forge/ui/forge.js": "dc34e3a836a2887ff2c17d6707628dc0d0b783d6a93f8850d5879330cdef1cbc",
+    "src/forge/ui/index.html": "87c5be5b74c779d837435789ec4316db3fb3257612c483832050e0da82a76584",
+    "tests/forge/__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+    "tests/forge/test_core.py": "02f9aa92fe6b3096da8602d14469b0a84a55fb266190cbdeb117ca8cb6f104c4",
+    "tests/forge/test_http.py": "fe7582d3d641c56df11ea9904861555b41df1030b4b8e60ecc3cd489226105a5",
+    "tests/forge/test_meta_planner.py": "2dcbfa551f946ee4bacedfaaa23a5fd43024aa8df3a58117647e1c1af18adf07",
+    "tests/forge/test_model_lifecycle.py": "6e24f9d74b941447d1cf8c0007d1196f869a6cea6718a8a1746b4ce10f5218c8",
+    "tests/forge/test_planner_v2.py": "7319e7abd29abdb6937af23929ef20d7ade892403129e0f21bb5fcb4e59dc14c",
+    "tests/forge/test_runtime_bridge.py": "466b67a62572a48449463aa5a06272b796eb6ede79943c067c0be9e60112257b",
+    "tests/forge/test_spark_diagnostic.py": "af7fc3a2a365fb9610eefac44ef87bbb8d51a9609cf04a9091a6eddaf63586b1",
+    "tests/forge/test_tv_journey_helpers.py": "b89af453e2c378bfc58e4781fc1c686d44548d3995721a7b02fbe6574788d8e5",
+    "tests/forge/test_verified_publication.py": "c5cff7a5d33697d6979c9f9b4ad349e2e1ffe6adbe74c38f3c0bf89ac4a1d4d9",
+    "tests/e2e/forge_smoke.py": "ae9c9e3ace25595e42328fe182a2782ea9507eeb854779f3a92c416c3c118879",
+    "tests/e2e/forge_publication_failure_smoke.py": "a1baf69611f0cddf2079b34671e21e24ac4aa2ea1e7f85dd9497a0774006e74f",
+    "tests/e2e/forge_runtime_smoke.py": "55e0311c388913effe0e54ff64e8b3beeda13502b846ef79f8e4fb598740aad5",
+    "tests/e2e/forge_expiry_smoke.py": "cdf841f4776dc24a2bcdb08e4d05d100c6108890f76d03f0bc82e8b5b1736e55",
+    "tests/e2e/forge_injected_sim_smoke.py": "0334ae5567f8f0c909e45418f9ad781e92310f99350ccdfdca2f76b3518aa810",
+    "tests/e2e/forge_model_memory_smoke.py": "c25c3d0ee1b9c91bb5ed86126f154a3041ca200ac95231d35dd0764f96ec61a7",
+    "tests/e2e/forge_revocation_during_plan_smoke.py": "754da1e8afd027c322f97a0ed21d2c3521152a9cc1aac3f5c11865e5bc75334d"
+  },
+  "runner_sha256": "b316820a387834aaf42fdc2216ed20004e965d21b14acbdb4d6addaccff14b7f",
+  "model_calls": 0,
+  "hardware_calls": 0,
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -q",
+      "exit_code": 0,
+      "output": "----------------------------------------------------------------------\nRan 301 tests in 22.956s\n\nOK\n"
+    },
+    {
+      "command": "python -m dev.forge_runtime_integration",
+      "exit_code": 0,
+      "output": "{\n  \"evidence_kind\": \"CROSS_BRANCH_CONTROLLED_RUNTIME_HTTP\",\n  \"hardware_calls\": 0,\n  \"model_calls\": 0,\n  \"source_mode\": \"SIMULATED_VERIFIED\",\n  \"trusted_runtime_reader\": \"src.runtime.api_v2.reader\",\n  \"authenticated_http_read\": \"passed\",\n  \"rssi_dbm\": -61,\n  \"other_source_aggregate_rssi_ignored\": -20,\n  \"runtime_grant_revocation_http\": 409,\n  \"service_removal_http\": 404,\n  \"fixture_reset_enabled\": false\n}\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_smoke",
+      "exit_code": 0,
+      "output": "Forge browser checks passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_publication_failure_smoke",
+      "exit_code": 0,
+      "output": "Publication failure cleanup and explicit recovery passed at four widths; no model/hardware calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_runtime_smoke",
+      "exit_code": 0,
+      "output": "Controlled runtime UI passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_expiry_smoke",
+      "exit_code": 0,
+      "output": "Expired fixture recovery passed at four widths; zero hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_injected_sim_smoke",
+      "exit_code": 0,
+      "output": "Injected simulated source labels passed; default TV identity not inherited.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_model_memory_smoke",
+      "exit_code": 0,
+      "output": "Explicit prepare/release and unavailable states passed at four widths; no actual model or hardware calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_revocation_during_plan_smoke",
+      "exit_code": 0,
+      "output": "Immediate removal during proposal, prepare and release passed; late results preserve owner intent.\n"
+    }
+  ],
+  "guard_self_test": "passed",
+  "guard_scope": "blocks non-loopback Python DNS/sockets, model endpoint sockets, and ADB device commands; adb version is a permitted dependency check",
+  "blocked_io_attempts": [],
+  "passed": true
+}

@@ -1,0 +1,67 @@
+{
+  "evidence_kind": "PHYSICAL_TV_LOCAL_META_JOURNEY_ATTEMPT",
+  "status": "NOT_VERIFIED",
+  "recorded_at_utc": "2026-10-27T12:06:03.355102+00:00",
+  "source_revision": "1569c19f96afcb8e9cba599df9c86f65b585944c",
+  "runner_sha256": "0de9a6127a91dd03f159dd48e92666cfde0b3311963f26980fae2d0cf8118640",
+  "model_provider_cost_usd": 0.0,
+  "model_calls": 1,
+  "app_installs": 0,
+  "permission_grants": 0,
+  "device_setting_changes_outside_pairing": 0,
+  "screenshots": 0,
+  "videos": 0,
+  "stages": [
+    "ready_tv_found_no_setup_changes",
+    "preparing_local_meta_without_device_data",
+    "paired_through_product_api_with_existing_permissions",
+    "physical_source_bound_starting_browser_meta_proposal",
+    "local_meta_proposal_validated",
+    "consent_publication_fresh_read_and_documents_verified",
+    "journey_not_verified"
+  ],
+  "cleanup": {
+    "local_relay_key_removed": true,
+    "temporary_forward_removed": true,
+    "forge_closed": true
+  },
+  "model_prepare": {
+    "state": "ready",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 300,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 45486,
+    "authorizes_execution": false
+  },
+  "pairing_session_created": true,
+  "physical_advertisers": 4,
+  "model": {
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "elapsed_ms": 71269,
+    "usage": {
+      "prompt_tokens": 255,
+      "completion_tokens": 90
+    },
+    "provider_cost_usd": 0.0
+  },
+  "remote_companion_unpairing": "Not independently verified; the runtime primitive checks local key removal only.",
+  "failure": "TimeoutError",
+  "failure_detail_sha256": "ffbfb0cb6427f6f54b146b7bf6a1c32f2b16c207d10856da962e878d21cca054",
+  "android_permissions_unchanged": true,
+  "model_release": {
+    "state": "released",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 0,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 228,
+    "authorizes_execution": false
+  },
+  "completed_at_utc": "2026-10-27T12:08:53.932136+00:00"
+}

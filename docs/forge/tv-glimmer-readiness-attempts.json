@@ -1,0 +1,50 @@
+[
+  {
+    "original_receipt": {
+      "evidence_kind": "PHYSICAL_TV_LOCAL_META_JOURNEY_ATTEMPT",
+      "status": "NOT_VERIFIED",
+      "recorded_at_utc": "2026-10-27T12:13:59.778114+00:00",
+      "source_revision": "30629e6517beb45acfe92bcb22af417789f189a0",
+      "runner_sha256": "7c8a26df756f87743426974ec772c96695bba4804232247e8bbb877d82df2977",
+      "model_provider_cost_usd": 0.0,
+      "model_calls": 0,
+      "app_installs": 0,
+      "permission_grants": 0,
+      "device_setting_changes_outside_pairing": 0,
+      "screenshots": 0,
+      "videos": 0,
+      "stages": [
+        "journey_not_verified"
+      ],
+      "cleanup": {},
+      "failure": "COMPANION_MUST_ALREADY_BE_FOREGROUND",
+      "failure_detail_sha256": "b266a39f5f90ff89054d594cda38d1bd952aa35b5fce264903cbd602ccaec19f",
+      "completed_at_utc": "2026-10-27T12:14:01.961758+00:00"
+    }
+  },
+  {
+    "original_receipt": {
+      "evidence_kind": "PHYSICAL_TV_LOCAL_META_JOURNEY_ATTEMPT",
+      "status": "NOT_VERIFIED",
+      "recorded_at_utc": "2026-10-27T12:15:15.083929+00:00",
+      "source_revision": "30629e6517beb45acfe92bcb22af417789f189a0",
+      "runner_sha256": "15c653792b285584c3ca2d9f6c50a5148745e7048872a45816f47d44060b36bf",
+      "model_provider_cost_usd": 0.0,
+      "model_calls": 0,
+      "app_installs": 0,
+      "permission_grants": 0,
+      "device_setting_changes_outside_pairing": 0,
+      "activity_launches": 0,
+      "screenshots": 0,
+      "videos": 0,
+      "stages": [
+        "journey_not_verified"
+      ],
+      "cleanup": {},
+      "failure": "TimeoutExpired",
+      "failure_detail_sha256": "79bfac1c80e5d4c6f9106ff8207bd45847d454044f85a37866e6c21981baf164",
+      "completed_at_utc": "2026-10-27T12:15:24.457650+00:00"
+    },
+    "annotation": "Activity launch count is unconfirmed for this timeout; the original runner increments it only after a successful return. Do not use the original zero as evidence that no launch was attempted."
+  }
+]

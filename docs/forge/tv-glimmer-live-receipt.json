@@ -1,0 +1,77 @@
+{
+  "evidence_kind": "PHYSICAL_TV_LOCAL_META_JOURNEY_ATTEMPT",
+  "status": "REAL_HARDWARE_VERIFIED",
+  "recorded_at_utc": "2026-10-27T12:21:53.642227+00:00",
+  "source_revision": "30629e6517beb45acfe92bcb22af417789f189a0",
+  "runner_sha256": "15c653792b285584c3ca2d9f6c50a5148745e7048872a45816f47d44060b36bf",
+  "model_provider_cost_usd": 0.0,
+  "model_calls": 1,
+  "app_installs": 0,
+  "permission_grants": 0,
+  "device_setting_changes_outside_pairing": 0,
+  "activity_launches": 0,
+  "screenshots": 0,
+  "videos": 0,
+  "stages": [
+    "ready_tv_found_no_setup_changes",
+    "preparing_local_meta_without_device_data",
+    "paired_through_product_api_with_existing_permissions",
+    "physical_source_bound_starting_browser_meta_proposal",
+    "local_meta_proposal_validated",
+    "consent_publication_fresh_read_and_documents_verified",
+    "verifying_authenticated_denial_after_local_revocation",
+    "revocation_denial_and_service_removal_verified"
+  ],
+  "cleanup": {
+    "local_relay_key_removed": true,
+    "temporary_forward_removed": true,
+    "forge_closed": true
+  },
+  "model_initially_loaded": false,
+  "model_prepare": {
+    "state": "ready",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 300,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 46223,
+    "authorizes_execution": false
+  },
+  "pairing_session_created": true,
+  "physical_advertisers": 4,
+  "model": {
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "elapsed_ms": 82406,
+    "usage": {
+      "prompt_tokens": 259,
+      "completion_tokens": 98
+    },
+    "provider_cost_usd": 0.0
+  },
+  "http": {
+    "publish": 200,
+    "read": 200,
+    "documents": 200,
+    "after_relay_revocation": 409,
+    "remove": 200,
+    "after_removal": 404
+  },
+  "remote_companion_unpairing": "Not independently verified; the runtime primitive checks local key removal only.",
+  "consent_source": "Owner-authorized headless UI driver; not a new human Android permission-dialog acceptance.",
+  "android_permissions_unchanged": true,
+  "model_release": {
+    "state": "released",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 0,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 207,
+    "authorizes_execution": false
+  },
+  "completed_at_utc": "2026-10-27T12:24:25.565386+00:00"
+}
