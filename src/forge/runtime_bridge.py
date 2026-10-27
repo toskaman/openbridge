@@ -54,7 +54,7 @@ class RuntimeV1Provider:
             contract=self.read('/api/v2/contract')
             if not isinstance(contract.get('version'),str) or contract['version'].split('.')[0]!='1':raise ForgeError('RUNTIME_CONTRACT_INCOMPATIBLE')
             authority=self._authority()
-            data=self.read('/api/v2/facts?device='+quote(self.target,safe=''))
+            data=self.read('/api/v2/facts?device='+quote(self.target,safe='')+'&source='+quote(authority['source'],safe=''))
             if data.get('device')!=self.target:raise ForgeError('RUNTIME_FACT_DEVICE_MISMATCH')
             facts=[f for f in data.get('facts',[]) if f.get('name')=='ble_rssi']
             if len(facts)!=1:raise ForgeError('RUNTIME_SIGNAL_ABSENT_OR_AMBIGUOUS')

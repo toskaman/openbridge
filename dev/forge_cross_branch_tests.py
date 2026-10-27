@@ -23,12 +23,13 @@ with tempfile.TemporaryDirectory(prefix='openbridge-contract-integration-') as d
  for relative in overlays:shutil.copy2(forge/relative,build/relative)
  shutil.copytree(forge/'src/forge',build/'src/forge',ignore=shutil.ignore_patterns('__pycache__'))
  shutil.copytree(forge/'tests/forge',build/'tests/forge',ignore=shutil.ignore_patterns('__pycache__'))
+ shutil.copy2(forge/'dev/forge_runtime_integration.py',build/'dev/forge_runtime_integration.py')
  for name in ('forge_smoke','forge_runtime_smoke','forge_expiry_smoke','forge_injected_sim_smoke','forge_model_memory_smoke','forge_revocation_during_plan_smoke'):
   shutil.copy2(forge/f'tests/e2e/{name}.py',build/f'tests/e2e/{name}.py')
  guard=build/'_controlled_guard';guard.mkdir();shutil.copy2(forge/'dev/controlled_io_guard.py',guard/'sitecustomize.py')
  guard_log=build/'guard-attempts.jsonl'
  env={**os.environ,'PYTHONIOENCODING':'utf-8','PYTHONPATH':str(guard)+os.pathsep+str(build),'OPENBRIDGE_TEST_GUARD_LOG':str(guard_log)}
- commands=[['-m','unittest','discover','-s','tests','-q'],['-m','tests.e2e.forge_smoke'],['-m','tests.e2e.forge_runtime_smoke'],['-m','tests.e2e.forge_expiry_smoke'],['-m','tests.e2e.forge_injected_sim_smoke'],['-m','tests.e2e.forge_model_memory_smoke'],['-m','tests.e2e.forge_revocation_during_plan_smoke']]
+ commands=[['-m','unittest','discover','-s','tests','-q'],['-m','dev.forge_runtime_integration'],['-m','tests.e2e.forge_smoke'],['-m','tests.e2e.forge_runtime_smoke'],['-m','tests.e2e.forge_expiry_smoke'],['-m','tests.e2e.forge_injected_sim_smoke'],['-m','tests.e2e.forge_model_memory_smoke'],['-m','tests.e2e.forge_revocation_during_plan_smoke']]
  preflight_code="import sys,socket,subprocess;g=sys.modules.get('sitecustomize');assert g is not None and g.GUARD_READY;assert socket.getaddrinfo is g.getaddrinfo and subprocess.Popen is g.GuardedPopen\ndef blocked(f):\n try:f()\n except AssertionError:return\n raise RuntimeError('Guard failed')\nblocked(lambda:socket.getaddrinfo('never-resolve.invalid',80))\nwith socket.socket() as probe:blocked(lambda:probe.connect(('127.0.0.1',11439)))\nblocked(lambda:subprocess.Popen(['adb','devices']))\nprint('I/O guard self-test passed')"
  preflight=subprocess.run([sys.executable,'-c',preflight_code],cwd=build,env={**env,'OPENBRIDGE_TEST_GUARD_LOG':str(build/'guard-self-test.jsonl')},capture_output=True,text=True,encoding='utf-8',timeout=15)
  if preflight.returncode:print(preflight.stderr);raise SystemExit('Guard self-test failed')

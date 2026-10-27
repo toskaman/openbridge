@@ -23,9 +23,13 @@ with tempfile.TemporaryDirectory() as directory:
  runtime.relays.enroll(rid,b'fixture-key','test-handle',{'capabilities':['ble_scan'],'permissions':{'BLUETOOTH_SCAN':True,'owner_enabled':True}})
  observations=[{'address':'01:02:03:04:05:06','address_kind':'static_random','rssi':-61,'company_ids':[],'service_uuids':[],'name':'Fixture advertiser'}]
  ingest_ble(registry,{'devices':observations},b'fixture-salt',observer=relay,source='RELAY:'+rid)
+ other=[{**observations[0],'rssi':-20}]
+ ingest_ble(registry,{'devices':other},b'fixture-salt',observer='pc',source='RELAY:other-fixture')
  registry.capability(relay,Capability('ble_relay','observe','SIMULATED_VERIFIED','RELAY:'+rid,'controlled integration fixture'))
  runtime.fabric_registry=registry;runtime.fabric_snapshot=registry.snapshot()
  target=next(d['key'] for d in runtime.fabric_snapshot['devices'] if d['category']=='ble')
+ aggregate=next(f for f in reader(runtime)('/api/v2/facts?device='+target)['facts'] if f['name']=='ble_rssi')
+ assert len(aggregate['sources'])==2 and aggregate['value']==-20
  provider=RuntimeV1Provider(reader(runtime),relay+':ble_relay',target,rid,allow_simulated=True)
  forge=create_forge_server(0,provider=provider,capability_id=provider.capability_id);worker=threading.Thread(target=forge.serve_forever,daemon=True);worker.start();base='http://127.0.0.1:'+str(forge.server_port)
  def request(path,body=None):
@@ -42,6 +46,6 @@ with tempfile.TemporaryDirectory() as directory:
   denied=request(catalog['observation_path']);assert denied[0]==409
   assert request('/api/remove',{})[0]==200
   assert request(catalog['observation_path'])[0]==404
-  result={'evidence_kind':'CROSS_BRANCH_CONTROLLED_RUNTIME_HTTP','hardware_calls':0,'model_calls':0,'source_mode':'SIMULATED_VERIFIED','trusted_runtime_reader':'src.runtime.api_v2.reader','authenticated_http_read':'passed','rssi_dbm':-61,'runtime_grant_revocation_http':denied[0],'service_removal_http':404,'fixture_reset_enabled':catalog['fixture_reset_enabled']}
+  result={'evidence_kind':'CROSS_BRANCH_CONTROLLED_RUNTIME_HTTP','hardware_calls':0,'model_calls':0,'source_mode':'SIMULATED_VERIFIED','trusted_runtime_reader':'src.runtime.api_v2.reader','authenticated_http_read':'passed','rssi_dbm':-61,'other_source_aggregate_rssi_ignored':-20,'runtime_grant_revocation_http':denied[0],'service_removal_http':404,'fixture_reset_enabled':catalog['fixture_reset_enabled']}
   print(json.dumps(result,indent=2))
  finally:forge.shutdown();forge.server_close();worker.join();runtime.server_close()

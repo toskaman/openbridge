@@ -50,3 +50,5 @@ Runtime fixture cleanup request: close the caught HTTPError responses in tests/r
 Video production remains paused by the owner until the entire project is complete. Final mounting, TV/inaccessible-device proof, richer composition evaluation and remaining product requirements are still open. Keep this PR draft pending integration validation.
 
 Runtime e50c708 records Android TV relay observations accepted for 5/5 targets, then refused after revocation. This resolves the earlier TV-provider evidence gate. It does not prove the combined TV HTTP/Glimmer journey. Source-filtered facts are now available in the runtime and are the next Forge consumer integration task. No video work is authorized without a new explicit request.
+
+Forge now consumes the source-filtered fact route added by the runtime owner. Controlled cross-branch evidence confirms selected -61 instead of aggregate -20, denied read after revocation, removed route 404, and no aggregate fallback for expired/unsupported filtered reads. See cross-branch-source-filter-test-receipt.json. The README correction is merged independently through PR #7; final Forge mounting remains runtime-owned.

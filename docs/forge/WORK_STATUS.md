@@ -27,3 +27,12 @@ SparkDiagnostic now exists with a supervised CLI and PowerShell credential wrapp
 Latest runtime e50c708 includes a physical Android TV relay proof: five advertisers accepted by Forge's provider, denied after revocation. This resolves TV-provider proof, not the combined TV HTTP/Glimmer journey or main mounting. Location grant came from the dev harness; TV changes remain in the owner's session journal. Next core step: consume the runtime's new source-filtered fact route to prevent mixed-relay aggregation from blocking valid bound observations. Keep response source/time/permission checks and fail closed if filtering is unsupported.
 
 Guarded combined build now passes 274 tests and six browser modules; zero forbidden I/O attempts. Receipt: cross-branch-spark-test-receipt.json. This remains controlled evidence.
+
+
+## Ready-to-resume state after README correction
+
+PR #7 merged to main as dcb71c3: explanation-first evaluation, 56/60 measured Glimmer outputs, baseline not scored for prose, full planning/goal-fit results retained. README in Forge now matches main exactly to resolve the sole merge conflict without touching protected runtime code. Experimental Spark details remain in docs/forge/SPARK_DIAGNOSTIC.md and draft PR #1. No videos until a new explicit owner request.
+
+Source-filter consumption is implemented: bound relay source is URL-encoded into the fact query; exact response source and freshness are still checked, authority rechecked, no aggregate fallback. Regression tests cover mixed sources, stale selected evidence and unsupported filtering. Actual controlled runtime handlers return bound -61 while another source's aggregate -20 is ignored. Read-after-revoke remains 409, after removal 404. Guarded integration: 277 tests + HTTP scenario + six browser modules pass, zero forbidden attempts. Receipt: cross-branch-source-filter-test-receipt.json. Independent review found no important defects.
+
+Next: final mounting coordination with the runtime owner; physical TV HTTP + Glimmer journey and richer composition evaluation. Spark diagnostic remains live-unconfirmed after one blocked attempt with retained $0.10 reservation; do not retry automatically or reuse the old $148 credit confirmation. Keep credentials private, all public content English, and no keyboard/mouse automation.
