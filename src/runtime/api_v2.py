@@ -87,7 +87,8 @@ def get(server, path, query):
         d = next((x for x in snap['devices'] if x['key'] == dev), None)
         if d is None:
             return 404, {'error': 'Unknown device'}
-        facts = [EvidenceFact(dev, name, f['value'], tuple(f['sources']), d.get('last_seen') or '', bool(f['verified']))
+        # observed_at is the time of the observation whose value is returned, never the device's last_seen.
+        facts = [EvidenceFact(dev, name, f['value'], tuple(f['sources']), f.get('observed_at') or '', bool(f['verified']))
                  for name, f in sorted(d.get('facts', {}).items())]
         return 200, {'device': dev, 'facts': [to_json(f) for f in facts]}
     return 404, {'error': 'Not found'}
@@ -102,3 +103,18 @@ def post(server, path, body):
     r = executor(server).execute(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}, body.get('consent') is True)
     status = 200 if r['state'] not in ('BLOCKED',) else 409
     return status, r
+
+
+def reader(server):
+    """Trusted in-process GET client for internal consumers (e.g. Capability Forge's RuntimeV1Provider).
+    Same handlers as HTTP, no network hop; raises on non-200 so callers fail closed."""
+    from urllib.parse import urlsplit
+    def read_json(path):
+        u = urlsplit(path)
+        if not u.path.startswith('/api/v2/') or u.path not in GET_ROUTES:
+            raise PermissionError('not a v2 read route')
+        status, body = get(server, u.path, u.query)
+        if status != 200:
+            raise LookupError(body.get('error', status))
+        return body
+    return read_json
