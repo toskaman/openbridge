@@ -48,3 +48,5 @@ Reproduce cross-branch checks on the owner Windows machine with `python dev/forg
 Runtime fixture cleanup request: close the caught HTTPError responses in tests/runtime/test_primitives.py (403/409) to avoid ResourceWarnings. Production adapter factory probing remains runtime-owned; the legacy HTTP unit fixture now supplies an empty adapter factory instead of invoking real discovery.
 
 Video production remains paused by the owner until the entire project is complete. Final mounting, TV/inaccessible-device proof, richer composition evaluation and remaining product requirements are still open. Keep this PR draft pending integration validation.
+
+Runtime e50c708 records Android TV relay observations accepted for 5/5 targets, then refused after revocation. This resolves the earlier TV-provider evidence gate. It does not prove the combined TV HTTP/Glimmer journey. Source-filtered facts are now available in the runtime and are the next Forge consumer integration task. No video work is authorized without a new explicit request.
