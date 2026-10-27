@@ -1,4 +1,5 @@
 """Durable reversible-setting transactions; physical adapters require explicit opt-in."""
+import os
 from contextlib import contextmanager, closing
 import hashlib
 import json
@@ -8,6 +9,16 @@ import sqlite3
 import sys
 import threading
 import time
+
+
+FAILPOINTS=('after_journal_prepared','after_backup','after_executing_marked','after_write_before_verify','during_revert')
+
+
+def failpoint(name):
+    """Crash-test hook (V4-03). Inactive unless OPENBRIDGE_FAILPOINT names this point; then the process
+    exits immediately, like a power cut, so an external supervisor can test recovery from the journal."""
+    if os.environ.get('OPENBRIDGE_FAILPOINT')==name:
+        os._exit(97)
 
 
 class TransactionBlocked(ValueError):
@@ -140,7 +151,9 @@ class TransactionEngine:
                     db.execute('INSERT INTO events(transaction_id,state,recorded) VALUES(?,?,?)',(transaction_id,'PREPARED',time.time()))
             except sqlite3.IntegrityError:
                 raise TransactionBlocked('This resource already has an active transaction') from None
+            failpoint('after_journal_prepared')
             self._state(transaction_id,{'PREPARED'},'VERIFIED_BACKUP')
+            failpoint('after_backup')
             return self.get(transaction_id)
 
     def apply(self,transaction_id):
@@ -154,7 +167,9 @@ class TransactionEngine:
                 if self.adapter.read_setting() != tx['before']:
                     raise TransactionBlocked('Original setting changed; refusing to overwrite')
                 self._state(transaction_id,{'VERIFIED_BACKUP'},'EXECUTING')
+                failpoint('after_executing_marked')
                 self.adapter.write_setting(tx['target'])
+                failpoint('after_write_before_verify')
                 if self.adapter.read_setting() != tx['target']:
                     raise TransactionBlocked('Read-back did not verify the proposed value')
                 self._state(transaction_id,{'EXECUTING'},'VERIFIED')
@@ -183,6 +198,7 @@ class TransactionEngine:
                 if not executed:
                     raise TransactionBlocked('No recorded execution; external state must be preserved')
                 self._state(transaction_id,expected,'REVERTING')
+                failpoint('during_revert')
                 self.adapter.write_setting(tx['before'])
                 if self.adapter.read_setting() != tx['before']:
                     raise TransactionBlocked('Restoration read-back did not match the snapshot')
