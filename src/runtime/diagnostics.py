@@ -224,3 +224,22 @@ def freebox(session, state_dir=None):
             pass
         path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps({'at': time.time(), 'hosts': hashed}))
     return out
+
+
+# ---------------- Generic gateway: UPnP-IGD (read-only) ----------------
+def igd(status):
+    """status: src.adapters.upnp_igd.read() result. UNSUPPORTED fields are reported as such, never guessed."""
+    src = 'UPnP-IGD (read-only)'
+    out = []
+    for k in ('connection_status', 'connection_type', 'wan_access_type', 'link_status', 'external_ipv4', 'last_connection_error'):
+        out.append(finding('igd_' + k, status.get(k, 'UNSUPPORTED'), '', src))
+    if isinstance(status.get('uptime_s'), int):
+        out.append(finding('igd_wan_uptime', round(status['uptime_s'] / 3600, 1), 'h', src))
+    for k in ('max_bitrate_down_mbps', 'max_bitrate_up_mbps'):
+        if isinstance(status.get(k), (int, float)):
+            out.append(finding('igd_' + k.replace('_mbps', ''), status[k], 'Mbit/s', src))
+    if status.get('connection_status') not in (None, 'UNSUPPORTED', 'Connected'):
+        out.append(finding('internet_down', True, '', 'igd_connection_status', True, f"IGD reports {status.get('connection_status')}", 'warning'))
+    if str(status.get('external_ipv4', '')).startswith('present, private'):
+        out.append(finding('double_nat_likely', True, '', 'igd_external_ipv4', True, 'WAN address of this gateway is private', 'info'))
+    return out
