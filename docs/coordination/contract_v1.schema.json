@@ -1,0 +1,119 @@
+{
+ "version": "1.0.0",
+ "types": {
+  "DeviceIdentity": [
+   "device_key",
+   "category",
+   "label",
+   "strong_identifier_kinds",
+   "possibly_same_as"
+  ],
+  "EvidenceFact": [
+   "device_key",
+   "name",
+   "value",
+   "sources",
+   "observed_at",
+   "verified",
+   "inferred",
+   "confidence"
+  ],
+  "DeviceObservation": [
+   "device_key",
+   "via_device",
+   "transport",
+   "source",
+   "observed_at",
+   "rssi",
+   "stale"
+  ],
+  "TransportSession": [
+   "device_key",
+   "transport",
+   "grants",
+   "authenticated",
+   "opened_by_openbridge"
+  ],
+  "RelayRoute": [
+   "target_device",
+   "relay_device",
+   "relay_id",
+   "radio",
+   "permission_granted",
+   "owner_enabled",
+   "online",
+   "last_success_at"
+  ],
+  "CapabilityPermission": [
+   "name",
+   "granted",
+   "obtained_by"
+  ],
+  "CapabilityDescriptor": [
+   "capability_id",
+   "device_key",
+   "name",
+   "transport",
+   "discovered",
+   "observed",
+   "readable",
+   "controllable",
+   "reversible",
+   "verified",
+   "permissions",
+   "parameters",
+   "operations",
+   "source",
+   "freshness_s",
+   "limitations",
+   "reversibility"
+  ],
+  "ActionDescriptor": [
+   "primitive_id",
+   "title",
+   "input_schema",
+   "required_permissions",
+   "preconditions",
+   "expected_effects",
+   "verification",
+   "inverse",
+   "reversibility",
+   "errors",
+   "timeout_s",
+   "concurrency",
+   "requires_consent"
+  ],
+  "TransactionReceipt": [
+   "transaction_id",
+   "primitive_id",
+   "device_key",
+   "state",
+   "before",
+   "after",
+   "verified",
+   "started_at",
+   "finished_at",
+   "errors"
+  ],
+  "RecoveryState": [
+   "pending_transactions",
+   "open_session_changes",
+   "blocked_reason"
+  ]
+ },
+ "reversibility": [
+  "NONE",
+  "EXACT",
+  "SESSION_CLEANUP",
+  "MANUAL",
+  "IRREVERSIBLE"
+ ],
+ "verification_status": [
+  "REAL_HARDWARE_VERIFIED",
+  "INTEGRATION_VERIFIED",
+  "SIMULATED_VERIFIED",
+  "IMPLEMENTED_UNVERIFIED",
+  "BLOCKED",
+  "UNSUPPORTED"
+ ]
+}

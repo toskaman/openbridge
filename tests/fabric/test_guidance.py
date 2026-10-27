@@ -73,9 +73,9 @@ class TvTests(unittest.TestCase):
         from src.fabric.discovery import ingest_mdns, ingest_android
         from src.fabric.registry import Registry
         r=Registry()
-        ingest_mdns(r,{'instances':[{'service':'_androidtvremote2._tcp','instance':'TV','host':'tv-a.local','port':6466,'addresses':['192.168.1.15'],'txt':{'bt':'00:1A:2B:3C:4D:5E'},'category':'tv'}]},b's')
+        ingest_mdns(r,{'instances':[{'service':'_androidtvremote2._tcp','instance':'TV','host':'tv-a.local','port':6466,'addresses':['192.0.2.15'],'txt':{'bt':'00:1A:2B:3C:4D:5E'},'category':'tv'}]},b's')
         class A:
-            _handles={'192.168.1.15:5555':'h'}
+            _handles={'192.0.2.15:5555':'h'}
             def discover(s):return {'devices':[{'id':'h','state':'device','transport':'WIFI','name':'x'}]}
             def stable_identifier(s,h,salt):return 'android_serial:abc'
             def bluetooth_identifier(s,h,salt):
