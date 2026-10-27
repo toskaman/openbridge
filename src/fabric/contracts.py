@@ -7,7 +7,7 @@ import hmac
 SCHEMA_VERSION = 1
 STATUSES = ('REAL_HARDWARE_VERIFIED', 'INTEGRATION_VERIFIED', 'SIMULATED_VERIFIED', 'IMPLEMENTED_UNVERIFIED', 'NOT_SUPPORTED', 'BLOCKED')
 LINK_GRANTS = ('observe', 'read', 'control')          # a link never implies more than it states
-IDENTIFIER_KINDS = ('android_serial', 'freebox_uid', 'mac_global', 'mdns_host', 'cast_id', 'hap_id', 'ble_address', 'companion_key', 'upnp_udn')
+IDENTIFIER_KINDS = ('android_serial', 'freebox_uid', 'mac_global', 'mdns_host', 'cast_id', 'hap_id', 'ble_address', 'companion_key', 'upnp_udn', 'windows_machine_guid')
 
 
 def now():

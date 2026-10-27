@@ -33,6 +33,8 @@ ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style
 
 class LocalServer(ThreadingHTTPServer):
     def server_close(self):
+        wb=getattr(self,'windows_bridge',None)
+        if wb is not None:wb.close()
         monitor=getattr(self,'android_events',None)
         if monitor is not None:monitor.close()
         ex=getattr(self,'runtime_executor',None)
@@ -362,14 +364,15 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
         from src.fabric.credential_vault import Vault
         session=None
         if providers is not None and 'freebox' not in providers:   # never probe the gateway unless asked
-            return {'android':server.android,'freebox':None}
+            return {'android':server.android,'freebox':None,'windows':server.windows_bridge}
         try:
             facts=server.freebox.discover()['devices'][0]['facts']
             session=FreeboxSession(Vault(),facts['api_version'].split('.')[0])
         except (IndexError,KeyError,ValueError):
             pass
-        return {'android':server.android,'freebox':{'public':server.freebox,'session':session}}
+        return {'android':server.android,'freebox':{'public':server.freebox,'session':session},'windows':server.windows_bridge}
     server.fabric_adapters = fabric_adapters
+    server.windows_bridge = None
     server.freebox_auth = {'state': 'IDLE'}
     def start_freebox_authorization(session_factory=None):
         if server.freebox_auth.get('state') == 'PENDING':
@@ -515,11 +518,25 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     return server
 
 
+def start_windows_bridge(port=9876):
+    from src.adapters.windows_bridge import WindowsBridge
+    from src.fabric.credential_vault import Vault
+    from src.fabric.mdns import lan_interface_ip, default_scope
+    psk=None
+    try:
+        psk=Vault().get('windows-bridge-psk')
+    except Exception:
+        pass
+    psk=psk or os.environ.get('OPENBRIDGE_WINDOWS_PSK')
+    return WindowsBridge(psk, lan_interface_ip(default_scope()), port).start()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=18765)
     parser.add_argument('--glimmer',action='store_true',help='With --local-meta: use pinned Meta Muse Glimmer (open weights, local GPU/CPU) instead of Llama 3.2 3B')
     parser.add_argument('--agent',action='store_true',help='Enable the consent-gated physical agent (requires --local-meta)')
+    parser.add_argument('--windows-bridge',action='store_true',help='Accept one BridgeWindows agent on the LAN interface (read-only allowlist). Key: vault entry windows-bridge-psk or OPENBRIDGE_WINDOWS_PSK')
     parser.add_argument('--local-meta',action='store_true',help='Use the pinned private CPU-local Meta model; never falls back to cloud')
     args = parser.parse_args()
     broker = None
@@ -543,6 +560,8 @@ def main():
         print('Simulated transaction journal unavailable; read-only inventory remains available.',flush=True)
     agent_dir=private_root/'agent' if args.agent and args.local_meta else None
     with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir) as server:
+        if args.windows_bridge:
+            server.windows_bridge=start_windows_bridge()
         print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
         try:
             server.serve_forever()

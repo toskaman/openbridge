@@ -32,3 +32,4 @@ Exact pending hardware procedures: (1) enable MIUI "Install via USB", install Co
 | Device replaced on the same link/IP | SIMULATED_VERIFIED | `test_device_replaced_under_same_link` → IDENTITY_CHANGED |
 | Relay disappears / revoked, TV off, timeout, concurrent requests, inconsistent read-back, server restart | SIMULATED_VERIFIED | `tests/runtime/test_primitives.py` |
 | Relay staleness, rotating addresses, anti-spoofing flags | SIMULATED_VERIFIED | `tests/runtime/test_relay_health.py` |
+| Windows PC through the owner's BridgeWindows agent (read-only allowlist: sys.diag, proc.list count, 4 registry values) | IMPLEMENTED_UNVERIFIED on hardware; SIMULATED_VERIFIED | `tests/runtime/test_windows_bridge.py` (real framing over loopback: allowlist enforced before sending, auth, identity change, disconnect). Hardware: `python -m dev.windows_bridge_smoke` waited 60 s, no agent connected |
