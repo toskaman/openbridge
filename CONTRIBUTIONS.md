@@ -39,3 +39,6 @@ The pinned local Meta broker, private CPU-only service launcher, numeric-fact al
 Authored during the event (26 October 2026): the allowlisted optional-app state adapter and isolated verifier, exact Android enabled-state restoration, the deterministic action gate, the consent-gated agent orchestrator and HTTP routes, the agent browser panel, the guided device-state dialog, the product-enforced Meta-only runtime registry, the pinned Muse Glimmer broker and the agent-planning benchmark harness, with their tests.
 
 Development assistance for these milestones: Claude (Cowork) wrote and ran the code, tests and evidence collection through a local PowerShell bridge on the participant's PC at the participant's request. This is build-time assistance only; Claude is not a runtime model. Runtime inference is Meta-only: Llama 3.2 3B and Muse Glimmer locally, Muse Spark 1.3 for the recorded cloud call.
+
+## Start-date confirmation (27 Oct 2026)
+The participant reports that the organizers confirmed building could start at the time of the first push to GitHub. The repository history (first commit 26 Oct) is unchanged and not backdated.

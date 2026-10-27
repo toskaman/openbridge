@@ -7,3 +7,6 @@ Verified: mDNS discovery; Freebox app authorization and read-only LAN inventory;
 Simulated and labelled: the demo fixture and its persistent change/Undo sandbox; hermetic UI suites in CI.
 
 Not verified: cable unplug during a write; Bluetooth on the PC itself (no adapter); OpenWrt/FRITZ!Box/Home Assistant/ESPHome/Matter/Zigbee (not implemented); more than one phone and one Android TV model. No bonus eligibility or organizer acceptance is claimed. Final video: pending (recorded only once the project is complete).
+
+## Update 27 Oct
+New since the last status: `/api/v2` contract and safe primitives; Windows PC (read-only agent); Galaxy Watch7 pairing and reads; crash drill 5/5 on the phone; live Meta Model API advisory; Capability Forge publication on real phone and TV relays. Final video: still pending until the project is complete.
