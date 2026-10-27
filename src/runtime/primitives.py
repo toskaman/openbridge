@@ -76,6 +76,11 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('periodic read_facts on this device; events only, never an action',),
                      'watch listed RUNNING in /api/v2/watches; every run is a normal read_facts receipt', 'watch_stop',
                      R.SESSION_CLEANUP.value, ('INVALID_WATCH', 'DEVICE_UNKNOWN'), 10, 'single-global', True),
+    ActionDescriptor('diagnostic_report', 'Read every readable device once and build a redacted report',
+                     {'type': 'object', 'properties': {'redact': _s('boolean')}, 'additionalProperties': False},
+                     ('read grants of each device',), ('graph exists',), ('none: read-only',),
+                     'each device section is a normal read_facts receipt (state + verified)', '', R.NONE.value,
+                     ('DEVICE_UNKNOWN',), 120, 'single-global', False),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -178,7 +183,7 @@ class Executor:
     # ---------- runners: return (state, before, after, verified, result) ----------
     def _read_facts(self, key, params):
         dev = self._device(key)
-        if dev['category'] == 'router':
+        if dev['category'] == 'router' and any(n == 'lan_inventory' and via == 'FREEBOX_API' for n, via in dev['capabilities']):
             session = (self.ctx.fabric_adapters(('freebox',)).get('freebox') or {}).get('session')
             if session is None or session.state() != 'AUTHORIZED':
                 raise PrimitiveError('NOT_READABLE', 'Freebox app not authorized (read-only authorization required)')
@@ -322,7 +327,14 @@ class Executor:
             raise PrimitiveError('UNKNOWN_WATCH', str(e)) from None
         return 'VERIFIED', 'RUNNING', w['state'], w['state'] == 'STOPPED', {}
 
-    RUNNERS = {'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def _report(self, key, params):
+        from src.runtime import report
+        if self.ctx.fabric_registry is None:
+            raise PrimitiveError('DEVICE_UNKNOWN', 'No graph yet; run discovery first')
+        rep = report.build(self, params.get('redact', True))
+        return 'VERIFIED', None, rep['summary'], True, {'report': rep, 'markdown': report.markdown(rep)}
+
+    RUNNERS = {'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
