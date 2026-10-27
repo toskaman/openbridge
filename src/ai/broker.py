@@ -89,7 +89,7 @@ class RuntimeModelBroker:
             raise ModelBlocked('Invalid fixture facts')
         if self.transport is None:
             raise ModelBlocked('Meta transport unavailable')
-        payload = {'model':MODEL_ID,'max_completion_tokens':900,
+        payload = {'model':MODEL_ID,'max_completion_tokens':4000,  # muse-spark-1.3 is a reasoning model: leave room for reasoning AND the JSON answer
                    'messages':[{'role':'developer','content':
                        'Return ONLY a JSON object with summary (string), evidence_refs (nonempty array of keys from the supplied facts), action (exactly inspect_only), uncertainty (string). '
                        'These are SIMULATED facts, not a physical device. Explain one useful read-only observation. No commands, writes, claimed optimization or rollback.'},
@@ -104,7 +104,10 @@ class RuntimeModelBroker:
             for field in ('prompt_tokens','completion_tokens'):
                 if type(usage[field]) is not int or not 0 <= usage[field] <= 100_000:
                     raise ModelBlocked('Invalid provider usage')
-            proposal = json.loads(response['choices'][0]['message']['content'])
+            content = response['choices'][0]['message'].get('content')
+            if not isinstance(content, str) or not content.strip():
+                raise ModelBlocked('Model returned no content (reasoning budget exhausted); raise max_completion_tokens')
+            proposal = json.loads(content)
             if not isinstance(proposal,dict) or set(proposal) != {'summary','evidence_refs','action','uncertainty'}:
                 raise ModelBlocked('Invalid advisory schema')
             if proposal['action'] != 'inspect_only' or any(not isinstance(proposal[k],str) or not 1 <= len(proposal[k]) <= 2000 for k in ('summary','uncertainty')):
