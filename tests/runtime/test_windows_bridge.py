@@ -37,7 +37,11 @@ class FakeAgent:
                 elif req['method'] == 'sys.diag':
                     res = {'result': DIAG}
                 elif req['method'] == 'reg.read':
-                    res = {'result': {'value': self.guid, 'reg_type': 'REG_SZ'}}
+                    name = req['params']['value_name']
+                    if name == 'MachineGuid' and self.guid is None:     # WOW64 view: value absent
+                        res = {'error': {'code': -32010, 'message': 'RegQueryValueExA failed'}}
+                    else:
+                        res = {'result': {'value': {'MachineGuid': self.guid, 'HwProfileGuid': '{hw-1}'}.get(name), 'reg_type': 1}}
                 elif req['method'] == 'proc.list':
                     res = {'result': {'processes': [{'name': 'secret.exe', 'pid': 1}] * 3}}
                 else:
@@ -110,6 +114,14 @@ class Bridge(unittest.TestCase):
         self.assertNotIn('gpu_temperature', f)             # 0 means no sensor, not 0 °C
         ident = self.b.identity(b'salt')
         self.assertTrue(ident.startswith('windows_machine_guid:')); self.assertNotIn('GUID-1', ident)
+        a.close()
+
+    def test_identity_fallback_under_wow64(self):
+        a = FakeAgent(self.port, guid=None)
+        self.assertTrue(wait(self.b.connected))
+        i1 = self.b.identity(b'salt')
+        self.assertTrue(i1 and i1.startswith('windows_machine_guid:'))
+        self.assertEqual(i1, self.b.identity(b'salt'))            # stable
         a.close()
 
     def test_bad_token_or_protocol_rejected(self):

@@ -327,3 +327,18 @@ REAL_HARDWARE_VERIFIED, through product paths:
 8. `relay_revoke` → Forge snapshot refused (RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN).
 
 Both TV changes stay open in the session journal for the owner's Finish session choice.
+
+## Windows PC through the owner's BridgeWindows agent (27 Oct 2026)
+
+Reproduce: start `agent.exe` on the other PC, then `python -m dev.windows_bridge_smoke` (server option `--windows-bridge`; key in the Windows vault). Second PC: Windows 10 build 17763 x64; agent 3.7.1 (x86 build).
+
+REAL_HARDWARE_VERIFIED:
+
+1. Listener bound to the LAN interface only. The agent authenticated with the configured key and protocol 3.x.
+2. Discovery `windows` provider → OK. The PC became a `computer` device with a strong hashed identity and capabilities `windows_diagnostics` (read). run_command, file_write, registry_write, input_injection and agent_update are BLOCKED.
+3. `read_facts` → VERIFIED, 9 OBSERVED findings: OS build, architecture, 2 cores, CPU load, RAM 3.91/2.56 GB, uptime, C: free 69 GB, 65 processes. No process names or hostname are returned.
+4. `exec.run` was refused by the adapter before sending.
+
+Found on hardware and fixed: the agent is a 32-bit build, so on 64-bit Windows its registry reads use the WOW64 view, where `MachineGuid` (and `ProductId`) are absent. The identity now falls back to `HKLM\SYSTEM\...\Hardware Profiles\0001\HwProfileGuid`, which is not redirected and is hashed with the install salt.
+
+Delivery: `agent.exe` was served to the other PC from a temporary LAN-only download page (single file, SHA-256 shown, auto-stop after 25 min, key not served).

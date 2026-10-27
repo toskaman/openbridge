@@ -123,7 +123,7 @@ def windows(call):
         if isinstance(d.get('os_build'), int):
             out.append(finding('os_build', d['os_build'], '', src))
         if d.get('architecture'):
-            out.append(finding('architecture', str(d['architecture'])[:8], '', src))
+            out.append(finding('architecture', str(d['architecture']).split()[0][:8], '', src))
         if isinstance(d.get('cpu_cores'), int):
             out.append(finding('cpu_cores', d['cpu_cores'], '', src))
         if isinstance(d.get('cpu_load_percent'), (int, float)):

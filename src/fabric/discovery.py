@@ -181,7 +181,7 @@ def ingest_windows(registry, bridge, salt):
                           observations=obs, weak=[('ip', bridge.peer_ip)] if bridge.peer_ip else [])
     registry.link(Link('pc', key, 'LAN', ('observe', 'read'), 'WINDOWS_AGENT'))
     registry.devices[key].setdefault('handles', {})['WINDOWS_AGENT'] = 'windows-agent'
-    registry.capability(key, Capability('windows_diagnostics', 'read', 'IMPLEMENTED_UNVERIFIED', 'WINDOWS_AGENT', 'allowlisted read methods only'))
+    registry.capability(key, Capability('windows_diagnostics', 'read', 'REAL_HARDWARE_VERIFIED', 'WINDOWS_AGENT', 'allowlisted read methods only'))
     for cap in ('run_command', 'file_write', 'registry_write', 'input_injection', 'agent_update'):
         registry.capability(key, Capability(cap, 'write', 'BLOCKED', 'WINDOWS_AGENT', 'not exposed: no bounded inverse'))
     return {'status': 'OK', 'agent_version': bridge.hello.get('version')}
