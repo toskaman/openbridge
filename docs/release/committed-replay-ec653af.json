@@ -1,0 +1,122 @@
+{
+  "recorded_at": "2026-10-27T17:02:12.856715+00:00",
+  "commit": "ec653af2225e47601510a87ba73acf27aab5ecc6",
+  "acquisition": "fresh public HTTPS clone; credential.helper empty, core.askPass empty, credential.interactive never; exact detached commit; no source overlays",
+  "machine": "same participant Windows PC, not independent machine",
+  "interpreter": "Python 3.14.4",
+  "dependencies": [
+    "attrs==26.1.0",
+    "greenlet==3.4.0",
+    "jsonschema==4.26.0",
+    "jsonschema-specifications==2025.9.1",
+    "playwright==1.63.0",
+    "pyee==13.0.1",
+    "referencing==0.37.0",
+    "rpds-py==2026.9.1",
+    "typing_extensions==4.16.0"
+  ],
+  "install_commands": [
+    "python -m venv <fresh-clone>/.release-venv",
+    "python -m pip install -r requirements-dev.txt jsonschema==4.26.0"
+  ],
+  "browser_cache": "existing shared C:/Users/TheBox/.cache/openbridge-playwright; no new browser download; not fresh browser acquisition",
+  "guard_sha256": "e11fc9c41b4b6b75f39219b3cf8c39aefb932e390a78c6ace71ab166a36fb865",
+  "guard_self_test": {
+    "exit_code": 0,
+    "output": "I/O guard self-test passed\n",
+    "expected_blocks": [
+      {
+        "blocked": "NON_LOOPBACK_DNS"
+      },
+      {
+        "blocked": "ACTUAL_MODEL_SOCKET"
+      },
+      {
+        "blocked": "ACTUAL_ADB_DEVICE_COMMAND"
+      }
+    ]
+  },
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -q",
+      "exit_code": 0,
+      "elapsed_seconds": 32.456,
+      "output": "----------------------------------------------------------------------\nRan 349 tests in 31.490s\n\nOK\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_workspace_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 14.418,
+      "output": "Source selection, bound publication/read/removal, offline refusal and cleanup passed at four widths; no model/device calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.agent_portal_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 3.102,
+      "output": "Portal waiting, connected, unavailable and copy checks passed at 390/768/1440/3440.\n"
+    },
+    {
+      "command": "python -m tests.e2e.offline_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 9.277,
+      "output": "Offline browser checks passed at 390/768/1440/3440: demo, recorded proof, reload/Undo, missing ADB/gateway. Zero physical or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.guided_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 7.087,
+      "output": "Guided UX checks passed at 390/768/1440/3440: waiting, requires action, authorized auto-close, non-blocking.\n"
+    },
+    {
+      "command": "python -m tests.e2e.fabric_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 7.008,
+      "output": "Device Fabric UI checks passed at 390/768/1440/3440: topology, indirect relay child, duplicate hint, blocked capability, Freebox authorization entry, relay pair/scan, guided relay error.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 7.344,
+      "output": "Forge browser checks passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_runtime_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 7.943,
+      "output": "Controlled runtime UI passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_revocation_during_plan_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 4.163,
+      "output": "Immediate removal during proposal, prepare and release passed; late results preserve owner intent.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_publication_failure_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 8.969,
+      "output": "Publication failure cleanup and explicit recovery passed at four widths; no model/hardware calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_model_memory_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 4.871,
+      "output": "Explicit prepare/release and unavailable states passed at four widths; no actual model or hardware calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_injected_sim_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 1.913,
+      "output": "Injected simulated source labels passed; default TV identity not inherited.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_expiry_smoke",
+      "exit_code": 0,
+      "elapsed_seconds": 4.558,
+      "output": "Expired fixture recovery passed at four widths; zero hardware or model calls.\n"
+    }
+  ],
+  "blocked_attempts": [],
+  "scope": "Python DNS/sockets and ADB subprocess guard; not OS/native/browser egress sandbox; no physical/model requests requested",
+  "passed": true
+}

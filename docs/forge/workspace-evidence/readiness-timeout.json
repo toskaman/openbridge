@@ -1,0 +1,26 @@
+{
+  "evidence_kind": "PHYSICAL_TRUSTED_WORKSPACE_JOURNEY_ATTEMPT",
+  "status": "NOT_VERIFIED",
+  "recorded_at_utc": "2026-10-27T16:55:06.964084+00:00",
+  "source_revision": "ec653af2225e47601510a87ba73acf27aab5ecc6",
+  "runner_sha256": "c99dadcf67e604ef286e229f56a99e8e4465d9d12f84a21c473b51d6faf7808e",
+  "model_calls": 0,
+  "app_installs": 0,
+  "permission_grants": 0,
+  "screenshots": 0,
+  "videos": 0,
+  "network_reconnects": 0,
+  "stages": [
+    "journey_not_verified"
+  ],
+  "http": {},
+  "cleanup": {
+    "temporary_forward_removed": true,
+    "runtime_closed": true
+  },
+  "remote_companion_unpairing": null,
+  "activity_launch_attempts": 1,
+  "activity_launches": null,
+  "failure": "TimeoutExpired",
+  "completed_at_utc": "2026-10-27T16:55:17.674885+00:00"
+}

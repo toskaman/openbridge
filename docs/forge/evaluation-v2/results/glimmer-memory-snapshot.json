@@ -1,0 +1,11 @@
+{
+  "service_working_set_bytes": 18145280,
+  "measurement": "Windows working-set snapshot; not peak RSS, not summed physical memory",
+  "notes": "Metadata only. No inference or process change. Measurements include shared mapped pages.",
+  "runner_child_working_set_bytes": [
+    17214439424
+  ],
+  "model": "muse-glimmer:30b-q4_K_M",
+  "recorded_at": "2026-10-27T17:02:38.9256396+00:00",
+  "endpoint": "http://127.0.0.1:11439"
+}

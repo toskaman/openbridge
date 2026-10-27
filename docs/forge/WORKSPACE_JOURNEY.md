@@ -1,0 +1,19 @@
+# Trusted selector: physical TV journey
+
+On 27 October 2026 the source-selection product path passed on the already-authorized Android TV. The coordinator displayed six physical observation candidates from a fresh ten-second relay scan. An owner-authorized headless browser selected one opaque candidate, opened its bound workspace, explicitly selected Rules, supplied publication consent, read the real observation and exported OpenAPI. The existing relay-revoke primitive removed local authority; the next read returned409. Stop removed the service (200, then404); coordinator closure returned200. Source was not silently selected or replaced by simulation.
+
+[Successful raw receipt](workspace-evidence/physical-success.json). Exact runner: `dev/forge_workspace_journey.py` at commit `ec653af2225e47601510a87ba73acf27aab5ecc6`, SHA-256 `c99dadcf67e604ef286e229f56a99e8e4465d9d12f84a21c473b51d6faf7808e`, matching the executed and public Git bytes. The run used real runtime handlers and separate random numeric-loopback ports, not the long-running user's main-server graph. The production launcher composes the same reader/manager/server code; this does not prove every possible launch environment.
+
+## Authority, setup and cleanup
+
+No model calls, app installs, Android permission grants, screenshots or videos occurred in the measured run. Existing permissions were reused and before/after BLE/location permission snapshots matched. Consent was exercised by the owner-authorized automated browser, not a new human Android permission dialog. The pairing code was read from transient accessibility XML through the authorized ADB connection, never logged. The temporary XML, only the journey-owned ADB forward, its local relay key, bound servers and temporary runtime were removed/closed.
+
+After revoke, a separate Companion accessibility-tree read found exactly the `Paired with a PC` row with `Not yet` as its value. This independently observes the app's unpaired UI state on this TV. It is stronger than merely checking local key deletion, but does not certify all remote protocol implementations or prove absence of every remote secret. The original earlier TV/Glimmer receipt's unknown remote-unpairing field stays unchanged.
+
+Two earlier attempts remain [unconnected](workspace-evidence/readiness-unconnected.json) and [readiness timeout](workspace-evidence/readiness-timeout.json). They made no pairing, scan or inference. The timeout occurred on a Companion activity launch; its launch outcome is explicitly unknown. Setup outside the successful measured runner attempted a single previously journaled TV endpoint, and later a targeted disconnect/reconnect (the reconnect timed out before any force-stop/restart command ran). After the owner confirmed the TV was awake, reconnect succeeded and the already installed Companion was foreground. Therefore the successful runner's zero reconnect/launch counts do not mean zero setup overall. [Targeted setup record](workspace-evidence/targeted-readiness-setup.json) preserves that bounded failed reconnect. No broad network scan, global ADB restart, permission bypass, app-data clear or setting mutation was used.
+
+The development Wi-Fi connection is recorded in the existing session journal for the main app's Finish session flow. Device permission state was not changed by the run. No unrelated model service or forward was stopped.
+
+## Reproduce explicitly
+
+`python -m dev.forge_workspace_journey --hardware --open-companion` requires an already connected authorized TV with installed Companion and existing BLE permissions. It performs one bounded physical scan and an owner-authorized UI lifecycle, with deterministic Rules and zero inference. No hardware runner is invoked by CI. New receipts are uniquely named; helpers have six controlled tests. Software-only source-selection checks at390/768/1440/3440 remain separate from physical evidence.

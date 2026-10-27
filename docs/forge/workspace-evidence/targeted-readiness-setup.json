@@ -1,0 +1,20 @@
+{
+  "scope": "One previously authorized TV link and installed Companion process only",
+  "link_reset_attempted": true,
+  "app_data_clears": 0,
+  "permission_grants": 0,
+  "installs": 0,
+  "screenshots": 0,
+  "videos": 0,
+  "steps": [
+    {
+      "step": "disconnect",
+      "command_completed": true
+    },
+    {
+      "step": "reconnect",
+      "command_completed": false,
+      "error": "TimeoutExpired"
+    }
+  ]
+}

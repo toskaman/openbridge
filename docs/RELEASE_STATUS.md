@@ -1,3 +1,16 @@
+# Current release evidence update — 27 October 2026
+
+This update supersedes conflicting historical checkpoints below. Integration base: `437dfa3`; newer runtime work is preserved, not re-authored here. Final verification of this base is being recorded separately.
+
+- [Physical trusted selector journey](forge/WORKSPACE_JOURNEY.md): selected TV observation, Rules plan, consent, publish/read/docs 200; revoke read 409, remove 200 then 404, close 200; remote Companion UI changed to unpaired. Existing Android permissions and owner-authorized automation were used. This is one tested device, not universal remote erasure or fresh human permission-dialog proof.
+- [Completed v2 evaluation](forge/evaluation-v2/RESULTS.md): Rules/Llama/Glimmer 80/80 overall; each model made 25 actual calls. Deterministic refusals and harness scope checks are separately counted. No general superiority is established.
+- Spark synthetic diagnostic succeeded; earlier failure is retained. No new hosted requests or paid fallback for release publication.
+- Anonymous exact-source ec653af replay: 349 tests and 12 browser modules passed on the same PC with a fresh clone/venv and existing browser cache. This is historical evidence, not verification of subsequent runtime changes.
+- Owner confirmed Indie Developer / Push the Frontier / solo toskaman. Final owner attestations, portal fields and submission receipt remain external gates.
+- Shared assignments: https://github.com/toskaman/openbridge/issues/36. Codex owns release/UI/evaluation; Claude owns backend/Companion/hardware; Spark supplies bounded design/review proposals. No video until a NEW explicit owner request.
+
+---
+
 # Current release status
 
 Status reconciled 27 October 2026 against merged PR #20 (`715da9638ed6747ba202f2e5a41dfdb5be7eaeb7`) and retained implementation/receipts. The recorded redesign validation is **314 local tests and seven passing CI checks**, not a new run during this documentation reconciliation. Local release-readiness changes remain work in progress until separately verified.
