@@ -1,0 +1,16 @@
+{
+  "evidence_kind": "ACTUAL_LOCAL_META_UX_REVIEW",
+  "model_id": "llama3.2:3b-instruct-q4_K_M",
+  "model_digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+  "elapsed_ms": 8868,
+  "usage": {
+    "prompt_tokens": 126,
+    "completion_tokens": 70
+  },
+  "provider_cost_usd": 0.0,
+  "proposal": {
+    "summary": "The interface could benefit from a clear lifecycle status indicator to inform users about the revocation of their service.",
+    "suggestion": "Consider adding a 'Revoked' or 'Inactive' status label to indicate when a user's service has been revoked, providing transparency and clarity on the service's current state."
+  },
+  "execution": "advice only, no generated code executed"
+}

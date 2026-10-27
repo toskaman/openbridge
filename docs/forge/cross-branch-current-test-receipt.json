@@ -1,0 +1,55 @@
+{
+  "runtime_revision": "6231b0e367371454dbf05d9c57c8b77edcfb854b",
+  "forge_revision": "fdced97e0973d32552ec02d90a65b218ecce6200",
+  "build": "disposable integration copy; source checkouts unchanged",
+  "overlays": [
+    "tests/integration/test_http.py",
+    "tests/fabric/test_guidance.py",
+    "config/runtime_models.json",
+    "src/forge/*",
+    "tests/forge/*"
+  ],
+  "model_calls": 0,
+  "hardware_calls": 0,
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -q",
+      "exit_code": 0,
+      "output": "<user>\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>\n  _warnings.warn(self.warn_message, ResourceWarning)\n<user>\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 409: 'Conflict'>\n  _warnings.warn(self.warn_message, ResourceWarning)\n----------------------------------------------------------------------\nRan 266 tests in 18.304s\n\nOK\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_smoke",
+      "exit_code": 0,
+      "output": "Forge browser checks passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_runtime_smoke",
+      "exit_code": 0,
+      "output": "Controlled runtime UI passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_expiry_smoke",
+      "exit_code": 0,
+      "output": "Expired fixture recovery passed at four widths; zero hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_injected_sim_smoke",
+      "exit_code": 0,
+      "output": "Injected simulated source labels passed; default TV identity not inherited.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_model_memory_smoke",
+      "exit_code": 0,
+      "output": "Explicit prepare/release and unavailable states passed at four widths; no actual model or hardware calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_revocation_during_plan_smoke",
+      "exit_code": 0,
+      "output": "Immediate removal during proposal, prepare and release passed; late results preserve owner intent.\n"
+    }
+  ],
+  "guard_self_test": "passed",
+  "guard_scope": "blocks non-loopback Python DNS/sockets, model endpoint sockets, and ADB device commands; adb version is a permitted dependency check",
+  "blocked_io_attempts": [],
+  "passed": true
+}

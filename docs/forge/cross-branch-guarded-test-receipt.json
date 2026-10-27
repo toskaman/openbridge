@@ -1,0 +1,25 @@
+{
+  "runtime_revision": "b5f1ab85622d6748b4c0712bfcdd72bada473ace",
+  "forge_revision": "fdced97e0973d32552ec02d90a65b218ecce6200",
+  "build": "disposable integration copy; source checkouts unchanged",
+  "overlays": [
+    "Forge modules/tests",
+    "isolated legacy HTTP fixture",
+    "four-entry Meta manifest"
+  ],
+  "model_calls": 0,
+  "hardware_calls": 0,
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -q",
+      "exit_code": 1,
+      "output": "\\adapters\\android.py\", line 124, in connect_network\n    if probe.connect_ex((str(address), port)) != 0:\n       ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\_controlled_guard\\sitecustomize.py\", line 31, in connect_ex\n    def connect_ex(self,address):check_address(address);return _connect_ex(self,address)\n                                 ~~~~~~~~~~~~~^^^^^^^^^\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\_controlled_guard\\sitecustomize.py\", line 17, in check_address\n    if not allowed_host(address[0]):denied('NON_LOOPBACK_SOCKET')\n                                    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\_controlled_guard\\sitecustomize.py\", line 7, in denied\n    raise AssertionError('Controlled test attempted forbidden I/O: '+kind)\nAssertionError: Controlled test attempted forbidden I/O: NON_LOOPBACK_SOCKET\n\n======================================================================\nFAIL: test_ready_depends_on_required_only (runtime.test_preflight.Preflight.test_ready_depends_on_required_only)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\tests\\runtime\\test_preflight.py\", line 25, in test_ready_depends_on_required_only\n    res = p.run_all(lambda url: (_ for _ in ()).throw(OSError()))\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\src\\runtime\\preflight.py\", line 104, in run_all\n    return [python_version(), storage(), secret_store(), adb(), companion(), *packages(), *models(fetch)]\n                                                         ~~~^^\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\src\\runtime\\preflight.py\", line 51, in adb\n    v = run([path, 'version'], capture_output=True, text=True, timeout=8).stdout.splitlines()[0]\n        ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<user>\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\subprocess.py\", line 555, in run\n    with Popen(*popenargs, **kwargs) as process:\n         ~~~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\_controlled_guard\\sitecustomize.py\", line 42, in popen\n    if name in ('adb','adb.exe'):denied('ACTUAL_ADB_PROCESS')\n                                 ~~~~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"<user>\\AppData\\Local\\Temp\\openbridge-contract-integration-lw3og4rr\\_controlled_guard\\sitecustomize.py\", line 7, in denied\n    raise AssertionError('Controlled test attempted forbidden I/O: '+kind)\nAssertionError: Controlled test attempted forbidden I/O: ACTUAL_ADB_PROCESS\n\n----------------------------------------------------------------------\nRan 224 tests in 13.737s\n\nFAILED (failures=2, errors=10)\n"
+    }
+  ],
+  "guard_scope": "blocks non-loopback Python DNS/sockets, model endpoint sockets, and actual ADB subprocesses",
+  "blocked_io_attempts": [
+    "{\"blocked\": \"NON_LOOPBACK_SOCKET\"}",
+    "{\"blocked\": \"ACTUAL_ADB_PROCESS\"}"
+  ],
+  "passed": false
+}

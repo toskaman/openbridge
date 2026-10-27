@@ -24,6 +24,14 @@
       "execution": "local",
       "endpoint": "http://127.0.0.1:11438",
       "manifest_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1"
+    },
+    {
+      "purpose": "experimental_forge_gated_proposal_v2",
+      "provider": "ollama",
+      "model_id": "muse-glimmer:30b-q4_K_M",
+      "execution": "local",
+      "endpoint": "http://127.0.0.1:11439/api/chat",
+      "manifest_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1"
     }
   ],
   "notes": "Default inference disabled. Explicit local Meta CPU option has no cloud fallback or provider cost. Hosted Meta accepts synthetic facts only under supervised free-credit checks. No automatic model requests."

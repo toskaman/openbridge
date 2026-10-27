@@ -57,11 +57,17 @@ class TvTests(unittest.TestCase):
 
     def test_connect_network_only_private_and_probe_first(self):
         import subprocess
+        from unittest.mock import patch
         from src.adapters.android import AndroidAdapter
         a=AndroidAdapter(executable='adb',runner=lambda *x,**k:subprocess.CompletedProcess(x,0,'',''))
         for bad in ('8.8.8.8','127.0.0.1','fe80::1'):
             with self.assertRaises(ValueError):a.connect_network(bad)
-        self.assertEqual(a.connect_network('192.168.255.254',port=1),'PORT_CLOSED')
+        with patch('socket.socket') as socket_factory:
+            probe=socket_factory.return_value
+            probe.connect_ex.return_value=111
+            self.assertEqual(a.connect_network('192.168.255.254',port=1),'PORT_CLOSED')
+            probe.connect_ex.assert_called_once_with(('192.168.255.254',1))
+            probe.close.assert_called_once_with()
 
     def test_tv_and_adb_view_merge_on_bluetooth_address(self):
         from src.fabric.discovery import ingest_mdns, ingest_android

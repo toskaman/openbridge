@@ -1,0 +1,12 @@
+{
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "endpoint": "http://127.0.0.1:11439",
+  "cpu_environment": true,
+  "provider_cost_usd": 0.0,
+  "input": "SIMULATED",
+  "prompt_changed": false,
+  "status": "FAILED",
+  "error": "INCORRECT_REFUSAL",
+  "elapsed_ms": 91305
+}

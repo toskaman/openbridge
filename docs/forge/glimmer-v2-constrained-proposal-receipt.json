@@ -1,0 +1,75 @@
+{
+  "evidence_kind": "ACTUAL_LOCAL_META_V2_PROPOSAL",
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "endpoint": "http://127.0.0.1:11439",
+  "input": "SIMULATED",
+  "provider_cost_usd": 0.0,
+  "benchmark_score": false,
+  "raw_proposal": {
+    "goal": "expose_remote_ble_observations",
+    "decision": "propose",
+    "steps": [
+      {
+        "capability_id": "tv.ble.observations",
+        "operation": "read_observations"
+      },
+      {
+        "capability_id": "pc.virtual_api.publish",
+        "operation": "publish_readonly"
+      }
+    ],
+    "evidence_refs": [
+      "evidence-relay",
+      "evidence-signal"
+    ],
+    "requires_consent": true
+  },
+  "usage": {
+    "prompt_tokens": 218,
+    "completion_tokens": 67
+  },
+  "result": {
+    "plan": {
+      "goal": "expose_remote_ble_observations",
+      "decision": "propose",
+      "steps": [
+        {
+          "capability_id": "tv.ble.observations",
+          "operation": "read_observations"
+        },
+        {
+          "capability_id": "pc.virtual_api.publish",
+          "operation": "publish_readonly"
+        }
+      ],
+      "evidence_refs": [
+        "evidence-relay",
+        "evidence-signal"
+      ],
+      "requires_consent": true
+    },
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "source": "LOCAL_META",
+    "model_called": true,
+    "planner_version": 2,
+    "eligibility_source": "DETERMINISTIC_RULES",
+    "authorizes_execution": false,
+    "elapsed_ms": 80073,
+    "usage": {
+      "prompt_tokens": 218,
+      "completion_tokens": 67
+    },
+    "provider_cost_usd": 0.0
+  },
+  "status": "VALIDATED_PLAN",
+  "observed_model_memory": [
+    {
+      "name": "muse-glimmer:30b-q4_K_M",
+      "size": 17078765483,
+      "size_vram": 0
+    }
+  ],
+  "wall_ms": 80276
+}

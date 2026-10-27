@@ -1,0 +1,13 @@
+{
+  "evidence_kind": "CROSS_BRANCH_CONTROLLED_RUNTIME_HTTP",
+  "hardware_calls": 0,
+  "model_calls": 0,
+  "source_mode": "SIMULATED_VERIFIED",
+  "trusted_runtime_reader": "src.runtime.api_v2.reader",
+  "authenticated_http_read": "passed",
+  "rssi_dbm": -61,
+  "runtime_grant_revocation_http": 409,
+  "service_removal_http": 404,
+  "fixture_reset_enabled": false,
+  "runtime_revision": "9b5c4a985ca412f74ad5a459282363103f1b1608"
+}

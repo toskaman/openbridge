@@ -1,0 +1,24 @@
+{
+  "purpose": "actual_local_meta_preparation_and_release",
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "provider_cost_usd": 0.0,
+  "hardware_calls": 0,
+  "input": "SIMULATED",
+  "benchmark_score": false,
+  "status": "FAILED",
+  "error": "MODEL_CONTROL_FAILED",
+  "release": {
+    "state": "released",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 0,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 229,
+    "authorizes_execution": false
+  },
+  "memory_after_release": [],
+  "total_ms": 53461
+}
