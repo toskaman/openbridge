@@ -3,7 +3,7 @@
 | Scenario | Status | Evidence |
 |---|---|---|
 | Android USB discovery, inspection (12 facts) | REAL_HARDWARE_VERIFIED | Xiaomi 11T Pro (Android 14); EVIDENCE_LEDGER phase A |
-| Android ADB Wi-Fi | IMPLEMENTED_UNVERIFIED | needs owner-paired wireless debugging |
+| Android ADB Wi-Fi (classic `adb connect <ip>:5555`) | REAL_HARDWARE_VERIFIED | Android TV, EVIDENCE_LEDGER TV section; phone wireless-debugging pairing (`_adb-tls-connect`): NOT TESTED |
 | Optional-app change + exact Undo | REAL_HARDWARE_VERIFIED | physical-package-receipt.json, agent-loop-receipt.json |
 | Crash during transaction + recovery | REAL_HARDWARE_VERIFIED | crash-recovery-receipt.json |
 | Android TV over ADB Wi-Fi (authorized after on-screen prompt) | REAL_HARDWARE_VERIFIED | EVIDENCE_LEDGER TV section |
@@ -20,3 +20,14 @@
 | Device seen only in LAN inventory | REAL_HARDWARE_VERIFIED | 12 Freebox-only hosts |
 
 Exact pending hardware procedures: (1) enable MIUI "Install via USB", install Companion from the relay panel, turn Bluetooth on, allow "Nearby devices", pair with the on-screen code, enable scans, scan 8 s; (2) on the Android TV enable Developer options > Wireless debugging and pair; (3) unplug the USB cable during the EXECUTING state of an app-state change and verify journal recovery.
+
+## Device Runtime v2 (branch feat/device-runtime-v2)
+
+| Scenario | Status | Evidence / reproduce |
+|---|---|---|
+| Freebox read-only diagnostics (connection, FTTH optics, system sensors, Wi-Fi state, LAN presence) | REAL_HARDWARE_VERIFIED | commit ed3c0f8, Freebox v7 fw 4.13.1: `python -m dev.freebox_diag` (all findings OBSERVED) |
+| Android diagnostics (battery, storage, uptime, Wi-Fi, CPU, memory, patch level) | IMPLEMENTED_UNVERIFIED on hardware; SIMULATED_VERIFIED | `tests/runtime/test_diagnostics.py`; phone/TV unreachable at test time |
+| USB unplug during a write | SIMULATED_VERIFIED only | `test_usb_unplugged_during_write` → FAILED + recovery entry. Physical scenario: NOT TESTED |
+| Device replaced on the same link/IP | SIMULATED_VERIFIED | `test_device_replaced_under_same_link` → IDENTITY_CHANGED |
+| Relay disappears / revoked, TV off, timeout, concurrent requests, inconsistent read-back, server restart | SIMULATED_VERIFIED | `tests/runtime/test_primitives.py` |
+| Relay staleness, rotating addresses, anti-spoofing flags | SIMULATED_VERIFIED | `tests/runtime/test_relay_health.py` |
