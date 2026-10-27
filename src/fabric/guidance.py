@@ -91,6 +91,21 @@ def guide(issue, manufacturer=None, sdk=None, television=False, tried=()):
         g = ('Accept debugging on the TV screen', 'Android asks the owner to trust each computer once.',
              ['A dialog "Allow debugging?" is shown on the TV.', 'With the remote, tick "Always allow from this computer".', 'Select OK.'],
              'OpenBridge checks every few seconds and continues automatically.')
+    elif issue == 'watch_wireless_debugging':
+        about = {'samsung': 'Settings > About watch > Software information > tap "Software version" until "Developer mode turned on" appears',
+                 'google': 'Settings > System > About > Versions > tap "Build number" 7 times'}.get(
+                     vendor, 'Settings > System > About > tap "Build number" 7 times')
+        g = ('Connect your smartwatch', 'Wear OS watches are reached over Wi-Fi with Android\'s official wireless debugging, paired once with a code.',
+             ['Put the watch on the same Wi-Fi as this PC and keep its screen awake.',
+              about + '.',
+              'Open Settings > Developer options: turn on "ADB debugging", then "Wireless debugging".',
+              'Tap "Pair new device": the watch shows an IP address:port and a 6-digit code.',
+              'Type both in OpenBridge and select "Pair watch". Accept "Allow debugging?" on the watch if asked.'],
+             'Pairing is remembered; next time OpenBridge only reconnects. Read-only by default.')
+    elif issue == 'watch_pair_failed':
+        g = ('Pairing did not complete', 'The code expires after a short time or was mistyped.',
+             ['On the watch, tap "Pair new device" again to get a fresh code.', 'Type the new IP:port and code, then retry.'],
+             'Nothing was changed on the watch.')
     elif issue == 'freebox_pending':
         g = ('Approve OpenBridge on your Freebox', 'The Freebox only issues app tokens after a press on its front panel.',
              ['Wake the Freebox Server display with an arrow key.', 'Select ✓ for "OpenBridge Device Fabric".'],

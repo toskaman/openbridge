@@ -568,3 +568,24 @@ document.querySelector('#finish-restore').addEventListener('click', async event 
   } catch (error) { out.textContent = `Restore stopped: ${error.message}`; }
   finally { button.disabled = false; }
 });
+
+// Smartwatch (Wear OS) pairing: tutorial + owner-typed address and code; nothing is scanned.
+document.querySelector('#watch-connect').addEventListener('click', async () => {
+  const panel = document.querySelector('#watch-panel');
+  panel.hidden = false;
+  try { const r = await postJson('/api/watch-pair', { device_id: 'watch' }); if (r.guide) showGuideObject(r.guide); }
+  catch (error) { document.querySelector('#watch-result').textContent = error.message; }
+  document.querySelector('#watch-address').focus();
+});
+document.querySelector('#watch-pair').addEventListener('click', async event => {
+  const button = event.currentTarget, result = document.querySelector('#watch-result');
+  const address = document.querySelector('#watch-address').value.trim(), code = document.querySelector('#watch-code').value.trim();
+  if (!/^\d{1,3}(\.\d{1,3}){3}:\d{2,5}$/.test(address) || !/^\d{6}$/.test(code)) { result.textContent = 'Type the IP:port and the 6-digit code shown on the watch.'; return; }
+  button.disabled = true; result.textContent = 'Pairing with the watch…';
+  try {
+    const r = await postJson('/api/watch-pair', { device_id: 'watch', address, code });
+    if (r.state === 'AUTHORIZED') { if (guide.open) guide.close(); document.querySelector('#watch-code').value = ''; result.textContent = 'Watch connected. Refreshing the environment…'; document.querySelector('#fabric-discover').click(); }
+    else { result.textContent = `Not connected yet (${r.state.replaceAll('_', ' ').toLowerCase()}).`; if (r.guide) showGuideObject(r.guide); }
+  } catch (error) { result.textContent = error.message; }
+  finally { button.disabled = false; }
+});

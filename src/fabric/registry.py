@@ -10,7 +10,7 @@ from src.fabric.contracts import DeviceObservation, Identifier, Capability, Link
 MAX_DEVICES = 2000
 # More specific evidence wins: a TV that also speaks HomeKit stays a TV.
 CATEGORY_RANK = {'unknown': 0, 'ble': 1, 'iot': 2, 'nas': 3, 'printer': 3, 'media': 4, 'computer': 5, 'hub': 5, 'android': 5,
-                 'network': 5, 'phone': 6, 'tv': 6, 'router': 7}
+                 'network': 5, 'phone': 6, 'watch': 6, 'tv': 6, 'router': 7}
 MAX_OBSERVATIONS_PER_DEVICE = 200
 
 
