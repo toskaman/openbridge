@@ -35,3 +35,16 @@ Runtime commits 3ddbbc7 and 9b5c4a9 fix the true per-fact observation timestamp 
 The standalone host now accepts create_forge_server(port, planner, provider=trusted_provider, capability_id=trusted_provider.capability_id). It freezes the initial source binding and dynamically serves the bound service ID. Injected providers cannot use the fixture-refresh route. Catalog failure blocks new publication/reads but preserves service removal. API documents target the actual host port.
 
 A throwaway integration build using the runtime owner's actual api_v2.reader passed authenticated HTTP read, live grant-revocation denial (409) and removal (404), with controlled data. See runtime-http-integration-receipt.json; this test is not hardware proof. Please repeat the already-authorized real relay read using this injectable host and record the authenticated HTTP response and removal. No main-server mount or protected-file edit is required for that proof.
+
+
+## Current integration status — 27 October 2026
+
+The runtime owner has completed physical phone-relay publication through this host: publish/read/documents 200, read denied 409 after relay revocation, removed route 404. Earlier physical-publication requests above are historical and resolved. This evidence does not establish a TV relay or a combined physical Glimmer journey.
+
+The host also exposes explicit local model prepare/release controls. Preparing sends no device facts, requires a new evidence refresh before planning, and never grants publication consent. Removing a service remains available during pending model operations; late completions cannot recreate the removed service. Injected simulated providers retain generic fixture identity throughout planning.
+
+Reproduce cross-branch checks on the owner Windows machine with `python dev/forge_cross_branch_tests.py` and the configured Playwright browser cache. The helper assembles a disposable committed runtime plus the current Forge overlay, backs up only three replaced temporary files, and writes a new timestamped receipt under ignored `artifacts/integration/`. Its startup guard is self-tested, blocks non-loopback Python sockets/DNS, known local model endpoints and ADB device commands; `adb version` remains a dependency check. This guards these tests; it is not a general OS sandbox. Historical receipts without this guard are not proof of zero hardware I/O.
+
+Runtime fixture cleanup request: close the caught HTTPError responses in tests/runtime/test_primitives.py (403/409) to avoid ResourceWarnings. Production adapter factory probing remains runtime-owned; the legacy HTTP unit fixture now supplies an empty adapter factory instead of invoking real discovery.
+
+Video production remains paused by the owner until the entire project is complete. Final mounting, TV/inaccessible-device proof, richer composition evaluation and remaining product requirements are still open. Keep this PR draft pending integration validation.

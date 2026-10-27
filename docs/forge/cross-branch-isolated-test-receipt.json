@@ -1,0 +1,46 @@
+{
+  "runtime_revision": "b5f1ab85622d6748b4c0712bfcdd72bada473ace",
+  "forge_revision": "85a0feba56704d52862b98fd3339213217dea60a",
+  "build": "disposable integration copy; source checkouts unchanged",
+  "overlays": [
+    "Forge modules/tests",
+    "isolated legacy HTTP fixture",
+    "four-entry Meta manifest"
+  ],
+  "model_calls": 0,
+  "hardware_calls": null,
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -q",
+      "exit_code": 0,
+      "output": "<user>\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>\n  _warnings.warn(self.warn_message, ResourceWarning)\n<user>\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 409: 'Conflict'>\n  _warnings.warn(self.warn_message, ResourceWarning)\n----------------------------------------------------------------------\nRan 263 tests in 20.149s\n\nOK\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_smoke",
+      "exit_code": 0,
+      "output": "Forge browser checks passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_runtime_smoke",
+      "exit_code": 0,
+      "output": "Controlled runtime UI passed at four widths. No hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_expiry_smoke",
+      "exit_code": 0,
+      "output": "Expired fixture recovery passed at four widths; zero hardware or model calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_model_memory_smoke",
+      "exit_code": 0,
+      "output": "Explicit prepare/release and unavailable states passed at four widths; no actual model or hardware calls.\n"
+    },
+    {
+      "command": "python -m tests.e2e.forge_revocation_during_plan_smoke",
+      "exit_code": 0,
+      "output": "Immediate removal during proposal, prepare and release passed; late results preserve owner intent.\n"
+    }
+  ],
+  "passed": true,
+  "isolation_limitation": "Historical run: legacy HTTP discovery was mocked, but the network guidance test still permitted a private-address socket probe. This is not evidence of zero hardware I/O; use the verified guarded receipt."
+}
