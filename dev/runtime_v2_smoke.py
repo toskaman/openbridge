@@ -34,6 +34,12 @@ def main():
         f = ex('read_facts', router)
         out['freebox_read_facts'] = {'state': f['state'], 'verified': f['verified'], 'errors': f['errors'],
                                      'findings': sorted(f'{x["name"]}:{x["kind"]}' for x in f['result'].get('facts', []) if not x['name'].startswith(('temperature_', 'fan_', 'wifi_')))}
+    out['android_read_facts'] = []
+    for d in graph['devices']:
+        if d['category'] in ('phone', 'tv', 'android') and 'android_serial' in d['strong_identifier_kinds']:
+            f = ex('read_facts', d['device_key'])
+            out['android_read_facts'].append({'category': d['category'], 'state': f['state'], 'verified': f['verified'], 'errors': f['errors'],
+                                              'findings': [f'{x["name"]}={x["value"]}{x["unit"]} ({x["kind"]})' for x in f['result'].get('facts', [])]})
     out['refusals'] = {'free_form': ex('adb_shell', router or 'x', {'cmd': 'reboot'})['errors'][0][:40],
                        'write_without_consent': ex('android_optional_app_state', router or 'x', {'plan_id': 'p'})['errors'][0][:40]}
     out['diagnosis'] = [f'{x["name"]}={x["value"]} ({x["kind"]})' for x in get('/api/v2/diagnosis')['findings']]

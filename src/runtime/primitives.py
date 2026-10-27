@@ -137,11 +137,20 @@ class Executor:
     def _adb_handle(self, key):
         dev = self._device(key)
         live = set(self.ctx.android._handles.values())
+        known = {i.value for i in dev['identifiers'] if i.strong}
         handle = next((h for h in dev.get('handles', {}).values() if h in live), None)
+        if handle is None and known:
+            # Re-attach by strong identity only (ADB issues a new handle after a reconnect).
+            for h in sorted(live):
+                if self.ctx.android.stable_identifier(h, self.ctx.fabric_salt) in known:
+                    handle = h
+                    transport = next((t for t, x in dev.get('handles', {}).items()), 'ADB')
+                    dev.setdefault('handles', {})[transport] = h
+                    self.emit('reattached', device_key=key)
+                    break
         if handle is None:
             raise PrimitiveError('DEVICE_UNAVAILABLE', 'No live ADB link to this device')
         ident = self.ctx.android.stable_identifier(handle, self.ctx.fabric_salt)
-        known = {i.value for i in dev['identifiers'] if i.strong}
         if ident is None:
             raise PrimitiveError('DEVICE_UNAVAILABLE', 'Device identity unreadable (disconnected or unauthorized)')
         if known and ident not in known:
@@ -167,7 +176,21 @@ class Executor:
                 if a not in diagnostics.ANDROID_READS:
                     raise ValueError('not in read allowlist')
                 return self.ctx.android._run(['-s', serial, 'shell', *a])
-            facts = diagnostics.android(read)
+            failures = []
+            def counted(*a):
+                try:
+                    return read(*a)
+                except (ValueError, OSError) as e:
+                    failures.append(str(e)[:80]); raise
+            facts = diagnostics.android(counted)
+            # Link check after the reads: a read set cut short by a lost link is PARTIAL, never VERIFIED.
+            try:
+                self.ctx.android.discover()
+                still = self.ctx.android.stable_identifier(handle, self.ctx.fabric_salt) is not None
+            except (ValueError, OSError):
+                still = False
+            if not still:
+                return 'PARTIAL', None, None, False, {'facts': facts, 'lost_link': True, 'failed_reads': len(failures)}
         else:
             reg = self.ctx.fabric_registry
             facts = [diagnostics.finding(f, reg.best_value(key, f).value, source=', '.join(sorted(obs))[:80])
@@ -305,6 +328,7 @@ class Executor:
         return receipt(state, before, after, verified, result=result)
 
     def recovery(self):
-        pending = tuple(t for t, r in self.receipts.items() if r.state in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL'))
+        pending = tuple(t for t, r in self.receipts.items() if r.state in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')
+                        and PRIMITIVES[r.primitive_id].reversibility != 'NONE')   # read-only results change nothing
         open_changes = tuple(c['id'] for c in self.ctx.session_journal.open_changes())
         return RecoveryState(pending, open_changes, '' if not pending else 'some transactions ended without verification')

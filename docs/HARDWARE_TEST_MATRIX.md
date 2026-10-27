@@ -26,7 +26,8 @@ Exact pending hardware procedures: (1) enable MIUI "Install via USB", install Co
 | Scenario | Status | Evidence / reproduce |
 |---|---|---|
 | Freebox read-only diagnostics (connection, FTTH optics, system sensors, Wi-Fi state, LAN presence) | REAL_HARDWARE_VERIFIED | commit ed3c0f8, Freebox v7 fw 4.13.1: `python -m dev.freebox_diag` (all findings OBSERVED) |
-| Android diagnostics (battery, storage, uptime, Wi-Fi, CPU, memory, patch level) | IMPLEMENTED_UNVERIFIED on hardware; SIMULATED_VERIFIED | `tests/runtime/test_diagnostics.py`; phone/TV unreachable at test time |
+| Android diagnostics (battery, storage, uptime, Wi-Fi, CPU, memory, patch level) | REAL_HARDWARE_VERIFIED on Android TV; phone NOT TESTED | dev/runtime_v2_smoke.py |
+| ADB link lost during a read (TV, Wi-Fi) | REAL_HARDWARE_VERIFIED | dev/transport_loss_smoke.py → PARTIAL, DEVICE_UNAVAILABLE, re-attach by identity |
 | USB unplug during a write | SIMULATED_VERIFIED only | `test_usb_unplugged_during_write` → FAILED + recovery entry. Physical scenario: NOT TESTED |
 | Device replaced on the same link/IP | SIMULATED_VERIFIED | `test_device_replaced_under_same_link` → IDENTITY_CHANGED |
 | Relay disappears / revoked, TV off, timeout, concurrent requests, inconsistent read-back, server restart | SIMULATED_VERIFIED | `tests/runtime/test_primitives.py` |

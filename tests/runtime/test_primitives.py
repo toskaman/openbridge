@@ -24,7 +24,10 @@ class FakeAndroid:
         self.runs = []
 
     def stable_identifier(self, handle, salt):
-        return self.identity
+        return self.identity if handle in self._handles.values() else None
+
+    def discover(self):
+        return {'devices': []}
 
     def _run(self, args):
         self.runs.append(args)
@@ -140,6 +143,25 @@ class Reliability(unittest.TestCase):
         self.assertIn('DEVICE_UNAVAILABLE', self.run_('read_facts')['errors'][0])
         self.c.android._handles = {}
         self.assertIn('DEVICE_UNAVAILABLE', self.run_('read_facts')['errors'][0])
+
+    def test_reattach_by_identity_after_reconnect(self):
+        self.c.android._handles = {'SERIAL1': 'h9'}          # same device, new ADB handle
+        self.assertEqual(self.run_('read_facts')['state'], 'VERIFIED')
+        self.assertEqual(self.c.fabric_registry.devices[self.key]['handles']['USB'], 'h9')
+        self.c.android.identity = 'id-other'
+        self.c.android._handles = {'SERIAL2': 'h10'}         # a different device must never be adopted
+        self.assertIn('DEVICE_UNAVAILABLE', self.run_('read_facts')['errors'][0])
+
+    def test_link_lost_during_reads_is_partial(self):
+        a = self.c.android
+        orig = a._run
+        def drop(args):
+            a._handles = {}
+            raise ValueError('device offline')
+        a._run = drop
+        r = self.run_('read_facts')
+        self.assertEqual((r['state'], r['verified'], r['result']['lost_link']), ('PARTIAL', False, True))
+        self.assertNotIn(r['transaction_id'], primitives.to_json(self.ex.recovery())['pending_transactions'])
 
     def test_plan_for_other_device_refused(self):
         self.assertIn('PLAN_DEVICE_MISMATCH', self.run_('android_optional_app_state', {'plan_id': 'p2'})['errors'][0])
