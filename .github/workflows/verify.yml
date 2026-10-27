@@ -23,6 +23,11 @@ jobs:
         with:
           python-version: '3.14.4'
       - run: python -m pip install -r requirements-dev.txt
+      - name: Use primary Ubuntu package mirror
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt
+          fi
       - run: python -m playwright install --with-deps chromium
       - run: python -m tests.e2e.offline_smoke
       - run: python -m tests.e2e.guided_smoke
