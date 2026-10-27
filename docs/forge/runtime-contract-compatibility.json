@@ -1,13 +1,14 @@
 {
   "runtime_contract_version": "1.0.0",
   "runtime_schema_sha256": "53f08aa050218ca39de394cc186975a36ef08cb08061d7684fd1d749aae4f610",
-  "runtime_revision_observed": "9b5c4a9",
+  "runtime_revision_observed": "b5f1ab85622d6748b4c0712bfcdd72bada473ace",
   "consumer": "src/forge/runtime_bridge.py",
   "tests": "tests/forge/test_runtime_bridge.py",
   "verification": "SIMULATED_VERIFIED",
   "physical_binding_enabled": false,
-  "pending_gate": "Runtime owner validates injectable host over actual phone/TV relay; no physical API proof yet",
+  "pending_gate": "Final mounting and combined physical Glimmer/TV scenario remain; phone HTTP lifecycle confirmed",
   "per_fact_timestamp_gate": "FIXED_BY_RUNTIME_OWNER_3ddbbc7",
   "owner_recorded_hardware_bridge": "3_of_3_phone_relay_snapshots_then_revocation_denied",
-  "physical_http_publication_proven": false
+  "physical_http_publication_proven": true,
+  "physical_evidence_origin": "runtime owner EVIDENCE_LEDGER; phone relay"
 }

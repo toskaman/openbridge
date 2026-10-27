@@ -1,5 +1,11 @@
 # Capability Forge API
 
+## Explicit local planner memory controls
+
+POST /api/model-prepare and POST /api/model-release accept only an empty JSON object under the existing bearer/Host/Origin protections. They exist only for a configured planner that supports the pinned local controls. They accept no model, prompt, facts, URL or operation parameter. Prepare retains the local model for five idle minutes; release requests immediate unloading. The response validates the exact model, load/unload state and zero generated tokens. Unsupported/unavailable control returns 409. No cloud fallback occurs.
+
+These operations do not collect provider evidence. The UI skips its normal source refresh during them and asks for fresh observations after preparation. Removal of an existing virtual service remains usable while model work is pending; stale completions are discarded. The underlying bounded inference may still finish, but cannot recreate a removed service.
+
 ## Trusted provider injection
 
 `create_forge_server(port, planner, provider=trusted_provider, capability_id=trusted_provider.capability_id)` now binds an existing capability through a trusted internal provider. HTTP and model inputs cannot select providers or supply commands. The initial snapshot fixes device, relay, source, status, capability and service identity. Subsequent snapshots must retain that binding and remain eligible.

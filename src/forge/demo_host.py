@@ -24,7 +24,7 @@ class ForgeServer(ThreadingHTTPServer):
     def catalog(self):
         try:current=self.snapshot();error=None
         except ForgeError as e:current=None;error=str(e)
-        return {'manifest':current,'available':current is not None,'error':error,'services':self.forge.list_services(),'history':self.forge.history(),'mode':'SIMULATED' if self.simulation else 'PHYSICAL_READ_ONLY','fixture_reset_enabled':self.fixture_reset_enabled,'observation_path':self.observation_path,'glimmer_configured':self.planner is not None}
+        return {'manifest':current,'available':current is not None,'error':error,'services':self.forge.list_services(),'history':self.forge.history(),'mode':'SIMULATED' if self.simulation else 'PHYSICAL_READ_ONLY','fixture_reset_enabled':self.fixture_reset_enabled,'observation_path':self.observation_path,'glimmer_configured':self.planner is not None,'model_controls_available':getattr(self.planner,'supports_model_control',False) is True}
     def server_close(self):
         self.forge.close();super().server_close()
 
@@ -62,13 +62,19 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(404,{'error':'UNKNOWN_ROUTE'})
     def do_POST(self):
         if not self.guard(True) or not self.authorized():return
-        if self.path not in ('/api/publish','/api/remove','/api/plan','/api/reset-fixture'):return self.reply(404,{'error':'UNKNOWN_ROUTE'})
+        if self.path not in ('/api/publish','/api/remove','/api/plan','/api/reset-fixture','/api/model-prepare','/api/model-release'):return self.reply(404,{'error':'UNKNOWN_ROUTE'})
         if self.headers.get('Content-Type')!='application/json':return self.reply(415,{'error':'JSON_CONTENT_TYPE_REQUIRED'})
         try:
             length=int(self.headers.get('Content-Length','0'))
             if self.headers.get('Transfer-Encoding') or not 0<length<=8192:return self.reply(413,{'error':'BODY_SIZE_DENIED'})
             body=json.loads(self.rfile.read(length));
             if not isinstance(body,dict):raise ForgeError('INVALID_BODY')
+            if self.path in ('/api/model-prepare','/api/model-release'):
+                if body!={}:raise ForgeError('INVALID_BODY')
+                planner=self.server.planner
+                if getattr(planner,'supports_model_control',False) is not True:raise ForgeError('MODEL_CONTROL_UNAVAILABLE')
+                result=planner.prepare() if self.path=='/api/model-prepare' else planner.release()
+                return self.reply(200,result)
             if self.path=='/api/publish':
                 if set(body)!={'consent'}:raise ForgeError('INVALID_BODY')
                 return self.reply(200,self.server.forge.publish(self.server.snapshot(),consent=body['consent']))

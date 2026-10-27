@@ -1,0 +1,84 @@
+{
+  "purpose": "actual_local_meta_preparation_and_release",
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+  "provider_cost_usd": 0.0,
+  "hardware_calls": 0,
+  "input": "SIMULATED",
+  "benchmark_score": false,
+  "execution_options": {
+    "temperature": 0,
+    "num_gpu": 0,
+    "num_ctx": 1024,
+    "num_batch": 32,
+    "num_thread": 4,
+    "num_predict": 384,
+    "use_mmap": true
+  },
+  "prepare": {
+    "state": "ready",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 300,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 49595,
+    "authorizes_execution": false
+  },
+  "memory_after_prepare": [
+    {
+      "name": "muse-glimmer:30b-q4_K_M",
+      "size": 12521161356,
+      "size_vram": 0
+    }
+  ],
+  "plan": {
+    "plan": {
+      "goal": "expose_remote_ble_observations",
+      "decision": "propose",
+      "steps": [
+        {
+          "capability_id": "tv.ble.observations",
+          "operation": "read_observations"
+        },
+        {
+          "capability_id": "pc.virtual_api.publish",
+          "operation": "publish_readonly"
+        }
+      ],
+      "evidence_refs": [
+        "evidence-relay",
+        "evidence-signal"
+      ],
+      "requires_consent": true
+    },
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "source": "LOCAL_META",
+    "model_called": true,
+    "planner_version": 2,
+    "eligibility_source": "DETERMINISTIC_RULES",
+    "authorizes_execution": false,
+    "elapsed_ms": 51686,
+    "usage": {
+      "prompt_tokens": 218,
+      "completion_tokens": 67
+    },
+    "provider_cost_usd": 0.0
+  },
+  "status": "PLAN_VALIDATED",
+  "release": {
+    "state": "released",
+    "model_id": "muse-glimmer:30b-q4_K_M",
+    "model_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+    "keep_alive_seconds": 0,
+    "tokens_generated": 0,
+    "provider_cost_usd": 0.0,
+    "device_data_read": false,
+    "elapsed_ms": 191,
+    "authorizes_execution": false
+  },
+  "memory_after_release": [],
+  "total_ms": 103082
+}

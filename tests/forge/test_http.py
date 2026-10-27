@@ -46,6 +46,21 @@ class ForgeHTTPTests(unittest.TestCase):
         self.assertEqual(self.fetch('/api/publish','POST',{'consent':True})[0],200)
     def test_wrong_content_type_is_rejected(self):
         self.assertEqual(self.fetch('/api/publish','POST',{'consent':True},headers={'Content-Type':'text/plain'})[0],415)
+    def test_model_memory_control_is_explicit_and_bounded(self):
+        self.assertEqual(self.fetch('/api/model-prepare','POST',{})[0],409)
+        calls=[]
+        class Planner:
+            supports_model_control=True
+            def prepare(self):calls.append('prepare');return {'state':'ready','device_data_read':False,'authorizes_execution':False}
+            def release(self):calls.append('release');return {'state':'released','device_data_read':False,'authorizes_execution':False}
+        self.server.planner=Planner()
+        self.assertTrue(self.fetch('/api/catalog')[1]['model_controls_available'])
+        self.assertEqual(self.fetch('/api/model-prepare','POST',{'model':'unapproved'})[0],400)
+        self.assertEqual(self.fetch('/api/model-release','POST',{},token=False)[0],401)
+        self.assertEqual(calls,[])
+        self.assertEqual(self.fetch('/api/model-prepare','POST',{})[1]['state'],'ready')
+        self.assertEqual(self.fetch('/api/model-release','POST',{})[1]['state'],'released')
+        self.assertEqual(calls,['prepare','release'])
     def test_body_and_query_bounds(self):
         self.assertEqual(self.fetch('/api/publish','POST',{'consent':True,'padding':'x'*9000})[0],413)
         self.assertEqual(self.fetch('/api/catalog?url=http://evil.invalid')[0],404)
