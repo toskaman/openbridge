@@ -418,7 +418,8 @@ function showDevice(device, links) {
   if (['tv', 'media'].includes(device.category) && !(device.handles || {}).WIFI) fabricDetail.append(tvPanel(device));
   const handle = (device.handles || {}).USB || (device.handles || {}).WIFI;
   if (handle && device.capabilities.some(c => c.name === 'ble_relay')) fabricDetail.append(relayPanel(device, handle));
-  if (['phone', 'tv', 'android', 'router', 'computer'].includes(device.category)) fabricDetail.append(diagnosisPanel(device));
+  if (['phone', 'tv', 'android', 'router', 'computer', 'vacuum', 'watch'].includes(device.category)) fabricDetail.append(diagnosisPanel(device));
+  if (device.category === 'vacuum') fabricDetail.append(tuyaPanel(device));
 }
 function diagnosisPanel(device) {
   // V4-01 timeline + hypotheses, V4-05 privacy-preserving cloud review. Read-only; nothing here changes a device.
@@ -704,3 +705,29 @@ document.querySelector('#watch-pair').addEventListener('click', async event => {
   box.append(element('h3', 'Voice or text command'), element('p', 'Push-to-talk sends only the audio clip to Meta (muse-voice-transcribe-1.0). Voice never authorizes anything: you review the transcript and press Run.'), lang, talk, text, go, out);
   host.append(box);
 })();
+
+function tuyaPanel(device) {
+  // One allowlisted reversible setting with read-back and exact Undo; movement is blocked by policy.
+  const box = element('div', undefined, 'diagnosis-panel');
+  const setting = element('select'); for (const v of ['suction', 'volume']) { const o = element('option', v); o.value = v; setting.append(o); }
+  const value = element('select');
+  const opts = { suction: ['gentle', 'normal', 'strong'], volume: ['vol_mute', 'vol_normal', 'vol_max'] };
+  const fill = () => { value.replaceChildren(...opts[setting.value].map(v => { const o = element('option', v); o.value = v; return o; })); };
+  setting.addEventListener('change', fill); fill();
+  const row = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
+  row.append(c, document.createTextNode(' I own this robot and approve this single reversible change.'));
+  const go = element('button', 'Change with read-back', 'secondary'); const undo = element('button', 'Undo exactly', 'secondary'); undo.hidden = true;
+  const out = element('p'); out.setAttribute('role', 'status');
+  go.addEventListener('click', async () => {
+    if (!c.checked) { out.textContent = 'Consent required.'; return; }
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_setting', device_key: device.key, params: { setting: setting.value, value: value.value }, consent: true });
+      out.textContent = `${r.state}: ${r.before} → ${r.after}${r.verified ? ' (read back)' : ''}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`; undo.hidden = !r.verified; }
+    catch (e) { out.textContent = e.message; }
+  });
+  undo.addEventListener('click', async () => {
+    const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_undo', device_key: device.key, params: { setting: setting.value }, consent: true });
+    out.textContent = `${r.state}: restored ${r.after}${r.verified ? ' (exact)' : ' (NOT exact — check the robot)'}`; undo.hidden = r.verified;
+  });
+  box.append(element('h3', 'Robot settings (reversible only)'), element('p', 'Start, stop, movement and "find my robot" are blocked: a moving robot has no exact Undo.'), setting, value, row, go, undo, out);
+  return box;
+}

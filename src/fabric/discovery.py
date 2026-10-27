@@ -107,6 +107,8 @@ def run(adapters, salt, providers=('mdns', 'ssdp', 'android', 'freebox'), mdns_t
         ingest_ble(registry, res, salt)
     if 'windows' in providers and adapters.get('windows'):
         report['windows'] = ingest_windows(registry, adapters['windows'], salt)
+    if 'tuya' in providers and adapters.get('tuya'):
+        report['tuya'] = ingest_tuya(registry, adapters['tuya'], salt)
     if 'freebox' in providers and adapters.get('freebox'):
         from src.fabric.freebox_ingest import ingest_freebox
         report['freebox'] = ingest_freebox(registry, adapters['freebox'], salt)
@@ -168,6 +170,23 @@ def ingest_ssdp(registry, result, salt):
                 registry.capability(key, Capability('igd_status', 'read', 'IMPLEMENTED_UNVERIFIED', 'UPNP_IGD',
                                                     'allowlisted read-only IGD queries; external IP masked'))
                 registry.link(Link('pc', key, 'LAN', ('observe', 'read'), 'UPNP_IGD'))
+
+
+def ingest_tuya(registry, vacuum, salt):
+    """Owner-linked Tuya vacuum (official IoT project key). Strong identity = Tuya device id (hashed)."""
+    t = now()
+    try:
+        facts = vacuum.facts()
+    except Exception as e:
+        return {'status': 'UNAVAILABLE', 'detail': type(e).__name__}
+    ids = [Identifier('tuya_device_id', opaque('tuya_device_id', vacuum.device_id, salt), True)]
+    obs = [DeviceObservation(f['name'], f['value'], 'TUYA_LOCAL', 'LAN', t, True) for f in facts]
+    key = registry.upsert(ids, category='vacuum', label='Robot vacuum (Tuya)', observations=obs, weak=[('ip', vacuum.ip)])
+    registry.link(Link('pc', key, 'LAN', ('observe', 'read', 'control'), 'TUYA_LOCAL'))
+    registry.capability(key, Capability('tuya_status', 'read', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'local protocol 3.4, owner-linked key'))
+    registry.capability(key, Capability('tuya_setting', 'write', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'suction / volume, exact Undo'))
+    registry.capability(key, Capability('movement', 'write', 'BLOCKED', 'TUYA_LOCAL', 'start, stop, direction, seek: no exact undo'))
+    return {'status': 'OK', 'devices': 1}
 
 
 def ingest_windows(registry, bridge, salt):
