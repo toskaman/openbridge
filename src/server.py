@@ -376,14 +376,22 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
         from src.adapters.freebox_auth import FreeboxSession
         from src.fabric.credential_vault import Vault
         session=None
+        tuya=None
+        try:
+            from src.adapters.tuya_local import TuyaVacuum, owner_link
+            link=owner_link()
+            tuya=getattr(server,'tuya',None) or (TuyaVacuum(link) if link else None)
+            server.tuya=tuya
+        except (ImportError,PermissionError,ValueError):
+            tuya=None
         if providers is not None and 'freebox' not in providers:   # never probe the gateway unless asked
-            return {'android':server.android,'freebox':None,'windows':server.windows_bridge}
+            return {'android':server.android,'freebox':None,'windows':server.windows_bridge,'tuya':tuya}
         try:
             facts=server.freebox.discover()['devices'][0]['facts']
             session=FreeboxSession(Vault(),facts['api_version'].split('.')[0])
         except (IndexError,KeyError,ValueError):
             pass
-        return {'android':server.android,'freebox':{'public':server.freebox,'session':session},'windows':server.windows_bridge}
+        return {'android':server.android,'freebox':{'public':server.freebox,'session':session},'windows':server.windows_bridge,'tuya':tuya}
     server.fabric_adapters = fabric_adapters
     server.windows_bridge = None
     server.freebox_auth = {'state': 'IDLE'}

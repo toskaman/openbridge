@@ -14,7 +14,7 @@ OpenBridge only reads from the owner's BridgeWindows agent: system diagnostics, 
 The agent's current authentication is a static pre-shared key sent in clear over plain TCP. Until it uses per-request signing (like the relay protocol), keep the agent on a trusted LAN. The adapter is off unless the server is started with `--windows-bridge`.
 
 ## Added 27 Oct
-- Tuya devices: discovered only. Local reads need the owner's device ID and local key from a free Tuya IoT project; OpenBridge never extracts keys from apps, cloud or traffic.
+- Tuya vacuum: owner-linked through the owner's own Tuya IoT Cloud project (`python -m dev.tuya_link`); reads plus suction/volume with exact Undo; movement and job control blocked. OpenBridge never extracts keys from apps, caches or traffic.
 - BridgeWindows agent: its own static key travels in clear over plain TCP; OpenBridge uses it read-only. OpenBridge `--windows-bridge` and the BridgeWindows daemon both need port 9876; run one at a time.
 - Smartwatch: read-only facts; no controls published on the watch yet.
 - Hosted Meta advisory: synthetic facts only; $0.10 per session, $1 local ceiling; Meta's spending alerts are not a provider hard cap.

@@ -1,2 +1,4 @@
 # Optional PC Bluetooth LE observation (MIT). Not needed when an Android Companion relays BLE.
 bleak==3.0.2
+# Optional Tuya local protocol (MIT). Only for an owner-linked Tuya device (python -m dev.tuya_link).
+tinytuya

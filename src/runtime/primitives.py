@@ -34,7 +34,7 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('none: read-only',), 'each finding names its source; INFERRED findings state their basis', '',
                      R.NONE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'NOT_READABLE'), 60, 'single-per-device', False),
     ActionDescriptor('bounded_discovery', 'Run one bounded local discovery',
-                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble', 'windows']), maxItems=6)},
+                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble', 'windows', 'tuya']), maxItems=7)},
                       'additionalProperties': False},
                      (), ('no discovery already running',), ('graph replaced by a fresh snapshot',), 'snapshot returned with per-provider status', '',
                      R.NONE.value, ('BUSY',), 60, 'single-global', False),
@@ -98,6 +98,16 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('none: read-only; frame kept as a hash only',),
                      'CONFIRMED only when structured read and screenshot agree; disagreement is INCONCLUSIVE', '', R.NONE.value,
                      ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED'), 330, 'single-per-device', True),
+    ActionDescriptor('tuya_setting', 'Change one allowlisted Tuya vacuum setting (suction or volume) with read-back',
+                     {'type': 'object', 'properties': {'setting': _s('string', enum=['suction', 'volume']), 'value': _s('string', maxLength=16)},
+                      'required': ['setting', 'value'], 'additionalProperties': False},
+                     ('owner consent', 'owner-linked Tuya key'), ('robot idle or docked', 'value in the setting allowlist'),
+                     ('setting equals the requested value',), 'independent status read equals target', 'tuya_undo', R.EXACT.value,
+                     ('NOT_LINKED', 'BLOCKED', 'READBACK_MISMATCH'), 30, 'single-per-device', True),
+    ActionDescriptor('tuya_undo', 'Restore the Tuya setting value recorded before the change',
+                     {'type': 'object', 'properties': {'setting': _s('string', enum=['suction', 'volume'])}, 'required': ['setting'], 'additionalProperties': False},
+                     ('owner consent',), ('a change was recorded',), ('setting equals the recorded before value',),
+                     'independent status read equals before value', '', R.EXACT.value, ('NOTHING_TO_UNDO', 'RESTORE_NOT_EXACT'), 30, 'single-per-device', True),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -218,6 +228,8 @@ class Executor:
             if session is None or session.state() != 'AUTHORIZED':
                 raise PrimitiveError('NOT_READABLE', 'Freebox app not authorized (read-only authorization required)')
             facts = diagnostics.freebox(session)
+        elif dev['category'] == 'vacuum':
+            facts = [diagnostics.finding(f['name'], f['value'], f['unit'], 'Tuya local protocol') for f in self._tuya().facts()]
         elif any(n == 'windows_diagnostics' for n, _ in dev['capabilities']):
             bridge = (self.ctx.fabric_adapters(('windows',)) or {}).get('windows')
             if bridge is None or not bridge.connected():
@@ -275,7 +287,7 @@ class Executor:
         if not self.ctx.fabric_lock.acquire(blocking=False):
             raise PrimitiveError('BUSY', 'A discovery is already running')
         try:
-            providers = tuple(params.get('providers') or ('mdns', 'ssdp', 'android', 'freebox'))
+            providers = tuple(params.get('providers') or ('mdns', 'ssdp', 'android', 'freebox', 'tuya'))
             snap, reg = discovery.run(self.ctx.fabric_adapters(providers), self.ctx.fabric_salt, providers=providers)
         finally:
             self.ctx.fabric_lock.release()
@@ -454,7 +466,31 @@ class Executor:
         state = 'VERIFIED' if r['verdict'] == 'CONFIRMED' else 'PARTIAL'
         return state, None, r['verdict'], r['verdict'] == 'CONFIRMED', r
 
-    RUNNERS = {'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def _tuya(self):
+        v = (self.ctx.fabric_adapters(('tuya',)) or {}).get('tuya')
+        if v is None:
+            raise PrimitiveError('NOT_LINKED', 'Tuya vacuum not linked (python -m dev.tuya_link)')
+        return v
+
+    def _tuya_setting(self, key, params):
+        from src.adapters.tuya_local import TuyaBlocked
+        if self._device(key)['category'] != 'vacuum':
+            raise PrimitiveError('BLOCKED', 'not a Tuya vacuum')
+        try:
+            r = self._tuya().set_reversible(params['setting'], params['value'])
+        except TuyaBlocked as e:
+            raise PrimitiveError('BLOCKED', str(e)) from None
+        return ('VERIFIED' if r['verified'] else 'FAILED'), r['before'], r['after'], r['verified'], r
+
+    def _tuya_undo(self, key, params):
+        from src.adapters.tuya_local import TuyaBlocked
+        try:
+            r = self._tuya().undo(params['setting'])
+        except TuyaBlocked as e:
+            raise PrimitiveError('NOTHING_TO_UNDO', str(e)) from None
+        return 'REVERTED', None, r['restored'], r['exact'], r
+
+    RUNNERS = {'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
