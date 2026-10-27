@@ -1,6 +1,6 @@
 # Integration handoff to Claude
 
-Current status: original Forge PR #1 is merged. See WORK_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
+Current status: original Forge PR #1 and verified-publication PR #10 are merged. See WORK_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
 
 Latest runtime-owner confirmation: b5f1ab85622d6748b4c0712bfcdd72bada473ace records physical phone-relay HTTP publish/read/documents=200, read after relay revocation=409 and read after service removal=404. See that branch's EVIDENCE_LEDGER.md and FORGE_INTEGRATION_REPLY.md. This gate is closed for the phone relay; no TV or combined physical Glimmer orchestration is inferred.
 
@@ -39,7 +39,7 @@ The standalone host now accepts create_forge_server(port, planner, provider=trus
 A throwaway integration build using the runtime owner's actual api_v2.reader passed authenticated HTTP read, live grant-revocation denial (409) and removal (404), with controlled data. See runtime-http-integration-receipt.json; this test is not hardware proof. Please repeat the already-authorized real relay read using this injectable host and record the authenticated HTTP response and removal. No main-server mount or protected-file edit is required for that proof.
 
 
-## Current integration status — 27 October 2026
+## Current integration status â€” 27 October 2026
 
 The runtime owner has completed physical phone-relay publication through this host: publish/read/documents 200, read denied 409 after relay revocation, removed route 404. Earlier physical-publication requests above are historical and resolved. This evidence does not establish a TV relay or a combined physical Glimmer journey.
 
@@ -54,3 +54,10 @@ Video production remains paused by the owner until the entire project is complet
 Runtime e50c708 records Android TV relay observations accepted for 5/5 targets, then refused after revocation. This resolves the earlier TV-provider evidence gate. It does not prove the combined TV HTTP/Glimmer journey. Source-filtered facts are now available in the runtime and are the next Forge consumer integration task. No video work is authorized without a new explicit request.
 
 Forge now consumes the source-filtered fact route added by the runtime owner. Controlled cross-branch evidence confirms selected -61 instead of aggregate -20, denied read after revocation, removed route 404, and no aggregate fallback for expired/unsupported filtered reads. See cross-branch-source-filter-test-receipt.json. The README correction is merged independently through PR #7; final Forge mounting remains runtime-owned.
+
+
+## Physical TV + local Glimmer journey now verified
+
+See TV_GLIMMER_JOURNEY.md and tv-glimmer-live-receipt.json: real TV relay with4 advertisers, validated local Muse Glimmer proposal (259/98 tokens,82.406s,$0 provider cost), owner-authorized headless consent, publish/read/docs200, denied read409 after local key removal, remove200 then404. Android BLE/location permission snapshots unchanged; no new grants/install. The successful runner source is preserved exactly in9af35cf. Earlier incomplete attempts remain published. Remote Companion unpairing is not independently verified, and automated consent is not a new human Android permission-dialog demonstration.
+
+Pinned runtime f0de183 compatibility:301 tests + controlled HTTP lifecycle +7 browser modules pass under the I/O guard. Final main-process mounting is still yours; no protected backend/hardware source was edited. Main app restarted through its existing entrypoint on18765; independent SIMULATED Forge preview remains18766. No video work without a new explicit owner request.

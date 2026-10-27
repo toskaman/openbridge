@@ -34,6 +34,19 @@ def verify_revoked_read(page,forge):
     return response.status
 
 
+def ensure_companion_foreground(android,serial,allow_open,report):
+    """Fail closed on readiness; a timed-out launch has an unknown outcome."""
+    report.setdefault('activity_launch_attempts',0);report.setdefault('activity_launches',0)
+    pattern=r'(?:mResumedActivity|topResumedActivity).*fr\.openbridge\.companion'
+    activity=android._run(['-s',serial,'shell','dumpsys','activity','activities'])
+    if allow_open and re.search(pattern,activity) is None:
+        report['activity_launch_attempts']=1;report['activity_launches']=None
+        android._run(['-s',serial,'shell','am','start','-W','-n','fr.openbridge.companion/.MainActivity'])
+        report['activity_launches']=1
+        activity=android._run(['-s',serial,'shell','dumpsys','activity','activities'])
+    require(re.search(pattern,activity) is not None,'COMPANION_MUST_ALREADY_BE_FOREGROUND')
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--hardware',action='store_true',help='Use the owner-authorized connected TV; no automatic setup')
@@ -76,12 +89,7 @@ def main():
         require(len(tvs)==1,'ONE_AUTHORIZED_TV_REQUIRED')
         tv=tvs[0];handle=next(iter(runtime.fabric_registry.devices[tv]['handles'].values()))
         serial=next(s for s,h in runtime.android._handles.items() if h==handle)
-        activity=runtime.android._run(['-s',serial,'shell','dumpsys','activity','activities'])
-        if args.open_companion and re.search(r'(?:mResumedActivity|topResumedActivity).*fr\.openbridge\.companion',activity) is None:
-            runtime.android._run(['-s',serial,'shell','am','start','-W','-n','fr.openbridge.companion/.MainActivity'])
-            report['activity_launches']=1
-            activity=runtime.android._run(['-s',serial,'shell','dumpsys','activity','activities'])
-        require(re.search(r'(?:mResumedActivity|topResumedActivity).*fr\.openbridge\.companion',activity) is not None,'COMPANION_MUST_ALREADY_BE_FOREGROUND')
+        ensure_companion_foreground(runtime.android,serial,args.open_companion,report)
         disabled=runtime.android._run(['-s',serial,'shell','pm','list','packages','-d'])
         require('com.android.bluetooth' not in disabled,'TV_BLUETOOTH_PACKAGE_DISABLED')
         permission_before=permissions()

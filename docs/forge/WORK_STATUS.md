@@ -10,34 +10,39 @@
 
 ## Workspace and services
 
-Worktree: C:/Users/TheBox/Desktop/Hackaton/OpenBridge-capability-forge. Branch: feat/forge-verified-publication, based on already-merged Forge work. Reuse this isolated worktree. Check git status/log and GitHub checks before continuing.
+Worktree: C:/Users/TheBox/Desktop/Hackaton/OpenBridge-capability-forge. Branch: feat/forge-tv-glimmer-proof, based on already-merged Forge work. Reuse this isolated worktree. Check git status/log and GitHub checks before continuing.
 
-Forge preview restarted at http://127.0.0.1:18766 with python -m src.forge.demo_host --glimmer-cpu-v2 (managed command session 47996). SIMULATED observations, no hardware. Local CPU Meta endpoint 11439 is separately running; startup made no inference request. Fixture evidence expires after 120 seconds: explicit fixture refresh required. Do not stop unrelated model services. The main app was not listening on 18765 when checked; mounting/restart coordination remains runtime-owned.
+Forge preview restarted at http://127.0.0.1:18766 with python -m src.forge.demo_host --glimmer-cpu-v2 (managed command session 47996). SIMULATED observations, no hardware. Local CPU Meta endpoint 11439 is separately running; startup made no inference request. Fixture evidence expires after 120 seconds: explicit fixture refresh required. Do not stop unrelated model services. Main app restarted from the existing runtime entrypoint at http://127.0.0.1:18765 (managed session 56025), with cloud credentials excluded from that process. Final Forge mounting remains runtime-owned.
 
 ## Completed foundations
 
 - Forge PR #1 merged as 767dcdb; its last checked CI jobs passed.
+- Verified publication PR #10 merged as fcfd387 after all eight checks passed: first-read verification, failure cleanup and renewed consent. See VERIFIED_PUBLICATION.md.
 - README correction PR #7 merged as dcb71c3: measured Glimmer explanations 56/60 (93.3%) first, rules have no scored prose output, full planning/goal-fit results retained. No invented superiority or diagnosis score.
 - Runtime-owner physical phone HTTP proof: publish/read/docs 200, read 409 after revocation, removed route 404. TV provider accepted 5/5 targets, then refused after revocation (e50c708). TV permission involved a dev-harness grant and journaled changes, not complete product-consent proof.
 - Spark diagnostic implemented and mocked-tested. One live attempt BLOCKED, one $0.10 reservation retained, no retry; accepted diagnosis/usage/cost unknown. Stale $148 balance cannot authorize another call. See SPARK_DIAGNOSTIC.md.
 - Windows bridge PR #8 merged on main; do not duplicate adapter work.
 
-## Current change: verified publication
+## Current change: real TV and local Meta journey
 
-ForgeService.publish_verified requires exact consent, rejects an existing service ID, creates a service and independently rereads trusted evidence under its lifecycle lock. Failed verification removes only the new service and returns PUBLICATION_VERIFICATION_FAILED. Low-level publish remains for staged integrations. This verifies provider/lifecycle data, not HTTP transport or a new scan.
+The combined physical TV/HTTP/Glimmer journey PASSED. Raw successful receipt: tv-glimmer-live-receipt.json. Four real BLE advertisers; pinned local Muse Glimmer proposal 259 input / 98 output tokens, 82.406 seconds, $0 provider cost. Driver consent, publish/read/docs 200, read after local key removal 409, remove 200, after removal 404. Own model load released, temporary ADB forward removed, BLE/location permission snapshots unchanged, no grants/install/data-clear or video.
 
-Standalone POST /api/publish uses this flow and refuses false consent before provider access. UI displays the verified read automatically. Failed verification clears plan/consent, explains removal and requires an explicit new attempt. Test service remains a separate authenticated HTTP read.
+Measured runner elapsed about 152 s including 46.223 s preload; connection and app setup happened earlier. Owner explicitly instructed us to start Companion and handle setup. We reconnected its single prior authorized Wi-Fi ADB endpoint, brought the installed app forward and later restarted only that process after a launch stalled. No keyboard/mouse, no app-data clear. Current physical runner makes no automatic force-stop or grants; optional --open-companion only launches the installed activity.
 
-Tests cover freshness, permission/provenance/provider failures, preservation of existing services, concurrency, intermediate-state isolation, HTTP cleanup and four-width recovery. Review found no important publication defects. Its receipt-provenance issue was fixed: archive the captured runtime revision, freeze overlay bytes and record hashes. Runner now handles already-merged Forge folders, backing up only differing existing overlay files.
+Consent was exercised by an owner-authorized headless driver. Pairing code was read from the TV UI tree via authorized ADB; existing Android permissions were reused. This is not fresh human Android permission-dialog proof. Remote Companion unpairing remains unverified; the 409 proves local runtime authority removal only. See TV_GLIMMER_JOURNEY.md for scope/setup.
 
-Pinned runtime dee5ba1 plus current overlay passed 294 tests, authenticated runtime HTTP lifecycle and seven browser modules; zero forbidden attempts in the self-tested Python I/O guard. Controlled evidence, not new hardware/model proof. See verified-publication-test-receipt.json. Artifacts and exact backup file lists: artifacts/forge-publication/. Check new branch CI/PR status after publication.
+First incomplete run remains tv-glimmer-first-attempt.json (one accepted real model proposal, publication/read/docs passed, driver timeout afterward). Two no-inference readiness failures are retained and annotated in tv-glimmer-readiness-attempts.json. Four-width reproduction showed the disabled Test button was the wrong revocation check; the corrected driver uses an authenticated API read, then UI removal. No timeout or security gate was weakened. Two actual local model proposals total across all attempts; no hidden model retry.
+
+Exact executed successful runner SHA256 matches commit 9af35cf; first runner matches 30629e6. Current runner subsequently adds conservative launch-outcome metadata and a fake-runner-tested readiness helper; no additional hardware inference was made for that refactor. Five fake helper tests and the four-width browser check pass. Independent review found no important defects.
+
+Pinned runtime f0de183 plus hashed current overlays passed 301 unit/integration tests, controlled authenticated HTTP lifecycle and seven browser modules; zero forbidden I/O attempts in the self-tested Python guard. See tv-glimmer-software-checks.json. These software checks made no model/device calls; the physical receipt is separate. Backup manifests: artifacts/forge-physical-tv/delta-backups.json and artifacts/forge-publication/delta-backups.json. Check branch PR/CI after publishing.
 
 ## Next
 
-1. Publish/finish the verified-publication PR after checks, preserving its exact evidence scope.
-2. Coordinate main-process mounting with trusted runtime reader and explicitly bound relay/target; no silent physical source selection or protected server edits.
-3. Complete physical TV HTTP + local Glimmer product journey with fresh evidence; distinguish device consent from harness grants.
-4. Expand composition evaluation beyond narrow two-step selection; preserve frozen v1 results.
+1. Publish/finish the physical TV proof PR after checks. Preserve failures, exact executed source hashes and scope limits.
+2. Final main-process Forge mounting remains runtime-owned: trusted reader, explicitly bound relay/target, no silent source choice or protected server edits. The physical integration gate is now closed for this tested journey.
+3. Expand composition evaluation beyond narrow two-step selection; retain frozen v1 results and do not convert this smoke proof into a reasoning-advantage score.
+4. Spark diagnostic remains live-unconfirmed; no automatic retry or reuse of the stale free-credit balance.
 5. No video work without a new explicit owner request.
 
 Earlier checkpoint history remains in Git; this file describes current state.
