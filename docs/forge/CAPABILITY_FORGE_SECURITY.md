@@ -8,6 +8,6 @@ Binding covers version, service, capability, device, relay, source, status, simu
 
 The demo binds to numeric loopback, validates Host exactly and requires an ephemeral bearer for data. Mutation additionally requires exact Origin. Browser CSP forbids external resources and framing; responses are non-cacheable. Input is bounded. This is a trusted single-user development host, not a multi-user Internet service. A local user/process with equal OS rights is outside this browser-origin boundary.
 
-Concurrent reads and revocation share a lock. Audit history omits tokens and observation contents, is bounded and in-memory; it is not a durable security journal. No automatic hardware scan or write occurs. No Undo integration is needed for read-only publication. Write-capable composition is deliberately unavailable until Claude's policy and transaction contract covers it.
+Concurrent reads and revocation share a lock. Audit history omits tokens and observation contents, is bounded and in-memory; it is not a durable security journal. No automatic hardware scan or write occurs. No Undo integration is needed for read-only publication. Write-capable composition is deliberately unavailable until the core policy and transaction contract covers it.
 
 Tests cover denied permissions, expiry, forged provenance, removed devices, invalid models, invented IDs, consent bypass and concurrent publication. Hardware-provider integration and independent threat review remain outstanding.

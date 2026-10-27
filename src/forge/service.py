@@ -11,7 +11,7 @@ class CapabilityProvider(Protocol):
         ...
 
 class MemoryProvider:
-    """Test-only provider. Integration must replace this with Claude's trusted snapshot bridge."""
+    """Test-only provider. Integration must replace this with the trusted snapshot bridge."""
     def __init__(self,manifest):self.current=copy.deepcopy(manifest)
     def snapshot(self,capability_id):
         if capability_id!=self.current['capability_id']:raise ForgeError('UNKNOWN_CAPABILITY')

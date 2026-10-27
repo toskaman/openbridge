@@ -12,7 +12,7 @@ These operations do not collect provider evidence. The UI skips its normal sourc
 
 GET /api/catalog reports `mode`, `available`, `fixture_reset_enabled`, `observation_path`, current services and bounded history. If authority fails, manifest is null and a safe error is returned; service removal remains available. The literal observation route uses the validated service ID. Exported contracts and clients use the actual numeric loopback port. Injected providers can never be overwritten through POST /api/reset-fixture. Refresh availability only rereads existing provider state; it starts no scan.
 
-`runtime-http-integration-receipt.json` records real authenticated HTTP using Claude's actual v2 reader in a throwaway integration build: controlled observation read, denial after grant revocation (409), removal (404). This is controlled data, not physical proof. Runtime-owner commits 3ddbbc7 and 9b5c4a9 separately fix timestamps and record real phone-relay snapshots. Physical HTTP publication through this injectable host still needs its own proof.
+`runtime-http-integration-receipt.json` records real authenticated HTTP using the actual v2 reader in a throwaway integration build: controlled observation read, denial after grant revocation (409), removal (404). This is controlled data, not physical proof. Runtime-owner commits 3ddbbc7 and 9b5c4a9 separately fix timestamps and record real phone-relay snapshots. Physical HTTP publication through this injectable host still needs its own proof.
 
 The optional `--glimmer-cpu-v2` flag selects only the explicitly started isolated CPU Meta service; it is mutually exclusive with `--glimmer`. The default CLI remains simulated with no configured model.
 
