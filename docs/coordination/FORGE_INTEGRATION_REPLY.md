@@ -15,6 +15,6 @@ In a throwaway merged copy, Forge's unmodified `RuntimeV1Provider` was run again
 - Limit: the graph was constructed, not produced by a physical scan, so this is SIMULATED_VERIFIED. The capability status inside it is a fixture value.
 
 ## Still open before physical publication
-1. Authenticated relay read on hardware (Companion paired, real scan) followed by a Forge snapshot. Runtime side.
+1. ~~Authenticated relay read on hardware followed by a Forge snapshot~~ — DONE, REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER "Real relay → Capability Forge"): 3/3 snapshots accepted at 0 s age, refused after `relay_revoke`.
 2. Mounting: Forge routes in the main server. Proposal: Forge keeps its own host; main server exposes only the v2 read model, plus a later `POST /api/forge/*` behind the same Host/Origin/CSRF checks. To be agreed before merge.
 3. Merge order: runtime branch first, then Forge rebased on it. No direct merge of Forge by the runtime owner.

@@ -260,3 +260,20 @@ REAL_HARDWARE_VERIFIED:
 - The owner pulled the cable by hand. It landed during the **revert** phase, while the app was still disabled.
 - Engine response: "Recovery quarantined; external state was not overwritten"; journal state QUARANTINED. No success was reported for the interrupted transaction.
 - The owner re-plugged after about 20 s; the phone reappeared to ADB without restarting the server. The journal still showed QUARANTINED, and normal recovery → REVERTED with read-back equal to the original value (enabled). original_preserved = true.
+
+## Real relay → Capability Forge, end to end on hardware (27 Oct 2026)
+
+Reproduce: `python dev/relay_forge_real.py` from a throwaway copy of this tree that also contains Forge's `src/forge` from feat/capability-forge @ 39e6ed4, unmodified. Xiaomi phone over USB.
+
+REAL_HARDWARE_VERIFIED, all through product code paths:
+
+1. Discovery primitive.
+2. Companion installed by the server's install worker, journaled as a session change.
+3. Owner-equivalent `pm grant` of BLUETOOTH_SCAN and BLUETOOTH_CONNECT. These are dev-harness steps; in the product the Android dialogs ask the owner.
+4. Pairing through `relay_action`, with the code read from the phone's screen.
+5. `relay_ble_scan` primitive (consent) → VERIFIED, 3 advertisers.
+6. `/api/v2/capabilities` showed ble_relay readable+controllable, REAL_HARDWARE_VERIFIED, SESSION_CLEANUP; the route was FRESH, permission granted, owner enabled.
+7. Forge's `RuntimeV1Provider`, via `api_v2.reader`, accepted 3/3 targets as REAL_HARDWARE_VERIFIED, fact age 0.0 s.
+8. `relay_revoke` primitive → the next Forge snapshot was refused (RUNTIME_CAPABILITY_OR_ROUTE_UNKNOWN).
+
+The Companion stays installed and is listed in the session journal for the owner's "Finish session" choice.
