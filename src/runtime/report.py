@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from src.runtime.fabric_diagnosis import diagnose
 
-READABLE = ('phone', 'tv', 'android', 'router', 'computer')
+READABLE = ('phone', 'tv', 'android', 'watch', 'router', 'computer')
 
 
 def build(executor, redact=True, recovery=None):
