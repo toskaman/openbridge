@@ -18,7 +18,7 @@ from src.forge.local_models import IsolatedGlimmerCPU
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'docs/forge/evaluation-v2/scenarios.json'
-FROZEN_SHA256 = 'f0ba6ace2af7edee83847847dd07ed6c284cc4210f8bb8f16d298f27e5ec2095'
+FROZEN_SHA256 = '693658da1da548ef39d3082db9e2447baa06be5885f30aadc5a239ec65c502b8'
 
 
 def dataset_sha256():
