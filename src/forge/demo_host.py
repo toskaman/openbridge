@@ -77,7 +77,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200,result)
             if self.path=='/api/publish':
                 if set(body)!={'consent'}:raise ForgeError('INVALID_BODY')
-                return self.reply(200,self.server.forge.publish(self.server.snapshot(),consent=body['consent']))
+                if body['consent'] is not True:raise ForgeError('OWNER_CONSENT_REQUIRED')
+                return self.reply(200,self.server.forge.publish_verified(self.server.snapshot(),consent=body['consent']))
             if self.path=='/api/remove':
                 if body!={}:raise ForgeError('INVALID_BODY')
                 self.server.forge.remove(self.server.service_id);return self.reply(200,{'state':'removed'})

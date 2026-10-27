@@ -23,12 +23,34 @@ class ForgeHTTPTests(unittest.TestCase):
         except HTTPError as e:r=e
         with r:return r.status,json.loads(r.read())
     def test_lifecycle_and_generated_route(self):
-        self.assertEqual(self.fetch('/api/publish','POST',{'consent':True})[0],200)
+        code,result=self.fetch('/api/publish','POST',{'consent':True})
+        self.assertEqual(code,200)
+        self.assertEqual(result['verification']['state'],'verified')
+        self.assertEqual(result['verification']['read']['observations'][0]['rssi_dbm'],-62)
         path='/v1/services/ble-observations/observations'
         self.assertEqual(self.fetch(path)[1]['observations'][0]['rssi_dbm'],-62)
         self.assertEqual(self.fetch('/api/documents')[1]['openapi']['openapi'],'3.1.0')
         self.assertEqual(self.fetch('/api/remove','POST',{})[0],200)
         self.assertEqual(self.fetch(path)[0],404)
+    def test_failed_first_verification_leaves_no_service(self):
+        original=self.server.provider.snapshot;calls=[]
+        def snapshot(capability_id):
+            calls.append(1)
+            current=original(capability_id)
+            if len(calls)>=3:current['available']=False
+            return current
+        self.server.provider.snapshot=snapshot
+        code,result=self.fetch('/api/publish','POST',{'consent':True})
+        self.assertEqual(code,409)
+        self.assertEqual(result['error'],'PUBLICATION_VERIFICATION_FAILED')
+        self.assertEqual(self.server.forge.list_services(),[])
+        self.assertEqual(self.fetch('/v1/services/ble-observations/observations')[0],404)
+    def test_refused_consent_never_reads_provider(self):
+        def unexpected(_):raise AssertionError('No provider read without consent')
+        self.server.provider.snapshot=unexpected
+        code,result=self.fetch('/api/publish','POST',{'consent':False})
+        self.assertEqual(code,409)
+        self.assertEqual(result['error'],'OWNER_CONSENT_REQUIRED')
     def test_auth_origin_host_and_no_arbitrary_dispatch(self):
         self.assertEqual(self.fetch('/api/catalog',token=False)[0],401)
         self.assertEqual(self.fetch('/api/publish','POST',{'consent':True},origin=False)[0],403)

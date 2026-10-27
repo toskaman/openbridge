@@ -1,5 +1,7 @@
 # Integration handoff to Claude
 
+Current status: original Forge PR #1 is merged. See WORK_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
+
 Latest runtime-owner confirmation: b5f1ab85622d6748b4c0712bfcdd72bada473ace records physical phone-relay HTTP publish/read/documents=200, read after relay revocation=409 and read after service removal=404. See that branch's EVIDENCE_LEDGER.md and FORGE_INTEGRATION_REPLY.md. This gate is closed for the phone relay; no TV or combined physical Glimmer orchestration is inferred.
 
 The separate host remains the agreed integration surface. Optional model-memory endpoints prepare/release only the pinned local planner; they accept no device facts or arbitrary parameters. Existing virtual services can be removed while a model request is pending. No video generation is permitted until the complete project is finished, per the owner's latest instruction.

@@ -47,6 +47,23 @@ class ForgeService:
                 self._audit('read',sid,'denied'); raise
             self._audit('read',sid,'verified')
             return {key:copy.deepcopy(current[key]) for key in ('service_id','device_id','relay_id','source','simulation','observed_at','evidence_refs','observations')}
+    def publish_verified(self,manifest,*,consent=False):
+        """Create and independently reread one new service; failed verification removes it.
+
+        This verifies trusted provider data, not the HTTP transport. Existing services are
+        never replaced, and the lock prevents reads of an unverified intermediate service.
+        """
+        if consent is not True:raise ForgeError('OWNER_CONSENT_REQUIRED')
+        requested=validate_manifest(manifest);sid=requested['service_id']
+        with self._lock:
+            if sid in self._services:raise ForgeError('SERVICE_ALREADY_PUBLISHED')
+            result=self.publish(requested,consent=True)
+            try:verified=self.read(sid)
+            except Exception:
+                self.remove(sid);self._audit('publication_verification',sid,'failed')
+                raise ForgeError('PUBLICATION_VERIFICATION_FAILED') from None
+            self._audit('publication_verification',sid,'verified')
+            return {**result,'verification':{'state':'verified','read':verified}}
     def documents(self,sid):
         with self._lock:
             if sid not in self._services:raise ForgeError('SERVICE_REMOVED')
