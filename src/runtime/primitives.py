@@ -81,6 +81,16 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('read grants of each device',), ('graph exists',), ('none: read-only',),
                      'each device section is a normal read_facts receipt (state + verified)', '', R.NONE.value,
                      ('DEVICE_UNKNOWN',), 120, 'single-global', False),
+    ActionDescriptor('diagnostic_probe', 'Re-measure a few devices a bounded number of times and update the timeline hypotheses (read-only)',
+                     {'type': 'object', 'properties': {
+                         'device_keys': _s('array', items=_s('string', maxLength=64), maxItems=4),
+                         'samples': _s('integer', minimum=1, maximum=5), 'interval_s': _s('integer', minimum=2, maximum=30),
+                         'window_s': _s('integer', minimum=10, maximum=600)},
+                      'required': ['device_keys'], 'additionalProperties': False},
+                     ('read grants of each device',), ('devices present in the graph', 'samples x interval <= 120 s'),
+                     ('none: read-only; timeline gains the new samples',),
+                     'every sample is a normal read_facts receipt; hypotheses recomputed before/after', '', R.NONE.value,
+                     ('DEVICE_UNKNOWN', 'INVALID_PARAMS'), 180, 'single-global', False),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -140,7 +150,12 @@ class Executor:
     def emit(self, kind, **data):
         with self._guard:
             self._seq += 1
-            self.events.append(dict(seq=self._seq, at=_now(), kind=kind, **data))
+            ev = dict(seq=self._seq, at=_now(), kind=kind, **data)
+            self.events.append(ev)
+        try:
+            self.timeline().ingest_event(ev, self._category(ev.get('device_key', '')))
+        except Exception:
+            pass
 
     def events_since(self, seq):
         with self._guard:
@@ -346,7 +361,58 @@ class Executor:
         rep = report.build(self, params.get('redact', True))
         return 'VERIFIED', None, rep['summary'], True, {'report': rep, 'markdown': report.markdown(rep)}
 
-    RUNNERS = {'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    def timeline(self):
+        from src.runtime.timeline import Timeline
+        with self._guard:
+            if getattr(self, '_timeline', None) is None:
+                self._timeline = Timeline()
+            return self._timeline
+
+    def _category(self, key):
+        reg = self.ctx.fabric_registry
+        return (reg.devices.get(key) or {}).get('category', '') if reg else ''
+
+    def _probe(self, key, params):
+        import time as _t
+        from src.runtime import hypotheses
+        keys = params['device_keys'] or [key]
+        for k in keys:
+            self._device(k)
+        samples, interval = params.get('samples', 3), params.get('interval_s', 10)
+        if samples * interval > 120:
+            raise PrimitiveError('INVALID_PARAMS', 'samples x interval must stay under 120 s')
+        window = params.get('window_s', hypotheses.DEFAULT_WINDOW_S)
+        tl = self.timeline()
+        target = keys[0]
+        before = hypotheses.analyze(tl.rows(), target, window)
+        reads = []
+        for i in range(samples):
+            for k in keys:
+                r = self._read_once(k)
+                reads.append({'device_key': k, 'sample': i + 1, 'state': r['state'], 'verified': r['verified']})
+            if i + 1 < samples:
+                (getattr(self, '_sleep', None) or _t.sleep)(interval)
+        after = hypotheses.analyze(tl.rows(), target, window)
+        conf = lambda a: {h['id']: h['confidence'] for h in a['hypotheses']}
+        delta = {h: {'before': conf(before).get(h), 'after': c} for h, c in conf(after).items() if conf(before).get(h) != c}
+        ok = all(r['verified'] for r in reads)
+        return ('VERIFIED' if ok else 'PARTIAL'), before['verdict'], after['verdict'], ok, \
+            {'reads': reads, 'before': before, 'after': after, 'confidence_changes': delta}
+
+    def _read_once(self, k):
+        """Inner read used by the probe (already under the global lock): same runner, same timeline feed."""
+        started = _now()
+        try:
+            state, _, _, verified, result = self._read_facts(k, {})
+            r = {'state': state, 'verified': verified, 'errors': [], 'result': result}
+        except PrimitiveError as e:
+            r = {'state': 'BLOCKED', 'verified': False, 'errors': [f'{e.code}: {e}'], 'result': {}}
+        except Exception as e:
+            r = {'state': 'FAILED', 'verified': False, 'errors': [f'{type(e).__name__}'], 'result': {}}
+        self.timeline().ingest_receipt(k, self._category(k), r)
+        return r
+
+    RUNNERS = {'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
@@ -389,9 +455,15 @@ class Executor:
             # The worker keeps the lock until it really ends: no second action can race the unfinished one.
             return receipt('UNKNOWN_TIMEOUT', errors=(f'TIMEOUT: no result after {p.timeout_s}s; state not verified, check recovery',))
         if 'e' in box:
-            return receipt(box['e'][0], errors=(box['e'][1],))
+            out = receipt(box['e'][0], errors=(box['e'][1],))
+            if primitive_id == 'read_facts':
+                self.timeline().ingest_receipt(device_key, self._category(device_key), out)
+            return out
         state, before, after, verified, result = box['r']
-        return receipt(state, before, after, verified, result=result)
+        out = receipt(state, before, after, verified, result=result)
+        if primitive_id == 'read_facts':
+            self.timeline().ingest_receipt(device_key, self._category(device_key), out)
+        return out
 
     def recovery(self):
         pending = tuple(t for t, r in self.receipts.items() if r.state in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')

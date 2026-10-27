@@ -7,7 +7,8 @@ from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
 GET_ROUTES = ('/api/v2/contract', '/api/v2/graph', '/api/v2/capabilities', '/api/v2/facts', '/api/v2/routes',
-              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis', '/api/v2/watches')
+              '/api/v2/primitives', '/api/v2/recovery', '/api/v2/events', '/api/v2/relays', '/api/v2/diagnosis', '/api/v2/watches',
+              '/api/v2/timeline', '/api/v2/hypotheses')
 POST_ROUTES = ('/api/v2/execute',)
 
 
@@ -63,6 +64,23 @@ def get(server, path, query):
         return 200, {'events': ex.events_since(since)}
     if path == '/api/v2/watches':
         return 200, {'watches': ex.watchers().list()}
+    if path in ('/api/v2/timeline', '/api/v2/hypotheses'):
+        tl = ex.timeline()
+        tl.ingest_routes(route_rows(server))
+        dev = (q.get('device') or [None])[0]
+        try:
+            since = int((q.get('since_s') or ['0'])[0]) or None
+            window = int((q.get('window_s') or ['90'])[0])
+        except ValueError:
+            return 400, {'error': 'since_s and window_s must be integers'}
+        if path == '/api/v2/timeline':
+            return 200, {'entries': tl.rows(dev, since)}
+        if not dev:
+            return 400, {'error': 'device is required'}
+        if not 10 <= window <= 600:
+            return 400, {'error': 'window_s out of range'}
+        from src.runtime import hypotheses
+        return 200, hypotheses.analyze(tl.rows(), dev, window)
     if path == '/api/v2/routes':
         return 200, {'routes': route_rows(server)}
     if path == '/api/v2/relays':
