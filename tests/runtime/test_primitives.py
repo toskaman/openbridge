@@ -29,7 +29,7 @@ class FakeAndroid:
     def discover(self):
         return {'devices': []}
 
-    def _run(self, args):
+    def _run(self, args, max_bytes=131072):
         self.runs.append(args)
         if args[3:] == ['cat', '/proc/uptime']:
             return '3600 1'
@@ -155,7 +155,7 @@ class Reliability(unittest.TestCase):
     def test_link_lost_during_reads_is_partial(self):
         a = self.c.android
         orig = a._run
-        def drop(args):
+        def drop(args, **kw):
             a._handles = {}
             raise ValueError('device offline')
         a._run = drop

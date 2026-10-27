@@ -290,3 +290,13 @@ REAL_HARDWARE_VERIFIED. The run used the unmodified Forge `create_forge_server` 
 6. `POST /api/remove` → 200; the observation route → 404 SERVICE_REMOVED.
 
 Before this run, a locked phone blocked the on-screen code read, so the harness failed closed and never paired.
+
+## Runtime v2.1 — power/thermal diagnostics and read-only watchers (27 Oct 2026, branch feat/runtime-v2.1)
+
+Reproduce: `python -m dev.watch_smoke`.
+
+- REAL_HARDWARE_VERIFIED on the Xiaomi phone:
+  - New findings `power_state` = dozing and `thermal_status` = none (OBSERVED).
+  - `watch_start` primitive (consent) on `memory_available > 0.01 GB`: 2 runs in 40 s, exactly one `watch_triggered` event (edge-triggered); `watch_stop` → STOPPED.
+- REAL_HARDWARE_VERIFIED on the Android TV (first run): `thermal_status` = none. The TV went to standby mid-watch, so the watch's next run was BLOCKED and emitted `watch_unavailable`, not a value.
+- Defect found on hardware and fixed: `dumpsys power` output exceeds the adapter's 128 KB cap, so the read was refused (fail-closed). These two allowlisted system dumps now have a 2 MB cap; all other reads keep 128 KB.
