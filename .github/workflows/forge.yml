@@ -26,6 +26,8 @@ jobs:
           fi
       - run: python -m playwright install --with-deps chromium
       - run: python -m unittest discover -s tests -q
+      - run: python -m dev.build_web_theme --check
+      - run: python -m tests.e2e.forge_workspace_smoke
       - run: python -m tests.e2e.forge_smoke
       - run: python -m tests.e2e.forge_publication_failure_smoke
       - run: python -m tests.e2e.forge_runtime_smoke

@@ -1,5 +1,7 @@
 # Evidence ledger — 26 October 2026
 
+Current interpretation: this ledger is chronological. Counts, failures and statements such as NOT TESTED describe their recorded milestone; later sections may supersede them. See [release status](docs/RELEASE_STATUS.md) for the current backlog. Hosted-credit guards are $0.10 reserved per explicit request, $0.20 per fresh observation and $1 persistent local lifetime allowance; none is an account-wide provider billing cap.
+
 ## Phase 1 local checks
 
 - Python 3.14.4 on Windows: 12 unit/integration tests PASS. Covers fixture provenance, write refusal, unknown device, exact Host, Origin, CSRF, malformed input, oversized body and fixed asset routing.
@@ -369,5 +371,5 @@ Each recovery ran in a fresh process that read the durable journal and the phone
 
 - Bug: `muse-spark-1.3` is a reasoning model; the broker's 900-token completion cap was fully consumed by reasoning (`reasoning_tokens` ≈ 898), so `content` came back empty and `recommend()` failed as "Meta call failed".
 - Fix (`src/ai/broker.py`): `max_completion_tokens` raised to 4000; empty/whitespace content is now an explicit `ModelBlocked('Model returned no content…')`; the $0.10 reservation and $1 total ceiling are unchanged. `src/server.py` now reads the key from the OS vault (`meta-api-key`) when `MODEL_API_KEY` is not in the environment.
-- REAL (Meta Model API, synthetic facts only, no personal data): one live call returned `muse-spark-1.3` id chatcmpl-01a17d97…, a schema-valid `inspect_only` advisory citing the three supplied keys, usage 110 prompt + 625 completion (533 reasoning), estimated cost **$0.0028**. Within the owner's free promotional credits; the broker caps total spend at $1.
-- Only free credits are used: the per-session budget is $0.10 and the durable local ceiling is $1; no automatic retries; failures keep their reservation.
+- REAL (Meta Model API, synthetic facts only, no personal data): one live call returned `muse-spark-1.3` id chatcmpl-01a17d97…, a schema-valid `inspect_only` advisory citing the three supplied keys, usage 110 prompt + 625 completion (533 reasoning), estimated cost **$0.0028**. Within the owner's free promotional credits; the broker enforces a $1 persistent local reservation ceiling, not a provider-wide hard billing cap.
+- Only free credits are used: each explicit request reserves $0.10, each fresh observation allows $0.20 and the persistent local lifetime ceiling is $1; no automatic retries; failures keep their reservation.

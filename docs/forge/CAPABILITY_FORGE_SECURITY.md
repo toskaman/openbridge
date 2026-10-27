@@ -10,4 +10,4 @@ The demo binds to numeric loopback, validates Host exactly and requires an ephem
 
 Concurrent reads and revocation share a lock. Audit history omits tokens and observation contents, is bounded and in-memory; it is not a durable security journal. No automatic hardware scan or write occurs. No Undo integration is needed for read-only publication. Write-capable composition is deliberately unavailable until Claude's policy and transaction contract covers it.
 
-Tests cover denied permissions, expiry, forged provenance, removed devices, invalid models, invented IDs, consent bypass and concurrent publication. Hardware-provider integration and independent threat review remain outstanding.
+Tests cover denied permissions, expiry, forged provenance, removed devices, invalid models, invented IDs, consent bypass and concurrent publication. Trusted injected-provider integration is proven on physical phone and TV relays, including the [combined TV/Glimmer journey](TV_GLIMMER_JOURNEY.md). Normal product entrypoint integration and independent threat review remain outstanding.

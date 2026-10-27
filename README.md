@@ -48,7 +48,9 @@ Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDW
 
 **Meta on real devices:** a real Android TV relay observed four BLE advertisers; local Muse Glimmer generated a validated Forge proposal, followed by owner-authorized consent in the test-driven UI, verified API publication/read and access removal. The recorded proposal used 259 input / 98 output tokens in 82.4 seconds, with $0 provider cost. This is an end-to-end proof, not a new benchmark or a demonstration of fresh human Android permission-dialog acceptance. [Journey, unsuccessful attempts and limits](docs/forge/TV_GLIMMER_JOURNEY.md).
 
-**Meta Model API:** Muse Spark 1.3 has a [recorded successful synthetic advisory call](docs/runtime-meta-receipt.json), separate from its disclosed visual-design contribution. The experimental multi-transport diagnostic is documented in [Capability Forge PR #1](https://github.com/toskaman/openbridge/pull/1). Its first live attempt was blocked; no accepted Spark diagnostic output or new accuracy score is claimed.
+**Meta Model API:** Muse Spark 1.3 has a [recorded successful synthetic advisory call](docs/runtime-meta-receipt.json), separate from its disclosed visual-design contribution. A subsequent supervised synthetic multi-transport diagnostic returned evidence-linked hypotheses and ordered read-only checks: [successful Spark diagnostic](docs/forge/SPARK_DIAGNOSTIC.md), 349 prompt / 2,999 completion tokens, estimated $0.013182 promotional cost. Its earlier blocked attempt is retained. This proves an advisory execution path, not diagnostic accuracy or automatic device repair.
+
+Current release status and remaining acceptance gates: [release index](docs/RELEASE_STATUS.md) and [submission worksheet](docs/release/SUBMISSION_EVIDENCE.md).
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Claude, Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
@@ -66,15 +68,17 @@ Requirements: Windows or Linux, Python 3.14 (no third-party runtime packages), A
 ```powershell
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests          # 170+ tests, no hardware needed
-python -m src.server                          # http://127.0.0.1:18765
+python -m unittest discover -s tests          # controlled tests; no hardware needed
+python -m dev.start_workspace                 # main :18765 + trusted Forge selector :18767
 ```
 With local Meta models and the agent:
 ```powershell
 python -m dev.start_local_meta --pull-model   # Llama 3.2 3B, private CPU service on :11437
 python -m dev.start_glimmer --pull-model      # optional Muse Glimmer 30B on :11438 (~18 GB)
-python -m src.server --local-meta --glimmer --agent
+python -m dev.start_workspace --local-meta --agent --glimmer-cpu-v2
 ```
+The main navigation opens **Capability Forge** at `http://127.0.0.1:18767/`. Discover and scan an approved relay first, refresh verified routes, explicitly select an observation, then open its source-bound workspace. No discovery, model call or publication starts automatically. The isolated Forge planner needs its existing service (`python -m dev.forge_glimmer_cpu_service`); `--glimmer-cpu-v2` never falls back to cloud. The independent simulated contract demo remains available via `python -m src.forge.demo_host` on :18766.
+
 Companion app: `python -m dev.build_companion` (official Android SDK tools), then **Install the OpenBridge Companion** from a phone or TV sheet in the UI.
 
 **Jury walkthrough:** Discover my environment → open a device sheet (sources, capabilities, statuses) → TV sheet: *Connect over ADB Wi-Fi* → *Use as Bluetooth relay* → *Scan nearby Bluetooth* → *Ask Meta what to do next* → Device agent (Declutter) for a consent-gated change and exact Undo → *Finish session…*. Without hardware: `python -m tests.e2e.fabric_smoke` and `python -m tests.e2e.offline_smoke` (both in CI).

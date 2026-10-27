@@ -1,7 +1,7 @@
 # Current risks
 
 1. Hardware diversity: evidence comes from one phone (Xiaomi, Android 14) and one Android TV (Android 11). Other vendors may differ; adapters fail closed and the UI shows vendor-aware guidance.
-2. Physical cable unplug during a write is covered by mocked tests and the durable journal, not by a physical run (a real process crash is covered).
+2. Physical cable pull during revert is verified on one phone, including quarantine and exact recovery after reconnect. Cable loss during other write phases/devices remains unproven. Five process-kill recovery points are separately recorded in EVIDENCE_LEDGER.md.
 3. Muse Glimmer needs ~18 GB; on a 16 GB GPU shared with other models it may need other local models unloaded. The product never substitutes another model silently.
 4. Relay security relies on on-screen pairing and the Companion being in the foreground; a compromised paired device could report false observations (they are observe-only and never trigger actions).
 5. Loopback isolation does not protect against malicious software running as the same local user.

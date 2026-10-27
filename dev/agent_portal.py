@@ -105,11 +105,11 @@ def build_handler(lan_ip, data, sha, size):
     return H
 
 
-PAGE = r"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
+PAGE = r"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>OpenBridge Companion</title>
 <style>
 :root{--bg:#101419;--panel:#1a212a;--line:#394656;--text:#f5f0e3;--muted:#aebbc7;--accent:#ff6b1a;--ok:#5fd08a;--wait:#f5c06b}
-*{box-sizing:border-box}html{color-scheme:dark}
+*{box-sizing:border-box}html{color-scheme:dark}[hidden]{display:none!important}
 body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#1b2633,var(--bg));color:var(--text);
 font:15px/1.6 "Segoe UI",system-ui,sans-serif;min-height:100vh}
 .wrap{max-width:720px;margin:0 auto;padding:40px 20px 60px}
@@ -151,33 +151,33 @@ border-radius:7px;padding:8px 12px;font-size:12px;cursor:pointer;min-height:36px
 <body><div class="wrap">
 <div class="brand"><span class="m">↗</span> OpenBridge <span style="color:var(--accent)">Companion</span></div>
 <p class="eyebrow">OBSERVE · UNDERSTAND · VERIFY — READ-ONLY</p>
-<h1>Connecter ce PC à OpenBridge</h1>
-<p class="lede">Trois étapes, moins d'une minute. OpenBridge lira l'état de ce PC en lecture seule. Aucune commande, aucun fichier modifié.</p>
+<h1>Connect this PC to OpenBridge</h1>
+<p class="lede">Three steps, less than a minute. OpenBridge reads this PC’s status in read-only mode. No commands are executed and no files are changed.</p>
 
-<div class="card"><h2>Étape 1 — Télécharger l'agent</h2>
+<div class="card"><h2>Step 1 — Download the agent</h2>
 <div class="step"><span class="n">1</span><div style="flex:1">
-<a class="btn" href="/agent.exe" download>⬇ Télécharger agent.exe <span style="opacity:.7;font-weight:400">· __SIZE__</span></a>
+<a class="btn" href="/agent.exe" download>⬇ Download agent.exe <span style="opacity:.7;font-weight:400">· __SIZE__</span></a>
 <p class="meta">SHA-256 : __SHA__</p></div></div></div>
 
-<div class="card"><h2>Étape 2 — Lancer l'agent</h2>
+<div class="card"><h2>Step 2 — Start the agent</h2>
 <div class="step"><span class="n">2</span><div style="flex:1">
-<p class="hint">Ouvre PowerShell dans le dossier du fichier téléchargé, puis colle&nbsp;:</p>
-<div class="cmd"><pre id="cmd">Chargement de la commande…</pre><button class="copy" id="copy">Copier</button></div>
-<p class="hint" id="cmdhint">La commande connecte l'agent à ce PC (OpenBridge) à l'adresse __IP__.</p></div></div></div>
+<p class="hint">Open PowerShell in the folder containing the downloaded file, then paste:</p>
+<div class="cmd"><pre id="cmd">Loading the command…</pre><button class="copy" id="copy">Copy</button></div>
+<p class="hint" id="cmdhint">This command connects the agent to the OpenBridge host at __IP__.</p></div></div></div>
 
-<div class="card"><h2>Étape 3 — Vérification en direct</h2>
+<div class="card"><h2>Step 3 — Check live status</h2>
 <div class="step"><span class="n">3</span><div style="flex:1" class="live">
-<span class="dot" id="dot"></span><div><div class="big" id="state">En attente du PC…</div>
-<div class="sub" id="statesub">Cette page se met à jour automatiquement.</div></div></div>
+<span class="dot" id="dot"></span><div><div class="big" id="state">Waiting for the PC…</div>
+<div class="sub" id="statesub">This page updates automatically.</div></div></div>
 <div class="metrics" id="metrics" hidden>
 <div class="mt"><span class="mv" id="m-cpu">—</span><span class="ml">CPU</span></div>
-<div class="mt"><span class="mv" id="m-ram">—</span><span class="ml">RAM utilisée</span></div>
-<div class="mt"><span class="mv" id="m-disk">—</span><span class="ml">Disque libre</span></div>
+<div class="mt"><span class="mv" id="m-ram">—</span><span class="ml">RAM used</span></div>
+<div class="mt"><span class="mv" id="m-disk">—</span><span class="ml">Free disk space</span></div>
 <div class="mt"><span class="mv" id="m-up">—</span><span class="ml">Uptime</span></div>
-<div class="mt"><span class="mv" id="m-rtt">—</span><span class="ml">Latence</span></div>
+<div class="mt"><span class="mv" id="m-rtt">—</span><span class="ml">Latency</span></div>
 </div></div></div>
 
-<p class="foot">OPENBRIDGE · LECTURE SEULE · CETTE PAGE S'ARRÊTE TOUTE SEULE</p>
+<p class="foot">OPENBRIDGE · READ-ONLY · THIS PORTAL STOPS AUTOMATICALLY</p>
 </div>
 <script>
 var cmdEl=document.getElementById('cmd'),copyBtn=document.getElementById('copy'),
@@ -189,7 +189,7 @@ function setMetrics(m){
   if(!m){metrics.hidden=true;return;}metrics.hidden=false;
   document.getElementById('m-cpu').textContent=fmt(m.cpu,'%')+(m.cores?(' · '+m.cores+'c'):'');
   document.getElementById('m-ram').textContent=fmt(m.ram_used_pct,'%');
-  document.getElementById('m-disk').textContent=fmt(m.disk_free_gb,' Go');
+  document.getElementById('m-disk').textContent=fmt(m.disk_free_gb,' GB');
   document.getElementById('m-up').textContent=fmt(m.uptime_h,' h');
   document.getElementById('m-rtt').textContent=fmt(m.rtt_ms?Math.round(m.rtt_ms):null,' ms');
 }
@@ -200,24 +200,24 @@ function copyText(t){
   try{document.execCommand('copy');res();}catch(e){rej(e);}document.body.removeChild(a);});
 }
 copyBtn.onclick=function(){if(!lastCmd)return;copyText(lastCmd).then(function(){
-  copyBtn.textContent='Copié ✓';copyBtn.classList.add('done');
-  setTimeout(function(){copyBtn.textContent='Copier';copyBtn.classList.remove('done');},1800);
-}).catch(function(){copyBtn.textContent='Sélectionne et copie';});};
+  copyBtn.textContent='Copied ✓';copyBtn.classList.add('done');
+  setTimeout(function(){copyBtn.textContent='Copy';copyBtn.classList.remove('done');},1800);
+}).catch(function(){copyBtn.textContent='Select and copy';});};
 function poll(){
   fetch('/api/state',{cache:'no-store'}).then(function(r){return r.json();}).then(function(s){
     if(s.command){lastCmd=s.command;cmdEl.textContent=s.command;}
-    else if(!lastCmd){cmdEl.textContent='agent.exe --host __IP__ --port 9876 --token <VOTRE_CLE>';lastCmd=cmdEl.textContent;}
+    else if(!lastCmd){cmdEl.textContent='agent.exe --host __IP__ --port 9876 --token <YOUR_KEY>';lastCmd=cmdEl.textContent;}
     if(s.connected){
       dot.className='dot ok';
-      stateEl.textContent='Connecté ✓';
-      subEl.textContent='Agent '+(s.arch||'')+' · v'+(s.version||'?')+' · OpenBridge peut lire ce PC.';
+      stateEl.textContent='Connected ✓';
+      subEl.textContent='Agent '+(s.arch||'')+' · v'+(s.version||'?')+' · OpenBridge can read this PC.';
       setMetrics(s.metrics);
     }else{setMetrics(null);
-      dot.className='dot';stateEl.textContent='En attente du PC…';
-      subEl.textContent='Lance la commande de l\'étape 2 sur l\'autre PC.';
+      dot.className='dot';stateEl.textContent='Waiting for the PC…';
+      subEl.textContent='Run the command from step 2 on the other PC.';
     }
-  }).catch(function(){setMetrics(null);dot.className='dot off';stateEl.textContent='Portail actif';
-    subEl.textContent='Démarre le service OpenBridge pour voir l\'état en direct.';});
+  }).catch(function(){setMetrics(null);dot.className='dot off';stateEl.textContent='Portal active';
+    subEl.textContent='Start the OpenBridge service to see live status.';});
 }
 poll();setInterval(poll,2000);
 </script>
