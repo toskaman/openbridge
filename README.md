@@ -12,7 +12,7 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) behind different permission screens. Tools either see one transport at a time or ask for broad control. Owners cannot tell what is really connected, what each device can do, and whether a change can be undone.
 
 ## What OpenBridge does
-1. **Discovers** with bounded, read-only providers: mDNS/DNS-SD, ADB (USB and Wi-Fi), the Freebox OS API (with official app authorization), Bluetooth LE, and **relays**.
+1. **Discovers** with bounded, read-only providers: mDNS/DNS-SD, SSDP, ADB (USB and Wi-Fi), the **ISP Router API (e.g., Freebox OS / UPnP-IGD)** — Freebox OS with official app authorization, or a generic read-only UPnP-IGD gateway — Bluetooth LE, and **relays**.
 2. **Builds one graph.** Observations merge only on strong identifiers (for example the TV's Bluetooth address seen both over mDNS and ADB); weak signals become "possible duplicate" hints. Every link states what it grants: *observe*, *read* or *control*.
 3. **Extends reach through relays.** The OpenBridge Companion app (Android phone or Android TV) performs short signed BLE scans for the PC, after on-screen pairing. Devices it hears appear under it as observe-only.
 4. **Uses Meta models where they help.** Muse Glimmer and Llama 3.2 run locally; they explain device state, propose at most one reversible step, and suggest the next discovery step. They never see identifiers and cannot bypass the deterministic gate.
@@ -59,6 +59,21 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 - **Live Meta Model API**: `muse-spark-1.3` advisory verified live on synthetic facts within free credits; local Llama 3.2 3B and Muse Glimmer remain the default.
 - **Read-only watchers and a redacted multi-device report.**
 Evidence for every item: `EVIDENCE_LEDGER.md` and `docs/HARDWARE_TEST_MATRIX.md`. Limits: `docs/KNOWN_LIMITATIONS.md`.
+
+## V4 additions (27 Oct 2026, evening) — status as of this commit
+| Feature | What it does | Status |
+|---|---|---|
+| Cross-transport diagnosis (V4-01) | One timeline of changes from every read path; competing hypotheses that cite timeline entries ("consistent with", never "caused by"); a read-only re-measure probe | SIMULATED_VERIFIED (CI drills with independent labels); real TV+router capture pending |
+| Privacy-preserving cloud escalation (V4-05) | Exact outgoing bytes, diff and categories shown before one explicit consent per payload; golden leak corpus; untrusted answer validated locally. Data minimisation, **not** anonymity | SIMULATED_VERIFIED; live call needs the supervised credit permit |
+| Registered ablation (V4-04) | 24 frozen held-out cases; rules 20/24 (fails all WAN-outage cases); model arms run on the owner's PC | rules arm MEASURED; model arms pending |
+| Generic UPnP-IGD (router) | Allowlisted read-only queries; port-mapping and every write refused before sending; external IP masked | SIMULATED_VERIFIED (fake IGD); real gateway pending |
+| BLE zones (V4-11) | Calibrated zones from two relays, "unknown" when unsure; precision/recall per zone; never coordinates | SIMULATED_VERIFIED; owner calibration run pending |
+| Visual read-back (V4-07) | Screenshot (status bar cropped) judged by local Muse Glimmer vs structured screen state; disagreement = INCONCLUSIVE | SIMULATED_VERIFIED; real TV run pending |
+| Voice (V4-10) | Push-to-talk → `muse-voice-transcribe-1.0` → typed FR/EN intent proposal; owner reviews and presses Run | IMPLEMENTED_UNVERIFIED (no live STT receipt yet) |
+| Wear OS manifest (V4-08) | Watch capabilities derived from reported features on every read; control BLOCKED | SIMULATED_VERIFIED; Watch7 run pending |
+| Inference scheduler (V4-12) | Second PC used only as a pinned-digest Meta inference endpoint; raw data never leaves this PC | SIMULATED_VERIFIED; benchmark pending |
+
+Claim-by-claim evidence: [docs/jury/CLAIM_EVIDENCE_MATRIX.md](docs/jury/CLAIM_EVIDENCE_MATRIX.md).
 
 ## Run it
 Requirements: Windows or Linux, Python 3.14 (no third-party runtime packages), Android platform-tools for ADB. Optional: Ollama for local Meta models, `bleak` for PC Bluetooth.

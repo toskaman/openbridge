@@ -10,3 +10,6 @@ Not verified: cable unplug during a write; Bluetooth on the PC itself (no adapte
 
 ## Update 27 Oct
 New since the last status: `/api/v2` contract and safe primitives; Windows PC (read-only agent); Galaxy Watch7 pairing and reads; crash drill 5/5 on the phone; live Meta Model API advisory; Capability Forge publication on real phone and TV relays. Final video: still pending until the project is complete.
+
+## Update 27 Oct (evening) — V4 code complete, hardware runs pending
+Merged as a stack of PRs: cross-transport timeline and hypotheses (V4-01), privacy-preserving cloud escalation (V4-05), registered ablation with rules arm measured (V4-04), read-only UPnP-IGD, BLE zones (V4-11), visual read-back (V4-07), voice (V4-10), Wear OS manifest (V4-08), inference scheduler (V4-12). All are SIMULATED_VERIFIED in CI except voice (IMPLEMENTED_UNVERIFIED). Hardware runs pending: TV+router timeline, IGD read, BLE zone calibration, TV visual read-back, Watch7 manifest, LAN worker benchmark, model arms of the ablation, one live cloud escalation, one live STT. See CLAIM_EVIDENCE_MATRIX.md and DEMO_STORYBOARD_150S.md.
