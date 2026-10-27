@@ -348,3 +348,19 @@ Delivery: `agent.exe` was served to the other PC from a temporary LAN-only downl
 - REAL_HARDWARE_VERIFIED: the owner moved agent.exe to a writable folder (Desktop) and OpenBridge/BridgeWindows' own `agent.update` hot-swapped the 32-bit agent for the 64-bit build I compiled (`agent_x64.exe`, machine type 0x8664, passes `--selftest`). Result: `updated: true, reconnected: true`, old pid 4344 → new pid 5816, SHA-256 of the running agent equals the x64 build. OpenBridge then read it over the bridge: `Is64BitProcess = True`, architecture `x64 (64-bit)`. Earlier failure (access denied at offset 0) was the agent running from C:\ (non-writable); running from Desktop fixed it.
 - The 64-bit build is the same source with one additive change (report `x64`/`x86` by `_WIN64`). Built with `zig cc -target x86_64-windows-gnu` because the installed MinGW GCC is 32-bit only. The user's BridgeWindows project was not modified; the build used a copy.
 - New: `dev/agent_portal.py` — a LAN onboarding page for any PC / the jury. One download button for agent.exe (SHA-256 shown), the exact PowerShell launch command (surfaced from BridgeWindows' own `remote_network_helper`, with a clipboard copy button and an http-safe fallback), and a live status that flips to "Connecté ✓ (x64)" with a privacy-safe metrics strip (CPU, RAM %, disk free, uptime, latency — no hostname or identifiers). Private-network clients only; self-stops after --minutes. Verified on the real LAN: page 200, agent.exe 171 KB, state connected=x64, metrics live, hostname not exposed.
+
+## V4-03 crash drill on the phone — five process kills, journal recovery (27 Oct 2026)
+
+Reproduce: `python -m dev.crash_drill --target phone --confirm-owned-device` (main @ PR #12). Xiaomi phone over USB, one allowlisted optional app, Android user 0.
+
+REAL_HARDWARE_VERIFIED, 5/5:
+
+| Failpoint (worker process killed, exit 97) | Journal at restart | App state at restart | Recovery | Read-back = original |
+|---|---|---|---|---|
+| after_journal_prepared | PREPARED | original | REVERTED | yes |
+| after_backup | VERIFIED_BACKUP | original | REVERTED | yes |
+| after_executing_marked | EXECUTING | original | REVERTED | yes |
+| after_write_before_verify | EXECUTING | **changed (disabled)** | REVERTED | yes |
+| during_revert | REVERTING | **changed (disabled)** | REVERTED | yes |
+
+Each recovery ran in a fresh process that read the durable journal and the phone independently (2.7–5.4 s per drill). This is crash recovery for one supported reversible setting, not atomicity across devices.
