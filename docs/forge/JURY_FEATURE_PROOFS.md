@@ -6,8 +6,10 @@ Reproduce: python -m unittest discover -s tests -q. Focused Forge tests live und
 
 Evidence: browser-verification.json and eight before/after screenshots; frozen composition-scenarios.json; per-route benchmark JSON when available. Results distinguish model output from deterministic validation and simulation from hardware. Each source code module is under src/forge; no Claude-owned backend/hardware/transaction files are changed.
 
-Not proven: actual off-PC beacon observation through a real TV in Forge; final Device Fabric integration; physical Undo in Forge; a multi-primitive compositional intelligence advantage; final contest submission; bonus eligibility; new Forge video. These are explicit gates, not completed features.
+Not proven: actual off-PC beacon observation through a real TV in Forge; final Device Fabric integration; physical Undo in Forge; a multi-primitive compositional intelligence advantage; final contest submission; bonus eligibility; real-hardware Forge video. These are explicit gates, not completed features.
 
 The prior project agent benchmark remains unfavorable to models: rules 90%, Glimmer 86.7%, Llama 3B about 53%. New gate-and-selection results must not replace that history or be marketed as unrestricted reasoning performance.
 
 Additional executed evidence: api-client-receipt.json records a real authenticated loopback read using the fixed generated client and HTTP 404 after service removal, with synthetic data. runtime_bridge.py passes three v1 contract mapping tests against simulated fixtures. meta-ux-review-receipt.json records an actual Llama UX review. Glimmer attempts failed under current resource/projector constraints; no actual Glimmer Forge plan is claimed.
+
+Delivery check: 202 unit/integration tests pass. Both original offline browser checks and Forge lifecycle checks pass at four widths. final-visual-checks.json adds selected contrast checks and a keyboard-operated plan/consent/publish/read/revoke flow. DEMO_VIDEO.json records a 170-second H.264 1080p/30fps silent English-captioned actual browser video; all device data in it is explicitly synthetic.
