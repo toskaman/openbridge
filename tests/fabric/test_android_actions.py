@@ -42,6 +42,18 @@ class Catalog(unittest.TestCase):
         self.assertTrue(a.run('restore', {'setting': 'media_volume'})['exact']); self.assertEqual(sh.vol, 7)
         with self.assertRaises(ActionError): a.run('restore', {'setting': 'media_volume'})
 
+    def test_volume_falls_back_to_keys(self):
+        sh = FakeShell()
+        def shell(*a):
+            if a[:3] == ('cmd', 'media_session', 'volume') and '--set' in a: return ''      # ignored by this build
+            if a == ('input', 'keyevent', '24'): sh.vol += 1; return ''
+            if a == ('input', 'keyevent', '25'): sh.vol -= 1; return ''
+            return sh(*a)
+        a = AndroidActions(shell, 'watch')
+        r = a.run('set', {'setting': 'media_volume', 'value': 4})
+        self.assertEqual((r['before'], r['after'], r['verified']), (7, 4, True))
+        self.assertTrue(a.run('restore', {'setting': 'media_volume'})['exact']); self.assertEqual(sh.vol, 7)
+
     def test_rejections_before_sending(self):
         sh = FakeShell(); a = AndroidActions(sh, 'tv')
         bad = [('key', {'key': 'reboot'}), ('text', {'text': 'a;rm -rf /'}), ('tap', {'x': 2, 'y': 0}), ('launch_app', {'package': 'com.evil.notinstalled'}),

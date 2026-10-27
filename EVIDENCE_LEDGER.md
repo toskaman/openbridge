@@ -424,3 +424,5 @@ OpenBridge server with `--windows-bridge` (commit 363b538 tree): the PC 2 agent 
 See docs/DEVICE_CAPABILITIES.md: catalog probed on TV and phone; vacuum water level / volume / seek and PC 2 jobs verified; TV input hung in deep standby and MIUI blocked input injection — both reported, not hidden.
 
 Second sweep (TV awake): Android TV remote keys (volume, mute, D-pad, channel ±, info, back, home), touchpad swipe/tap, YouTube launch (focused app read back), power off (asleep) and power on (awake) all executed on hardware. Xiaomi phone: input/settings writes still denied by MIUI until the ADB authorization is renewed.
+
+Galaxy Watch7 sweep (23:16 and 23:20): remote keys, touch swipe/tap, Settings launch with focused-app read-back, exact media volume change and restore via volume keys. Xiaomi phone: still INJECT_EVENTS / WRITE_SETTINGS denied.
