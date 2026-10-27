@@ -1,4 +1,4 @@
-"""Consumer of Claude's Device Capability Contract v1. Never executes a primitive."""
+"""Consumer of Device Capability Contract v1. Never executes a primitive."""
 from datetime import datetime
 import hashlib
 import re

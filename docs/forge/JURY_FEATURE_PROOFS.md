@@ -14,7 +14,7 @@ Implemented: strict read-only manifest compiler; deterministic OpenAPI/JSON Sche
 
 Reproduce: python -m unittest discover -s tests -q. Focused Forge tests live under tests/forge. Run python -m src.forge.demo_host; select rules explicitly if local Glimmer is not configured. Approve publication, test read, view contract, remove service. No hardware is needed or accessed.
 
-Evidence: browser-verification.json and eight before/after screenshots; frozen composition-scenarios.json; per-route benchmark JSON when available. Results distinguish model output from deterministic validation and simulation from hardware. Each source code module is under src/forge; no Claude-owned backend/hardware/transaction files are changed.
+Evidence: browser-verification.json and eight before/after screenshots; frozen composition-scenarios.json; per-route benchmark JSON when available. Results distinguish model output from deterministic validation and simulation from hardware. Each source code module is under src/forge; no core backend/hardware/transaction files are changed.
 
 Not proven: actual off-PC beacon observation through a real TV in Forge; final Device Fabric integration; physical Undo in Forge; a multi-primitive compositional intelligence advantage; final contest submission; bonus eligibility; real-hardware Forge video. These are explicit gates, not completed features.
 
