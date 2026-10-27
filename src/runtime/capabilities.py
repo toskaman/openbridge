@@ -16,6 +16,7 @@ KNOWN = {
                   {'seconds': {'type': 'integer', 'minimum': 1, 'maximum': 15}},
                   ('Companion must be open in the foreground', 'advertisements only, never connects')),
     'lan_inventory': (True, False, ReversibilityClass.NONE, ('read_facts',), {}, ('read-only Freebox API',)),
+    'windows_diagnostics': (True, False, ReversibilityClass.NONE, ('read_facts',), {}, ('owner-run BridgeWindows agent', 'allowlisted read methods only')),
     'freebox_api': (True, False, ReversibilityClass.NONE, ('read_facts',), {}, ('public endpoints',)),
 }
 
