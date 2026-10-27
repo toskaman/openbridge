@@ -62,9 +62,10 @@ class AndroidAdapter:
             raise ValueError('invalid serial')
         result = self.runner([self.executable, '-s', serial, 'exec-out', 'screencap', '-p'], capture_output=True, timeout=10,
                              creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        if result.returncode or not result.stdout.startswith(b'\x89PNG') or len(result.stdout) > max_bytes:
+        start = result.stdout.find(b'\x89PNG\r\n\x1a\n')      # some TV builds print log lines before the PNG
+        if result.returncode or start < 0 or start > 4096 or len(result.stdout) > max_bytes:
             raise ValueError('Screen capture unavailable')
-        return result.stdout
+        return result.stdout[start:]
 
     def discover(self):
         if not self.executable:

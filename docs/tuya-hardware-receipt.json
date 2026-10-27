@@ -1,0 +1,82 @@
+{
+ "at": "2026-10-27T20:37:35",
+ "commit": "b10153f",
+ "steps": [
+  {
+   "step": "discovery",
+   "state": "VERIFIED",
+   "before": null,
+   "after": {
+    "devices": 3
+   },
+   "verified": true,
+   "errors": [],
+   "providers": {
+    "mdns": {
+     "status": "OK",
+     "instances": 5,
+     "packets": 5
+    },
+    "tuya": {
+     "status": "OK",
+     "devices": 1
+    }
+   }
+  },
+  {
+   "step": "vacuum_read",
+   "state": "VERIFIED",
+   "before": null,
+   "after": null,
+   "verified": true,
+   "errors": [],
+   "facts": {
+    "vacuum_status": "charge_done",
+    "battery_level": 100,
+    "main_brush_life": 99,
+    "side_brush_life": 100,
+    "filter_life": 99,
+    "suction": "normal",
+    "clean_time_min": 0,
+    "clean_area_m2": 0,
+    "fault_code": 0,
+    "water_level": "middle",
+    "work_mode": "only_sweep",
+    "volume": "vol_normal"
+   }
+  },
+  {
+   "step": "vacuum_suction_gentle",
+   "state": "VERIFIED",
+   "before": "normal",
+   "after": "gentle",
+   "verified": true,
+   "errors": []
+  },
+  {
+   "step": "vacuum_undo",
+   "state": "REVERTED",
+   "before": null,
+   "after": "normal",
+   "verified": true,
+   "errors": []
+  },
+  {
+   "step": "vacuum_seek",
+   "state": "EXECUTED_UNVERIFIED",
+   "before": "charge_done",
+   "after": "charge_done",
+   "verified": false,
+   "errors": []
+  },
+  {
+   "step": "pc2",
+   "error": "no Windows agent connected"
+  }
+ ],
+ "devices": [
+  "media",
+  "router",
+  "vacuum"
+ ]
+}

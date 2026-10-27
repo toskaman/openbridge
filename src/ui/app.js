@@ -729,7 +729,18 @@ function tuyaPanel(device) {
     const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_undo', device_key: device.key, params: { setting: setting.value }, consent: true });
     out.textContent = `${r.state}: restored ${r.after}${r.verified ? ' (exact)' : ' (NOT exact — check the robot)'}`; undo.hidden = r.verified;
   });
-  box.append(element('h3', 'Robot settings (reversible only)'), element('p', 'Start, stop, movement and "find my robot" are blocked: a moving robot has no exact Undo.'), setting, value, row, go, undo, out);
+  const ctl = element('div');
+  const send = async (command, v) => {
+    if (!c.checked) { out.textContent = 'Consent required.'; return; }
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'tuya_command', device_key: device.key, params: v === undefined ? { command } : { command, value: v }, consent: true });
+      out.textContent = `${command}${v ? ' ' + v : ''}: ${r.state} · status ${r.before} → ${r.after}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`; }
+    catch (e) { out.textContent = e.message; }
+  };
+  for (const [label, cmd, v] of [['Start', 'start'], ['Pause', 'pause'], ['Dock', 'dock'], ['Find (beep)', 'seek'], ['Empty dust', 'empty_dust'],
+      ['▲', 'move', 'forward'], ['▼', 'move', 'backward'], ['◀', 'move', 'turn_left'], ['▶', 'move', 'turn_right'], ['■ Stop', 'move', 'stop']]) {
+    const b = element('button', label, 'secondary'); b.addEventListener('click', () => send(cmd, v)); ctl.append(b);
+  }
+  box.append(element('h3', 'Robot'), element('p', 'Settings: reversible with exact Undo. Commands: irreversible, consent applies to each click; manual moves stop by themselves after 1 s.'), setting, value, row, go, undo, ctl, out);
   return box;
 }
 

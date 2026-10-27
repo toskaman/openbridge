@@ -40,29 +40,31 @@ class Intents(unittest.TestCase):
 
 
 class FakeSock:
-    """Server side of a WebSocket: answers the handshake and the transcription events."""
+    """Server side of the documented Meta realtime ASR WebSocket."""
     def __init__(self, final='Trouve les appareils Bluetooth', error=None):
-        self.buf, self.sent, self.final, self.error, self.stage = b'', b'', final, error, 0
-    def sendall(self, data):
-        self.sent += data
-        if self.stage == 0 and b'\r\n\r\n' in self.sent:
-            self.buf += b'HTTP/1.1 101 Switching Protocols\r\n\r\n'; self.stage = 1
-        elif self.stage == 1 and b'input_audio_buffer.commit' in self._client_texts():
-            ev = {'type': 'error', 'error': {'message': self.error}} if self.error else \
-                {'type': 'conversation.item.input_audio_transcription.completed', 'transcript': self.final}
-            for e in ({'type': 'conversation.item.input_audio_transcription.delta', 'delta': 'Tro'}, ev):
-                d = json.dumps(e).encode(); self.buf += bytes([0x81, 126]) + struct.pack('>H', len(d)) + d
-            self.stage = 2
-    def _client_texts(self):
-        out, i = b'', self.sent.index(b'\r\n\r\n') + 4
-        s = self.sent
+        self.buf, self.sent, self.final, self.error, self.stage, self.frames = b'', b'', final, error, 0, []
+    def _push(self, e):
+        d = json.dumps(e).encode(); self.buf += bytes([0x81, 126]) + struct.pack('>H', len(d)) + d
+    def _parse(self):
+        s, i, out = self.sent, self.sent.index(b'\r\n\r\n') + 4, []
         while i + 2 <= len(s):
-            n = s[i + 1] & 0x7f; j = i + 2
+            op, n = s[i] & 0x0f, s[i + 1] & 0x7f; j = i + 2
             if n == 126: n, = struct.unpack('>H', s[j:j + 2]); j += 2
             elif n == 127: n, = struct.unpack('>Q', s[j:j + 8]); j += 8
             if j + 4 + n > len(s): break
-            m = s[j:j + 4]; out += bytes(b ^ m[k % 4] for k, b in enumerate(s[j + 4:j + 4 + n])); i = j + 4 + n
+            m = s[j:j + 4]; out.append((op, bytes(b ^ m[k % 4] for k, b in enumerate(s[j + 4:j + 4 + n])))); i = j + 4 + n
         return out
+    def sendall(self, data):
+        self.sent += data
+        if self.stage == 0 and b'\r\n\r\n' in self.sent:
+            self.buf += b'HTTP/1.1 101 Switching Protocols\r\n\r\n'; self.stage = 1; return
+        self.frames = self._parse()
+        texts = [json.loads(p) for op, p in self.frames if op == 1]
+        if self.stage == 1 and texts:
+            self._push({'type': 'error', 'message': self.error} if self.error else {'sessionId': 's-1'}); self.stage = 2
+        if self.stage == 2 and any(t.get('type') == 'endStream' for t in texts):
+            self._push({'type': 'transcript', 'transcript': 'Trou', 'final': False})
+            self._push({'type': 'transcript', 'transcript': self.final, 'final': True}); self.stage = 3
     def recv(self, n):
         d, self.buf = self.buf[:n], self.buf[n:]; return d
     def close(self): pass
@@ -71,21 +73,25 @@ class FakeSock:
 class STT(unittest.TestCase):
     def test_transcribe_protocol(self):
         sock = FakeSock()
-        r = stt.transcribe(b'\x00\x01' * 16000, 'k', 'fr', connect=lambda addr, timeout: sock)
+        r = stt.transcribe(b'\x00\x01' * 16000, 'k', 'fr', connect=lambda addr, timeout: sock, pace=False)
         self.assertEqual(r['transcript'], 'Trouve les appareils Bluetooth')
-        msgs = sock._client_texts()
-        self.assertIn(b'session.update', msgs); self.assertIn(b'"language": "fr"', msgs)
-        self.assertIn(b'Authorization: Bearer k', sock.sent)
+        first = json.loads(sock.frames[0][1])
+        self.assertEqual((first['audioEncoding'], first['mode'], first['languageBias'], first['authorization']['accessToken']),
+                         ('PCM_16KHZ', 'PUSH_TO_TALK', ['French'], 'Bearer k'))
+        binary = [p for op, p in sock.frames if op == 2]
+        self.assertEqual(b''.join(binary), b'\x00\x01' * 16000)
+        self.assertEqual(json.loads(sock.frames[-1][1]), {'type': 'endStream'})
+        self.assertNotIn(b'Authorization:', sock.sent)
 
     def test_bounds_and_errors(self):
         c = lambda addr, timeout: FakeSock()
         for args in ((b'', 'k'), (b'\x00' * 3, 'k'), (b'\x00\x00' * (16000 * 16), 'k'), (b'\x00\x00', '')):
             with self.subTest(n=len(args[0])), self.assertRaises(stt.STTBlocked):
-                stt.transcribe(*args, connect=c)
+                stt.transcribe(*args, connect=c, pace=False)
         with self.assertRaises(stt.STTBlocked):
-            stt.transcribe(b'\x00\x00', 'k', 'de', connect=c)
+            stt.transcribe(b'\x00\x00', 'k', 'de', connect=c, pace=False)
         with self.assertRaises(stt.STTBlocked):
-            stt.transcribe(b'\x00\x00', 'k', connect=lambda a, timeout: FakeSock(error='quota'))
+            stt.transcribe(b'\x00\x00', 'k', connect=lambda a, timeout: FakeSock(error='quota'), pace=False)
 
 
 if __name__ == '__main__':
