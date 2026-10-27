@@ -17,7 +17,7 @@ import zlib
 
 from src.ai.broker import ModelBlocked
 
-SCREEN_CLASSES = ('home_launcher', 'settings', 'media_playback', 'other_app', 'dialog', 'screen_off_or_black')
+SCREEN_CLASSES = ('home_launcher', 'settings', 'media_playback', 'other_app', 'dialog', 'screensaver', 'screen_off_or_black')
 STATUS_BAR_FRACTION = 0.08
 SETTINGS_PKGS = ('com.android.tv.settings', 'com.android.settings', 'com.google.android.tv.settings')
 MEDIA_HINTS = ('youtube', 'netflix', 'player', 'video', 'tv.player', 'plex', 'vlc', 'disney', 'primevideo', 'canal')
@@ -75,6 +75,8 @@ def crop_status_bar(png, fraction=STATUS_BAR_FRACTION, step=1):
 def structured_class(window_dump, power_state):
     if power_state in ('asleep', 'dozing'):
         return 'screen_off_or_black', 'dumpsys power'
+    if power_state == 'dreaming' or 'DreamActivity' in (window_dump or ''):
+        return 'screensaver', 'dumpsys power / dream activity'
     m = re.search(r'mCurrentFocus=Window\{[^ ]+ [^ ]+ ([A-Za-z0-9_.]+)/', window_dump or '')
     if not m:
         m2 = re.search(r'mCurrentFocus=Window\{[^}]*\b(Application Not Responding|PopupWindow|Toast)', window_dump or '')
@@ -117,7 +119,7 @@ def readback(capture, read, broker):
     except (ValueError, OSError):
         power = None
     try:
-        windows = read('dumpsys', 'window', 'windows')
+        windows = read('dumpsys', 'window')
     except (ValueError, OSError):
         windows = ''
     s_class, s_src = structured_class(windows, power)

@@ -468,7 +468,7 @@ class Executor:
         from src.ai import visual_readback
         handle = self._adb_handle(key)
         serial = next(s for s, h in self.ctx.android._handles.items() if h == handle)
-        allowed = (('dumpsys', 'power'), ('dumpsys', 'window', 'windows'))
+        allowed = (('dumpsys', 'power'), ('dumpsys', 'window'))
         def read(*a):
             if a not in allowed:
                 raise ValueError('not in read allowlist')

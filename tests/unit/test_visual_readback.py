@@ -56,7 +56,7 @@ class Crop(unittest.TestCase):
 
 class Verdicts(unittest.TestCase):
     def reader(self, windows, power='Awake'):
-        return lambda *a: {('dumpsys', 'power'): f'mWakefulness={power}', ('dumpsys', 'window', 'windows'): windows}[a]
+        return lambda *a: {('dumpsys', 'power'): f'mWakefulness={power}', ('dumpsys', 'window'): windows}[a]
 
     def test_agree_disagree_and_unavailable(self):
         g = FakeGlimmer('home_launcher')
@@ -75,6 +75,11 @@ class Verdicts(unittest.TestCase):
         self.assertEqual(r['structured']['screen'], 'screen_off_or_black')
         self.assertEqual(r['verdict'], 'CONFIRMED')
 
+    def test_screensaver(self):
+        dream = 'mCurrentFocus=Window{364dbde u0 com.google.android.backdrop/android.service.dreams.DreamActivity}'
+        r = vr.readback(png, self.reader(dream, 'Dreaming'), FakeGlimmer('screensaver'))
+        self.assertEqual((r['structured']['screen'], r['verdict']), ('screensaver', 'CONFIRMED'))
+
     def test_invalid_model_answer_is_not_trusted(self):
         g = FakeGlimmer('press_ok_button')
         self.assertEqual(vr.readback(png, self.reader(LAUNCHER), g)['verdict'], 'STRUCTURED_ONLY')
@@ -89,7 +94,7 @@ class Primitive(unittest.TestCase):
             c.android.screencap = lambda serial: png()
             orig = c.android._run
             def run(args, max_bytes=131072):
-                if args[3:] == ['dumpsys', 'window', 'windows']: return LAUNCHER
+                if args[3:] == ['dumpsys', 'window']: return LAUNCHER
                 if args[3:] == ['dumpsys', 'power']: return 'mWakefulness=Awake'
                 return orig(args, max_bytes)
             c.android._run = run
