@@ -1,5 +1,11 @@
 # Capability Forge visual verification
 
+Current release status (27 October 2026): see [release index](../RELEASE_STATUS.md). The notes below preserve earlier milestones and their original scores/failures; they are historical unless explicitly reaffirmed in that index.
+
+Current redesign: Muse Wonder 1.0 authored theme tokens and complete CSS fields; layout integration and safeguards were independently implemented. Its final explanatory field was truncated and remains disclosed. See [redesign plan and attribution](META_WEBSITE_REDESIGN_PLAN.md) and [work status](WORK_STATUS.md) for matched-state screenshots/receipts. Orange/charcoal and hand-authored-style descriptions below refer to the earlier preview. No video work until a new explicit owner request, even after completion.
+
+## Historical visual checks
+
 Before images in screens/before-*.png capture the existing application at loopback port 18765 without hardware interaction. After images in screens/after-*.png capture the separate simulated Forge page. This is an adjacent feature preview, not a claim that the main page was replaced.
 
 Four real headless Chromium viewports: 390, 768, 1440 and 3440 px. browser-verification.json records no horizontal page overflow, no JavaScript errors, explicit unavailable-model feedback, consent gating, publication, authenticated read, contract view and removal. Keyboard focus was checked; visible focus styles and a skip link are provided. No popups are designed. Screenshots are actual browser renders; fixture content is marked SIMULATED.

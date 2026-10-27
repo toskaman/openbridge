@@ -81,3 +81,17 @@ class SparkDiagnosticTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 1)
         with closing(sqlite3.connect(self.path)) as db:
             self.assertEqual(db.execute('SELECT SUM(reserved) FROM reservations').fetchone()[0], 100000)
+
+    def test_reasoning_and_json_share_a_bounded_completion_allowance(self):
+        broker=self.broker()
+        original=broker.transport
+        def reasoning_transport(payload):
+            response=original(payload)
+            if payload['max_completion_tokens']<4000:
+                response['choices'][0].update(finish_reason='length')
+                response['choices'][0]['message']['content']=''
+            return response
+        broker.transport=reasoning_transport
+        result=broker.diagnose('blocked_relay')
+        self.assertEqual(result['proposal'],self.proposal)
+        self.assertEqual(self.calls[0]['max_completion_tokens'],4000)

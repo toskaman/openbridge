@@ -12,7 +12,7 @@ These operations do not collect provider evidence. The UI skips its normal sourc
 
 GET /api/catalog reports `mode`, `available`, `fixture_reset_enabled`, `observation_path`, current services and bounded history. If authority fails, manifest is null and a safe error is returned; service removal remains available. The literal observation route uses the validated service ID. Exported contracts and clients use the actual numeric loopback port. Injected providers can never be overwritten through POST /api/reset-fixture. Refresh availability only rereads existing provider state; it starts no scan.
 
-`runtime-http-integration-receipt.json` records real authenticated HTTP using Claude's actual v2 reader in a throwaway integration build: controlled observation read, denial after grant revocation (409), removal (404). This is controlled data, not physical proof. Runtime-owner commits 3ddbbc7 and 9b5c4a9 separately fix timestamps and record real phone-relay snapshots. Physical HTTP publication through this injectable host still needs its own proof.
+`runtime-http-integration-receipt.json` records real authenticated HTTP using Claude's actual v2 reader in a throwaway integration build: controlled observation read, denial after grant revocation (409), removal (404). This is controlled data, not physical proof. Runtime-owner commits 3ddbbc7 and 9b5c4a9 separately fix timestamps and record real phone-relay snapshots. Later physical phone and TV publication close that gate; the combined local Glimmer journey is recorded in [TV journey](TV_GLIMMER_JOURNEY.md). Controlled receipts remain controlled evidence.
 
 The optional `--glimmer-cpu-v2` flag selects only the explicitly started isolated CPU Meta service; it is mutually exclusive with `--glimmer`. The default CLI remains simulated with no configured model.
 
@@ -20,13 +20,13 @@ Run `python -m src.forge.demo_host` from the branch checkout. Open http://127.0.
 
 GET /api/session supplies an ephemeral bearer token to the same-origin local page. All data and mutation routes require Authorization: Bearer <token>. Mutations additionally require exact Origin. Never put tokens in URLs, generated documents or screenshots.
 
-- GET /api/catalog: simulated manifest, service inventory, bounded history and planner configuration.
+- GET /api/catalog: server-bound manifest (default simulated; trusted injected mode supported), service inventory, bounded history and planner configuration.
 - POST /api/plan with {"planner":"glimmer"} or {"planner":"rules"}: untrusted proposal only; no publication.
-- POST /api/publish with {"consent":true}: publish the server-owned fixture after current checks. Caller-provided manifests, commands and URLs are rejected.
-- GET /v1/services/ble-observations/observations: fresh read-only synthetic relay response.
+- POST /api/publish with {"consent":true}: publish the server-owned bound capability after current checks. Caller-provided manifests, commands and URLs are rejected.
+- GET /v1/services/ble-observations/observations: fresh read-only bound relay response (synthetic in default mode).
 - GET /api/documents: generated OpenAPI, standalone schemas, fixed client, documentation and manifest hash; also enforces current grants.
 - POST /api/remove with {}: idempotent revocation.
 
-Errors: 400 invalid body; 401 absent bearer; 403 Host/Origin denied; 404 absent route or removed service; 409 current permission, freshness, provenance or model failure; 413 oversized body. No CORS access is granted. Query-selected commands and arbitrary endpoints do not exist. The generated client targets the default 18766 port; custom demo-host ports are for testing and require an explicit client endpoint update during integration.
+Errors: 400 invalid body; 401 absent bearer; 403 Host/Origin denied; 404 absent route or removed service; 409 current permission, freshness, provenance or model failure; 413 oversized body. No CORS access is granted. Query-selected commands and arbitrary endpoints do not exist. Generated contracts and fixed clients target the actual numeric loopback host port, including custom test ports.
 
 Tests: tests/forge/test_http.py exercises real loopback HTTP, authentication, origin, host, body bounds, lifecycle and unavailable Meta. This API is a standalone integration host, not a claim that main src/server.py exposes these endpoints.

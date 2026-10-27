@@ -1,5 +1,11 @@
 # Provisional capability integration boundary
 
+Current release status (27 October 2026): see [release index](../RELEASE_STATUS.md). The notes below preserve earlier milestones and their original scores/failures; they are historical unless explicitly reaffirmed in that index.
+
+The timestamp/source-filter gate is resolved by the final [runtime contract](../coordination/DEVICE_CAPABILITY_CONTRACT_V1.md), source-filtered RuntimeV1Provider and physical receipts. Keep the provisional interface below as historical design context, not an active integration checklist.
+
+## Historical provisional boundary
+
 This document is not Claude's final DEVICE_CAPABILITY_CONTRACT_V1.md. That file was absent during the initial branch audit.
 
 Implement CapabilityProvider.snapshot(capability_id: str) -> dict, conforming to the strict fields in src/forge/fixtures.py and compiler.validate_manifest. Return a newly read snapshot of permissions, source identity, availability and observations. It must derive from Claude's canonical registry and authenticated relay manager; never accept a client-authored assertion of verification. Snapshot lookup must fail for unknown or revoked capabilities.

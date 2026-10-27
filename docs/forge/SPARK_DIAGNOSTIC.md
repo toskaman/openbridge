@@ -28,3 +28,11 @@ Six mocked tests initially passed, including stale/missing permits, reference/or
 One live supervised attempt on 27 October 2026 was blocked. The original CLI suppressed the specific reason, so it is unknown whether the failure occurred in transport or response validation; no root cause, usage, cost or accepted model output can be claimed from that record. The reservation remains retained. The CLI now exposes fixed safe boundary errors for future supervised attempts. No retry was made. See [failed-attempt receipt](spark-diagnostic-live-attempt.json).
 
 The earlier Muse Spark runtime advisory remains separate successful provider evidence. The Glimmer advisor's 56/60 (93.3%) explanation result is a different task and is not reused as this diagnostic's accuracy.
+
+## Subsequent supervised success — 27 October 2026
+
+A new owner-confirmed $149 promotional balance authorized one bounded request. Before this request, a regression reproduced the known reasoning-token starvation at the old 900-token completion cap. The diagnostic now allows 4,000 completion tokens, sharing reasoning and JSON output, within the same retained $0.10 reservation. Seven controlled diagnostic tests passed before transport.
+
+The single new Muse Spark 1.3 request succeeded: 349 prompt / 2,999 completion tokens (2,488 reasoning), 10,817 ms, estimated $0.013182 promotional-credit cost. [Sanitized successful receipt](spark-diagnostic-success.json) records two uncertain hypotheses and three allowed read-only checks in dependency order. No repair, grant, scan or hardware action occurred. Schema/reference/order validity is not diagnostic-accuracy or model-superiority evidence. The original blocked attempt remains unchanged; no automatic retry was made.
+
+Decision: keep live diagnostics explicitly supervised and CLI-only. The site may link to this recorded synthetic result, but does not send physical graphs or screenshots to cloud inference. This success resolves provider execution evidence for the experiment, not general diagnostic evaluation or final portal acceptance.

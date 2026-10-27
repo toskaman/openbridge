@@ -6,4 +6,4 @@ This is a projection for read-only capability publication, not a new hardware re
 
 The path means “workspace reads observations reported through this relay,” not “workspace directly controls the beacon.” Contradictory identity is unavailable. Multiple routes are candidate alternatives, not proof that two identifiers represent the same physical device. Manufacturer bytes remain raw data; unsupported semantic measurements stay unavailable.
 
-Files: src/forge/ui and fixtures.py; source boundary in service.py. Tests include identity conflict, absent device and changed provenance. The current cards are simulated and do not claim live device synchronization.
+Files: src/forge/ui and fixtures.py; source boundary in service.py. Tests include identity conflict, absent device and changed provenance. Default cards are simulated. Trusted injected runtime mode presents source-bound status, availability and pseudonymous identities; physical phone/TV evidence is recorded in [TV journey](TV_GLIMMER_JOURNEY.md). This does not claim continuous device synchronization.
