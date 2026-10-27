@@ -301,3 +301,12 @@ Reproduce: `python -m dev.watch_smoke`.
 - REAL_HARDWARE_VERIFIED on the Android TV (first run): `thermal_status` = none. The TV went to standby mid-watch, so the watch's next run was BLOCKED and emitted `watch_unavailable`, not a value.
 - Defect found on hardware and fixed: `dumpsys power` output exceeds the adapter's 128 KB cap, so the read was refused (fail-closed). These two allowlisted system dumps now have a 2 MB cap; all other reads keep 128 KB.
 - REAL_HARDWARE_VERIFIED: Freebox "internet down" watch (`internet_state ne "up"`, `python -m dev.freebox_watch_smoke`): 2 runs, last value "up", 0 triggers (correct while online), stopped cleanly. A real outage trigger is NOT TESTED; the trigger logic is covered by tests/runtime/test_watchers.py.
+
+## Runtime v2.3 — multi-device diagnostic report (27 Oct 2026)
+
+Reproduce: `python -m dev.report_smoke`.
+
+- REAL_HARDWARE_VERIFIED: the `diagnostic_report` primitive on the participant LAN read the phone (16 findings, warning `security_patch_outdated`) and the Freebox (27 findings), both VERIFIED. It listed 12 other devices as observed without a read grant. Labels were redacted ("phone 1", "router 1").
+- Two defects were found on the first hardware run and fixed:
+  - LAN-inventory hosts with no read grant appeared as BLOCKED sections.
+  - A second gateway seen via SSDP was given the Freebox's API facts. Freebox reads now require that device's own `lan_inventory` capability via FREEBOX_API.
