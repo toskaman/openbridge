@@ -237,3 +237,15 @@ Reproduce: `python -m dev.runtime_v2_smoke` (read-only; prints counts and findin
   - Fix: a link check after the reads (a cut-short read is now PARTIAL, not verified) and re-attachment by strong identity only.
   - Re-run: PARTIAL (5 facts, verified=false) → BLOCKED DEVICE_UNAVAILABLE on the dead link → VERIFIED with 11 facts after reconnect. Simulated regression tests were added for both.
 - USB unplug during a write: still NOT TESTED physically (the phone was not visible to ADB).
+
+## Device Runtime v2 — phone diagnostics and transport reset during a real write (27 Oct 2026)
+
+- REAL_HARDWARE_VERIFIED: `read_facts` on the Xiaomi phone over USB → 13 OBSERVED findings (battery 100 %, 21 °C, health good, charging, 224 GB / 154 GB free, uptime 34 h, Wi-Fi on, 8 cores, 1.8 GB RAM available, user 0, patch 2025-02-01, 74 user apps) + 1 INFERRED (`security_patch_outdated` = 20 months).
+- REAL_HARDWARE_VERIFIED, ADB transport reset during a write (`python -m dev.link_loss_write_smoke 0.05 --confirm-owned-device`). This was a host-side `adb reconnect` 50 ms into disabling one allowlisted optional app, not a physical cable pull.
+  - Apply → BLOCKED "Transaction quarantined".
+  - Immediate revert → refused: the state could not be read, so the external state was not overwritten.
+  - Journal state → QUARANTINED. No success was reported at any point.
+  - Once the phone was visible again: recovery → REVERTED, read-back equal to the recorded original value (enabled).
+  - Reproduced twice.
+- Observed limitation: after `adb reconnect` the phone did not reappear until the ADB server was restarted (`adb kill-server`). The TV over Wi-Fi then needed a new `adb connect`. Recovery is safe meanwhile: the transaction stays QUARANTINED in the journal until then.
+- Physical cable pull: still NOT TESTED (needs the owner's hand).
