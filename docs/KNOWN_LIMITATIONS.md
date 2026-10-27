@@ -9,15 +9,15 @@
 - The local 3B model is weak at planning (53% correct); Muse Glimmer 87%; a simple rule reaches 90% on the narrow benchmark. Safety never depends on the model.
 
 ## BridgeWindows adapter (Windows PCs)
-OpenBridge only reads from the owner's BridgeWindows agent: system diagnostics, process count and an exact allowlist of registry values. The agent's command, file, registry-write, input and update methods are refused before anything is sent.
+BridgeWindows diagnostics use read-only allowlisted methods. A separate consent-gated `pc_job` primitive now permits arbitrary owner-typed commands; these jobs cannot be undone. This exception must not be described as read-only.
 
 The agent's current authentication is a static pre-shared key sent in clear over plain TCP. Until it uses per-request signing (like the relay protocol), keep the agent on a trusted LAN. The adapter is off unless the server is started with `--windows-bridge`.
 
 ## Added 27 Oct
 - Tuya vacuum: owner-linked through the owner's own Tuya IoT Cloud project (`python -m dev.tuya_link`); reads plus suction/volume with exact Undo; robot commands (start, moves, dock, resets…) are irreversible and need consent per command; manual moves auto-stop after at most 3 s. OpenBridge never extracts keys from apps, caches or traffic.
-- BridgeWindows agent: its own static key travels in clear over plain TCP; OpenBridge uses it read-only. OpenBridge `--windows-bridge` and the BridgeWindows daemon both need port 9876; run one at a time.
+- BridgeWindows agent: its own static key travels in clear over plain TCP; OpenBridge diagnostics are read-only, with the separate owner-consented `pc_job` exception. OpenBridge `--windows-bridge` and the BridgeWindows daemon both need port 9876; run one at a time.
 - Smartwatch: read-only facts; no controls published on the watch yet.
-- Hosted Meta advisory: synthetic facts only; $0.10 per session, $1 local ceiling; Meta's spending alerts are not a provider hard cap.
+- Hosted Meta advisory: synthetic facts only; $0.10 reserved per explicit request, $0.20 per fresh observation and $1 persistent local lifetime ceiling; Meta's spending alerts are not a provider hard cap.
 
 ## Added 27 Oct (V4)
 - Hypotheses are rule-based correlations in time, not causes; the rules miss WAN outages when two devices drop together (registered ablation, 20/24).

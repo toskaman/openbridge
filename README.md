@@ -84,8 +84,8 @@ Requirements: Windows or Linux, Python 3.14 (no third-party runtime packages), A
 ```powershell
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests          # 170+ tests, no hardware needed
-python -m src.server                          # http://127.0.0.1:18765
+python -m unittest discover -s tests          # controlled tests; no hardware needed
+python -m dev.start_workspace                 # main :18765 + trusted Forge selector :18767
 ```
 With local Meta models and the agent:
 ```powershell
@@ -93,6 +93,8 @@ python -m dev.start_local_meta --pull-model   # Llama 3.2 3B, private CPU servic
 python -m dev.start_glimmer --pull-model      # optional Muse Glimmer 30B on :11438 (~18 GB)
 python -m src.server --local-meta --glimmer --agent
 ```
+The default launcher starts no discovery, model call or publication. Open **Capability Forge** from the main navigation, refresh verified routes and explicitly select a source-bound observation. Optional Forge local CPU planning uses `python -m dev.start_workspace --glimmer-cpu-v2` with its existing isolated service on :11439. The standalone simulated demo remains `python -m src.forge.demo_host` on :18766. See [trusted physical workspace proof](docs/forge/WORKSPACE_JOURNEY.md) and [frozen v2 evaluation](docs/forge/evaluation-v2/RESULTS.md).
+
 Companion app: `python -m dev.build_companion` (official Android SDK tools), then **Install the OpenBridge Companion** from a phone or TV sheet in the UI.
 
 **Jury walkthrough:** Discover my environment → open a device sheet (sources, capabilities, statuses) → TV sheet: *Connect over ADB Wi-Fi* → *Use as Bluetooth relay* → *Scan nearby Bluetooth* → *Ask Meta what to do next* → Device agent (Declutter) for a consent-gated change and exact Undo → *Finish session…*. Without hardware: `python -m tests.e2e.fabric_smoke` and `python -m tests.e2e.offline_smoke` (both in CI).

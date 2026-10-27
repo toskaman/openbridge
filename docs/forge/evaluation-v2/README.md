@@ -24,7 +24,7 @@ Memory fields distinguish Python `tracemalloc` peak allocation from Ollama `/api
 
 - `python -m unittest tests.forge.test_benchmark_v2 -q`: 14 tests pass with controlled brokers, including unavailability, invalid proposals, permission/hallucination accounting and hard call/time budgets. The initial test invocation failed because the harness did not yet exist, before implementation.
 - Rules-only CLI over all 80 cases: 80/80 correct, zero model calls, zero proposed permission violations or hallucinated IDs. Local receipt: ignored `artifacts/evaluation-v2/rules-controlled.json`.
-- Model scores remain **NOT RUN**. These checks do not claim general reasoning advantage or final release acceptance.
+- Completed frozen runs and full receipts: [results](RESULTS.md). Each model made 25 actual local calls; the remaining cases test deterministic policy or harness scope. No general reasoning advantage or final release acceptance is claimed.
 
 ## Exact bounded commands
 

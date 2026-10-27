@@ -1,0 +1,41 @@
+{
+  "evidence_kind": "PHYSICAL_TRUSTED_WORKSPACE_JOURNEY_ATTEMPT",
+  "status": "REAL_HARDWARE_VERIFIED",
+  "recorded_at_utc": "2026-10-27T16:58:28.846049+00:00",
+  "source_revision": "ec653af2225e47601510a87ba73acf27aab5ecc6",
+  "runner_sha256": "c99dadcf67e604ef286e229f56a99e8e4465d9d12f84a21c473b51d6faf7808e",
+  "model_calls": 0,
+  "app_installs": 0,
+  "permission_grants": 0,
+  "screenshots": 0,
+  "videos": 0,
+  "network_reconnects": 0,
+  "stages": [
+    "existing_authorized_tv_ready",
+    "paired_and_ten_second_scan_verified",
+    "trusted_selection_rules_consent_publication_read_documents_verified",
+    "revocation_read_denial_service_and_workspace_removal_verified"
+  ],
+  "http": {
+    "publish": 200,
+    "read": 200,
+    "documents": 200,
+    "after_relay_revocation": 409,
+    "remove": 200,
+    "after_removal": 404,
+    "close_workspace": 200
+  },
+  "cleanup": {
+    "temporary_ui_xml_removed": true,
+    "local_relay_key_removed": true,
+    "temporary_forward_removed": true,
+    "coordinator_and_bound_workspaces_closed": true,
+    "runtime_closed": true
+  },
+  "remote_companion_unpairing": true,
+  "activity_launch_attempts": 0,
+  "activity_launches": 0,
+  "physical_candidates": 6,
+  "android_permissions_unchanged": true,
+  "completed_at_utc": "2026-10-27T16:59:01.102746+00:00"
+}

@@ -6,7 +6,7 @@ Draft preparation only; no submission, organizer acceptance, score, or final vid
 |---|---|---|
 | Project title | OpenBridge Capability Forge | Confirm final public title. |
 | Purpose | Discover device capabilities and publish narrow read-only services through explicit consent and deterministic checks. | Confirm portal word limit. |
-| Team / eligibility | Not established by repository evidence | Names, roles, contact, age/location eligibility, team limits and participant attestations. |
+| Track / theme / team | Owner confirmed Indie Developer, Push the Frontier, solo entry credited **toskaman** on 27 October 2026 | Portal field verification, private contact and eligibility attestations remain participant-owned. |
 | Official start / deadline | `CONTRIBUTIONS.md` records participant-reported start confirmation; history is unchanged | Organizer message/reference, timezone, deadline and approved build period. |
 | Source URL / revision | https://github.com/toskaman/openbridge | Select final public commit; verify anonymous availability at that revision. |
 | Meta runtime use | `docs/glimmer-smoke-receipt.json`, `docs/local-meta-smoke-receipt.json`, `docs/runtime-meta-receipt.json` | Distinguish local runtime from development theme generation. |
