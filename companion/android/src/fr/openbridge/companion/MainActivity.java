@@ -11,6 +11,10 @@ import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import java.util.ArrayList;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -39,6 +43,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private boolean setupRunning;
     private ScrollView scroll;
     private Button setup;
+    private static final int VOICE_PERM = 11;
+    private SpeechRecognizer voice;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -69,19 +75,30 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         root.addView(controlsCard); root.addView(spacer(14));
 
         commandCard = card(); commandCard.setVisibility(View.GONE);
-        commandCard.addView(text("ASK FROM HERE · typed, reviewed on your PC", 12, true, MUTED));
+        commandCard.addView(text("ASK FROM HERE · type or speak, reviewed on your PC", 12, true, MUTED));
         commandInput = new EditText(this); commandInput.setHint("e.g. Start my vacuum");
         commandInput.setTextColor(TEXT); commandInput.setHintTextColor(MUTED);
         commandInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, tv ? 20 : 16);
         commandInput.setSingleLine(true);
         commandCard.addView(commandInput);
+        LinearLayout sendRow = new LinearLayout(this); sendRow.setOrientation(LinearLayout.HORIZONTAL);
         Button send = button("Send to PC", true);
         send.setOnClickListener(v -> {
             String s = relay.submitCommand(commandInput.getText().toString());
             commandResult.setText(s);
             if (s != null && s.startsWith("Sent")) commandInput.setText("");
         });
-        commandCard.addView(send);
+        sendRow.addView(send, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        Button mic = button("Speak", false);
+        mic.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_btn_speak_now, 0, 0, 0);
+        mic.setCompoundDrawablePadding(dp(8));
+        mic.setOnClickListener(v -> startVoiceInput());
+        if (!SpeechRecognizer.isRecognitionAvailable(this))
+            mic.setVisibility(View.GONE);        // no system recognition service (some TVs): typed input still works
+        LinearLayout.LayoutParams micLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        micLp.leftMargin = dp(10);
+        sendRow.addView(mic, micLp);
+        commandCard.addView(sendRow);
         commandResult = text("", 14, false, OK); commandCard.addView(commandResult);
         root.addView(commandCard); root.addView(spacer(14));
 
@@ -178,6 +195,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     @Override public void onRequestPermissionsResult(int r, String[] p, int[] g) {
         boolean granted = g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED;
         if (r == 2 && granted) { turnOnBluetooth(); return; }
+        if (r == VOICE_PERM) {
+            if (granted) listen(); else commandResult.setText("Microphone declined — type instead.");
+            return;
+        }
         if (!granted) setupRunning = false;     // owner declined: stop asking
         refresh(); nextSetupStep();
     }
@@ -185,8 +206,51 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         if (c != RESULT_OK) setupRunning = false;
         refresh(); nextSetupStep();
     }
+
+    /** Voice fills the same text field; nothing is sent until the owner reviews and taps Send to PC. */
+    private void startVoiceInput() {
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) { commandResult.setText("Voice input is not available on this device."); return; }
+        if (checkSelfPermission("android.permission.RECORD_AUDIO") != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{"android.permission.RECORD_AUDIO"}, VOICE_PERM); return;
+        }
+        listen();
+    }
+
+    private void listen() {
+        stopVoice();
+        voice = SpeechRecognizer.createSpeechRecognizer(this);
+        voice.setRecognitionListener(new RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle p) { commandResult.setText("Listening — speak now."); }
+            @Override public void onEndOfSpeech() { commandResult.setText("Heard — transcribing."); }
+            @Override public void onError(int e) {
+                commandResult.setText(e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+                        ? "Did not catch that — try again or type." : "Voice error — try again or type.");
+                stopVoice();
+            }
+            @Override public void onResults(Bundle r) {
+                ArrayList<String> res = r.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (res != null && !res.isEmpty() && res.get(0) != null && !res.get(0).trim().isEmpty()) {
+                    commandInput.setText(res.get(0));
+                    commandResult.setText("Heard — review, then Send to PC.");
+                } else commandResult.setText("Did not catch that — try again or type.");
+                stopVoice();
+            }
+            @Override public void onPartialResults(Bundle p) { }
+            @Override public void onEvent(int t, Bundle p) { }
+            @Override public void onBeginningOfSpeech() { }
+            @Override public void onRmsChanged(float v) { }
+            @Override public void onBufferReceived(byte[] b) { }
+        });
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        try { voice.startListening(i); commandResult.setText("Listening — speak now."); }
+        catch (Exception e) { commandResult.setText("Voice input is not available on this device."); stopVoice(); }
+    }
+
+    private void stopVoice() { if (voice != null) { try { voice.destroy(); } catch (Exception ignored) { } voice = null; } }
     @Override protected void onResume() { super.onResume(); relay.foreground = true; relay.start(); refresh(); }
-    @Override protected void onPause() { relay.foreground = false; super.onPause(); }
+    @Override protected void onPause() { stopVoice(); relay.foreground = false; super.onPause(); }
+    @Override protected void onDestroy() { stopVoice(); super.onDestroy(); }
 
     private void refresh() {
         runOnUiThread(() -> {
