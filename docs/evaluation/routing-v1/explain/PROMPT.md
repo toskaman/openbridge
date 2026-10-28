@@ -20,6 +20,6 @@ Record:
 
 Substitution: `{CASE_JSON}` = the sampled row object verbatim from
 `docs/evaluation/routing-v1/results/run-f8873d9.json`
-(sha256 `5f00f05881e1c5dd16d730a1566f875541aeb34806586aef176905ffee732734`),
+(sha256 `94aa4e74222c7321960abd55b0c03fad12be2f888dd4e7d2ad535e3bb7c7017d`),
 keys `case_id, family, predictions, reasons, expected, document, events`.
 No other context, no retrieval, no tools.
