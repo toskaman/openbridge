@@ -116,6 +116,28 @@ class RemoteControls:
             digest = hashlib.sha256(json.dumps([rid, skill, target, params, label], sort_keys=True).encode()).hexdigest()[:10]
             cid = f'ctl-{digest}-g{gen}'                 # a re-grant of the same definition gets a new id
             out[cid] = {'label': label, 'skill_id': skill, 'target': target, 'params': params, 'generation': gen, 'key_fp': fp}
+        return self._install(rid, gen, fp, out)
+
+    def set_manifest_controls(self, rid, specs):
+        """V4: buttons bound to owner-approved Meta manifests (validated UIViewPlan). Owner path only.
+        specs: [{label, manifest, grant, facts, inputs}] already compiled and grant-checked by the substrate."""
+        if self.closed:
+            raise RemoteControlError(503, 'Remote controls are shut down')
+        relay = self._relay(rid)
+        if len(specs) > fabric_relay.MAX_CONTROLS:
+            raise RemoteControlError(400, f'At most {fabric_relay.MAX_CONTROLS} controls')
+        with self._lock:
+            self.generation += 1
+            gen = self.generation
+        fp, out = _key_fp(relay['key']), {}
+        for s in specs:
+            digest = hashlib.sha256(json.dumps([rid, s['manifest_hash'], s['inputs'], s['label']], sort_keys=True).encode()).hexdigest()[:10]
+            out[f'ctl-{digest}-g{gen}'] = {'kind': 'manifest', 'label': s['label'], 'skill_id': s['manifest']['capability_id'], 'target': None,
+                                            'params': s['inputs'], 'manifest': s['manifest'], 'grant': s['grant'], 'facts': s['facts'],
+                                            'manifest_hash': s['manifest_hash'], 'generation': gen, 'key_fp': fp}
+        return self._install(rid, gen, fp, out)
+
+    def _install(self, rid, gen, fp, out):
         with self._lock:                                 # owner-update order survives delayed network replies
             if self.closed:
                 raise RemoteControlError(503, 'Remote controls are shut down')
@@ -143,7 +165,7 @@ class RemoteControls:
 
     def state(self):
         with self._lock:
-            return {'controls': [{'relay_id': rid, 'control_id': cid, **{k: v for k, v in g.items() if k != 'key_fp'}}
+            return {'controls': [{'relay_id': rid, 'control_id': cid, **{k: v for k, v in g.items() if k not in ('key_fp', 'grant', 'facts', 'manifest')}}
                                  for rid, cs in self.grants.items() for cid, g in cs.items()],
                     'history': list(self.history[-20:]), 'suspended': sorted(f'{a}/{b}' for a, b in self.suspended),
                     'closed': self.closed}
@@ -261,6 +283,8 @@ class RemoteControls:
         return entry
 
     def _dispatch(self, rid, req, grant, actor, entry):
+        if grant.get('kind') == 'manifest':
+            return self._dispatch_manifest(rid, req, grant, entry)
         from src.runtime.api_v2 import router
         from src.runtime.routing import RouteError
         rt = router(self.server)
@@ -290,3 +314,26 @@ class RemoteControls:
             return outcome, text
         except RouteError as e:
             return 'BLOCKED', f"{grant['label']}: {e}"[:80]
+
+    def _dispatch_manifest(self, rid, req, grant, entry):
+        """V4 path: the press runs an owner-approved Meta manifest through the substrate kernel (grant re-verified,
+        facts and permissions re-checked before each step, receipt signed). operation_id derives from the request id."""
+        from src.runtime.api_v2 import substrate
+        from src.substrate.kernel import SubstrateError
+        s = substrate(self.server)
+        op = 'op-' + req['request_id']
+        if op in s.operations:
+            return 'DUPLICATE', f"{grant['label']}: already done"
+        with self._lock:
+            if self._current_grant(rid, req['control_id']) is not grant:
+                return 'REVOKED', 'This control is no longer authorized'
+        try:
+            rec = s.invoke(grant['manifest'], grant['grant'], grant['facts'],
+                           {'operation_id': op, 'principal': 'relay', 'manifest_hash': grant['manifest_hash'], 'grant_id': grant['grant']['grant_id'],
+                            'inputs': grant['params'], 'trace_id': 'rc-' + req['request_id'][:20]})
+        except SubstrateError as e:
+            return 'BLOCKED', f"{grant['label']}: {e.code.lower().replace('_', ' ')}"[:80]
+        entry['invocation_id'] = op
+        entry['transaction_id'] = next((st['transaction_id'] for st in reversed(rec['steps']) if st['transaction_id']), None)
+        text = f"{grant['label']}: " + {'VERIFIED': 'done, verified', 'EXECUTED': 'done'}.get(rec['status'], rec['status'].lower())
+        return rec['status'], text
