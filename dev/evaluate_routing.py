@@ -1,0 +1,170 @@
+"""Frozen synthetic routing snapshots. Never arm, invoke, scan or call a model."""
+import argparse
+import hashlib
+import json
+import math
+import platform
+import random
+import subprocess
+import tempfile
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from types import SimpleNamespace
+from src.fabric.contracts import DeviceObservation, Identifier, Link
+from src.fabric.registry import Registry
+from src.fabric.relay import RelayManager
+from src.fabric.session import SessionJournal
+from src.runtime.api_v2 import executor
+from src.runtime.primitives import Executor
+from src.runtime.relay_health import RelayLedger
+from src.runtime.routing import Router
+from src.runtime.route_contract import validate_doc
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT/'docs/evaluation/routing-v1'
+FROZEN_MANIFEST_SHA = '2dbf2598a07ce12d40c8b9d09cbb2ed848526c9fdc23a703b57ce1bdd1465a6b'
+ARMS = ('router','catalog_first','first_eligible','random_eligible','historical_freshest','policy_aware')
+
+def sha(raw): return hashlib.sha256(raw).hexdigest()
+
+def verify_frozen(root=DATA):
+    manifest=(root/'SHA256SUMS').read_bytes()
+    if sha(manifest)!=FROZEN_MANIFEST_SHA: raise ValueError('FROZEN_MANIFEST_CHANGED')
+    for line in manifest.decode().splitlines():
+        expected,name=line.split('  ',1)
+        if name not in ('cases.json','gold.json','REGISTRATION.md','CORRIGENDUM.md') or sha((root/name).read_bytes())!=expected:
+            raise ValueError('FROZEN_INPUT_CHANGED')
+
+def eligible(n):
+    return n['online'] and n['control_grant'] and n['scan_permission'] and n['owner_enabled'] and n['age_s']<=120
+
+def baseline_predictions(case):
+    nodes=case['nodes'];ready=[n for n in nodes if eligible(n)];policy=case['policy']
+    first=ready[0]['alias'] if ready else None
+    ordered=sorted(ready,key=lambda n:(n['age_s'],n['alias']))
+    choice=ordered[0]['alias'] if ordered else None
+    aliases={n['alias'] for n in ready}
+    if policy['mode']=='PINNED':choice=policy['pinned'] if policy['pinned'] in aliases else None
+    elif policy['mode']=='PREFERRED':choice=next((a for a in policy['preferred'] if a in aliases),choice)
+    rng=random.Random(int(sha(case['case_id'].encode()),16))
+    return {'catalog_first':nodes[0]['alias'] if nodes else None,'first_eligible':first,
+            'random_eligible':rng.choice(ready)['alias'] if ready else None,
+            'historical_freshest':min(nodes,key=lambda n:n['age_s'])['alias'] if nodes else None,'policy_aware':choice}
+
+def run_case(case):
+    if case.get('skill_id')!='ble_scan_room':raise ValueError('ONLY_SYNTHETIC_SCAN_ROUTE_SELECTION')
+    if not isinstance(case.get('nodes'),list) or not 1<=len(case['nodes'])<=8:raise ValueError('INVALID_NODES')
+    aliases=[n['alias'] for n in case['nodes']]
+    if len(set(aliases))!=len(aliases):raise ValueError('DUPLICATE_ALIAS')
+    counts={'transport_attempts':0,'dispatch_attempts':0}
+    def deny_transport(*args,**kwargs):
+        counts['transport_attempts']+=1;raise AssertionError('EVALUATION_TRANSPORT_REFUSED')
+    def deny_dispatch(*args,**kwargs):
+        counts['dispatch_attempts']+=1;raise AssertionError('EVALUATION_DISPATCH_REFUSED')
+    now=case['clock_epoch'];clock=lambda:now;reg=Registry();keys={};relays=RelayManager(transport=deny_transport);ledger=RelayLedger(clock=clock)
+    for node in case['nodes']:
+        alias=node['alias'];tr=node['transport'];observed=datetime.fromtimestamp(now-node['age_s'],timezone.utc).isoformat()
+        key=reg.upsert([Identifier('android_serial','synthetic-'+case['case_id']+'-'+alias,True)],category=node['category'],label='Synthetic '+alias,
+                       observations=[DeviceObservation('model','Synthetic node','SIMULATED',tr,observed,False)])
+        keys[alias]=key;handle='simulated-'+alias;reg.devices[key]['handles']={tr:handle};reg.devices[key]['last_seen']=observed
+        reg.link(Link('pc',key,tr,('observe','read','control') if node['control_grant'] else ('observe','read'),'SIMULATED',observed))
+        relays.enroll(alias,b'synthetic-evaluation-key-00000000',handle,{'capabilities':['ble_scan'],'permissions':{'BLUETOOTH_SCAN':node['scan_permission'],'owner_enabled':node['owner_enabled']}})
+        relays.relays[alias]['online']=node['online']
+        ledger.routes[alias]={'last_success_at':now-node['age_s'],'scans':1,'failures':0}
+    with tempfile.TemporaryDirectory(prefix='openbridge-routing-eval-') as d:
+        server=SimpleNamespace(fabric_registry=reg,fabric_snapshot=reg.snapshot(),relays=relays,relay_ledger=ledger,
+                               session_journal=SessionJournal(str(Path(d)/'session.json')),runtime_executor=None,skill_router=None)
+        ex=executor(server);ex.RUNNERS={k:deny_dispatch for k in Executor.RUNNERS}
+        router=Router(server,clock=clock);server.skill_router=router
+        setup=router.skill_routes('ble_scan_room')
+        route_alias={r['route_id']:next(a for a,k in keys.items() if r['hops'][0]['device_key']==k) for r in setup['routes']}
+        alias_route={a:r for r,a in route_alias.items()}
+        policy=case['policy'];body={'skill_id':'ble_scan_room','mode':policy['mode']}
+        if policy['mode']=='PINNED':body['route_id']=alias_route[policy['pinned']]
+        elif policy['mode']=='PREFERRED':body['preferred']=[alias_route[a] for a in policy['preferred']]
+        router.set_policy(body)
+        start=time.perf_counter();doc=router.skill_routes('ble_scan_room');latency=(time.perf_counter()-start)*1000
+        predictions={'router':route_alias.get(doc['selected_route_id'])}
+        result={'case_id':case['case_id'],'family':case['family'],'hop_count':case['hop_count'],'predictions':predictions,
+                'reasons':{route_alias[r['route_id']]:r['reason'] for r in doc['routes']},'contract_errors':validate_doc(doc),
+                'router_latency_ms':latency,'setup_documents':[setup],'document':doc,'events':ex.events_since(0),**counts}
+        if any(counts.values()):raise AssertionError('EVALUATION_SIDE_EFFECT_ATTEMPT')
+        return result
+
+def score_predictions(predictions,gold,valid=None):
+    if len(predictions)!=len(gold):raise ValueError('MISMATCHED_DENOMINATOR')
+    valid=[True]*len(gold) if valid is None else valid
+    if len(valid)!=len(gold):raise ValueError('MISMATCHED_VALIDITY')
+    n=len(gold);hits=sum(v and p==g for p,g,v in zip(predictions,gold,valid))
+    predicted=sum(v and p is None for p,v in zip(predictions,valid));actual=sum(g is None for g in gold)
+    true=sum(v and p is None and g is None for p,g,v in zip(predictions,gold,valid))
+    interval=None
+    if n:
+        z=1.959963984540054;q=hits/n;den=1+z*z/n;mid=(q+z*z/(2*n))/den;half=z*math.sqrt(q*(1-q)/n+z*z/(4*n*n))/den
+        interval=[max(0,mid-half),min(1,mid+half)]
+    return {'hits':hits,'n':n,'accuracy':hits/n if n else None,'descriptive_wilson95':interval,
+            'errors':sum(not v for v in valid),'abstention_precision':true/predicted if predicted else None,
+            'abstention_recall':true/actual if actual else None}
+
+def evaluate(cases,gold):
+    labels={g['case_id']:g for g in gold}
+    if len(labels)!=len(gold) or len({c['case_id'] for c in cases})!=len(cases) or set(labels)!={c['case_id'] for c in cases}:
+        raise ValueError('CASE_GOLD_MISMATCH')
+    rows=[]
+    for case in cases:
+        arm_errors={}
+        try:baselines=baseline_predictions(case)
+        except Exception as error:
+            baselines={arm:None for arm in ARMS if arm!='router'}
+            arm_errors.update({arm:type(error).__name__ for arm in baselines})
+        try:row=run_case(case)
+        except Exception as error:
+            arm_errors['router']=type(error).__name__
+            row={'case_id':case['case_id'],'family':case['family'],'hop_count':case['hop_count'],'error':type(error).__name__,
+                 'error_detail':str(error)[:500],'predictions':{'router':None},'contract_errors':['CASE_ERROR'],'reasons':{}}
+        row['predictions'].update(baselines);row['arm_errors']=arm_errors
+        row['expected']=labels[case['case_id']];row['expected_device_class']=next((n['category'] for n in case['nodes'] if n['alias']==row['expected']['selected_alias']),'abstention')
+        rows.append(row)
+    def metrics(group,arm):
+        return score_predictions([r['predictions'][arm] for r in group],[r['expected']['selected_alias'] for r in group],
+                                 [arm not in r['arm_errors'] and (arm!='router' or not r['contract_errors']) for r in group])
+    summary={arm:metrics(rows,arm) for arm in ARMS}
+    slices={key:{str(v):{'indicative_n_lt_30':sum(str(r[key])==str(v) for r in rows)<30,
+                       'arms':{a:metrics([r for r in rows if r[key]==v],a) for a in ARMS}} for v in sorted({r[key] for r in rows},key=str)}
+            for key in ('family','expected_device_class','hop_count')}
+    family_perfect={a:sum(s['arms'][a]['hits']==s['arms'][a]['n'] for s in slices['family'].values()) for a in ARMS}
+    reason_n=sum(len(r['expected']['unavailable_reasons']) for r in rows)
+    reason_hits=sum(r['reasons'].get(k,'MISSING')==v for r in rows for k,v in r['expected']['unavailable_reasons'].items())
+    times=sorted(r['router_latency_ms'] for r in rows if 'router_latency_ms' in r)
+    return {'evidence':'SIMULATED','purpose':'DETERMINISTIC_ROUTING_SNAPSHOT_EVALUATION','rows':rows,'summary':summary,'slices':slices,
+            'family_perfect':{'total_families':len(slices['family']),'arms':family_perfect},'reason_checks':{'hits':reason_hits,'n':reason_n},
+            'router_latency_ms':{'p50':times[max(0,math.ceil(.5*len(times))-1)] if times else None,'p95':times[max(0,math.ceil(.95*len(times))-1)] if times else None},
+            'actual_hardware_calls':0,'actual_model_calls':0,'automatic_retry':False,
+            'limitations':['Eight correlated synthetic templates; descriptive intervals are not independent-trial evidence.',
+                           'No task execution, dynamic failover, unseen-protocol or model-superiority result.']}
+
+def write_report(path,report):
+    path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)
+    with path.open('xb') as handle:handle.write((json.dumps(report,indent=2,allow_nan=False)+'\n').encode())
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
+    if args.output.exists():raise FileExistsError('Never overwrite a previous evaluation')
+    verify_frozen()
+    if subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=ROOT).strip():raise ValueError('TRACKED_WORKTREE_NOT_CLEAN')
+    review=json.loads((DATA/'meta-design-review-receipt.json').read_text())
+    request=(DATA/'meta-design-review-request.json').read_bytes()
+    if review.get('status')!='REVIEW_RECEIVED' or review.get('model_id')!='muse-spark-1.3' or review['review']['verdict']!='APPROVE' or sha(request)!=review['input_sha256']:
+        raise ValueError('PRE_RUN_REVIEW_REQUIRED')
+    cases=json.loads((DATA/'cases.json').read_text())['cases'];gold=json.loads((DATA/'gold.json').read_text())['labels']
+    report=evaluate(cases,gold)
+    report['provenance']={'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+                          'recorded_at_utc':datetime.now(timezone.utc).isoformat(),'python':platform.python_version(),'platform':platform.platform(),
+                          'manifest_sha256':FROZEN_MANIFEST_SHA,'harness_sha256':sha(Path(__file__).read_bytes()),'tracked_worktree_clean':True,
+                          'design_review_model':review['model_id'],'design_review_input_sha256':review['input_sha256']}
+    write_report(args.output,report)
+    print(json.dumps({'output':str(args.output),'summary':report['summary'],'reason_checks':report['reason_checks']}))
+    return 1 if any(r['arm_errors'] for r in report['rows']) else 0
+
+if __name__=='__main__':raise SystemExit(main())

@@ -1,0 +1,1434 @@
+{
+  "version": 1,
+  "evidence": "SIMULATED",
+  "cases": [
+    {
+      "case_id": "routing-v1-freshness-01",
+      "family": "freshness",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 70,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-freshness-02",
+      "family": "freshness",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 71,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-freshness-03",
+      "family": "freshness",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 72,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-freshness-04",
+      "family": "freshness",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 73,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-link_down-01",
+      "family": "link_down",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 70,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-link_down-02",
+      "family": "link_down",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 71,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-link_down-03",
+      "family": "link_down",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 72,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-link_down-04",
+      "family": "link_down",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 73,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-01",
+      "family": "grant_insufficient",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": true,
+          "control_grant": false,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 70,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-02",
+      "family": "grant_insufficient",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 71,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": false,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-03",
+      "family": "grant_insufficient",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 72,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": true,
+          "control_grant": false,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-04",
+      "family": "grant_insufficient",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": false,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 73,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-01",
+      "family": "owner_disabled",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": false
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 70,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-02",
+      "family": "owner_disabled",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 71,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": false
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-03",
+      "family": "owner_disabled",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 72,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": false
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-04",
+      "family": "owner_disabled",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": false
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 73,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-lease_stale-01",
+      "family": "lease_stale",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 130,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 130,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-lease_stale-02",
+      "family": "lease_stale",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 131,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 131,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-lease_stale-03",
+      "family": "lease_stale",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 132,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 132,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-lease_stale-04",
+      "family": "lease_stale",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 133,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 133,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-pinned_down-01",
+      "family": "pinned_down",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 70,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PINNED",
+        "pinned": "node-a"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-pinned_down-02",
+      "family": "pinned_down",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 71,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PINNED",
+        "pinned": "node-b"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-pinned_down-03",
+      "family": "pinned_down",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 72,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PINNED",
+        "pinned": "node-c"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-pinned_down-04",
+      "family": "pinned_down",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 73,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PINNED",
+        "pinned": "node-a"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-preferred-01",
+      "family": "preferred",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 70,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PREFERRED",
+        "preferred": [
+          "node-c",
+          "node-a"
+        ]
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-preferred-02",
+      "family": "preferred",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 71,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PREFERRED",
+        "preferred": [
+          "node-a",
+          "node-b"
+        ]
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-preferred-03",
+      "family": "preferred",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 72,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PREFERRED",
+        "preferred": [
+          "node-b",
+          "node-c"
+        ]
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-preferred-04",
+      "family": "preferred",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 73,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "PREFERRED",
+        "preferred": [
+          "node-c",
+          "node-a"
+        ]
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-01",
+      "family": "all_unavailable",
+      "variant": 1,
+      "clock_epoch": 1793189000,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "USB",
+          "age_s": 3,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 30,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": false,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 130,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-02",
+      "family": "all_unavailable",
+      "variant": 2,
+      "clock_epoch": 1793189010,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tv",
+          "transport": "WIFI",
+          "age_s": 131,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 4,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 31,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": false,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-03",
+      "family": "all_unavailable",
+      "variant": 3,
+      "clock_epoch": 1793189020,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "tablet",
+          "transport": "USB",
+          "age_s": 32,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": false,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 132,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 5,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-04",
+      "family": "all_unavailable",
+      "variant": 4,
+      "clock_epoch": 1793189030,
+      "skill_id": "ble_scan_room",
+      "nodes": [
+        {
+          "alias": "node-a",
+          "category": "phone",
+          "transport": "WIFI",
+          "age_s": 6,
+          "online": false,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-b",
+          "category": "tv",
+          "transport": "USB",
+          "age_s": 33,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": false,
+          "owner_enabled": true
+        },
+        {
+          "alias": "node-c",
+          "category": "tablet",
+          "transport": "WIFI",
+          "age_s": 133,
+          "online": true,
+          "control_grant": true,
+          "scan_permission": true,
+          "owner_enabled": true
+        }
+      ],
+      "policy": {
+        "mode": "AUTO"
+      },
+      "phase": "post_condition_snapshot",
+      "hop_count": 2
+    }
+  ]
+}

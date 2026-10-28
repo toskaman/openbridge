@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "labels": [
+    {
+      "case_id": "routing-v1-freshness-01",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-freshness-02",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-freshness-03",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-freshness-04",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-link_down-01",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "link_down",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-link_down-02",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": "link_down",
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-link_down-03",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": "link_down"
+      }
+    },
+    {
+      "case_id": "routing-v1-link_down-04",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "link_down",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-01",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "grant_insufficient",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-02",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": "grant_insufficient",
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-03",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": "grant_insufficient"
+      }
+    },
+    {
+      "case_id": "routing-v1-grant_insufficient-04",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "grant_insufficient",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-01",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "policy_blocked",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-02",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": "policy_blocked",
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-03",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": "policy_blocked"
+      }
+    },
+    {
+      "case_id": "routing-v1-owner_disabled-04",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "policy_blocked",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-lease_stale-01",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "lease_stale",
+        "node-b": null,
+        "node-c": "lease_stale"
+      }
+    },
+    {
+      "case_id": "routing-v1-lease_stale-02",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": "lease_stale",
+        "node-b": "lease_stale",
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-lease_stale-03",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": "lease_stale",
+        "node-c": "lease_stale"
+      }
+    },
+    {
+      "case_id": "routing-v1-lease_stale-04",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": "lease_stale",
+        "node-b": null,
+        "node-c": "lease_stale"
+      }
+    },
+    {
+      "case_id": "routing-v1-pinned_down-01",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": "link_down",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-pinned_down-02",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": "link_down",
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-pinned_down-03",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": "link_down"
+      }
+    },
+    {
+      "case_id": "routing-v1-pinned_down-04",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": "link_down",
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-preferred-01",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-preferred-02",
+      "selected_alias": "node-a",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-preferred-03",
+      "selected_alias": "node-b",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-preferred-04",
+      "selected_alias": "node-c",
+      "unavailable_reasons": {
+        "node-a": null,
+        "node-b": null,
+        "node-c": null
+      }
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-01",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": "link_down",
+        "node-b": "grant_insufficient",
+        "node-c": "lease_stale"
+      }
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-02",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": "lease_stale",
+        "node-b": "link_down",
+        "node-c": "grant_insufficient"
+      }
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-03",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": "grant_insufficient",
+        "node-b": "lease_stale",
+        "node-c": "link_down"
+      }
+    },
+    {
+      "case_id": "routing-v1-all_unavailable-04",
+      "selected_alias": null,
+      "unavailable_reasons": {
+        "node-a": "link_down",
+        "node-b": "grant_insufficient",
+        "node-c": "lease_stale"
+      }
+    }
+  ]
+}
