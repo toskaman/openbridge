@@ -1,0 +1,15 @@
+{
+  "voice_head": "f0331ce6cd7118a680781142e3819b78a923fc58",
+  "redirect": {
+    "second_origin_contacted": true,
+    "redirected_audio_accepted": true
+  },
+  "fallback": {
+    "status": 200,
+    "cloud_transport_function_called_without_credit_or_disclosure_fields": true
+  },
+  "scope": "Loopback-only redirect and mocked cloud function; actual voice AST, relay source. No real key/model/microphone.",
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0
+}
