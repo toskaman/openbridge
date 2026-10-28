@@ -204,11 +204,31 @@ class Synthesize(unittest.TestCase):
                       'facts': [{'fact_id': 'f', 'kind': 'model', 'value': 'X',
                                  'source': 'ADB', 'observed_at': 1.0}]},))
         p = Y.build_prompt(b, 'mute tv', PRIMS, 'tv')
-        self.assertIn('v4-synth-2', p)
+        self.assertIn('v4-synth-3', p)
         self.assertIn(b['devices'][0]['opaque_id'], p)
         self.assertIn(b['devices'][0]['facts'][0]['evidence_ref'], p)
         self.assertIn('read_facts', p)
         self.assertNotIn('tv1', p)
+
+    def test_prompt_states_candidate_contract(self):
+        # G3 attempt-2 root cause: v4-synth-2 never showed the schema, so the model
+        # invented plan/evidence/primitive_ids. v4-synth-3 states all 10 model keys.
+        p = Y.build_prompt(bundle(), 'mute tv', ('input.key',), 'tv')
+        for k in ('candidate_id', 'evidence_refs', 'intent', 'origin', 'postconditions',
+                  'preconditions', 'primitive_chain', 'required_grants', 'schema_version',
+                  'target_opaque_id'):
+            self.assertIn(k, p)
+        self.assertIn('EXACTLY these 10 keys', p)
+        self.assertIn('<device-opaque-id>', p)   # placeholders only, no answer leakage
+        self.assertIn('input.key', p)
+        self.assertIn('"key": string, one of:', p)
+        self.assertIn('mute', p)
+
+    def test_input_key_names_match_runtime(self):
+        from src.fabric import android_actions as AA
+        from src.forge import v4_schemas as S
+        self.assertEqual(S.INPUT_KEY_NAMES, tuple(sorted(AA.KEYS)))
+        self.assertIn('input.key', S.INPUT_SCHEMAS)
 
     def test_prompt_bounds_facts(self):
         devs = tuple({'category': 'tv', 'device_id': 'tv%d' % i,

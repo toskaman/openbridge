@@ -43,7 +43,9 @@ with both outcomes reported.
 ## Frozen procedure (bytes frozen in a PR before any call)
 - Evidence: signed facts pulled from the live registry at run time (no
   hand-written fixtures); bundle digest recorded.
-- Prompt: `v4-synth-2` template (in-repo, versioned) + bounded projection.
+- Prompt: `v4-synth-3` template (in-repo, versioned) + bounded projection.
+  v4-synth-2 is retired: it never stated the candidate schema (G3 attempts 1-2
+  root cause), so the model invented plan/evidence/primitive_ids.
 - Model: Muse Spark 1.3 via broker (Llama 3B proven unable to emit the
   10-key contract; Glimmer unavailable). Temperature 0, JSON mode.
 - Budget: ≤ $0.80 via the allowance path, canonical shared ledger,

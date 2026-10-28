@@ -4,7 +4,7 @@ import secrets
 
 from src.forge import v4_schemas as S
 
-PROMPT_VERSION = 'v4-synth-2'
+PROMPT_VERSION = 'v4-synth-3'
 CANDIDATE_KEYS = {'schema_version', 'candidate_id', 'origin', 'intent', 'target_opaque_id',
                   'primitive_chain', 'preconditions', 'postconditions', 'required_grants',
                   'evidence_refs', 'model_run_id'}
@@ -36,14 +36,44 @@ def evidence_projection(bundle, target_category):
     return '\n'.join(lines)
 
 
+def _input_schema_lines(primitive_ids):
+    lines = []
+    for pid in sorted(primitive_ids):
+        schema = S.INPUT_SCHEMAS.get(pid)
+        if schema is None:
+            lines.append('- %s: no declared inputs; use "input": {} exactly' % pid)
+            continue
+        inner = ', '.join('"%s": %s' % (k, v) for k, v in sorted(schema.items()))
+        lines.append('- %s: "input": {%s}; undeclared keys are rejected' % (pid, inner))
+    return '\n'.join(lines)
+
+
 def build_prompt(bundle, intent_text, primitive_ids, target_category):
+    # v4-synth-3 states the full CapabilityCandidate contract (G3 attempt-2 root cause:
+    # v4-synth-2 never showed the schema, so the model invented plan/evidence/primitive_ids).
+    keys = ('candidate_id (string), evidence_refs (non-empty list of listed fact refs), '
+            'intent (string), origin (must be "meta_generated"), postconditions (list), '
+            'preconditions (list), primitive_chain (non-empty list), required_grants (list, '
+            'unique, each one of: control, observe, read), schema_version (must be 1), '
+            'target_opaque_id (one device above)')
+    example = ('{"schema_version":1,"candidate_id":"<id>","origin":"meta_generated",'
+               '"intent":"<intent>","target_opaque_id":"<device-opaque-id>",'
+               '"primitive_chain":[{"primitive_id":"<allowed-primitive>",'
+               '"input":{"<declared-key>":"<value>"}}],"preconditions":[],'
+               '"postconditions":[],"required_grants":["<grant>"],'
+               '"evidence_refs":["<listed-fact-ref>"]}')
     return ('SYNTH_PROMPT %s. Intent: %s. Target category: %s. Primitives: %s.\n'
             'Evidence projection (cite ONLY these refs, no others):\n%s\n'
-            'Bundle digest: %s. Reply with exactly one JSON CapabilityCandidate '
-            '(no model_run_id field; host injects it). Every primitive_id must be listed. '
-            'target_opaque_id must be a device above.' % (
+            'Bundle digest: %s. Reply with exactly one JSON CapabilityCandidate. It must '
+            'contain EXACTLY these 10 keys and no others (the host adds model_run_id '
+            'afterwards): %s.\n'
+            'Each primitive_chain step is exactly {"primitive_id": <one of the Primitives '
+            'above>, "input": {<per the input schemas below>}}.\n'
+            'Input schemas:\n%s\n'
+            'Example shape (placeholders only, NOT the answer):\n%s' % (
                 PROMPT_VERSION, intent_text[:200], target_category, ','.join(sorted(primitive_ids)),
-                evidence_projection(bundle, target_category), S.digest(bundle)))
+                evidence_projection(bundle, target_category), S.digest(bundle), keys,
+                _input_schema_lines(primitive_ids), example))
 
 
 def validate_candidate(value, primitive_ids, bundle=None, schemas=None, sources=None):
