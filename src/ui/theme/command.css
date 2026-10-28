@@ -16,6 +16,11 @@
   color:var(--text);border-radius:var(--r-s);padding:10px 12px;font-size:15px;min-width:0;}
 .ask-composer input:focus{outline:none;border-color:var(--cyan);}
 .ask-suggest,.ask-recents{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0;}
+.ask-devices{margin:8px 0 0;}
+.ask-dev-head{display:flex;gap:8px;align-items:center;margin-bottom:4px;}
+.ask-dev-list{display:flex;flex-direction:column;gap:4px;}
+.ask-dev-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.ask-dev-text{font-size:13px;color:var(--text-2);flex:1;min-width:140px;}
 .ask-stages{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;}
 .ask-stages li{font-size:13px;color:var(--text-2);padding-left:22px;position:relative;}
 .ask-stages li::before{content:"";position:absolute;left:4px;top:7px;width:8px;height:8px;

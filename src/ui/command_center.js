@@ -132,6 +132,15 @@
     }
     root.append(sug);
 
+    const dev = el('div', undefined, 'ask-devices');
+    const devHead = el('div', undefined, 'ask-dev-head');
+    devHead.append(el('span', 'From devices', 'ask-label'));
+    const check = el('button', 'Check devices', 'ghost small');
+    check.type = 'button'; check.onclick = () => checkDevices();
+    devHead.append(check);
+    dev.append(devHead, el('div', undefined, 'ask-dev-list'));
+    root.append(dev);
+
     root.append(el('ol', undefined, 'ask-stages'));
     root.append(el('div', undefined, 'ask-result'));
     const rec = recentList();
@@ -163,6 +172,33 @@
     row.append(el('span', t(k), 'k'), el('span', String(v), 'v'));
     box.append(row);
   }
+  async function checkDevices() {
+    const list = root.querySelector('.ask-dev-list');
+    list.replaceChildren(el('span', '…', 'muted'));
+    try {
+      const data = await req('/api/v2/companion/commands?poll=1');
+      list.replaceChildren();
+      const items = (data && data.pending) || [];
+      if (!items.length) { list.append(el('span', 'No commands from devices.', 'muted')); return; }
+      for (const it of items.slice(0, 12)) {
+        const row = el('div', undefined, 'ask-dev-row');
+        const d = it.intent || {};
+        row.append(el('span', it.text || '', 'ask-dev-text'));
+        row.append(el('span', `${d.status || '?'}${d.skill_id ? ' · ' + d.skill_id : ''}`, 'tag'));
+        const load = el('button', 'Load', 'ghost small');
+        load.type = 'button';
+        load.onclick = () => {
+          const input = document.getElementById('ask-input');
+          if (input) { input.value = it.text || ''; input.focus(); }
+        };
+        row.append(load);
+        list.append(row);
+      }
+    } catch (e) {
+      list.replaceChildren(el('span', `${t('error')}: ${e.message}`, 'ask-error'));
+    }
+  }
+
   function recentList() {
     try { return JSON.parse(localStorage.getItem('ask-openbridge-recents') || '[]'); }
     catch { return []; }

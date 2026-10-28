@@ -22,7 +22,8 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/remote_controls', '/api/v2/skills', '
               '/api/v2/relays/samples',
               '/api/v2/catalog',
               '/api/v2/onboarding',
-              '/api/v2/command/tiers')
+              '/api/v2/command/tiers',
+              '/api/v2/companion/commands')
 POST_ROUTES = ('/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
 
 
@@ -108,6 +109,12 @@ def get(server, path, query):
     if path == '/api/v2/command/tiers':
         from src.runtime import command as cmd
         return 200, cmd.tiers(server)
+    if path == '/api/v2/companion/commands':
+        from src.runtime.companion_commands import companion_commands
+        cc = companion_commands(server)
+        if (q.get('poll') or [''])[0] == '1':
+            cc.poll_once()
+        return 200, {'pending': cc.list()}
     if path == '/api/v2/skills':
         from src.runtime.routing import SKILLS
         return 200, {'skills': [{'skill_id': k, 'plain': v['plain'], 'targeted': v['targeted'], 'reversibility': v['reversibility'],

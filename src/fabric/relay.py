@@ -14,8 +14,10 @@ import time
 
 PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
-              'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result')
+              'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
+              'get_commands', 'report_command')
 MAX_CONTROLS, MAX_REQUESTS = 12, 16
+MAX_COMMANDS, MAX_COMMAND_TEXT, MAX_COMMAND_REPORT = 8, 500, 160
 CONTROL_ID = re.compile(r'^[a-z0-9-]{4,40}$')
 REQUEST_ID = re.compile(r'^[0-9a-f]{32}$')
 MAX_SCAN_SECONDS = 15
@@ -55,6 +57,11 @@ def command(key, relay_id, op, params=None, now=None):
     if op == 'report_result':
         if set(params) - {'request_id', 'state', 'text'} or not REQUEST_ID.match(str(params.get('request_id', ''))) or len(str(params.get('text', ''))) > 80:
             raise RelayError('Malformed result report')
+    if op == 'report_command':
+        if set(params) - {'request_id', 'status', 'text'} or not REQUEST_ID.match(str(params.get('request_id', ''))) \
+                or params.get('status') not in ('resolved', 'needs_clarification', 'unsupported', 'escalation_required') \
+                or not isinstance(params.get('text'), str) or len(params['text']) > MAX_COMMAND_REPORT:
+            raise RelayError('Malformed command report')
     now = int(now if now is not None else time.time())
     msg = {'protocol': PROTOCOL, 'relay_id': relay_id, 'op': op, 'params': params, 'nonce': secrets.token_hex(12),
            'issued_at': now, 'expires_at': now + COMMAND_TTL}
@@ -137,6 +144,29 @@ def validate_requests(report, known_controls):
     return out
 
 
+def validate_commands(report):
+    """Typed NL commands from a relay are untrusted: bounded id, text, lang and quality only.
+    Malformed entries are dropped; an oversize list is refused outright. The PC parses
+    locally and never auto-approves or executes from this channel."""
+    cmds = report.get('commands')
+    if not isinstance(cmds, list) or len(cmds) > MAX_COMMANDS:
+        raise RelayError('Malformed command list')
+    out = []
+    for c in cmds:
+        if not isinstance(c, dict) or not REQUEST_ID.match(str(c.get('request_id', ''))):
+            continue
+        text = c.get('text')
+        if not isinstance(text, str) or not text.strip() or len(text) > MAX_COMMAND_TEXT:
+            continue
+        if c.get('lang') not in ('en', 'fr'):
+            continue
+        if c.get('quality') not in ('low', 'medium', 'high', 'auto'):
+            continue
+        out.append({'request_id': c['request_id'], 'text': text.strip(),
+                    'lang': c['lang'], 'quality': c['quality']})
+    return out
+
+
 class RelayManager:
     """Tracks enrolled relays and picks one per request strictly by granted capability."""
     def __init__(self, transport):
@@ -145,7 +175,7 @@ class RelayManager:
         self._lock = threading.Lock()
 
     def enroll(self, relay_id, key, device_key, declared):
-        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls')}
+        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls', 'command_submit')}
         self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
                                  'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
                                  'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}

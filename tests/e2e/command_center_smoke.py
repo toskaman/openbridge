@@ -44,6 +44,11 @@ def main():
                                                                  'estimate_usd': 0.0}))
                 page.route('**/api/v2/command/approve',
                            lambda r: r.fulfill(status=200, json=PREVIEW))
+                page.route('**/api/v2/companion/commands*',
+                           lambda r: r.fulfill(status=200, json={'pending': [
+                               {'request_id': 'c' * 32, 'relay_id': 'r-phone',
+                                'text': 'Start my vacuum', 'lang': 'en', 'intent': dict(
+                                    INTENT, skill_id='vacuum.start', outcome='start cleaning')}]}))
 
                 def on_execute(r):
                     seen['execute'] = r.request.post_data_json
@@ -57,6 +62,11 @@ def main():
                 body = panel.inner_text()
                 assert 'Envoyer' not in body and 'Qualité' not in body, 'UI must stay English'
                 assert 'llama3.2' in body and '~$0.10' in body
+                panel.get_by_role('button', name='Check devices').click()
+                expect(panel.get_by_text('Start my vacuum').first).to_be_visible()
+                expect(panel.get_by_text('resolved · vacuum.start')).to_be_visible()
+                panel.get_by_role('button', name='Load').click()
+                expect(page.locator('#ask-input')).to_have_value('Start my vacuum')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 if width == 1440:
                     page.locator('#ask-input').fill('Scan for bluetooth devices')

@@ -591,3 +591,132 @@ class CommandAPI(unittest.TestCase):
         srv = api_server()
         srv.fabric_registry = None
         self.assertEqual(post(srv, '/api/v2/command/approve', {'intent': vacuum_intent()})[0], 503)
+
+
+CMD_KEY = __import__('src.fabric.relay', fromlist=['derive_key']).derive_key('654321', 'rn', 'pn')
+
+
+def cmd_report(*cmds):
+    return {'commands': list(cmds)}
+
+
+def good_cmd(rid='a' * 32):
+    return {'request_id': rid, 'text': 'Start my vacuum', 'lang': 'en', 'quality': 'auto'}
+
+
+class FakeCmdCompanion:
+    """Mirrors RelayServer.java command ops: queues device-typed commands, shows reports."""
+
+    def __init__(self, key):
+        from src.fabric import relay as R
+        self.R, self.key, self.seen = R, key, {}
+        self.queue, self.reports = [], []
+
+    def type(self, text, lang='en', quality='auto', rid=None):
+        import secrets
+        rid = rid or secrets.token_hex(16)
+        self.queue.append({'request_id': rid, 'text': text, 'lang': lang, 'quality': quality})
+        return rid
+
+    def __call__(self, relay, message):
+        R = self.R
+        msg = R.verify(self.key, message, self.seen)
+        params = {}
+        if msg['op'] == 'get_commands':
+            params, self.queue = {'commands': self.queue}, []
+        elif msg['op'] == 'report_command':
+            self.reports.append(msg['params'])
+        import time
+        t = int(time.time())
+        reply = {'protocol': R.PROTOCOL, 'relay_id': msg['relay_id'], 'op': 'reply', 'params': params,
+                 'nonce': 'r' + msg['nonce'], 'issued_at': t, 'expires_at': t + 30}
+        return {**reply, 'mac': R.sign(self.key, reply)}
+
+
+def cmd_server(companion=None, caps=('command_submit',)):
+    from types import SimpleNamespace
+    srv = api_server()
+    comp = companion or FakeCmdCompanion(CMD_KEY)
+    srv.relays = SimpleNamespace(relays={'r-phone': {'key': CMD_KEY, 'capabilities': list(caps),
+                                                     'online': True, 'busy': False,
+                                                     'send': comp, 'seen': {}}})
+    return srv, comp
+
+
+class CompanionChannel(unittest.TestCase):
+    def test_validate_commands_accepts_and_drops(self):
+        from src.fabric.relay import validate_commands
+        bad_id = dict(good_cmd(), request_id='zzz')
+        long_text = dict(good_cmd('b' * 32), text='x' * 501)
+        out = validate_commands(cmd_report(good_cmd(), bad_id, long_text, 'junk'))
+        self.assertEqual([c['request_id'] for c in out], ['a' * 32])
+
+    def test_validate_commands_rejects_oversize_list(self):
+        from src.fabric.relay import validate_commands, RelayError
+        with self.assertRaises(RelayError):
+            validate_commands(cmd_report(*[good_cmd('%032x' % i) for i in range(9)]))
+
+    def test_report_command_params_validated(self):
+        from src.fabric.relay import command, RelayError
+        command(CMD_KEY, 'r-phone', 'report_command',
+                {'request_id': 'a' * 32, 'status': 'resolved', 'text': 'ok'})
+        with self.assertRaises(RelayError):
+            command(CMD_KEY, 'r-phone', 'report_command',
+                    {'request_id': 'bad', 'status': 'resolved', 'text': 'ok'})
+        with self.assertRaises(RelayError):
+            command(CMD_KEY, 'r-phone', 'report_command',
+                    {'request_id': 'a' * 32, 'status': 'resolved', 'text': 'x' * 161})
+
+    def test_poll_collects_parses_and_reports_local_only(self):
+        from src.runtime.companion_commands import CompanionCommands
+        srv, comp = cmd_server()
+        rid = comp.type('Start my vacuum')
+        cc = CompanionCommands(srv, low=FakeTransport(good_reply()), medium=FakeTransport(good_reply()))
+        self.assertEqual(cc.poll_once(), 1)
+        self.assertEqual(cc.pending[rid]['intent']['status'], 'resolved')
+        self.assertEqual(cc.pending[rid]['intent']['provenance']['parser'], 'local')
+        self.assertEqual(len(comp.reports), 1)
+        self.assertEqual(comp.reports[0]['request_id'], rid)
+
+    def test_duplicate_request_ignored(self):
+        from src.runtime.companion_commands import CompanionCommands
+        srv, comp = cmd_server()
+        local = FakeTransport(good_reply())
+        cc = CompanionCommands(srv, low=local, medium=local)
+        rid = comp.type('Start my vacuum')
+        cc.poll_once()
+        comp.queue.append(dict(good_cmd(rid), text='Start my vacuum'))
+        cc.poll_once()
+        self.assertEqual(len(cc.pending), 1)
+        self.assertEqual(len(local.calls), 1)
+
+    def test_relay_without_capability_skipped(self):
+        from src.runtime.companion_commands import CompanionCommands
+        srv, comp = cmd_server(caps=('ble_scan',))
+        comp.type('Start my vacuum')
+        cc = CompanionCommands(srv, low=FakeTransport(good_reply()), medium=FakeTransport(good_reply()))
+        self.assertEqual(cc.poll_once(), 0)
+        self.assertEqual(cc.pending, {})
+
+    def test_pending_bounded_fifo(self):
+        from src.runtime.companion_commands import CompanionCommands, MAX_PENDING
+        srv, comp = cmd_server()
+        cc = CompanionCommands(srv, low=FakeTransport(good_reply()), medium=FakeTransport(good_reply()))
+        first = comp.type('cmd one')
+        cc.poll_once()
+        for i in range(MAX_PENDING + 5):
+            comp.type(f'cmd {i}')
+            cc.poll_once()
+        self.assertEqual(len(cc.pending), MAX_PENDING)
+        self.assertNotIn(first, cc.pending)
+
+    def test_api_lists_and_polls(self):
+        from src.runtime.api_v2 import get
+        srv, comp = cmd_server()
+        comp.type('Start my vacuum')
+        status, body = get(srv, '/api/v2/companion/commands', 'poll=1')
+        self.assertEqual(status, 200)
+        self.assertEqual(len(body['pending']), 1)
+        self.assertEqual(body['pending'][0]['intent']['skill_id'], 'vacuum.start')
+        status, body = get(srv, '/api/v2/companion/commands', '')
+        self.assertEqual(len(body['pending']), 1)
