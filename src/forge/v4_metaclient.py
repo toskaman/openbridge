@@ -71,6 +71,19 @@ def ollama_transport(endpoint, model, json_mode=True, urlopen=None, pinned_model
     return call
 
 
+def transport_from_broker(broker, json_mode=True, urlopen=None):
+    """Runtime wiring: only a digest-provisioned broker yields a transport.
+
+    ready() verifies the pinned (model id, weight digest) against the live
+    Ollama catalog; the transport then pins that id for echo checks. Raises
+    ValueError while unprovisioned — never returns an unchecked transport.
+    """
+    if not broker.ready():
+        raise ValueError('broker model not provisioned (digest mismatch or unavailable)')
+    return ollama_transport(broker.endpoint, broker.model_id, json_mode, urlopen,
+                            pinned_models={broker.model_id})
+
+
 class RulesPlanner:
     """Deterministic ablation baseline: same task, no model. Never scored as Meta-created."""
 

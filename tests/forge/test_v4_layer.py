@@ -140,6 +140,24 @@ class MetaClient(unittest.TestCase):
         with self.assertRaises(ValueError):
             M.ollama_transport('http://x:11437', '')
 
+    def test_transport_from_broker_requires_provisioning(self):
+        import io, json
+        from src.ai.local_meta import LocalMetaBroker, MODEL_DIGEST
+
+        class Resp(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        good = LocalMetaBroker(catalog=lambda: {'models': [{'name': 'mid', 'digest': 'sha256:' + MODEL_DIGEST}]})
+        good.model_id = 'mid'
+        with self.assertRaises(ValueError):
+            M.transport_from_broker(LocalMetaBroker(catalog=lambda: {'models': []}))
+        t = M.transport_from_broker(good, urlopen=lambda req, timeout=None: Resp(
+            json.dumps({'model': 'mid', 'message': {'content': '{}'}}).encode()))
+        ok, body = t('hi', {})
+        self.assertTrue(ok)
+        self.assertEqual(body['provisioning'], 'broker-pinned')
+
     def test_ollama_transport_broker_pins(self):
         import io, json
 
