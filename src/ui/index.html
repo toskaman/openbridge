@@ -8,6 +8,7 @@
 <link href="/style.css" rel="stylesheet"/>
 <script defer src="/app.js"></script>
 <script defer src="/shell.js"></script>
+<script defer src="/command_center.js"></script>
 </head>
 <body class="ob-app">
 <svg aria-hidden="true" class="sprite" width="0" height="0">
@@ -49,6 +50,7 @@
       <a href="#/activity" data-nav="activity"><svg aria-hidden="true"><use href="#i-activity"/></svg><span>Activity &amp; Recovery</span></a>
     </nav>
     <div class="nav-secondary">
+      <button type="button" id="ask-nav"><svg aria-hidden="true"><use href="#i-meta"/></svg>Ask OpenBridge</button>
       <button type="button" data-action="assistant"><svg aria-hidden="true"><use href="#i-meta"/></svg>Meta AI Assistant</button>
       <a href="#/advanced" data-nav="advanced"><svg aria-hidden="true"><use href="#i-gear"/></svg><span>Advanced diagnostics</span></a>
     </div>
@@ -81,6 +83,9 @@
           </div>
           <div class="hero-graph" id="home-mini-graph" aria-hidden="true"></div>
         </div>
+        <section class="panel ask-panel" id="ask-openbridge" aria-labelledby="ask-title">
+          <div id="ask-root"></div>
+        </section>
         <div class="stats" id="home-stats" aria-live="polite"></div>
         <div class="home-grid">
           <section class="panel" aria-labelledby="home-devices-title">

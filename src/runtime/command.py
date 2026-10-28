@@ -1,0 +1,211 @@
+"""Command Center P0: approve/execute service over resolved intents.
+
+approve() previews without dispatching (B2: read-only skill_routes; direct
+primitives: contract + target validation only). execute() requires fresh
+consent, re-resolves targets (a revocation between approve and execute blocks),
+and dispatches exactly once through the existing Router/Executor. P0 handles
+one device per command; groups arrive later.
+"""
+from src.runtime import intent as I
+from src.runtime import skills as S
+
+
+class CommandError(Exception):
+    def __init__(self, status, message):
+        super().__init__(message)
+        self.status = status
+
+
+def resolve_targets(targets, devices):
+    keys = []
+    for t in targets or []:
+        ref = (t.get('ref') or '').strip().lower()
+        if not ref:
+            raise CommandError(400, 'empty target ref')
+        hits = set()
+        for k, d in devices.items():
+            if ref == k.lower() or ref == (d.get('label') or '').strip().lower():
+                hits.add(k)
+            elif ref == (d.get('category') or '').strip().lower():
+                hits.add(k)
+        if not hits:
+            raise CommandError(404, f'no authorized device matches {t.get("ref")!r}')
+        if len(hits) > 1:
+            raise CommandError(409, f'ambiguous target {t.get("ref")!r}: {len(hits)} devices match')
+        keys.append(next(iter(hits)))
+    return keys
+
+
+def _devices(server):
+    reg = getattr(server, 'fabric_registry', None)
+    devs = getattr(reg, 'devices', None)
+    if not isinstance(devs, dict):
+        raise CommandError(503, 'device registry unavailable (run discovery first)')
+    return devs
+
+
+def _low(server):
+    t = getattr(server, 'command_low', None)
+    if t is None:
+        from src.ai.local_meta import MODEL_DIGEST
+        from src.runtime.nl_router import OllamaIntentTransport, TIERS
+        model, endpoint = TIERS['low']
+        t = server.command_low = OllamaIntentTransport(model, endpoint, digest=MODEL_DIGEST)
+    return t
+
+
+def _medium(server):
+    t = getattr(server, 'command_medium', None)
+    if t is None:
+        from src.ai.glimmer import GLIMMER_DIGEST
+        from src.runtime.nl_router import OllamaIntentTransport, TIERS
+        model, endpoint = TIERS['medium']
+        t = server.command_medium = OllamaIntentTransport(model, endpoint, digest=GLIMMER_DIGEST)
+    return t
+
+
+def _broker(server):
+    b = getattr(server, 'model_broker', None)
+    if b is None or not callable(getattr(b, 'transport', None)):
+        return None
+    if not hasattr(b, 'permit') or not hasattr(b, 'budget_path'):
+        return None
+    return b
+
+
+def _cloud(server):
+    t = getattr(server, 'command_cloud', None)
+    if t is None:
+        b = _broker(server)
+        if b is None:
+            return None
+        from src.runtime.nl_router import CloudIntentTransport, TIERS
+        model, endpoint = TIERS['high']
+        t = server.command_cloud = CloudIntentTransport(model, endpoint, b.transport)
+    return t
+
+
+def tiers(server):
+    from src.runtime.nl_router import TIERS
+    from src.runtime.cost_guard import estimate_usd
+    out = {}
+    for quality, get in (('low', _low), ('medium', _medium)):
+        model, endpoint = TIERS[quality]
+        try:
+            ready = bool(get(server).ready())
+        except Exception:
+            ready = False
+        out[quality] = {'model': model, 'endpoint': endpoint, 'ready': ready,
+                        'estimate_usd': estimate_usd(quality)}
+    model, endpoint = TIERS['high']
+    out['high'] = {'model': model, 'endpoint': endpoint,
+                   'configured': _broker(server) is not None,
+                   'enabled': getattr(server, 'command_cloud_enabled', True) is True,
+                   'estimate_usd': estimate_usd('high')}
+    return out
+
+
+def parse_request(server, body):
+    from src.ai.broker import RESERVATION_MICRO_USD
+    from src.runtime import cost_guard as C
+    from src.runtime import nl_router as N
+    if not isinstance(body, dict):
+        raise CommandError(400, 'request body must be an object')
+    text = body.get('text')
+    if not isinstance(text, str) or not text.strip() or len(text) > 2000:
+        raise CommandError(400, 'text must be 1..2000 characters')
+    lang = body.get('lang', 'en')
+    quality = body.get('quality', 'auto')
+    consent = body.get('cloud_consent', False)
+    if lang not in I.LANGS:
+        raise CommandError(400, f'lang must be one of {I.LANGS}')
+    if quality not in ('low', 'medium', 'high', 'auto'):
+        raise CommandError(400, 'quality must be low|medium|high|auto')
+    enabled = getattr(server, 'command_cloud_enabled', True) is True
+    if quality == 'high':
+        try:
+            C.require_cloud(consent, enabled)
+        except C.CostBlocked as e:
+            raise CommandError(409, str(e)) from None
+        if _broker(server) is None:
+            raise CommandError(409, 'cloud is not configured on this server')
+    cloud = _cloud(server)
+
+    def gate():
+        C.require_cloud(consent, enabled)
+        b = _broker(server)
+        if b is None:
+            raise C.CostBlocked('cloud is not configured on this server')
+        permit = b.permit
+        ceiling = min(int(permit.session_budget_usd * 1_000_000),
+                      int((permit.free_balance_usd - 1) * 1_000_000))
+        C.check_budget(str(b.budget_path), permit.observation_id, ceiling, RESERVATION_MICRO_USD)
+        C.reserve(str(b.budget_path), permit.observation_id, RESERVATION_MICRO_USD)
+
+    doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
+                  cloud_allowed=consent is True and enabled and cloud is not None,
+                  before_cloud=gate if quality in ('high', 'auto') else None)
+    out = {'intent': doc, 'cloud_used': doc['provenance']['parser'] == 'cloud',
+           'estimate_usd': C.estimate_usd(quality) if quality != 'auto'
+           else (C.estimate_usd('high') if doc['provenance']['parser'] == 'cloud' else 0.0)}
+    if out['cloud_used'] and getattr(cloud, 'last_usage', None):
+        out['usage'] = cloud.last_usage
+    return out
+
+
+def approve(server, doc):
+    from src.runtime.api_v2 import router
+    if I.validate_intent(doc) or doc.get('status') != 'resolved':
+        raise CommandError(400, 'only a valid resolved intent can be approved')
+    try:
+        solved = S.resolve(doc['skill_id'], doc.get('params') or {})
+    except S.SkillError as e:
+        raise CommandError(400, str(e)) from None
+    keys = resolve_targets(doc.get('targets'), _devices(server))
+    if len(keys) != 1:
+        raise CommandError(409, 'P0 executes one device per command')
+    prev = {'skill_id': doc['skill_id'], 'primitive_id': solved['primitive_id'],
+            'params': solved['params'], 'device_keys': keys,
+            'risk_level': solved['risk_level'],
+            'verification': solved['verification'],
+            'consent_required': True}
+    if solved['primitive_id'].startswith('b2:'):
+        from src.runtime.routing import RouteError, SKILLS
+        skill = doc['skill_id']
+        target = keys[0] if SKILLS[skill]['targeted'] else None
+        try:
+            routes = router(server).skill_routes(skill, target)
+        except RouteError as e:
+            raise CommandError(e.status, str(e)) from None
+        prev['route'] = {'selected_route_id': routes.get('selected_route_id'),
+                         'rule': (routes.get('selection') or {}).get('rule'),
+                         'states': [(r['route_id'], r['state'], r['reason'])
+                                    for r in routes.get('routes', [])]}
+        if not routes.get('selected_route_id'):
+            raise CommandError(409, 'no READY route for this skill')
+    return prev
+
+
+def execute(server, doc, consent=False):
+    from src.runtime.api_v2 import router, executor
+    if consent is not True:
+        raise CommandError(400, 'fresh consent is required to execute')
+    prev = approve(server, doc)   # re-resolves everything; revocations block here
+    if prev['primitive_id'].startswith('b2:'):
+        from src.runtime.routing import RouteError, SKILLS
+        r = router(server)
+        skill = doc['skill_id']
+        target = prev['device_keys'][0] if SKILLS[skill]['targeted'] else None
+        try:
+            lease = r.arm({'skill_id': skill, 'target': target,
+                           'route_id': prev['route']['selected_route_id'],
+                           'params': prev['params'], 'consent': True})
+            body = {k: lease[k] for k in ('invocation_id', 'route_id', 'lease_id', 'graph_revision')}
+            body.update(skill_id=skill, params=prev['params'], consent=True)
+            if target is not None:
+                body['target'] = target
+            return r.invoke(body)
+        except RouteError as e:
+            raise CommandError(e.status, str(e)) from None
+    return executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
+                                    prev['params'], True)
