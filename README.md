@@ -14,6 +14,10 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 *Ask OpenBridge: type a request in English or French; tiered Meta-only routing (free local Llama/Glimmer, cloud Spark only with explicit consent) resolves it to a registered skill, shows a fingerprint-bound preview, and executes only after owner approval. Local tiers verified live; cloud path unit-tested, broker unconfigured in this capture.*
 
+![Companion 0.4.0 on a real phone: typed command parsed on the PC, outcome reported back](docs/jury/screens/companion-ask-phone.png)
+
+*Companion 0.4.0 on a real phone (28 Oct 2026): the owner types "Send my vacuum to the dock", the PC parses it with local Llama over the signed relay channel, and the outcome — "vacuum.dock ready — review on this PC" — is reported back on the phone. The phone never executes; approval happens on the PC.*
+
 ## The problem
 Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) behind different permission screens. Tools either see one transport at a time or ask for broad control. Owners cannot tell what is really connected, what each device can do, and whether a change can be undone.
 
@@ -41,7 +45,7 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 | TV-to-phone BLE failover on hardware (TV scan VERIFIED → link_down → phone scan VERIFIED, dedup + consent-void proofs) | [Complete handover](docs/release/COMPLETE_HANDOVER.md) |
 | Watch hold → single TV action with independent read-back and revocation | [Watch acceptance](docs/release/WATCH_CONTROL_ACCEPTANCE.md) (2-tap/16-action root cause unproven; dup/expiry hardware proof pending) |
 | Frozen synthetic routing evaluation: router 32/32, full baselines, Spark pre-run design review | [Results](docs/evaluation/routing-v1/RESULTS.md) (no model-advantage claim) |
-| Ask OpenBridge NL → skill resolution (local Llama parse, tiered routing, fingerprint-bound approve/execute) | Scratch-verified + fixtures e2e this branch; cloud path unit-tested only |
+| Ask OpenBridge NL → skill resolution (local Llama parse, tiered routing, fingerprint-bound approve/execute) | Live-verified on 18765 (real parse/approve/execute, incl. fabric.status READ of 3 devices) + phone→PC→phone signed loop + fixtures e2e; cloud path unit-tested only |
 
 Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDWARE_TEST_MATRIX.md), [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md).
 
