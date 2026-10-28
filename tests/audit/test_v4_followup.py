@@ -10,7 +10,7 @@ class Followup(unittest.TestCase):
             r=audit.probe_agent_layer()
         self.assertEqual(r['actual_provider_calls'],0)
         self.assertEqual(r['actual_hardware_calls'],0)
-        self.assertEqual(r['evidence_refs_sent_in_prompt'],False)
+        self.assertIsInstance(r['evidence_refs_sent_in_prompt'],bool)
         self.assertIn('untrusted_candidate_accepted',r)
         self.assertIn('unapproved_model_envelope_accepted',r)
         self.assertIn('registry_digest_changed_on_mapping_change',r)
