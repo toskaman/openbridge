@@ -92,6 +92,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         final android.os.Handler h = new android.os.Handler(getMainLooper());
         h.postDelayed(new Runnable() { @Override public void run() {
             String s = relay.expirePending(); if (s != null) resultText.setText(s);
+            renderBusy();
             if (!isFinishing()) h.postDelayed(this, 5000);
         } }, 5000);
         if (!getSharedPreferences("ui", MODE_PRIVATE).getBoolean("setup_offered", false)) {
@@ -213,6 +214,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                 org.json.JSONObject o = c.optJSONObject(i); if (o == null) continue;
                 String id = o.optString("control_id");
                 Button b = button(o.optString("label"), i == 0);
+                b.setTag(new String[]{id, o.optString("label")});
                 // Hold to send: a tap does nothing, so stray or phantom touches (watch off the wrist) never send a command.
                 final org.json.JSONObject[] down = new org.json.JSONObject[1];
                 b.setOnTouchListener((v, e) -> {
@@ -229,6 +231,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                     down[0] = null;
                     String s = relay.press(id, touch == null ? "key" : "long_press", touch);
                     if (s != null) resultText.setText(s);
+                    renderBusy();                                   // feedback on the button itself: "Sending…", disabled
                     return true;
                 });
                 controlsBox.addView(b); controlsBox.addView(spacer(8));
@@ -236,7 +239,17 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             controlsCard.setVisibility(c.length() > 0 ? View.VISIBLE : View.GONE);
         });
     }
-    @Override public void result(String text) { runOnUiThread(() -> resultText.setText(text)); }
+    @Override public void result(String text) { runOnUiThread(() -> { resultText.setText(text); renderBusy(); }); }
+
+    /** One press in flight per control: the button shows "Sending…" and ignores presses until the PC answers or 20 s pass. */
+    private void renderBusy() {
+        for (int i = 0; i < controlsBox.getChildCount(); i++) {
+            View v = controlsBox.getChildAt(i);
+            if (!(v instanceof Button) || !(v.getTag() instanceof String[])) continue;
+            String[] tag = (String[]) v.getTag(); boolean busy = relay.busy(tag[0]);
+            ((Button) v).setText(busy ? "Sending…" : tag[1]); v.setEnabled(!busy);
+        }
+    }
 
     @Override public void status(String text) { runOnUiThread(() -> { status.setText(text); refresh(); }); }
     @Override public void code(String c) {

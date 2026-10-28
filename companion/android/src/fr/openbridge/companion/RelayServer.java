@@ -48,13 +48,21 @@ final class RelayServer {
     static final long PENDING_TIMEOUT_MS = 20_000;
     /** request_id -> time the PC fetched it. Cleared by the PC's signed result; never re-sent (at-most-once). */
     private final java.util.Map<String, Long> pending = new java.util.HashMap<>();
+    /** request_id -> control_id for requests fetched by the PC and not yet answered. */
+    private final java.util.Map<String, String> pendingControls = new java.util.HashMap<>();
+    boolean busy(String controlId) {
+        synchronized (requests) {
+            for (JSONObject q : requests) if (controlId.equals(q.optString("control_id"))) return true;
+            return pendingControls.containsValue(controlId);
+        }
+    }
 
     /** Called by the UI timer: a fetched request without a result in time is shown as unconfirmed, never re-sent. */
     String expirePending() {
         long now = System.currentTimeMillis(); int n = 0;
         synchronized (requests) {
             java.util.Iterator<java.util.Map.Entry<String, Long>> it = pending.entrySet().iterator();
-            while (it.hasNext()) { if (now - it.next().getValue() > PENDING_TIMEOUT_MS) { it.remove(); n++; } }
+            while (it.hasNext()) { java.util.Map.Entry<String, Long> e = it.next(); if (now - e.getValue() > PENDING_TIMEOUT_MS) { pendingControls.remove(e.getKey()); it.remove(); n++; } }
         }
         return n == 0 ? null : "Not confirmed by your PC. Check the device before pressing again.";
     }
@@ -116,6 +124,8 @@ final class RelayServer {
             for (int i = 0; i < cs.length(); i++) if (cs.optJSONObject(i) != null && controlId.equals(cs.optJSONObject(i).optString("control_id"))) known = true;
             if (!known) return "This control is no longer authorized";
             if (requests.size() >= MAX_QUEUE) return "Too many pending requests; wait for the PC";
+            for (JSONObject q : requests) if (controlId.equals(q.optString("control_id"))) return "Already sending…";
+            if (pendingControls.containsValue(controlId)) return "Already sending…";   // one press in flight per control
             lastPress = now;
             long seq = prefs.getLong("press_seq", 0) + 1; prefs.edit().putLong("press_seq", seq).apply();
             try {
@@ -239,7 +249,7 @@ final class RelayServer {
                     if (!id.matches("[a-z0-9-]{4,40}") || label.isEmpty() || label.length() > 40) throw new SecurityException("bounds");
                     clean.put(new JSONObject().put("control_id", id).put("label", label));
                 }
-                synchronized (requests) { controls = clean; requests.clear(); pending.clear(); }
+                synchronized (requests) { controls = clean; requests.clear(); pending.clear(); pendingControls.clear(); }
                 prefs.edit().putString("controls", clean.toString()).apply();
                 ui.controls(clean); break;
             }
@@ -247,14 +257,14 @@ final class RelayServer {
                 JSONArray out = new JSONArray();
                 long now = System.currentTimeMillis();
                 synchronized (requests) {
-                    while (!requests.isEmpty()) { JSONObject r = requests.poll(); out.put(r); pending.put(r.getString("request_id"), now); }
+                    while (!requests.isEmpty()) { JSONObject r = requests.poll(); out.put(r); pending.put(r.getString("request_id"), now); pendingControls.put(r.getString("request_id"), r.optString("control_id")); }
                 }
                 params.put("requests", out); break;
             }
             case "report_result": {
                 JSONObject p = cmd.getJSONObject("params");
                 String text = p.optString("text", "");
-                synchronized (requests) { if (pending.remove(p.optString("request_id")) == null) break; }   // unknown or late: ignored
+                synchronized (requests) { pendingControls.remove(p.optString("request_id")); if (pending.remove(p.optString("request_id")) == null) break; }   // unknown or late: ignored
                 ui.result(text.length() > 80 ? text.substring(0, 80) : text); break;
             }
             case "revoke_access": unpair(); break;
