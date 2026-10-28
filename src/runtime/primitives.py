@@ -204,6 +204,34 @@ class Executor:
         self._receipt_order = deque()
         self._acknowledged = set()     # unresolved transactions the owner checked and acknowledged (outcome stays unverified)
         self._admitted = 0             # potentially changing operations admitted but not yet recorded
+        from src.runtime.state_store import StateStore
+        self._store = StateStore.for_server(ctx)
+        self._restore()
+
+    # ---------- durable recovery backlog ----------
+    def _restore(self):
+        """Unresolved outcomes from a previous run stay in recovery after a restart (B1 backlog, now durable)."""
+        if self._store is None:
+            return
+        for row in self._store.load().get('unresolved', []) if isinstance(self._store.load().get('unresolved'), list) else []:
+            try:
+                r = TransactionReceipt(**{k: row[k] for k in ('transaction_id', 'primitive_id', 'device_key', 'state', 'before', 'after',
+                                                             'verified', 'started_at', 'finished_at')}, errors=tuple(row.get('errors') or ()))
+            except (KeyError, TypeError):
+                continue
+            if r.primitive_id in PRIMITIVES and r.state in self.UNRESOLVED:
+                self.receipts[r.transaction_id] = r
+                self._receipt_order.append(r.transaction_id)
+
+    def _persist(self):
+        if self._store is None:
+            return
+        with self._guard:
+            rows = [dict(to_json(self.receipts[t]), errors=list(self.receipts[t].errors)) for t in list(self.receipts) if self._needs_recovery(t)]
+        try:
+            self._store.update(unresolved=rows)
+        except OSError:
+            pass                        # durability is best effort; the in-memory backlog still enforces admission
 
     # ---------- events ----------
     def emit(self, kind, **data):
@@ -641,6 +669,7 @@ class Executor:
                 return False
             self._acknowledged.add(tx)
         self.emit('acknowledged', transaction_id=tx)
+        self._persist()
         return True
 
     # ---------- entry point ----------
@@ -666,6 +695,8 @@ class Executor:
                     self.receipts.pop(victim, None)
                     self._acknowledged.discard(victim)
             self.emit('receipt', transaction_id=tx, primitive_id=primitive_id, state=state, verified=verified)
+            if state in self.UNRESOLVED:
+                self._persist()
             return dict(to_json(r), result=result or {})
         try:
             if p is None:

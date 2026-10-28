@@ -75,6 +75,14 @@ class Router:
         self.ledger = rc.InvocationLedger()
         self.completed = {}          # (actor, invocation_id) -> (binding, request fingerprint, finished)
         self._lock = threading.RLock()
+        from src.runtime.state_store import StateStore
+        self._store = StateStore.for_server(server)
+        saved = self._store.load().get('policies') if self._store else None
+        for sid, pol in (saved.items() if isinstance(saved, dict) else ()):
+            if sid in SKILLS and isinstance(pol, dict) and pol.get('mode') in ('PINNED', 'PREFERRED', 'AUTO') \
+                    and pol.get('failover') in ('none', 'idempotent_read_retry'):
+                self.policies[sid] = {'mode': pol['mode'], 'failover': pol['failover'], 'pinned_route_id': pol.get('pinned_route_id'),
+                                      'preferred': [x for x in pol.get('preferred') or [] if isinstance(x, str)][:32], 'set_by': 'owner'}
 
     # ---------- inputs ----------
     def _ex(self):
@@ -339,6 +347,11 @@ class Router:
             for k in [k for k in self.invocations if k[0] == skill_id and self.invocations[k]['status'] == 'armed']:
                 self.invocations.pop(k)                  # a policy change voids armed consent
         self._ex().emit('skill_policy', skill_id=skill_id, mode=mode)
+        if self._store is not None:
+            try:
+                self._store.update(policies=self.policies)
+            except OSError:
+                pass
         return self.policies[skill_id]
 
     # ---------- arm + invoke ----------
