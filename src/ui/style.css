@@ -176,7 +176,7 @@ th{color:var(--muted);font-weight:500;font-size:12px}
 .search-field{display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:0 10px;flex:1;min-width:200px;max-width:380px}
 .search-field input{border:0;background:transparent;box-shadow:none;width:100%}
 .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line-2);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
-.seg-btn{background:transparent;color:var(--text-2);border:0;min-height:28px;padding:5px 10px;font-weight:500;font-size:12px}
+.seg-btn{white-space:nowrap;background:transparent;color:var(--text-2);border:0;min-height:28px;padding:5px 10px;font-weight:500;font-size:12px}
 .seg-btn:hover{background:var(--surface-2);filter:none}
 .seg-btn.active{background:var(--surface-3);color:var(--text);box-shadow:0 0 0 1px var(--line-2) inset}
 .report.fabric{background:none;border:0;box-shadow:none;padding:0}
@@ -411,6 +411,7 @@ dialog::backdrop{background:rgba(3,6,14,.7);backdrop-filter:blur(4px)}
 .watch-panel{display:none}
 
 /* ---------- responsive ---------- */
+@media (min-width:2200px){#view{max-width:1880px}.device-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}}
 @media (max-width:1280px){.devices-layout{grid-template-columns:minmax(0,1fr) 360px}.home-grid{grid-template-columns:1fr}.graph-layout{grid-template-columns:1fr}}
 @media (max-width:1100px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.auto-grid,.activity-grid{grid-template-columns:1fr}.auto-grid>.panel:first-child{grid-row:auto}}
 @media (max-width:960px){

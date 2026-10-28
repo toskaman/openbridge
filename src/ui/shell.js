@@ -105,7 +105,7 @@
     for (const k of list) {
       const n = k.providers.length;
       k.lifecycle = k.experimental ? 'Experimental' : k.verifiedEver ? 'Verified' : 'Discovered';
-      k.availability = !st.snap && !k.always ? 'Offline' : k.needs ? 'Needs a step' : k.route && n && !k.readyIf ? 'Needs a step' : n ? 'Ready' : 'Offline';
+      k.availability = !st.snap && !k.always ? 'Not checked yet' : k.needs ? 'Needs a step' : k.route && n && !k.readyIf ? 'Needs a step' : n ? 'Ready' : 'Offline';
       if (k.route) k.routeNote = st.routes.length ? `${fresh} of ${st.routes.length} relay route(s) fresh` : n ? 'Pair a relay in this session to measure route health' : 'No relay-capable device found';
     }
     return list;
@@ -200,7 +200,7 @@
   function renderInsights() {
     const box = $('#home-insights'); box.replaceChildren();
     if (!st.snap) { box.append(h('p', { class: 'muted', text: 'Insights appear after discovery. Each one states whether it is an observation or an inference, and what it rests on.' })); return; }
-    const NICE = { ble_via_relay_possible: 'This PC has no Bluetooth, but relay-capable devices can scan for it.', ble_unreachable: 'No Bluetooth path: no local adapter and no relay-capable device.', relay_routes_degraded: 'A Bluetooth relay is offline or has not scanned recently.', blocked_capabilities: 'Some capabilities are blocked by policy or missing permission.', possible_duplicates: 'Some devices may be the same hardware seen twice (not merged).', pending_transactions: 'An operation ended without verification — check Recovery.' };
+    const NICE = { ble_via_relay_possible: 'This PC has no Bluetooth, but relay-capable devices can scan for it.', ble_unreachable: 'No Bluetooth path: no local adapter and no relay-capable device.', relay_routes_degraded: 'A Bluetooth relay is offline or has not scanned recently.', blocked_capabilities: 'Some capabilities are blocked by policy or missing permission.', possible_duplicates: 'Some devices may be the same hardware seen twice (not merged).', pending_transactions: 'An operation ended without verification — check Recovery.', graph: 'The server has no discovery result to reason about yet — run discovery.' };
     const items = st.diagnosis.filter(f => f.kind === 'INFERRED' || f.level === 'warning').slice(0, 4);
     if (!items.length) box.append(h('p', { class: 'muted', text: 'No warnings from the current graph.' }));
     for (const f of items) box.append(h('div', { class: 'insight ' + (f.level === 'warning' ? 'warn' : '') }, h('span', { class: 'kind ' + f.kind.toLowerCase(), text: f.kind === 'INFERRED' ? 'Inference' : 'Observation' }), h('p', { text: NICE[f.name] || `${f.name.replace(/_/g, ' ')}: ${f.value}` }), f.basis ? h('small', { text: 'Based on: ' + f.basis }) : null));
@@ -326,7 +326,7 @@
     for (const k of skills()) {
       const card = h('article', { class: 'skill' },
         h('div', { class: 'skill-top' }, h('span', { class: 'sicon' }, icon(k.icon)), h('div', {}, h('h3', { text: k.name }), h('p', { text: k.plain }))),
-        h('div', { class: 'badges' }, h('span', { class: 'pill ' + (k.lifecycle === 'Verified' ? 'available' : 'planned'), text: k.lifecycle }), h('span', { class: 'pill ' + (k.availability === 'Ready' ? 'available' : k.availability === 'Offline' ? 'detected' : 'permission'), text: k.availability })),
+        h('div', { class: 'badges' }, h('span', { class: 'pill ' + (k.lifecycle === 'Verified' ? 'available' : 'planned'), text: k.lifecycle }), h('span', { class: 'pill ' + (k.availability === 'Ready' ? 'available' : (k.availability === 'Offline' || k.availability === 'Not checked yet') ? 'detected' : 'permission'), text: k.availability })),
         h('dl', {},
           h('dt', { text: 'Provided by' }), h('dd', {}, k.providers.length ? k.providers.map(p => h('button', { class: 'chip link', type: 'button', onclick: () => p.key === 'pc' ? null : go('devices', p.key) }, p.label === 'This PC' || p.key === 'pc' ? p.label : label(p))) : h('span', { class: 'muted', text: 'No provider in the current graph' })),
           h('dt', { text: 'Used by' }), h('dd', { text: k.consumers.join(', ') }),
@@ -705,6 +705,7 @@
   function toast(text, cls) { const t = h('div', { class: 'toast ' + (cls || ''), role: 'status', text }); $('#toasts').append(t); setTimeout(() => t.remove(), 5200); }
   new MutationObserver(() => { const t = $('#status').textContent.trim(); $('#status').classList.toggle('bad', /blocked|failed|error|refused/i.test(t)); }).observe($('#status'), { childList: true, characterData: true, subtree: true });
 
+  { const voice = $('.voice-panel'); if (voice) $('#assistant-voice').append(voice); }
   // ---------------- menu ----------------
   function closeMenu() { $('#sidebar').classList.remove('open'); $('.menu-toggle').setAttribute('aria-expanded', 'false'); }
 
