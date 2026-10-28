@@ -31,6 +31,8 @@ The current v4 adapter uses mutual HMAC challenge-response and session-MAC envel
 
 ## Physical routing and remote-control follow-up
 
-- The 28 October two-relay rerun verified the TV scan, TV-loss refusal, phone route selection and PINNED refusal. The fresh phone scan remained blocked; Bluetooth was on before the run and off afterward. [Full transcript and limits](release/PHYSICAL_FAILOVER_FOLLOWUP.md).
-- Watch-to-TV controls in PR54 remain unmerged after a reported two taps produced16 executions. Long-press/rate-limiting mitigations are not a clean one-intent/one-action hardware result.
+- The earlier partial two-relay run remains preserved. A later [complete contributor-recorded handover](release/COMPLETE_HANDOVER.md) verifies a fresh phone scan after TV loss. This is a demonstration, not an unseen evaluation; cleanup and permission-revocation coverage remain separately qualified.
+- Revised Watch controls and integration fixes merged in PR57. The [reported owner-attended hold](release/WATCH_CONTROL_ACCEPTANCE.md) produced one request and one TV volume increment. The original two-tap/sixteen-action cause remains unproven; duplicate/expiry cases are unit-tested only. Revocation stops new admissions, not an already-admitted physical operation.
 - Both devices still reported location mode3 after the rerun. This run made no location writes; the earlier requested restoration needs confirmation.
+
+- Durable policy/recovery PR56 remains unmerged: reviewed source can treat corrupt state as empty and lose concurrent updates. Current main has no restart-durability guarantee from that PR.

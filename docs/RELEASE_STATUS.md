@@ -1,4 +1,14 @@
-Latest hardware/remaining-work update: [28 October follow-up](release/PHYSICAL_FAILOVER_FOLLOWUP.md) and [current backlog](REMAINING_WORK.md). The two-relay rerun is partial; B3 controls are unmerged pending the repeated-action investigation.
+# Release checkpoint — 28 October 2026
+
+[PR #57](https://github.com/toskaman/openbridge/pull/57) merged as `ad7e2fc`, including revised Companion controls and concurrency fixes. Final feature head `48c7275`: 508 local tests and all six CI checks passed, with six local browser suites and responsive main/Forge checks. Runtime deployment was not performed as part of this integration.
+
+The [complete handover](release/COMPLETE_HANDOVER.md) and [Watch control report](release/WATCH_CONTROL_ACCEPTANCE.md) are contributor-recorded demonstrations with explicit provenance and acceptance limits. Earlier partial runs remain available. The original repeated-action cause is still unproven. Claude's main application theme is retained; historical Meta design contributions remain attributed in their original scope.
+
+Open gates are enumerated in the [current backlog](REMAINING_WORK.md): PR #56 persistence fixes, frozen unseen evaluation, hardware cleanup/edge-case confirmation, coordinated reload and participant submission. No submission or organizer acceptance is claimed. No video work is authorized.
+
+The following dated checkpoints are historical, including their test counts, model-run progress and main-theme descriptions.
+
+---
 
 # Current release evidence update — 27 October 2026
 
