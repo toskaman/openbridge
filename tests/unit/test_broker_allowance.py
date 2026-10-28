@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from src.ai.broker import CreditPermit, ModelBlocked, RuntimeModelBroker
+from src.ai.broker import CreditPermit, ModelBlocked, RuntimeModelBroker, resolve_ledger
 
 
 def permit(obs='obs-1', age_s=10, free=135.0, budget=0.20):
@@ -126,6 +126,35 @@ class AllowancePath(unittest.TestCase):
             finally:
                 db.close()
             self.assertEqual(row, ('obs-eval', 100000, 800000, 'owner-ref-1'))
+
+
+class CanonicalLedger(unittest.TestCase):
+    def test_default_is_stable_user_level_path(self):
+        a, b = resolve_ledger(None), resolve_ledger(None)
+        self.assertEqual(a, b)
+        self.assertIn('OpenBridge', str(a))
+        self.assertTrue(str(a).endswith('budget.sqlite3'))
+        self.assertFalse(str(a).startswith(str(Path.cwd())))
+
+    def test_explicit_path_respected(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = str(Path(d) / 'custom.sqlite3')
+            self.assertEqual(resolve_ledger(p), Path(p))
+
+    def test_two_ledgers_are_independent_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            p1, p2 = Path(d) / 'a.sqlite3', Path(d) / 'b.sqlite3'
+            for p in (p1, p2):
+                RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=0.80,
+                                   evaluation_authz='a')._reserve()
+            import sqlite3
+            for p in (p1, p2):
+                db = sqlite3.connect(p)
+                try:
+                    n = db.execute('SELECT COUNT(*) FROM reservations').fetchone()[0]
+                finally:
+                    db.close()
+                self.assertEqual(n, 1)
 
 
 if __name__ == '__main__':

@@ -79,6 +79,8 @@ def main():
                     help='owner-written file containing the authorization ref (read-only, never created)')
     ap.add_argument('--observed-at', required=True,
                     help='owner observation time, ISO with timezone (immutable, never minted)')
+    ap.add_argument('--ledger', default=None,
+                    help='explicit ledger path (tests/one-offs only; default is the canonical shared ledger)')
     args = ap.parse_args()
     authz = args.authz
     if args.authz_file:
@@ -103,7 +105,7 @@ def main():
     MAX_COMPLETION_TOKENS = args.max_completion_tokens
 
     sys.path.insert(0, str(ROOT))
-    from src.ai.broker import CreditPermit, MetaTransport, RuntimeModelBroker, ModelBlocked, MODEL_ID, ENDPOINT
+    from src.ai.broker import CreditPermit, MetaTransport, RuntimeModelBroker, ModelBlocked, MODEL_ID, ENDPOINT, resolve_ledger
     from src.fabric.credential_vault import Vault
 
     assert ENDPOINT == 'https://api.meta.ai/v1/chat/completions' and MODEL_ID == 'muse-spark-1.3'
@@ -124,7 +126,8 @@ def main():
         print('NO_KEY')
         return 2
     transport = MetaTransport(key)
-    budget_path = out / 'budget.sqlite3'
+    budget_path = resolve_ledger(args.ledger)
+    print('ledger: %s' % budget_path)
     records = []
     done = set()
     if args.resume:

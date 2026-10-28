@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import sqlite3
 import time
@@ -16,6 +17,16 @@ RESERVATION_MICRO_USD = 100_000
 ALLOWED_FACTS = {'battery_percent', 'storage_free_gb', 'screen_timeout_seconds'}
 EVAL_ALLOWANCE_MAX_USD = 1.00
 EVAL_OBSERVATION_MAX_AGE_S = 24 * 3600
+
+
+def resolve_ledger(explicit=None):
+    """One canonical shared ledger across runs/outputs, so the same allowance
+    cannot be spent twice through two ledger files. Explicit paths are for
+    tests and documented one-off runs only."""
+    if explicit is not None:
+        return Path(explicit)
+    root = os.environ.get('LOCALAPPDATA') or str(Path.home() / '.local' / 'share')
+    return Path(root) / 'OpenBridge' / 'budget.sqlite3'
 
 
 class ModelBlocked(ValueError):
