@@ -1,0 +1,1320 @@
+{
+  "baseline_revision": "dcf852775aab0a4129b1c9e117f9457db77f985d",
+  "auditor_revision": "41e57f7f025175751cbae20ea91f7ae22296770d",
+  "recorded_at_utc": "2026-10-28T17:20:12.263809+00:00",
+  "source_blob_sha256": {
+    "src/runtime/command.py": "a2ae305f0b6e8694ea129623522e47d05bc7503448d199ad61b1210bd316e8a9",
+    "src/runtime/skills.py": "3ca99d5abdc1a1f3798cba99a0e8f0f7867f138cf6696d5bf648b2bc28ae9554",
+    "src/runtime/fabric_status.py": "03555d5ba2069bef49e6a49d40365c25f50061f35db4d1f33d71cae94e6b4017",
+    "src/runtime/primitives.py": "b5fd2cc6e85438c669d2467ec1ea7e288ac0b6a2144264d2a187740dd0af7d9f",
+    "src/forge/planner.py": "51a44c8c93d63f3591d3a6f9bd645a82adc22d2448f3a4a4f61b3d0885580d9f",
+    "src/forge/planner_v2.py": "f96f75172b9168e7775d778f73e6d4199564cdb6c5c659e931c169780474c7c6",
+    "src/forge/compiler.py": "1c3b039c1d33a8c0c47c2091735d9682aa30370712b71ac3ce49a45cbcf3533d",
+    "dev/run_explain_eval.py": "d3ba71df682bb35a94961abf51d33f95f58fbed9eeb03602a0d58ba4ac7dbfa4",
+    "src/ai/broker.py": "253d9f048f092af68e2c88a0c77c5116a9df54b1b87cd936532bb18bac77496d"
+  },
+  "registry": {
+    "registries": {
+      "primitives": {
+        "android_optional_app_state": {
+          "primitive_id": "android_optional_app_state",
+          "title": "Disable one allowlisted optional app for Android user 0 (agent plan)",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "plan_id": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "plan_id"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent",
+            "gate decision ALLOW_WITH_CONSENT"
+          ],
+          "preconditions": [
+            "plan produced by the agent for this device",
+            "identity re-verified",
+            "exact backup recorded before write"
+          ],
+          "expected_effects": [
+            "package enabled state = disabled-user"
+          ],
+          "verification": "independent pm read-back equals target",
+          "inverse": "undo_transaction",
+          "reversibility": "EXACT",
+          "errors": [
+            "GATE_DENIED",
+            "CONSENT_REQUIRED",
+            "READBACK_MISMATCH",
+            "DEVICE_UNAVAILABLE"
+          ],
+          "timeout_s": 60,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "bounded_discovery": {
+          "primitive_id": "bounded_discovery",
+          "title": "Run one bounded local discovery",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "providers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "mdns",
+                    "ssdp",
+                    "android",
+                    "freebox",
+                    "ble",
+                    "windows",
+                    "tuya"
+                  ]
+                },
+                "maxItems": 7
+              }
+            },
+            "additionalProperties": false
+          },
+          "required_permissions": [],
+          "preconditions": [
+            "no discovery already running"
+          ],
+          "expected_effects": [
+            "graph replaced by a fresh snapshot"
+          ],
+          "verification": "snapshot returned with per-provider status",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "BUSY"
+          ],
+          "timeout_s": 60,
+          "concurrency": "single-global",
+          "requires_consent": false
+        },
+        "device_action": {
+          "primitive_id": "device_action",
+          "title": "Run one typed action on an Android phone, TV or watch (remote keys, mouse, text, apps, URL, settings)",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "get",
+                  "key",
+                  "launch_app",
+                  "list_apps",
+                  "long_press",
+                  "open_url",
+                  "restore",
+                  "screen_state",
+                  "set",
+                  "swipe",
+                  "tap",
+                  "text"
+                ]
+              },
+              "args": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "maxLength": 24
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "package": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "url": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "setting": {
+                    "type": "string",
+                    "maxLength": 32
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1800000
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "x1": {
+                    "type": "number"
+                  },
+                  "y1": {
+                    "type": "number"
+                  },
+                  "x2": {
+                    "type": "number"
+                  },
+                  "y2": {
+                    "type": "number"
+                  },
+                  "ms": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  }
+                }
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent for this action"
+          ],
+          "preconditions": [
+            "identity re-verified",
+            "args valid for the action"
+          ],
+          "expected_effects": [
+            "device acted; settings read back"
+          ],
+          "verification": "settings: independent read-back (undo = device_action with action=restore); other actions report the screen state",
+          "inverse": "",
+          "reversibility": "IRREVERSIBLE",
+          "errors": [
+            "DEVICE_UNAVAILABLE",
+            "INVALID_ACTION"
+          ],
+          "timeout_s": 60,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "device_capabilities": {
+          "primitive_id": "device_capabilities",
+          "title": "Measure which typed actions an Android phone, TV or watch supports (read-only probe)",
+          "input_schema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "read grant on a current ADB link"
+          ],
+          "preconditions": [
+            "identity re-verified"
+          ],
+          "expected_effects": [
+            "none: read-only"
+          ],
+          "verification": "each entry measured on the device now",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "DEVICE_UNAVAILABLE"
+          ],
+          "timeout_s": 60,
+          "concurrency": "single-per-device",
+          "requires_consent": false
+        },
+        "device_macro": {
+          "primitive_id": "device_macro",
+          "title": "Run a short sequence of typed actions (a new feature built from the catalog) under one consent listing every step",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "steps": {
+                "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "get",
+                        "key",
+                        "launch_app",
+                        "long_press",
+                        "open_url",
+                        "restore",
+                        "screen_state",
+                        "set",
+                        "swipe",
+                        "tap",
+                        "text",
+                        "wait"
+                      ]
+                    },
+                    "args": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "key": {
+                          "type": "string",
+                          "maxLength": 24
+                        },
+                        "text": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "package": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "url": {
+                          "type": "string",
+                          "maxLength": 300
+                        },
+                        "setting": {
+                          "type": "string",
+                          "maxLength": 32
+                        },
+                        "value": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 1800000
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "x1": {
+                          "type": "number"
+                        },
+                        "y1": {
+                          "type": "number"
+                        },
+                        "x2": {
+                          "type": "number"
+                        },
+                        "y2": {
+                          "type": "number"
+                        },
+                        "ms": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 10000
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "steps"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent for the whole listed sequence"
+          ],
+          "preconditions": [
+            "identity re-verified",
+            "at most 20 steps, waits <= 10 s each"
+          ],
+          "expected_effects": [
+            "steps ran in order; stops at the first failure"
+          ],
+          "verification": "per-step result returned",
+          "inverse": "",
+          "reversibility": "IRREVERSIBLE",
+          "errors": [
+            "DEVICE_UNAVAILABLE",
+            "INVALID_ACTION"
+          ],
+          "timeout_s": 300,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "diagnostic_probe": {
+          "primitive_id": "diagnostic_probe",
+          "title": "Re-measure a few devices a bounded number of times and update the timeline hypotheses (read-only)",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "device_keys": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "maxItems": 4
+              },
+              "samples": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "interval_s": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 30
+              },
+              "window_s": {
+                "type": "integer",
+                "minimum": 10,
+                "maximum": 600
+              }
+            },
+            "required": [
+              "device_keys"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "read grants of each device"
+          ],
+          "preconditions": [
+            "devices present in the graph",
+            "samples x interval <= 120 s"
+          ],
+          "expected_effects": [
+            "none: read-only; timeline gains the new samples"
+          ],
+          "verification": "every sample is a normal read_facts receipt; hypotheses recomputed before/after",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "DEVICE_UNKNOWN",
+            "INVALID_PARAMS"
+          ],
+          "timeout_s": 180,
+          "concurrency": "single-global",
+          "requires_consent": false
+        },
+        "diagnostic_report": {
+          "primitive_id": "diagnostic_report",
+          "title": "Read every readable device once and build a redacted report",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "redact": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "read grants of each device"
+          ],
+          "preconditions": [
+            "graph exists"
+          ],
+          "expected_effects": [
+            "none: read-only"
+          ],
+          "verification": "each device section is a normal read_facts receipt (state + verified)",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "DEVICE_UNKNOWN"
+          ],
+          "timeout_s": 120,
+          "concurrency": "single-global",
+          "requires_consent": false
+        },
+        "pc_job": {
+          "primitive_id": "pc_job",
+          "title": "Run one owner-typed command on a client PC through its BridgeWindows agent",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "maxLength": 2000
+              },
+              "shell": {
+                "type": "string",
+                "enum": [
+                  "cmd",
+                  "powershell"
+                ]
+              },
+              "timeout_s": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600
+              }
+            },
+            "required": [
+              "command"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent for this exact command"
+          ],
+          "preconditions": [
+            "agent connected",
+            "identity re-verified"
+          ],
+          "expected_effects": [
+            "the command ran once on that PC"
+          ],
+          "verification": "exit code and captured output returned; nothing is retried",
+          "inverse": "",
+          "reversibility": "IRREVERSIBLE",
+          "errors": [
+            "DEVICE_UNAVAILABLE",
+            "IDENTITY_CHANGED",
+            "FAILED"
+          ],
+          "timeout_s": 630,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "read_facts": {
+          "primitive_id": "read_facts",
+          "title": "Read diagnostics from one device",
+          "input_schema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "read grant on a current link"
+          ],
+          "preconditions": [
+            "device present in the graph",
+            "identity re-verified for ADB devices"
+          ],
+          "expected_effects": [
+            "none: read-only"
+          ],
+          "verification": "each finding names its source; INFERRED findings state their basis",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "DEVICE_UNAVAILABLE",
+            "IDENTITY_CHANGED",
+            "NOT_READABLE"
+          ],
+          "timeout_s": 60,
+          "concurrency": "single-per-device",
+          "requires_consent": false
+        },
+        "relay_ble_scan": {
+          "primitive_id": "relay_ble_scan",
+          "title": "Ask a paired Companion relay for a bounded BLE advertisement scan",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "relay_id": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "seconds": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 15
+              }
+            },
+            "required": [
+              "relay_id"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "relay paired (HMAC key)",
+            "BLUETOOTH_SCAN granted on the relay",
+            "owner enabled scans"
+          ],
+          "preconditions": [
+            "relay online and not busy"
+          ],
+          "expected_effects": [
+            "advertisements added to the graph with RELAY provenance"
+          ],
+          "verification": "signed relay report validated (nonce, expiry, bounds)",
+          "inverse": "relay_revoke",
+          "reversibility": "SESSION_CLEANUP",
+          "errors": [
+            "RELAY_UNAVAILABLE",
+            "RELAY_PERMISSION",
+            "BAD_SIGNATURE"
+          ],
+          "timeout_s": 25,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "relay_revoke": {
+          "primitive_id": "relay_revoke",
+          "title": "Revoke a paired relay (forget its key and tell it to stop)",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "relay_id": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "relay_id"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [],
+          "preconditions": [
+            "relay known"
+          ],
+          "expected_effects": [
+            "local key deleted; relay asked to revoke access"
+          ],
+          "verification": "relay absent from manager after call",
+          "inverse": "",
+          "reversibility": "IRREVERSIBLE",
+          "errors": [
+            "UNKNOWN_RELAY"
+          ],
+          "timeout_s": 15,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "session_cleanup": {
+          "primitive_id": "session_cleanup",
+          "title": "Restore or keep the environment changes OpenBridge made this session",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "restore": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                "maxItems": 64
+              }
+            },
+            "required": [
+              "restore"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent"
+          ],
+          "preconditions": [
+            "open session changes exist"
+          ],
+          "expected_effects": [
+            "selected changes restored, others marked KEPT"
+          ],
+          "verification": "per-change restore result read back where the device allows it",
+          "inverse": "",
+          "reversibility": "SESSION_CLEANUP",
+          "errors": [
+            "PARTIAL"
+          ],
+          "timeout_s": 120,
+          "concurrency": "single-global",
+          "requires_consent": true
+        },
+        "tuya_command": {
+          "primitive_id": "tuya_command",
+          "title": "Send one typed command to the Tuya robot (start, pause, dock, mode, move, seek, empty dust, resets, water, work mode)",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "command": {
+                "type": "string",
+                "enum": [
+                  "start",
+                  "pause",
+                  "mode",
+                  "dock",
+                  "move",
+                  "seek",
+                  "empty_dust",
+                  "reset_side_brush",
+                  "reset_main_brush",
+                  "reset_filter",
+                  "water_level",
+                  "work_mode"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 16
+              },
+              "move_s": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "command"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent for this command"
+          ],
+          "preconditions": [
+            "owner-linked Tuya key",
+            "value in the command allowlist",
+            "manual moves end with stop after <= 3 s"
+          ],
+          "expected_effects": [
+            "device acted on the command"
+          ],
+          "verification": "status read after the command; momentary commands report verified=null",
+          "inverse": "",
+          "reversibility": "IRREVERSIBLE",
+          "errors": [
+            "NOT_LINKED",
+            "BLOCKED"
+          ],
+          "timeout_s": 30,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "tuya_setting": {
+          "primitive_id": "tuya_setting",
+          "title": "Change one allowlisted Tuya vacuum setting (suction or volume) with read-back",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "setting": {
+                "type": "string",
+                "enum": [
+                  "suction",
+                  "volume"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 16
+              }
+            },
+            "required": [
+              "setting",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent",
+            "owner-linked Tuya key"
+          ],
+          "preconditions": [
+            "robot idle or docked",
+            "value in the setting allowlist"
+          ],
+          "expected_effects": [
+            "setting equals the requested value"
+          ],
+          "verification": "independent status read equals target",
+          "inverse": "tuya_undo",
+          "reversibility": "EXACT",
+          "errors": [
+            "NOT_LINKED",
+            "BLOCKED",
+            "READBACK_MISMATCH"
+          ],
+          "timeout_s": 30,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "tuya_undo": {
+          "primitive_id": "tuya_undo",
+          "title": "Restore the Tuya setting value recorded before the change",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "setting": {
+                "type": "string",
+                "enum": [
+                  "suction",
+                  "volume"
+                ]
+              }
+            },
+            "required": [
+              "setting"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent"
+          ],
+          "preconditions": [
+            "a change was recorded"
+          ],
+          "expected_effects": [
+            "setting equals the recorded before value"
+          ],
+          "verification": "independent status read equals before value",
+          "inverse": "",
+          "reversibility": "EXACT",
+          "errors": [
+            "NOTHING_TO_UNDO",
+            "RESTORE_NOT_EXACT"
+          ],
+          "timeout_s": 30,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "undo_transaction": {
+          "primitive_id": "undo_transaction",
+          "title": "Restore the exact state saved before a verified transaction",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "plan_id": {
+                "type": "string",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "plan_id"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent"
+          ],
+          "preconditions": [
+            "transaction VERIFIED"
+          ],
+          "expected_effects": [
+            "state equals the recorded before value"
+          ],
+          "verification": "independent read-back equals the recorded before value",
+          "inverse": "",
+          "reversibility": "EXACT",
+          "errors": [
+            "NOTHING_TO_UNDO",
+            "RESTORE_NOT_EXACT"
+          ],
+          "timeout_s": 60,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "visual_readback": {
+          "primitive_id": "visual_readback",
+          "title": "Capture one screenshot and compare a local Muse Glimmer reading with the structured screen state",
+          "input_schema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent (screenshots are sensitive)",
+            "read grant on a current ADB link"
+          ],
+          "preconditions": [
+            "identity re-verified",
+            "local Glimmer only; no cloud path"
+          ],
+          "expected_effects": [
+            "none: read-only; frame kept as a hash only"
+          ],
+          "verification": "CONFIRMED only when structured read and screenshot agree; disagreement is INCONCLUSIVE",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "DEVICE_UNAVAILABLE",
+            "IDENTITY_CHANGED"
+          ],
+          "timeout_s": 330,
+          "concurrency": "single-per-device",
+          "requires_consent": true
+        },
+        "watch_start": {
+          "primitive_id": "watch_start",
+          "title": "Watch one diagnostic finding on a device and raise an event when it crosses a threshold",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "finding": {
+                "type": "string",
+                "maxLength": 48
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "lt",
+                  "le",
+                  "gt",
+                  "ge",
+                  "eq",
+                  "ne"
+                ]
+              },
+              "threshold_number": {
+                "type": "number"
+              },
+              "threshold_text": {
+                "type": "string",
+                "maxLength": 32
+              },
+              "interval_s": {
+                "type": "integer",
+                "minimum": 30,
+                "maximum": 3600
+              },
+              "lifetime_s": {
+                "type": "integer",
+                "minimum": 30,
+                "maximum": 86400
+              }
+            },
+            "required": [
+              "finding",
+              "op",
+              "interval_s"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [
+            "owner consent"
+          ],
+          "preconditions": [
+            "device present in the graph",
+            "at most 16 running watches"
+          ],
+          "expected_effects": [
+            "periodic read_facts on this device; events only, never an action"
+          ],
+          "verification": "watch listed RUNNING in /api/v2/watches; every run is a normal read_facts receipt",
+          "inverse": "watch_stop",
+          "reversibility": "SESSION_CLEANUP",
+          "errors": [
+            "INVALID_WATCH",
+            "DEVICE_UNKNOWN"
+          ],
+          "timeout_s": 10,
+          "concurrency": "single-global",
+          "requires_consent": true
+        },
+        "watch_stop": {
+          "primitive_id": "watch_stop",
+          "title": "Stop a watch",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "watch_id": {
+                "type": "string",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "watch_id"
+            ],
+            "additionalProperties": false
+          },
+          "required_permissions": [],
+          "preconditions": [
+            "watch exists"
+          ],
+          "expected_effects": [
+            "no further reads"
+          ],
+          "verification": "watch state STOPPED",
+          "inverse": "",
+          "reversibility": "NONE",
+          "errors": [
+            "UNKNOWN_WATCH"
+          ],
+          "timeout_s": 10,
+          "concurrency": "single-global",
+          "requires_consent": false
+        }
+      },
+      "b2_skills": {
+        "ble_scan_room": {
+          "version": 1,
+          "reversibility": "SESSION_CLEANUP",
+          "idempotent": true,
+          "consent": "per_invocation",
+          "targeted": false,
+          "input": {
+            "type": "object",
+            "properties": {
+              "seconds": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 15
+              }
+            },
+            "additionalProperties": false
+          },
+          "plain": "Find nearby Bluetooth devices through a paired relay (scan only)."
+        },
+        "device_facts": {
+          "version": 1,
+          "reversibility": "NONE",
+          "idempotent": true,
+          "consent": "none",
+          "targeted": true,
+          "input": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "plain": "Read the verified facts OpenBridge holds for one device."
+        },
+        "tv_volume_set": {
+          "version": 2,
+          "reversibility": "EXACT",
+          "idempotent": false,
+          "consent": "per_invocation",
+          "targeted": true,
+          "input": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "plain": "Set media volume to an exact value, read it back, keep the previous value for exact Undo."
+        },
+        "tv_volume_step": {
+          "version": 1,
+          "reversibility": "IRREVERSIBLE",
+          "idempotent": false,
+          "consent": "per_invocation",
+          "targeted": true,
+          "input": {
+            "type": "object",
+            "properties": {
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down"
+                ]
+              }
+            },
+            "required": [
+              "direction"
+            ],
+            "additionalProperties": false
+          },
+          "plain": "Press volume up or down once (one press per invocation)."
+        }
+      },
+      "command_skills": [
+        {
+          "skill_id": "ble_scan_room",
+          "version": 1,
+          "display_name": "Scan nearby Bluetooth",
+          "description": "Find nearby Bluetooth devices through a paired relay (scan only).",
+          "capability_id": "ble.scan",
+          "targets": [
+            "relay"
+          ],
+          "permissions": [
+            "route:ble_scan_room"
+          ],
+          "risk_level": "low",
+          "idempotent": true,
+          "verification": "verified_physical",
+          "verification_ref": "docs/release/failover-evidence/partial-two-relay-run.json",
+          "provenance": "builtin",
+          "primitive_id": "b2:ble_scan_room",
+          "param_names": [
+            "seconds",
+            "value",
+            "direction"
+          ],
+          "params": {},
+          "keywords": [
+            "bluetooth",
+            "ble",
+            "scan",
+            "nearby",
+            "devices"
+          ]
+        },
+        {
+          "skill_id": "device_facts",
+          "version": 1,
+          "display_name": "Read device facts",
+          "description": "Read the verified facts OpenBridge holds for one device.",
+          "capability_id": "device.facts",
+          "targets": [
+            "any"
+          ],
+          "permissions": [
+            "route:device_facts"
+          ],
+          "risk_level": "low",
+          "idempotent": true,
+          "verification": "claimed",
+          "verification_ref": "README (read path, not re-verified this session)",
+          "provenance": "builtin",
+          "primitive_id": "b2:device_facts",
+          "param_names": [
+            "seconds",
+            "value",
+            "direction"
+          ],
+          "params": {},
+          "keywords": [
+            "facts",
+            "info",
+            "device",
+            "status"
+          ]
+        },
+        {
+          "skill_id": "fabric.status",
+          "version": 1,
+          "display_name": "Summarize fabric state",
+          "description": "Count devices by category and relays by online state (read-only, no hardware calls)",
+          "capability_id": "fabric.status",
+          "targets": [
+            "fabric"
+          ],
+          "permissions": [],
+          "risk_level": "low",
+          "idempotent": true,
+          "verification": "claimed",
+          "verification_ref": "unit + sandbox + live approve/execute READ proof (this branch)",
+          "provenance": "meta_generated",
+          "primitive_id": "fabric_status",
+          "param_names": [],
+          "params": {},
+          "keywords": [
+            "fabric",
+            "status",
+            "how many",
+            "devices",
+            "online",
+            "count",
+            "summary",
+            "combien",
+            "appareils",
+            "etat",
+            "resume"
+          ]
+        },
+        {
+          "skill_id": "tv_volume_set",
+          "version": 1,
+          "display_name": "Set TV volume (exact)",
+          "description": "Set media volume to an exact value, read it back, keep the previous value for exact Undo.",
+          "capability_id": "tv.volume",
+          "targets": [
+            "tv"
+          ],
+          "permissions": [
+            "route:tv_volume_set"
+          ],
+          "risk_level": "low",
+          "idempotent": false,
+          "verification": "claimed",
+          "verification_ref": "docs/release/WATCH_CONTROL_ACCEPTANCE.md (published with limitations)",
+          "provenance": "builtin",
+          "primitive_id": "b2:tv_volume_set",
+          "param_names": [
+            "seconds",
+            "value",
+            "direction"
+          ],
+          "params": {},
+          "keywords": [
+            "tv",
+            "volume",
+            "set",
+            "television"
+          ]
+        },
+        {
+          "skill_id": "tv_volume_step",
+          "version": 1,
+          "display_name": "TV volume step",
+          "description": "Press volume up or down once (one press per invocation).",
+          "capability_id": "tv.volume",
+          "targets": [
+            "tv"
+          ],
+          "permissions": [
+            "route:tv_volume_step"
+          ],
+          "risk_level": "low",
+          "idempotent": false,
+          "verification": "claimed",
+          "verification_ref": "docs/release/WATCH_CONTROL_ACCEPTANCE.md (published with limitations)",
+          "provenance": "builtin",
+          "primitive_id": "b2:tv_volume_step",
+          "param_names": [
+            "seconds",
+            "value",
+            "direction"
+          ],
+          "params": {},
+          "keywords": [
+            "tv",
+            "volume",
+            "up",
+            "down",
+            "television"
+          ]
+        },
+        {
+          "skill_id": "vacuum.dock",
+          "version": 1,
+          "display_name": "Send vacuum to dock",
+          "description": "Tuya robot vacuum typed command: dock",
+          "capability_id": "vacuum.clean",
+          "targets": [
+            "vacuum"
+          ],
+          "permissions": [
+            "tuya:command"
+          ],
+          "risk_level": "medium",
+          "idempotent": false,
+          "verification": "claimed",
+          "verification_ref": "README (Tuya vacuum control claimed, not re-verified this session)",
+          "provenance": "builtin",
+          "primitive_id": "tuya_command",
+          "param_names": [],
+          "params": {
+            "command": "dock"
+          },
+          "keywords": [
+            "vacuum",
+            "dock",
+            "charge",
+            "base",
+            "aspirateur",
+            "recharger"
+          ]
+        },
+        {
+          "skill_id": "vacuum.pause",
+          "version": 1,
+          "display_name": "Pause vacuum",
+          "description": "Tuya robot vacuum typed command: pause",
+          "capability_id": "vacuum.clean",
+          "targets": [
+            "vacuum"
+          ],
+          "permissions": [
+            "tuya:command"
+          ],
+          "risk_level": "medium",
+          "idempotent": false,
+          "verification": "claimed",
+          "verification_ref": "README (Tuya vacuum control claimed, not re-verified this session)",
+          "provenance": "builtin",
+          "primitive_id": "tuya_command",
+          "param_names": [],
+          "params": {
+            "command": "pause"
+          },
+          "keywords": [
+            "vacuum",
+            "pause",
+            "stop",
+            "aspirateur",
+            "pause"
+          ]
+        },
+        {
+          "skill_id": "vacuum.start",
+          "version": 1,
+          "display_name": "Start vacuum cleaning",
+          "description": "Tuya robot vacuum typed command: start",
+          "capability_id": "vacuum.clean",
+          "targets": [
+            "vacuum"
+          ],
+          "permissions": [
+            "tuya:command"
+          ],
+          "risk_level": "high",
+          "idempotent": false,
+          "verification": "claimed",
+          "verification_ref": "README (Tuya vacuum control claimed, not re-verified this session)",
+          "provenance": "builtin",
+          "primitive_id": "tuya_command",
+          "param_names": [],
+          "params": {
+            "command": "start"
+          },
+          "keywords": [
+            "vacuum",
+            "start",
+            "clean",
+            "aspirateur",
+            "demarrer",
+            "demarrer le menage"
+          ]
+        }
+      ]
+    },
+    "sha256": "74d11e71d675e14bec4edb2944287d38acab5738a915f88f8854c8eb0e6c4ac3",
+    "counts": {
+      "primitives": 19,
+      "b2_skills": 4,
+      "command_skills": 8
+    },
+    "classification": "PREBUILT_REGISTRY_SNAPSHOT",
+    "hardware_facts_observed": false
+  },
+  "command_concurrency": {
+    "evidence": "SIMULATED",
+    "same_intent": true,
+    "requests": 2,
+    "mock_effects": 2,
+    "transactions": [
+      "tx-347ee07399e67bee",
+      "tx-4a9e5b2dc99e7069"
+    ],
+    "cache_entries": 1,
+    "single_effect_gate": false,
+    "actual_hardware_calls": 0,
+    "note": "Actual Executor used; fake runner effects deliberately serialized, so per-device execution lock is respected."
+  },
+  "explanation_credit_policy": {
+    "evidence": "SIMULATED",
+    "observation_age_s": 601,
+    "expired_original_rejected": true,
+    "minted_next_slot_accepted": true,
+    "reservation_total_usd": 0.8,
+    "derived_observation_ids": 4,
+    "new_output_ledger_accepted": true,
+    "guard_pass": false,
+    "actual_provider_calls": 0,
+    "actual_spend_usd": 0,
+    "note": "Tests enforcement properties only; does not assert historical account charges exceeded owner authorization."
+  },
+  "actual_hardware_calls": 0,
+  "actual_provider_calls": 0,
+  "actual_spend_usd": 0,
+  "security_release_gate": "BLOCKED",
+  "v4_runtime_novel_adapter": "NOT_ESTABLISHED",
+  "heldout_hardware_gold": "NOT_FROZEN",
+  "scope": "Independent development probes; not physical acceptance or held-out model performance."
+}

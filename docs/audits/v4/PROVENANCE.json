@@ -1,0 +1,32 @@
+{
+  "baseline_revision": "dcf852775aab0a4129b1c9e117f9457db77f985d",
+  "auditor_revision": "41e57f7",
+  "auditor_git_blob_sha256": "59c13a38d455c6c247250808100d61680c0020e97a3ace1c48e025b683d9b806",
+  "test_command": "python -B -m unittest discover -s tests -q",
+  "exit_code": 0,
+  "methods": 605,
+  "raw_output_sha256": "bc29e24b09ccd407388bdf332a66eefad13b42692159c724a16349874e923fb2",
+  "public_output_sha256": "860bf8aebbf6f783679b2fe9640d0576c0d790bd44af0571def67ba0d51ade01",
+  "redactions": "Project and user-home paths only",
+  "repository": {
+    "isPrivate": false,
+    "licenseInfo": {
+      "key": "mit",
+      "name": "MIT License",
+      "nickname": ""
+    }
+  },
+  "kit_input_sha256": {
+    "LIRE_EN_PREMIER_FR.md": "19ff6e42e36d0e101392b3a642b0dcc94670ffdfb0adafd5907cfda4d219a59f",
+    "03_PROMPTS/99_QUICK_COPYPATHS.md": "c118a3354f6dbca0f4e01dab341bf40c0925885e4b98dbe0ad22fce26a5b1278",
+    "01_COORDINATION/01_AGENT_OWNERSHIP.md": "725a25f429289f3e78332c3b084c76a2c2178c4579ed0832748a5aabcfb5b087",
+    "03_PROMPTS/CHATGPT_6_1_SOL/07_META_CAUSALITY_SECURITY_AUDIT_V4.md": "26e7070425f2254560c9bdba0177861393649dd24562e51a8595d09e6a206076",
+    "03_PROMPTS/CHATGPT_6_1_SOL/08_JURY_RELEASE_GATE_V4.md": "99c477ea80f582ffa1c77681e716242cb34c6e4fb7b3919b09218c2ccfa2a5bc"
+  },
+  "development_failures": [
+    "Initial import failed before the new audit helper existed (test-first).",
+    "Initial credit-probe temporary SQLite connection remained open, causing Windows cleanup failure; corrected with explicit connection closing before the successful focused/full runs."
+  ],
+  "audit_cli_exit": 2,
+  "audit_cli_meaning": "Evidence collected; security release gate BLOCKED, not a script execution crash."
+}

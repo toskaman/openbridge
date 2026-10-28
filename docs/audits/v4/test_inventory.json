@@ -1,0 +1,31 @@
+{
+  "catalogs": [
+    {
+      "file": "scenario_catalog.csv",
+      "rows": 720,
+      "sha256": "61158ef4f772aea32b7e911e272d531bb1e5c6357a125a073fa43ce1b5de5eef"
+    },
+    {
+      "file": "live_journeys_extensions.csv",
+      "rows": 120,
+      "sha256": "75a01a7fe1ec43bf4d4394caeebc8992318e2da329d3d122a5c7a4eeb3f5df84"
+    },
+    {
+      "file": "wow_extensions_200.csv",
+      "rows": 200,
+      "sha256": "81714accb4a6ba0ed9fbc402a919ed1c7b6b0d000c67304a296d0b9f1bf0b26d"
+    },
+    {
+      "file": "v4_meta_native_extensions_120.csv",
+      "rows": 120,
+      "sha256": "099eb6c5c7df3c73ca57c1f538068b17f9a6b722a44f242fb1775783c9c6f737"
+    }
+  ],
+  "specified_cases": 1160,
+  "application_tests_run": 605,
+  "existing_tests": 599,
+  "new_audit_test_methods": 6,
+  "full_spec_cases_instantiated_and_executed_by_this_audit": 0,
+  "physical_cases_executed": 0,
+  "note": "Related tests cover only a fragment of a broad kit assertion; no coverage percentage or1160-pass claim."
+}

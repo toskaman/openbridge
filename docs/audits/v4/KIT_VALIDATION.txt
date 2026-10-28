@@ -1,0 +1,7 @@
+OK: 720 planned scenario specifications, unique IDs, all expected domain counts, 3 independent prompt suites.
+NOTE: This does not run a single test against the OpenBridge application.
+OK V2: 720 + 120 = 840 specifications (NOT executed), 40 backlog items, owner journeys, 3 new agent prompts, valid example JSON.
+OK V3: 1,040 unique SPECIFICATIONS (720+120+200), 55 proposed tasks, complete agent prompt suites, example JSON valid.
+NO APPLICATION TEST WAS EXECUTED BY THIS VALIDATOR.
+OK V4: 1,160 UNIQUE PROPOSED TEST SPECIFICATIONS; 67 PROPOSED TASKS; 3 agent suites.
+NO OPENBRIDGE APPLICATION/MODEL/HARDWARE TEST HAS BEEN RUN BY THIS VALIDATOR.
