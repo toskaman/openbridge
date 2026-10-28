@@ -767,3 +767,73 @@
   // app.js already requested /api/fabric; if it rendered before this script ran, pick its snapshot up.
   if (typeof fabric !== 'undefined' && fabric) onSnapshot(fabric);
 })();
+
+
+/* Codex read-only B2 route consumer. No invocation, policy change or automatic polling. */
+(() => {
+  const host = document.getElementById('route-truth');
+  const refresh = document.getElementById('route-refresh');
+  const picker = document.getElementById('route-skill');
+  if (!host || !refresh || !picker) return;
+  const revisions = new Map();
+  let generation = 0;
+  const node = (tag, text) => { const n = document.createElement(tag); n.textContent = String(text); return n; };
+  const states = new Set(['READY', 'STANDBY', 'UNAVAILABLE']);
+  const reasons = new Set(['link_down', 'grant_insufficient', 'consent_missing', 'capability_absent', 'lease_stale', 'dependency_unready', 'policy_blocked', 'backend_unknown']);
+  function supported(doc, skill) {
+    if (!doc || doc.schema_version !== 'b2.2' || doc.skill?.skill_id !== skill ||
+        !['AUTO', 'PREFERRED', 'PINNED'].includes(doc.policy?.mode) ||
+        !doc.graph_revision || typeof doc.graph_revision.epoch !== 'string' ||
+        !Number.isSafeInteger(doc.graph_revision.seq) || doc.graph_revision.seq < 0 ||
+        !Number.isFinite(Date.parse(doc.server_time)) || !Array.isArray(doc.routes) || doc.routes.length > 128 ||
+        !['idle', 'armed', 'executing'].includes(doc.invocation?.status)) return false;
+    const ids = new Set();
+    return doc.routes.every(r => {
+      if (!r || typeof r.route_id !== 'string' || r.route_id.length > 128 || ids.has(r.route_id) ||
+          !states.has(r.state) || !['REAL_HARDWARE', 'SIMULATED', 'NONE'].includes(r.evidence) ||
+          !['none', 'required', 'armed'].includes(r.consent) ||
+          (r.state === 'UNAVAILABLE' ? !reasons.has(r.reason) : r.reason !== null) ||
+          !Array.isArray(r.hops) || r.hops.length > 4 || !r.freshness ||
+          !Number.isFinite(Date.parse(r.freshness.observed_at)) || !Number.isFinite(Date.parse(r.freshness.expires_at))) return false;
+      ids.add(r.route_id);
+      return r.hops.every(h => h && typeof h.device_key === 'string' && typeof h.transport === 'string');
+    }) && (doc.selected_route_id === null || doc.routes.some(r => r.route_id === doc.selected_route_id && r.state === 'READY'));
+  }
+  function render(doc) {
+    host.replaceChildren(node('p', `Snapshot · ${doc.server_time} · ${doc.policy.mode} · revision ${doc.graph_revision.seq}`));
+    host.append(node('p', 'Eligibility and selection are backend-reported. This snapshot does not authorize execution or promise failover.'));
+    if (!doc.routes.length) host.append(node('p', 'No eligible routes reported.'));
+    for (const r of doc.routes) {
+      const card = document.createElement('article'); card.className = 'route-card';
+      card.append(node('h3', r.route_id), node('p', `${r.state} · ${r.evidence}`));
+      if (r.route_id === doc.selected_route_id) card.append(node('p', 'Selected by backend'));
+      if (['armed', 'executing'].includes(doc.invocation.status) && doc.invocation.route_id === r.route_id) card.append(node('p', `Invocation: ${doc.invocation.status}`));
+      if (r.reason) card.append(node('p', `Unavailable reason: ${r.reason}`));
+      card.append(node('p', `Consent: ${r.consent}`), node('p', r.hops.map(h => `${h.device_key} via ${h.transport}`).join(' → ')),
+        node('p', `Observed ${r.freshness.observed_at}; expires ${r.freshness.expires_at}`));
+      const details = document.createElement('details'); details.append(node('summary', 'Inspect route evidence'), node('pre', JSON.stringify(r, null, 2))); card.append(details); host.append(card);
+    }
+  }
+  picker.addEventListener('change', () => { generation++; host.replaceChildren(node('p', 'Skill changed. Refresh to request its route snapshot.')); });
+  refresh.addEventListener('click', async () => {
+    const current = ++generation; const skill = picker.value;
+    const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 10000);
+    refresh.disabled = true; host.setAttribute('aria-busy', 'true'); host.replaceChildren(node('p', 'Requesting route snapshot…'));
+    try {
+      const response = await fetch(`/api/v2/skill_routes?skill=${encodeURIComponent(skill)}`, {cache: 'no-store', signal: controller.signal});
+      if (current !== generation) return;
+      if (response.status === 404) { host.replaceChildren(node('p', 'Routing backend is not available. No routes or failover are assumed.')); return; }
+      if (!response.ok) throw new Error('Route request refused');
+      const doc = await response.json();
+      if (current !== generation) return;
+      if (!supported(doc, skill)) { host.replaceChildren(node('p', 'Unsupported or invalid route snapshot. No route status is displayed.')); return; }
+      const previous = revisions.get(skill);
+      if (previous && previous.epoch === doc.graph_revision.epoch && previous.seq > doc.graph_revision.seq) {
+        host.replaceChildren(node('p', 'Outdated route snapshot refused. Refresh again.')); return;
+      }
+      revisions.set(skill, doc.graph_revision); render(doc);
+    } catch (error) {
+      if (current === generation) host.replaceChildren(node('p', error.name === 'AbortError' ? 'Route request timed out. Refresh to try again.' : 'Route evidence unavailable. No route status is assumed.'));
+    } finally { clearTimeout(timer); refresh.disabled = false; host.removeAttribute('aria-busy'); }
+  });
+})();
