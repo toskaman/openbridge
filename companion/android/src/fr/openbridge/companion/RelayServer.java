@@ -22,11 +22,8 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -48,8 +45,9 @@ final class RelayServer {
     private volatile Ui ui;
     private final SharedPreferences prefs;
     private final SecureRandom random = new SecureRandom();
-    private final Set<String> seen = new HashSet<>();
-    private final ArrayDeque<String> seenOrder = new ArrayDeque<>();
+    /** nonce -> expires_at (s). A nonce is forgotten only after its command expired; never evicted while live. */
+    private final Map<String, Long> seen = new LinkedHashMap<>();
+    private static final int MAX_NONCES = 512;
     private volatile boolean running;
     private static RelayServer instance;
     volatile boolean foreground;
@@ -217,8 +215,10 @@ final class RelayServer {
         if (!PROTOCOL.equals(body.optString("protocol")) || now < body.getLong("issued_at") - 5 || now > body.getLong("expires_at")) throw new SecurityException("expired");
         String nonce = body.getString("nonce");
         synchronized (seen) {
-            if (!seen.add(nonce)) throw new SecurityException("replay");
-            seenOrder.add(nonce); if (seenOrder.size() > 512) seen.remove(seenOrder.poll());
+            if (seen.containsKey(nonce)) throw new SecurityException("replay");
+            seen.values().removeIf(exp -> exp < now);
+            if (seen.size() >= MAX_NONCES) throw new SecurityException("too many live commands");
+            seen.put(nonce, body.getLong("expires_at"));
         }
         return body;
     }

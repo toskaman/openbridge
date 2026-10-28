@@ -467,7 +467,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
             rid = pending['hello']['relay_id']
             reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
-            declared = fabric_relay.verify(key, reply, set()).get('params', {})
+            declared = fabric_relay.verify(key, reply, None).get('params', {})
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
             with server.relay_pending_lock:

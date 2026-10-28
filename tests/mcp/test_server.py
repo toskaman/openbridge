@@ -121,3 +121,40 @@ class Hardening(unittest.TestCase):
                 m.loopback_only(bad)
         body = m.redact_graph({'devices': [{'key': 'a', 'category': 'tv', 'label': "Marie's TV"}, {'key': 'b', 'category': 'tv', 'label': 'Salon'}]})
         self.assertEqual([d['label'] for d in body['devices']], ['tv 1', 'tv 2'])
+
+
+class RedirectConfinement(unittest.TestCase):
+    """Codex B1 review: a validated loopback URL must not redirect the MCP client to any other destination."""
+    def _server(self, handler):
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        class H(BaseHTTPRequestHandler):
+            def do_GET(self):
+                handler(self)
+            def log_message(self, *a):
+                pass
+        s = ThreadingHTTPServer(('127.0.0.1', 0), H)
+        threading.Thread(target=s.serve_forever, daemon=True).start()
+        self.addCleanup(lambda: (s.shutdown(), s.server_close()))
+        return s
+
+    def test_redirect_is_never_followed(self):
+        hits = []
+        def target(h):
+            hits.append(h.path)
+            h.send_response(200); h.send_header('Content-Type', 'application/json'); h.end_headers(); h.wfile.write(b'{"devices": []}')
+        dest = self._server(target)
+        for code in (301, 302, 303, 307, 308):
+            def redirector(h, code=code):
+                h.send_response(code); h.send_header('Location', f'http://127.0.0.1:{dest.server_port}/api/v2/graph'); h.end_headers()
+            src = self._server(redirector)
+            reply = call(f'http://127.0.0.1:{src.server_port}', 'tools/call', {'name': 'openbridge_get_graph', 'arguments': {}})
+            self.assertTrue(reply['result'].get('isError'), code)
+            self.assertIn('redirect', reply['result']['content'][0]['text'].lower())
+        self.assertEqual(hits, [])                        # no request ever reached the redirect destination
+
+    def test_base_url_rejects_credentials_path_query_fragment(self):
+        for bad in ('http://user:pw@127.0.0.1:18765', 'http://127.0.0.1:18765/api', 'http://127.0.0.1:18765/?x=1',
+                    'http://127.0.0.1:18765/#f', 'http://127.0.0.1:notaport', 'http://127.0.0.1.evil.example:18765'):
+            with self.assertRaises(SystemExit, msg=bad):
+                mcp.loopback_only(bad)
+        self.assertEqual(mcp.loopback_only('http://localhost:18765'), 'http://localhost:18765')

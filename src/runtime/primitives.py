@@ -202,6 +202,8 @@ class Executor:
         self._guard = threading.Lock()
         self.receipts = {}
         self._receipt_order = deque()
+        self._acknowledged = set()     # unresolved transactions the owner checked and acknowledged (outcome stays unverified)
+        self._admitted = 0             # potentially changing operations admitted but not yet recorded
 
     # ---------- events ----------
     def emit(self, kind, **data):
@@ -617,22 +619,51 @@ class Executor:
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup}
 
+    # ---------- recovery backlog ----------
+    MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first
+    MAX_UNRESOLVED = 64       # unresolved, potentially changing outcomes kept until the owner resolves them
+    UNRESOLVED = ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')
+
+    def _needs_recovery(self, tx):
+        r = self.receipts.get(tx)
+        p = PRIMITIVES.get(r.primitive_id) if r else None
+        return bool(r and p and r.state in self.UNRESOLVED and p.reversibility != 'NONE' and tx not in self._acknowledged)
+
+    def _backlog(self):
+        return sum(1 for t in self.receipts if self._needs_recovery(t)) + self._admitted
+
+    def acknowledge(self, tx):
+        """The owner checked an unresolved outcome on the device. It leaves recovery and frees backlog capacity;
+        the receipt keeps its unverified state (acknowledging is not verification)."""
+        with self._guard:
+            if not self._needs_recovery(tx):
+                return False
+            self._acknowledged.add(tx)
+        self.emit('acknowledged', transaction_id=tx)
+        return True
+
     # ---------- entry point ----------
     def execute(self, primitive_id, device_key, params, consent=False):
         started, tx = _now(), 'tx-' + secrets.token_hex(8)
         p = PRIMITIVES.get(primitive_id)
+        admitted = []
         def receipt(state, before=None, after=None, verified=False, errors=(), result=None):
             r = TransactionReceipt(tx, primitive_id, str(device_key)[:64], state, before, after, verified, started, _now(), tuple(errors))
             with self._guard:
+                if admitted:
+                    self._admitted -= 1
+                    admitted.clear()
                 self.receipts[tx] = r
                 self._receipt_order.append(tx)
-                while len(self.receipts) > 512:   # bound in-memory growth; recovery-relevant states are never evicted
-                    victim = next((t for t in self._receipt_order if t in self.receipts
-                                   and self.receipts[t].state not in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')), None)
+                # Bounded: unresolved changing outcomes are capped by admission (MAX_UNRESOLVED) and never evicted;
+                # everything else is evicted oldest-first.
+                while len(self.receipts) > self.MAX_RECEIPTS:
+                    victim = next((t for t in self._receipt_order if t in self.receipts and not self._needs_recovery(t)), None)
                     if victim is None:
-                        break                     # only unresolved outcomes remain: keep them all (recovery() must see them)
+                        break
                     self._receipt_order.remove(victim)
                     self.receipts.pop(victim, None)
+                    self._acknowledged.discard(victim)
             self.emit('receipt', transaction_id=tx, primitive_id=primitive_id, state=state, verified=verified)
             return dict(to_json(r), result=result or {})
         try:
@@ -645,6 +676,15 @@ class Executor:
                 raise PrimitiveError('CONSENT_REQUIRED', 'Owner consent is required for this primitive')
         except PrimitiveError as e:
             return receipt('BLOCKED', errors=(f'{e.code}: {e}',))
+        if p.reversibility != 'NONE':   # could change something: admit only while the recovery backlog has room
+            with self._guard:
+                full = self._backlog() >= self.MAX_UNRESOLVED
+                if not full:
+                    self._admitted += 1
+                    admitted.append(True)
+            if full:
+                return receipt('BLOCKED', errors=(f'RECOVERY_BACKLOG: {self.MAX_UNRESOLVED} operations ended without verification; '
+                                                  'check them in Activity & Recovery and acknowledge them before running another change',))
         lock = self._lock_for(GLOBAL_KEY if p.concurrency == 'single-global' else device_key)
         if not lock.acquire(blocking=False):
             return receipt('BLOCKED', errors=('CONCURRENT: another primitive is running on this target',))
@@ -676,7 +716,7 @@ class Executor:
         return out
 
     def recovery(self):
-        pending = tuple(t for t, r in self.receipts.items() if r.state in ('UNKNOWN_TIMEOUT', 'FAILED', 'PARTIAL')
-                        and PRIMITIVES[r.primitive_id].reversibility != 'NONE')   # read-only results change nothing
+        with self._guard:   # read-only results change nothing; acknowledged outcomes were checked by the owner
+            pending = tuple(t for t in list(self.receipts) if self._needs_recovery(t))
         open_changes = tuple(c['id'] for c in self.ctx.session_journal.open_changes())
         return RecoveryState(pending, open_changes, '' if not pending else 'some transactions ended without verification')

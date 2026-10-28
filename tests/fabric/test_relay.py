@@ -9,7 +9,7 @@ KEY=R.derive_key('123456','rn','pn')
 
 class FakeRelay:
     """Reference relay behaviour: verifies commands, returns signed bounded observations."""
-    def __init__(s,observations=None,fail=None,malformed=False):s.seen=set();s.obs=observations or [];s.fail=fail;s.ops=[];s.malformed=malformed
+    def __init__(s,observations=None,fail=None,malformed=False):s.seen={};s.obs=observations or [];s.fail=fail;s.ops=[];s.malformed=malformed
     def __call__(s,relay,message):
         msg=R.verify(KEY,message,s.seen);s.ops.append(msg['op'])
         if s.fail:raise s.fail
@@ -30,12 +30,12 @@ class RelayTests(unittest.TestCase):
         with self.assertRaises(R.RelayError):R.command(KEY,'tv','shell',{})
 
     def test_replay_expiry_and_tamper_rejected(self):
-        c=R.command(KEY,'tv','get_status');seen=set();R.verify(KEY,c,seen)
+        c=R.command(KEY,'tv','get_status');seen={};R.verify(KEY,c,seen)
         with self.assertRaises(R.RelayError):R.verify(KEY,c,seen)
-        with self.assertRaises(R.RelayError):R.verify(KEY,R.command(KEY,'tv','get_status',now=time.time()-100),set())
+        with self.assertRaises(R.RelayError):R.verify(KEY,R.command(KEY,'tv','get_status',now=time.time()-100),None)
         t=dict(R.command(KEY,'tv','get_status'));t['op']='revoke_access'
-        with self.assertRaises(R.RelayError):R.verify(KEY,t,set())
-        with self.assertRaises(R.RelayError):R.verify(R.derive_key('000000','rn','pn'),R.command(KEY,'tv','get_status'),set())
+        with self.assertRaises(R.RelayError):R.verify(KEY,t,None)
+        with self.assertRaises(R.RelayError):R.verify(R.derive_key('000000','rn','pn'),R.command(KEY,'tv','get_status'),None)
 
     def test_scan_through_relay_adds_indirect_observe_only_device(self):
         obs=[{'address':'C1:22:33:44:55:66','name':'Thermo','rssi':-71,'company_ids':[76],'address_kind':'static_random'}]
@@ -83,7 +83,7 @@ class TransportTests(unittest.TestCase):
         def send(_r,msg):
             if msg.get('op')=='pair_request':
                 state['pc']=msg['pc_nonce'];return {'protocol':R.PROTOCOL,'relay_id':'phone','relay_nonce':'ab'*8}
-            k=R.derive_key('424242','ab'*8,state['pc']);R.verify(k,msg,set())
+            k=R.derive_key('424242','ab'*8,state['pc']);R.verify(k,msg,None)
             now=int(time.time());rep={'protocol':R.PROTOCOL,'relay_id':'phone','op':'reply','params':{'capabilities':['ble_scan']},'nonce':'n1','issued_at':now,'expires_at':now+30}
             return {**rep,'mac':R.sign(k,rep)}
         rid,key,declared=R.pair(send,lambda:'424242');self.assertEqual((rid,declared['capabilities']),('phone',['ble_scan']))
@@ -97,7 +97,7 @@ class ServerRelayFlowTests(unittest.TestCase):
         from src.fabric.registry import Registry
         server=create_server(0,fabric_salt=b's',session_journal=__import__('src.fabric.session',fromlist=['x']).SessionJournal(__import__('tempfile').mkdtemp()+'/s.json'))
         try:
-            state={'code':None,'key':None,'seen':set(),'owner':True}
+            state={'code':None,'key':None,'seen':{},'owner':True}
             def send(_r,msg):
                 if msg.get('op')=='pair_request':
                     state['pc']=msg['pc_nonce'];state['code']='314159'
@@ -146,7 +146,7 @@ class PairingIsolationTests(unittest.TestCase):
             if msg.get('op') == 'pair_request':
                 state['pc'] = msg['pc_nonce']
                 return {'protocol': R.PROTOCOL, 'relay_id': relay_id, 'relay_nonce': relay_nonce, 'declared': {}}
-            key = R.derive_key(code, relay_nonce, state['pc']); R.verify(key, msg, set())
+            key = R.derive_key(code, relay_nonce, state['pc']); R.verify(key, msg, None)
             now = int(time.time())
             rep = {'protocol': R.PROTOCOL, 'relay_id': relay_id, 'op': 'reply',
                    'params': {'capabilities': ['ble_scan'], 'permissions': {'BLUETOOTH_SCAN': True, 'owner_enabled': True}},
@@ -210,14 +210,72 @@ class NonceBoundTests(unittest.TestCase):
             R.verify(KEY, cmds[0], seen, now=later)
 
 
+class NonceCacheApiTests(unittest.TestCase):
+    def test_only_expiring_dict_or_one_shot(self):
+        c = R.command(KEY, 'tv', 'get_status')
+        with self.assertRaises(TypeError):            # a count-evicting set is no longer a supported cache
+            R.verify(KEY, c, set())
+        R.verify(KEY, c, None); R.verify(KEY, c, None)  # one-shot check: valid twice, nothing remembered (pairing replies)
+        seen = {}
+        R.verify(KEY, c, seen)
+        with self.assertRaises(R.RelayError):
+            R.verify(KEY, c, seen)
+
+
+def _executor():
+    from types import SimpleNamespace
+    from src.runtime.primitives import Executor
+    return Executor(SimpleNamespace(fabric_registry=None, session_journal=SimpleNamespace(open_changes=lambda: [])))
+
+
+def _unresolved(ex, n, prefix='u'):
+    from src.runtime.contract import TransactionReceipt
+    for i in range(n):
+        tx = f'{prefix}{i}'
+        ex.receipts[tx] = TransactionReceipt(tx, 'pc_job', 'k', 'UNKNOWN_TIMEOUT', None, None, False, '', '', ())
+        ex._receipt_order.append(tx)
+
+
 class ReceiptBoundTests(unittest.TestCase):
-    def test_unresolved_receipts_are_never_evicted(self):
-        from types import SimpleNamespace
+    def test_unresolved_changes_are_never_evicted_and_admission_is_bounded(self):
+        ex = _executor()
+        _unresolved(ex, ex.MAX_UNRESOLVED)
+        for _ in range(ex.MAX_RECEIPTS + 100):          # flood with resolved (BLOCKED) receipts
+            ex.execute('no-such-primitive', 'k', {})
+        self.assertLessEqual(len(ex.receipts), ex.MAX_RECEIPTS)
+        self.assertEqual(sum(1 for r in ex.receipts.values() if r.state == 'UNKNOWN_TIMEOUT'), ex.MAX_UNRESOLVED)
+        r = ex.execute('relay_revoke', 'k2', {'relay_id': 'r'}, consent=True)   # a changing operation is refused, not admitted
+        self.assertEqual(r['state'], 'BLOCKED'); self.assertIn('RECOVERY_BACKLOG', r['errors'][0])
+        self.assertEqual(len(ex.recovery().pending_transactions), ex.MAX_UNRESOLVED)
+        self.assertTrue(ex.acknowledge('u0'))            # owner checked one: it leaves recovery and frees one slot
+        self.assertFalse(ex.acknowledge('u0'))
+        self.assertNotIn('u0', ex.recovery().pending_transactions)
+        self.assertEqual(ex.receipts['u0'].state, 'UNKNOWN_TIMEOUT')   # acknowledging is not verification
+
+    def test_concurrent_failures_never_exceed_capacity_or_lose_an_outcome(self):
+        import threading
         from src.runtime.primitives import Executor
-        from src.runtime.contract import TransactionReceipt
-        ex = Executor(SimpleNamespace(fabric_registry=None))
-        for i in range(600):
-            ex.receipts[f'u{i}'] = TransactionReceipt(f'u{i}', 'pc_job', 'k', 'UNKNOWN_TIMEOUT', None, None, False, '', '', ())
-            ex._receipt_order.append(f'u{i}')
-        ex.execute('read_facts', 'k', {})                 # triggers the bound
-        self.assertEqual(sum(1 for r in ex.receipts.values() if r.state == 'UNKNOWN_TIMEOUT'), 600)
+        ex = _executor()
+        gate = threading.Event()
+        def failing(self_, key, params):
+            gate.wait(5)
+            raise RuntimeError('adapter lost mid-operation')
+        ex.RUNNERS = dict(Executor.RUNNERS, relay_revoke=failing)
+        out, threads = [], []
+        for i in range(ex.MAX_UNRESOLVED * 3):
+            th = threading.Thread(target=lambda i=i: out.append(ex.execute('relay_revoke', f'dev{i}', {'relay_id': 'r'}, consent=True)))
+            threads.append(th); th.start()
+        for _ in range(200):                              # all admissions decided while every admitted job is still running
+            if sum(1 for o in out if o['state'] == 'BLOCKED') + ex._admitted >= len(threads):
+                break
+            threading.Event().wait(0.01)
+        gate.set()
+        for th in threads:
+            th.join(10)
+        failed = [o for o in out if o['state'] == 'FAILED']
+        blocked = [o for o in out if o['state'] == 'BLOCKED']
+        self.assertEqual(len(failed), ex.MAX_UNRESOLVED)
+        self.assertEqual(len(failed) + len(blocked), len(threads))
+        self.assertTrue(all('RECOVERY_BACKLOG' in o['errors'][0] for o in blocked))
+        self.assertEqual(set(ex.recovery().pending_transactions), {o['transaction_id'] for o in failed})   # none forgotten
+        self.assertEqual(ex._admitted, 0)
