@@ -8,7 +8,7 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 ![Real Device Fabric run, household names redacted](docs/jury/screens/fabric-tv-relay-redacted-1440.png)
 
-*Real run on the author's home network (names redacted with `?redact`): a Freebox and the 12 active hosts it reports, an Android phone over USB, an Android TV over ADB Wi-Fi merged with its mDNS identity, and 6 Bluetooth devices that the PC cannot hear itself (it has no Bluetooth radio) found through the TV acting as a relay.*
+*Real run on the author's home network, 28 Oct 2026 (names redacted with `?redact`): 24 devices — a Freebox reporting 12 active LAN hosts, mDNS/SSDP discovery, an Android phone over USB and an Android TV over ADB Wi-Fi as paired relays. The PC has no Bluetooth radio; BLE reach through relays is demonstrated on hardware in the [TV-to-phone handover](docs/release/COMPLETE_HANDOVER.md).*
 
 ![Ask OpenBridge natural-language panel](docs/jury/screens/ask-openbridge-1440.png)
 
@@ -16,7 +16,7 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 ![Companion 0.4.0 on a real phone: typed command parsed on the PC, outcome reported back](docs/jury/screens/companion-ask-phone.png)
 
-*Companion 0.4.0 on a real phone (28 Oct 2026): the owner types "Send my vacuum to the dock", the PC parses it with local Llama over the signed relay channel, and the outcome — "vacuum.dock ready — review on this PC" — is reported back on the phone. The phone never executes; approval happens on the PC.*
+*Companion 0.4.0 on a real phone (28 Oct 2026): the owner types "How many devices are online", the PC parses it with local Llama over the signed relay channel, and the outcome — "fabric.status ready — review on this PC" — is reported back on the phone. The phone never executes; approval happens on the PC.*
 
 ## The problem
 Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) behind different permission screens. Tools either see one transport at a time or ask for broad control. Owners cannot tell what is really connected, what each device can do, and whether a change can be undone.
