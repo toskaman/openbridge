@@ -9,7 +9,9 @@ class EvidenceError(ValueError):
 
 
 def registry_digest(skills, primitives):
-    norm = {'skills': sorted(s['skill_id'] for s in skills), 'primitives': sorted(primitives)}
+    norm = {'skills': sorted([dict(sorted(s.items())) for s in skills],
+                             key=lambda d: d.get('skill_id', '')),
+            'primitives': sorted(primitives)}
     return S.digest(norm)
 
 
