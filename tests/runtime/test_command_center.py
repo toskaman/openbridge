@@ -216,6 +216,14 @@ class NLRouter(unittest.TestCase):
         self.assertNotIn('Bearer', p)
         self.assertNotIn('sk-', p)
 
+    def test_prompt_prefers_resolving_with_direct_examples(self):
+        from src.runtime.nl_router import build_prompt
+        p = build_prompt('How many devices are online', 'en')
+        self.assertIn('fabric.status', p)
+        # Direct-resolution examples must outnumber the clarification example,
+        # else small models over-ask (observed live with Llama 3B).
+        self.assertGreater(p.count('"confidence": 0.9'), p.count('clarifying_question": "'))
+
 
 class CostGuard(unittest.TestCase):
     def test_estimates_match_broker_reservation(self):
