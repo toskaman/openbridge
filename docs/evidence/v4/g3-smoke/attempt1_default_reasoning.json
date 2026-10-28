@@ -1,0 +1,91 @@
+{
+ "kind": "G3_INTEGRATION_SMOKE",
+ "started": "2026-10-28T23:11:59.905763+00:00",
+ "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+ "model": "muse-spark-1.3",
+ "calls": [
+  {
+   "prompt_sha256": "c2de7f5eeb16a034ac1d5cd75be506d57a5f5e0f7873c1de19a332e552f02902",
+   "elapsed_ms": 13719,
+   "request_id": "chatcmpl-01a184c9-3d0d-751b-8c0d-4670138684d9",
+   "model": "muse-spark-1.3",
+   "finish_reason": "length",
+   "usage": {
+    "prompt_tokens": 541,
+    "completion_tokens": 4000
+   },
+   "reserved_usd": 0.1,
+   "estimated_cost_usd": 0.01767625,
+   "reply": "",
+   "status": "RECORDED"
+  },
+  {
+   "prompt_sha256": "c2de7f5eeb16a034ac1d5cd75be506d57a5f5e0f7873c1de19a332e552f02902",
+   "elapsed_ms": 16340,
+   "request_id": "chatcmpl-01a184c9-7cf4-732c-80f8-ac3e76f32e50",
+   "model": "muse-spark-1.3",
+   "finish_reason": "length",
+   "usage": {
+    "prompt_tokens": 541,
+    "completion_tokens": 4000
+   },
+   "reserved_usd": 0.1,
+   "estimated_cost_usd": 0.01767625,
+   "reply": "",
+   "status": "RECORDED"
+  },
+  {
+   "prompt_sha256": "c2de7f5eeb16a034ac1d5cd75be506d57a5f5e0f7873c1de19a332e552f02902",
+   "elapsed_ms": 16923,
+   "request_id": "chatcmpl-01a184c9-bf78-7719-9cb6-c037ca8bbeb8",
+   "model": "muse-spark-1.3",
+   "finish_reason": "length",
+   "usage": {
+    "prompt_tokens": 541,
+    "completion_tokens": 4000
+   },
+   "reserved_usd": 0.1,
+   "estimated_cost_usd": 0.01767625,
+   "reply": "",
+   "status": "RECORDED"
+  }
+ ],
+ "steps": [],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "autorisé pour l’essai G3, 0,80 $ maximum",
+  "observation_id": "meta-dashboard-20261029T0010",
+  "observed_at": "2026-10-29T00:10:00+01:00",
+  "free_balance_usd_lower_bound": 132.0
+ },
+ "target": {
+  "device_fingerprint": "fp-cb29c7d289439e8e",
+  "fact_count": 13
+ },
+ "bundle_id": "b-9b1661836a177013",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Mute the TV audio, then confirm by reading the media stream state that it report'"
+  },
+  "stocked_path": "device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task"
+ },
+ "synthesis_rejects": [
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "not JSON"
+  },
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "not JSON"
+  },
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "not JSON"
+  }
+ ],
+ "status": "KILL",
+ "reason": "no valid candidate within the frozen call budget",
+ "finished": "2026-10-28T23:12:56.404871+00:00"
+}
