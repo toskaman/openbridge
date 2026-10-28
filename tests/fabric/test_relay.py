@@ -192,7 +192,8 @@ class PairingIsolationTests(unittest.TestCase):
 class NonceBoundTests(unittest.TestCase):
     def test_seen_nonces_bounded_without_reopening_replay(self):
         m = manager(FakeRelay()); seen = m.relays['tv']['seen']
-        cmds = [R.command(KEY, 'tv', 'get_status') for _ in range(600)]
+        t0 = int(time.time())                           # one issue time: the test must not depend on runner speed
+        cmds = [R.command(KEY, 'tv', 'get_status', now=t0) for _ in range(600)]
         accepted = 0
         for c in cmds:
             try:

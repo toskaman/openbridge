@@ -77,6 +77,7 @@ def _get(base_url, path, query):
             raw = r.read(MAX_REPLY + 1)
     except HTTPError as error:
         if 300 <= error.code < 400:   # never follow: a loopback URL must not hand us to another host or port
+            error.close()
             raise _ToolError(f'OpenBridge answered with a redirect ({error.code}); redirects are refused.') from None
         detail = error.read(2000).decode('utf-8', 'replace')
         try:
