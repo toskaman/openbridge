@@ -26,6 +26,8 @@
     escalation: 'Needs a stronger model or setup step', reasons: 'Reasons',
     suggestions: 'Try', recents: 'Recent', error: 'Request failed',
     micTitle: 'Voice input arrives in P1; text only for now',
+    micReady: 'Record a voice command (local Meta STT)', micStop: 'Stop and transcribe',
+    micBusy: 'Transcribing…', micDenied: 'Microphone unavailable in this browser',
     partial: 'Partial success', failed: 'Failed',
   };
   let reqLang = (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
@@ -120,8 +122,12 @@
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(input.value); });
     const mic = el('button', undefined, 'ghost');
     mic.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-    mic.type = 'button'; mic.disabled = true; mic.title = t('micTitle');
-    mic.setAttribute('aria-label', t('micTitle'));
+    mic.type = 'button';
+    const canMic = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.AudioContext);
+    mic.disabled = !canMic;
+    mic.title = t(canMic ? 'micReady' : 'micDenied');
+    mic.setAttribute('aria-label', mic.title);
+    mic.onclick = () => toggleMic(input, mic);
     form.append(input, ask, mic);
     root.append(form);
 
@@ -212,9 +218,91 @@
     } catch { /* private mode: recents simply do not persist */ }
   }
 
+  /* Device-side voice, PC flavor: record PCM16 16 kHz in the browser, transcribe with
+     local Meta STT, fill the same input for owner review. Nothing auto-runs. */
+  let rec = null;
+  const WORKLET = "registerProcessor('ob-cap',class extends AudioWorkletProcessor{"
+    + "process(i){const c=i[0]&&i[0][0];if(c)this.port.postMessage(c.slice(0));return true}});";
+  function pcm16b64(chunks, inRate) {
+    let n = 0;
+    for (const c of chunks) n += c.length;
+    const flat = new Float32Array(n);
+    let o = 0;
+    for (const c of chunks) { flat.set(c, o); o += c.length; }
+    const step = Math.max(1, Math.round(inRate / 16000));
+    const out = new Int16Array(Math.floor(n / step));
+    for (let i = 0; i < out.length; i++) {
+      let s = 0;
+      for (let k = 0; k < step; k++) s += flat[i * step + k] || 0;
+      const v = Math.max(-1, Math.min(1, s / step));
+      out[i] = v < 0 ? v * 32768 : v * 32767;
+    }
+    const bytes = new Uint8Array(out.buffer);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 8192)
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+    return btoa(bin);
+  }
+  function micState(mic, cls, title) {
+    mic.classList.toggle('recording', cls === 'recording');
+    mic.disabled = cls === 'busy';
+    mic.title = t(title); mic.setAttribute('aria-label', t(title));
+  }
+  async function toggleMic(input, mic) {
+    if (rec) { stopMic(input, mic); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      const ctx = new AudioContext();
+      await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' })));
+      const src = ctx.createMediaStreamSource(stream);
+      const node = new AudioWorkletNode(ctx, 'ob-cap');
+      const chunks = [];
+      node.port.onmessage = (e) => chunks.push(e.data);
+      src.connect(node);
+      rec = { ctx, stream, node, chunks, timer: setTimeout(() => stopMic(input, mic), 15000) };
+      micState(mic, 'recording', 'micStop');
+    } catch (e) {
+      resultBox().append(el('p', `${t('error')}: ${e.message || e}`, 'ask-error'));
+    }
+  }
+  async function stopMic(input, mic) {
+    const r = rec; rec = null;
+    if (!r) return;
+    clearTimeout(r.timer);
+    micState(mic, 'busy', 'micBusy');
+    try {
+      r.node.disconnect();
+      const rate = r.ctx.sampleRate;
+      const chunks = r.chunks;
+      r.stream.getTracks().forEach((tr) => tr.stop());
+      await r.ctx.close();
+      if (!chunks.length) throw new Error('no audio captured');
+      const data = await post('/api/v2/voice/transcribe', { audio_b64: pcm16b64(chunks, rate), language: reqLang });
+      input.value = (data.transcript || '').trim();
+      input.dataset.voice = '1';
+      input.focus();
+    } catch (e) {
+      resultBox().append(el('p', `${t('error')}: ${e.message || e}`, 'ask-error'));
+    } finally {
+      micState(mic, '', 'micReady');
+    }
+  }
+  /* Spoken outcome on this PC, only for requests that started by voice. */
+  function speak(text) {
+    try {
+      if (!('speechSynthesis' in window) || !text) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(String(text).slice(0, 200));
+      u.lang = reqLang === 'fr' ? 'fr-FR' : 'en-US';
+      speechSynthesis.speak(u);
+    } catch { /* silent: speech is a courtesy, never load-bearing */ }
+  }
+
   async function run(text) {
     if (running || !text.trim()) return;
     running = true;
+    const byVoice = document.getElementById('ask-input').dataset.voice === '1';
+    document.getElementById('ask-input').dataset.voice = '';
     stages().replaceChildren(); resultBox();
     const t0 = performance.now();
     try {
@@ -227,6 +315,7 @@
         box.append(el('h3', t('clarification')));
         box.append(el('p', d.clarifying_question || ''));
         pushRecent(text.trim(), null, d.status);
+        if (byVoice) speak(d.clarifying_question || t('clarification'));
         return;
       }
       if (d.status === 'unsupported' || d.status === 'escalation_required') {
@@ -234,6 +323,7 @@
         box.append(el('h3', t(d.status === 'unsupported' ? 'unsupported' : 'escalation')));
         box.append(el('p', `${t('reasons')}: ${(d.ambiguities || []).join(' · ')}`));
         pushRecent(text.trim(), null, d.status);
+        if (byVoice) speak(`${t(d.status === 'unsupported' ? 'unsupported' : 'escalation')}. ${(d.ambiguities || []).join('. ')}`);
         return;
       }
       if (d.status !== 'resolved') {
@@ -266,6 +356,7 @@
           kv(box, 'timeTaken', `${Math.round(performance.now() - t0)} ms`);
           btn.textContent = t('approved');
           pushRecent(text.trim(), d.skill_id, rc.state);
+          if (byVoice) speak(`${t('approved')}. ${rc.state || ''}`);
         } catch (e) {
           kv(box, 'failed', e.message);
           btn.disabled = false; btn.textContent = t('approve');
@@ -273,6 +364,7 @@
       };
       box.append(btn);
       pushRecent(text.trim(), d.skill_id, 'preview');
+      if (byVoice) speak(`${d.outcome || d.skill_id}. ${t('stApproval')}`);
     } catch (e) {
       resultBox().append(el('p', `${t('error')}: ${e.message}`, 'ask-error'));
     } finally {

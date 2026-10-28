@@ -291,8 +291,17 @@ def voice(server, path, body):
         pcm = base64.b64decode(body['audio_b64'], validate=True)
     except (binascii.Error, ValueError):
         return 400, {'error': 'invalid audio'}
+    # Local-first: on-device Meta STT costs nothing and keeps audio home; cloud only when local is absent.
+    from src.ai import stt_local
     try:
-        return 200, voice_stt.transcribe(pcm, _meta_key(), body.get('language', 'fr'))
+        if stt_local.available():
+            try:
+                return 200, stt_local.transcribe_pcm(bytes(pcm), body.get('language', 'fr'))
+            except voice_stt.STTBlocked:
+                raise
+            except Exception as e:
+                raise OSError(f'local STT failed ({type(e).__name__})') from e
+        return 200, voice_stt.transcribe(bytes(pcm), _meta_key(), body.get('language', 'fr'))
     except voice_stt.STTBlocked as e:
         return 409, {'error': str(e), 'fallback': 'type the command instead'}
     except OSError as e:

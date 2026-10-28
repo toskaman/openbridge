@@ -20,6 +20,10 @@ MAX_CONTROLS, MAX_REQUESTS = 12, 16
 MAX_COMMANDS, MAX_COMMAND_TEXT, MAX_COMMAND_REPORT = 8, 500, 160
 CONTROL_ID = re.compile(r'^[a-z0-9-]{4,40}$')
 REQUEST_ID = re.compile(r'^[0-9a-f]{32}$')
+CLIP_ID = re.compile(r'^[a-z0-9-]{1,32}$')
+SHA256 = re.compile(r'^[0-9a-f]{64}$')
+VOICE_MAX_BYTES = 512 * 1024   # 15 s of 16 kHz PCM16 mono is 480 000 bytes; margin, hard cap
+VOICE_URL_SKEW = 120           # seconds of clock skew tolerated on a voice download URL
 MAX_SCAN_SECONDS = 15
 MAX_OBSERVATIONS = 200
 COMMAND_TTL = 30
@@ -155,14 +159,27 @@ def validate_commands(report):
     for c in cmds:
         if not isinstance(c, dict) or not REQUEST_ID.match(str(c.get('request_id', ''))):
             continue
-        text = c.get('text')
-        if not isinstance(text, str) or not text.strip() or len(text) > MAX_COMMAND_TEXT:
-            continue
         if c.get('lang') not in ('en', 'fr'):
             continue
         if c.get('quality') not in ('low', 'medium', 'high', 'auto'):
             continue
-        out.append({'request_id': c['request_id'], 'text': text.strip(),
+        if c.get('kind', 'text') == 'voice':
+            # Voice clip announced by the relay; the PC downloads the raw PCM16 bytes over a
+            # one-shot HMAC URL, checks size+sha256, transcribes locally, then parses as text.
+            nbytes = c.get('bytes')
+            if not CLIP_ID.match(str(c.get('clip_id', ''))) or not SHA256.match(str(c.get('sha256', ''))):
+                continue
+            if not isinstance(nbytes, int) or nbytes <= 0 or nbytes > VOICE_MAX_BYTES or nbytes % 2:
+                continue
+            out.append({'request_id': c['request_id'], 'kind': 'voice', 'clip_id': c['clip_id'],
+                        'bytes': nbytes, 'sha256': c['sha256'], 'lang': c['lang'], 'quality': c['quality']})
+            continue
+        if c.get('kind', 'text') != 'text':
+            continue
+        text = c.get('text')
+        if not isinstance(text, str) or not text.strip() or len(text) > MAX_COMMAND_TEXT:
+            continue
+        out.append({'request_id': c['request_id'], 'kind': 'text', 'text': text.strip(),
                     'lang': c['lang'], 'quality': c['quality']})
     return out
 
@@ -228,11 +245,9 @@ class RelayManager:
                 pass        # local key is gone regardless: relay can no longer be commanded
 
 
-def http_transport(base_url, timeout=25):
-    """POST JSON to a relay. base_url must be loopback (adb forward) or a private LAN address in the approved scope."""
+def _check_scope(base_url):
     import ipaddress
     from urllib.parse import urlsplit
-    from urllib.request import Request, build_opener, ProxyHandler
     host = urlsplit(base_url).hostname
     try:
         ip = ipaddress.ip_address(host)
@@ -240,6 +255,12 @@ def http_transport(base_url, timeout=25):
         raise RelayError('Relay address must be an IP literal') from None
     if not (ip.is_loopback or ip.is_private) or ip.is_multicast:
         raise RelayError('Relay address outside the approved local scope')
+
+
+def http_transport(base_url, timeout=25):
+    """POST JSON to a relay. base_url must be loopback (adb forward) or a private LAN address in the approved scope."""
+    from urllib.request import Request, build_opener, ProxyHandler
+    _check_scope(base_url)
 
     def send(_relay, message):
         data = json.dumps(message).encode()
@@ -255,6 +276,47 @@ def http_transport(base_url, timeout=25):
             raise RelayError('Relay refused: ' + str(reply['error'])[:80])
         return reply
     return send
+
+
+def voice_sig(key, clip_id, ts, nonce):
+    """HMAC for a one-shot voice download URL. Mirrors the Companion's /voice check byte for byte."""
+    return hmac.new(key, f'voice-v1|{clip_id}|{ts}|{nonce}'.encode(), hashlib.sha256).hexdigest()
+
+
+def voice_url(base_url, key, clip_id, now=None):
+    """Build a signed one-shot download URL for a voice clip announced via get_commands."""
+    if not CLIP_ID.match(clip_id):
+        raise RelayError('Bad clip id')
+    ts = int(now if now is not None else time.time())
+    nonce = secrets.token_hex(8)
+    return '%s/voice?clip=%s&ts=%d&nonce=%s&sig=%s' % (
+        base_url.rstrip('/'), clip_id, ts, nonce, voice_sig(key, clip_id, ts, nonce))
+
+
+def fetch_voice(base_url, key, clip_id, expected_bytes, expected_sha256, timeout=25):
+    """Download raw PCM16 mono 16 kHz bytes from a paired relay. Same local scope as http_transport."""
+    _check_scope(base_url)
+    if not isinstance(expected_bytes, int) or expected_bytes <= 0 or expected_bytes > VOICE_MAX_BYTES:
+        raise RelayError('Bad voice size')
+    if not SHA256.match(expected_sha256 or ''):
+        raise RelayError('Bad voice hash')
+    from urllib.request import Request, build_opener, ProxyHandler
+    from urllib.error import HTTPError
+    try:
+        req = Request(voice_url(base_url, key, clip_id), method='GET')
+        with build_opener(ProxyHandler({})).open(req, timeout=timeout) as r:
+            raw = r.read(expected_bytes + 1)
+    except HTTPError as error:
+        try:
+            detail = error.read(200).decode('utf-8', 'replace')
+        finally:
+            error.close()
+        raise RelayError('Relay refused voice: ' + detail) from None
+    if len(raw) != expected_bytes:
+        raise RelayError('Voice clip size mismatch')
+    if hashlib.sha256(raw).hexdigest() != expected_sha256:
+        raise RelayError('Voice clip hash mismatch')
+    return raw
 
 
 def pair(send, code_reader):
