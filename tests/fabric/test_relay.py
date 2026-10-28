@@ -158,6 +158,11 @@ class PairingIsolationTests(unittest.TestCase):
         return self.server.relay_action('/api/relay-pair-start', {'device_id': handle},
                                         transport_factory=lambda u: self.companion(relay_id, code, nonce))
 
+    def test_pair_confirm_stores_relay_url(self):
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
+        self.assertEqual(self.server.relays.relays['phone']['url'], 'http://127.0.0.1:47800')
+
     def test_two_pairings_in_progress_do_not_clobber_each_other(self):
         self.start('android-h1', 'phone', '111111', 'aa' * 8)
         self.start('android-h2', 'tv', '222222', 'bb' * 8)

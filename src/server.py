@@ -450,7 +450,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 now = time.monotonic()
                 for h in [h for h, p in server.relay_pending.items() if now - p['started_at'] > PAIRING_TTL]:
                     del server.relay_pending[h]
-                server.relay_pending[handle] = {'send': send, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
+                server.relay_pending[handle] = {'send': send, 'url': url, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
             return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': hello['relay_id'], 'declared': hello.get('declared', {})}
         if path == '/api/relay-pair-confirm':
             handle = body.get('device_id')
@@ -470,6 +470,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             declared = fabric_relay.verify(key, reply, None).get('params', {})
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
+            server.relays.relays[rid]['url'] = pending.get('url')
             server.relay_ledger.proved(rid)
             with server.relay_pending_lock:
                 server.relay_pending.pop(handle, None)
