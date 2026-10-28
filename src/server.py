@@ -478,7 +478,14 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             relay = server.relays.relays.get(rid)
             if relay is None:
                 raise fabric_relay.RelayError('Unknown relay')
-            status = fabric_relay.verify(relay['key'], relay['send'](relay, fabric_relay.command(relay['key'], rid, 'get_status')), relay['seen']).get('params', {})
+            try:
+                status = fabric_relay.verify(relay['key'], relay['send'](relay, fabric_relay.command(relay['key'], rid, 'get_status')), relay['seen']).get('params', {})
+            except (OSError, TimeoutError) as error:
+                relay['online'] = False          # Companion stopped or unreachable: its routes go link_down until it answers again
+                relay['failures'] = relay.get('failures', 0) + 1
+                server.relay_ledger.failure(rid)
+                raise fabric_relay.RelayError(f'Relay unreachable: {type(error).__name__}; open the Companion app on the device and retry') from None
+            relay['online'] = True               # a signed status reply is the read-back that brings a relay back
             relay['permissions'] = dict(status.get('permissions', {}))
             rid, observations = server.relays.scan(int(body.get('seconds', 8)), relay_id=rid)
             server.relay_ledger.record(rid, observations)
