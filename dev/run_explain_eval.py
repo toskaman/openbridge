@@ -3,13 +3,12 @@
 Frozen inputs: docs/evaluation/routing-v1/explain/{PROMPT.md,SAMPLE.json,RUBRIC.md,BUDGET.md,SHA256SUMS}
 plus docs/evaluation/routing-v1/results/run-f8873d9.json (bound by SAMPLE.run_sha256).
 
-Budget: at most 8 calls x $0.10 through broker._reserve. The broker caps one
-supervised session at $0.20, so the run mints 4 permits ($0.20 each) from the
-single owner-supplied balance observation; each permit is minted lazily just
-before its 2 calls so every reserve lands inside the 300 s freshness window.
+Budget: at most 8 calls x $0.10 through broker._reserve under ONE canonical
+observation identity/time and one shared ledger, with an explicit
+owner-authorized evaluation allowance (--allowance-usd + --authz).
 
 Usage:
-  python -m dev.run_explain_eval --observation-id <id> --free-balance-usd <n> --out <dir>
+  python -m dev.run_explain_eval --observation-id <id> --free-balance-usd <n> --out <dir> --authz <ref>
 """
 import argparse
 import hashlib
@@ -53,7 +52,14 @@ def main():
     ap.add_argument('--max-completion-tokens', type=int, default=800)
     ap.add_argument('--resume', action='store_true',
                     help='skip case_ids already in <out>/replies.json; never re-runs a call')
+    ap.add_argument('--allowance-usd', type=float, default=0.80,
+                    help='explicit owner-authorized evaluation allowance (canonical observation, shared ledger)')
+    ap.add_argument('--authz', default=None,
+                    help='explicit owner authorization reference for the allowance (required)')
     args = ap.parse_args()
+    if not args.authz:
+        print('MISSING_AUTHZ')
+        return 2
     global EXPLAIN, MAX_COMPLETION_TOKENS
     EXPLAIN = ROOT / args.eval_dir
     MAX_COMPLETION_TOKENS = args.max_completion_tokens
@@ -81,7 +87,6 @@ def main():
         return 2
     transport = MetaTransport(key)
     budget_path = out / 'budget.sqlite3'
-    permits = {}
     records = []
     done = set()
     if args.resume:
@@ -89,26 +94,21 @@ def main():
         if prev.exists():
             records = json.loads(prev.read_text(encoding='utf-8'))
             done = {r['case_id'] for r in records}
-            print('resume: keeping %d recorded calls, %d remaining' % (len(records), 0))
-
-    def permit_for(i):
-        slot = i // 2
-        if slot not in permits:
-            permits[slot] = CreditPermit(
-                observation_id='%s#%d' % (args.observation_id, slot + 1),
-                verified_at=datetime.now(timezone.utc),
-                free_balance_usd=args.free_balance_usd, session_budget_usd=0.20)
-        return permits[slot]
+            print('resume: keeping %d recorded calls' % len(records))
+    permit = CreditPermit(observation_id=args.observation_id, verified_at=datetime.now(timezone.utc),
+                          free_balance_usd=args.free_balance_usd, session_budget_usd=0.20)
+    broker = RuntimeModelBroker(budget_path, permit, transport,
+                                evaluation_allowance_usd=args.allowance_usd,
+                                evaluation_authz=args.authz)
 
     pending = [c for c in sample['sampled_case_ids'][:sample['budget_calls_max']] if c not in done]
     for i, case_id in enumerate(pending):
         row = {k: rows[case_id][k] for k in ROW_KEYS}
         case_json = json.dumps(row, indent=2, ensure_ascii=False)
         prompt = template.replace('{CASE_JSON}', case_json)
-        rec = {'case_id': case_id, 'slot': i // 2 + 1,
+        rec = {'case_id': case_id,
                'input_sha256': hashlib.sha256(prompt.encode()).hexdigest(),
                'status': None}
-        broker = RuntimeModelBroker(budget_path, permit_for(i), transport)
         try:
             broker._reserve()
         except ModelBlocked as e:
