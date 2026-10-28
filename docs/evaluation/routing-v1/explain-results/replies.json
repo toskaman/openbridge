@@ -1,0 +1,130 @@
+[
+  {
+    "case_id": "routing-v1-all_unavailable-01",
+    "slot": 1,
+    "input_sha256": "dde40e248c103f3a16260f4e7bf64361877676e2f88b8c0d1c8e0eeb467a19ea",
+    "status": "RECORDED",
+    "elapsed_ms": 3769,
+    "request_id": "chatcmpl-01a18370-aa0e-7779-995a-87e0d8c7a9f4",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2154,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.0060925,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-freshness-01",
+    "slot": 1,
+    "input_sha256": "6575ded73431e8de87ee8e5421666f12f07c8b25b126931ca2963f6e3d516655",
+    "status": "RECORDED",
+    "elapsed_ms": 4079,
+    "request_id": "chatcmpl-01a18370-ba0d-71c1-b214-292f34f0a68e",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2095,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.00601875,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-grant_insufficient-01",
+    "slot": 2,
+    "input_sha256": "b0e4ef2ef61910c3f52170741bb7d91949c56d7ec0cd0e1fc32ebc282ea830b1",
+    "status": "RECORDED",
+    "elapsed_ms": 3771,
+    "request_id": "chatcmpl-01a18370-c8d1-77eb-bb12-40466d9e7168",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2174,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.0061175,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-lease_stale-01",
+    "slot": 2,
+    "input_sha256": "a56c961a90dda87120ea73963b5d35863e9fa3d4d8923abb95c6ba29908c85a4",
+    "status": "RECORDED",
+    "elapsed_ms": 3353,
+    "request_id": "chatcmpl-01a18370-d5ce-75c0-9361-dcb1b4a9ffb4",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2130,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.0060625,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-link_down-01",
+    "slot": 3,
+    "input_sha256": "a9e810576652811323c6d28ad9bcc452d1626548d86f0e7d0e20adfec50c83c8",
+    "status": "RECORDED",
+    "elapsed_ms": 3643,
+    "request_id": "chatcmpl-01a18370-e42f-704b-99ea-f5b2f0f86d7e",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2106,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.0060325,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-owner_disabled-01",
+    "slot": 3,
+    "input_sha256": "80d1618bb630571a4449a1597e6460efe30065c69a3324603d1ab16aa2d2e28b",
+    "status": "RECORDED",
+    "elapsed_ms": 3937,
+    "request_id": "chatcmpl-01a18370-f3b3-777a-8f11-2dd43596212a",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2141,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.00607625,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-pinned_down-01",
+    "slot": 4,
+    "input_sha256": "61544602b6286f3baf1634799185e62ed341db722fa752a9684cb2ec3674fdda",
+    "status": "RECORDED",
+    "elapsed_ms": 3655,
+    "request_id": "chatcmpl-01a18371-01d2-7650-8fce-20fec9a0e5d7",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2203,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.00615375,
+    "reserved_usd": 0.1
+  },
+  {
+    "case_id": "routing-v1-preferred-01",
+    "slot": 4,
+    "input_sha256": "6d513ad7fb940a0b5e304616e54bbb4f5fd40de0144a9b2d5ad1016e8d935138",
+    "status": "RECORDED",
+    "elapsed_ms": 3547,
+    "request_id": "chatcmpl-01a18371-0fac-73f1-a0d2-d71309c99462",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "prompt_tokens": 2206,
+      "completion_tokens": 800
+    },
+    "reply": "",
+    "estimated_cost_usd": 0.0061575,
+    "reserved_usd": 0.1
+  }
+]
