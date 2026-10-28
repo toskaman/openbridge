@@ -140,6 +140,22 @@ class MetaClient(unittest.TestCase):
         with self.assertRaises(ValueError):
             M.ollama_transport('http://x:11437', '')
 
+    def test_ollama_transport_broker_pins(self):
+        import io, json
+
+        class Resp(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake_open(req, timeout=None):
+            return Resp(json.dumps({'model': 'm', 'message': {'content': '{}'}}).encode())
+        with self.assertRaises(ValueError):
+            M.ollama_transport('http://x:11437', 'm', urlopen=fake_open, pinned_models={'other'})
+        ok, body = M.ollama_transport('http://x:11437', 'm', urlopen=fake_open,
+                                      pinned_models={'m'})('hi', {})
+        self.assertTrue(ok)
+        self.assertEqual(body['provisioning'], 'broker-pinned')
+
 
 class Synthesize(unittest.TestCase):
     def test_invalid_opcode_rejected(self):
@@ -187,7 +203,7 @@ class Synthesize(unittest.TestCase):
         b = bundle()
         good_ref = 'f-x'
         b['devices'].append({'opaque_id': 'opaque:device:abc', 'category': 'tv',
-                             'permission_scope': ['observe'],
+                             'permission_scope': ['observe', 'read'],
                              'facts': [{'fact_id': 'f-0', 'kind': 'k', 'value_class': 'observed_value',
                                         'source': 's', 'observed_at': 1.0, 'evidence_ref': good_ref}]})
         base = {'schema_version': 1, 'candidate_id': 'c1', 'origin': 'meta_generated',
@@ -195,13 +211,44 @@ class Synthesize(unittest.TestCase):
                 'primitive_chain': [{'primitive_id': 'read_facts', 'input': {}}],
                 'preconditions': [], 'postconditions': [], 'required_grants': ['read'],
                 'evidence_refs': [good_ref, 'src:android/keyevent/MUTE'], 'model_run_id': 'r1'}
-        Y.validate_candidate(dict(base), PRIMS, bundle=b)
+        Y.validate_candidate(dict(base), PRIMS, bundle=b, sources={'src:android/keyevent/MUTE'})
         bad = dict(base, target_opaque_id='opaque:device:nope')
         with self.assertRaises(Y.SynthError):
             Y.validate_candidate(bad, PRIMS, bundle=b)
         bad = dict(base, evidence_refs=['invented-ref'])
         with self.assertRaises(Y.SynthError):
             Y.validate_candidate(bad, PRIMS, bundle=b)
+
+    def test_src_ref_needs_host_allowlist(self):
+        b = bundle()
+        b['devices'].append({'opaque_id': 'opaque:device:abc', 'category': 'tv',
+                             'permission_scope': ['observe', 'read'],
+                             'facts': []})
+        base = {'schema_version': 1, 'candidate_id': 'c1', 'origin': 'meta_generated',
+                'intent': 'x', 'target_opaque_id': 'opaque:device:abc',
+                'primitive_chain': [{'primitive_id': 'read_facts', 'input': {}}],
+                'preconditions': [], 'postconditions': [], 'required_grants': ['read'],
+                'evidence_refs': ['src:nonexistent-uninspected-file'], 'model_run_id': 'r1'}
+        with self.assertRaises(Y.SynthError):
+            Y.validate_candidate(dict(base), PRIMS, bundle=b)
+        with self.assertRaises(Y.SynthError):
+            Y.validate_candidate(dict(base), PRIMS, bundle=b, sources={'src:other-file'})
+        Y.validate_candidate(dict(base), PRIMS, bundle=b,
+                             sources={'src:nonexistent-uninspected-file'})
+
+    def test_grants_scoped_to_target(self):
+        b = bundle()
+        b['devices'].append({'opaque_id': 'opaque:device:abc', 'category': 'tv',
+                             'permission_scope': ['observe'],
+                             'facts': [{'fact_id': 'f-0', 'kind': 'k', 'value_class': 'observed_value',
+                                        'source': 's', 'observed_at': 1.0, 'evidence_ref': 'f-x'}]})
+        base = {'schema_version': 1, 'candidate_id': 'c1', 'origin': 'meta_generated',
+                'intent': 'x', 'target_opaque_id': 'opaque:device:abc',
+                'primitive_chain': [{'primitive_id': 'read_facts', 'input': {}}],
+                'preconditions': [], 'postconditions': [], 'required_grants': ['control'],
+                'evidence_refs': ['f-x'], 'model_run_id': 'r1'}
+        with self.assertRaises(Y.SynthError):
+            Y.validate_candidate(dict(base), PRIMS, bundle=b)
 
     def test_candidate_inputs_typed_and_grants_scoped(self):
         schemas = {'read_facts': {'device': 'string'}}

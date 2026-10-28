@@ -46,7 +46,7 @@ def build_prompt(bundle, intent_text, primitive_ids, target_category):
                 evidence_projection(bundle, target_category), S.digest(bundle)))
 
 
-def validate_candidate(value, primitive_ids, bundle=None, schemas=None):
+def validate_candidate(value, primitive_ids, bundle=None, schemas=None, sources=None):
     if not isinstance(value, dict) or set(value) != CANDIDATE_KEYS:
         raise SynthError('SCHEMA_REJECTED')
     if value['schema_version'] != S.SCHEMA_VERSION or value['origin'] != 'meta_generated':
@@ -73,18 +73,25 @@ def validate_candidate(value, primitive_ids, bundle=None, schemas=None):
     if not isinstance(grants, list) or any(g not in GRANT_SCOPE for g in grants) or len(set(grants)) != len(grants):
         raise SynthError('GRANT_SCOPE')
     if bundle is not None:
-        known_devices = {d['opaque_id'] for d in bundle['devices']}
-        if value['target_opaque_id'] not in known_devices:
+        targets = [d for d in bundle['devices'] if d['opaque_id'] == value['target_opaque_id']]
+        if not targets:
             raise SynthError('UNKNOWN_TARGET')
+        scopes = set(targets[0].get('permission_scope', []))
+        if any(g not in scopes for g in grants):
+            raise SynthError('GRANT_NOT_IN_TARGET_SCOPE')
         known_refs = {f['evidence_ref'] for d in bundle['devices'] for f in d['facts']}
+        allowed_src = set(sources or ())
         for r in value['evidence_refs']:
-            if r not in known_refs and not (isinstance(r, str) and r.startswith('src:')):
-                raise SynthError('INVENTED_EVIDENCE_REF')
+            if r in known_refs:
+                continue
+            if isinstance(r, str) and r.startswith('src:') and r in allowed_src:
+                continue
+            raise SynthError('INVENTED_EVIDENCE_REF')
     return value
 
 
 def synthesize(client, tier, bundle, intent_text, primitive_ids, target_category,
-               schemas=None):
+               schemas=None, sources=None):
     """Propose a candidate only. This layer has no staging path: hosts must call
     v4_substrate.compile_first (trusted kernel) before anything is staged."""
     prompt = build_prompt(bundle, intent_text, primitive_ids, target_category)
@@ -100,7 +107,8 @@ def synthesize(client, tier, bundle, intent_text, primitive_ids, target_category
     doc = dict(doc)
     doc['model_run_id'] = 'mr-' + secrets.token_hex(8)
     try:
-        cand = validate_candidate(doc, primitive_ids, bundle=bundle, schemas=schemas)
+        cand = validate_candidate(doc, primitive_ids, bundle=bundle, schemas=schemas,
+                                  sources=sources)
     except SynthError as e:
         return (False, {'status': 'SCHEMA_REJECTED', 'reason': str(e)[:120]})
     cand['digest'] = S.digest({k: v for k, v in cand.items()})
