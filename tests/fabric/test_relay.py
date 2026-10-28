@@ -280,3 +280,28 @@ class ReceiptBoundTests(unittest.TestCase):
         self.assertTrue(all('RECOVERY_BACKLOG' in o['errors'][0] for o in blocked))
         self.assertEqual(set(ex.recovery().pending_transactions), {o['transaction_id'] for o in failed})   # none forgotten
         self.assertEqual(ex._admitted, 0)
+
+
+class RelayLivenessTests(unittest.TestCase):
+    """A Companion that stops answering goes offline at once; a signed status reply brings it back (physical run 28 Oct)."""
+    def test_unreachable_relay_goes_offline_and_recovers_on_status(self):
+        import tempfile
+        from src.server import create_server
+        from src.fabric.session import SessionJournal
+        s = create_server(0, fabric_salt=b's', session_journal=SessionJournal(tempfile.mkdtemp() + '/s.json'))
+        self.addCleanup(s.server_close)
+        fake = FakeRelay()
+        s.relays.enroll('tv', KEY, 'dev-tv', {'capabilities': ['ble_scan'], 'permissions': {'BLUETOOTH_SCAN': True, 'owner_enabled': True}})
+        def dead(relay, msg):
+            raise ConnectionResetError('Remote end closed connection without response')
+        s.relays.relays['tv']['send'] = dead
+        with self.assertRaises(R.RelayError):
+            s.relay_action('/api/relay-scan', {'relay_id': 'tv'})
+        self.assertFalse(s.relays.relays['tv']['online'])
+        self.assertEqual(s.relay_ledger.routes['tv']['failures'], 1)
+        s.relays.relays['tv']['send'] = fake
+        try:
+            s.relay_action('/api/relay-scan', {'relay_id': 'tv'})
+        except R.RelayError:
+            pass                                          # no graph in this test; the status read-back already ran
+        self.assertTrue(s.relays.relays['tv']['online'])

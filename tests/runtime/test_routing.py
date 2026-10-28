@@ -282,3 +282,18 @@ class Stability(Base):
             sels.add(doc['selected_route_id'])
         self.assertEqual(len(sels), 1)
         self.assertEqual([e for e in ex.events_since(0) if e['kind'] == 'route_changed'], [])
+
+
+class UncertainOutcome(Base):
+    def test_timeout_makes_route_unknown_until_a_later_success(self):
+        from src.runtime.contract import TransactionReceipt
+        ex = executor(self.server)
+        ph = self.keys['phone']
+        t_fail = '2026-10-28T09:00:00+00:00'
+        ex.receipts['tx-aaaaaaaaaaaaaaaa'] = TransactionReceipt('tx-aaaaaaaaaaaaaaaa', 'relay_ble_scan', ph, 'UNKNOWN_TIMEOUT', None, None, False, t_fail, t_fail, ())
+        self.clock.t = 1_793_181_000.0                       # just after the timeout; last ledger success is older
+        doc = self.routes()
+        r = self.by_dev(doc, ph)
+        self.assertEqual((r['state'], r['reason']), ('UNAVAILABLE', 'backend_unknown'))
+        self.server.relay_ledger.record('r-ph', [])          # a successful scan after the timeout resolves it
+        self.assertEqual(self.by_dev(self.routes(), ph)['state'], 'READY')

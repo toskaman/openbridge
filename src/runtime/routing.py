@@ -185,6 +185,10 @@ class Router:
                     reason, detail = 'grant_insufficient', {'missing_grant': 'control', 'hop_index': 1, 'blocking_device_key': key}
                 elif not r['permissions'].get('owner_enabled'):
                     reason = 'policy_blocked'
+                else:
+                    last = self._last_receipt('relay_ble_scan', key)
+                    if last and last['state'] in ('UNKNOWN_TIMEOUT', 'PARTIAL') and not (last_ok and last_ok >= _epoch(last['finished_at'])):
+                        reason = 'backend_unknown'   # uncertain outcome: unavailable until a successful read-back
                 route = self._route(skill_id, snap, key, hops, 'op:relay_ble_scan', 'relay_ble_scan', last_ok if last_ok else self.clock(),
                                     LEASE_S['RELAY'], 'relay ledger' if last_ok else 'relay pairing (no scan yet)', reason, detail)
                 if not last_ok:
