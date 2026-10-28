@@ -2,11 +2,12 @@
 
 Verified integration: `ad7e2fc1a62ee872c433ea1f5a64c63a20d844f0`. PR #54 history and PR #57 fixes are merged. Final feature head `48c7275` passed 508 local tests, six CI checks, six local browser suites and responsive main/Forge checks. These are software results; the running hardware service has not been reloaded to this revision.
 
+Corrected persistence is delivered through [PR59](https://github.com/toskaman/openbridge/pull/59), preserving PR56 history: [saved completed unresolved outcomes and routing policies](runtime/PERSISTENCE.md) use coordinated atomic updates, corrupt-state blocking and explicit write errors. Eleven focused persistence tests and 519 local tests passed; exact-head CI/review is recorded on the PR. This does not assert live deployment or pre-dispatch crash recovery.
+
 Delivered: [complete contributor-recorded TV-to-phone handover](release/COMPLETE_HANDOVER.md), [qualified Watch hold-to-TV action evidence](release/WATCH_CONTROL_ACCEPTANCE.md), controller initialization and grant ordering fixes. The original two-tap/sixteen-action cause remains unproven. Duplicate delivery and expiry have unit coverage, not physical acceptance. Hardware demonstrations are not scored evaluations.
 
 | Priority | Remaining gate | Owner and next concrete action | Acceptance evidence |
 |---|---|---|---|
-| P0 | Durable recovery and policy storage | Claude: revise PR #56; Codex: review the new exact head | Corrupt existing state visibly blocks recovery; coordinated updates preserve unrelated fields across supported processes; unique atomic temp files; write failures surfaced; failed-first concurrency/order tests. Current head `e21c658` remains unmerged. |
 | P1 | Frozen unseen evaluation | Codex prepares harness/design; Spark reviews the frozen design before results | Commit case set, separate gold, metrics, baselines, abstention and failure schedule before any scored run. Existing handover cannot be retroactively scored. No hosted inference until eligible fresh promotional-credit guard. |
 | P1 | Hardware cleanup and acceptance limits | Claude: reconcile owner hardware state and retained receipts | Confirm earlier location-restoration request and test relay/forward cleanup; retain uncertainty where independent proof is unavailable. Do not change settings without exact baseline. |
 | P1 | Revised control hardware edge cases | Claude: coordinate owner-attended targeted validation | Same-request duplicate and expired request produce no second action; preserve original amplification as unresolved unless evidence establishes cause. No automatic grant or broad replay. |

@@ -204,6 +204,45 @@ class Executor:
         self._receipt_order = deque()
         self._acknowledged = set()     # unresolved transactions the owner checked and acknowledged (outcome stays unverified)
         self._admitted = 0             # potentially changing operations admitted but not yet recorded
+        from src.runtime.state_store import StateStore
+        self._store = StateStore.for_server(ctx)
+        self._persist_lock = threading.RLock()
+        self._state_error = ''
+        self._restore()
+
+    # ---------- durable recovery backlog ----------
+    def _restore(self):
+        if self._store is None or self._state_error:
+            return
+        try:
+            saved = self._store.load()
+        except OSError as error:
+            self._state_error = str(error)
+            return
+        with self._guard:
+            self._acknowledged.update(saved.get('acknowledged', []))
+            for row in saved.get('unresolved', []):
+                r = TransactionReceipt(**{k: row[k] for k in ('transaction_id', 'primitive_id', 'device_key', 'state', 'before', 'after',
+                                                             'verified', 'started_at', 'finished_at')}, errors=tuple(row.get('errors') or ()))
+                if r.transaction_id not in self.receipts:
+                    self.receipts[r.transaction_id] = r
+                    self._receipt_order.append(r.transaction_id)
+
+    def _persist(self, acknowledged=()):
+        if self._store is None:
+            return True
+        # Snapshot inside the persistence lock: a slower older snapshot cannot overwrite a newer one.
+        with self._persist_lock:
+            with self._guard:
+                rows = [dict(to_json(self.receipts[t]), errors=list(self.receipts[t].errors)) for t in self.receipts if self._needs_recovery(t)]
+                ack = set(self._acknowledged) | set(acknowledged)
+            try:
+                self._store.save_unresolved(rows, ack)
+                return True
+            except OSError as error:
+                self._state_error = str(error)
+                self.emit('state_error', reason=self._state_error)
+                return False
 
     # ---------- events ----------
     def emit(self, kind, **data):
@@ -636,10 +675,14 @@ class Executor:
     def acknowledge(self, tx):
         """The owner checked an unresolved outcome on the device. It leaves recovery and frees backlog capacity;
         the receipt keeps its unverified state (acknowledging is not verification)."""
-        with self._guard:
-            if not self._needs_recovery(tx):
+        with self._persist_lock:
+            with self._guard:
+                if not self._needs_recovery(tx):
+                    return False
+            if not self._persist(acknowledged=(tx,)):
                 return False
-            self._acknowledged.add(tx)
+            with self._guard:
+                self._acknowledged.add(tx)
         self.emit('acknowledged', transaction_id=tx)
         return True
 
@@ -666,7 +709,11 @@ class Executor:
                     self.receipts.pop(victim, None)
                     self._acknowledged.discard(victim)
             self.emit('receipt', transaction_id=tx, primitive_id=primitive_id, state=state, verified=verified)
-            return dict(to_json(r), result=result or {})
+            durable = self._persist() if self._needs_recovery(tx) else True
+            out = dict(to_json(r), result=result or {})
+            if not durable:
+                out['errors'].append(self._state_error)
+            return out
         try:
             if p is None:
                 raise PrimitiveError('UNKNOWN_PRIMITIVE', 'Unknown primitive (no free-form commands)')
@@ -677,6 +724,10 @@ class Executor:
                 raise PrimitiveError('CONSENT_REQUIRED', 'Owner consent is required for this primitive')
         except PrimitiveError as e:
             return receipt('BLOCKED', errors=(f'{e.code}: {e}',))
+        if p.reversibility != 'NONE':
+            self._restore()
+            if self._state_error:
+                return receipt('BLOCKED', errors=(self._state_error,))
         if p.reversibility != 'NONE':   # could change something: admit only while the recovery backlog has room
             with self._guard:
                 full = self._backlog() >= self.MAX_UNRESOLVED
@@ -717,7 +768,8 @@ class Executor:
         return out
 
     def recovery(self):
+        self._restore()
         with self._guard:   # read-only results change nothing; acknowledged outcomes were checked by the owner
             pending = tuple(t for t in list(self.receipts) if self._needs_recovery(t))
         open_changes = tuple(c['id'] for c in self.ctx.session_journal.open_changes())
-        return RecoveryState(pending, open_changes, '' if not pending else 'some transactions ended without verification')
+        return RecoveryState(pending, open_changes, self._state_error or ('' if not pending else 'some transactions ended without verification'))
