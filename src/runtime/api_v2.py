@@ -20,8 +20,9 @@ GET_ROUTES = ('/api/v2/contract',
               '/api/v2/timeline',
               '/api/v2/hypotheses',
               '/api/v2/relays/samples',
-              '/api/v2/catalog')
-POST_ROUTES = ('/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
+              '/api/v2/catalog',
+              '/api/v2/onboarding')
+POST_ROUTES = ('/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
 def executor(server):
@@ -74,6 +75,14 @@ def get(server, path, query):
         except ValueError:
             return 400, {'error': 'since must be an integer'}
         return 200, {'events': ex.events_since(since)}
+    if path == '/api/v2/onboarding':
+        from src.fabric import onboarding
+        apk = getattr(server, 'companion_apk', None)
+        portal = getattr(server, 'apk_portal', None)
+        return 200, {'candidates': onboarding.candidates(server.fabric_snapshot, server.fabric_registry, bool(apk and apk.exists())),
+                     'discovered': server.fabric_snapshot is not None,
+                     'apk_portal': portal.state() if portal else {'running': False},
+                     'note': None if server.fabric_snapshot else 'Run discovery first: nothing is probed until you ask.'}
     if path == '/api/v2/catalog':
         from src.fabric import android_actions as aa
         from src.adapters import tuya_local as tl
@@ -220,7 +229,33 @@ def voice(server, path, body):
         return 503, {'error': f'Meta STT unreachable ({type(e).__name__})', 'fallback': 'type the command instead'}
 
 
+def apk_portal(server, body):
+    from src.fabric.apk_portal import ApkPortal
+    from src.fabric.mdns import default_scope, lan_interface_ip
+    if set(body) - {'minutes', 'stop'}:
+        return 400, {'error': 'Unexpected fields'}
+    old = getattr(server, 'apk_portal', None)
+    if body.get('stop') is True:
+        if old:
+            old.stop()
+        return 200, {'running': False}
+    if old and old.running():
+        return 200, old.state()
+    ip = lan_interface_ip(default_scope())
+    if not ip:
+        return 409, {'error': 'No private LAN interface found on this PC'}
+    try:
+        server.apk_portal = ApkPortal(server.companion_apk, ip, body.get('minutes', 10)).start()
+    except FileNotFoundError:
+        return 409, {'error': 'Companion APK not built on this PC (python -m dev.build_companion)'}
+    except (ValueError, OSError) as e:
+        return 409, {'error': f'Cannot open the LAN download: {type(e).__name__}'}
+    return 200, server.apk_portal.state()
+
+
 def post(server, path, body):
+    if path == '/api/v2/onboarding/apk-portal' and isinstance(body, dict):
+        return apk_portal(server, body)
     if path.startswith('/api/v2/voice/') and isinstance(body, dict):
         return voice(server, path, body)
     if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):

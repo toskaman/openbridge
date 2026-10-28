@@ -36,12 +36,15 @@ def ingest_mdns(registry, result, salt):
             ids.append(Identifier('freebox_uid', opaque('freebox_uid', txt['api_domain'].lower(), salt), True))
         label = next((txt[k] for k in MDNS_LABEL_KEYS if txt.get(k)), inst['instance'])[:60]
         obs = []
-        for k in ('md', 'box_model_name', 'manufacturer', 'api_version'):
-            if txt.get(k):
+        for k in ('md', 'box_model_name', 'manufacturer', 'api_version', 'model'):
+            if txt.get(k) and not (k == 'model' and inst['service'] not in ('_device-info._tcp', '_airplay._tcp', '_companion-link._tcp')):
                 obs.append(DeviceObservation({'md': 'model', 'box_model_name': 'model'}.get(k, k), txt[k][:80], 'MDNS', 'LAN', t, False, 0.8))
         key = registry.upsert(ids, category=inst['category'], label=label, observations=obs,
                               weak=[('ip', a) for a in inst.get('addresses', [])])
         services = registry.devices[key].setdefault('mdns_services', set()); services.add(inst['service'])
+        if inst.get('port') and any('.' in a for a in inst.get('addresses', [])):
+            # Kept off the snapshot; used only by the local onboarding view (e.g. the ADB pairing port).
+            registry.devices[key].setdefault('endpoints', {})[inst['service']] = (next(a for a in inst['addresses'] if '.' in a), int(inst['port']))
         registry.observe(key, DeviceObservation('mdns_services', sorted(services), 'MDNS', 'LAN', t, False, 0.9))
         registry.link(Link('pc', key, 'LAN', ('observe',), 'MDNS:' + inst['service']))
         cap = {'_fbx-api._tcp': ('freebox_api', 'read', 'REAL_HARDWARE_VERIFIED'),

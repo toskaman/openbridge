@@ -22,7 +22,7 @@ def main():
                 page.on('pageerror',lambda e:errors.append(str(e)))
                 page.route('**/api/devices?source=android',lambda route:route.fulfill(json=STATES[current['v']]))
                 page.route('**/api/device-events?source=android',lambda route:route.fulfill(status=503,body=''))
-                page.goto(url,wait_until='networkidle')
+                page.goto(url+'/#/advanced',wait_until='networkidle')   # source inspection lives in Advanced diagnostics
                 guide=page.locator('#guide')
                 page.get_by_role('radio',name='Android USB').check()
                 page.get_by_role('button',name='List USB devices').click()

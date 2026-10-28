@@ -13,7 +13,7 @@ def main():
             page = browser.new_page(viewport={'width': width, 'height': 1000})
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
-            page.goto('http://127.0.0.1:18765', wait_until='networkidle')
+            page.goto('http://127.0.0.1:18765/#/advanced', wait_until='networkidle')   # inspection lives in Advanced diagnostics
             page.screenshot(path=str(artifacts / f'{width}-before.png'), full_page=True)
             page.get_by_role('button', name='Refresh demo').click()
             page.get_by_role('button', name='Inspect evidence').click()
@@ -28,6 +28,7 @@ def main():
             page.get_by_role('button',name='View recorded Meta proof').click()
             page.get_by_text('RECORDED RUN',exact=False).wait_for()
             assert 'no live request was made' in page.locator('#recorded-proof-result').inner_text()
+            page.goto('http://127.0.0.1:18765/#/activity')   # simulated sandbox lives in Activity & Recovery
             page.locator('#demo-consent').check()
             change=page.get_by_role('button',name='Run simulated change')
             expect(change).to_be_enabled()
@@ -42,6 +43,7 @@ def main():
             expect(page.locator('#transaction-result')).to_contain_text('SIMULATED · REVERTED.')
             expect(page.locator('#demo-setting-state')).to_contain_text(f'Screen timeout: {original}s.')
             page.screenshot(path=str(artifacts / f'{width}-recovery.png'),full_page=True)
+            page.goto('http://127.0.0.1:18765/#/advanced')
             page.route('**/api/devices?source=demo', lambda route: route.abort())
             page.get_by_role('button', name='Refresh demo').click()
             page.get_by_text('Inventory failed:', exact=False).wait_for()
