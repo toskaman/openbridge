@@ -3,13 +3,12 @@
 Frozen inputs: docs/evaluation/routing-v1/explain/{PROMPT.md,SAMPLE.json,RUBRIC.md,BUDGET.md,SHA256SUMS}
 plus docs/evaluation/routing-v1/results/run-f8873d9.json (bound by SAMPLE.run_sha256).
 
-Budget: at most 8 calls x $0.10 through broker._reserve. The broker caps one
-supervised session at $0.20, so the run mints 4 permits ($0.20 each) from the
-single owner-supplied balance observation; each permit is minted lazily just
-before its 2 calls so every reserve lands inside the 300 s freshness window.
+Budget: at most 8 calls x $0.10 through broker._reserve under ONE canonical
+observation identity/time and one shared ledger, with an explicit
+owner-authorized evaluation allowance (--allowance-usd + --authz).
 
 Usage:
-  python -m dev.run_explain_eval --observation-id <id> --free-balance-usd <n> --out <dir>
+  python -m dev.run_explain_eval --observation-id <id> --free-balance-usd <n> --out <dir> --authz <ref>
 """
 import argparse
 import hashlib
@@ -44,6 +43,25 @@ def identifiers(s):
     return out
 
 
+def parse_observed_at(value):
+    from datetime import datetime, timezone
+    text = str(value).strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    dt = datetime.fromisoformat(text)
+    if dt.tzinfo is None:
+        raise ValueError('observed-at must carry a timezone')
+    return dt.astimezone(timezone.utc)
+
+
+def read_authz_file(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        ref = f.read().strip()
+    if not ref:
+        raise ValueError('authz file is empty')
+    return ref
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--observation-id', required=True)
@@ -53,13 +71,42 @@ def main():
     ap.add_argument('--max-completion-tokens', type=int, default=800)
     ap.add_argument('--resume', action='store_true',
                     help='skip case_ids already in <out>/replies.json; never re-runs a call')
+    ap.add_argument('--allowance-usd', type=float, default=0.80,
+                    help='explicit owner-authorized evaluation allowance (canonical observation, shared ledger)')
+    ap.add_argument('--authz', default=None,
+                    help='explicit owner authorization reference for the allowance')
+    ap.add_argument('--authz-file', default=None,
+                    help='owner-written file containing the authorization ref (read-only, never created)')
+    ap.add_argument('--observed-at', required=True,
+                    help='owner observation time, ISO with timezone (immutable, never minted)')
+    # No --ledger override: the live runner always uses the canonical shared ledger, so one
+    # authorization can never be double-spent across ledger files (Sol audit). Explicit ledger
+    # paths exist only on the broker API for hermetic unit tests.
     args = ap.parse_args()
+    authz = args.authz
+    if args.authz_file:
+        if args.authz:
+            print('AUTHZ_EXCLUSIVE')
+            return 2
+        try:
+            authz = read_authz_file(args.authz_file)
+        except (OSError, ValueError) as e:
+            print('AUTHZ_FILE: %s' % e)
+            return 2
+    if not authz:
+        print('MISSING_AUTHZ')
+        return 2
+    try:
+        observed_at = parse_observed_at(args.observed_at)
+    except ValueError as e:
+        print('OBSERVED_AT: %s' % e)
+        return 2
     global EXPLAIN, MAX_COMPLETION_TOKENS
     EXPLAIN = ROOT / args.eval_dir
     MAX_COMPLETION_TOKENS = args.max_completion_tokens
 
     sys.path.insert(0, str(ROOT))
-    from src.ai.broker import CreditPermit, MetaTransport, RuntimeModelBroker, ModelBlocked, MODEL_ID, ENDPOINT
+    from src.ai.broker import CreditPermit, MetaTransport, RuntimeModelBroker, ModelBlocked, MODEL_ID, ENDPOINT, resolve_ledger
     from src.fabric.credential_vault import Vault
 
     assert ENDPOINT == 'https://api.meta.ai/v1/chat/completions' and MODEL_ID == 'muse-spark-1.3'
@@ -80,8 +127,8 @@ def main():
         print('NO_KEY')
         return 2
     transport = MetaTransport(key)
-    budget_path = out / 'budget.sqlite3'
-    permits = {}
+    budget_path = resolve_ledger(None)
+    print('ledger: %s' % budget_path)
     records = []
     done = set()
     if args.resume:
@@ -89,26 +136,21 @@ def main():
         if prev.exists():
             records = json.loads(prev.read_text(encoding='utf-8'))
             done = {r['case_id'] for r in records}
-            print('resume: keeping %d recorded calls, %d remaining' % (len(records), 0))
-
-    def permit_for(i):
-        slot = i // 2
-        if slot not in permits:
-            permits[slot] = CreditPermit(
-                observation_id='%s#%d' % (args.observation_id, slot + 1),
-                verified_at=datetime.now(timezone.utc),
-                free_balance_usd=args.free_balance_usd, session_budget_usd=0.20)
-        return permits[slot]
+            print('resume: keeping %d recorded calls' % len(records))
+    permit = CreditPermit(observation_id=args.observation_id, verified_at=observed_at,
+                          free_balance_usd=args.free_balance_usd, session_budget_usd=0.20)
+    broker = RuntimeModelBroker(budget_path, permit, transport,
+                                evaluation_allowance_usd=args.allowance_usd,
+                                evaluation_authz=authz)
 
     pending = [c for c in sample['sampled_case_ids'][:sample['budget_calls_max']] if c not in done]
     for i, case_id in enumerate(pending):
         row = {k: rows[case_id][k] for k in ROW_KEYS}
         case_json = json.dumps(row, indent=2, ensure_ascii=False)
         prompt = template.replace('{CASE_JSON}', case_json)
-        rec = {'case_id': case_id, 'slot': i // 2 + 1,
+        rec = {'case_id': case_id,
                'input_sha256': hashlib.sha256(prompt.encode()).hexdigest(),
                'status': None}
-        broker = RuntimeModelBroker(budget_path, permit_for(i), transport)
         try:
             broker._reserve()
         except ModelBlocked as e:

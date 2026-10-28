@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import sqlite3
 import time
@@ -14,6 +15,18 @@ MODEL_ID = 'muse-spark-1.3'
 ENDPOINT = 'https://api.meta.ai/v1/chat/completions'
 RESERVATION_MICRO_USD = 100_000
 ALLOWED_FACTS = {'battery_percent', 'storage_free_gb', 'screen_timeout_seconds'}
+EVAL_ALLOWANCE_MAX_USD = 1.00
+EVAL_OBSERVATION_MAX_AGE_S = 24 * 3600
+
+
+def resolve_ledger(explicit=None):
+    """One canonical shared ledger across runs/outputs, so the same allowance
+    cannot be spent twice through two ledger files. Explicit paths are for
+    tests and documented one-off runs only."""
+    if explicit is not None:
+        return Path(explicit)
+    root = os.environ.get('LOCALAPPDATA') or str(Path.home() / '.local' / 'share')
+    return Path(root) / 'OpenBridge' / 'budget.sqlite3'
 
 
 class ModelBlocked(ValueError):
@@ -51,15 +64,20 @@ class MetaTransport:
 
 
 class RuntimeModelBroker:
-    def __init__(self, budget_path, permit=None, transport=None):
+    def __init__(self, budget_path, permit=None, transport=None, evaluation_allowance_usd=None,
+                 evaluation_authz=None):
         self.budget_path = Path(budget_path)
         self.permit = permit
         self.transport = transport
+        self.evaluation_allowance_usd = evaluation_allowance_usd
+        self.evaluation_authz = evaluation_authz
 
     def _reserve(self):
         permit = self.permit
         if permit is None or permit.verified_at.tzinfo is None:
             raise ModelBlocked('Fresh promotional-credit verification required')
+        if self.evaluation_allowance_usd is not None:
+            return self._reserve_allowance(permit)
         age = (datetime.now(timezone.utc)-permit.verified_at).total_seconds()
         if not 0 <= age <= 300:
             raise ModelBlocked('Promotional-credit observation expired or invalid')
@@ -69,18 +87,60 @@ class RuntimeModelBroker:
         if not 0 < permit.session_budget_usd <= 0.20 or not permit.observation_id or len(permit.observation_id)>120:
             raise ModelBlocked('Invalid supervised session allowance')
         ceiling = min(int(permit.session_budget_usd*1_000_000), int((permit.free_balance_usd-1)*1_000_000))
+        self._record(permit.observation_id, ceiling)
+
+    def _reserve_allowance(self, permit):
+        """Explicit owner-authorized evaluation allowance (Sol audit finding).
+
+        One canonical observation identity/time and one shared ledger; the
+        allowance replaces the $0.20/session cap. Freshness backstop is 24 h
+        (eval runs outlast 300 s); every reserve stays ledger-capped per
+        observation and globally. Reviewers: this relaxes the 300 s rule for
+        eval runs ONLY, and only with an explicit non-empty authorization ref.
+        """
+        a = self.evaluation_allowance_usd
+        if isinstance(a, bool) or not isinstance(a, (int, float)) or not math.isfinite(a) \
+                or not 0 < a <= EVAL_ALLOWANCE_MAX_USD:
+            raise ModelBlocked('Invalid explicit evaluation allowance')
+        if not isinstance(self.evaluation_authz, str) or not self.evaluation_authz.strip() \
+                or len(self.evaluation_authz) > 120:
+            raise ModelBlocked('Evaluation allowance requires explicit owner authorization reference')
+        if isinstance(permit.free_balance_usd, bool) or not isinstance(permit.free_balance_usd, (int, float)) \
+                or not math.isfinite(permit.free_balance_usd):
+            raise ModelBlocked('Invalid credit values')
+        if not permit.observation_id or len(permit.observation_id) > 120:
+            raise ModelBlocked('Invalid observation identity')
+        age = (datetime.now(timezone.utc)-permit.verified_at).total_seconds()
+        if not 0 <= age <= EVAL_OBSERVATION_MAX_AGE_S:
+            raise ModelBlocked('Evaluation observation too old')
+        ceiling = min(int(a*1_000_000), int((permit.free_balance_usd-1)*1_000_000))
+        self._record(permit.observation_id, ceiling, allowance_micro=int(a*1_000_000),
+                     authz=self.evaluation_authz)
+
+    def _record(self, observation, ceiling, allowance_micro=None, authz=None):
         if ceiling < RESERVATION_MICRO_USD:
             raise ModelBlocked('Insufficient verified free-credit headroom')
         self.budget_path.parent.mkdir(parents=True, exist_ok=True)
         with closing(sqlite3.connect(self.budget_path, timeout=5)) as db, db:
-            db.execute('CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY, observation TEXT, reserved INTEGER, recorded REAL)')
+            db.execute('CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY, observation TEXT, reserved INTEGER, recorded REAL, allowance INTEGER, authz TEXT)')
+            cols = {r[1] for r in db.execute('PRAGMA table_info(reservations)').fetchall()}
+            if 'allowance' not in cols:
+                db.execute('ALTER TABLE reservations ADD COLUMN allowance INTEGER')
+            if 'authz' not in cols:
+                db.execute('ALTER TABLE reservations ADD COLUMN authz TEXT')
             db.execute('BEGIN IMMEDIATE')
-            used = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations WHERE observation=?',(permit.observation_id,)).fetchone()[0]
+            if allowance_micro is not None:
+                bound = db.execute('SELECT DISTINCT allowance, authz FROM reservations WHERE observation=?',
+                                   (observation,)).fetchall()
+                bound = [(a, z) for a, z in bound if a is not None]
+                if bound and (allowance_micro, authz) not in bound:
+                    raise ModelBlocked('Allowance/authz mismatch for this observation')
+            used = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations WHERE observation=?',(observation,)).fetchone()[0]
             total = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations').fetchone()[0]
             if used+RESERVATION_MICRO_USD > ceiling or total+RESERVATION_MICRO_USD > 1_000_000:
                 raise ModelBlocked('Conservative local credit budget exhausted')
-            db.execute('INSERT INTO reservations(observation,reserved,recorded) VALUES(?,?,?)',
-                       (permit.observation_id,RESERVATION_MICRO_USD,time.time()))
+            db.execute('INSERT INTO reservations(observation,reserved,recorded,allowance,authz) VALUES(?,?,?,?,?)',
+                       (observation,RESERVATION_MICRO_USD,time.time(),allowance_micro,authz))
 
     def recommend(self, facts):
         if not isinstance(facts,dict) or not facts or set(facts)-ALLOWED_FACTS:
