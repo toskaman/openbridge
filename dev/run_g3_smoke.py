@@ -59,6 +59,8 @@ def main():
         ap.add_argument(a, required=True)
     ap.add_argument('--free-balance-usd', type=float, required=True)
     ap.add_argument('--allowance-usd', type=float, default=0.80)
+    ap.add_argument('--reasoning-effort', choices=['minimal', 'low', 'medium', 'high'], default=None,
+                    help='Muse Spark reasoning_effort (cannot be disabled); recorded in the transcript')
     args = ap.parse_args()
     sys.path.insert(0, str(ROOT))
     from dev.run_explain_eval import parse_observed_at, read_authz_file
@@ -69,7 +71,7 @@ def main():
 
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     T = {'kind': 'G3_INTEGRATION_SMOKE', 'started': datetime.now(timezone.utc).isoformat(), 'intent': INTENT,
-         'model': MODEL_ID, 'calls': [], 'steps': []}
+         'model': MODEL_ID, 'reasoning_effort': args.reasoning_effort, 'calls': [], 'steps': []}
 
     def save():
         (out / 'G3_SMOKE_TRANSCRIPT.json').write_text(json.dumps(T, indent=1, ensure_ascii=False), encoding='utf-8')
@@ -123,12 +125,16 @@ def main():
         except ModelBlocked as e:
             rec['status'] = 'BLOCKED'; rec['error'] = str(e); raise
         t0 = time.monotonic()
-        resp = transport({'model': MODEL_ID, 'temperature': 0, 'max_completion_tokens': MAX_COMPLETION_TOKENS,
-                          'messages': [{'role': 'user', 'content': prompt}]})
+        payload = {'model': MODEL_ID, 'temperature': 0, 'max_completion_tokens': MAX_COMPLETION_TOKENS,
+                   'messages': [{'role': 'user', 'content': prompt}]}
+        if args.reasoning_effort:
+            payload['reasoning_effort'] = args.reasoning_effort
+        resp = transport(payload)
         usage = resp.get('usage') or {}
         rec.update(elapsed_ms=round((time.monotonic() - t0) * 1000), request_id=resp.get('id'), model=resp.get('model'),
                    finish_reason=((resp.get('choices') or [{}])[0].get('finish_reason')),
-                   usage={k: usage.get(k) for k in ('prompt_tokens', 'completion_tokens')}, reserved_usd=0.10)
+                   usage={k: usage.get(k) for k in ('prompt_tokens', 'completion_tokens')}, reserved_usd=0.10,
+                   reasoning_tokens=(usage.get('completion_tokens_details') or {}).get('reasoning_tokens'))
         if isinstance(usage.get('prompt_tokens'), int) and isinstance(usage.get('completion_tokens'), int):
             rec['estimated_cost_usd'] = (usage['prompt_tokens'] * 1.25 + usage['completion_tokens'] * 4.25) / 1_000_000
         if resp.get('model') != MODEL_ID:
