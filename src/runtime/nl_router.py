@@ -115,13 +115,21 @@ def build_prompt(text, lang):
              'skill_id null and confidence 0. Never invent a skill_id. Registered skills:']
     for c in S.all_skills():
         lines.append(f"- {c['skill_id']}: {c['description']} (targets: {','.join(c['targets'])})")
+    lines.append('Prefer resolving with the closest registered skill. Ask a clarifying '
+                 'question ONLY when two or more registered skills match equally well.')
     lines.append('Example: "Start my vacuum" -> {"outcome": "start cleaning", '
                  '"skill_id": "vacuum.start", "targets": [{"kind": "device", "ref": "vacuum"}], '
                  '"params": {}, "confidence": 0.9, "ambiguities": [], "clarifying_question": null}')
-    lines.append('Example: "Turn on my vacuum" -> {"outcome": "ambiguous power vs clean", '
+    lines.append('Example: "How many devices are online" -> {"outcome": "count online devices", '
+                 '"skill_id": "fabric.status", "targets": [{"kind": "category", "ref": "fabric"}], '
+                 '"params": {}, "confidence": 0.9, "ambiguities": [], "clarifying_question": null}')
+    lines.append('Example: "Scan for bluetooth devices" -> {"outcome": "scan nearby bluetooth", '
+                 '"skill_id": "ble_scan_room", "targets": [{"kind": "device", "ref": "relay"}], '
+                 '"params": {}, "confidence": 0.9, "ambiguities": [], "clarifying_question": null}')
+    lines.append('Example: "Turn it up" -> {"outcome": "ambiguous tv volume set vs step", '
                  '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
-                 '"ambiguities": ["power vs clean"], '
-                 '"clarifying_question": "Power on, or start cleaning?"}')
+                 '"ambiguities": ["set vs step"], '
+                 '"clarifying_question": "Set an exact volume, or step up once?"}')
     lines.append(f'User language: {lang}. User request: {text}')
     return '\n'.join(lines)
 
