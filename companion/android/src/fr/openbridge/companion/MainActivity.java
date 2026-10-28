@@ -209,8 +209,23 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                 String id = o.optString("control_id");
                 Button b = button(o.optString("label"), i == 0);
                 // Hold to send: a tap does nothing, so stray or phantom touches (watch off the wrist) never send a command.
+                final org.json.JSONObject[] down = new org.json.JSONObject[1];
+                b.setOnTouchListener((v, e) -> {
+                    if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                        try { down[0] = new org.json.JSONObject().put("tool", e.getToolType(0)).put("pressure", Math.round(e.getPressure() * 100) / 100.0)
+                                .put("size", Math.round(e.getSize() * 100) / 100.0).put("down_ms", 0).put("t", e.getEventTime()); } catch (Exception ignored) { }
+                    }
+                    return false;                                   // keep the normal click / long-click handling
+                });
                 b.setOnClickListener(v -> resultText.setText("Hold the button to send"));
-                b.setOnLongClickListener(v -> { String s = relay.press(id); if (s != null) resultText.setText(s); return true; });
+                b.setOnLongClickListener(v -> {
+                    org.json.JSONObject touch = down[0];
+                    try { if (touch != null) { touch.put("down_ms", android.os.SystemClock.uptimeMillis() - touch.getLong("t")); touch.remove("t"); } } catch (Exception ignored) { }
+                    down[0] = null;
+                    String s = relay.press(id, touch == null ? "key" : "long_press", touch);
+                    if (s != null) resultText.setText(s);
+                    return true;
+                });
                 controlsBox.addView(b); controlsBox.addView(spacer(8));
             }
             controlsCard.setVisibility(c.length() > 0 ? View.VISIBLE : View.GONE);

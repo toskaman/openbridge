@@ -121,7 +121,19 @@ def validate_requests(report, known_controls):
     for r in reqs:
         if not isinstance(r, dict) or not REQUEST_ID.match(str(r.get('request_id', ''))) or r.get('control_id') not in known_controls:
             continue                                # unknown or revoked control: dropped, never executed
-        out.append({'request_id': r['request_id'], 'control_id': r['control_id']})
+        clean = {'request_id': r['request_id'], 'control_id': r['control_id']}
+        if isinstance(r.get('pressed_at'), int) and not isinstance(r.get('pressed_at'), bool) and 0 < r['pressed_at'] < 10 ** 14:
+            clean['pressed_at'] = r['pressed_at']                    # device time, milliseconds
+        if isinstance(r.get('seq'), int) and not isinstance(r.get('seq'), bool) and 0 <= r['seq'] < 2 ** 53:
+            clean['seq'] = r['seq']
+        if r.get('gesture') in ('long_press', 'click', 'key'):
+            clean['gesture'] = r['gesture']
+        t = r.get('touch')
+        if isinstance(t, dict):
+            num = lambda v, hi: v if isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= hi else None
+            clean['touch'] = {'tool': num(t.get('tool'), 9), 'pressure': num(t.get('pressure'), 10), 'size': num(t.get('size'), 10),
+                              'down_ms': num(t.get('down_ms'), 600000)}
+        out.append(clean)
     return out
 
 

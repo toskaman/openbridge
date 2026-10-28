@@ -90,7 +90,10 @@ final class RelayServer {
     }
 
     /** The owner pressed a control on this device: queue one request; the PC picks it up over the signed channel. */
-    String press(String controlId) {
+    String press(String controlId) { return press(controlId, "click", null); }
+
+    /** gesture + coarse touch info travel with the request so the PC can tell a deliberate hold from a phantom touch. */
+    String press(String controlId, String gesture, JSONObject touch) {
         if (!paired()) return "Not paired with a PC";
         long now = System.currentTimeMillis();
         synchronized (requests) {
@@ -101,7 +104,14 @@ final class RelayServer {
             if (!known) return "This control is no longer authorized";
             if (requests.size() >= MAX_QUEUE) return "Too many pending requests; wait for the PC";
             lastPress = now;
-            try { requests.add(new JSONObject().put("request_id", hex(bytes(16))).put("control_id", controlId).put("pressed_at", now / 1000)); }
+            long seq = prefs.getLong("press_seq", 0) + 1; prefs.edit().putLong("press_seq", seq).apply();
+            try {
+                JSONObject r = new JSONObject().put("request_id", hex(bytes(16))).put("control_id", controlId).put("pressed_at", now)
+                        .put("seq", seq).put("gesture", gesture);
+                if (touch != null) r.put("touch", touch);
+                requests.add(r);
+                android.util.Log.i("OpenBridgeRemote", "request seq=" + seq + " control=" + controlId + " gesture=" + gesture + " touch=" + touch);
+            }
             catch (Exception e) { return "Could not queue the request"; }
         }
         return "Sent to your PC…";
