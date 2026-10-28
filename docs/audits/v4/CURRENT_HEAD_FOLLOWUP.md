@@ -66,3 +66,7 @@ G1 is now **proposed contract under review**, not a frozen compatible interface.
 ## Reproduce without effects
 
 Fetch the exact audited Git objects first (`git fetch origin` and, for a fresh clone, `git fetch origin refs/pull/72/head`). Verify the audited commit8a73b8f is available; do not substitute a changed PR head. On the audit branch, run `python -B -m dev.audit_v4_followup --output artifacts/new-v4-audit.json`. It refuses an existing output path and returns2 for the retained blocked observations. Do not run provider or physical actions to reproduce these source-level findings.
+
+## Source-guard follow-up
+
+The guarded auditor atd945edb verifies all eight agent source files and the PR72 schema helper before probing, and extracts kernel/contract/fixtures from the immutable PR object. A failed-first source-mismatch regression passes. [Guarded receipt](current-head-receipt-guarded.json), [latest631-method output](GUARDED_TEST_OUTPUT.txt) and [guarded provenance](GUARDED_PROVENANCE.json) retain the new run. Earlier630-method output and receipt remain unchanged. The blocked observations reproduce with zero provider/hardware calls. See [additional upstream context](UPSTREAM_CONTEXT.md) for explanation-v2 preparation.

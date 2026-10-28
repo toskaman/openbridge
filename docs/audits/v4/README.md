@@ -11,3 +11,5 @@ Read [current-head follow-up](CURRENT_HEAD_FOLLOWUP.md) first, then the [baselin
 Security release gate is BLOCKED. All new effects, grants and ledgers in the probes are synthetic/temp-only. No model, hardware or private-key access occurred. Passing collector tests are not security clearance.
 
 Latest software validation:630 methods pass; [public test output](CURRENT_TEST_OUTPUT.txt), [current provenance](CURRENT_PROVENANCE.json) and [baseline CI for the merged scaffold](CURRENT_CI.json). These do not include a full execution of the unmerged PR72 test suite.
+
+Latest guarded validation:631 methods,8 focused audit methods; [guarded receipt](current-head-receipt-guarded.json), [test output](GUARDED_TEST_OUTPUT.txt), [provenance](GUARDED_PROVENANCE.json), [upstream context](UPSTREAM_CONTEXT.md). Earlier630-method validation remains historical evidence.
