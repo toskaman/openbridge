@@ -92,10 +92,13 @@ def tiers(server):
     for quality, get in (('low', _low), ('medium', _medium)):
         model, endpoint = TIERS[quality]
         try:
-            ready = bool(get(server).ready())
+            t = get(server)
+            ready = bool(t.ready())
+            last = getattr(t, 'last_ok', None)
         except Exception:
-            ready = False
+            ready, last = False, None
         out[quality] = {'model': model, 'endpoint': endpoint, 'ready': ready,
+                        'last_inference': 'ok' if last is True else ('failed' if last is False else 'unknown'),
                         'estimate_usd': estimate_usd(quality)}
     model, endpoint = TIERS['high']
     out['high'] = {'model': model, 'endpoint': endpoint,
@@ -169,9 +172,12 @@ def approve(server, doc):
     except S.SkillError as e:
         raise CommandError(400, str(e)) from None
     devs = _devices(server)
-    keys = resolve_targets(doc.get('targets'), devs)
-    if len(keys) != 1:
-        raise CommandError(409, 'P0 executes one device per command')
+    if S.get(doc['skill_id'])['targets'] == ['fabric']:
+        keys = []   # fabric-scoped reads address the registry itself, not a device
+    else:
+        keys = resolve_targets(doc.get('targets'), devs)
+        if len(keys) != 1:
+            raise CommandError(409, 'P0 executes one device per command')
     approved_targets = [{'key': k, 'label': devs[k].get('label'),
                          'category': devs[k].get('category')} for k in keys]
     prev = {'skill_id': doc['skill_id'], 'primitive_id': solved['primitive_id'],
@@ -225,6 +231,16 @@ def execute(server, doc, consent=False, preview=None):
     prev = approve(server, doc)   # re-resolves everything; revocations block here
     if prev['fingerprint'] != preview['fingerprint']:
         raise CommandError(409, 'target, params or route changed since approval; review again')
+    if prev['primitive_id'] == 'fabric_status':
+        from src.runtime.fabric_status import summarize
+        relays = getattr(getattr(server, 'relays', None), 'relays', None) or {}
+        rc = {'state': 'READ', 'transaction_id': None,
+              'summary': summarize(_devices(server), relays)}
+        cache[key] = rc
+        order.append(key)
+        while len(order) > MAX_EXECUTIONS:
+            cache.pop(order.pop(0), None)
+        return rc
     if prev['primitive_id'].startswith('b2:'):
         from src.runtime.routing import RouteError, SKILLS
         r = router(server)

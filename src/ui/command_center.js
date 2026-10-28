@@ -96,7 +96,9 @@
         const info = tiers[q] || {};
         const pill = el('span', undefined, 'tag');
         const ok = q === 'high' ? (info.configured && info.enabled) : info.ready;
-        pill.textContent = `${q}: ${(info.model || '?').split(':')[0]} · ${ok ? t('ready') : t('notReady')} · ${q === 'high' ? t('cloud') : t('local')} · ${t('estimate')} ${fmtUsd(info.estimate_usd)}`;
+        const infer = info.last_inference === 'failed' ? ' · infer failed'
+          : (info.last_inference === 'ok' ? ' · infer ok' : '');
+        pill.textContent = `${q}: ${(info.model || '?').split(':')[0]} · ${ok ? t('ready') : t('notReady')} · ${q === 'high' ? t('cloud') : t('local')} · ${t('estimate')} ${fmtUsd(info.estimate_usd)}${infer}`;
         tierBox.append(pill);
       }
     }

@@ -107,6 +107,7 @@ class SkillRegistry(unittest.TestCase):
 class FakeTransport:
     def __init__(self, reply=None, error=None):
         self.reply, self.error, self.calls = reply, error, []
+        self.last_ok = None
 
     def ready(self):
         return True
@@ -543,6 +544,30 @@ class CommandAPI(unittest.TestCase):
         self.assertFalse(body['high']['configured'])
         self.assertEqual(body['high']['estimate_usd'], 0.10)
 
+    def test_tiers_reports_last_inference_outcome(self):
+        from src.runtime.api_v2 import get
+        srv = api_server()
+        srv.command_low.last_ok = True
+        srv.command_medium.last_ok = False
+        _, body = get(srv, '/api/v2/command/tiers', '')
+        self.assertEqual(body['low']['last_inference'], 'ok')
+        self.assertEqual(body['medium']['last_inference'], 'failed')
+
+    def test_ollama_transport_tracks_last_inference(self):
+        from src.runtime.nl_router import OllamaIntentTransport, TransportError
+        t = OllamaIntentTransport(
+            'llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437',
+            catalog=lambda: {'models': [{'name': 'llama3.2:3b-instruct-q4_K_M'}]},
+            chat=lambda p: {'model': 'llama3.2:3b-instruct-q4_K_M', 'done': True, 'done_reason': 'stop',
+                            'message': {'content': '{"a": 1}'}, 'prompt_eval_count': 1, 'eval_count': 1})
+        self.assertIsNone(t.last_ok)
+        t('prompt')
+        self.assertTrue(t.last_ok)
+        bad = OllamaIntentTransport('m', 'e', catalog=lambda: {}, chat=lambda p: {'model': 'evil'})
+        with self.assertRaises(TransportError):
+            bad('prompt')
+        self.assertFalse(bad.last_ok)
+
     def test_parse_returns_intent_and_estimate(self):
         from src.runtime.api_v2 import post
         status, body = post(api_server(), '/api/v2/command/parse',
@@ -709,6 +734,64 @@ class CompanionChannel(unittest.TestCase):
             cc.poll_once()
         self.assertEqual(len(cc.pending), MAX_PENDING)
         self.assertNotIn(first, cc.pending)
+
+    def test_generated_fabric_status_contract_validates(self):
+        from src.runtime.skills import get, validate_contract
+        c = get('fabric.status')
+        self.assertIsNotNone(c)
+        self.assertEqual(validate_contract(c), [])
+        self.assertEqual(c['provenance'], 'meta_generated')
+        self.assertTrue(c['idempotent'])
+        self.assertEqual(c['risk_level'], 'low')
+
+    def test_generated_fabric_status_summarizes(self):
+        from src.runtime.fabric_status import summarize
+        out = summarize(fake_devices(), {'r1': {'online': True, 'capabilities': {'ble_scan'}},
+                                          'r2': {'online': False, 'capabilities': set()}})
+        self.assertEqual(out['devices_total'], 2)
+        self.assertEqual(out['by_category'], {'vacuum': 1, 'tv': 1})
+        self.assertEqual(out['relays_total'], 2)
+        self.assertEqual(out['relays_online'], 1)
+        self.assertEqual(summarize({}, {})['devices_total'], 0)
+
+    def test_generated_fabric_status_is_pure(self):
+        import ast
+        src = open('src/runtime/fabric_status.py', encoding='utf-8').read()
+        tree = ast.parse(src)
+        for node in ast.walk(tree):
+            self.assertNotIsInstance(node, (ast.Import, ast.ImportFrom),
+                                     'generated skill must be import-free pure code')
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                self.assertNotIn(node.func.id, ('open', 'eval', 'exec', 'compile', '__import__'))
+
+    def test_fabric_status_approves_without_device(self):
+        from src.runtime.command import approve
+        d = draft(status='resolved', skill_id='fabric.status', outcome='summarize fabric',
+                  confidence=0.9, targets=[{'kind': 'category', 'ref': 'fabric'}])
+        prev = approve(FakeServer(), d)
+        self.assertEqual(prev['device_keys'], [])
+        self.assertEqual(prev['approved_targets'], [])
+        self.assertIn('fingerprint', prev)
+
+    def test_fabric_status_executes_read_only(self):
+        from src.runtime.command import approve, execute
+        srv = FakeServer()
+        d = draft(status='resolved', skill_id='fabric.status', outcome='summarize fabric',
+                  confidence=0.9, targets=[{'kind': 'category', 'ref': 'fabric'}])
+        rc = execute(srv, d, consent=True, preview=approve(srv, d))
+        self.assertEqual(rc['state'], 'READ')
+        self.assertEqual(rc['summary']['devices_total'], 2)
+        self.assertEqual(rc['summary']['relays_total'], 0)
+
+    def test_fallback_injects_fabric_target_when_empty(self):
+        from src.runtime.nl_router import parse
+        r = good_reply(); r['skill_id'] = None; r['confidence'] = 0.0
+        r['clarifying_question'] = None; r['outcome'] = 'how many devices are online'
+        r['targets'] = []
+        d = parse('How many devices are online', 'en', 'low', FakeTransport(r), None)
+        self.assertEqual(d['status'], 'resolved')
+        self.assertEqual(d['skill_id'], 'fabric.status')
+        self.assertEqual(d['targets'], [{'kind': 'category', 'ref': 'fabric'}])
 
     def test_api_lists_and_polls(self):
         from src.runtime.api_v2 import get

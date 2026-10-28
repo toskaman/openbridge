@@ -52,6 +52,7 @@ class OllamaIntentTransport:
     def __init__(self, model_id, endpoint, digest=None, catalog=None, chat=None, timeout=120):
         from src.ai.local_meta import local_request
         self.model_id, self.endpoint, self.digest = model_id, endpoint, digest
+        self.last_ok = None   # last inference outcome: tags-present does not imply inference works
         self._catalog = catalog or (lambda: local_request('/api/tags', endpoint=endpoint))
         self._chat = chat or (lambda payload: local_request('/api/chat', payload,
                                                              endpoint=endpoint, timeout=timeout))
@@ -73,6 +74,7 @@ class OllamaIntentTransport:
         try:
             registry.require(self.model_id, self.endpoint)
         except registry.RegistryInvalid as e:
+            self.last_ok = False
             raise TransportError(str(e)) from None
         payload = {'model': self.model_id, 'stream': False, 'format': INTENT_SCHEMA,
                    'keep_alive': '30s', 'options': {'temperature': 0, 'num_ctx': 4096},
@@ -94,10 +96,13 @@ class OllamaIntentTransport:
             out = __import__('json').loads(msg['content'])
             if not isinstance(out, dict):
                 raise TransportError('reply is not an object')
+            self.last_ok = True
             return out
         except TransportError:
+            self.last_ok = False
             raise
         except Exception as e:
+            self.last_ok = False
             raise TransportError(f'local parse failed: {type(e).__name__}') from None
 
 
@@ -134,6 +139,36 @@ def _keyword_fallback(text, outcome):
     if len(scored) > 1 and scored[0][0] > scored[1][0] and scored[0][0] > 0:
         return scored[0][1]
     return None
+
+
+def _fallback_candidate(text, reply, out):
+    """Build the deterministic resolution after a model abstention, or None.
+
+    Fabric-scoped skills get the virtual target injected when the model supplied
+    none; every other skill still needs model-provided targets (no guessing)."""
+    if not isinstance(reply, dict):
+        return None
+    fb = _keyword_fallback(text, reply.get('outcome'))
+    if fb is None:
+        return None
+    targets = reply.get('targets')
+    if not targets:
+        if S.get(fb)['targets'] != ['fabric']:
+            return None
+        targets = [{'kind': 'category', 'ref': 'fabric'}]
+    try:
+        cand = dict(out, status='resolved', skill_id=fb,
+                    outcome=str(reply.get('outcome') or text)[:300],
+                    targets=targets,
+                    params=reply['params'] if isinstance(reply.get('params'), dict) else {},
+                    confidence=0.6,
+                    ambiguities=['deterministic catalog match after model abstention'])
+        S.resolve(fb, cand['params'])
+        if I.validate_intent(cand):
+            return None
+        return cand
+    except (S.SkillError, ValueError, TypeError, AttributeError):
+        return None
 
 
 def _interpret(doc, reply, parser, model_id):
@@ -257,22 +292,10 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
         if reply is skip:
             continue
         out = _interpret(doc, reply, parser, TIERS[tier][0])
-        if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities'] \
-                and isinstance(reply, dict):
-            fb = _keyword_fallback(text, reply.get('outcome'))
-            if fb is not None and reply.get('targets'):
-                try:
-                    cand = dict(out, status='resolved', skill_id=fb,
-                                outcome=str(reply.get('outcome') or text)[:300],
-                                targets=reply['targets'],
-                                params=reply['params'] if isinstance(reply.get('params'), dict) else {},
-                                confidence=0.6,
-                                ambiguities=['deterministic catalog match after model abstention'])
-                    S.resolve(fb, cand['params'])
-                    if not I.validate_intent(cand):
-                        return cand
-                except (S.SkillError, ValueError, TypeError, AttributeError):
-                    pass
+        if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities']:
+            cand = _fallback_candidate(text, reply, out)
+            if cand is not None:
+                return cand
         if out['status'] in ('resolved', 'unsupported', 'needs_clarification'):
             return out
         doc = out
@@ -289,22 +312,10 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
                 pass
             else:
                 out = _interpret(doc, reply, 'cloud', TIERS['high'][0])
-                if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities'] \
-                        and isinstance(reply, dict):
-                    fb = _keyword_fallback(text, reply.get('outcome'))
-                    if fb is not None and reply.get('targets'):
-                        try:
-                            cand = dict(out, status='resolved', skill_id=fb,
-                                        outcome=str(reply.get('outcome') or text)[:300],
-                                        targets=reply['targets'],
-                                        params=reply['params'] if isinstance(reply.get('params'), dict) else {},
-                                        confidence=0.6,
-                                        ambiguities=['deterministic catalog match after model abstention'])
-                            S.resolve(fb, cand['params'])
-                            if not I.validate_intent(cand):
-                                return cand
-                        except (S.SkillError, ValueError, TypeError, AttributeError):
-                            pass
+                if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities']:
+                    cand = _fallback_candidate(text, reply, out)
+                    if cand is not None:
+                        return cand
                 if out['status'] in ('resolved', 'unsupported', 'needs_clarification'):
                     return out
                 doc = out

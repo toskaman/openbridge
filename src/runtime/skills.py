@@ -64,6 +64,16 @@ for _c in (
           ('vacuum', 'pause', 'stop', 'aspirateur', 'pause')),
     _tuya('vacuum.dock', 'Send vacuum to dock', 'dock', 'medium',
           ('vacuum', 'dock', 'charge', 'base', 'aspirateur', 'recharger')),
+    {'skill_id': 'fabric.status', 'version': 1, 'display_name': 'Summarize fabric state',
+     'description': 'Count devices by category and relays by online state (read-only, no hardware calls)',
+     'capability_id': 'fabric.status', 'targets': ['fabric'],
+     'permissions': [], 'risk_level': 'low', 'idempotent': True,
+     'verification': 'claimed',
+     'verification_ref': 'unit + sandbox + live approve/execute READ proof (this branch)',
+     'provenance': 'meta_generated', 'primitive_id': 'fabric_status',
+     'param_names': (), 'params': {},
+     'keywords': ('fabric', 'status', 'how many', 'devices', 'online', 'count', 'summary',
+                  'combien', 'appareils', 'etat', 'resume')},
 ):
     _REGISTRY[_c['skill_id']] = _c
 del _c
