@@ -10,6 +10,8 @@ Draft preparation only; no submission, organizer acceptance, score, or final vid
 | Official start / deadline | `CONTRIBUTIONS.md` records participant-reported start confirmation; history is unchanged | Organizer message/reference, timezone, deadline and approved build period. |
 | Source URL / revision | https://github.com/toskaman/openbridge | Select final public commit; verify anonymous availability at that revision. |
 | Meta runtime use | `docs/glimmer-smoke-receipt.json`, `docs/local-meta-smoke-receipt.json`, `docs/runtime-meta-receipt.json` | Distinguish local runtime from development theme generation. |
+| Routing / Watch demonstrations | [Complete handover](COMPLETE_HANDOVER.md), [Watch acceptance](WATCH_CONTROL_ACCEPTANCE.md) | Contributor-recorded hardware evidence; retain original amplification and cleanup limitations. Not a scored evaluation. |
+| Integrated verification | PR57 merged `ad7e2fc`; tested feature head `48c7275`, 508 local tests and six CI checks | Final submission commit and live deployment still need selection/verification. PR56 excluded. |
 | Real device journey | `docs/forge/tv-glimmer-live-receipt.json`, `docs/forge/TV_GLIMMER_JOURNEY.md` | Review redaction; retain failed attempts and stated permission-dialog limits. |
 | Synthetic benchmark | `docs/benchmark/STATUS.md`, `docs/benchmark/advisor-benchmark-glimmer.json` | Preserve rules baseline and unfavorable goal-fit/planning findings; no general-superiority claim. |
 | Software verification | `docs/forge/tv-glimmer-software-checks.json`; release replay record in this folder | State historical revision/overlays separately from final revision verification. |

@@ -1,12 +1,19 @@
-# Current integration review — 28 October 2026
+# Remaining work — reconciled after PR #57
 
-The [complete contributor-recorded TV-to-phone handover](release/COMPLETE_HANDOVER.md) supersedes the earlier partial result for demonstration purposes. Both attempts remain available. This is not a scored evaluation or independent proof of all cleanup/revocation cases.
+Verified integration: `ad7e2fc1a62ee872c433ea1f5a64c63a20d844f0`. PR #54 history and PR #57 fixes are merged. Final feature head `48c7275` passed 508 local tests, six CI checks, six local browser suites and responsive main/Forge checks. These are software results; the running hardware service has not been reloaded to this revision.
 
-Revised PR #54 Watch controls are under integration review on `codex/b3-acceptance`. [Hardware evidence and limits](release/WATCH_CONTROL_ACCEPTANCE.md) document a hold producing one action and owner-confirmed revocation. Two integration races now have regression tests: concurrent initialization creates one controller, and a delayed grant response cannot restore authority after a newer revoke. The original two-tap/sixteen-action cause remains unproven. Duplicate delivery and expiry have unit coverage, not physical acceptance.
+Delivered: [complete contributor-recorded TV-to-phone handover](release/COMPLETE_HANDOVER.md), [qualified Watch hold-to-TV action evidence](release/WATCH_CONTROL_ACCEPTANCE.md), controller initialization and grant ordering fixes. The original two-tap/sixteen-action cause remains unproven. Duplicate delivery and expiry have unit coverage, not physical acceptance. Hardware demonstrations are not scored evaluations.
 
-PR #56 persistence remains unmerged. Controlled exact-source tests reproduced corrupted state appearing empty without a blocked reason, and lost updates between two store instances. Required follow-up: visible fail-closed recovery, coherent per-path/process updates, unique atomic temporary files, surfaced durability failures and ordering tests. See [review](https://github.com/toskaman/openbridge/pull/56#issuecomment-6468847557).
+| Priority | Remaining gate | Owner and next concrete action | Acceptance evidence |
+|---|---|---|---|
+| P0 | Durable recovery and policy storage | Claude: revise PR #56; Codex: review the new exact head | Corrupt existing state visibly blocks recovery; coordinated updates preserve unrelated fields across supported processes; unique atomic temp files; write failures surfaced; failed-first concurrency/order tests. Current head `e21c658` remains unmerged. |
+| P1 | Frozen unseen evaluation | Codex prepares harness/design; Spark reviews the frozen design before results | Commit case set, separate gold, metrics, baselines, abstention and failure schedule before any scored run. Existing handover cannot be retroactively scored. No hosted inference until eligible fresh promotional-credit guard. |
+| P1 | Hardware cleanup and acceptance limits | Claude: reconcile owner hardware state and retained receipts | Confirm earlier location-restoration request and test relay/forward cleanup; retain uncertainty where independent proof is unavailable. Do not change settings without exact baseline. |
+| P1 | Revised control hardware edge cases | Claude: coordinate owner-attended targeted validation | Same-request duplicate and expired request produce no second action; preserve original amplification as unresolved unless evidence establishes cause. No automatic grant or broad replay. |
+| Release | Coordinated live reload | Runtime owner + Codex, after active work/state check | Exact loaded revision, preserved pending recovery/open changes, read-only endpoint checks; no interruption of active contributor tests. |
+| Release | Participant review and submission | Owner | Final commit, portal-required fields, private eligibility/terms declarations and actual submission receipt. Track/theme/solo already confirmed. |
 
-Remaining release gates: final integration CI/review; persistence remediation; independent cleanup confirmation (including earlier location restoration); frozen unseen evaluation; owner portal declarations and submission receipt. Supported read-only multi-PC review is complete; the port remains unimplemented. No schedule, video work, new hosted spending or automatic remote-control grants. Claude's main theme is retained.
+Supported read-only multi-PC review is complete; OpenBridge remains single-PC and the previously safety-blocked port is not retried. Scheduling remains cancelled. Claude's main theme is retained. No videos until a NEW explicit owner request; no desktop keyboard/mouse automation, new hosted spending or automatic control grants.
 
 The snapshots below are historical and may describe superseded blockers or scheduling.
 
