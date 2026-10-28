@@ -1,0 +1,37 @@
+{
+  "head": "089c39f3803fc1a25a40ed6b719b04ad6789d4ad",
+  "source_sha256": {
+    "src/fabric/android_actions.py": "35b9938bc96164288626e82b5d01adcc0705724fdcd1021a5d4de06fac7e6645",
+    "src/substrate/registry.py": "b6479624be11f14652bd5b9dd5965aadd0d9f17d1519d373ee17725f306b1c4c",
+    "tests/fabric/test_audio_state.py": "7c619a168b03b0837c7b9478c06b7f31f22f93e7d5c62325348e8c9d64804e8f",
+    "docs/evidence/v4/HW_STATE_AUDIO_TRANSCRIPT.json": "03a8678808a057eadc82d90087998ae0f55297e980fbed320891e413b81104bd"
+  },
+  "tests_run": 5,
+  "test_success": true,
+  "test_output": ".....\n----------------------------------------------------------------------\nRan 5 tests in 0.001s\n\nOK\n",
+  "unknown_format_checks": {
+    "missing_music": true,
+    "unknown_muted": true,
+    "neighbour_muted": true
+  },
+  "contributor_reported_mute_volume": [
+    [
+      false,
+      20
+    ],
+    [
+      true,
+      0
+    ],
+    [
+      false,
+      20
+    ]
+  ],
+  "reported_initial_final_read_equal": true,
+  "physical_result_independently_observed": false,
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0,
+  "scope": "Parser/registry tests and transcript consistency only; hardware driver never imported/executed."
+}
