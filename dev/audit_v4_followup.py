@@ -18,8 +18,24 @@ from types import SimpleNamespace
 ROOT=Path(__file__).resolve().parents[1]
 AGENT_HEAD='c426496a1305584ccf73b023ce9227099a73b55d'
 SUBSTRATE_HEAD='8a73b8f395ecf13a979f88fd93649cd3975b3f23'
+AGENT_SOURCE_SHA256={'src/forge/v4_evidence.py': 'e8f55149dc703986c28adc52b956f3befdbd7e4397dcf48347222686fbe6136d',
+ 'src/forge/v4_gap.py': '42502734c7dd3b601634237959718251f9a4127a1417868666eceddd180edbfe',
+ 'src/forge/v4_metaclient.py': 'ab11498a375f4cc677d1ff6e6c4283c13e5e235d2e06feaeb1c93af10e5af6f0',
+ 'src/forge/v4_provenance.py': 'cc7a43fb5a3f2c4f3ae71f09b0a6c5945c0d5bfc50e519a694bc48f72e69cf6d',
+ 'src/forge/v4_schemas.py': 'a82d8d937004e99003133a051a4cf0d3190e09b377bc5be3016745f604e327f4',
+ 'src/forge/v4_synthesize.py': '7fb72140cdd2019123a82b8fe11a94dffae3c9597c812a6cbaf4b7835752344a',
+ 'src/forge/v4_ui.py': '0f78184d14e427757b03effc14b6ff626bbfd3c325487e1695978e0ca7fe5b7c',
+ 'src/forge/v4_workflow.py': 'b06c3b533629b91b1690ff0470421fb1332070641e7a869cefbd8c7207464cf2'}
+SCHEMA_HELPER_SHA256='8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9'
+
+def verify_sources(expected):
+    for name,wanted in expected.items():
+        raw=(ROOT/name).read_bytes().replace(b'\r\n',b'\n')
+        if hashlib.sha256(raw).hexdigest()!=wanted:
+            raise ValueError('AUDIT_SOURCE_CHANGED: '+name)
 
 def probe_agent_layer():
+    verify_sources(AGENT_SOURCE_SHA256)
     from src.forge import v4_evidence as E,v4_schemas as S,v4_synthesize as Y,v4_metaclient as M
     b=E.resolve([{'device_id':'synthetic-tv','category':'tv','permission_scope':['observe'],
                   'facts':[{'kind':'supported_actions','value':'read-only','source':'SIMULATED','observed_at':1000}]}],[],['read_facts'],1000)
@@ -40,7 +56,7 @@ def probe_agent_layer():
     wrong_model,_=M.MetaClient({'low':transport}).generate('low','synthetic',{'max_s':1})
     before=[{'skill_id':'existing.same-id','params':{'action':'start'},'version':1}]
     after=[{'skill_id':'existing.same-id','params':{'action':'dock'},'version':2}]
-    return {'source_head':AGENT_HEAD,'evidence_refs_sent_in_prompt':all(ref in prompt for ref in refs),
+    return {'source_head':AGENT_HEAD,'source_equality_checked':True,'source_blob_sha256':AGENT_SOURCE_SHA256,'evidence_refs_sent_in_prompt':all(ref in prompt for ref in refs),
             'target_id_sent_in_prompt':b['devices'][0]['opaque_id'] in prompt,
             'untrusted_candidate_accepted':accepted,'candidate_changes':'foreign target, invented evidence, extra untyped input, expanded grant',
             'unapproved_model_envelope_accepted':wrong_model,'fake_request_model':requests[0]['model'],
@@ -51,6 +67,7 @@ def git_json(path):
     return json.loads(subprocess.check_output(['git','show',SUBSTRATE_HEAD+':'+path],cwd=ROOT))
 
 def probe_substrate_pr72():
+    verify_sources({'src/runtime/route_contract.py':SCHEMA_HELPER_SHA256})
     from src.runtime.route_contract import schema_errors
     source=subprocess.check_output(['git','show',SUBSTRATE_HEAD+':src/substrate/kernel.py'],cwd=ROOT,text=True)
     names={'SubstrateError','canonical','manifest_hash','iso','epoch','validate','Substrate'}
@@ -90,7 +107,7 @@ def probe_substrate_pr72():
     downgrade=checker._check_fact(fact,fact['device_fingerprint'],600)
     fact['verified']=False;fact['signature']=checker._sign('fact',{k:v for k,v in fact.items() if k!='signature'})
     unverified=checker._check_fact(fact,fact['device_fingerprint'],600)
-    return {'source_head':SUBSTRATE_HEAD,'schema_validation':'actual PR72 contract/schema_errors; no schema bypass',
+    return {'source_head':SUBSTRATE_HEAD,'kernel_source_blob_sha256':hashlib.sha256(source.encode()).hexdigest(),'schema_helper_sha256':SCHEMA_HELPER_SHA256,'source_equality_checked':True,'schema_validation':'actual PR72 contract/schema_errors; no schema bypass',
             'compile_device_lookup_and_executor':'mocked; probes isolate admission/trust rather than full physical compile pipeline',
             'same_operation_mock_effects':len(effects),'grant_uses':s.grant_uses,'errors':errors,
             'current_provenance_downgrade_accepted':downgrade is None,'signed_unverified_fact_accepted':unverified is None,

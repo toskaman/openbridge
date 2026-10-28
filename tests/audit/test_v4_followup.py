@@ -14,3 +14,8 @@ class Followup(unittest.TestCase):
         self.assertIn('untrusted_candidate_accepted',r)
         self.assertIn('unapproved_model_envelope_accepted',r)
         self.assertIn('registry_digest_changed_on_mapping_change',r)
+
+    def test_source_mismatch_refuses_receipt_before_probing(self):
+        with patch.object(audit,'AGENT_SOURCE_SHA256',{'src/forge/v4_schemas.py':'0'*64},create=True):
+            with self.assertRaisesRegex(ValueError,'AUDIT_SOURCE_CHANGED'):
+                audit.probe_agent_layer()
