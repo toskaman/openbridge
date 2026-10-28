@@ -6,7 +6,7 @@
   "exit_code": 0,
   "methods": 605,
   "raw_output_sha256": "bc29e24b09ccd407388bdf332a66eefad13b42692159c724a16349874e923fb2",
-  "public_output_sha256": "860bf8aebbf6f783679b2fe9640d0576c0d790bd44af0571def67ba0d51ade01",
+  "public_output_sha256": "013512f08cd7a808b6f5de1d0806f517b3973fdad85733834e4322ee205c5a60",
   "redactions": "Project and user-home paths only",
   "repository": {
     "isPrivate": false,
@@ -28,5 +28,7 @@
     "Initial credit-probe temporary SQLite connection remained open, causing Windows cleanup failure; corrected with explicit connection closing before the successful focused/full runs."
   ],
   "audit_cli_exit": 2,
-  "audit_cli_meaning": "Evidence collected; security release gate BLOCKED, not a script execution crash."
+  "audit_cli_meaning": "Evidence collected; security release gate BLOCKED, not a script execution crash.",
+  "public_line_endings": "LF, matching committed Git bytes",
+  "publication_validation": "Initial pre-publication checksum check caught CRLF normalization differences; corrected before pushing, without changing result content."
 }
