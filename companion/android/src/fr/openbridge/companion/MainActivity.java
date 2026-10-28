@@ -15,6 +15,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -30,6 +31,9 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private TextView status, code, codeHint;
     private LinearLayout codeCard, controlsCard, controlsBox;
     private TextView resultText;
+    private LinearLayout commandCard;
+    private EditText commandInput;
+    private TextView commandResult;
     private Button bluetooth, location, permission, enable, unpair;
     private boolean tv;
     private boolean setupRunning;
@@ -63,6 +67,23 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         controlsBox = new LinearLayout(this); controlsBox.setOrientation(LinearLayout.VERTICAL); controlsCard.addView(controlsBox);
         resultText = text("", 14, false, OK); controlsCard.addView(resultText);
         root.addView(controlsCard); root.addView(spacer(14));
+
+        commandCard = card(); commandCard.setVisibility(View.GONE);
+        commandCard.addView(text("ASK FROM HERE · typed, reviewed on your PC", 12, true, MUTED));
+        commandInput = new EditText(this); commandInput.setHint("e.g. Start my vacuum");
+        commandInput.setTextColor(TEXT); commandInput.setHintTextColor(MUTED);
+        commandInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, tv ? 20 : 16);
+        commandInput.setSingleLine(true);
+        commandCard.addView(commandInput);
+        Button send = button("Send to PC", true);
+        send.setOnClickListener(v -> {
+            String s = relay.submitCommand(commandInput.getText().toString());
+            commandResult.setText(s);
+            if (s != null && s.startsWith("Sent")) commandInput.setText("");
+        });
+        commandCard.addView(send);
+        commandResult = text("", 14, false, OK); commandCard.addView(commandResult);
+        root.addView(commandCard); root.addView(spacer(14));
 
         LinearLayout statusCard = card();
         statusCard.addView(text("READINESS", 12, true, MUTED));
@@ -189,6 +210,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             enable.setText(enabled ? "Pause scans" : "Resume scans");
             enable.setVisibility(paired ? View.VISIBLE : View.GONE);
             unpair.setVisibility(paired ? View.VISIBLE : View.GONE);
+            commandCard.setVisibility(paired ? View.VISIBLE : View.GONE);
             View first = setup.getVisibility() == View.VISIBLE ? setup : bluetooth.getVisibility() == View.VISIBLE ? bluetooth : location.getVisibility() == View.VISIBLE ? location
                     : permission.getVisibility() == View.VISIBLE ? permission : enable.getVisibility() == View.VISIBLE ? enable : null;
             if (first != null && getCurrentFocus() == null) first.requestFocus();
@@ -240,6 +262,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         });
     }
     @Override public void result(String text) { runOnUiThread(() -> { resultText.setText(text); renderBusy(); }); }
+    @Override public void commandResult(String text) { runOnUiThread(() -> commandResult.setText(text)); }
 
     /** One press in flight per control: the button shows "Sending…" and ignores presses until the PC answers or 20 s pass. */
     private void renderBusy() {

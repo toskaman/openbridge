@@ -39,8 +39,12 @@ final class RelayServer {
     static final int MAX_OBSERVATIONS = 200;
     private static final int MAX_BODY = 16384;
 
-    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } }
+    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void commandResult(String text) { } }
     static final int MAX_CONTROLS = 12, MAX_QUEUE = 16;
+    static final int MAX_COMMANDS = 8, MAX_COMMAND_TEXT = 500;
+    /** Owner-typed NL commands queued on this device; the PC drains them and reports parse outcomes. Never auto-executed. */
+    private final java.util.ArrayDeque<JSONObject> commands = new java.util.ArrayDeque<>();
+    private final java.util.Set<String> pendingCommands = new java.util.HashSet<>();
     /** Owner-authorized controls pushed by the paired PC (label + id only; the PC keeps skill, target and params). */
     private JSONArray controls = new JSONArray();
     private final java.util.ArrayDeque<JSONObject> requests = new java.util.ArrayDeque<>();
@@ -140,7 +144,23 @@ final class RelayServer {
         return "Sent to your PC…";
     }
 
-    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } prefs.edit().remove("controls").apply();
+    /** Queue one owner-typed command for the PC to parse (local tiers only). Explicit send; nothing automatic. */
+    String submitCommand(String text) {
+        if (!paired()) return "Not paired with a PC";
+        String t = text == null ? "" : text.trim();
+        if (t.isEmpty()) return "Type a command first";
+        if (t.length() > MAX_COMMAND_TEXT) return "Command too long (500 characters max)";
+        synchronized (commands) {
+            if (commands.size() >= MAX_COMMANDS) return "Too many pending commands; wait for the PC";
+            try {
+                String lang = java.util.Locale.getDefault().getLanguage().startsWith("fr") ? "fr" : "en";
+                commands.add(new JSONObject().put("request_id", hex(bytes(16))).put("text", t).put("lang", lang).put("quality", "auto"));
+            } catch (Exception e) { return "Could not queue the command"; }
+        }
+        return "Sent to your PC…";
+    }
+
+    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); } prefs.edit().remove("controls").apply();
         prefs.edit().remove("key").putBoolean("owner_enabled", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
@@ -267,6 +287,19 @@ final class RelayServer {
                 synchronized (requests) { pendingControls.remove(p.optString("request_id")); if (pending.remove(p.optString("request_id")) == null) break; }   // unknown or late: ignored
                 ui.result(text.length() > 80 ? text.substring(0, 80) : text); break;
             }
+            case "get_commands": {
+                JSONArray out = new JSONArray();
+                synchronized (commands) {
+                    while (!commands.isEmpty()) { JSONObject r = commands.poll(); out.put(r); pendingCommands.add(r.getString("request_id")); }
+                }
+                params.put("commands", out); break;
+            }
+            case "report_command": {
+                JSONObject p = cmd.getJSONObject("params");
+                String text = p.optString("text", "");
+                synchronized (commands) { if (!pendingCommands.remove(p.optString("request_id"))) break; }   // unknown or late: ignored
+                ui.commandResult(text.length() > 160 ? text.substring(0, 160) : text); break;
+            }
             case "revoke_access": unpair(); break;
             default: throw new SecurityException("unknown op");
         }
@@ -279,6 +312,7 @@ final class RelayServer {
         JSONArray caps = new JSONArray();
         if (bleHardware()) caps.put("ble_scan");
         caps.put("remote_controls");
+        caps.put("command_submit");
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
                 .put("sdk", Build.VERSION.SDK_INT).put("television", tv);

@@ -28,7 +28,7 @@ from src.fabric import discovery as fabric_discovery
 from src.fabric import relay as fabric_relay
 
 UI = Path(__file__).parent / 'ui'
-ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript')}
+ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript'), '/command_center.js': ('command_center.js', 'text/javascript')}
 
 
 class LocalServer(ThreadingHTTPServer):
