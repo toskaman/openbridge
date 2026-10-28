@@ -41,6 +41,13 @@ def main():
     button.click();expect(page.locator('#route-truth')).to_contain_text('Routing backend is not available')
     result.update(status=200,body=json.loads((FIX/'skill_routes_empty.json').read_text()))
     button.click();expect(page.locator('#route-truth')).to_contain_text('No eligible routes')
+    facts=json.loads((FIX/'skill_routes_device_facts.json').read_text())
+    device=facts['routes'][0]['hops'][-1]['device_key']
+    page.evaluate('(key) => { fabric = {devices:[{key, label:"Fixture device"}]}; }',device)
+    page.locator('#route-skill').select_option('device_facts')
+    page.locator('#route-target').select_option(device)
+    result['body']=facts
+    button.click();expect(page.locator('#route-truth')).to_contain_text(facts['routes'][0]['route_id'])
     assert all(m=='GET' for m in requests)
     assert not errors,errors
     page.close()

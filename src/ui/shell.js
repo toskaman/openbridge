@@ -775,12 +775,14 @@
   const refresh = document.getElementById('route-refresh');
   const picker = document.getElementById('route-skill');
   if (!host || !refresh || !picker) return;
+  const targetPicker = document.getElementById('route-target');
+  const targetLabel = document.getElementById('route-target-label');
   const revisions = new Map();
   let generation = 0;
   const node = (tag, text) => { const n = document.createElement(tag); n.textContent = String(text); return n; };
   const states = new Set(['READY', 'STANDBY', 'UNAVAILABLE']);
   const reasons = new Set(['link_down', 'grant_insufficient', 'consent_missing', 'capability_absent', 'lease_stale', 'dependency_unready', 'policy_blocked', 'backend_unknown']);
-  function supported(doc, skill) {
+  function supported(doc, skill, target) {
     if (!doc || doc.schema_version !== 'b2.2' || doc.skill?.skill_id !== skill ||
         !['AUTO', 'PREFERRED', 'PINNED'].includes(doc.policy?.mode) ||
         !doc.graph_revision || typeof doc.graph_revision.epoch !== 'string' ||
@@ -797,7 +799,7 @@
           !Number.isFinite(Date.parse(r.freshness.observed_at)) || !Number.isFinite(Date.parse(r.freshness.expires_at))) return false;
       ids.add(r.route_id);
       return r.hops.every(h => h && typeof h.device_key === 'string' && typeof h.transport === 'string');
-    }) && (doc.selected_route_id === null || doc.routes.some(r => r.route_id === doc.selected_route_id && r.state === 'READY'));
+    }) && (doc.selected_route_id === null || doc.routes.some(r => r.route_id === doc.selected_route_id && r.state === 'READY' && (!target || r.hops.some(h => h.device_key === target))));
   }
   function render(doc) {
     host.replaceChildren(node('p', `Snapshot · ${doc.server_time} · ${doc.policy.mode} · revision ${doc.graph_revision.seq}`));
@@ -814,24 +816,34 @@
       const details = document.createElement('details'); details.append(node('summary', 'Inspect route evidence'), node('pre', JSON.stringify(r, null, 2))); card.append(details); host.append(card);
     }
   }
-  picker.addEventListener('change', () => { generation++; host.replaceChildren(node('p', 'Skill changed. Refresh to request its route snapshot.')); });
+  picker.addEventListener('change', () => {
+    generation++; targetLabel.hidden = picker.value === 'ble_scan_room';
+    targetPicker.replaceChildren(new Option('Select a discovered device', ''));
+    const snapshot = typeof fabric !== 'undefined' ? fabric : null;
+    for (const d of snapshot?.devices || []) targetPicker.append(new Option(d.label || d.category || 'Device', d.key));
+    host.replaceChildren(node('p', 'Skill changed. Select its device if required, then refresh.'));
+  });
+  targetPicker.addEventListener('change', () => { generation++; host.replaceChildren(node('p', 'Device changed. Refresh its route snapshot.')); });
   refresh.addEventListener('click', async () => {
     const current = ++generation; const skill = picker.value;
+    const target = skill === 'ble_scan_room' ? null : targetPicker.value;
+    if (target === '') { host.replaceChildren(node('p', 'Select a discovered device first. Run discovery in My Devices if the list is empty.')); return; }
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 10000);
     refresh.disabled = true; host.setAttribute('aria-busy', 'true'); host.replaceChildren(node('p', 'Requesting route snapshot…'));
     try {
-      const response = await fetch(`/api/v2/skill_routes?skill=${encodeURIComponent(skill)}`, {cache: 'no-store', signal: controller.signal});
+      const response = await fetch(`/api/v2/skill_routes?skill=${encodeURIComponent(skill)}${target ? '&target=' + encodeURIComponent(target) : ''}`, {cache: 'no-store', signal: controller.signal});
       if (current !== generation) return;
       if (response.status === 404) { host.replaceChildren(node('p', 'Routing backend is not available. No routes or failover are assumed.')); return; }
       if (!response.ok) throw new Error('Route request refused');
       const doc = await response.json();
       if (current !== generation) return;
-      if (!supported(doc, skill)) { host.replaceChildren(node('p', 'Unsupported or invalid route snapshot. No route status is displayed.')); return; }
-      const previous = revisions.get(skill);
+      if (!supported(doc, skill, target)) { host.replaceChildren(node('p', 'Unsupported or invalid route snapshot. No route status is displayed.')); return; }
+      const revisionKey = `${skill}:${target || ''}`;
+      const previous = revisions.get(revisionKey);
       if (previous && previous.epoch === doc.graph_revision.epoch && previous.seq > doc.graph_revision.seq) {
         host.replaceChildren(node('p', 'Outdated route snapshot refused. Refresh again.')); return;
       }
-      revisions.set(skill, doc.graph_revision); render(doc);
+      revisions.set(revisionKey, doc.graph_revision); render(doc);
     } catch (error) {
       if (current === generation) host.replaceChildren(node('p', error.name === 'AbortError' ? 'Route request timed out. Refresh to try again.' : 'Route evidence unavailable. No route status is assumed.'));
     } finally { clearTimeout(timer); refresh.disabled = false; host.removeAttribute('aria-busy'); }

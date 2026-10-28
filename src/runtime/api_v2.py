@@ -6,7 +6,7 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract',
+GET_ROUTES = ('/api/v2/contract', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -22,7 +22,19 @@ GET_ROUTES = ('/api/v2/contract',
               '/api/v2/relays/samples',
               '/api/v2/catalog',
               '/api/v2/onboarding')
-POST_ROUTES = ('/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
+POST_ROUTES = ('/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
+
+
+import threading
+_ROUTER_INIT_LOCK = threading.Lock()
+
+
+def router(server):
+    with _ROUTER_INIT_LOCK:
+        if getattr(server, 'skill_router', None) is None:
+            from src.runtime.routing import Router
+            server.skill_router = Router(server)
+        return server.skill_router
 
 
 def executor(server):
@@ -75,6 +87,16 @@ def get(server, path, query):
         except ValueError:
             return 400, {'error': 'since must be an integer'}
         return 200, {'events': ex.events_since(since)}
+    if path == '/api/v2/skills':
+        from src.runtime.routing import SKILLS
+        return 200, {'skills': [{'skill_id': k, 'plain': v['plain'], 'targeted': v['targeted'], 'reversibility': v['reversibility'],
+                                 'consent': v['consent'], 'input': v['input'], 'policy': router(server).policy(k)} for k, v in SKILLS.items()]}
+    if path == '/api/v2/skill_routes':
+        from src.runtime.routing import RouteError
+        try:
+            return 200, router(server).skill_routes((q.get('skill') or [''])[0], (q.get('target') or [None])[0])
+        except RouteError as e:
+            return e.status, {'error': str(e), 'code': e.code}
     if path == '/api/v2/onboarding':
         from src.fabric import onboarding
         apk = getattr(server, 'companion_apk', None)
@@ -254,6 +276,14 @@ def apk_portal(server, body):
 
 
 def post(server, path, body):
+    if path in ('/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke') and isinstance(body, dict):
+        from src.runtime.routing import RouteError
+        r = router(server)
+        try:
+            out = {'/api/v2/skill_policy': r.set_policy, '/api/v2/skill_arm': r.arm, '/api/v2/skill_invoke': r.invoke}[path](body)
+        except RouteError as e:
+            return e.status, {'error': str(e), 'code': e.code}
+        return (409 if isinstance(out, dict) and out.get('state') == 'BLOCKED' else 200), out
     if path == '/api/v2/onboarding/apk-portal' and isinstance(body, dict):
         return apk_portal(server, body)
     if path.startswith('/api/v2/voice/') and isinstance(body, dict):
