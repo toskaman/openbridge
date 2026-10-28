@@ -75,6 +75,58 @@ class AllowancePath(unittest.TestCase):
             with self.assertRaises(ModelBlocked):
                 b2._reserve()
 
+    def test_allowance_bound_to_observation(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'b.sqlite3'
+            RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=0.80,
+                               evaluation_authz='a')._reserve()
+            sneakier = RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=1.00,
+                                          evaluation_authz='a')
+            with self.assertRaises(ModelBlocked):
+                sneakier._reserve()
+
+    def test_authz_bound_to_observation(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'b.sqlite3'
+            RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=0.80,
+                               evaluation_authz='a')._reserve()
+            other = RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=0.80,
+                                       evaluation_authz='b')
+            with self.assertRaises(ModelBlocked):
+                other._reserve()
+
+    def test_two_processes_capped_at_first_allowance(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'b.sqlite3'
+            first = RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=0.80,
+                                       evaluation_authz='a')
+            for _ in range(8):
+                first._reserve()
+            second = RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=1.00,
+                                        evaluation_authz='a')
+            with self.assertRaises(ModelBlocked):
+                second._reserve()
+
+    def test_whitespace_authz_refused(self):
+        with tempfile.TemporaryDirectory() as d:
+            b = self.mk(d, authz='   ')
+            with self.assertRaises(ModelBlocked):
+                b._reserve()
+
+    def test_ledger_row_records_allowance_and_authz(self):
+        import sqlite3
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'b.sqlite3'
+            RuntimeModelBroker(p, permit('obs-eval', 600), evaluation_allowance_usd=0.80,
+                               evaluation_authz='owner-ref-1')._reserve()
+            db = sqlite3.connect(p)
+            try:
+                row = db.execute(
+                    'SELECT observation, reserved, allowance, authz FROM reservations').fetchone()
+            finally:
+                db.close()
+            self.assertEqual(row, ('obs-eval', 100000, 800000, 'owner-ref-1'))
+
 
 if __name__ == '__main__':
     unittest.main()

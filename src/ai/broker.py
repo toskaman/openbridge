@@ -91,7 +91,7 @@ class RuntimeModelBroker:
         if isinstance(a, bool) or not isinstance(a, (int, float)) or not math.isfinite(a) \
                 or not 0 < a <= EVAL_ALLOWANCE_MAX_USD:
             raise ModelBlocked('Invalid explicit evaluation allowance')
-        if not isinstance(self.evaluation_authz, str) or not self.evaluation_authz \
+        if not isinstance(self.evaluation_authz, str) or not self.evaluation_authz.strip() \
                 or len(self.evaluation_authz) > 120:
             raise ModelBlocked('Evaluation allowance requires explicit owner authorization reference')
         if isinstance(permit.free_balance_usd, bool) or not isinstance(permit.free_balance_usd, (int, float)) \
@@ -103,21 +103,33 @@ class RuntimeModelBroker:
         if not 0 <= age <= EVAL_OBSERVATION_MAX_AGE_S:
             raise ModelBlocked('Evaluation observation too old')
         ceiling = min(int(a*1_000_000), int((permit.free_balance_usd-1)*1_000_000))
-        self._record(permit.observation_id, ceiling)
+        self._record(permit.observation_id, ceiling, allowance_micro=int(a*1_000_000),
+                     authz=self.evaluation_authz)
 
-    def _record(self, observation, ceiling):
+    def _record(self, observation, ceiling, allowance_micro=None, authz=None):
         if ceiling < RESERVATION_MICRO_USD:
             raise ModelBlocked('Insufficient verified free-credit headroom')
         self.budget_path.parent.mkdir(parents=True, exist_ok=True)
         with closing(sqlite3.connect(self.budget_path, timeout=5)) as db, db:
-            db.execute('CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY, observation TEXT, reserved INTEGER, recorded REAL)')
+            db.execute('CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY, observation TEXT, reserved INTEGER, recorded REAL, allowance INTEGER, authz TEXT)')
+            cols = {r[1] for r in db.execute('PRAGMA table_info(reservations)').fetchall()}
+            if 'allowance' not in cols:
+                db.execute('ALTER TABLE reservations ADD COLUMN allowance INTEGER')
+            if 'authz' not in cols:
+                db.execute('ALTER TABLE reservations ADD COLUMN authz TEXT')
             db.execute('BEGIN IMMEDIATE')
+            if allowance_micro is not None:
+                bound = db.execute('SELECT DISTINCT allowance, authz FROM reservations WHERE observation=?',
+                                   (observation,)).fetchall()
+                bound = [(a, z) for a, z in bound if a is not None]
+                if bound and (allowance_micro, authz) not in bound:
+                    raise ModelBlocked('Allowance/authz mismatch for this observation')
             used = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations WHERE observation=?',(observation,)).fetchone()[0]
             total = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations').fetchone()[0]
             if used+RESERVATION_MICRO_USD > ceiling or total+RESERVATION_MICRO_USD > 1_000_000:
                 raise ModelBlocked('Conservative local credit budget exhausted')
-            db.execute('INSERT INTO reservations(observation,reserved,recorded) VALUES(?,?,?)',
-                       (observation,RESERVATION_MICRO_USD,time.time()))
+            db.execute('INSERT INTO reservations(observation,reserved,recorded,allowance,authz) VALUES(?,?,?,?,?)',
+                       (observation,RESERVATION_MICRO_USD,time.time(),allowance_micro,authz))
 
     def recommend(self, facts):
         if not isinstance(facts,dict) or not facts or set(facts)-ALLOWED_FACTS:

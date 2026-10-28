@@ -43,6 +43,25 @@ def identifiers(s):
     return out
 
 
+def parse_observed_at(value):
+    from datetime import datetime, timezone
+    text = str(value).strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    dt = datetime.fromisoformat(text)
+    if dt.tzinfo is None:
+        raise ValueError('observed-at must carry a timezone')
+    return dt.astimezone(timezone.utc)
+
+
+def read_authz_file(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        ref = f.read().strip()
+    if not ref:
+        raise ValueError('authz file is empty')
+    return ref
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--observation-id', required=True)
@@ -55,10 +74,29 @@ def main():
     ap.add_argument('--allowance-usd', type=float, default=0.80,
                     help='explicit owner-authorized evaluation allowance (canonical observation, shared ledger)')
     ap.add_argument('--authz', default=None,
-                    help='explicit owner authorization reference for the allowance (required)')
+                    help='explicit owner authorization reference for the allowance')
+    ap.add_argument('--authz-file', default=None,
+                    help='owner-written file containing the authorization ref (read-only, never created)')
+    ap.add_argument('--observed-at', required=True,
+                    help='owner observation time, ISO with timezone (immutable, never minted)')
     args = ap.parse_args()
-    if not args.authz:
+    authz = args.authz
+    if args.authz_file:
+        if args.authz:
+            print('AUTHZ_EXCLUSIVE')
+            return 2
+        try:
+            authz = read_authz_file(args.authz_file)
+        except (OSError, ValueError) as e:
+            print('AUTHZ_FILE: %s' % e)
+            return 2
+    if not authz:
         print('MISSING_AUTHZ')
+        return 2
+    try:
+        observed_at = parse_observed_at(args.observed_at)
+    except ValueError as e:
+        print('OBSERVED_AT: %s' % e)
         return 2
     global EXPLAIN, MAX_COMPLETION_TOKENS
     EXPLAIN = ROOT / args.eval_dir
@@ -95,11 +133,11 @@ def main():
             records = json.loads(prev.read_text(encoding='utf-8'))
             done = {r['case_id'] for r in records}
             print('resume: keeping %d recorded calls' % len(records))
-    permit = CreditPermit(observation_id=args.observation_id, verified_at=datetime.now(timezone.utc),
+    permit = CreditPermit(observation_id=args.observation_id, verified_at=observed_at,
                           free_balance_usd=args.free_balance_usd, session_budget_usd=0.20)
     broker = RuntimeModelBroker(budget_path, permit, transport,
                                 evaluation_allowance_usd=args.allowance_usd,
-                                evaluation_authz=args.authz)
+                                evaluation_authz=authz)
 
     pending = [c for c in sample['sampled_case_ids'][:sample['budget_calls_max']] if c not in done]
     for i, case_id in enumerate(pending):
