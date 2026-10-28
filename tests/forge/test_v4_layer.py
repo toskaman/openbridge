@@ -219,6 +219,8 @@ class Synthesize(unittest.TestCase):
                   'target_opaque_id'):
             self.assertIn(k, p)
         self.assertIn('EXACTLY these 10 keys', p)
+        self.assertIn('character-for-character exactly as listed', p)
+        self.assertIn('minimal subset', p)
         self.assertIn('<device-opaque-id>', p)   # placeholders only, no answer leakage
         self.assertIn('input.key', p)
         self.assertIn('"key": string, one of:', p)

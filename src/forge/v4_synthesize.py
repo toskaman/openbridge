@@ -51,11 +51,14 @@ def _input_schema_lines(primitive_ids):
 def build_prompt(bundle, intent_text, primitive_ids, target_category):
     # v4-synth-3 states the full CapabilityCandidate contract (G3 attempt-2 root cause:
     # v4-synth-2 never showed the schema, so the model invented plan/evidence/primitive_ids).
-    keys = ('candidate_id (string), evidence_refs (non-empty list of listed fact refs), '
-            'intent (string), origin (must be "meta_generated"), postconditions (list), '
-            'preconditions (list), primitive_chain (non-empty list), required_grants (list, '
-            'unique, each one of: control, observe, read), schema_version (must be 1), '
-            'target_opaque_id (one device above)')
+    keys = ('candidate_id (string), evidence_refs (non-empty list: copy each ref '
+            'character-for-character exactly as listed, they start with "opaque:"; never '
+            'shorten, reformat, or invent), intent (string), origin (must be '
+            '"meta_generated"), postconditions (list), preconditions (list), '
+            'primitive_chain (non-empty list), required_grants (list, unique, minimal '
+            'subset: each one of control, observe, read, and only from the target '
+            'device scope= list), schema_version '
+            '(must be 1), target_opaque_id (copy one device id above exactly)')
     example = ('{"schema_version":1,"candidate_id":"<id>","origin":"meta_generated",'
                '"intent":"<intent>","target_opaque_id":"<device-opaque-id>",'
                '"primitive_chain":[{"primitive_id":"<allowed-primitive>",'
