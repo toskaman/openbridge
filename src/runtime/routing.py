@@ -187,6 +187,8 @@ class Router:
                     reason = 'policy_blocked'
                 route = self._route(skill_id, snap, key, hops, 'op:relay_ble_scan', 'relay_ble_scan', last_ok if last_ok else self.clock(),
                                     LEASE_S['RELAY'], 'relay ledger' if last_ok else 'relay pairing (no scan yet)', reason, detail)
+                if not last_ok:
+                    route['_age'] = LEASE_S['RELAY']   # never scanned: ranks after any proven relay, deterministically
                 route['_params'] = lambda p, rid=rid: {'relay_id': rid, 'seconds': p.get('seconds', 8)}
                 out.append(route)
             return out
@@ -262,7 +264,7 @@ class Router:
                 sel = min(eligible, key=lambda r: (order.get(r['route_id'], 10 ** 6), r['route_id']))['route_id']
                 rule = 'preferred_order'
             else:
-                sel = min(eligible, key=lambda r: (r['_age'], len(r['hops']), -self._success_rate(r['_primitive'], r['_key']), r['route_id']))['route_id']
+                sel = min(eligible, key=lambda r: (int(r['_age']), len(r['hops']), -self._success_rate(r['_primitive'], r['_key']), r['route_id']))['route_id']
                 rule = 'auto_score'
         # backend order: selected first, then READY, STANDBY, UNAVAILABLE; stable by route_id
         rank = {'READY': 1, 'STANDBY': 2, 'UNAVAILABLE': 3}
