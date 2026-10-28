@@ -49,7 +49,7 @@ _ENTRIES = [
     (_d('state.screen', 'android', 'display', _EMPTY, {'type': 'object'}, ['read'], 'READ', 'IDEMPOTENT', 60, REAL,
         'power state and focused app match dumpsys power/window'),
      ('device_action', lambda a: {'action': 'screen_state'}, ANDROID)),
-    (_d('state.audio', 'android', 'audio', _EMPTY, {'type': 'object'}, ['read'], 'READ', 'IDEMPOTENT', 60, SIM,
+    (_d('state.audio', 'android', 'audio', _EMPTY, {'type': 'object'}, ['read'], 'READ', 'IDEMPOTENT', 60, REAL,
         'muted flag and volume index equal an independent dumpsys audio read of STREAM_MUSIC',
         ['muted is null when the device does not report it; HDMI-CEC/AVR volume is not visible here']),
      ('device_action', lambda a: {'action': 'audio_state'}, ANDROID)),
