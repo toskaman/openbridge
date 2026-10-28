@@ -1,12 +1,14 @@
+> Historical integration handoff. Use [current release status](../RELEASE_STATUS.md) for delivered work and remaining gates; branch/service/mounting notes below describe their original checkpoint.
+
 # Integration handoff
 
-Current status: original Forge PR #1 and verified-publication PR #10 are merged. See WORK_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
+Current status: original Forge PR #1 and verified-publication PR #10 are merged. See ../RELEASE_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
 
 Current handoff (27 October 2026): [release index](../RELEASE_STATUS.md) is authoritative for open work. Phone/TV HTTP publication, true per-fact timestamps, source filtering and the combined physical TV/Glimmer lifecycle are resolved. PR #1, #10, #14 and #20 are merged; old draft/merge requests below are historical. Normal product entrypoint and explicit trusted relay/target selection remain next work. A separate host bound through `api_v2.reader(server)` is valid; main-process mounting is optional. No videos, recordings, edits or renders until a new explicit owner request, even after completion.
 
 ## Historical handoff chronology
 
-Current status: original Forge PR #1 and verified-publication PR #10 are merged. See WORK_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
+Current status: original Forge PR #1 and verified-publication PR #10 are merged. See ../RELEASE_STATUS.md for active branch/service state and VERIFIED_PUBLICATION.md for the new first-read publication contract. Earlier requests below are historical unless repeated there. Video work requires a new explicit owner request.
 
 Latest runtime-owner confirmation: b5f1ab85622d6748b4c0712bfcdd72bada473ace records physical phone-relay HTTP publish/read/documents=200, read after relay revocation=409 and read after service removal=404. See that branch's EVIDENCE_LEDGER.md and FORGE_INTEGRATION_REPLY.md. This gate is closed for the phone relay; no TV or combined physical Glimmer orchestration is inferred.
 

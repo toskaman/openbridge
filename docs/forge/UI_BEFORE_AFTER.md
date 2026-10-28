@@ -2,7 +2,7 @@
 
 Current release status (27 October 2026): see [release index](../RELEASE_STATUS.md). The notes below preserve earlier milestones and their original scores/failures; they are historical unless explicitly reaffirmed in that index.
 
-Current redesign: Muse Wonder 1.0 authored theme tokens and complete CSS fields; layout integration and safeguards were independently implemented. Its final explanatory field was truncated and remains disclosed. See [redesign plan and attribution](META_WEBSITE_REDESIGN_PLAN.md) and [work status](WORK_STATUS.md) for matched-state screenshots/receipts. Orange/charcoal and hand-authored-style descriptions below refer to the earlier preview. No video work until a new explicit owner request, even after completion.
+Current redesign: Muse Wonder 1.0 authored theme tokens and complete CSS fields; layout integration and safeguards were independently implemented. Its final explanatory field was truncated and remains disclosed. See [redesign plan and attribution](META_WEBSITE_REDESIGN_PLAN.md) and [work status](../RELEASE_STATUS.md) for matched-state screenshots/receipts. Orange/charcoal and hand-authored-style descriptions below refer to the earlier preview. No video work until a new explicit owner request, even after completion.
 
 ## Historical visual checks
 

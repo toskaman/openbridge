@@ -4,6 +4,8 @@
 
 Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier* · MIT licence
 
+[Documentation](docs/README.md) · [Release status and next tasks](docs/RELEASE_STATUS.md) · [Evidence](docs/RELEASE_EVIDENCE.md)
+
 ![Real Device Fabric run, household names redacted](docs/jury/screens/fabric-tv-relay-redacted-1440.png)
 
 *Real run on the author's home network (names redacted with `?redact`): a Freebox and the 12 active hosts it reports, an Android phone over USB, an Android TV over ADB Wi-Fi merged with its mDNS identity, and 6 Bluetooth devices that the PC cannot hear itself (it has no Bluetooth radio) found through the TV acting as a relay.*

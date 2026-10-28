@@ -53,4 +53,4 @@ The original rows above describe their recorded revisions. Newer [device capabil
 - Xiaomi: input/settings writes remained denied; readable facts and permitted app launch are separate results.
 - BridgeWindows v4: mutual authentication and message MACs, without payload encryption; historical v3 rows do not describe the current protocol. OpenBridge multi-PC integration remains unimplemented.
 
-These are existing contributor-recorded hardware results, not newly repeated hardware experiments during this audit. See [remaining work](REMAINING_WORK.md) for open integration gates.
+These are existing contributor-recorded hardware results, not newly repeated hardware experiments during this audit. See [remaining work](RELEASE_STATUS.md) for open integration gates.

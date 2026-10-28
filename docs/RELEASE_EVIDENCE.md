@@ -7,6 +7,6 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - [Complete TV-to-phone handover](release/COMPLETE_HANDOVER.md), with [export/provenance metadata](release/failover-evidence/complete-handover-20261028.metadata.json), preserving [earlier partial attempts](release/PHYSICAL_FAILOVER_FOLLOWUP.md).
 - [Watch hold-to-TV acceptance and limits](release/WATCH_CONTROL_ACCEPTANCE.md).
 - [PR57](https://github.com/toskaman/openbridge/pull/57): merged `ad7e2fc`; tested head `48c7275`, 508 local tests and six passing CI checks. Source integration does not assert live deployment.
-- [Current release gates](REMAINING_WORK.md); persistence PR56 remains excluded.
+- [Current release gates](RELEASE_STATUS.md); corrected persistence is integrated through [PR59](https://github.com/toskaman/openbridge/pull/59).
 
 - [Preregistered synthetic routing results](evaluation/routing-v1/RESULTS.md): full inputs/gold/decisions and exact harness; actual Meta Spark design-review receipt, separately attributed from deterministic routing scores.

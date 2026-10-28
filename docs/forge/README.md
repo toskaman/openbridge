@@ -12,7 +12,7 @@ For the isolated CPU Muse Glimmer v2 service, use `python -m dev.forge_glimmer_c
 
 - [Physical TV journey](TV_GLIMMER_JOURNEY.md): actual local Muse Glimmer proposal, verified publication/read, revocation refusal and removal. Recorded hardware evidence does not imply current device availability.
 - [Original model ablation](MODEL_ABLATION_RESULTS.md): retain narrow-task failures and rules baseline; do not present the development proofs as new benchmark scores.
-- [Integration handoff](INTEGRATION_HANDOFF.md): trusted runtime provider interface and outstanding main-process mounting. A standalone preview is not final product integration.
+- [Historical integration handoff](INTEGRATION_HANDOFF.md): provider interface evolution. Use [current release status](../RELEASE_STATUS.md) for delivered integration and open gates.
 - [Meta website receipt](meta-web-design-receipt.json): Muse Wonder 1.0 authored the current theme foundation. Codex authored markup adaptation, integration and checks. The complete CSS fields were retained; the final explanatory note was truncated.
 
 Forge foundation, verified publication and TV proof were merged through PRs #1, #10 and #14. The redesign is tracked in PR #20. Historical recordings remain historical artifacts; no further videos may be created without a new explicit owner request.
