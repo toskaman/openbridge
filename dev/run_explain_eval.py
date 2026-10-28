@@ -22,10 +22,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPLAIN = ROOT / 'docs/evaluation/routing-v1/explain'
+MAX_COMPLETION_TOKENS = 800
 ROW_KEYS = ('case_id', 'family', 'predictions', 'reasons', 'expected', 'document', 'events')
 ID_RES = (re.compile(r'(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}'),
           re.compile(r'\b\d{1,3}(?:\.\d{1,3}){3}\b'),
-          re.compile(r'\b[A-Z0-9]{6,}\b'))
+          re.compile(r'\b[0-9a-f]{16,}\b'))
+FROZEN_VOCABULARY = {'DECISION', 'EVIDENCE', 'LIMITS', 'UNSUPPORTED', 'SUPPORTED', 'INVALID'}
 
 
 def frozen_template():
@@ -38,7 +40,7 @@ def frozen_template():
 def identifiers(s):
     out = set()
     for rx in ID_RES:
-        out.update(rx.findall(s))
+        out.update(x for x in rx.findall(s) if x not in FROZEN_VOCABULARY)
     return out
 
 
@@ -47,7 +49,14 @@ def main():
     ap.add_argument('--observation-id', required=True)
     ap.add_argument('--free-balance-usd', required=True, type=float)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--eval-dir', default='docs/evaluation/routing-v1/explain')
+    ap.add_argument('--max-completion-tokens', type=int, default=800)
+    ap.add_argument('--resume', action='store_true',
+                    help='skip case_ids already in <out>/replies.json; never re-runs a call')
     args = ap.parse_args()
+    global EXPLAIN, MAX_COMPLETION_TOKENS
+    EXPLAIN = ROOT / args.eval_dir
+    MAX_COMPLETION_TOKENS = args.max_completion_tokens
 
     sys.path.insert(0, str(ROOT))
     from src.ai.broker import CreditPermit, MetaTransport, RuntimeModelBroker, ModelBlocked, MODEL_ID, ENDPOINT
@@ -74,6 +83,13 @@ def main():
     budget_path = out / 'budget.sqlite3'
     permits = {}
     records = []
+    done = set()
+    if args.resume:
+        prev = out / 'replies.json'
+        if prev.exists():
+            records = json.loads(prev.read_text(encoding='utf-8'))
+            done = {r['case_id'] for r in records}
+            print('resume: keeping %d recorded calls, %d remaining' % (len(records), 0))
 
     def permit_for(i):
         slot = i // 2
@@ -84,7 +100,8 @@ def main():
                 free_balance_usd=args.free_balance_usd, session_budget_usd=0.20)
         return permits[slot]
 
-    for i, case_id in enumerate(sample['sampled_case_ids'][:sample['budget_calls_max']]):
+    pending = [c for c in sample['sampled_case_ids'][:sample['budget_calls_max']] if c not in done]
+    for i, case_id in enumerate(pending):
         row = {k: rows[case_id][k] for k in ROW_KEYS}
         case_json = json.dumps(row, indent=2, ensure_ascii=False)
         prompt = template.replace('{CASE_JSON}', case_json)
@@ -102,7 +119,7 @@ def main():
         started = time.monotonic()
         try:
             response = transport({'model': MODEL_ID, 'temperature': 0,
-                                  'max_completion_tokens': 800,
+                                  'max_completion_tokens': MAX_COMPLETION_TOKENS,
                                   'messages': [{'role': 'user', 'content': prompt}]})
         except Exception as e:  # noqa: BLE001 - failed call recorded, never retried
             rec['status'] = 'FAILED'
@@ -112,6 +129,8 @@ def main():
         rec['elapsed_ms'] = round((time.monotonic() - started) * 1000)
         rec['request_id'] = response.get('id')
         rec['model'] = response.get('model')
+        rec['finish_reason'] = ((response.get('choices') or [{}])[0].get('finish_reason'))
+        rec['max_completion_tokens'] = MAX_COMPLETION_TOKENS
         usage = (response.get('usage') or {})
         rec['usage'] = {k: usage.get(k) for k in ('prompt_tokens', 'completion_tokens')}
         if (rec['model'] != MODEL_ID or any(type(usage.get(k)) is not int or not 0 <= usage.get(k) <= 100_000
