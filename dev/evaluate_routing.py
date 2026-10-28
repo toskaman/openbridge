@@ -85,7 +85,7 @@ def run_case(case):
         elif policy['mode']=='PREFERRED':body['preferred']=[alias_route[a] for a in policy['preferred']]
         router.set_policy(body)
         start=time.perf_counter();doc=router.skill_routes('ble_scan_room');latency=(time.perf_counter()-start)*1000
-        predictions=baseline_predictions(case);predictions['router']=route_alias.get(doc['selected_route_id'])
+        predictions={'router':route_alias.get(doc['selected_route_id'])}
         result={'case_id':case['case_id'],'family':case['family'],'hop_count':case['hop_count'],'predictions':predictions,
                 'reasons':{route_alias[r['route_id']]:r['reason'] for r in doc['routes']},'contract_errors':validate_doc(doc),
                 'router_latency_ms':latency,'setup_documents':[setup],'document':doc,'events':ex.events_since(0),**counts}
@@ -113,15 +113,22 @@ def evaluate(cases,gold):
         raise ValueError('CASE_GOLD_MISMATCH')
     rows=[]
     for case in cases:
+        arm_errors={}
+        try:baselines=baseline_predictions(case)
+        except Exception as error:
+            baselines={arm:None for arm in ARMS if arm!='router'}
+            arm_errors.update({arm:type(error).__name__ for arm in baselines})
         try:row=run_case(case)
         except Exception as error:
+            arm_errors['router']=type(error).__name__
             row={'case_id':case['case_id'],'family':case['family'],'hop_count':case['hop_count'],'error':type(error).__name__,
-                 'error_detail':str(error)[:500],'predictions':{arm:None for arm in ARMS},'contract_errors':['CASE_ERROR'],'reasons':{}}
+                 'error_detail':str(error)[:500],'predictions':{'router':None},'contract_errors':['CASE_ERROR'],'reasons':{}}
+        row['predictions'].update(baselines);row['arm_errors']=arm_errors
         row['expected']=labels[case['case_id']];row['expected_device_class']=next((n['category'] for n in case['nodes'] if n['alias']==row['expected']['selected_alias']),'abstention')
         rows.append(row)
     def metrics(group,arm):
         return score_predictions([r['predictions'][arm] for r in group],[r['expected']['selected_alias'] for r in group],
-                                 [not r.get('error') and (arm!='router' or not r['contract_errors']) for r in group])
+                                 [arm not in r['arm_errors'] and (arm!='router' or not r['contract_errors']) for r in group])
     summary={arm:metrics(rows,arm) for arm in ARMS}
     slices={key:{str(v):{'indicative_n_lt_30':sum(str(r[key])==str(v) for r in rows)<30,
                        'arms':{a:metrics([r for r in rows if r[key]==v],a) for a in ARMS}} for v in sorted({r[key] for r in rows},key=str)}
@@ -158,6 +165,6 @@ def main():
                           'design_review_model':review['model_id'],'design_review_input_sha256':review['input_sha256']}
     write_report(args.output,report)
     print(json.dumps({'output':str(args.output),'summary':report['summary'],'reason_checks':report['reason_checks']}))
-    return 1 if any('error' in r for r in report['rows']) else 0
+    return 1 if any(r['arm_errors'] for r in report['rows']) else 0
 
 if __name__=='__main__':raise SystemExit(main())

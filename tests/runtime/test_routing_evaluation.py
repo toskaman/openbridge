@@ -19,9 +19,10 @@ class Evaluation(unittest.TestCase):
         case=example();before=copy.deepcopy(case);out=ev.run_case(case)
         self.assertEqual(case,before)
         self.assertEqual(out['predictions']['router'],'young')
-        self.assertEqual(out['predictions']['catalog_first'],'old')
-        self.assertEqual(out['predictions']['first_eligible'],'old')
-        self.assertEqual(out['predictions']['policy_aware'],'young')
+        baselines=ev.baseline_predictions(case)
+        self.assertEqual(baselines['catalog_first'],'old')
+        self.assertEqual(baselines['first_eligible'],'old')
+        self.assertEqual(baselines['policy_aware'],'young')
         self.assertEqual(out['contract_errors'],[])
         self.assertEqual(out['dispatch_attempts'],0);self.assertEqual(out['transport_attempts'],0)
         self.assertTrue(out['events']);self.assertTrue(out['setup_documents'])
@@ -29,9 +30,9 @@ class Evaluation(unittest.TestCase):
     def test_pinned_down_abstains_without_fallback(self):
         case=example();case['policy']={'mode':'PINNED','pinned':'young'};case['nodes'][1]['online']=False
         out=ev.run_case(case)
-        self.assertIsNone(out['predictions']['router']);self.assertIsNone(out['predictions']['policy_aware'])
+        self.assertIsNone(out['predictions']['router']);self.assertIsNone(ev.baseline_predictions(case)['policy_aware'])
         self.assertEqual(out['reasons']['young'],'link_down')
-        self.assertEqual(out['predictions']['first_eligible'],'old')
+        self.assertEqual(ev.baseline_predictions(case)['first_eligible'],'old')
 
     def test_abstention_metrics_and_empty_denominators(self):
         out=ev.score_predictions([None,None,'x'],[None,'x','x'])
@@ -56,8 +57,14 @@ class Evaluation(unittest.TestCase):
         case=example();label={'case_id':case['case_id'],'selected_alias':None,'unavailable_reasons':{'old':'link_down','young':'link_down'}}
         with patch.object(ev,'run_case',side_effect=ValueError('development failure')):
             report=ev.evaluate([case],[label])
-        for score in report['summary'].values():
-            self.assertEqual((score['hits'],score['n'],score['errors']),(0,1,1))
+        router=report['summary']['router']
+        self.assertEqual((router['hits'],router['n'],router['errors']),(0,1,1))
+        for arm,score in report['summary'].items():
+            if arm!='router':self.assertEqual(score['errors'],0)
+        label['selected_alias']='young'
+        with patch.object(ev,'run_case',side_effect=ValueError('development failure')):
+            good=ev.evaluate([case],[label])
+        self.assertEqual(good['summary']['policy_aware']['hits'],1)
         self.assertEqual(report['rows'][0]['error'],'ValueError')
 
     def test_frozen_case_tampering_is_refused_without_scoring(self):
