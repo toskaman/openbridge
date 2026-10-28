@@ -113,12 +113,14 @@ class Substrate:
             return 'FORGED_FACT'
         if fact['device_fingerprint'] != fp:
             return 'FACT_OTHER_DEVICE'
+        if fact['verified'] is not True:
+            return 'UNVERIFIED_FACT'                 # execution relies only on direct, verified evidence
         if self.clock() - epoch(fact['observed_at']) > max_age:
             return 'STALE_FACT'
         current = {f['fact_id']: f for f in self.facts(self.device_by_fp(fp)['key'])}
         cur = current.get(fact['fact_id'])
-        if cur is None or cur['value'] != fact['value']:
-            return 'FACT_CHANGED'
+        if cur is None or any(cur[k] != fact[k] for k in ('value', 'verified', 'source')):
+            return 'FACT_CHANGED'                    # value, provenance or trust changed since the fact was signed
         return None
 
     # ---------- compiler ----------
@@ -296,19 +298,25 @@ class Substrate:
         errs = validate('InvokeRequest', request)
         if errs:
             raise SubstrateError('SCHEMA', errs[0])
-        with self._lock:
-            if request['operation_id'] in self.operations:
+        op = request['operation_id']
+        with self._lock:                              # reserve the operation id atomically before any other check (Sol P1)
+            if op in self.operations:
                 raise SubstrateError('OPERATION_REPLAY', 'operation_id already used', 409)
-        c = self.compile(manifest, facts, request['inputs'], for_dispatch=True)
-        if c['manifest_hash'] != request['manifest_hash']:
-            raise SubstrateError('HASH_MISMATCH', 'Request hash does not match the manifest', 409)
-        fp = manifest['target']['device_fingerprint']
-        with self._lock:
-            self._check_grant(grant, c['manifest_hash'], fp, c['permissions'])
-            if grant['grant_id'] != request['grant_id']:
-                raise SubstrateError('GRANT_MISMATCH', 'grant_id differs from the request', 409)
-            self.grant_uses[grant['grant_id']] = self.grant_uses.get(grant['grant_id'], 0) + 1
-            self.operations.add(request['operation_id'])
+            self.operations.add(op)
+        try:
+            c = self.compile(manifest, facts, request['inputs'], for_dispatch=True)
+            if c['manifest_hash'] != request['manifest_hash']:
+                raise SubstrateError('HASH_MISMATCH', 'Request hash does not match the manifest', 409)
+            fp = manifest['target']['device_fingerprint']
+            with self._lock:                          # grant check and consumption in one critical section
+                self._check_grant(grant, c['manifest_hash'], fp, c['permissions'])
+                if grant['grant_id'] != request['grant_id']:
+                    raise SubstrateError('GRANT_MISMATCH', 'grant_id differs from the request', 409)
+                self.grant_uses[grant['grant_id']] = self.grant_uses.get(grant['grant_id'], 0) + 1
+        except Exception:
+            with self._lock:                          # nothing was dispatched: the id may be used for a corrected request
+                self.operations.discard(op)
+            raise
         started, steps, status, error = self.clock(), [], 'VERIFIED', None
         ex = self._ex()
         for st in c['plan']:

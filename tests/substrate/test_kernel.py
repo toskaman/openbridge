@@ -1,6 +1,7 @@
 """V4 substrate trust kernel (SIMULATED_VERIFIED: real registry + Executor, fake device runners, fixed test key).
 Each security test states the attack it blocks; all were written before kernel.py existed (new module)."""
 import copy
+import time
 import json
 import tempfile
 import threading
@@ -358,3 +359,40 @@ class SharedFixtures(Base):
         self.assertEqual(m['target']['device_fingerprint'], self.fp)
         self.s.compile(m, load('facts_tv.json'))
         self.assertTrue(self.s.verify_receipt(load('receipt_tv_mute.json')))
+
+
+class SolReview(Base):
+    """Sol V4 review of PR #72 (head 8a73b8f): both cases passed the kernel before the fix."""
+    def test_p1_concurrent_same_operation_id_dispatches_once(self):
+        m = self.manifest()
+        g, _ = self.s.issue_grant(m, self.facts, True, max_uses=10)
+        real = self.s.compile
+        def slow(*a, **k):
+            r = real(*a, **k); time.sleep(0.05); return r      # widen the window between the replay check and dispatch
+        self.s.compile = slow
+        out, errs = [], []
+        def go():
+            try:
+                out.append(self.s.invoke(m, g, self.facts, self.request(m, g)))
+            except SubstrateError as e:
+                errs.append(e.code)
+        ths = [threading.Thread(target=go) for _ in range(5)]
+        for t in ths: t.start()
+        for t in ths: t.join(10)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(errs, ['OPERATION_REPLAY'] * 4)
+        self.assertEqual(len(self.calls), 2)                     # one operation = its two steps, once
+
+    def test_p2_unverified_or_downgraded_fact_is_refused(self):
+        self.t[0] = time.time()                                  # registry facts carry real observation times
+        self.facts = self.s.facts(self.tv)
+        model = next(f for f in self.facts if f['name'] == 'model')
+        weak = dict(model, verified=False)
+        weak['signature'] = self.s._sign('fact', {k: v for k, v in weak.items() if k != 'signature'})   # legitimately signed, unverified
+        m = self.manifest(facts_required=[weak['fact_id']], evidence_refs=[weak['fact_id']])
+        self.rejects('UNVERIFIED_FACT', self.s.compile, m, [weak])
+        m = self.manifest(facts_required=[model['fact_id']], evidence_refs=[model['fact_id']])
+        self.s.compile(m, [model])                               # verified ADB fact: accepted
+        dev = next(d for d in self.server.fabric_snapshot['devices'] if d['key'] == self.tv)
+        dev['facts']['model'] = dict(dev['facts']['model'], verified=False, sources=['UNKNOWN'])   # same value, trust downgraded
+        self.rejects('FACT_CHANGED', self.s.compile, m, [model])
