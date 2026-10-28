@@ -1,0 +1,22 @@
+[
+ {
+  "device_fingerprint": "fp-7d29859f5f5e1153",
+  "fact_id": "f-a8477062bde7bd72",
+  "name": "category",
+  "observed_at": "2027-01-15T08:00:00Z",
+  "signature": "3aa188d1c9a94f23b412c3e7591d6b0f0b79fba7f492a9786b27d24450572ff3",
+  "source": "REGISTRY",
+  "value": "tv",
+  "verified": true
+ },
+ {
+  "device_fingerprint": "fp-7d29859f5f5e1153",
+  "fact_id": "f-e001bf84a678f65e",
+  "name": "model",
+  "observed_at": "2026-10-28T17:20:40Z",
+  "signature": "47930c7ea195d20c65989734567bf5b9ec148fc4b31b980237f46868a450eab7",
+  "source": "ADB",
+  "value": "Android_TV",
+  "verified": true
+ }
+]

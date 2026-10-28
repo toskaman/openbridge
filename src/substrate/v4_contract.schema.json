@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "openbridge:v4/substrate/1",
+  "title": "OpenBridge V4 primitive substrate contract (obv4.1)",
+  "description": "Canonical shared schema between the Claude substrate and the Muse Code agent tier. Cross-field rules: src/substrate/compiler.py. Every $defs entry is a top-level document type.",
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"},
+    "fingerprint": {"type": "string", "pattern": "^fp-[0-9a-f]{16}$"},
+    "ts": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+    "sig": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "permission": {"enum": ["observe", "read", "control"]},
+    "side_effect": {"enum": ["NONE", "READ", "REVERSIBLE_EXACT", "SESSION_CLEANUP", "IRREVERSIBLE"]},
+    "text": {"type": "string", "maxLength": 200},
+    "scalar": {"type": ["string", "integer", "number", "boolean", "null"], "maxLength": 200},
+
+    "Fact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "device_fingerprint", "name", "value", "source", "observed_at", "verified", "signature"],
+      "properties": {
+        "fact_id": {"type": "string", "pattern": "^f-[0-9a-f]{16}$"},
+        "device_fingerprint": {"$ref": "#/$defs/fingerprint"},
+        "name": {"$ref": "#/$defs/id"},
+        "value": {"$ref": "#/$defs/scalar"},
+        "source": {"type": "string", "pattern": "^[A-Z_]{2,24}(:[a-z0-9-]{1,40})?$"},
+        "observed_at": {"$ref": "#/$defs/ts"},
+        "verified": {"type": "boolean"},
+        "signature": {"$ref": "#/$defs/sig"}
+      }
+    },
+
+    "PrimitiveDescriptor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "version", "platform", "resource_type", "input_schema", "output_schema", "required_permissions", "side_effect_class",
+                   "idempotency", "costs", "constraints", "source", "status", "manifest_allowed", "test_oracle", "error_codes"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "version": {"type": "integer", "minimum": 1, "maximum": 1000},
+        "platform": {"enum": ["android", "android_tv", "wear_os", "windows", "router", "tuya", "ble_relay", "any"]},
+        "resource_type": {"$ref": "#/$defs/id"},
+        "input_schema": {"type": "object"},
+        "output_schema": {"type": "object"},
+        "required_permissions": {"type": "array", "maxItems": 3, "items": {"$ref": "#/$defs/permission"}},
+        "side_effect_class": {"$ref": "#/$defs/side_effect"},
+        "idempotency": {"enum": ["IDEMPOTENT", "NON_IDEMPOTENT"]},
+        "costs": {"type": "object", "additionalProperties": false, "required": ["max_seconds", "cloud_spend"],
+                  "properties": {"max_seconds": {"type": "integer", "minimum": 1, "maximum": 900}, "cloud_spend": {"const": false}}},
+        "constraints": {"type": "array", "maxItems": 12, "items": {"$ref": "#/$defs/text"}},
+        "source": {"const": "prebuilt"},
+        "status": {"enum": ["REAL_HARDWARE_VERIFIED", "SIMULATED_VERIFIED", "HYPOTHESIS", "BLOCKED"]},
+        "manifest_allowed": {"type": "boolean"},
+        "test_oracle": {"$ref": "#/$defs/text"},
+        "error_codes": {"type": "array", "maxItems": 16, "items": {"type": "string", "pattern": "^[A-Z_]{3,40}$"}}
+      }
+    },
+
+    "Arg": {
+      "type": ["string", "integer", "number", "boolean", "object", "null"],
+      "description": "A literal scalar, {\"$input\": name} or {\"$fact\": fact_id}. Objects are only references; checked by the compiler."
+    },
+
+    "Step": {
+      "type": "object", "additionalProperties": false,
+      "required": ["step_id", "primitive_id", "args", "on_uncertain"],
+      "properties": {
+        "step_id": {"$ref": "#/$defs/id"},
+        "primitive_id": {"$ref": "#/$defs/id"},
+        "args": {"type": "object"},
+        "repeat": {"type": "integer", "minimum": 1, "maximum": 5},
+        "on_uncertain": {"enum": ["INCONCLUSIVE", "ABORT"]}
+      }
+    },
+
+    "CandidateManifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifest_version", "capability_id", "title", "origin", "model_run", "target", "inputs", "steps", "facts_required",
+                   "max_fact_age_s", "evidence_refs", "permissions_requested", "expires_at"],
+      "properties": {
+        "manifest_version": {"const": "obv4.1"},
+        "capability_id": {"$ref": "#/$defs/id"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 60},
+        "origin": {"const": "meta_generated"},
+        "model_run": {"type": "object", "additionalProperties": false, "required": ["provider", "model", "run_id"],
+                      "properties": {"provider": {"const": "meta"}, "model": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_.:-]{1,63}$"},
+                                     "run_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{6,64}$"}}},
+        "target": {"type": "object", "additionalProperties": false, "required": ["device_fingerprint", "category"],
+                   "properties": {"device_fingerprint": {"$ref": "#/$defs/fingerprint"}, "category": {"$ref": "#/$defs/id"}}},
+        "inputs": {"type": "object", "description": "name -> strict primitive-subset schema (integer/string/boolean with bounds or enum)"},
+        "steps": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"$ref": "#/$defs/Step"}},
+        "facts_required": {"type": "array", "maxItems": 16, "items": {"type": "string", "pattern": "^f-[0-9a-f]{16}$"}},
+        "max_fact_age_s": {"type": "integer", "minimum": 5, "maximum": 3600},
+        "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"type": "string", "pattern": "^(f-[0-9a-f]{16}|src:[A-Za-z0-9_.:/-]{3,120})$"}},
+        "permissions_requested": {"type": "array", "maxItems": 3, "items": {"$ref": "#/$defs/permission"}},
+        "expires_at": {"$ref": "#/$defs/ts"}
+      }
+    },
+
+    "InvokeRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operation_id", "principal", "manifest_hash", "grant_id", "inputs", "trace_id"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^op-[0-9a-f]{32}$"},
+        "principal": {"enum": ["owner", "relay"]},
+        "manifest_hash": {"$ref": "#/$defs/hash"},
+        "grant_id": {"type": "string", "pattern": "^g-[0-9a-f]{16}$"},
+        "inputs": {"type": "object"},
+        "trace_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{6,64}$"}
+      }
+    },
+
+    "Grant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["grant_id", "principal", "manifest_hash", "device_fingerprints", "permissions", "max_uses", "issued_at", "expires_at", "signature"],
+      "properties": {
+        "grant_id": {"type": "string", "pattern": "^g-[0-9a-f]{16}$"},
+        "principal": {"const": "owner"},
+        "manifest_hash": {"$ref": "#/$defs/hash"},
+        "device_fingerprints": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"$ref": "#/$defs/fingerprint"}},
+        "permissions": {"type": "array", "maxItems": 3, "items": {"$ref": "#/$defs/permission"}},
+        "max_uses": {"type": "integer", "minimum": 1, "maximum": 100},
+        "issued_at": {"$ref": "#/$defs/ts"},
+        "expires_at": {"$ref": "#/$defs/ts"},
+        "signature": {"$ref": "#/$defs/sig"}
+      }
+    },
+
+    "Receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operation_id", "manifest_hash", "origin", "device_fingerprint", "status", "steps", "started_at", "finished_at", "signature"],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^op-[0-9a-f]{32}$"},
+        "manifest_hash": {"$ref": "#/$defs/hash"},
+        "origin": {"enum": ["meta_generated", "prebuilt"]},
+        "device_fingerprint": {"$ref": "#/$defs/fingerprint"},
+        "status": {"enum": ["VERIFIED", "EXECUTED", "FAILED", "INCONCLUSIVE", "BLOCKED", "REJECTED"]},
+        "steps": {"type": "array", "maxItems": 60, "items": {"type": "object", "additionalProperties": false,
+                  "required": ["step_id", "primitive_id", "attempt", "transaction_id", "status"],
+                  "properties": {"step_id": {"$ref": "#/$defs/id"}, "primitive_id": {"$ref": "#/$defs/id"},
+                                 "attempt": {"type": "integer", "minimum": 1, "maximum": 5},
+                                 "transaction_id": {"type": ["string", "null"], "pattern": "^tx-[0-9a-f]{16}$"},
+                                 "status": {"type": "string", "pattern": "^[A-Z_]{3,24}$"}}}},
+        "error": {"type": ["string", "null"], "maxLength": 200},
+        "started_at": {"$ref": "#/$defs/ts"},
+        "finished_at": {"$ref": "#/$defs/ts"},
+        "signature": {"$ref": "#/$defs/sig"}
+      }
+    },
+
+    "EngineeringPrimitiveRequest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["request_id", "requested_primitive", "platform", "reason", "evidence_refs", "least_permission_design", "blockers", "test_plan", "status"],
+      "properties": {
+        "request_id": {"type": "string", "pattern": "^epr-[0-9a-f]{16}$"},
+        "requested_primitive": {"$ref": "#/$defs/id"},
+        "platform": {"enum": ["android", "android_tv", "wear_os", "windows", "router", "tuya", "ble_relay", "any"]},
+        "reason": {"enum": ["UNKNOWN_PRIMITIVE", "PRIMITIVE_BLOCKED", "PRIMITIVE_HYPOTHESIS", "NOT_MANIFEST_ALLOWED"]},
+        "evidence_refs": {"type": "array", "maxItems": 16, "items": {"type": "string", "maxLength": 128}},
+        "least_permission_design": {"$ref": "#/$defs/text"},
+        "blockers": {"type": "array", "maxItems": 8, "items": {"$ref": "#/$defs/text"}},
+        "test_plan": {"$ref": "#/$defs/text"},
+        "status": {"const": "OPEN"}
+      }
+    },
+
+    "UIViewPlan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_device", "profile_id", "layout_version", "widgets", "origin_model_run_id", "evidence_refs", "plan_hash"],
+      "properties": {
+        "target_device": {"$ref": "#/$defs/fingerprint"},
+        "profile_id": {"$ref": "#/$defs/id"},
+        "layout_version": {"type": "integer", "minimum": 1, "maximum": 100000},
+        "widgets": {"type": "array", "minItems": 1, "maxItems": 12, "items": {"type": "object", "additionalProperties": false,
+                    "required": ["widget_id", "kind", "label", "binding", "permission_label"],
+                    "properties": {"widget_id": {"$ref": "#/$defs/id"}, "kind": {"enum": ["button", "label"]},
+                                   "label": {"type": "string", "minLength": 1, "maxLength": 40},
+                                   "binding": {"type": ["object", "null"], "additionalProperties": false, "required": ["manifest_hash", "inputs"],
+                                               "properties": {"manifest_hash": {"$ref": "#/$defs/hash"}, "inputs": {"type": "object"}}},
+                                   "permission_label": {"type": "string", "maxLength": 60}}}},
+        "origin_model_run_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{6,64}$"},
+        "evidence_refs": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"type": "string", "maxLength": 128}},
+        "plan_hash": {"$ref": "#/$defs/hash"}
+      }
+    }
+  }
+}

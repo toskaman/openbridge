@@ -6,7 +6,7 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
+GET_ROUTES = ('/api/v2/contract', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -24,7 +24,7 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/remote_controls', '/api/v2/skills', '
               '/api/v2/onboarding',
               '/api/v2/command/tiers',
               '/api/v2/companion/commands')
-POST_ROUTES = ('/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
+POST_ROUTES = ('/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
 
 
 import threading
@@ -52,6 +52,13 @@ def remote_controls(server):
                     return close(*a, **k)
                 server.server_close = server_close
         return server.remote_controls
+
+
+def substrate(server):
+    if getattr(server, 'v4_substrate', None) is None:
+        from src.substrate.kernel import Substrate
+        server.v4_substrate = Substrate(server)
+    return server.v4_substrate
 
 
 def executor(server):
@@ -125,6 +132,19 @@ def get(server, path, query):
             return 200, router(server).skill_routes((q.get('skill') or [''])[0], (q.get('target') or [None])[0])
         except RouteError as e:
             return e.status, {'error': str(e), 'code': e.code}
+    if path == '/api/v2/primitives/catalog':
+        from src.substrate import kernel, registry
+        return 200, {'contract_version': kernel.CONTRACT_VERSION, 'primitives': registry.catalog(), 'schema': kernel.CONTRACT}
+    if path == '/api/v2/facts/signed':
+        from src.substrate.kernel import SubstrateError
+        try:
+            s = substrate(server)
+            key = (q.get('device') or [''])[0]
+            return 200, {'device_fingerprint': s.fingerprint(key), 'facts': s.facts(key)}
+        except SubstrateError as e:
+            return e.status, {'error': str(e), 'code': e.code}
+    if path == '/api/v2/manifests/receipts':
+        return 200, {'receipts': list(substrate(server).receipts[-50:])}
     if path == '/api/v2/onboarding':
         from src.fabric import onboarding
         apk = getattr(server, 'companion_apk', None)
@@ -304,6 +324,25 @@ def apk_portal(server, body):
 
 
 def post(server, path, body):
+    if path.startswith('/api/v2/manifests/') and isinstance(body, dict):
+        from src.substrate.kernel import SubstrateError
+        s = substrate(server)
+        try:
+            if path == '/api/v2/manifests/compile':          # dry run: no side effect, no grant
+                c = s.compile(body.get('manifest'), body.get('facts') or [], body.get('inputs'))
+                return 200, {k: v for k, v in c.items() if k != 'device_key'}
+            if path == '/api/v2/manifests/grant':            # owner path only (CSRF + Origin enforced by the server)
+                g, c = s.issue_grant(body.get('manifest'), body.get('facts') or [], body.get('consent'), body.get('max_uses', 1), body.get('ttl_s', 900))
+                return 200, {'grant': g, 'manifest_hash': c['manifest_hash'], 'permissions': c['permissions'], 'effects': c['effects']}
+            if path == '/api/v2/manifests/revoke':
+                s.revoke(str(body.get('grant_id', '')))
+                return 200, {'revoked': body.get('grant_id')}
+            if path == '/api/v2/manifests/ui_install':
+                return 200, s.install_ui_plan(body)
+            if path == '/api/v2/manifests/invoke':
+                return 200, s.invoke(body.get('manifest'), body.get('grant'), body.get('facts') or [], body.get('request') or {})
+        except SubstrateError as e:
+            return e.status, dict({'error': str(e), 'code': e.code}, **e.extra)
     if path in ('/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute') and isinstance(body, dict):
         from src.runtime import command as cmd
         try:

@@ -1,0 +1,16 @@
+{
+ "device_fingerprints": [
+  "fp-7d29859f5f5e1153"
+ ],
+ "expires_at": "2027-01-15T08:15:00Z",
+ "grant_id": "g-b9eec454f467a7f0",
+ "issued_at": "2027-01-15T08:00:00Z",
+ "manifest_hash": "sha256:c6e6bb444e406807d38e00f15973dea32af888f73df2f3707660b72179fa8ab0",
+ "max_uses": 3,
+ "permissions": [
+  "control",
+  "read"
+ ],
+ "principal": "owner",
+ "signature": "1b1b56ce837e9522f4882498c5a061ac5c8e9067b90e558b934ae8acef1ad520"
+}
