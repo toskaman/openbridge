@@ -6,7 +6,7 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract', '/api/v2/skills', '/api/v2/skill_routes',
+GET_ROUTES = ('/api/v2/contract', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -22,7 +22,7 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/relays/samples',
               '/api/v2/catalog',
               '/api/v2/onboarding')
-POST_ROUTES = ('/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
+POST_ROUTES = ('/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
 import threading
@@ -35,6 +35,19 @@ def router(server):
             from src.runtime.routing import Router
             server.skill_router = Router(server)
         return server.skill_router
+
+
+def remote_controls(server):
+    if getattr(server, 'remote_controls', None) is None:
+        from src.runtime.remote_controls import RemoteControls
+        server.remote_controls = rc = RemoteControls(server)
+        close = getattr(server, 'server_close', None)
+        if close is not None:                          # server shutdown stops the poller: no late dispatch
+            def server_close(*a, **k):
+                rc.close()
+                return close(*a, **k)
+            server.server_close = server_close
+    return server.remote_controls
 
 
 def executor(server):
@@ -87,6 +100,8 @@ def get(server, path, query):
         except ValueError:
             return 400, {'error': 'since must be an integer'}
         return 200, {'events': ex.events_since(since)}
+    if path == '/api/v2/remote_controls':
+        return 200, remote_controls(server).state()
     if path == '/api/v2/skills':
         from src.runtime.routing import SKILLS
         return 200, {'skills': [{'skill_id': k, 'plain': v['plain'], 'targeted': v['targeted'], 'reversibility': v['reversibility'],
@@ -276,6 +291,15 @@ def apk_portal(server, body):
 
 
 def post(server, path, body):
+    if path == '/api/v2/remote_controls':
+        from src.runtime.remote_controls import RemoteControlError
+        from src.fabric.relay import RelayError
+        try:
+            return 200, remote_controls(server).set_controls(body)
+        except RemoteControlError as e:
+            return e.status, {'error': str(e)}
+        except RelayError as e:
+            return 409, {'error': str(e)}
     if path in ('/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke') and isinstance(body, dict):
         from src.runtime.routing import RouteError
         r = router(server)
