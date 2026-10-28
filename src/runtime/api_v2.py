@@ -320,6 +320,9 @@ def post(server, path, body):
         if set(body) - {'transaction_id', 'consent'} or not isinstance(body.get('transaction_id'), str) or body.get('consent') is not True:
             return 400, {'error': 'transaction_id and consent: true are required'}
         if not executor(server).acknowledge(body['transaction_id']):
+            recovery = executor(server).recovery()
+            if recovery.blocked_reason.startswith('STATE_'):
+                return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
             return 404, {'error': 'No unresolved transaction with this id'}
         return 200, to_json(executor(server).recovery())
     if path != '/api/v2/execute' or not isinstance(body, dict):

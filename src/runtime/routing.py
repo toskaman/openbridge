@@ -75,6 +75,32 @@ class Router:
         self.ledger = rc.InvocationLedger()
         self.completed = {}          # (actor, invocation_id) -> (binding, request fingerprint, finished)
         self._lock = threading.RLock()
+        from src.runtime.state_store import StateStore
+        self._store = StateStore.for_server(server)
+        self._state_error = ''
+        self._refresh_state()
+
+    def _refresh_state(self):
+        if self._store is None or self._state_error:
+            return
+        try:
+            saved = self._store.load().get('policies', {})
+        except OSError as error:
+            self._state_error = str(error)
+            return
+        if saved != self.policies:
+            for key in list(self.invocations):
+                if self.invocations[key]['status'] == 'armed' and saved.get(key[0]) != self.policies.get(key[0]):
+                    self.invocations.pop(key)
+            self.policies = saved
+
+    def _require_state(self):
+        self._refresh_state()
+        if self._state_error:
+            ex = getattr(self.server, 'runtime_executor', None)
+            if ex is not None:
+                ex._state_error = self._state_error
+            raise RouteError(503, self._state_error.split(':', 1)[0], self._state_error)
 
     # ---------- inputs ----------
     def _ex(self):
@@ -248,6 +274,7 @@ class Router:
         return self.policies.get(skill_id) or {'mode': 'AUTO', 'failover': 'none', 'pinned_route_id': None, 'preferred': [], 'set_by': 'default'}
 
     def _evaluate(self, skill_id, target):
+        self._require_state()
         if skill_id not in SKILLS:
             raise RouteError(404, 'UNKNOWN_SKILL', 'Unknown skill')
         if SKILLS[skill_id]['targeted'] and not target:
@@ -334,12 +361,20 @@ class Router:
             raise RouteError(400, 'INVALID_POLICY', 'PINNED needs route_id')
         if not isinstance(preferred, list) or len(preferred) > 32 or not all(isinstance(x, str) for x in preferred):
             raise RouteError(400, 'INVALID_POLICY', 'preferred must be a list of route ids')
+        policy = {'mode': mode, 'failover': failover, 'pinned_route_id': pinned, 'preferred': preferred, 'set_by': 'owner'}
         with self._lock:
-            self.policies[skill_id] = {'mode': mode, 'failover': failover, 'pinned_route_id': pinned, 'preferred': preferred, 'set_by': 'owner'}
+            self._require_state()
+            if self._store is not None:
+                try:
+                    self._store.set_policy(skill_id, policy)
+                except OSError as error:
+                    self._state_error = str(error)
+                    self._require_state()
+            self.policies[skill_id] = policy
             for k in [k for k in self.invocations if k[0] == skill_id and self.invocations[k]['status'] == 'armed']:
-                self.invocations.pop(k)                  # a policy change voids armed consent
+                self.invocations.pop(k)
         self._ex().emit('skill_policy', skill_id=skill_id, mode=mode)
-        return self.policies[skill_id]
+        return policy
 
     # ---------- arm + invoke ----------
     def arm(self, body, actor=ACTOR, invocation_id=None):
@@ -372,6 +407,8 @@ class Router:
             raise RouteError(400, 'INVALID_PARAMS', str(e)) from None
 
     def invoke(self, body, actor=ACTOR):
+        with self._lock:
+            self._require_state()
         req = {k: body.get(k) for k in ('invocation_id', 'skill_id', 'route_id', 'lease_id', 'graph_revision', 'params', 'consent')}
         extra = set(body) - set(req) - {'target'}
         errs = rc.schema_errors(req, rc.SCHEMA['$defs']['invoke_request']) + ([f'unexpected field {sorted(extra)[0]}'] if extra else [])
