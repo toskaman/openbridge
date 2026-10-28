@@ -470,6 +470,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             declared = fabric_relay.verify(key, reply, None).get('params', {})
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
+            server.relay_ledger.proved(rid)
             with server.relay_pending_lock:
                 server.relay_pending.pop(handle, None)
             return {'state': 'PAIRED', 'relay_id': rid, 'declared': declared, 'eligible_for_ble': rid in server.relays.eligible('ble_scan')}
@@ -486,6 +487,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 server.relay_ledger.failure(rid)
                 raise fabric_relay.RelayError(f'Relay unreachable: {type(error).__name__}; open the Companion app on the device and retry') from None
             relay['online'] = True               # a signed status reply is the read-back that brings a relay back
+            server.relay_ledger.proved(rid)
             relay['permissions'] = dict(status.get('permissions', {}))
             rid, observations = server.relays.scan(int(body.get('seconds', 8)), relay_id=rid)
             server.relay_ledger.record(rid, observations)

@@ -41,6 +41,11 @@ class RelayLedger:
             r = self.routes.setdefault(relay_id, {'last_success_at': None, 'scans': 0, 'failures': 0})
             r['last_success_at'], r['scans'] = t, r['scans'] + 1
 
+    def proved(self, relay_id):
+        """A signed reply from the relay (pairing confirmation or status read-back) re-proves the route without a scan."""
+        with self._lock:
+            self.routes.setdefault(relay_id, {'last_success_at': None, 'scans': 0, 'failures': 0})['last_proof_at'] = self.clock()
+
     def failure(self, relay_id):
         with self._lock:
             self.routes.setdefault(relay_id, {'last_success_at': None, 'scans': 0, 'failures': 0})['failures'] += 1
