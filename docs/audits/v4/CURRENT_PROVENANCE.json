@@ -1,0 +1,36 @@
+{
+  "application_head": "c426496a1305584ccf73b023ce9227099a73b55d",
+  "unmerged_substrate_head": "8a73b8f395ecf13a979f88fd93649cd3975b3f23",
+  "probe_auditor_revision": "2787d4e30b341873324c90bb4b0761a395dbcbb4",
+  "full_test_revision": "358410d95ae609dff82bde413ca79e7d55a5162f",
+  "command": "python -B -m unittest discover -s tests -q",
+  "exit_code": 0,
+  "test_methods": 630,
+  "new_agent_tests": 24,
+  "audit_methods_total": 7,
+  "raw_output_sha256": "5f7c839e4ba24cc4759ec5f7db68077f921d318a1c7d03cdc421d8dc7bf4f666",
+  "public_output_sha256": "6a8ceb4f90eb64fa3093ace75699093cb317bc480ee70c70e1d3c977d1934368",
+  "agent_source_blob_sha256": {
+    "src/forge/v4_evidence.py": "e8f55149dc703986c28adc52b956f3befdbd7e4397dcf48347222686fbe6136d",
+    "src/forge/v4_gap.py": "42502734c7dd3b601634237959718251f9a4127a1417868666eceddd180edbfe",
+    "src/forge/v4_schemas.py": "a82d8d937004e99003133a051a4cf0d3190e09b377bc5be3016745f604e327f4",
+    "src/forge/v4_metaclient.py": "ab11498a375f4cc677d1ff6e6c4283c13e5e235d2e06feaeb1c93af10e5af6f0",
+    "src/forge/v4_synthesize.py": "7fb72140cdd2019123a82b8fe11a94dffae3c9597c812a6cbaf4b7835752344a",
+    "src/forge/v4_ui.py": "0f78184d14e427757b03effc14b6ff626bbfd3c325487e1695978e0ca7fe5b7c",
+    "src/forge/v4_workflow.py": "b06c3b533629b91b1690ff0470421fb1332070641e7a869cefbd8c7207464cf2",
+    "src/forge/v4_provenance.py": "cc7a43fb5a3f2c4f3ae71f09b0a6c5945c0d5bfc50e519a694bc48f72e69cf6d"
+  },
+  "substrate_source_blob_sha256": {
+    "src/substrate/kernel.py": "9a8e818fceac3b80d47ac78c19177edca20c9f83ee2d41a7649c77d5183cf665",
+    "src/substrate/v4_contract.schema.json": "9d10792be54f074e1b3be7a5d52be1cb7f2ca90e4fae65f3fded88000a947e31",
+    "tests/substrate/fixtures/manifest_tv_mute.json": "cad67ce9d1d70118152c6f9f60358aafe0a511f94c050af44441d1606f17d8b6",
+    "tests/substrate/fixtures/grant_tv_mute.json": "4cc8ca43fc20de9879aaf505ea0a4e52530e64ed6b68d498da095b5d8eac8114",
+    "tests/substrate/fixtures/invoke_request.json": "4b86b62308c3871c5558ad723e7910112feb0735d4df06a314ce69628ec8132b",
+    "tests/substrate/fixtures/facts_tv.json": "67c99760676d7c376ebe67d514bb73e771a5c7da9c76a20fd46b71914626527c"
+  },
+  "full_pr72_test_suite": "NOT_RUN; isolated method probes only",
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0,
+  "protected_files_changed_by_auditor": false
+}
