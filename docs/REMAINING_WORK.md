@@ -1,3 +1,13 @@
+# Current update — 28 October 2026, physical rerun
+
+Latest audited main: `0aed8a6` (relay fixes #51–#53), 489 local tests passed. [New two-relay transcript](release/PHYSICAL_FAILOVER_FOLLOWUP.md) records a verified TV scan, TV-loss refusal, automatic selection of the phone and PINNED refusal; the fresh phone scan was blocked as Bluetooth turned off. This remains PARTIAL, not complete failover or a scored evaluation.
+
+PR #54 watch/Companion controls remain unmerged: two taps produced sixteen executions in the reported run. Codex review requires root-cause isolation, revocation-race and poller-lifecycle fixes, request-expiry binding and a clean single-intent rerun; long-press/rate limits alone are insufficient. Location is still enabled on the phone and TV; the earlier requested restoration is not confirmed. No additional settings writes were made in this rerun.
+
+The requested subsequent [multi-PC review](release/MULTI_PC_REVIEW.md) is complete at read-only scope: existing bridge fake tests11/11 pass, OpenBridge remains single-PC, and the earlier safety-blocked port is not retried. Scheduling remains cancelled. Current blockers are the phone radio instability, full device-cleanup confirmation and B3 repeated-action defect. No videos until a NEW explicit owner request.
+
+---
+
 # Integration update — 28 October 2026
 
 B1 revised recovery/MCP/nonce fixes and B2 rev2 schema/contract helpers are integrated for combined verification, together with Claude's owner-selected application theme and onboarding. This does not implement the B2 routing endpoints or physical failover. Codex added tested APK expiry/timer fixes and an in-flight dedup expiry regression fix. Multi-PC work is deferred to 29 October 09:00 Paris for supported-scope review, not an automatic retry of the previously blocked port. The dated audit table below is historical; current review status is on issue36 and the integration PR. Videos remain on explicit owner hold.

@@ -1,2 +1,5 @@
 * text=auto eol=lf
 *.ps1 text eol=crlf
+
+# Preserve exact executed driver bytes for receipt SHA-256 verification.
+docs/release/failover-evidence/*.py.txt -text whitespace=cr-at-eol

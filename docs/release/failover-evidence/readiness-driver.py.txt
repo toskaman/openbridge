@@ -1,0 +1,114 @@
+"""One owner-authorized BLE-only physical rerun, no radio/settings writes or app install."""
+import sys,json,re,time,secrets,hashlib,threading,tempfile,subprocess
+from pathlib import Path
+from datetime import datetime,timezone
+from urllib.request import build_opener,ProxyHandler,Request
+from urllib.error import HTTPError
+from src.server import create_server
+from src.fabric.session import SessionJournal
+from src.runtime.route_contract import validate_doc
+from dev.forge_workspace_journey import read_companion_xml,permission_snapshot
+from dev.forge_tv_glimmer_journey import ensure_companion_foreground
+class Blocked(Exception):pass
+def need(ok,reason):
+ if not ok:raise Blocked(reason)
+report={'status':'NOT_VERIFIED','recorded_at':datetime.now(timezone.utc).isoformat(),'source_revision':subprocess.check_output(['git','rev-parse','HEAD']).decode().strip(),'driver_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'stages':[],'route_snapshots':[],'scans':[],'model_calls':0,'installs':0,'permission_grants':0,'settings_writes':0,'cleanup':{}}
+folder=Path('artifacts/physical-failover');folder.mkdir(exist_ok=True)
+out=folder/('attempt-'+datetime.now().strftime('%Y%m%d-%H%M%S')+'-'+secrets.token_hex(4)+'.json')
+runtime=None;worker=None;chosen={};paired={};baseline_forwards=set();stopped=False
+try:
+ runtime=create_server(0,session_journal=SessionJournal(tempfile.mkdtemp(prefix='ob-failover-')+'/journal.json'))
+ a=runtime.android
+ inventory=a.discover();filtered=[]
+ for d in inventory['devices']:
+  if d['state']!='device':continue
+  serial=next(k for k,v in a._handles.items() if v==d['id'])
+  try:model=a._run(['-s',serial,'shell','getprop','ro.product.model']).strip()
+  except Exception:continue
+  role='phone' if model=='BV9300 Pro' else 'tv' if model=='Android TV' else None
+  if role:chosen[role]={'serial':serial,'handle':d['id']};filtered.append(d)
+ need(set(chosen)=={'tv','phone'},'AUTHORIZED_TV_AND_BLACKVIEW_REQUIRED')
+ original_discover=a.discover;a.discover=lambda:{**inventory,'devices':filtered}
+ baseline_forwards=set(a._run(['forward','--list']).splitlines())
+ report['stages'].append('two_authorized_devices_selected')
+ def device_state(role):
+  serial=chosen[role]['serial']
+  return {'bluetooth_on':a._run(['-s',serial,'shell','settings','get','global','bluetooth_on']).strip(),'location_mode':a._run(['-s',serial,'shell','settings','get','secure','location_mode']).strip(),'permissions':permission_snapshot(a._run(['-s',serial,'shell','dumpsys','package','fr.openbridge.companion'],max_bytes=2097152))}
+ report['before']={r:device_state(r) for r in chosen}
+ for role in chosen:need(report['before'][role]['bluetooth_on']=='1',role.upper()+'_BLUETOOTH_ALREADY_ON_REQUIRED')
+ worker=threading.Thread(target=runtime.serve_forever,daemon=True);worker.start()
+ base=f'http://127.0.0.1:{runtime.server_port}';opener=build_opener(ProxyHandler({}))
+ def req(path,body=None):
+  headers={'Content-Type':'application/json'}
+  if body is not None:headers.update({'Origin':base,'X-CSRF-Token':runtime.csrf_token})
+  request=Request(base+path,json.dumps(body).encode() if body is not None else None,headers)
+  try:
+   with opener.open(request,timeout=55) as response:return response.status,json.load(response)
+  except HTTPError as error:
+   with error:return error.code,json.load(error)
+ status,discovery=req('/api/v2/execute',{'primitive_id':'bounded_discovery','device_key':'fabric','params':{'providers':['android']},'consent':False})
+ need(discovery.get('state')=='VERIFIED','BOUNDED_DISCOVERY_FAILED')
+ for role,info in chosen.items():
+  info['key']=next(k for k,d in runtime.fabric_registry.devices.items() if info['handle'] in d.get('handles',{}).values())
+  setup={};ensure_companion_foreground(a,info['serial'],True,setup);report.setdefault('setup',{})[role]=setup
+  status,start=req('/api/relay-pair-start',{'device_id':info['handle']});need(status==200,role.upper()+'_PAIR_START_FAILED')
+  time.sleep(1)
+  xml=read_companion_xml(a,info['serial']);code=re.search(r'Pairing code (\d{6})',xml) or re.search(r'text="(\d{6})"',xml)
+  need(code is not None,role.upper()+'_PAIRING_CODE_UNAVAILABLE')
+  status,reply=req('/api/relay-pair-confirm',{'device_id':info['handle'],'code':code.group(1)});del xml,code
+  need(status==200 and reply.get('state')=='PAIRED',role.upper()+'_PAIR_CONFIRM_FAILED')
+  paired[role]=reply['relay_id'];need(reply.get('eligible_for_ble') is True,role.upper()+'_EXISTING_PERMISSION_REQUIRED')
+ report['stages'].append('two_companions_paired')
+ def routes(tag):
+  status,doc=req('/api/v2/skill_routes?skill=ble_scan_room');need(status==200 and not validate_doc(doc),'INVALID_ROUTE_DOCUMENT')
+  report['route_snapshots'].append({'stage':tag,'document':doc});return doc
+ doc=routes('paired')
+ tv=next(r['route_id'] for r in doc['routes'] if r['hops'][0]['device_key']==chosen['tv']['key'])
+ phone=next(r['route_id'] for r in doc['routes'] if r['hops'][0]['device_key']==chosen['phone']['key'])
+ req('/api/v2/skill_policy',{'skill_id':'ble_scan_room','mode':'PREFERRED','preferred':[tv]})
+ def scan(tag,expected):
+  doc=routes(tag);need(doc['selected_route_id']==expected,'UNEXPECTED_SELECTED_PROVIDER')
+  status,lease=req('/api/v2/skill_arm',{'skill_id':'ble_scan_room','route_id':expected,'params':{'seconds':6},'consent':True});need(status==200,'ARM_FAILED')
+  body={k:lease[k] for k in ('invocation_id','route_id','lease_id','graph_revision')};body.update(skill_id='ble_scan_room',params={'seconds':6},consent=True)
+  status,result=req('/api/v2/skill_invoke',body)
+  status2,retry=req('/api/v2/skill_invoke',body)
+  summary={'stage':tag,'route_id':expected,'http':status,'state':result.get('state'),'verified':result.get('verified'),'transaction_id':result.get('transaction_id'),'retry_same_transaction':result.get('transaction_id') is not None and retry.get('transaction_id')==result.get('transaction_id'),'invocation_id':lease['invocation_id']}
+  report['scans'].append(summary);return result
+ first=scan('tv_scan',tv);need(first.get('state')=='VERIFIED','TV_SCAN_NOT_VERIFIED')
+ req('/api/v2/skill_policy',{'skill_id':'ble_scan_room','mode':'AUTO'})
+ need(routes('auto_before_loss')['selected_route_id']==tv,'AUTO_DID_NOT_PREFER_PROVEN_TV')
+ a._run(['-s',chosen['tv']['serial'],'shell','am','force-stop','fr.openbridge.companion']);stopped=True
+ dead=scan('tv_loss_detection',tv);need(dead.get('state') in ('BLOCKED','FAILED','UNKNOWN_TIMEOUT'),'STOPPED_PROVIDER_NOT_REFUSED')
+ after=routes('after_loss');need(after['selected_route_id']==phone,'PHONE_NOT_SELECTED_AFTER_TV_LOSS')
+ req('/api/v2/skill_policy',{'skill_id':'ble_scan_room','mode':'PINNED','route_id':tv});need(routes('pinned_dead_tv')['selected_route_id'] is None,'PINNED_SILENT_FALLBACK')
+ report['pinned_refusal']=True
+ req('/api/v2/skill_policy',{'skill_id':'ble_scan_room','mode':'AUTO'})
+ second=scan('fresh_phone_after_loss',phone);need(second.get('state')=='VERIFIED','FRESH_PHONE_SCAN_NOT_VERIFIED')
+ report['status']='REAL_HARDWARE_VERIFIED';report['stages'].append('fresh_phone_scan_after_tv_loss_verified')
+except Exception as error:
+ report['failure']=str(error) if isinstance(error,Blocked) else type(error).__name__
+finally:
+ if runtime:
+  if stopped:
+   try:ensure_companion_foreground(runtime.android,chosen['tv']['serial'],True,{});report['cleanup']['tv_companion_reopened']=True
+   except Exception:report['cleanup']['tv_companion_reopened']=False
+  for role,rid in paired.items():
+   try:runtime.relays.revoke(rid);report['cleanup'][role+'_local_relay_removed']=rid not in runtime.relays.relays
+   except Exception:report['cleanup'][role+'_local_relay_removed']=False
+  try:
+   report['events']=[e for e in runtime.runtime_executor.events_since(0) if e['kind'] in ('route_decision','route_changed','receipt')]
+  except Exception:report['events']=[]
+  try:report['after']={r:device_state(r) for r in chosen}
+  except Exception:report['cleanup']['state_readback']='incomplete'
+  try:
+   rows=set(runtime.android._run(['forward','--list']).splitlines())-baseline_forwards
+   owned={v['serial'] for v in chosen.values()}
+   for row in rows:
+    fields=row.split()
+    if len(fields)==3 and fields[0] in owned and fields[2]=='tcp:47800':runtime.android._run(['-s',fields[0],'forward','--remove',fields[1]])
+   report['cleanup']['owned_forwards_removed']=True
+  except Exception:report['cleanup']['owned_forwards_removed']=False
+  if worker:runtime.shutdown();worker.join(2)
+  runtime.server_close();report['cleanup']['runtime_closed']=True
+ out.write_text(json.dumps(report,indent=2),encoding='utf-8')
+ print(json.dumps({'status':report['status'],'failure':report.get('failure'),'receipt':str(out),'scan_states':[s['state'] for s in report['scans']],'cleanup':report['cleanup']}))

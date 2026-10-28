@@ -1,0 +1,83 @@
+{
+  "status": "NOT_VERIFIED",
+  "recorded_at": "2026-10-28T11:38:45.104711+00:00",
+  "source_revision": "0aed8a687a7361f4a039b35a7563f46b7b78ff50",
+  "driver_sha256": "86b67b64ba1bd3cd39a6d80e3c13246f40a4a9aca92c87a09840b3eea30deec2",
+  "stages": [
+    "two_authorized_devices_selected"
+  ],
+  "route_snapshots": [],
+  "scans": [],
+  "model_calls": 0,
+  "installs": 0,
+  "permission_grants": 0,
+  "settings_writes": 0,
+  "cleanup": {
+    "owned_forwards_removed": true,
+    "runtime_closed": true
+  },
+  "before": {
+    "phone": {
+      "bluetooth_on": "1",
+      "location_mode": "3",
+      "permissions": {
+        "ACCESS_FINE_LOCATION": [],
+        "BLUETOOTH_SCAN": [
+          true
+        ],
+        "BLUETOOTH_CONNECT": [
+          true
+        ]
+      }
+    },
+    "tv": {
+      "bluetooth_on": "1",
+      "location_mode": "3",
+      "permissions": {
+        "ACCESS_FINE_LOCATION": [
+          true
+        ],
+        "BLUETOOTH_SCAN": [],
+        "BLUETOOTH_CONNECT": []
+      }
+    }
+  },
+  "failure": "JourneyBlocked",
+  "events": [
+    {
+      "seq": 2,
+      "at": "2026-10-28T11:38:53+00:00",
+      "kind": "receipt",
+      "transaction_id": "tx-42c1da82fbdc95a2",
+      "primitive_id": "bounded_discovery",
+      "state": "VERIFIED",
+      "verified": true
+    }
+  ],
+  "after": {
+    "phone": {
+      "bluetooth_on": "1",
+      "location_mode": "3",
+      "permissions": {
+        "ACCESS_FINE_LOCATION": [],
+        "BLUETOOTH_SCAN": [
+          true
+        ],
+        "BLUETOOTH_CONNECT": [
+          true
+        ]
+      }
+    },
+    "tv": {
+      "bluetooth_on": "1",
+      "location_mode": "3",
+      "permissions": {
+        "ACCESS_FINE_LOCATION": [
+          true
+        ],
+        "BLUETOOTH_SCAN": [],
+        "BLUETOOTH_CONNECT": []
+      }
+    }
+  }
+}
