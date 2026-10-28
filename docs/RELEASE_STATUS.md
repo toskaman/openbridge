@@ -1,3 +1,5 @@
+Latest hardware/remaining-work update: [28 October follow-up](release/PHYSICAL_FAILOVER_FOLLOWUP.md) and [current backlog](REMAINING_WORK.md). The two-relay rerun is partial; B3 controls are unmerged pending the repeated-action investigation.
+
 # Current release evidence update — 27 October 2026
 
 Current prioritized work and ownership: [remaining work](REMAINING_WORK.md). Latest source audit: `038f463` (including Watch7/Blackview evidence); older checkpoint counts and revisions below remain historical.

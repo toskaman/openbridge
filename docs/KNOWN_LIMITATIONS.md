@@ -28,3 +28,9 @@ The current v4 adapter uses mutual HMAC challenge-response and session-MAC envel
 - Voice: the evidence ledger records a live synthetic speech/transcription run. Audio leaves the PC when this optional service is used; a transcript is a proposal, never authorization. No new transcription was made for this documentation update.
 - LAN inference worker must be declared by the owner; it is not in the default runtime manifest.
 - PC jobs (`pc_job`) run arbitrary owner-typed commands and cannot be undone. The BridgeWindows v4 link authenticates messages but does not encrypt payloads; use it only on a trusted LAN.
+
+## Physical routing and remote-control follow-up
+
+- The 28 October two-relay rerun verified the TV scan, TV-loss refusal, phone route selection and PINNED refusal. The fresh phone scan remained blocked; Bluetooth was on before the run and off afterward. [Full transcript and limits](release/PHYSICAL_FAILOVER_FOLLOWUP.md).
+- Watch-to-TV controls in PR54 remain unmerged after a reported two taps produced16 executions. Long-press/rate-limiting mitigations are not a clean one-intent/one-action hardware result.
+- Both devices still reported location mode3 after the rerun. This run made no location writes; the earlier requested restoration needs confirmation.
