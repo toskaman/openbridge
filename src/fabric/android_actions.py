@@ -196,9 +196,14 @@ class AndroidActions:
             w, h = self.size(); out['screen_px'] = [w, h]; pointer = True
         except (ActionError, ValueError, OSError):
             pointer = False
+        out['ranges'] = {}
         for s in SETTINGS:
             try:
                 out['actions'][f'set:{s}'] = self.get(s) is not None
+                if s == 'media_volume' and out['actions'][f'set:{s}']:   # measured, read-only: enables EXACT routing (B2)
+                    m = re.search(r'range \[(\d+)\.\.(\d+)\]', self.shell(*SETTINGS[s][0]) or '')
+                    if m:
+                        out['ranges'][s] = [int(m[1]), int(m[2])]
             except (ActionError, ValueError, OSError):
                 out['actions'][f'set:{s}'] = False
         try:
