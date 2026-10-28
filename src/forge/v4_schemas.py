@@ -19,7 +19,9 @@ def opaque(kind, value):
 
 
 def canonical(value):
-    return json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+    # Byte-identical to the substrate kernel canonical form (incl. ensure_ascii):
+    # one canonicalization across the V4 interface so hashes bind both sides.
+    return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
 
 
 def digest(value):

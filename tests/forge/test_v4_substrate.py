@@ -91,6 +91,43 @@ class Wiring(unittest.TestCase):
                                               'permission_label': '', 'manifest_hash': '', 'inputs': {}}],
                        'run_1', [])
 
+    def test_module_level_layout_like_real_kernel(self):
+        import sys, types
+        mod = types.ModuleType('fake_kernel72')
+        mod.CONTRACT_VERSION = 'obv4.1'
+        mod.manifest_hash = lambda m: 'sha256:real-shape'
+
+        class RealShape:
+            def compile(self, manifest, facts=(), inputs=None, for_dispatch=False):
+                return {'ok': True}
+        RealShape.__module__ = 'fake_kernel72'
+        sys.modules['fake_kernel72'] = mod
+        try:
+            m = VS.to_manifest(CAND, {'category': 'tv', 'device_fingerprint': 'fp-1'},
+                               {'model': 'm', 'run_id': 'r'}, 'T', ['control'], [], '2027-01-01T00:00:00Z')
+            r = VS.compile_first(RealShape(), m, [])
+            self.assertEqual(r, {'status': 'COMPILED', 'manifest_hash': 'sha256:real-shape',
+                                 'compiled': {'ok': True}})
+        finally:
+            del sys.modules['fake_kernel72']
+
+    def test_real_kernel_class_if_merged(self):
+        try:
+            from src.substrate.kernel import Substrate
+        except ImportError:
+            self.skipTest('substrate PR unmerged')
+        obj = Substrate.__new__(Substrate)
+        self.assertEqual(VS.contract_version(obj), 'obv4.1')
+        self.assertTrue(callable(VS.hash_fn(obj)))
+
+    def test_canonical_matches_kernel_on_unicode(self):
+        import hashlib, json
+        from src.forge import v4_schemas as S
+        value = {'label': 'héllo → tv'}
+        expect = hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'),
+                                           ensure_ascii=False).encode()).hexdigest()
+        self.assertEqual(S.digest(value), expect)
+
 
 if __name__ == '__main__':
     unittest.main()

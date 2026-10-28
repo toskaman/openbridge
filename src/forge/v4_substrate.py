@@ -4,6 +4,8 @@ The substrate object is duck-typed (compile/validate/manifest_hash + error.code)
 the substrate PR is unmerged, so this module never imports it. Integration is
 proven by the shared contract version + the plan_hash recomputation check.
 """
+import sys
+
 from src.forge import v4_schemas as S
 
 CONTRACT_VERSION = 'obv4.1'
@@ -11,6 +13,30 @@ CONTRACT_VERSION = 'obv4.1'
 
 class WireError(ValueError):
     pass
+
+
+def _resolve(substrate, name):
+    """Instance attr -> class attr -> defining-module attr (the real kernel
+    exposes CONTRACT_VERSION/manifest_hash at module scope)."""
+    value = getattr(substrate, name, None)
+    if value is not None:
+        return value
+    value = getattr(type(substrate), name, None)
+    if value is not None:
+        return value
+    module = sys.modules.get(type(substrate).__module__)
+    return getattr(module, name, None) if module is not None else None
+
+
+def contract_version(substrate):
+    return _resolve(substrate, 'CONTRACT_VERSION')
+
+
+def hash_fn(substrate):
+    fn = _resolve(substrate, 'manifest_hash')
+    if not callable(fn):
+        raise WireError('NO_HASH_FN')
+    return fn
 
 
 def to_manifest(candidate, target, model_run, title, permissions, facts_required,
@@ -32,7 +58,7 @@ def to_manifest(candidate, target, model_run, title, permissions, facts_required
 
 
 def compile_first(substrate, manifest, facts):
-    if getattr(substrate, 'CONTRACT_VERSION', None) != CONTRACT_VERSION:
+    if contract_version(substrate) != CONTRACT_VERSION:
         raise WireError('CONTRACT_MISMATCH')
     try:
         compiled = substrate.compile(manifest, facts)
@@ -42,7 +68,7 @@ def compile_first(substrate, manifest, facts):
             return {'status': 'NO_SUPPORTED_PRIMITIVE',
                     'engineering_request': getattr(e, 'extra', {}).get('engineering_request')}
         return {'status': 'COMPILE_REJECTED', 'code': code}
-    return {'status': 'COMPILED', 'manifest_hash': substrate.manifest_hash(manifest),
+    return {'status': 'COMPILED', 'manifest_hash': hash_fn(substrate)(manifest),
             'compiled': compiled}
 
 
