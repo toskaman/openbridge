@@ -7,13 +7,17 @@ by itself: the relay must report the Android permission as granted and the owner
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import threading
 import time
 
 PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
-              'get_permissions', 'revoke_access')
+              'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result')
+MAX_CONTROLS, MAX_REQUESTS = 12, 16
+CONTROL_ID = re.compile(r'^[a-z0-9-]{4,40}$')
+REQUEST_ID = re.compile(r'^[0-9a-f]{32}$')
 MAX_SCAN_SECONDS = 15
 MAX_OBSERVATIONS = 200
 COMMAND_TTL = 30
@@ -42,6 +46,15 @@ def command(key, relay_id, op, params=None, now=None):
         seconds = params.get('seconds', 8)
         if params.get('radio') != 'ble' or not isinstance(seconds, (int, float)) or not 1 <= seconds <= MAX_SCAN_SECONDS:
             raise RelayError('Only bounded BLE discovery (1-15 s) is allowed')
+    if op == 'set_controls':
+        cs = params.get('controls')
+        if not isinstance(cs, list) or len(cs) > MAX_CONTROLS or not all(
+                isinstance(c, dict) and set(c) == {'control_id', 'label'} and CONTROL_ID.match(str(c['control_id']))
+                and isinstance(c['label'], str) and 0 < len(c['label']) <= 40 for c in cs):
+            raise RelayError('Controls must be at most 12 {control_id, label} entries')
+    if op == 'report_result':
+        if set(params) - {'request_id', 'state', 'text'} or not REQUEST_ID.match(str(params.get('request_id', ''))) or len(str(params.get('text', ''))) > 80:
+            raise RelayError('Malformed result report')
     now = int(now if now is not None else time.time())
     msg = {'protocol': PROTOCOL, 'relay_id': relay_id, 'op': op, 'params': params, 'nonce': secrets.token_hex(12),
            'issued_at': now, 'expires_at': now + COMMAND_TTL}
@@ -98,6 +111,20 @@ def validate_report(report):
     return clean
 
 
+def validate_requests(report, known_controls):
+    """Requests from a relay are untrusted: only an id and the id of a control the owner authorized. The relay never
+    supplies a skill, target or parameter; the PC takes those from the owner's grant."""
+    reqs = report.get('requests')
+    if not isinstance(reqs, list) or len(reqs) > MAX_REQUESTS:
+        raise RelayError('Malformed request list')
+    out = []
+    for r in reqs:
+        if not isinstance(r, dict) or not REQUEST_ID.match(str(r.get('request_id', ''))) or r.get('control_id') not in known_controls:
+            continue                                # unknown or revoked control: dropped, never executed
+        out.append({'request_id': r['request_id'], 'control_id': r['control_id']})
+    return out
+
+
 class RelayManager:
     """Tracks enrolled relays and picks one per request strictly by granted capability."""
     def __init__(self, transport):
@@ -106,7 +133,7 @@ class RelayManager:
         self._lock = threading.Lock()
 
     def enroll(self, relay_id, key, device_key, declared):
-        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan',)}
+        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls')}
         self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
                                  'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
                                  'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}

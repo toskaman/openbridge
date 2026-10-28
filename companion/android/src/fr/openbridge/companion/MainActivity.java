@@ -28,7 +28,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private RelayServer relay;
     private LinearLayout checklist;
     private TextView status, code, codeHint;
-    private LinearLayout codeCard;
+    private LinearLayout codeCard, controlsCard, controlsBox;
+    private TextView resultText;
     private Button bluetooth, location, permission, enable, unpair;
     private boolean tv;
     private boolean setupRunning;
@@ -57,6 +58,12 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         code = text("", tv ? 72 : 56, true, ACCENT); code.setGravity(Gravity.CENTER); code.setLetterSpacing(0.15f);
         codeCard.addView(codeHint); codeCard.addView(code); root.addView(codeCard); root.addView(spacer(14));
 
+        controlsCard = card(); controlsCard.setVisibility(View.GONE);
+        controlsCard.addView(text("REMOTE CONTROLS", 12, true, MUTED));
+        controlsBox = new LinearLayout(this); controlsBox.setOrientation(LinearLayout.VERTICAL); controlsCard.addView(controlsBox);
+        resultText = text("", 14, false, OK); controlsCard.addView(resultText);
+        root.addView(controlsCard); root.addView(spacer(14));
+
         LinearLayout statusCard = card();
         statusCard.addView(text("READINESS", 12, true, MUTED));
         checklist = new LinearLayout(this); checklist.setOrientation(LinearLayout.VERTICAL); statusCard.addView(checklist);
@@ -81,7 +88,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         permission.setOnClickListener(v -> requestScanPermission());
         enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
-        relay.start(); refresh();
+        relay.start(); refresh(); controls(relay.controls());
         if (!getSharedPreferences("ui", MODE_PRIVATE).getBoolean("setup_offered", false)) {
             getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("setup_offered", true).apply();
             setupRunning = true; nextSetupStep();      // first launch: walk through the system dialogs once
@@ -192,6 +199,22 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         r.addView(text(value, 14, false, ok ? MUTED : WARN));
         checklist.addView(r);
     }
+
+    /** Controls the owner authorized on the PC; each press sends one request, the PC verifies and reports back. */
+    @Override public void controls(org.json.JSONArray c) {
+        runOnUiThread(() -> {
+            controlsBox.removeAllViews();
+            for (int i = 0; i < c.length(); i++) {
+                org.json.JSONObject o = c.optJSONObject(i); if (o == null) continue;
+                String id = o.optString("control_id");
+                Button b = button(o.optString("label"), i == 0);
+                b.setOnClickListener(v -> { String s = relay.press(id); if (s != null) resultText.setText(s); });
+                controlsBox.addView(b); controlsBox.addView(spacer(8));
+            }
+            controlsCard.setVisibility(c.length() > 0 ? View.VISIBLE : View.GONE);
+        });
+    }
+    @Override public void result(String text) { runOnUiThread(() -> resultText.setText(text)); }
 
     @Override public void status(String text) { runOnUiThread(() -> { status.setText(text); refresh(); }); }
     @Override public void code(String c) {

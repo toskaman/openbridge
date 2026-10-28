@@ -18,7 +18,7 @@ GRANT_RANK = {'observe': 0, 'read': 1, 'control': 2}
 TRANSPORTS = ('USB', 'WIFI', 'LAN', 'BLE', 'RELAY', 'CLOUD_API', 'AGENT')
 LEASE_S = {'USB': 60, 'WIFI': 60, 'RELAY': 120, 'LAN': 300, 'BLE': 120, 'CLOUD_API': 60, 'AGENT': 60}
 INVOCATION_LEASE_S = 30
-ACTOR = 'owner'                     # the local UI; Companion/Watch actors arrive with B3
+ACTOR = 'owner'                     # the local UI; B3 remote controls act as 'relay:<relay_id>'
 
 SKILLS = {
     'ble_scan_room': {'version': 1, 'reversibility': 'SESSION_CLEANUP', 'idempotent': True, 'consent': 'per_invocation', 'targeted': False,
@@ -342,18 +342,22 @@ class Router:
         return self.policies[skill_id]
 
     # ---------- arm + invoke ----------
-    def arm(self, body):
-        """Owner consents to one exact invocation on the selected route: returns a 30 s lease bound to it."""
+    def arm(self, body, actor=ACTOR, invocation_id=None):
+        """One consented invocation on the selected route: returns a 30 s lease bound to it and to the actor.
+        Internal actors (B3 remote controls) pass an invocation id derived from their request id, so a re-sent press
+        is recognised and never dispatched twice."""
         skill_id, target, params = body.get('skill_id'), body.get('target'), body.get('params') or {}
         if body.get('consent') is not True:
             raise RouteError(400, 'CONSENT_REQUIRED', 'consent: true is required to arm an invocation')
         with self._lock:
+            if invocation_id is not None and (actor, invocation_id) in self.completed:
+                raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
             doc = self._evaluate(skill_id, target)
             self._validate_input(skill_id, params)
             route = next((r for r in doc['routes'] if r['route_id'] == body.get('route_id')), None)
             if route is None or route['route_id'] != doc['selected_route_id']:
                 raise RouteError(409, 'ROUTE_NOT_SELECTED', 'Only the selected READY route can be armed; review the routes again')
-            inv = {'status': 'armed', 'invocation_id': 'inv-' + secrets.token_hex(16), 'route_id': route['route_id'], 'lease_id': 'ls-' + secrets.token_hex(8),
+            inv = {'status': 'armed', 'actor': actor, 'invocation_id': invocation_id or 'inv-' + secrets.token_hex(16), 'route_id': route['route_id'], 'lease_id': 'ls-' + secrets.token_hex(8),
                    'expires': self.clock() + INVOCATION_LEASE_S, 'graph_revision': doc['graph_revision'], 'params': params,
                    'target_identity': self._target_identity(route['_key']), 'authority_rev': route['authority']['authority_rev']}
             self.invocations[(skill_id, target)] = inv
@@ -379,7 +383,7 @@ class Router:
         key = (req['skill_id'], target)
         with self._lock:
             inv = self.invocations.get(key)
-            known = inv and inv['invocation_id'] == req['invocation_id']
+            known = inv and inv['invocation_id'] == req['invocation_id'] and inv.get('actor', ACTOR) == actor   # another actor cannot use this lease
             if not known:
                 done = self.completed.get((actor, req['invocation_id']))
                 if done is None:
@@ -397,7 +401,7 @@ class Router:
                 raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different binding') from None
         with self._lock:
             inv = self.invocations.get(key)
-            if not inv or inv['invocation_id'] != req['invocation_id']:
+            if not inv or inv['invocation_id'] != req['invocation_id'] or inv.get('actor', ACTOR) != actor:
                 raise RouteError(409, 'CONSENT_VOID', 'route changed: review again')
             doc = self._evaluate(req['skill_id'], target)
             route = next((r for r in doc['routes'] if r['route_id'] == req['route_id']), None)
