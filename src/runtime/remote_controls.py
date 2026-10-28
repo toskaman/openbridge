@@ -8,7 +8,7 @@ Trust model:
   `relay:<relay_id>`, the invocation id is derived from the request id (a re-sent press is deduplicated), the
   binding covers the selected route, and the outcome is the Executor receipt.
 - The standing grant plus one physical press on the paired device stands for consent to exactly one invocation.
-- The verified outcome text is signed back to the device. Revoking a control or the relay stops it immediately.
+- The verified outcome text is signed back to the device. Revoking a control or the relay stops new dispatch admissions. An already admitted operation may finish.
 
 Delivery is at-most-once: get_requests drains the device queue. A press lost between drain and dispatch (e.g. PC
 crash) is never retried automatically; the owner presses again. Failed or uncertain outcomes are never reissued.
@@ -18,7 +18,7 @@ Point-of-dispatch revalidation (Codex review of PR #54):
 - Each grant is bound to the relay key fingerprint at grant time; re-pairing invalidates it.
 - At dispatch, under the lock, the current grant generation, relay key and open state are rechecked.
 - A request whose device timestamp is older or newer than REQUEST_TTL_S is EXPIRED (never executed).
-- close() stops the poller; nothing dispatches after it.
+- close() stops the poller and new dispatch admissions; an already admitted operation may finish.
 
 Evidence chain: each history entry records request_id, the device's monotonic seq, pressed_at, gesture and coarse
 touch info (tool type, pressure, size), invocation_id and transaction_id. That data is what isolates phantom touches
@@ -53,6 +53,7 @@ class RemoteControls:
         self.server, self.clock = server, clock
         self.grants = {}         # relay_id -> {control_id: {label, skill_id, target, params, generation, key_fp}}
         self.generation = 0
+        self._grant_versions = {}   # latest accepted owner update per relay
         self._last = {}          # (relay_id, control_id) -> last invocation time
         self._recent = {}        # (relay_id, control_id) -> recent request times
         self.suspended = set()   # (relay_id, control_id) suspended after an unusual burst
@@ -114,13 +115,21 @@ class RemoteControls:
             digest = hashlib.sha256(json.dumps([rid, skill, target, params, label], sort_keys=True).encode()).hexdigest()[:10]
             cid = f'ctl-{digest}-g{gen}'                 # a re-grant of the same definition gets a new id
             out[cid] = {'label': label, 'skill_id': skill, 'target': target, 'params': params, 'generation': gen, 'key_fp': fp}
-        with self._lock:                                 # revoke first: no window where old ids stay executable
-            self.grants.pop(rid, None)
-            self.suspended = {k for k in self.suspended if k[0] != rid}
-            self._recent = {k: v for k, v in self._recent.items() if k[0] != rid}
+        with self._lock:                                 # owner-update order survives delayed network replies
+            if self.closed:
+                raise RemoteControlError(503, 'Remote controls are shut down')
+            superseded = self._grant_versions.get(rid, 0) > gen
+            if not superseded:
+                self._grant_versions[rid] = gen
+                self.grants.pop(rid, None)
+                self.suspended = {k for k in self.suspended if k[0] != rid}
+                self._recent = {k: v for k, v in self._recent.items() if k[0] != rid}
+        if superseded:
+            return self.state()
         self._send(rid, 'set_controls', {'controls': [{'control_id': k, 'label': v['label']} for k, v in out.items()]})
         with self._lock:
-            if out and not self.closed:
+            current_relay = self.server.relays.relays.get(rid)
+            if out and not self.closed and self._grant_versions.get(rid) == gen and current_relay and _key_fp(current_relay['key']) == fp:
                 self.grants[rid] = out
         self._ex().emit('remote_controls', relay_id=rid, count=len(out), generation=gen)
         self._ensure_thread()

@@ -1,0 +1,7 @@
+# Complete physical handover — contributor evidence
+
+Claude supplied this owner-attended run from a separate instance on port 18781, reporting source `a535e1f`. Codex reviewed the supplied transcript; Codex did not repeat the physical actions. The original transcript does not embed a source revision or driver checksum. [Metadata](failover-evidence/complete-handover-20261028.metadata.json) records the raw checksum, exported checksum, redaction and these provenance limits.
+
+[Transcript](failover-evidence/complete-handover-20261028.json) records two READY relays, TV route selection, a VERIFIED TV scan (`tx-1a64a75c2a07dee9`), same-ID retry returning the same transaction, TV Companion stopped, stale consent refused, dead-relay dispatch blocked, route change to the phone, and a fresh VERIFIED phone scan (`tx-fc1ea9fecb27a833`) whose retry also returns the same transaction. It records events from 12:03:34 to 12:03:49 UTC on 28 October 2026.
+
+The contributor reports TV Companion relaunched and the separate test instance stopped. This is a complete handover demonstration, not a scored evaluation: no pre-frozen unseen gold set exists for this run. It does not independently prove every cleanup condition, both-unavailable behavior or permission-revocation behavior. The earlier partial and failed attempts remain preserved in [the follow-up](PHYSICAL_FAILOVER_FOLLOWUP.md). No new model calls or hardware actions were made to publish this evidence.

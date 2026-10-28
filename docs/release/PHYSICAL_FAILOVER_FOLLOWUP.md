@@ -1,3 +1,5 @@
+> Update: a later [complete contributor-recorded handover](COMPLETE_HANDOVER.md) is now available. This earlier partial run remains preserved unchanged below.
+
 # Physical routing follow-up — 28 October 2026
 
 **Status: PARTIAL / NOT VERIFIED end-to-end.** One bounded two-relay rerun used the owner's already-authorized Android TV and Blackview BV9300 Pro on main `0aed8a6`. No model/cloud calls, app installations, permission grants or radio/location-setting writes occurred. Two fixed wake-key requests and installed-Companion launches were used for readiness; a deliberate Companion force-stop modeled loss of the TV provider.

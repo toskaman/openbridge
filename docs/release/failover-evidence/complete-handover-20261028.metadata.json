@@ -1,0 +1,17 @@
+{
+  "artifact": "complete-handover-20261028.json",
+  "raw_source_sha256": "1baa8cad3f8bc5e049d6a7e1517d8c37b0abf68f3b542c3c32addd06ffed40c7",
+  "export_sha256": "d63b301059a39907d097efbff14a09fa26556e7b17751b5d43698e8b8ce05382",
+  "exported_at": "2026-10-28T12:25:36.822686+00:00",
+  "reported_source_revision": "a535e1f990632c90e451edd72419d6ee27c9b24b",
+  "source_revision_basis": "contributor-reported; not embedded in original transcript",
+  "driver_sha256": null,
+  "model_calls": {
+    "reported": 0,
+    "independently_measured": false
+  },
+  "redactions": [
+    "Stable Android provider identifiers in discovery log replaced with transport summary"
+  ],
+  "classification": "contributor-recorded physical demonstration; not a scored evaluation"
+}

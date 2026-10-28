@@ -23,7 +23,8 @@ owner-authorized remote controls they expose. Written for review; describes what
 - The request time on the device is within ±30 s.
 - The B2 route is selected and READY, and the lease is bound to actor `relay:<id>`, target identity, authority revision and exact params.
 - Per-control rate limit (0.5 s), and suspension after more than 3 requests in 10 s until the owner re-grants.
-- Shutdown (`server_close`) stops the poller; nothing dispatches afterwards.
+- Shutdown (`server_close`) stops the poller and new dispatch admissions. An operation already admitted before shutdown or revocation may finish; this is not physical cancellation.
+- Delayed owner-grant responses cannot restore a control after a newer revocation. The PC checks the latest per-relay update generation and pairing key before installing a grant. A device card can lag during concurrent updates; stale ids remain unauthorized on the PC.
 
 ## Device side
 - **Hold to send:** a tap sends nothing; a long press is required.

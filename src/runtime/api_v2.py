@@ -27,6 +27,7 @@ POST_ROUTES = ('/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill
 
 import threading
 _ROUTER_INIT_LOCK = threading.Lock()
+_REMOTE_CONTROL_INIT_LOCK = threading.Lock()
 
 
 def router(server):
@@ -38,16 +39,17 @@ def router(server):
 
 
 def remote_controls(server):
-    if getattr(server, 'remote_controls', None) is None:
-        from src.runtime.remote_controls import RemoteControls
-        server.remote_controls = rc = RemoteControls(server)
-        close = getattr(server, 'server_close', None)
-        if close is not None:                          # server shutdown stops the poller: no late dispatch
-            def server_close(*a, **k):
-                rc.close()
-                return close(*a, **k)
-            server.server_close = server_close
-    return server.remote_controls
+    with _REMOTE_CONTROL_INIT_LOCK:
+        if getattr(server, 'remote_controls', None) is None:
+            from src.runtime.remote_controls import RemoteControls
+            server.remote_controls = rc = RemoteControls(server)
+            close = getattr(server, 'server_close', None)
+            if close is not None:                          # server shutdown stops the poller: no late dispatch
+                def server_close(*a, **k):
+                    rc.close()
+                    return close(*a, **k)
+                server.server_close = server_close
+        return server.remote_controls
 
 
 def executor(server):

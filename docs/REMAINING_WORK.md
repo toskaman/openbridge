@@ -1,3 +1,17 @@
+# Current integration review — 28 October 2026
+
+The [complete contributor-recorded TV-to-phone handover](release/COMPLETE_HANDOVER.md) supersedes the earlier partial result for demonstration purposes. Both attempts remain available. This is not a scored evaluation or independent proof of all cleanup/revocation cases.
+
+Revised PR #54 Watch controls are under integration review on `codex/b3-acceptance`. [Hardware evidence and limits](release/WATCH_CONTROL_ACCEPTANCE.md) document a hold producing one action and owner-confirmed revocation. Two integration races now have regression tests: concurrent initialization creates one controller, and a delayed grant response cannot restore authority after a newer revoke. The original two-tap/sixteen-action cause remains unproven. Duplicate delivery and expiry have unit coverage, not physical acceptance.
+
+PR #56 persistence remains unmerged. Controlled exact-source tests reproduced corrupted state appearing empty without a blocked reason, and lost updates between two store instances. Required follow-up: visible fail-closed recovery, coherent per-path/process updates, unique atomic temporary files, surfaced durability failures and ordering tests. See [review](https://github.com/toskaman/openbridge/pull/56#issuecomment-6468847557).
+
+Remaining release gates: final integration CI/review; persistence remediation; independent cleanup confirmation (including earlier location restoration); frozen unseen evaluation; owner portal declarations and submission receipt. Supported read-only multi-PC review is complete; the port remains unimplemented. No schedule, video work, new hosted spending or automatic remote-control grants. Claude's main theme is retained.
+
+The snapshots below are historical and may describe superseded blockers or scheduling.
+
+---
+
 # Current update — 28 October 2026, physical rerun
 
 Latest audited main: `0aed8a6` (relay fixes #51–#53), 489 local tests passed. [New two-relay transcript](release/PHYSICAL_FAILOVER_FOLLOWUP.md) records a verified TV scan, TV-loss refusal, automatic selection of the phone and PINNED refusal; the fresh phone scan was blocked as Bluetooth turned off. This remains PARTIAL, not complete failover or a scored evaluation.
