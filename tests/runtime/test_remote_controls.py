@@ -18,6 +18,7 @@ class FakeCompanion:
     def __init__(self, key=KEY):
         self.key, self.seen, self.controls, self.queue, self.results, self.ops = key, {}, [], [], [], []
         self.clock = time.time
+        self.pending = {}
 
     def press(self, control_id, request_id=None, **extra):
         rid = request_id or ('%032x' % (len(self.ops) * 7919 + int(time.time() * 1000) % 100000 + len(self.queue)))
@@ -32,8 +33,10 @@ class FakeCompanion:
             self.controls = msg['params']['controls']; self.queue = []
         elif msg['op'] == 'get_requests':
             params, self.queue = {'requests': self.queue}, []
+            self.pending.update({r['request_id']: True for r in params['requests']})
         elif msg['op'] == 'report_result':
-            self.results.append(msg['params'])
+            if self.pending.pop(msg['params']['request_id'], None):     # unknown or late results are ignored, like the Java
+                self.results.append(msg['params'])
         elif msg['op'] in ('get_status', 'discover_capabilities'):
             params = {'capabilities': ['remote_controls'], 'permissions': {}}
         t = int(time.time())
@@ -271,3 +274,32 @@ class Shutdown(unittest.TestCase):
         self.assertTrue(rc.state()['closed'])
         with self.assertRaises(RemoteControlError):
             rc.set_controls({'relay_id': 'x', 'controls': [], 'consent': True})
+
+
+class PendingAck(unittest.TestCase):
+    setUp = RemoteControls.setUp
+    grant = RemoteControls.grant
+    vol_up = RemoteControls.vol_up
+
+    def test_every_fetched_request_is_acknowledged_whatever_the_outcome(self):
+        cid = self.vol_up()
+        now_ms = int(self.clock.t * 1000)
+        self.companion.queue += [{'request_id': '%032x' % 1, 'control_id': cid, 'pressed_at': now_ms},
+                                 {'request_id': '%032x' % 2, 'control_id': cid, 'pressed_at': now_ms - 600_000}]   # executed + expired
+        self.rc.poll_once()
+        self.assertEqual(self.companion.pending, {})
+        self.assertEqual(len(self.companion.results), 2)
+
+    def test_closed_pc_leaves_request_pending_for_the_device_timeout(self):
+        cid = self.vol_up()
+        self.companion.press(cid, request_id='%032x' % 3)
+        real = self.companion.__call__
+        def close_after_fetch(relay, message):
+            reply = real(relay, message)
+            if R.verify(self.companion.key, dict(message), {})['op'] == 'get_requests':
+                self.rc.close()
+            return reply
+        self.server.relays.relays['r-watch']['send'] = close_after_fetch
+        self.rc.poll_once()
+        self.assertEqual(self.calls, [])
+        self.assertIn('%032x' % 3, self.companion.pending)   # device shows "Not confirmed" after 20 s; never re-sent

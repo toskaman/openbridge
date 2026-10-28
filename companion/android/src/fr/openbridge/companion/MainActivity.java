@@ -89,6 +89,11 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
         relay.start(); refresh(); controls(relay.controls());
+        final android.os.Handler h = new android.os.Handler(getMainLooper());
+        h.postDelayed(new Runnable() { @Override public void run() {
+            String s = relay.expirePending(); if (s != null) resultText.setText(s);
+            if (!isFinishing()) h.postDelayed(this, 5000);
+        } }, 5000);
         if (!getSharedPreferences("ui", MODE_PRIVATE).getBoolean("setup_offered", false)) {
             getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("setup_offered", true).apply();
             setupRunning = true; nextSetupStep();      // first launch: walk through the system dialogs once

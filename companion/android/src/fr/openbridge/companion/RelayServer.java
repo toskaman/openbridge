@@ -45,6 +45,19 @@ final class RelayServer {
     private JSONArray controls = new JSONArray();
     private final java.util.ArrayDeque<JSONObject> requests = new java.util.ArrayDeque<>();
     private long lastPress;
+    static final long PENDING_TIMEOUT_MS = 20_000;
+    /** request_id -> time the PC fetched it. Cleared by the PC's signed result; never re-sent (at-most-once). */
+    private final java.util.Map<String, Long> pending = new java.util.HashMap<>();
+
+    /** Called by the UI timer: a fetched request without a result in time is shown as unconfirmed, never re-sent. */
+    String expirePending() {
+        long now = System.currentTimeMillis(); int n = 0;
+        synchronized (requests) {
+            java.util.Iterator<java.util.Map.Entry<String, Long>> it = pending.entrySet().iterator();
+            while (it.hasNext()) { if (now - it.next().getValue() > PENDING_TIMEOUT_MS) { it.remove(); n++; } }
+        }
+        return n == 0 ? null : "Not confirmed by your PC. Check the device before pressing again.";
+    }
 
     private final Context ctx;
     private volatile Ui ui;
@@ -226,18 +239,22 @@ final class RelayServer {
                     if (!id.matches("[a-z0-9-]{4,40}") || label.isEmpty() || label.length() > 40) throw new SecurityException("bounds");
                     clean.put(new JSONObject().put("control_id", id).put("label", label));
                 }
-                synchronized (requests) { controls = clean; requests.clear(); }
+                synchronized (requests) { controls = clean; requests.clear(); pending.clear(); }
                 prefs.edit().putString("controls", clean.toString()).apply();
                 ui.controls(clean); break;
             }
             case "get_requests": {
                 JSONArray out = new JSONArray();
-                synchronized (requests) { while (!requests.isEmpty()) out.put(requests.poll()); }
+                long now = System.currentTimeMillis();
+                synchronized (requests) {
+                    while (!requests.isEmpty()) { JSONObject r = requests.poll(); out.put(r); pending.put(r.getString("request_id"), now); }
+                }
                 params.put("requests", out); break;
             }
             case "report_result": {
                 JSONObject p = cmd.getJSONObject("params");
                 String text = p.optString("text", "");
+                synchronized (requests) { if (pending.remove(p.optString("request_id")) == null) break; }   // unknown or late: ignored
                 ui.result(text.length() > 80 ? text.substring(0, 80) : text); break;
             }
             case "revoke_access": unpair(); break;
