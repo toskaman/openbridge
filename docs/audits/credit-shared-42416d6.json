@@ -1,0 +1,31 @@
+{
+  "head": "42416d6cb17010f16d39647d8d8dc6a8583f4322",
+  "results": {
+    "canonical_default": {
+      "accepted": 8,
+      "refused": 8,
+      "reserved_usd": 0.8,
+      "authorized_allowance_usd": 0.8,
+      "relative_paths": [
+        "OpenBridge\\budget.sqlite3",
+        "OpenBridge\\budget.sqlite3"
+      ],
+      "cap_enforced": true
+    },
+    "explicit_override": {
+      "accepted": 16,
+      "refused": 0,
+      "reserved_usd": 1.6,
+      "authorized_allowance_usd": 0.8,
+      "relative_paths": [
+        "out-a\\budget.sqlite3",
+        "out-b\\budget.sqlite3"
+      ],
+      "cap_enforced": false
+    }
+  },
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0,
+  "verdict": "Default output-independent cap fixed; arbitrary explicit live ledger override remains unguarded."
+}
