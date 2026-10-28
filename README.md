@@ -8,6 +8,10 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 *Real run on the author's home network (names redacted with `?redact`): a Freebox and the 12 active hosts it reports, an Android phone over USB, an Android TV over ADB Wi-Fi merged with its mDNS identity, and 6 Bluetooth devices that the PC cannot hear itself (it has no Bluetooth radio) found through the TV acting as a relay.*
 
+![Ask OpenBridge natural-language panel](docs/jury/screens/ask-openbridge-1440.png)
+
+*Ask OpenBridge: type a request in English or French; tiered Meta-only routing (free local Llama/Glimmer, cloud Spark only with explicit consent) resolves it to a registered skill, shows a fingerprint-bound preview, and executes only after owner approval. Local tiers verified live; cloud path unit-tested, broker unconfigured in this capture.*
+
 ## The problem
 Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) behind different permission screens. Tools either see one transport at a time or ask for broad control. Owners cannot tell what is really connected, what each device can do, and whether a change can be undone.
 
@@ -17,6 +21,8 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 3. **Extends reach through relays.** The OpenBridge Companion app (Android phone or Android TV) performs short signed BLE scans for the PC, after on-screen pairing. Devices it hears appear under it as observe-only.
 4. **Uses Meta models where they help.** Muse Glimmer and Llama 3.2 run locally; they explain device state, propose at most one reversible step, and suggest the next discovery step. They never see identifiers and cannot bypass the deterministic gate.
 5. **Changes only what it can undo.** Consent → snapshot → execute → independent read-back → exact Undo, with crash recovery. A session journal asks before finishing whether to restore every setting changed during the session.
+6. **Routes skills across relays (B2).** Typed skill contracts with READY/ACTIVE/STANDBY states, freshness leases, AUTO/PREFERRED/PINNED policies, consent-bound invocation leases and exact-once dedup. A TV-to-phone BLE failover is demonstrated on hardware ([handover](docs/release/COMPLETE_HANDOVER.md)); a frozen synthetic routing evaluation scores 32/32 with full baselines ([results](docs/evaluation/routing-v1/RESULTS.md)).
+7. **Asks in natural language (Ask OpenBridge).** English or French requests resolve to registered skills through tiered Meta-only inference; every step (parse → preview → approval → receipt) is shown with model, cost and evidence, and the model can never authorize its own privileged actions.
 
 ## Verified on real hardware
 | Capability | Evidence |
@@ -30,6 +36,10 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 | Muse Glimmer 30B local inference, digest = official registry manifest | [glimmer receipt](docs/glimmer-smoke-receipt.json) |
 | Real TV relay → local Muse Glimmer proposal → verified API publication/read → access denial and removal | [TV/Meta journey and limits](docs/forge/TV_GLIMMER_JOURNEY.md) |
 | Session restore of pre-session settings (TV system app, Companion, ADB Wi-Fi) | [Transactions & Undo](docs/TRANSACTION_AND_UNDO.md) |
+| TV-to-phone BLE failover on hardware (TV scan VERIFIED → link_down → phone scan VERIFIED, dedup + consent-void proofs) | [Complete handover](docs/release/COMPLETE_HANDOVER.md) |
+| Watch hold → single TV action with independent read-back and revocation | [Watch acceptance](docs/release/WATCH_CONTROL_ACCEPTANCE.md) (2-tap/16-action root cause unproven; dup/expiry hardware proof pending) |
+| Frozen synthetic routing evaluation: router 32/32, full baselines, Spark pre-run design review | [Results](docs/evaluation/routing-v1/RESULTS.md) (no model-advantage claim) |
+| Ask OpenBridge NL → skill resolution (local Llama parse, tiered routing, fingerprint-bound approve/execute) | Scratch-verified + fixtures e2e this branch; cloud path unit-tested only |
 
 Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDWARE_TEST_MATRIX.md), [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md).
 
@@ -53,6 +63,12 @@ Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDW
 Current release status and remaining acceptance gates: [release index](docs/RELEASE_STATUS.md) and [submission worksheet](docs/release/SUBMISSION_EVIDENCE.md).
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
+
+## What's new (28 Oct 2026)
+- **B2 skill routing**: typed contracts, AUTO/PREFERRED/PINNED, leases, dedup; hardware TV-to-phone handover + frozen 32/32 evaluation with Spark design review.
+- **B3 Companion controls**: owner-granted watch/phone controls routed through B2 (one hold → one action, signed outcomes, revocation); hardware edge acceptance still open.
+- **Ask OpenBridge**: natural-language panel (EN request UI, FR text accepted), tiered Meta-only routing, cost guard on the shared broker ledger, fingerprint-bound approve/execute.
+- **Durable runtime**: routing policies + unresolved-outcome backlog survive restarts (atomic, corrupt-state blocks visibly).
 
 ## What's new (27 Oct 2026)
 - **Runtime contract v1 and `/api/v2`**: a versioned read model and one execute endpoint over named safe primitives (schema, consent, identity re-check, per-device locking, honest timeouts). See `docs/api/HTTP.md`.
@@ -97,7 +113,7 @@ The default launcher starts no discovery, model call or publication. Open **Capa
 
 Companion app: `python -m dev.build_companion` (official Android SDK tools), then **Install the OpenBridge Companion** from a phone or TV sheet in the UI.
 
-**Jury walkthrough:** Discover my environment → open a device sheet (sources, capabilities, statuses) → TV sheet: *Connect over ADB Wi-Fi* → *Use as Bluetooth relay* → *Scan nearby Bluetooth* → *Ask Meta what to do next* → Device agent (Declutter) for a consent-gated change and exact Undo → *Finish session…*. Without hardware: `python -m tests.e2e.fabric_smoke` and `python -m tests.e2e.offline_smoke` (both in CI).
+**Jury walkthrough:** Ask OpenBridge a request (*Scan for bluetooth devices*) → review the fingerprint-bound preview → approve → read the receipt → Discover my environment → open a device sheet (sources, capabilities, statuses) → TV sheet: *Connect over ADB Wi-Fi* → *Use as Bluetooth relay* → *Scan nearby Bluetooth* → *Ask Meta what to do next* → Device agent (Declutter) for a consent-gated change and exact Undo → *Finish session…*. Without hardware: `python -m tests.e2e.command_center_smoke`, `python -m tests.e2e.fabric_smoke` and `python -m tests.e2e.offline_smoke` (all in CI).
 
 ## Safety boundaries
 Loopback-only server with Host/Origin/CSRF checks; no port scanning; discovery limited to private networks; one owner-triggered connection per device; router/box configuration read-only by policy; Freebox token protected by Windows DPAPI; raw serials/MACs pseudonymized; signed, expiring, replay-protected relay commands; scans only after on-screen pairing and only while the Companion is open; Android permissions only through Android's own dialogs; writes limited to an allowlist with exact restoration or blocked before writing.
