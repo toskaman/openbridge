@@ -52,7 +52,14 @@ MAX_NONCES = 512   # mirrors the Companion nonce-cache prune; bounds long-lived 
 
 
 def verify(key, message, seen_nonces, now=None):
-    """Used by relays (and by the PC on relay replies). Rejects bad MAC, expiry, replay and unknown ops."""
+    """Used by relays (and by the PC on relay replies). Rejects bad MAC, expiry, replay and unknown ops.
+
+    seen_nonces is either a long-lived dict (nonce -> expires_at) that gives replay protection: a nonce is only
+    forgotten after its message expired, and when the cache is full of live nonces new messages are refused, never
+    admitted by evicting a live one; or None for a one-shot check of a single message (no replay tracking, e.g. a
+    pairing reply). Other container types are rejected so no caller can rely on a count-evicting cache."""
+    if seen_nonces is not None and not isinstance(seen_nonces, dict):
+        raise TypeError('seen_nonces must be a dict nonce cache (nonce -> expires_at) or None for a one-shot check')
     now = time.time() if now is None else now
     msg = {k: v for k, v in message.items() if k != 'mac'}
     if not hmac.compare_digest(sign(key, msg), str(message.get('mac', ''))):
@@ -61,16 +68,15 @@ def verify(key, message, seen_nonces, now=None):
         raise RelayError('Unknown protocol or operation')
     if not msg.get('issued_at', 0) - 5 <= now <= msg.get('expires_at', 0):
         raise RelayError('Expired command')
+    if seen_nonces is None:             # one-shot check of a single message: nothing to remember
+        return msg
     if msg['nonce'] in seen_nonces:
         raise RelayError('Replay')
-    if isinstance(seen_nonces, dict):   # long-lived insertion-ordered set: FIFO eviction
-        seen_nonces[msg['nonce']] = True
-        while len(seen_nonces) > MAX_NONCES:
-            seen_nonces.pop(next(iter(seen_nonces)))
-    else:                               # ephemeral caller-owned set
-        seen_nonces.add(msg['nonce'])
-        while len(seen_nonces) > MAX_NONCES:
-            seen_nonces.pop()
+    for n in [n for n, exp in seen_nonces.items() if not (isinstance(exp, (int, float)) and exp >= now)]:
+        del seen_nonces[n]              # forget a nonce only once its message has expired
+    if len(seen_nonces) >= MAX_NONCES:
+        raise RelayError('Too many live commands; retry after they expire')   # never evict a live nonce
+    seen_nonces[msg['nonce']] = msg.get('expires_at', now)
     return msg
 
 
@@ -190,5 +196,5 @@ def pair(send, code_reader):
         raise RelayError('Not an OpenBridge relay')
     key = derive_key(code_reader(), hello['relay_nonce'], pc_nonce)
     reply = send(None, command(key, hello['relay_id'], 'discover_capabilities'))
-    declared = verify(key, reply, set()).get('params', {})
+    declared = verify(key, reply, None).get('params', {})
     return hello['relay_id'], key, declared

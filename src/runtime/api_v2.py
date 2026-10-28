@@ -21,7 +21,7 @@ GET_ROUTES = ('/api/v2/contract',
               '/api/v2/hypotheses',
               '/api/v2/relays/samples',
               '/api/v2/catalog')
-POST_ROUTES = ('/api/v2/execute', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
+POST_ROUTES = ('/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
 def executor(server):
@@ -225,6 +225,12 @@ def post(server, path, body):
         return voice(server, path, body)
     if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
         return cloud(server, path, body)
+    if path == '/api/v2/recovery/acknowledge' and isinstance(body, dict):
+        if set(body) - {'transaction_id', 'consent'} or not isinstance(body.get('transaction_id'), str) or body.get('consent') is not True:
+            return 400, {'error': 'transaction_id and consent: true are required'}
+        if not executor(server).acknowledge(body['transaction_id']):
+            return 404, {'error': 'No unresolved transaction with this id'}
+        return 200, to_json(executor(server).recovery())
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent'}
