@@ -145,15 +145,29 @@ class AndroidAdapter:
             return 'WAITING_FOR_TV_APPROVAL'
         return 'CONNECT_FAILED'
 
-    def forward_companion(self, handle, port=47800):
-        """Fixed `adb forward tcp:<port> tcp:47800` so the PC reaches the Companion over USB without exposing it on Wi-Fi."""
-        if not isinstance(port, int) or not 1024 < port < 65536:
+    def forward_companion(self, handle, port=None):
+        """`adb forward tcp:<local> tcp:47800` so the PC reaches the Companion over ADB without exposing it on Wi-Fi.
+        Each device gets its own local port (allocated by adb, then kept stable): with one shared port, the last
+        forward silently redirected every relay to the last device, so two relays could never coexist."""
+        if port is not None and (not isinstance(port, int) or not 1024 < port < 65536):
             raise ValueError('Invalid port')
         with self._lock:
             serial = next((k for k, v in self._handles.items() if v == handle), None)
             if serial is None:
                 raise ValueError('Unknown device')
-            self._run(['-s', serial, 'forward', f'tcp:{port}', 'tcp:47800'])
+            ports = self.__dict__.setdefault('_companion_ports', {})
+            if port is None:
+                listed = self._run(['forward', '--list'])
+                known = ports.get(serial)
+                if known and f'{serial} tcp:{known} tcp:47800' in listed:
+                    return f'http://127.0.0.1:{known}'
+                out = self._run(['-s', serial, 'forward', 'tcp:0', 'tcp:47800']).strip()
+                if not out.isdigit() or not 1024 < int(out) < 65536:
+                    raise ValueError('ADB did not allocate a forward port')
+                port = int(out)
+            else:
+                self._run(['-s', serial, 'forward', f'tcp:{port}', 'tcp:47800'])
+            ports[serial] = port
         return f'http://127.0.0.1:{port}'
 
     def pair_wireless(self, ip, pair_port, code):

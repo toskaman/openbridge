@@ -261,3 +261,24 @@ class Http(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Stability(Base):
+    def test_never_scanned_relays_do_not_flap(self):
+        fresh = world(self.clock)[0]                       # new server: no relay has scanned yet
+        ex = executor(fresh); r = router(fresh)
+        ticking = [self.clock.t]
+        calls = [0]
+        def tick():                                        # coarse OS timer: sometimes equal, sometimes one 15.6 ms step apart
+            calls[0] += 1
+            if calls[0] % 3 == 0:
+                ticking[0] += 0.0156
+            return ticking[0]
+        r.clock = tick
+        sels = set()
+        for i in range(20):
+            doc = r.skill_routes('ble_scan_room')
+            self.assertEqual(rc.validate_doc(doc), [])
+            sels.add(doc['selected_route_id'])
+        self.assertEqual(len(sels), 1)
+        self.assertEqual([e for e in ex.events_since(0) if e['kind'] == 'route_changed'], [])
