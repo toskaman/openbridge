@@ -181,6 +181,15 @@ class NLRouter(unittest.TestCase):
         self.assertEqual(d['status'], 'resolved')
         self.assertEqual(d['provenance']['parser'], 'cloud')
 
+    def test_explicit_medium_uses_medium_transport(self):
+        from src.runtime.nl_router import parse
+        low, medium = FakeTransport(good_reply()), FakeTransport(good_reply())
+        d = parse('Start my vacuum', 'en', 'medium', low, None, medium)
+        self.assertEqual(d['status'], 'resolved')
+        self.assertEqual(d['provenance']['model_id'], 'muse-glimmer:30b-q4_K_M')
+        self.assertEqual(len(medium.calls), 1)
+        self.assertEqual(low.calls, [])
+
     def test_model_abstention_with_unique_keyword_hit_resolves(self):
         from src.runtime.nl_router import parse
         r = good_reply(); r['skill_id'] = None; r['confidence'] = 0.0
@@ -233,6 +242,28 @@ class CostGuard(unittest.TestCase):
         reserve(db, 'obs-1', 100_000)
         with self.assertRaises(CostBlocked):
             check_budget(db, 'obs-1', 200_000, 100_000)
+
+    def test_atomic_admit_never_overshoots(self):
+        import tempfile, os, sqlite3, threading
+        from src.runtime.cost_guard import admit, CostBlocked
+        db = os.path.join(tempfile.mkdtemp(), 'b.sqlite')
+        barrier = threading.Barrier(10)
+        won = []
+        def worker():
+            barrier.wait()
+            try:
+                admit(db, 'obs-1', 200_000, 100_000)
+                won.append(True)
+            except CostBlocked:
+                pass
+        ts = [threading.Thread(target=worker) for _ in range(10)]
+        [t.start() for t in ts]
+        [t.join() for t in ts]
+        self.assertEqual(len(won), 2)
+        con = sqlite3.connect(db)
+        total = con.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations').fetchone()[0]
+        con.close()
+        self.assertEqual(total, 200_000)
 
     def test_budget_uses_broker_reservations_table(self):
         import tempfile, os, sqlite3
@@ -338,22 +369,89 @@ class CommandService(unittest.TestCase):
             approve(FakeServer(), draft(status='unsupported'))
 
     def test_execute_needs_consent_and_dispatches_once(self):
-        from src.runtime.command import execute, CommandError
+        from src.runtime.command import approve, execute, CommandError
         srv = FakeServer()
         with self.assertRaises(CommandError):
             execute(srv, vacuum_intent(), consent=False)
-        rc = execute(srv, vacuum_intent(), consent=True)
+        prev = approve(srv, vacuum_intent())
+        rc = execute(srv, vacuum_intent(), consent=True, preview=prev)
         self.assertEqual(rc['transaction_id'], 'tx-9')
         self.assertEqual(len(srv.runtime_executor.calls), 1)
         self.assertTrue(srv.runtime_executor.calls[0][3])
 
     def test_execute_reresolves_fresh_targets(self):
-        from src.runtime.command import execute, CommandError
+        from src.runtime.command import approve, execute, CommandError
         srv = FakeServer()
+        prev = approve(srv, vacuum_intent())
         srv.reg.devices = {}
         with self.assertRaises(CommandError):
-            execute(srv, vacuum_intent(), consent=True)
+            execute(srv, vacuum_intent(), consent=True, preview=prev)
         self.assertEqual(srv.runtime_executor.calls, [])
+
+    def test_approve_binds_fingerprint_and_identity(self):
+        import re
+        from src.runtime.command import approve
+        prev = approve(FakeServer(), vacuum_intent())
+        self.assertTrue(re.fullmatch(r'[0-9a-f]{64}', prev['fingerprint']))
+        self.assertEqual(prev['approved_targets'],
+                         [{'key': 'dev-vac1', 'label': 'Roborock', 'category': 'vacuum'}])
+
+    def test_execute_requires_matching_preview(self):
+        from src.runtime.command import execute, CommandError
+        with self.assertRaises(CommandError):
+            execute(FakeServer(), vacuum_intent(), consent=True)
+
+    def test_execute_refuses_reassigned_target(self):
+        from src.runtime.command import approve, execute, CommandError
+        srv = FakeServer()
+        d = vacuum_intent(targets=[{'kind': 'device', 'ref': 'Roborock'}])
+        prev = approve(srv, d)
+        srv.reg.devices['dev-vac1']['label'] = 'Old vacuum'
+        srv.reg.devices['dev-vac2'] = {'key': 'dev-vac2', 'category': 'vacuum', 'label': 'Roborock'}
+        with self.assertRaises(CommandError) as cm:
+            execute(srv, d, consent=True, preview=prev)
+        self.assertEqual(cm.exception.status, 409)
+        self.assertEqual(srv.runtime_executor.calls, [])
+
+    def test_execute_refuses_swapped_skill(self):
+        from src.runtime.command import approve, execute, CommandError
+        srv = FakeServer()
+        prev = approve(srv, vacuum_intent())
+        d = vacuum_intent(); d['skill_id'] = 'vacuum.pause'
+        with self.assertRaises(CommandError):
+            execute(srv, d, consent=True, preview=prev)
+        self.assertEqual(srv.runtime_executor.calls, [])
+
+    def test_double_execute_returns_same_receipt(self):
+        from src.runtime.command import approve, execute
+        srv = FakeServer()
+        d = vacuum_intent()
+        prev = approve(srv, d)
+        first = execute(srv, d, consent=True, preview=prev)
+        second = execute(srv, d, consent=True, preview=prev)
+        self.assertEqual(first['transaction_id'], second['transaction_id'])
+        self.assertEqual(len(srv.runtime_executor.calls), 1)
+
+    def test_new_intent_redispatches(self):
+        from src.runtime.command import approve, execute
+        srv = FakeServer()
+        for iid in ('int-aaa', 'int-bbb'):
+            d = vacuum_intent(intent_id=iid)
+            execute(srv, d, consent=True, preview=approve(srv, d))
+        self.assertEqual(len(srv.runtime_executor.calls), 2)
+
+    def test_b2_path_dedups_arm_and_invoke(self):
+        from src.runtime.command import approve, execute
+        srv = FakeServer()
+        d = draft(status='resolved', skill_id='ble_scan_room', outcome='scan nearby',
+                  confidence=0.9, targets=[{'kind': 'device', 'ref': 'tv'}])
+        prev = approve(srv, d)
+        execute(srv, d, consent=True, preview=prev)
+        execute(srv, d, consent=True, preview=prev)
+        arms = [c for c in srv.skill_router.calls if c[0] == 'arm']
+        invokes = [c for c in srv.skill_router.calls if c[0] == 'invoke']
+        self.assertEqual(len(arms), 1)
+        self.assertEqual(len(invokes), 1)
 
 
 class CloudTransport(unittest.TestCase):
@@ -395,6 +493,46 @@ def api_server():
     return srv
 
 
+def stub_broker(reserve_error=None, sender=None):
+    import json
+    from types import SimpleNamespace
+    calls = []
+    def _reserve():
+        calls.append(True)
+        if reserve_error is not None:
+            raise reserve_error
+    sends = []
+    def _send(payload):
+        sends.append(payload)
+        return sender(payload) if sender else cloud_response(json.dumps(good_reply()))
+    b = SimpleNamespace(transport=_send,
+                        permit=SimpleNamespace(observation_id='obs-1'),
+                        budget_path='/tmp/never.sqlite', _reserve=_reserve)
+    b.calls, b.sends = calls, sends
+    return b
+
+
+class BrokerGate(unittest.TestCase):
+    def test_stale_credit_blocks_before_any_send(self):
+        from src.ai.broker import ModelBlocked
+        from src.runtime.command import parse_request
+        srv = api_server()
+        srv.model_broker = stub_broker(ModelBlocked('Promotional-credit observation expired or invalid'))
+        out = parse_request(srv, {'text': 'Start my vacuum', 'quality': 'high', 'cloud_consent': True})
+        self.assertEqual(out['intent']['status'], 'escalation_required')
+        self.assertTrue(any('expired' in a for a in out['intent']['ambiguities']))
+        self.assertEqual(srv.model_broker.sends, [])
+
+    def test_gate_delegates_reservation_to_broker_once(self):
+        from src.runtime.command import parse_request
+        srv = api_server()
+        srv.model_broker = stub_broker()
+        out = parse_request(srv, {'text': 'Start my vacuum', 'quality': 'high', 'cloud_consent': True})
+        self.assertEqual(out['intent']['status'], 'resolved')
+        self.assertEqual(len(srv.model_broker.calls), 1)
+        self.assertEqual(len(srv.model_broker.sends), 1)
+
+
 class CommandAPI(unittest.TestCase):
     def test_tiers_reports_readiness(self):
         from src.runtime.api_v2 import get
@@ -432,7 +570,8 @@ class CommandAPI(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(prev['device_keys'], ['dev-vac1'])
         self.assertEqual(srv.runtime_executor.calls, [])
-        status, rc = post(srv, '/api/v2/command/execute', {'intent': vacuum_intent(), 'consent': True})
+        status, rc = post(srv, '/api/v2/command/execute',
+                            {'intent': vacuum_intent(), 'consent': True, 'preview': prev})
         self.assertEqual(status, 200)
         self.assertEqual(rc['transaction_id'], 'tx-9')
 

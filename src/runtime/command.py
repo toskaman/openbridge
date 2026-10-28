@@ -106,7 +106,6 @@ def tiers(server):
 
 
 def parse_request(server, body):
-    from src.ai.broker import RESERVATION_MICRO_USD
     from src.runtime import cost_guard as C
     from src.runtime import nl_router as N
     if not isinstance(body, dict):
@@ -136,11 +135,11 @@ def parse_request(server, body):
         b = _broker(server)
         if b is None:
             raise C.CostBlocked('cloud is not configured on this server')
-        permit = b.permit
-        ceiling = min(int(permit.session_budget_usd * 1_000_000),
-                      int((permit.free_balance_usd - 1) * 1_000_000))
-        C.check_budget(str(b.budget_path), permit.observation_id, ceiling, RESERVATION_MICRO_USD)
-        C.reserve(str(b.budget_path), permit.observation_id, RESERVATION_MICRO_USD)
+        from src.ai.broker import ModelBlocked
+        try:
+            b._reserve()   # shared guard: freshness, finite balances, allowance, atomic insert
+        except ModelBlocked as e:
+            raise C.CostBlocked(str(e)) from None
 
     doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
                   cloud_allowed=consent is True and enabled and cloud is not None,
@@ -153,6 +152,14 @@ def parse_request(server, body):
     return out
 
 
+def _fingerprint(skill_id, primitive_id, params, approved_targets, route_id):
+    import hashlib, json
+    canon = json.dumps({'skill': skill_id, 'primitive': primitive_id, 'params': params,
+                        'targets': approved_targets, 'route': route_id},
+                       sort_keys=True, separators=(',', ':'))
+    return hashlib.sha256(canon.encode()).hexdigest()
+
+
 def approve(server, doc):
     from src.runtime.api_v2 import router
     if I.validate_intent(doc) or doc.get('status') != 'resolved':
@@ -161,11 +168,15 @@ def approve(server, doc):
         solved = S.resolve(doc['skill_id'], doc.get('params') or {})
     except S.SkillError as e:
         raise CommandError(400, str(e)) from None
-    keys = resolve_targets(doc.get('targets'), _devices(server))
+    devs = _devices(server)
+    keys = resolve_targets(doc.get('targets'), devs)
     if len(keys) != 1:
         raise CommandError(409, 'P0 executes one device per command')
+    approved_targets = [{'key': k, 'label': devs[k].get('label'),
+                         'category': devs[k].get('category')} for k in keys]
     prev = {'skill_id': doc['skill_id'], 'primitive_id': solved['primitive_id'],
             'params': solved['params'], 'device_keys': keys,
+            'approved_targets': approved_targets,
             'risk_level': solved['risk_level'],
             'verification': solved['verification'],
             'consent_required': True}
@@ -183,14 +194,37 @@ def approve(server, doc):
                                     for r in routes.get('routes', [])]}
         if not routes.get('selected_route_id'):
             raise CommandError(409, 'no READY route for this skill')
+    prev['fingerprint'] = _fingerprint(
+        prev['skill_id'], prev['primitive_id'], prev['params'],
+        prev['approved_targets'],
+        (prev.get('route') or {}).get('selected_route_id'))
     return prev
 
 
-def execute(server, doc, consent=False):
+MAX_EXECUTIONS = 512
+
+
+def _exec_cache(server):
+    if getattr(server, 'command_executions', None) is None:
+        server.command_executions = {}
+        server.command_exec_order = []
+    return server.command_executions, server.command_exec_order
+
+
+def execute(server, doc, consent=False, preview=None):
     from src.runtime.api_v2 import router, executor
     if consent is not True:
         raise CommandError(400, 'fresh consent is required to execute')
+    if not isinstance(preview, dict) or preview.get('skill_id') != (doc or {}).get('skill_id') \
+            or not isinstance(preview.get('fingerprint'), str):
+        raise CommandError(400, 'execute needs the preview returned by approve for this intent')
+    key = ((doc or {}).get('intent_id'), preview['fingerprint'])
+    cache, order = _exec_cache(server)
+    if key in cache:
+        return cache[key]   # idempotent retry: same receipt, no second dispatch
     prev = approve(server, doc)   # re-resolves everything; revocations block here
+    if prev['fingerprint'] != preview['fingerprint']:
+        raise CommandError(409, 'target, params or route changed since approval; review again')
     if prev['primitive_id'].startswith('b2:'):
         from src.runtime.routing import RouteError, SKILLS
         r = router(server)
@@ -204,8 +238,14 @@ def execute(server, doc, consent=False):
             body.update(skill_id=skill, params=prev['params'], consent=True)
             if target is not None:
                 body['target'] = target
-            return r.invoke(body)
+            rc = r.invoke(body)
         except RouteError as e:
             raise CommandError(e.status, str(e)) from None
-    return executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
-                                    prev['params'], True)
+    else:
+        rc = executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
+                                      prev['params'], True)
+    cache[key] = rc
+    order.append(key)
+    while len(order) > MAX_EXECUTIONS:
+        cache.pop(order.pop(0), None)
+    return rc

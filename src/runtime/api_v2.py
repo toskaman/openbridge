@@ -304,7 +304,8 @@ def post(server, path, body):
                 return 200, cmd.parse_request(server, body)
             if path == '/api/v2/command/approve':
                 return 200, cmd.approve(server, body.get('intent'))
-            return 200, cmd.execute(server, body.get('intent'), body.get('consent', False))
+            return 200, cmd.execute(server, body.get('intent'), body.get('consent', False),
+                                    body.get('preview'))
         except cmd.CommandError as e:
             return e.status, {'error': str(e)}
     if path == '/api/v2/remote_controls':

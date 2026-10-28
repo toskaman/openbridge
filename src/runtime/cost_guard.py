@@ -53,6 +53,25 @@ def check_budget(db_path, observation_id, ceiling_micro, amount_micro):
     return ceiling_micro - used - amount_micro
 
 
+def admit(db_path, observation_id, ceiling_micro, amount_micro):
+    """Atomic check-and-reserve: sums and insert happen inside one BEGIN
+    IMMEDIATE transaction, so concurrent admissions can never overshoot."""
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    with closing(sqlite3.connect(db_path, timeout=5)) as db, db:
+        db.execute('CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY, observation TEXT, reserved INTEGER, recorded REAL)')
+        db.execute('BEGIN IMMEDIATE')
+        used = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations WHERE observation=?',
+                          (observation_id,)).fetchone()[0]
+        total = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations').fetchone()[0]
+        if used + amount_micro > ceiling_micro:
+            raise CostBlocked('observation budget exhausted')
+        if total + amount_micro > GLOBAL_CEILING_MICRO:
+            raise CostBlocked('global conservative budget exhausted')
+        db.execute('INSERT INTO reservations(observation,reserved,recorded) VALUES(?,?,?)',
+                   (observation_id, amount_micro, time.time()))
+        return ceiling_micro - used - amount_micro
+
+
 def reserve(db_path, observation_id, amount_micro):
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     with closing(sqlite3.connect(db_path, timeout=5)) as db, db:

@@ -229,7 +229,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
         raise ValueError('quality must be low|medium|high|auto')
     prompt = build_prompt(text, lang)
     plan = {'low': [('low', local_transport, 'local')],
-            'medium': [('medium', local_transport, 'local')],
+            'medium': [('medium', medium_transport, 'local')],
             'high': [('high', cloud_transport, 'cloud')],
             'auto': [('low', local_transport, 'local'),
                      ('medium', medium_transport, 'local')] if medium_transport

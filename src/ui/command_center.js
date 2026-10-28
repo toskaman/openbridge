@@ -5,52 +5,31 @@
   const root = document.getElementById('ask-root');
   if (!root) return;
 
+  /* Owner rule: rendered UI is English throughout. French is accepted as
+     REQUEST text only (request-language selector below, neutral EN/FR codes). */
   const STRINGS = {
-    en: {
-      title: 'Ask OpenBridge', tagline: 'Tell your devices what you want. Meta AI will find or learn a way.',
-      ask: 'Ask', placeholder: 'e.g. Start my vacuum · Scan for bluetooth devices',
-      quality: 'AI quality', low: 'Low · free local', medium: 'Medium · free local',
-      high: 'High · Meta cloud', auto: 'Auto · local first',
-      local: 'local', cloud: 'cloud', ready: 'ready', notReady: 'not ready',
-      notConfigured: 'cloud not configured', disabled: 'cloud disabled',
-      consent: 'I allow cloud calls for this request (at most $0.10 each, kill switch on).',
-      estimate: 'estimate', cost: 'cost', needConsent: 'Cloud consent is required for High quality.',
-      stUnderstand: 'Understanding request', stDevices: 'Identifying devices',
-      stSkills: 'Checking available skills', stPreview: 'Preview ready',
-      stApproval: 'Awaiting approval', stExecute: 'Executing', stVerified: 'Verification completed',
-      approve: 'Approve & execute', approved: 'Approved', executing: 'Executing…',
-      outcome: 'Outcome', skill: 'Skill', devices: 'Devices', model: 'Model',
-      timeTaken: 'Time taken', evidence: 'Evidence', state: 'State',
-      clarification: 'One question before I act', unsupported: 'Not supported',
-      escalation: 'Needs a stronger model or setup step', reasons: 'Reasons',
-      suggestions: 'Try', recents: 'Recent', error: 'Request failed',
-      micTitle: 'Voice input arrives in P1; text only for now',
-      partial: 'Partial success', failed: 'Failed',
-    },
-    fr: {
-      title: 'Ask OpenBridge', tagline: 'Dites à vos appareils ce que vous voulez. Meta AI trouvera un moyen.',
-      ask: 'Envoyer', placeholder: 'ex. Démarre mon aspirateur · Cherche les appareils bluetooth',
-      quality: 'Qualité IA', low: 'Basse · locale gratuite', medium: 'Moyenne · locale gratuite',
-      high: 'Haute · cloud Meta', auto: 'Auto · local d’abord',
-      local: 'local', cloud: 'cloud', ready: 'prêt', notReady: 'non prêt',
-      notConfigured: 'cloud non configuré', disabled: 'cloud désactivé',
-      consent: 'J’autorise les appels cloud pour cette demande (max 0,10 $ chacun, coupe-circuit actif).',
-      estimate: 'estimation', cost: 'coût', needConsent: 'Le consentement cloud est requis pour la qualité Haute.',
-      stUnderstand: 'Compréhension de la demande', stDevices: 'Identification des appareils',
-      stSkills: 'Vérification des compétences', stPreview: 'Aperçu prêt',
-      stApproval: 'En attente d’approbation', stExecute: 'Exécution', stVerified: 'Vérification terminée',
-      approve: 'Approuver et exécuter', approved: 'Approuvé', executing: 'Exécution…',
-      outcome: 'Résultat', skill: 'Compétence', devices: 'Appareils', model: 'Modèle',
-      timeTaken: 'Durée', evidence: 'Preuve', state: 'État',
-      clarification: 'Une question avant d’agir', unsupported: 'Non pris en charge',
-      escalation: 'Nécessite un modèle plus puissant ou une étape de configuration', reasons: 'Motifs',
-      suggestions: 'Essayer', recents: 'Récent', error: 'La requête a échoué',
-      micTitle: 'La voix arrive en P1 ; texte uniquement pour l’instant',
-      partial: 'Succès partiel', failed: 'Échec',
-    },
+    title: 'Ask OpenBridge', tagline: 'Tell your devices what you want. Meta AI will find or learn a way.',
+    ask: 'Ask', placeholder: 'e.g. Start my vacuum · Scan for bluetooth devices',
+    quality: 'AI quality', low: 'Low · free local', medium: 'Medium · free local',
+    high: 'High · Meta cloud', auto: 'Auto · local first',
+    requestLang: 'Request', local: 'local', cloud: 'cloud', ready: 'ready', notReady: 'not ready',
+    notConfigured: 'cloud not configured', disabled: 'cloud disabled',
+    consent: 'I allow cloud calls for this request (at most $0.10 each, kill switch on).',
+    estimate: 'estimate', cost: 'cost', needConsent: 'Cloud consent is required for High quality.',
+    stUnderstand: 'Understanding request', stDevices: 'Identifying devices',
+    stSkills: 'Checking available skills', stPreview: 'Preview ready',
+    stApproval: 'Awaiting approval', stExecute: 'Executing', stVerified: 'Verification completed',
+    approve: 'Approve & execute', approved: 'Approved', executing: 'Executing…',
+    outcome: 'Outcome', skill: 'Skill', devices: 'Devices', model: 'Model',
+    timeTaken: 'Time taken', evidence: 'Evidence', state: 'State',
+    clarification: 'One question before I act', unsupported: 'Not supported',
+    escalation: 'Needs a stronger model or setup step', reasons: 'Reasons',
+    suggestions: 'Try', recents: 'Recent', error: 'Request failed',
+    micTitle: 'Voice input arrives in P1; text only for now',
+    partial: 'Partial success', failed: 'Failed',
   };
-  let lang = (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
-  const t = (k) => (STRINGS[lang] && STRINGS[lang][k]) || STRINGS.en[k] || k;
+  let reqLang = (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
+  const t = (k) => STRINGS[k] || k;
 
   let csrf;
   async function req(path, body) {
@@ -73,9 +52,9 @@
   }
 
   const SUGGESTIONS = [
-    { en: 'Scan for bluetooth devices', fr: 'Cherche les appareils bluetooth' },
-    { en: 'Start my vacuum', fr: 'Démarre mon aspirateur' },
-    { en: 'Set living room TV volume to 10', fr: 'Mets le volume de la TV du salon à 10' },
+    'Scan for bluetooth devices',
+    'Start my vacuum',
+    'Set living room TV volume to 10',
   ];
   let tiers = null, quality = 'auto', cloudConsent = false, running = false;
 
@@ -93,9 +72,10 @@
     const h = el('div'); h.append(el('h2', t('title')), el('p', t('tagline'), 'sub'));
     h.firstChild.id = 'ask-title';
     const langBox = el('div', undefined, 'ask-lang');
+    langBox.append(el('span', t('requestLang'), 'ask-label'));
     for (const l of ['en', 'fr']) {
-      const b = el('button', l.toUpperCase(), 'ghost small' + (lang === l ? ' active' : ''));
-      b.type = 'button'; b.onclick = () => { lang = l; render(); };
+      const b = el('button', l.toUpperCase(), 'ghost small' + (reqLang === l ? ' active' : ''));
+      b.type = 'button'; b.onclick = () => { reqLang = l; render(); };
       langBox.append(b);
     }
     head.append(h, langBox);
@@ -146,8 +126,8 @@
     const sug = el('div', undefined, 'ask-suggest');
     sug.append(el('span', t('suggestions'), 'ask-label'));
     for (const s of SUGGESTIONS) {
-      const b = el('button', s[lang], 'ghost small');
-      b.type = 'button'; b.onclick = () => { input.value = s[lang]; input.focus(); };
+      const b = el('button', s, 'ghost small');
+      b.type = 'button'; b.onclick = () => { input.value = s; input.focus(); };
       sug.append(b);
     }
     root.append(sug);
@@ -202,7 +182,7 @@
     try {
       stage('stUnderstand');
       const parsed = await post('/api/v2/command/parse', {
-        text: text.trim(), lang, quality, cloud_consent: cloudConsent });
+        text: text.trim(), lang: reqLang, quality, cloud_consent: cloudConsent });
       const d = parsed.intent;
       if (d.status === 'needs_clarification') {
         const box = resultBox();
@@ -241,7 +221,7 @@
         btn.disabled = true; btn.textContent = t('executing');
         try {
           stage('stExecute');
-          const rc = await post('/api/v2/command/execute', { intent: d, consent: true });
+          const rc = await post('/api/v2/command/execute', { intent: d, consent: true, preview: prev });
           stage('stVerified');
           kv(box, 'state', rc.state || '?');
           kv(box, 'evidence', rc.transaction_id || '?');
