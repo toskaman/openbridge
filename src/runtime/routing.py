@@ -175,7 +175,9 @@ class Router:
                 g = self._grant(link)
                 hops = [{'device_key': key, 'transport': self._transport(link['transport'] if link else 'LAN'), 'primitive_id': 'relay_ble_scan', 'grant': g, 'required_grant': 'control'},
                         {'device_key': key, 'transport': 'RELAY', 'primitive_id': 'relay_ble_scan', 'grant': 'control' if r['permissions'].get('BLUETOOTH_SCAN') else 'observe', 'required_grant': 'control'}]
-                last_ok = (led.routes.get(rid) or {}).get('last_success_at') if led else None
+                entry = (led.routes.get(rid) or {}) if led else {}
+                last_ok = entry.get('last_success_at')
+                proof = max([x for x in (last_ok, entry.get('last_proof_at')) if x is not None], default=None)
                 reason = detail = None
                 if not r.get('online'):
                     reason = 'link_down'
@@ -189,8 +191,8 @@ class Router:
                     last = self._last_receipt('relay_ble_scan', key)
                     if last and last['state'] in ('UNKNOWN_TIMEOUT', 'PARTIAL') and not (last_ok and last_ok >= _epoch(last['finished_at'])):
                         reason = 'backend_unknown'   # uncertain outcome: unavailable until a successful read-back
-                route = self._route(skill_id, snap, key, hops, 'op:relay_ble_scan', 'relay_ble_scan', last_ok if last_ok else self.clock(),
-                                    LEASE_S['RELAY'], 'relay ledger' if last_ok else 'relay pairing (no scan yet)', reason, detail)
+                route = self._route(skill_id, snap, key, hops, 'op:relay_ble_scan', 'relay_ble_scan', proof if proof else self.clock(),
+                                    LEASE_S['RELAY'], 'relay ledger' if last_ok else 'signed relay reply (no scan yet)', reason, detail)
                 if not last_ok:
                     route['_age'] = LEASE_S['RELAY']   # never scanned: ranks after any proven relay, deterministically
                 route['_params'] = lambda p, rid=rid: {'relay_id': rid, 'seconds': p.get('seconds', 8)}

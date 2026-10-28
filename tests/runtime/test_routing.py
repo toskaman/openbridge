@@ -297,3 +297,14 @@ class UncertainOutcome(Base):
         self.assertEqual((r['state'], r['reason']), ('UNAVAILABLE', 'backend_unknown'))
         self.server.relay_ledger.record('r-ph', [])          # a successful scan after the timeout resolves it
         self.assertEqual(self.by_dev(self.routes(), ph)['state'], 'READY')
+
+
+class LeaseProof(Base):
+    def test_signed_reply_reproves_a_stale_relay_route(self):
+        self.clock.t += 500                                   # both scans are older than the 120 s relay lease
+        self.assertIsNone(self.routes()['selected_route_id'])
+        self.server.relay_ledger.proved('r-tv')               # pairing confirmation / status read-back
+        doc = self.routes()
+        tv = self.by_dev(doc, self.keys['tv'])
+        self.assertEqual((tv['state'], doc['selected_route_id']), ('READY', tv['route_id']))
+        self.assertEqual(self.by_dev(doc, self.keys['phone'])['reason'], 'lease_stale')
