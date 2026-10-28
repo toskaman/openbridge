@@ -1,0 +1,170 @@
+{
+ "schema_version": "b2.2",
+ "server_time": "2026-10-28T09:00:12Z",
+ "graph_revision": {
+  "epoch": "boot-7f3a",
+  "seq": 42
+ },
+ "skill": {
+  "skill_id": "ble_scan_room",
+  "version": 1,
+  "reversibility": "SESSION_CLEANUP",
+  "idempotent": true,
+  "consent": "per_invocation"
+ },
+ "policy": {
+  "mode": "PREFERRED",
+  "failover": "none",
+  "pinned_route_id": null,
+  "set_by": "owner"
+ },
+ "selected_route_id": "rt-faf4fb2497ec5025",
+ "selection": {
+  "rule": "preferred_order",
+  "decided_at": "2026-10-28T09:00:12Z"
+ },
+ "invocation": {
+  "status": "armed",
+  "invocation_id": "inv-3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+  "route_id": "rt-faf4fb2497ec5025",
+  "lease_id": "ls-9c1d2e3f4a5b6c7d",
+  "lease_expires_at": "2026-10-28T09:00:40Z",
+  "lease_expires_in_s": 28
+ },
+ "routes": [
+  {
+   "route_id": "rt-faf4fb2497ec5025",
+   "provider_id": "pv-cfb537c06bb54703",
+   "operation_id": "op:relay_ble_scan",
+   "state": "READY",
+   "reason": null,
+   "reason_detail": null,
+   "consent": "armed",
+   "hops": [
+    {
+     "device_key": "dev-tv",
+     "transport": "WIFI",
+     "primitive_id": "relay_ble_scan",
+     "grant": "control",
+     "required_grant": "control"
+    },
+    {
+     "device_key": "dev-tv",
+     "transport": "RELAY",
+     "primitive_id": "relay_ble_scan",
+     "grant": "control",
+     "required_grant": "control"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "control@dev-tv",
+     "control@dev-tv"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:02:00Z",
+    "lease_s": 120,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": {
+    "transaction_id": "tx-a1b2c3d4e5f60718",
+    "state": "VERIFIED",
+    "evidence": "REAL_HARDWARE",
+    "finished_at": "2026-10-28T09:00:00Z"
+   },
+   "evidence": "REAL_HARDWARE"
+  },
+  {
+   "route_id": "rt-63d4103f0736c5cc",
+   "provider_id": "pv-eeb3413fd735d174",
+   "operation_id": "op:relay_ble_scan",
+   "state": "STANDBY",
+   "reason": null,
+   "reason_detail": null,
+   "consent": "required",
+   "hops": [
+    {
+     "device_key": "dev-bv9300",
+     "transport": "USB",
+     "primitive_id": "relay_ble_scan",
+     "grant": "control",
+     "required_grant": "control"
+    },
+    {
+     "device_key": "dev-bv9300",
+     "transport": "RELAY",
+     "primitive_id": "relay_ble_scan",
+     "grant": "control",
+     "required_grant": "control"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "control@dev-bv9300",
+     "control@dev-bv9300"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:02:00Z",
+    "lease_s": 120,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": {
+    "transaction_id": "tx-a1b2c3d4e5f60718",
+    "state": "VERIFIED",
+    "evidence": "REAL_HARDWARE",
+    "finished_at": "2026-10-28T09:00:00Z"
+   },
+   "evidence": "REAL_HARDWARE"
+  },
+  {
+   "route_id": "rt-41cd72a059019c20",
+   "provider_id": "pv-dadad5c5ddf95afc",
+   "operation_id": "op:relay_ble_scan",
+   "state": "UNAVAILABLE",
+   "reason": "asleep",
+   "reason_detail": {
+    "missing_grant": "control",
+    "hop_index": 0,
+    "blocking_device_key": null
+   },
+   "consent": "required",
+   "hops": [
+    {
+     "device_key": "dev-xiaomi",
+     "transport": "USB",
+     "primitive_id": "relay_ble_scan",
+     "grant": "read",
+     "required_grant": "control"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "control@dev-xiaomi"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:02:00Z",
+    "lease_s": 120,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": null,
+   "evidence": "NONE"
+  }
+ ],
+ "delivery": {
+  "mode": "poll",
+  "poll_after_s": 2,
+  "events_since": 1187
+ }
+}

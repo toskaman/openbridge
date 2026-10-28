@@ -1,0 +1,17 @@
+{
+ "armed_without_lease.json": "needs id, route and lease",
+ "exact_skill_key_route.json": "EXACT skill route",
+ "extra_field.json": "unexpected field",
+ "grant_insufficient_without_detail.json": "missing_grant",
+ "lease_out_of_bounds.json": "out of range",
+ "pinned_fallback.json": "pinned route",
+ "retry_on_non_idempotent.json": "idempotent read-only",
+ "selected_standby.json": "READY route",
+ "simulated_as_hardware.json": "last receipt",
+ "too_many_hops.json": "item count",
+ "two_armed.json": "armed",
+ "unavailable_without_reason.json": "exactly one reason",
+ "unknown_reason.json": "not in enum",
+ "unknown_route_state.json": "not in enum",
+ "wrong_schema_version.json": "must be 'b2.2'"
+}

@@ -1,0 +1,155 @@
+{
+ "schema_version": "b2.2",
+ "server_time": "2026-10-28T09:00:12Z",
+ "graph_revision": {
+  "epoch": "boot-7f3a",
+  "seq": 42
+ },
+ "skill": {
+  "skill_id": "device_facts",
+  "version": 1,
+  "reversibility": "NONE",
+  "idempotent": true,
+  "consent": "none"
+ },
+ "policy": {
+  "mode": "AUTO",
+  "failover": "idempotent_read_retry",
+  "pinned_route_id": null,
+  "set_by": "owner"
+ },
+ "selected_route_id": "rt-df98c10359456d88",
+ "selection": {
+  "rule": "auto_score",
+  "decided_at": "2026-10-28T09:00:12Z"
+ },
+ "invocation": {
+  "status": "idle",
+  "invocation_id": null,
+  "route_id": null,
+  "lease_id": null,
+  "lease_expires_at": null,
+  "lease_expires_in_s": null
+ },
+ "routes": [
+  {
+   "route_id": "rt-df98c10359456d88",
+   "provider_id": "pv-c34b090fb3417752",
+   "operation_id": "op:read_facts",
+   "state": "READY",
+   "reason": null,
+   "reason_detail": null,
+   "consent": "none",
+   "hops": [
+    {
+     "device_key": "dev-tv",
+     "transport": "WIFI",
+     "primitive_id": "read_facts",
+     "grant": "read",
+     "required_grant": "read"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "read@dev-tv"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:01:00Z",
+    "lease_s": 60,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": {
+    "transaction_id": "tx-a1b2c3d4e5f60718",
+    "state": "VERIFIED",
+    "evidence": "REAL_HARDWARE",
+    "finished_at": "2026-10-28T09:00:00Z"
+   },
+   "evidence": "REAL_HARDWARE"
+  },
+  {
+   "route_id": "rt-15b1b320d1f823cf",
+   "provider_id": "pv-8c2479bebd735ee3",
+   "operation_id": "op:read_facts",
+   "state": "READY",
+   "reason": null,
+   "reason_detail": null,
+   "consent": "none",
+   "hops": [
+    {
+     "device_key": "dev-tv",
+     "transport": "RELAY",
+     "primitive_id": "read_facts",
+     "grant": "read",
+     "required_grant": "read"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "read@dev-tv"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:02:00Z",
+    "lease_s": 120,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": {
+    "transaction_id": "tx-0f0e0d0c0b0a0908",
+    "state": "VERIFIED",
+    "evidence": "SIMULATED",
+    "finished_at": "2026-10-28T09:00:00Z"
+   },
+   "evidence": "REAL_HARDWARE"
+  },
+  {
+   "route_id": "rt-d1620db1c019da9b",
+   "provider_id": "pv-37c2a462aaf8e8dc",
+   "operation_id": "op:read_facts",
+   "state": "UNAVAILABLE",
+   "reason": "lease_stale",
+   "reason_detail": null,
+   "consent": "none",
+   "hops": [
+    {
+     "device_key": "dev-box",
+     "transport": "LAN",
+     "primitive_id": "read_facts",
+     "grant": "read",
+     "required_grant": "read"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "read@dev-box"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T08:50:00Z",
+    "expires_at": "2026-10-28T08:55:00Z",
+    "lease_s": 300,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": {
+    "transaction_id": "tx-a1b2c3d4e5f60718",
+    "state": "VERIFIED",
+    "evidence": "REAL_HARDWARE",
+    "finished_at": "2026-10-28T09:00:00Z"
+   },
+   "evidence": "REAL_HARDWARE"
+  }
+ ],
+ "delivery": {
+  "mode": "poll",
+  "poll_after_s": 8,
+  "events_since": 1187
+ }
+}

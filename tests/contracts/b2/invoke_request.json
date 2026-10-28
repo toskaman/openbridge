@@ -1,0 +1,14 @@
+{
+ "invocation_id": "inv-3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+ "skill_id": "ble_scan_room",
+ "route_id": "rt-faf4fb2497ec5025",
+ "lease_id": "ls-9c1d2e3f4a5b6c7d",
+ "graph_revision": {
+  "epoch": "boot-7f3a",
+  "seq": 42
+ },
+ "params": {
+  "seconds": 8
+ },
+ "consent": true
+}
