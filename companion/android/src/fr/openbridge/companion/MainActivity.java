@@ -28,7 +28,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private RelayServer relay;
     private LinearLayout checklist;
     private TextView status, code, codeHint;
-    private LinearLayout codeCard;
+    private LinearLayout codeCard, controlsCard, controlsBox;
+    private TextView resultText;
     private Button bluetooth, location, permission, enable, unpair;
     private boolean tv;
     private boolean setupRunning;
@@ -57,6 +58,12 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         code = text("", tv ? 72 : 56, true, ACCENT); code.setGravity(Gravity.CENTER); code.setLetterSpacing(0.15f);
         codeCard.addView(codeHint); codeCard.addView(code); root.addView(codeCard); root.addView(spacer(14));
 
+        controlsCard = card(); controlsCard.setVisibility(View.GONE);
+        controlsCard.addView(text("REMOTE CONTROLS · hold to send", 12, true, MUTED));
+        controlsBox = new LinearLayout(this); controlsBox.setOrientation(LinearLayout.VERTICAL); controlsCard.addView(controlsBox);
+        resultText = text("", 14, false, OK); controlsCard.addView(resultText);
+        root.addView(controlsCard); root.addView(spacer(14));
+
         LinearLayout statusCard = card();
         statusCard.addView(text("READINESS", 12, true, MUTED));
         checklist = new LinearLayout(this); checklist.setOrientation(LinearLayout.VERTICAL); statusCard.addView(checklist);
@@ -81,7 +88,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         permission.setOnClickListener(v -> requestScanPermission());
         enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
-        relay.start(); refresh();
+        relay.start(); refresh(); controls(relay.controls());
+        final android.os.Handler h = new android.os.Handler(getMainLooper());
+        h.postDelayed(new Runnable() { @Override public void run() {
+            String s = relay.expirePending(); if (s != null) resultText.setText(s);
+            renderBusy();
+            if (!isFinishing()) h.postDelayed(this, 5000);
+        } }, 5000);
         if (!getSharedPreferences("ui", MODE_PRIVATE).getBoolean("setup_offered", false)) {
             getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("setup_offered", true).apply();
             setupRunning = true; nextSetupStep();      // first launch: walk through the system dialogs once
@@ -191,6 +204,51 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         r.addView(l, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
         r.addView(text(value, 14, false, ok ? MUTED : WARN));
         checklist.addView(r);
+    }
+
+    /** Controls the owner authorized on the PC; each press sends one request, the PC verifies and reports back. */
+    @Override public void controls(org.json.JSONArray c) {
+        runOnUiThread(() -> {
+            controlsBox.removeAllViews();
+            for (int i = 0; i < c.length(); i++) {
+                org.json.JSONObject o = c.optJSONObject(i); if (o == null) continue;
+                String id = o.optString("control_id");
+                Button b = button(o.optString("label"), i == 0);
+                b.setTag(new String[]{id, o.optString("label")});
+                // Hold to send: a tap does nothing, so stray or phantom touches (watch off the wrist) never send a command.
+                final org.json.JSONObject[] down = new org.json.JSONObject[1];
+                b.setOnTouchListener((v, e) -> {
+                    if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                        try { down[0] = new org.json.JSONObject().put("tool", e.getToolType(0)).put("pressure", Math.round(e.getPressure() * 100) / 100.0)
+                                .put("size", Math.round(e.getSize() * 100) / 100.0).put("down_ms", 0).put("t", e.getEventTime()); } catch (Exception ignored) { }
+                    }
+                    return false;                                   // keep the normal click / long-click handling
+                });
+                b.setOnClickListener(v -> resultText.setText("Hold the button to send"));
+                b.setOnLongClickListener(v -> {
+                    org.json.JSONObject touch = down[0];
+                    try { if (touch != null) { touch.put("down_ms", android.os.SystemClock.uptimeMillis() - touch.getLong("t")); touch.remove("t"); } } catch (Exception ignored) { }
+                    down[0] = null;
+                    String s = relay.press(id, touch == null ? "key" : "long_press", touch);
+                    if (s != null) resultText.setText(s);
+                    renderBusy();                                   // feedback on the button itself: "Sending…", disabled
+                    return true;
+                });
+                controlsBox.addView(b); controlsBox.addView(spacer(8));
+            }
+            controlsCard.setVisibility(c.length() > 0 ? View.VISIBLE : View.GONE);
+        });
+    }
+    @Override public void result(String text) { runOnUiThread(() -> { resultText.setText(text); renderBusy(); }); }
+
+    /** One press in flight per control: the button shows "Sending…" and ignores presses until the PC answers or 20 s pass. */
+    private void renderBusy() {
+        for (int i = 0; i < controlsBox.getChildCount(); i++) {
+            View v = controlsBox.getChildAt(i);
+            if (!(v instanceof Button) || !(v.getTag() instanceof String[])) continue;
+            String[] tag = (String[]) v.getTag(); boolean busy = relay.busy(tag[0]);
+            ((Button) v).setText(busy ? "Sending…" : tag[1]); v.setEnabled(!busy);
+        }
     }
 
     @Override public void status(String text) { runOnUiThread(() -> { status.setText(text); refresh(); }); }

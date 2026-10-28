@@ -1,0 +1,545 @@
+{
+  "skill_routes_docs": [
+    {
+      "t": 1793189014.4692607,
+      "status": 200,
+      "doc": {
+        "schema_version": "b2.2",
+        "server_time": "2026-10-28T12:03:34Z",
+        "graph_revision": {
+          "epoch": "boot-e507fdec",
+          "seq": 1
+        },
+        "skill": {
+          "skill_id": "ble_scan_room",
+          "version": 1,
+          "reversibility": "SESSION_CLEANUP",
+          "idempotent": true,
+          "consent": "per_invocation"
+        },
+        "policy": {
+          "mode": "AUTO",
+          "failover": "none",
+          "pinned_route_id": null,
+          "set_by": "default"
+        },
+        "selected_route_id": "rt-a629ad54d927988c",
+        "selection": {
+          "rule": "auto_score",
+          "decided_at": "2026-10-28T12:03:34Z"
+        },
+        "invocation": {
+          "status": "idle",
+          "invocation_id": null,
+          "route_id": null,
+          "lease_id": null,
+          "lease_expires_at": null,
+          "lease_expires_in_s": null
+        },
+        "routes": [
+          {
+            "route_id": "rt-a629ad54d927988c",
+            "provider_id": "pv-5603f700c25c7e8e",
+            "operation_id": "op:relay_ble_scan",
+            "state": "READY",
+            "reason": null,
+            "reason_detail": null,
+            "consent": "required",
+            "hops": [
+              {
+                "device_key": "dev-1b8e463ffe24",
+                "transport": "WIFI",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              },
+              {
+                "device_key": "dev-1b8e463ffe24",
+                "transport": "RELAY",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              }
+            ],
+            "authority": {
+              "grants_checked": [
+                "control@dev-1b8e463ffe24",
+                "control@dev-1b8e463ffe24"
+              ],
+              "authority_rev": 1
+            },
+            "freshness": {
+              "observed_at": "2026-10-28T12:03:31Z",
+              "expires_at": "2026-10-28T12:05:31Z",
+              "lease_s": 120,
+              "source": "signed relay reply (no scan yet)"
+            },
+            "exactness": null,
+            "last_receipt": null,
+            "evidence": "NONE"
+          },
+          {
+            "route_id": "rt-fe566d728250eabb",
+            "provider_id": "pv-c828b281c3e32c8f",
+            "operation_id": "op:relay_ble_scan",
+            "state": "READY",
+            "reason": null,
+            "reason_detail": null,
+            "consent": "required",
+            "hops": [
+              {
+                "device_key": "dev-16a5028f3167",
+                "transport": "USB",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              },
+              {
+                "device_key": "dev-16a5028f3167",
+                "transport": "RELAY",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              }
+            ],
+            "authority": {
+              "grants_checked": [
+                "control@dev-16a5028f3167",
+                "control@dev-16a5028f3167"
+              ],
+              "authority_rev": 1
+            },
+            "freshness": {
+              "observed_at": "2026-10-28T12:03:34Z",
+              "expires_at": "2026-10-28T12:05:34Z",
+              "lease_s": 120,
+              "source": "signed relay reply (no scan yet)"
+            },
+            "exactness": null,
+            "last_receipt": null,
+            "evidence": "NONE"
+          }
+        ],
+        "delivery": {
+          "mode": "poll",
+          "poll_after_s": 8,
+          "events_since": 0
+        }
+      }
+    },
+    {
+      "t": 1793189021.1014702,
+      "status": 200,
+      "doc": {
+        "schema_version": "b2.2",
+        "server_time": "2026-10-28T12:03:41Z",
+        "graph_revision": {
+          "epoch": "boot-e507fdec",
+          "seq": 2
+        },
+        "skill": {
+          "skill_id": "ble_scan_room",
+          "version": 1,
+          "reversibility": "SESSION_CLEANUP",
+          "idempotent": true,
+          "consent": "per_invocation"
+        },
+        "policy": {
+          "mode": "AUTO",
+          "failover": "none",
+          "pinned_route_id": null,
+          "set_by": "default"
+        },
+        "selected_route_id": "rt-a629ad54d927988c",
+        "selection": {
+          "rule": "auto_score",
+          "decided_at": "2026-10-28T12:03:41Z"
+        },
+        "invocation": {
+          "status": "idle",
+          "invocation_id": null,
+          "route_id": null,
+          "lease_id": null,
+          "lease_expires_at": null,
+          "lease_expires_in_s": null
+        },
+        "routes": [
+          {
+            "route_id": "rt-a629ad54d927988c",
+            "provider_id": "pv-5603f700c25c7e8e",
+            "operation_id": "op:relay_ble_scan",
+            "state": "READY",
+            "reason": null,
+            "reason_detail": null,
+            "consent": "required",
+            "hops": [
+              {
+                "device_key": "dev-1b8e463ffe24",
+                "transport": "WIFI",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              },
+              {
+                "device_key": "dev-1b8e463ffe24",
+                "transport": "RELAY",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              }
+            ],
+            "authority": {
+              "grants_checked": [
+                "control@dev-1b8e463ffe24",
+                "control@dev-1b8e463ffe24"
+              ],
+              "authority_rev": 1
+            },
+            "freshness": {
+              "observed_at": "2026-10-28T12:03:41Z",
+              "expires_at": "2026-10-28T12:05:41Z",
+              "lease_s": 120,
+              "source": "relay ledger"
+            },
+            "exactness": null,
+            "last_receipt": {
+              "transaction_id": "tx-1a64a75c2a07dee9",
+              "state": "VERIFIED",
+              "evidence": "REAL_HARDWARE",
+              "finished_at": "2026-10-28T12:03:41Z"
+            },
+            "evidence": "REAL_HARDWARE"
+          },
+          {
+            "route_id": "rt-fe566d728250eabb",
+            "provider_id": "pv-c828b281c3e32c8f",
+            "operation_id": "op:relay_ble_scan",
+            "state": "READY",
+            "reason": null,
+            "reason_detail": null,
+            "consent": "required",
+            "hops": [
+              {
+                "device_key": "dev-16a5028f3167",
+                "transport": "USB",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              },
+              {
+                "device_key": "dev-16a5028f3167",
+                "transport": "RELAY",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              }
+            ],
+            "authority": {
+              "grants_checked": [
+                "control@dev-16a5028f3167",
+                "control@dev-16a5028f3167"
+              ],
+              "authority_rev": 1
+            },
+            "freshness": {
+              "observed_at": "2026-10-28T12:03:34Z",
+              "expires_at": "2026-10-28T12:05:34Z",
+              "lease_s": 120,
+              "source": "signed relay reply (no scan yet)"
+            },
+            "exactness": null,
+            "last_receipt": null,
+            "evidence": "NONE"
+          }
+        ],
+        "delivery": {
+          "mode": "poll",
+          "poll_after_s": 8,
+          "events_since": 3
+        }
+      }
+    },
+    {
+      "t": 1793189023.3487923,
+      "status": 200,
+      "doc": {
+        "schema_version": "b2.2",
+        "server_time": "2026-10-28T12:03:43Z",
+        "graph_revision": {
+          "epoch": "boot-e507fdec",
+          "seq": 3
+        },
+        "skill": {
+          "skill_id": "ble_scan_room",
+          "version": 1,
+          "reversibility": "SESSION_CLEANUP",
+          "idempotent": true,
+          "consent": "per_invocation"
+        },
+        "policy": {
+          "mode": "AUTO",
+          "failover": "none",
+          "pinned_route_id": null,
+          "set_by": "default"
+        },
+        "selected_route_id": "rt-fe566d728250eabb",
+        "selection": {
+          "rule": "auto_score",
+          "decided_at": "2026-10-28T12:03:43Z"
+        },
+        "invocation": {
+          "status": "idle",
+          "invocation_id": null,
+          "route_id": null,
+          "lease_id": null,
+          "lease_expires_at": null,
+          "lease_expires_in_s": null
+        },
+        "routes": [
+          {
+            "route_id": "rt-fe566d728250eabb",
+            "provider_id": "pv-c828b281c3e32c8f",
+            "operation_id": "op:relay_ble_scan",
+            "state": "READY",
+            "reason": null,
+            "reason_detail": null,
+            "consent": "required",
+            "hops": [
+              {
+                "device_key": "dev-16a5028f3167",
+                "transport": "USB",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              },
+              {
+                "device_key": "dev-16a5028f3167",
+                "transport": "RELAY",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              }
+            ],
+            "authority": {
+              "grants_checked": [
+                "control@dev-16a5028f3167",
+                "control@dev-16a5028f3167"
+              ],
+              "authority_rev": 1
+            },
+            "freshness": {
+              "observed_at": "2026-10-28T12:03:34Z",
+              "expires_at": "2026-10-28T12:05:34Z",
+              "lease_s": 120,
+              "source": "signed relay reply (no scan yet)"
+            },
+            "exactness": null,
+            "last_receipt": null,
+            "evidence": "NONE"
+          },
+          {
+            "route_id": "rt-a629ad54d927988c",
+            "provider_id": "pv-5603f700c25c7e8e",
+            "operation_id": "op:relay_ble_scan",
+            "state": "UNAVAILABLE",
+            "reason": "link_down",
+            "reason_detail": null,
+            "consent": "required",
+            "hops": [
+              {
+                "device_key": "dev-1b8e463ffe24",
+                "transport": "WIFI",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              },
+              {
+                "device_key": "dev-1b8e463ffe24",
+                "transport": "RELAY",
+                "primitive_id": "relay_ble_scan",
+                "grant": "control",
+                "required_grant": "control"
+              }
+            ],
+            "authority": {
+              "grants_checked": [
+                "control@dev-1b8e463ffe24",
+                "control@dev-1b8e463ffe24"
+              ],
+              "authority_rev": 1
+            },
+            "freshness": {
+              "observed_at": "2026-10-28T12:03:41Z",
+              "expires_at": "2026-10-28T12:05:41Z",
+              "lease_s": 120,
+              "source": "relay ledger"
+            },
+            "exactness": null,
+            "last_receipt": {
+              "transaction_id": "tx-1607e628c7c664fd",
+              "state": "BLOCKED",
+              "evidence": "NONE",
+              "finished_at": "2026-10-28T12:03:43Z"
+            },
+            "evidence": "NONE"
+          }
+        ],
+        "delivery": {
+          "mode": "poll",
+          "poll_after_s": 8,
+          "events_since": 7
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-10-28T12:03:34+00:00",
+      "kind": "route_decision",
+      "skill_id": "ble_scan_room",
+      "target": "",
+      "graph_seq": 1,
+      "selected_route_id": "rt-a629ad54d927988c",
+      "rule": "auto_score",
+      "candidates": [
+        {
+          "route_id": "rt-a629ad54d927988c",
+          "state": "READY",
+          "reason": null
+        },
+        {
+          "route_id": "rt-fe566d728250eabb",
+          "state": "READY",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-28T12:03:34+00:00",
+      "kind": "started",
+      "transaction_id": "tx-1a64a75c2a07dee9",
+      "primitive_id": "relay_ble_scan"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-28T12:03:41+00:00",
+      "kind": "receipt",
+      "transaction_id": "tx-1a64a75c2a07dee9",
+      "primitive_id": "relay_ble_scan",
+      "state": "VERIFIED",
+      "verified": true
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-28T12:03:41+00:00",
+      "kind": "route_decision",
+      "skill_id": "ble_scan_room",
+      "target": "",
+      "graph_seq": 2,
+      "selected_route_id": "rt-a629ad54d927988c",
+      "rule": "auto_score",
+      "candidates": [
+        {
+          "route_id": "rt-a629ad54d927988c",
+          "state": "READY",
+          "reason": null
+        },
+        {
+          "route_id": "rt-fe566d728250eabb",
+          "state": "READY",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-28T12:03:43+00:00",
+      "kind": "started",
+      "transaction_id": "tx-1607e628c7c664fd",
+      "primitive_id": "relay_ble_scan"
+    },
+    {
+      "seq": 6,
+      "at": "2026-10-28T12:03:43+00:00",
+      "kind": "receipt",
+      "transaction_id": "tx-1607e628c7c664fd",
+      "primitive_id": "relay_ble_scan",
+      "state": "BLOCKED",
+      "verified": false
+    },
+    {
+      "seq": 7,
+      "at": "2026-10-28T12:03:43+00:00",
+      "kind": "route_changed",
+      "skill_id": "ble_scan_room",
+      "target": "",
+      "from_route": "rt-a629ad54d927988c",
+      "to_route": "rt-fe566d728250eabb",
+      "graph_seq": 3
+    },
+    {
+      "seq": 8,
+      "at": "2026-10-28T12:03:43+00:00",
+      "kind": "route_decision",
+      "skill_id": "ble_scan_room",
+      "target": "",
+      "graph_seq": 3,
+      "selected_route_id": "rt-fe566d728250eabb",
+      "rule": "auto_score",
+      "candidates": [
+        {
+          "route_id": "rt-fe566d728250eabb",
+          "state": "READY",
+          "reason": null
+        },
+        {
+          "route_id": "rt-a629ad54d927988c",
+          "state": "UNAVAILABLE",
+          "reason": "link_down"
+        }
+      ]
+    },
+    {
+      "seq": 9,
+      "at": "2026-10-28T12:03:43+00:00",
+      "kind": "started",
+      "transaction_id": "tx-fc1ea9fecb27a833",
+      "primitive_id": "relay_ble_scan"
+    },
+    {
+      "seq": 10,
+      "at": "2026-10-28T12:03:49+00:00",
+      "kind": "receipt",
+      "transaction_id": "tx-fc1ea9fecb27a833",
+      "primitive_id": "relay_ble_scan",
+      "state": "VERIFIED",
+      "verified": true
+    }
+  ],
+  "log": [
+    "discover 200: phone BV9300 Pro (USB/WIFI), watch SM-L310 (WIFI), Android TV (WIFI), Android slot 5 (EMULATOR); stable Android provider identifiers redacted",
+    "relays before {'routes': [], 'advertisers': []}",
+    "pair-start tv 200 CODE_SHOWN_ON_DEVICE relay-dabd2a796665 None",
+    "code read from tv screen: yes",
+    "pair-confirm tv 200 PAIRED True None",
+    "pair-start phone 200 CODE_SHOWN_ON_DEVICE relay-c388ba6dafcd None",
+    "code read from phone screen: yes",
+    "pair-confirm phone 200 PAIRED True None",
+    "routes 200 selected rt-a629ad54d927988c [('dev-1b8e46', 'READY', None), ('dev-16a502', 'READY', None)]",
+    "RUN1 arm 200 30 None",
+    "RUN1 invoke 200 VERIFIED tx-1a64a75c2a07dee9 [] None",
+    "RUN1 retry same id 200 tx-1a64a75c2a07dee9 same tx",
+    "routes 200 selected rt-a629ad54d927988c [('dev-1b8e46', 'READY', None), ('dev-16a502', 'READY', None)]",
+    "FAILOVER: stopping the Companion on the selected relay: tv",
+    "stale consent on dead route -> 409 CONSENT_VOID",
+    "invoke on dead relay 409 BLOCKED ['RELAY_UNAVAILABLE: Relay unreachable: RemoteDisconnected; open the Companion app on the device and retry']",
+    "routes 200 selected rt-fe566d728250eabb [('dev-16a502', 'READY', None), ('dev-1b8e46', 'UNAVAILABLE', 'link_down')]",
+    "RUN2 after failover arm 200 30 None",
+    "RUN2 after failover invoke 200 VERIFIED tx-fc1ea9fecb27a833 [] None",
+    "RUN2 after failover retry same id 200 tx-fc1ea9fecb27a833 same tx",
+    "RESULT: route moved rt-a629ad54d927988c -> rt-fe566d728250eabb state VERIFIED",
+    "events ['route_decision', 'receipt', 'route_decision', 'receipt', 'route_changed', 'route_decision', 'receipt']"
+  ]
+}
