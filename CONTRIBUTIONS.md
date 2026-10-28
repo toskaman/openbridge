@@ -48,3 +48,7 @@ The [generation receipt](docs/forge/meta-web-design-receipt.json) records 798 in
 
 ## Start-date confirmation (27 Oct 2026)
 The participant reports that the organizers confirmed building could start at the time of the first push to GitHub. The repository history (first commit 26 Oct) is unchanged and not backdated.
+
+## Current application theme — owner decision, 28 October 2026
+
+The owner selected Claude's latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. Codex integrated and tested the combined changes. No new Meta design call was made for this integration.

@@ -10,7 +10,7 @@ def main():
         page.route('**/api/model-status',lambda route:route.fulfill(json={'supervised_session_configured':True}))
         captured=[]
         page.route('**/api/recommend',lambda route:captured.append(route))
-        page.goto('http://127.0.0.1:18765',wait_until='networkidle')
+        page.goto('http://127.0.0.1:18765/#/advanced',wait_until='networkidle')   # Meta review lives in Advanced diagnostics
         button=page.get_by_role('button',name='Request Meta advice')
         assert button.is_enabled()
         button.click()

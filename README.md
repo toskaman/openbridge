@@ -112,3 +112,7 @@ All code was written during the event; see [CONTRIBUTIONS](CONTRIBUTIONS.md) and
 The current visual foundation was authored by **Meta Muse Wonder 1.0** through the official Meta API on 27 October 2026: design tokens, workspace shell, and component CSS. Codex adapted the markup, wrote the integration layer, preserved existing controls, and performed verification. The original Meta-authored modules are in `src/ui/theme/`; compile them with `python -m dev.build_web_theme`.
 
 The [generation receipt](docs/forge/meta-web-design-receipt.json) records 798 input and 3,500 output tokens, an estimated $0.073192 promotional-credit cost, and `finish_reason: length`. The final explanatory field was truncated; only the five fully decoded fields were extracted. The three complete CSS fields were retained verbatim. This is a real build-time Meta contribution, not a claim that Meta authored all application code or a new runtime model integration. No second provider request was made.
+
+## Current application theme — owner decision, 28 October 2026
+
+The owner selected Claude's latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. Codex integrated and tested the combined changes. No new Meta design call was made for this integration.

@@ -28,7 +28,7 @@ from src.fabric import discovery as fabric_discovery
 from src.fabric import relay as fabric_relay
 
 UI = Path(__file__).parent / 'ui'
-ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript')}
+ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript')}
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -252,7 +252,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None})
             if self.path == '/api/watch-pair':
                 from src.fabric.guidance import guide
-                if body['device_id'] != 'watch':
+                if body['device_id'] not in ('watch', 'android'):
                     raise ValueError()
                 addr, code = str(body.get('address', '')), str(body.get('code', ''))
                 m = __import__('re').fullmatch(r'(\d{1,3}(?:\.\d{1,3}){3}):(\d{2,5})', addr.strip())
@@ -260,7 +260,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self.reply(200, {'state': 'NEED_INPUT', 'guide': guide('watch_wireless_debugging', manufacturer=body.get('manufacturer'))})
                 state, target = self.server.android.pair_wireless(m.group(1), int(m.group(2)), code.strip())
                 if state == 'AUTHORIZED':
-                    self.server.session_journal.record('adb_network_connected', 'Smartwatch', {'address': target}, 'not connected', 'connected')
+                    self.server.session_journal.record('adb_network_connected', 'Smartwatch' if body['device_id'] == 'watch' else 'Android device', {'address': target}, 'not connected', 'connected')
                 issue = {'PAIR_FAILED': 'watch_pair_failed', 'PAIRED_NOT_ADVERTISED': 'watch_wireless_debugging', 'CONNECT_FAILED': 'watch_wireless_debugging'}.get(state)
                 return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=body.get('manufacturer')) if issue else None})
             if self.path == '/api/fabric-advise':
@@ -467,7 +467,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
             rid = pending['hello']['relay_id']
             reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
-            declared = fabric_relay.verify(key, reply, set()).get('params', {})
+            declared = fabric_relay.verify(key, reply, None).get('params', {})
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
             with server.relay_pending_lock:

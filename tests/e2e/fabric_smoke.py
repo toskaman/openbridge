@@ -25,16 +25,20 @@ def main():
             for width in (390,768,1440,3440):
                 page=b.new_page(viewport={'width':width,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
                 page.route('**/api/fabric-discover',lambda r:r.fulfill(json=SNAP))
-                page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
+                page.goto(f'http://127.0.0.1:{server.server_port}/#/devices',wait_until='networkidle')
                 page.get_by_role('button',name='Discover my environment').click()
+                page.get_by_role('button',name='Topology list').click()   # same tree as before, behind the Cards/Topology switch
+                def back():   # below 960 px the inspector is a full-screen sheet with a Back button
+                    b2=page.locator('#device-inspector.open .ihead .back')
+                    if b2.count() and b2.is_visible(): b2.click()
                 expect(page.locator('#fabric-meta')).to_contain_text('5 DEVICE(S)')
                 expect(page.get_by_role('button',name='Authorize read-only Freebox inventory')).to_be_visible()
                 box=page.locator('#fabric-tree .fabric-node',has_text='Freebox');expect(box.locator('.grant')).to_have_count(1)
                 expect(page.locator('#fabric-tree')).to_contain_text('possible duplicate')
                 page.locator('#fabric-tree .fabric-node',has_text='Thermometer').click()   # indirect device under the TV relay
-                expect(page.locator('#fabric-detail')).to_contain_text('Observed only')
+                expect(page.locator('#fabric-detail')).to_contain_text('Observed only');back()
                 page.locator('#fabric-tree .fabric-node',has_text='Living room TV').click()
-                expect(page.locator('#fabric-detail')).to_contain_text('not merged')
+                expect(page.locator('#fabric-detail')).to_contain_text('not merged');back()
                 import copy
                 relayed=copy.deepcopy(SNAP);relayed['providers']['relay']={'status':'OK','devices':1}
                 relayed['devices'][3]['capabilities']=[{'name':'ble_relay','level':'observe','status':'REAL_HARDWARE_VERIFIED','via':'RELAY:r1','evidence':'1 advertisers reported'}]

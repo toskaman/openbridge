@@ -9,9 +9,10 @@ def main():
         for width in (390,768,1440,3440):
             page=b.new_page(viewport={'width':width,'height':1000});errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
-            page.goto('http://127.0.0.1:18799',wait_until='networkidle')
+            page.goto('http://127.0.0.1:18799/#/devices',wait_until='networkidle')
             if first:
                 page.get_by_role('button',name='Discover my environment').click();first=False
+            page.get_by_role('button',name='Topology list').click()
             expect(page.locator('#fabric-meta')).to_contain_text('DEVICE(S)',timeout=60000)
             nodes=page.locator('#fabric-tree .fabric-node')
             if nodes.count()>1:nodes.nth(1).click()

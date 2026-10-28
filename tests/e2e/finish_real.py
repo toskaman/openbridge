@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright, expect
 def main():
     with sync_playwright() as p:
         b=p.chromium.launch(headless=True);page=b.new_page(viewport={'width':1440,'height':1000})
-        page.goto('http://127.0.0.1:18799/?redact',wait_until='networkidle')
+        page.goto('http://127.0.0.1:18799/?redact#/activity',wait_until='networkidle')   # Finish session lives in Activity & Recovery
         page.get_by_role('button',name='Finish session…').click()
         expect(page.locator('#finish')).to_be_visible();page.wait_for_timeout(500)
         Path('artifacts/session').mkdir(parents=True,exist_ok=True);page.screenshot(path='artifacts/session/finish-before.png')

@@ -1,0 +1,112 @@
+{
+ "schema_version": "b2.2",
+ "server_time": "2026-10-28T09:00:12Z",
+ "graph_revision": {
+  "epoch": "boot-7f3a",
+  "seq": 42
+ },
+ "skill": {
+  "skill_id": "tv_volume_set",
+  "version": 2,
+  "reversibility": "EXACT",
+  "idempotent": false,
+  "consent": "per_invocation"
+ },
+ "policy": {
+  "mode": "AUTO",
+  "failover": "none",
+  "pinned_route_id": null,
+  "set_by": "default"
+ },
+ "selected_route_id": "rt-10d6dfad7eb3a35e",
+ "selection": {
+  "rule": "auto_score",
+  "decided_at": "2026-10-28T09:00:12Z"
+ },
+ "invocation": {
+  "status": "idle",
+  "invocation_id": null,
+  "route_id": null,
+  "lease_id": null,
+  "lease_expires_at": null,
+  "lease_expires_in_s": null
+ },
+ "routes": [
+  {
+   "route_id": "rt-10d6dfad7eb3a35e",
+   "provider_id": "pv-3ccdf44d4ca28b3b",
+   "operation_id": "op:device_action:key_volume_up",
+   "state": "READY",
+   "reason": null,
+   "reason_detail": null,
+   "consent": "required",
+   "hops": [
+    {
+     "device_key": "dev-tv",
+     "transport": "WIFI",
+     "primitive_id": "device_action",
+     "grant": "control",
+     "required_grant": "control"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "control@dev-tv"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:01:00Z",
+    "lease_s": 60,
+    "source": "adb media volume read-back"
+   },
+   "exactness": null,
+   "last_receipt": {
+    "transaction_id": "tx-a1b2c3d4e5f60718",
+    "state": "VERIFIED",
+    "evidence": "REAL_HARDWARE",
+    "finished_at": "2026-10-28T09:00:00Z"
+   },
+   "evidence": "REAL_HARDWARE"
+  },
+  {
+   "route_id": "rt-272fc014b86e92e0",
+   "provider_id": "pv-c6de5bb1f038ff46",
+   "operation_id": "op:device_action:set_media_volume",
+   "state": "UNAVAILABLE",
+   "reason": "capability_absent",
+   "reason_detail": null,
+   "consent": "required",
+   "hops": [
+    {
+     "device_key": "dev-lgtv",
+     "transport": "LAN",
+     "primitive_id": "device_action",
+     "grant": "observe",
+     "required_grant": "control"
+    }
+   ],
+   "authority": {
+    "grants_checked": [
+     "control@dev-lgtv"
+    ],
+    "authority_rev": 3
+   },
+   "freshness": {
+    "observed_at": "2026-10-28T09:00:00Z",
+    "expires_at": "2026-10-28T09:02:00Z",
+    "lease_s": 120,
+    "source": "relay ledger"
+   },
+   "exactness": null,
+   "last_receipt": null,
+   "evidence": "NONE"
+  }
+ ],
+ "delivery": {
+  "mode": "poll",
+  "poll_after_s": 8,
+  "events_since": 1187
+ }
+}

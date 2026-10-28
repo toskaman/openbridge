@@ -20,8 +20,9 @@ def main(serial=os.environ.get('OPENBRIDGE_PHONE_SERIAL',''),node='2107113SG',ta
     with sync_playwright() as p:
         b=p.chromium.launch(headless=True);page=b.new_page(viewport={'width':1440,'height':1100});errors=[]
         page.on('pageerror',lambda e:errors.append(str(e)))
-        page.goto('http://127.0.0.1:18799/?redact',wait_until='networkidle')
+        page.goto('http://127.0.0.1:18799/?redact#/devices',wait_until='networkidle')
         page.get_by_role('button',name='Discover my environment').click()
+        page.get_by_role('button',name='Topology list').click()
         expect(page.locator('#fabric-meta')).to_contain_text('DEVICE(S)',timeout=60000)
         page.locator('#fabric-tree .fabric-node',has_text=node).first.click()
         page.get_by_role('button',name='Use as Bluetooth relay').click()

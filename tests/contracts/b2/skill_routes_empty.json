@@ -1,0 +1,40 @@
+{
+ "schema_version": "b2.2",
+ "server_time": "2026-10-28T09:00:12Z",
+ "graph_revision": {
+  "epoch": "boot-7f3a",
+  "seq": 42
+ },
+ "skill": {
+  "skill_id": "ble_scan_room",
+  "version": 1,
+  "reversibility": "SESSION_CLEANUP",
+  "idempotent": true,
+  "consent": "per_invocation"
+ },
+ "policy": {
+  "mode": "AUTO",
+  "failover": "none",
+  "pinned_route_id": null,
+  "set_by": "default"
+ },
+ "selected_route_id": null,
+ "selection": {
+  "rule": "none_eligible",
+  "decided_at": "2026-10-28T09:00:12Z"
+ },
+ "invocation": {
+  "status": "idle",
+  "invocation_id": null,
+  "route_id": null,
+  "lease_id": null,
+  "lease_expires_at": null,
+  "lease_expires_in_s": null
+ },
+ "routes": [],
+ "delivery": {
+  "mode": "poll",
+  "poll_after_s": 8,
+  "events_since": 1187
+ }
+}

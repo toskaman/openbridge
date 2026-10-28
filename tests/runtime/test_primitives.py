@@ -247,6 +247,13 @@ class Http(unittest.TestCase):
                 urllib.request.urlopen(req)
             self.assertEqual(e.exception.code, 409)
             self.assertIn('DEVICE_UNKNOWN', json.loads(e.exception.read())['errors'][0]); e.exception.close()
+            ack = lambda payload, token=csrf: urllib.request.urlopen(urllib.request.Request(base + '/api/v2/recovery/acknowledge', json.dumps(payload).encode(),
+                                                                                             {'Content-Type': 'application/json', 'X-CSRF-Token': token, 'Origin': base}))
+            for payload, token, code in (({'transaction_id': 'tx-x', 'consent': True}, 'bad', 403), ({'transaction_id': 'tx-x'}, csrf, 400),
+                                         ({'transaction_id': 'tx-x', 'consent': True}, csrf, 404)):
+                with self.assertRaises(urllib.error.HTTPError) as e:
+                    ack(payload, token)
+                self.assertEqual(e.exception.code, code); e.exception.close()
         finally:
             s.shutdown(); s.server_close()
 

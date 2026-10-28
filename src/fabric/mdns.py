@@ -13,12 +13,13 @@ GROUP = ('224.0.0.251', 5353)
 SERVICE_TYPES = ('_fbx-api._tcp', '_googlecast._tcp', '_androidtvremote2._tcp', '_adb-tls-connect._tcp',
                  '_adb-tls-pairing._tcp', '_home-assistant._tcp', '_esphomelib._tcp', '_hap._tcp', '_matter._tcp',
                  '_matterc._udp', '_ipp._tcp', '_smb._tcp', '_workstation._tcp', '_airplay._tcp', '_raop._tcp',
-                 '_spotify-connect._tcp', '_device-info._tcp', '_http._tcp')
+                 '_spotify-connect._tcp', '_device-info._tcp', '_http._tcp',
+                 '_apple-mobdev2._tcp', '_companion-link._tcp')
 CATEGORY = {'_fbx-api._tcp': 'router', '_googlecast._tcp': 'media', '_androidtvremote2._tcp': 'tv',
             '_adb-tls-connect._tcp': 'android', '_adb-tls-pairing._tcp': 'android', '_home-assistant._tcp': 'hub',
             '_esphomelib._tcp': 'iot', '_hap._tcp': 'iot', '_matter._tcp': 'iot', '_matterc._udp': 'iot',
             '_ipp._tcp': 'printer', '_smb._tcp': 'nas', '_workstation._tcp': 'computer', '_airplay._tcp': 'media',
-            '_raop._tcp': 'media', '_spotify-connect._tcp': 'media'}
+            '_raop._tcp': 'media', '_spotify-connect._tcp': 'media', '_apple-mobdev2._tcp': 'apple', '_companion-link._tcp': 'apple'}
 MAX_PACKETS = 400
 MAX_RECORDS = 4000
 A, PTR, TXT, AAAA, SRV = 1, 12, 16, 28, 33
