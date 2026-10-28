@@ -582,6 +582,7 @@ class Executor:
 
     def _device_capabilities(self, key, params):
         p = self._actions(key).probe()
+        self.__dict__.setdefault('probes', {})[key] = p       # measured ranges feed B2 route exactness
         return 'VERIFIED', None, None, True, p
 
     def _one(self, a, action, args):

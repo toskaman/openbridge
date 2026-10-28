@@ -124,4 +124,31 @@ A hop timeout produces receipt `UNKNOWN_TIMEOUT`. The route becomes `UNAVAILABLE
 - No new device write capability or grant elevation.
 - No cloud routing and no model-chosen routes.
 - No push transport.
-- No multi-PC routing until the Windows adapter supports several sessions.
+- No multi-PC routing in this contract version (multi-PC v4 is implemented and reviewed separately).
+
+## 11. Runtime implementation (rev 2, Claude, 28 Oct 2026)
+Implemented in `src/runtime/routing.py`, wired in `src/runtime/api_v2.py`. Every response is checked against the schema and rules in `tests/runtime/test_routing.py`.
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/v2/skills` | GET | skill table: id, plain text, targeted, reversibility, consent, input schema, current policy |
+| `/api/v2/skill_routes?skill=<id>[&target=<device key>]` | GET | route truth (§3); targeted skills require `target` |
+| `/api/v2/skill_policy` | POST (CSRF) | `{skill_id, mode, failover?, route_id? (PINNED), preferred? []}`; voids armed consent |
+| `/api/v2/skill_arm` | POST (CSRF) | `{skill_id, target?, route_id, params, consent: true}` → `{invocation_id, lease_id, route_id, graph_revision, lease_expires_at, lease_expires_in_s}`; only the selected READY route; 30 s lease |
+| `/api/v2/skill_invoke` | POST (CSRF) | §6 request (+ `target` for targeted skills); dispatched once through the Executor with consent |
+
+`skill_arm` is the one addition to the rev 2 text: it is where the server issues the invocation ID and lease that §4 and §5 describe.
+
+**Skills live today:**
+- `ble_scan_room`: paired relays; ledger freshness; permission and owner gates.
+- `device_facts`: link and read grant.
+- `tv_volume_set`: ADB control. It is EXACT only after a read-only `device_capabilities` probe measured the media-volume range; otherwise it is `dependency_unready`, naming the device.
+- `tv_volume_step`: ADB control.
+
+**Events on `/api/v2/events`:** `route_decision` (every `skill_routes` read), `route_changed`, `skill_policy`.
+
+**Limits:**
+- Policies and invocations are in memory; a server restart returns to AUTO with no armed invocation.
+- The only actor is the local owner UI; Companion/Watch actors are B3.
+- Evidence is REAL_HARDWARE for receipts from live devices and SIMULATED for synthetic (`sim-`) devices.
+- Multi-PC scope is outside this contract version (it is implemented separately in BridgeWindows v4).
