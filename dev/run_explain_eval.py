@@ -22,6 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPLAIN = ROOT / 'docs/evaluation/routing-v1/explain'
+MAX_COMPLETION_TOKENS = 800
 ROW_KEYS = ('case_id', 'family', 'predictions', 'reasons', 'expected', 'document', 'events')
 ID_RES = (re.compile(r'(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}'),
           re.compile(r'\b\d{1,3}(?:\.\d{1,3}){3}\b'),
@@ -47,7 +48,12 @@ def main():
     ap.add_argument('--observation-id', required=True)
     ap.add_argument('--free-balance-usd', required=True, type=float)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--eval-dir', default='docs/evaluation/routing-v1/explain')
+    ap.add_argument('--max-completion-tokens', type=int, default=800)
     args = ap.parse_args()
+    global EXPLAIN, MAX_COMPLETION_TOKENS
+    EXPLAIN = ROOT / args.eval_dir
+    MAX_COMPLETION_TOKENS = args.max_completion_tokens
 
     sys.path.insert(0, str(ROOT))
     from src.ai.broker import CreditPermit, MetaTransport, RuntimeModelBroker, ModelBlocked, MODEL_ID, ENDPOINT
@@ -102,7 +108,7 @@ def main():
         started = time.monotonic()
         try:
             response = transport({'model': MODEL_ID, 'temperature': 0,
-                                  'max_completion_tokens': 800,
+                                  'max_completion_tokens': MAX_COMPLETION_TOKENS,
                                   'messages': [{'role': 'user', 'content': prompt}]})
         except Exception as e:  # noqa: BLE001 - failed call recorded, never retried
             rec['status'] = 'FAILED'
@@ -112,6 +118,8 @@ def main():
         rec['elapsed_ms'] = round((time.monotonic() - started) * 1000)
         rec['request_id'] = response.get('id')
         rec['model'] = response.get('model')
+        rec['finish_reason'] = ((response.get('choices') or [{}])[0].get('finish_reason'))
+        rec['max_completion_tokens'] = MAX_COMPLETION_TOKENS
         usage = (response.get('usage') or {})
         rec['usage'] = {k: usage.get(k) for k in ('prompt_tokens', 'completion_tokens')}
         if (rec['model'] != MODEL_ID or any(type(usage.get(k)) is not int or not 0 <= usage.get(k) <= 100_000
