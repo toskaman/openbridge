@@ -25,7 +25,7 @@ def main():
                     page.route('**/api/devices?source=android',lambda route:route.fulfill(json={'status':'ADB_MISSING','devices':[]}))
                     page.route('**/api/device-events?source=android',lambda route:route.fulfill(content_type='text/event-stream',body='data: {"type":"unavailable","status":"ADB_MISSING","devices":[]}\n\n'))
                     page.route('**/api/devices?source=freebox',lambda route:route.fulfill(json={'status':'GATEWAY_UNAVAILABLE','devices':[]}))
-                    page.goto(url,wait_until='networkidle')
+                    page.goto(url+'/#/advanced',wait_until='networkidle')   # inspection, evidence and Meta review live in Advanced diagnostics
                     assert page.locator('html').get_attribute('lang')=='en'
                     page.get_by_role('button',name='Refresh demo').click()
                     page.get_by_role('button',name='Inspect evidence').click()
@@ -33,6 +33,7 @@ def main():
                     assert page.get_by_role('button',name='Request Meta advice').is_disabled()
                     page.get_by_role('button',name='View recorded Meta proof').click()
                     page.get_by_text('RECORDED RUN',exact=False).wait_for()
+                    page.goto(url+'/#/activity')   # simulated Change & Undo sandbox lives in Activity & Recovery
                     page.locator('#demo-consent').check()
                     page.get_by_role('button',name='Run simulated change').click()
                     expect(page.locator('#transaction-result')).to_contain_text('SIMULATED · VERIFIED.')
@@ -40,9 +41,10 @@ def main():
                     undo=page.get_by_role('button',name='Undo simulated change');expect(undo).to_be_enabled();undo.click()
                     expect(page.locator('#transaction-result')).to_contain_text('SIMULATED · REVERTED.')
                     expect(page.locator('#demo-setting-state')).to_contain_text('Screen timeout: 30s.')
+                    page.goto(url+'/#/advanced')
                     page.get_by_role('radio',name='Android USB').check()
                     expect(page.locator('#device')).to_contain_text('ADB is missing.')
-                    assert page.get_by_role('button',name='Run simulated change').is_disabled()
+                    assert page.locator('#demo-change').is_disabled()   # sandbox button sits in Activity & Recovery (hidden view)
                     page.get_by_role('radio',name='Freebox gateway').check()
                     page.get_by_role('button',name='Identify local Freebox').click()
                     expect(page.locator('#device')).to_contain_text('No compatible Freebox responded.')

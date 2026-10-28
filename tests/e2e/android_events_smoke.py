@@ -13,7 +13,7 @@ def main():
         };''')
         pending=[]
         page.route('**/api/inspect',lambda route:pending.append(route))
-        page.goto('http://127.0.0.1:18765',wait_until='networkidle')
+        page.goto('http://127.0.0.1:18765/#/advanced',wait_until='networkidle')   # source inspection lives in Advanced diagnostics
         page.get_by_role('radio',name='Android USB').check()
         device={'id':'test-opaque','name':'Test Android','state':'unauthorized','source':'ADB',
                 'transport':'USB','simulated':False,'capabilities':[]}

@@ -13,13 +13,15 @@ def main():
         for width,act in ((390,False),(1440,True)):
             page=browser.new_page(viewport={'width':width,'height':900})
             errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-            page.goto(BASE,wait_until='networkidle')
+            page.goto(BASE+'/#/activity',wait_until='networkidle')   # the agent lives in Activity & Recovery
             page.get_by_text('Agent ready.',exact=False).wait_for()
+            page.goto(BASE+'/#/advanced')   # source inspection lives in Advanced diagnostics
             page.get_by_role('radio',name='Android USB').check()
             page.get_by_role('button',name='List USB devices').click()
             page.get_by_text('Inventory complete',exact=False).wait_for(timeout=30000)
             page.get_by_role('button',name='Inspect evidence').first.click()
             page.get_by_text('Reading complete. No device was changed.',exact=True).wait_for(timeout=70000)
+            page.goto(BASE+'/#/activity')
             page.get_by_role('radio',name='Declutter optional apps').check()
             page.get_by_role('button',name='Ask Meta for a plan').click()
             page.get_by_text('Policy gate:',exact=False).wait_for(timeout=170000)
