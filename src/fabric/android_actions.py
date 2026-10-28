@@ -38,6 +38,7 @@ ACTIONS = {
     'get': {'params': {'setting': sorted(SETTINGS)}, 'reversibility': 'NONE', 'what': 'read a setting'},
     'list_apps': {'params': {}, 'reversibility': 'NONE', 'what': 'list launchable apps'},
     'screen_state': {'params': {}, 'reversibility': 'NONE', 'what': 'screen on/off/screensaver and focused app'},
+    'audio_state': {'params': {}, 'reversibility': 'NONE', 'what': 'media stream muted flag, volume index and output devices'},
 }
 PKG = re.compile(r'[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+\Z')
 TEXT = re.compile(r'[A-Za-z0-9 .,\-_@]{1,100}\Z')
@@ -118,6 +119,22 @@ class AndroidActions:
         w = re.search(r'mCurrentFocus=Window\{[^ ]+ [^ ]+ ([A-Za-z0-9_.]+)', self.shell('dumpsys', 'window') or '')
         return {'power': p[1].lower() if p else None, 'focused_app': w[1] if w else None}
 
+    def audio_state(self):
+        """Read-only media-stream state from `dumpsys audio`. Unknown fields stay None (never guessed)."""
+        out = (self.shell('dumpsys', 'audio') or '').replace('\r\n', '\n')
+        m = re.search(r'- STREAM_MUSIC:\n(.*?)(?:\n\s*- STREAM_|\Z)', out, re.S)
+        block = m[1] if m else ''
+        def field(name, conv):
+            f = re.search(r'^\s*' + name + r':\s*(\S+)', block, re.M)
+            return conv(f[1]) if f else None
+        muted = field('Muted', lambda v: {'true': True, 'false': False}.get(v.lower()))
+        vol = field('streamVolume', lambda v: int(v) if v.isdigit() else None)
+        mx = field('Max', lambda v: int(v) if v.isdigit() else None)
+        dev = re.search(r'^\s*Devices:\s*(.+)$', block, re.M)
+        return {'stream': 'music', 'muted': muted, 'volume_index': vol, 'max_index': mx,
+                'devices': re.findall(r'([a-z][a-z_0-9]*)(?:\(\d+\))?', dev[1]) if dev else [],
+                'readable': m is not None and muted is not None}
+
     def run(self, action, params):
         p = params or {}
         if action == 'key':
@@ -187,6 +204,8 @@ class AndroidActions:
             return {'apps': self.apps()}
         if action == 'screen_state':
             return self.screen_state()
+        if action == 'audio_state':
+            return self.audio_state()
         raise ActionError('unknown action')
 
     def probe(self):
@@ -213,4 +232,8 @@ class AndroidActions:
         keys = [k for k in KEYS if self.category == 'tv' or k not in TV_ONLY]
         out['actions'].update({'key': keys, 'text': True, 'tap': pointer, 'swipe': pointer, 'long_press': pointer,
                                'launch_app': bool(apps), 'open_url': True, 'list_apps': bool(apps), 'screen_state': True})
+        try:
+            out['actions']['audio_state'] = self.audio_state()['readable']
+        except (ValueError, OSError):
+            out['actions']['audio_state'] = False
         return out

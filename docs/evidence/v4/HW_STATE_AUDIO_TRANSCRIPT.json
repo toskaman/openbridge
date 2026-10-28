@@ -1,0 +1,87 @@
+{
+ "started": 1793221648.1261675,
+ "steps": [
+  {
+   "action": "audio_state",
+   "args": null,
+   "http": 200,
+   "state": "EXECUTED",
+   "tx": "tx-f635261ea9e8cbe3",
+   "result": {
+    "stream": "music",
+    "muted": false,
+    "volume_index": 20,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "errors": []
+  },
+  {
+   "action": "key",
+   "args": {
+    "key": "mute"
+   },
+   "http": 200,
+   "state": "EXECUTED",
+   "tx": "tx-1ff3e59eee549656",
+   "result": {
+    "sent": "mute"
+   },
+   "errors": []
+  },
+  {
+   "action": "audio_state",
+   "args": null,
+   "http": 200,
+   "state": "EXECUTED",
+   "tx": "tx-31cbb884af94ba90",
+   "result": {
+    "stream": "music",
+    "muted": true,
+    "volume_index": 0,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "errors": []
+  },
+  {
+   "action": "key",
+   "args": {
+    "key": "mute"
+   },
+   "http": 200,
+   "state": "EXECUTED",
+   "tx": "tx-2565820439f7ea24",
+   "result": {
+    "sent": "mute"
+   },
+   "errors": []
+  },
+  {
+   "action": "audio_state",
+   "args": null,
+   "http": 200,
+   "state": "EXECUTED",
+   "tx": "tx-865aa6da085e3a3e",
+   "result": {
+    "stream": "music",
+    "muted": false,
+    "volume_index": 20,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "errors": []
+  }
+ ],
+ "tv": "dev-5e31cb8de819",
+ "finished": 1793221662.7101042
+}
