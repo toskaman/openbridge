@@ -59,6 +59,7 @@ class RemoteControls:
         self.suspended = set()   # (relay_id, control_id) suspended after an unusual burst
         self.history = []        # bounded outcome log (no free text from the device)
         self._lock = threading.Lock()
+        self._grant_send_lock = threading.Lock()  # order Companion updates through acknowledgement
         self._stop = threading.Event()
         self._thread = None
         self.closed = False
@@ -126,11 +127,16 @@ class RemoteControls:
                 self._recent = {k: v for k, v in self._recent.items() if k[0] != rid}
         if superseded:
             return self.state()
-        self._send(rid, 'set_controls', {'controls': [{'control_id': k, 'label': v['label']} for k, v in out.items()]})
-        with self._lock:
-            current_relay = self.server.relays.relays.get(rid)
-            if out and not self.closed and self._grant_versions.get(rid) == gen and current_relay and _key_fp(current_relay['key']) == fp:
-                self.grants[rid] = out
+        with self._grant_send_lock:
+            with self._lock:
+                superseded = self.closed or self._grant_versions.get(rid) != gen
+            if superseded:
+                return self.state()
+            self._send(rid, 'set_controls', {'controls': [{'control_id': k, 'label': v['label']} for k, v in out.items()]})
+            with self._lock:
+                current_relay = self.server.relays.relays.get(rid)
+                if out and not self.closed and self._grant_versions.get(rid) == gen and current_relay and _key_fp(current_relay['key']) == fp:
+                    self.grants[rid] = out
         self._ex().emit('remote_controls', relay_id=rid, count=len(out), generation=gen)
         self._ensure_thread()
         return self.state()
