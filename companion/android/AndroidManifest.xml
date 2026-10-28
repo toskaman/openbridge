@@ -19,9 +19,6 @@
         <intent>
             <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
         </intent>
-        <intent>
-            <action android:name="android.speech.tts.TextToSpeechService" />
-        </intent>
     </queries>
     <!-- Android 8-11 requirements for BLE scanning. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
