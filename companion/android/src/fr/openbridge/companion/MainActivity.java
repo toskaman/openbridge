@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         codeCard.addView(codeHint); codeCard.addView(code); root.addView(codeCard); root.addView(spacer(14));
 
         controlsCard = card(); controlsCard.setVisibility(View.GONE);
-        controlsCard.addView(text("REMOTE CONTROLS", 12, true, MUTED));
+        controlsCard.addView(text("REMOTE CONTROLS · hold to send", 12, true, MUTED));
         controlsBox = new LinearLayout(this); controlsBox.setOrientation(LinearLayout.VERTICAL); controlsCard.addView(controlsBox);
         resultText = text("", 14, false, OK); controlsCard.addView(resultText);
         root.addView(controlsCard); root.addView(spacer(14));
@@ -208,7 +208,9 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                 org.json.JSONObject o = c.optJSONObject(i); if (o == null) continue;
                 String id = o.optString("control_id");
                 Button b = button(o.optString("label"), i == 0);
-                b.setOnClickListener(v -> { String s = relay.press(id); if (s != null) resultText.setText(s); });
+                // Hold to send: a tap does nothing, so stray or phantom touches (watch off the wrist) never send a command.
+                b.setOnClickListener(v -> resultText.setText("Hold the button to send"));
+                b.setOnLongClickListener(v -> { String s = relay.press(id); if (s != null) resultText.setText(s); return true; });
                 controlsBox.addView(b); controlsBox.addView(spacer(8));
             }
             controlsCard.setVisibility(c.length() > 0 ? View.VISIBLE : View.GONE);

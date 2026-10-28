@@ -160,3 +160,25 @@ class RemoteControls(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Burst(unittest.TestCase):
+    setUp = RemoteControls.setUp
+    grant = RemoteControls.grant
+    vol_up = RemoteControls.vol_up
+
+    def test_unusual_burst_suspends_until_regrant(self):
+        cid = self.vol_up()
+        for i in range(6):
+            self.clock.t += 0.6
+            self.companion.press(cid, request_id='%032x' % (1000 + i))
+            self.rc.poll_once()
+        self.assertEqual(len(self.calls), 3)                              # 4th press inside 10 s suspends the control
+        self.assertIn('paused', self.companion.results[-1]['text'])
+        self.assertTrue(self.rc.state()['suspended'])
+        self.clock.t += 60
+        self.companion.press(cid, request_id='%032x' % 2000); self.rc.poll_once()
+        self.assertEqual(len(self.calls), 3)                              # still suspended: only the owner re-enables
+        cid = self.vol_up()                                               # explicit re-grant
+        self.companion.press(cid, request_id='%032x' % 3000); self.rc.poll_once()
+        self.assertEqual(len(self.calls), 4)

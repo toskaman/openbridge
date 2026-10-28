@@ -20,6 +20,7 @@ from src.fabric import relay as fabric_relay
 POLL_S = 1.5
 MAX_PER_POLL = 8
 MIN_INTERVAL_S = 0.5           # per control: one invocation per half second at most
+BURST, BURST_WINDOW_S = 3, 10.0   # more presses than this in the window: the control is suspended until re-granted
 
 
 class RemoteControlError(Exception):
@@ -33,6 +34,8 @@ class RemoteControls:
         self.server, self.clock = server, clock
         self.grants = {}         # relay_id -> {control_id: {label, skill_id, target, params}}
         self._last = {}          # (relay_id, control_id) -> last invocation time
+        self._recent = {}        # (relay_id, control_id) -> recent request times
+        self.suspended = set()   # (relay_id, control_id) suspended after an unusual burst (hardware run 28 Oct)
         self.history = []        # bounded outcome log (no free text from the device)
         self._lock = threading.Lock()
         self._thread = None
@@ -84,6 +87,8 @@ class RemoteControls:
             out[cid] = {'label': label, 'skill_id': skill, 'target': target, 'params': params}
         self._send(rid, 'set_controls', {'controls': [{'control_id': k, 'label': v['label']} for k, v in out.items()]})
         with self._lock:
+            self.suspended = {k for k in self.suspended if k[0] != rid}      # an explicit re-grant re-enables
+            self._recent = {k: v for k, v in self._recent.items() if k[0] != rid}
             if out:
                 self.grants[rid] = out
             else:
@@ -95,7 +100,7 @@ class RemoteControls:
     def state(self):
         with self._lock:
             return {'controls': [{'relay_id': rid, 'control_id': cid, **g} for rid, cs in self.grants.items() for cid, g in cs.items()],
-                    'history': list(self.history[-20:])}
+                    'history': list(self.history[-20:]), 'suspended': sorted(f'{a}/{b}' for a, b in self.suspended)}
 
     # ---------- device side ----------
     def _ex(self):
@@ -146,7 +151,14 @@ class RemoteControls:
         actor = f'relay:{rid}'
         key = (rid, req['control_id'])
         now = self.clock()
-        if (actor, 'inv-' + req['request_id']) in router(self.server).completed:
+        recent = [x for x in self._recent.get(key, []) if now - x < BURST_WINDOW_S] + [now]
+        self._recent[key] = recent
+        if key not in self.suspended and len(recent) > BURST:
+            self.suspended.add(key)
+            self._ex().emit('remote_control_suspended', relay_id=rid, control_id=req['control_id'], presses=len(recent))
+        if key in self.suspended:
+            outcome, text = 'SUSPENDED', f"{grant['label']}: paused (unusual repeated presses); re-enable on the PC"
+        elif (actor, 'inv-' + req['request_id']) in router(self.server).completed:
             outcome, text = 'DUPLICATE', f"{grant['label']}: already done"     # a re-sent press: never dispatched twice
         elif now - self._last.get(key, 0) < MIN_INTERVAL_S:
             outcome, text = 'BLOCKED', 'Too fast; press again'
