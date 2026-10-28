@@ -220,6 +220,8 @@ class FakeSTTProcessor:
         return ['x']
 
 
+@unittest.skipUnless(__import__('importlib').util.find_spec('torch') is not None,
+                       'torch required: exercises transcribe_pcm tensor path with a fake backend')
 class STTSwitchTracking(unittest.TestCase):
     """FR-after-EN must re-switch the adapter: _backend tracks the loaded language (no model)."""
 
