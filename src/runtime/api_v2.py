@@ -25,11 +25,16 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/skills', '/api/v2/skill_routes',
 POST_ROUTES = ('/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe',)
 
 
+import threading
+_ROUTER_INIT_LOCK = threading.Lock()
+
+
 def router(server):
-    if getattr(server, 'skill_router', None) is None:
-        from src.runtime.routing import Router
-        server.skill_router = Router(server)
-    return server.skill_router
+    with _ROUTER_INIT_LOCK:
+        if getattr(server, 'skill_router', None) is None:
+            from src.runtime.routing import Router
+            server.skill_router = Router(server)
+        return server.skill_router
 
 
 def executor(server):

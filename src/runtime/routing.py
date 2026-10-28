@@ -376,7 +376,7 @@ class Router:
                 done = self.completed.get((actor, req['invocation_id']))
                 if done is None:
                     raise RouteError(409, 'CONSENT_VOID', 'No armed invocation with this id (expired, voided by a route change, or never armed); review again')
-                if done[1] != _fp(req):
+                if done[1] != _fp(dict(req, target=target)):
                     raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different skill, route, lease or params')
                 b = done[0]
             else:
@@ -423,7 +423,7 @@ class Router:
                 for k in [k for k, v in self.completed.items() if now - v[2] > self.ledger.ttl_s]:
                     del self.completed[k]
                 if len(self.completed) < 4096:
-                    self.completed[(actor, req['invocation_id'])] = (binding, _fp(req), now)
+                    self.completed[(actor, req['invocation_id'])] = (binding, _fp(dict(req, target=target)), now)
                 if self.invocations.get(key, {}).get('invocation_id') == req['invocation_id']:
                     self.invocations.pop(key, None)
         return dict(receipt, invocation_id=req['invocation_id'], route_id=req['route_id'], skill_id=req['skill_id'])

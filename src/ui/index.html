@@ -152,6 +152,7 @@
           <h2 id="route-snapshot-title">Route evidence snapshot</h2>
           <p class="muted">Read-only backend evidence. Refresh explicitly; this panel never runs a skill or changes its provider.</p>
           <label>Skill <select id="route-skill"><option value="ble_scan_room">Bluetooth scan</option><option value="device_facts">Device facts</option><option value="tv_volume_set">Exact TV volume</option><option value="tv_volume_step">TV volume step</option></select></label>
+          <label id="route-target-label" hidden>Device <select id="route-target"><option value="">Select a discovered device</option></select></label>
           <button class="ghost" type="button" id="route-refresh">Refresh route snapshot</button>
           <div id="route-truth" role="status" aria-live="polite">Not requested. Routing support may not be installed yet.</div>
         </section>
