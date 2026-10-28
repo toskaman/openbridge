@@ -2,6 +2,8 @@
 import tempfile
 import unittest
 from pathlib import Path
+from datetime import datetime
+from unittest.mock import patch
 from types import SimpleNamespace
 
 from src.fabric import onboarding
@@ -32,7 +34,10 @@ class Candidates(unittest.TestCase):
         b = reg.upsert([], category='ble', label='Samsung device (BLE)', observations=[DeviceObservation('ble_company_ids', [117], 'RELAY:r', 'BLE', now(), True)])
         return reg
 
-    def test_kinds_states_and_methods(self):
+    @patch('src.fabric.contracts.datetime')
+    def test_kinds_states_and_methods(self, clock):
+        # Port digits in a valid timestamp must not be mistaken for an endpoint leak.
+        clock.now.return_value = datetime.fromisoformat('2026-10-28T12:37:41.345110+00:00')
         reg = self.build()
         c = {x['label']: x for x in onboarding.candidates(reg.snapshot(), reg, companion_ready=True)}
         pair = next(x for x in c.values() if any(m.get('pairing_address') for m in x['methods']))
@@ -47,7 +52,20 @@ class Candidates(unittest.TestCase):
         weak = c['Samsung device (BLE)']
         self.assertEqual((weak['kind'], weak['confidence'], weak['state']), ('phone_maybe', 'weak', 'IDENTIFY'))
         snap = reg.snapshot()
-        self.assertNotIn('34511', repr(snap))                     # pairing endpoint stays off the snapshot
+        def leaves(value):
+            if isinstance(value, dict):
+                for item in value.values():
+                    yield from leaves(item)
+            elif isinstance(value, list):
+                for item in value:
+                    yield from leaves(item)
+            else:
+                yield value
+        values = list(leaves(snap))
+        self.assertNotIn(34511, values)                            # no numeric port field
+        self.assertNotIn('34511', values)                          # no string port field
+        self.assertFalse(any(isinstance(v, str) and ':34511' in v for v in values))  # no address:port
+        self.assertNotIn('pairing_address', repr(snap))
 
     def test_companion_not_built_is_honest(self):
         reg = self.build()
