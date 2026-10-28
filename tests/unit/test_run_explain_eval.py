@@ -16,6 +16,18 @@ class RunnerInputs(unittest.TestCase):
         with self.assertRaises(ValueError):
             R.parse_observed_at('soon')
 
+    def test_no_ledger_override_flag(self):
+        # Sol audit: the live runner must not accept an alternate ledger file, so one
+        # authorization can never double-spend across ledgers. Explicit ledger paths
+        # exist only on the broker API for hermetic unit tests.
+        import sys
+        from unittest import mock
+        argv = ['prog', '--observation-id', 'o', '--free-balance-usd', '1', '--out', 'd',
+               '--observed-at', '2026-10-28T18:00:00+00:00', '--authz', 'a', '--ledger', 'other.db']
+        with mock.patch.object(sys, 'argv', argv), self.assertRaises(SystemExit) as cm:
+            R.main()
+        self.assertEqual(cm.exception.code, 2)
+
     def test_authz_file_read_never_creates(self):
         import tempfile
         from pathlib import Path

@@ -79,8 +79,9 @@ def main():
                     help='owner-written file containing the authorization ref (read-only, never created)')
     ap.add_argument('--observed-at', required=True,
                     help='owner observation time, ISO with timezone (immutable, never minted)')
-    ap.add_argument('--ledger', default=None,
-                    help='explicit ledger path (tests/one-offs only; default is the canonical shared ledger)')
+    # No --ledger override: the live runner always uses the canonical shared ledger, so one
+    # authorization can never be double-spent across ledger files (Sol audit). Explicit ledger
+    # paths exist only on the broker API for hermetic unit tests.
     args = ap.parse_args()
     authz = args.authz
     if args.authz_file:
@@ -126,7 +127,7 @@ def main():
         print('NO_KEY')
         return 2
     transport = MetaTransport(key)
-    budget_path = resolve_ledger(args.ledger)
+    budget_path = resolve_ledger(None)
     print('ledger: %s' % budget_path)
     records = []
     done = set()
