@@ -29,9 +29,17 @@ class MetaClient:
 
 
 def ollama_transport(endpoint, model, json_mode=True, urlopen=None):
-    """Bind an Ollama /api/chat endpoint as a MetaClient transport (local Meta only)."""
+    """Bind an Ollama /api/chat endpoint as a MetaClient transport (local Meta only).
+
+    The expected model id is pinned: a response echoing a different model is a
+    transport failure, never silently accepted. Weight-digest pinning stays at
+    broker provisioning time (LocalMetaBroker); pass only broker-verified
+    endpoints here.
+    """
     import json as _json
     import urllib.request as _url
+    if not model or not isinstance(model, str):
+        raise ValueError('expected model id is required')
     _open = urlopen or _url.urlopen
 
     def call(prompt, budget):
@@ -48,6 +56,8 @@ def ollama_transport(endpoint, model, json_mode=True, urlopen=None):
             raise
         except Exception as e:
             raise TransportFailed(type(e).__name__) from None
+        if data.get('model') != model:
+            raise TransportFailed('MODEL_IDENTITY_MISMATCH')
         try:
             text = data['message']['content']
         except (KeyError, TypeError):
