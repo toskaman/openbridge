@@ -1,3 +1,7 @@
+# Integration update — 28 October 2026
+
+B1 revised recovery/MCP/nonce fixes and B2 rev2 schema/contract helpers are integrated for combined verification, together with Claude's owner-selected application theme and onboarding. This does not implement the B2 routing endpoints or physical failover. Codex added tested APK expiry/timer fixes and an in-flight dedup expiry regression fix. Multi-PC work is deferred to 29 October 09:00 Paris for supported-scope review, not an automatic retry of the previously blocked port. The dated audit table below is historical; current review status is on issue36 and the integration PR. Videos remain on explicit owner hold.
+
 # Remaining work — audited 27 October 2026
 
 Source: main `038f463`; shared coordination: [issue #36](https://github.com/toskaman/openbridge/issues/36). This is the current actionable backlog, superseding historical unchecked plans. Source inspection and contributor receipts remain distinct from newly repeated physical tests.

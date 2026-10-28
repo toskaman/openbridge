@@ -26,6 +26,7 @@ class ApkPortal:
         self.lan_ip, self.minutes, self.clock = lan_ip, max(1, min(int(minutes), 30)), clock
         self.downloads = 0
         self._srv = None
+        self._timer = None
 
     def start(self):
         portal = self
@@ -33,6 +34,8 @@ class ApkPortal:
             def log_message(self, *a):
                 pass
             def do_GET(self):
+                if portal.clock() >= portal.expires_at:
+                    return self.send_error(410, "Download link expired")
                 try:
                     if not ipaddress.ip_address(self.client_address[0]).is_private:
                         return self.send_error(403)
@@ -51,7 +54,9 @@ class ApkPortal:
         self._srv.daemon_threads = True
         self.expires_at = self.clock() + self.minutes * 60
         threading.Thread(target=self._srv.serve_forever, daemon=True).start()
-        threading.Timer(self.minutes * 60, self.stop).start()
+        self._timer = threading.Timer(self.minutes * 60, self.stop)
+        self._timer.daemon = True
+        self._timer.start()
         return self
 
     @property
@@ -62,6 +67,9 @@ class ApkPortal:
         return self._srv is not None and self.clock() < self.expires_at
 
     def stop(self):
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
         if self._srv:
             self._srv.shutdown(); self._srv.server_close(); self._srv = None
 

@@ -182,7 +182,7 @@ class InvocationLedger:
         key = (actor, invocation_id)
         with self._lock:
             now = self.clock()
-            for k in [k for k, e in self._entries.items() if now - e[2] > self.ttl_s]:
+            for k in [k for k, e in self._entries.items() if not isinstance(e[1], threading.Event) and now - e[2] > self.ttl_s]:
                 del self._entries[k]
             entry = self._entries.get(key)
             if entry is None:
@@ -208,6 +208,6 @@ class InvocationLedger:
             result = {'state': 'FAILED', 'errors': [f'{type(e).__name__}: {str(e)[:160]}']}
         with self._lock:
             done = self._entries[key][1]
-            self._entries[key] = (binding, result, self._entries[key][2])
+            self._entries[key] = (binding, result, self.clock())
         done.set()
         return result
