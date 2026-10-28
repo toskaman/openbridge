@@ -257,9 +257,21 @@ def _check_scope(base_url):
         raise RelayError('Relay address outside the approved local scope')
 
 
+def _opener():
+    # No proxy, no redirects: the scope check guards the original URL, and a 302 must
+    # never silently carry a signed message or a voice download off-scope (Sol audit).
+    from urllib.request import HTTPRedirectHandler, ProxyHandler, build_opener
+
+    class _NoRedirect(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            raise RelayError('Relay redirected (refused, cross-origin not followed)')
+
+    return build_opener(ProxyHandler({}), _NoRedirect)
+
+
 def http_transport(base_url, timeout=25):
     """POST JSON to a relay. base_url must be loopback (adb forward) or a private LAN address in the approved scope."""
-    from urllib.request import Request, build_opener, ProxyHandler
+    from urllib.request import Request
     _check_scope(base_url)
 
     def send(_relay, message):
@@ -267,7 +279,7 @@ def http_transport(base_url, timeout=25):
         req = Request(base_url.rstrip('/') + '/ob', data=data, headers={'Content-Type': 'application/json'}, method='POST')
         from urllib.error import HTTPError
         try:
-            with build_opener(ProxyHandler({})).open(req, timeout=timeout) as r:
+            with _opener().open(req, timeout=timeout) as r:
                 raw = r.read(300_000)
         except HTTPError as error:
             raise RelayError('Relay refused: ' + error.read(200).decode('utf-8', 'replace')) from None
@@ -300,11 +312,11 @@ def fetch_voice(base_url, key, clip_id, expected_bytes, expected_sha256, timeout
         raise RelayError('Bad voice size')
     if not SHA256.match(expected_sha256 or ''):
         raise RelayError('Bad voice hash')
-    from urllib.request import Request, build_opener, ProxyHandler
+    from urllib.request import Request
     from urllib.error import HTTPError
     try:
         req = Request(voice_url(base_url, key, clip_id), method='GET')
-        with build_opener(ProxyHandler({})).open(req, timeout=timeout) as r:
+        with _opener().open(req, timeout=timeout) as r:
             raw = r.read(expected_bytes + 1)
     except HTTPError as error:
         try:
