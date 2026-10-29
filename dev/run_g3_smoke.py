@@ -97,7 +97,7 @@ def effect_binding(steps, catalog):
     return None
 
 
-def act_restore_sequence(invoke, oracle, revoke, sleep=time.sleep):
+def act_restore_sequence(invoke, oracle, revoke, sleep=time.sleep, observed=None, restore=None):
     """Act -> oracle -> conditional restore -> oracle, revoke always attempted.
 
     Restore runs ONLY if act executed (no blind restore after an unknown act);
@@ -111,8 +111,9 @@ def act_restore_sequence(invoke, oracle, revoke, sleep=time.sleep):
         mid = oracle()
         # Restore only after an OBSERVED transition: an executed act whose effect was not seen
         # is reconciled by the owner, never by a second blind toggle.
-        if st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED') and (mid or {}).get('muted') is True:
-            st2, r2 = invoke('restore')
+        seen = observed(mid) if observed else (mid or {}).get('muted') is True
+        if st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED') and seen:
+            st2, r2 = restore() if restore else invoke('restore')
             sleep(1.5)
             post = oracle()
     finally:
@@ -130,6 +131,8 @@ def main():
         ap.add_argument(a, required=True)
     ap.add_argument('--free-balance-usd', type=float, required=True)
     ap.add_argument('--allowance-usd', type=float, default=0.80)
+    ap.add_argument('--task-spec', default=None, help='sealed task spec JSON (requires --task-sha256)')
+    ap.add_argument('--task-sha256', default=None, help='sha256 committed by Sol before the run')
     ap.add_argument('--replay-from', default=None,
                     help='reuse the validated Meta candidate recorded in a prior transcript (no new model call); re-validated against live evidence')
     ap.add_argument('--max-completion-tokens', type=int, default=MAX_COMPLETION_TOKENS)
@@ -143,8 +146,17 @@ def main():
     from src.forge import v4_evidence, v4_synthesize, v4_substrate
     from src.forge.v4_metaclient import MetaClient, RulesPlanner
 
+    from dev import g3_task
+    if bool(args.task_spec) != bool(args.task_sha256):
+        print('TASK_SPEC and TASK_SHA256 go together'); return 2
+    try:
+        spec = g3_task.load(args.task_spec, args.task_sha256) if args.task_spec else g3_task.MUTE_SMOKE
+    except (g3_task.SpecError, OSError, ValueError) as e:
+        print('TASK_SPEC: %s' % e); return 2
+    INTENT_T, OFFER_T, CAT = spec['intent'], tuple(spec['offer']), spec['target_category']
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
-    T = {'kind': 'G3_INTEGRATION_SMOKE', 'started': datetime.now(timezone.utc).isoformat(), 'intent': INTENT,
+    T = {'kind': 'G3_INTEGRATION_SMOKE' if spec is g3_task.MUTE_SMOKE else 'G3_SEALED_TASK', 'task_id': spec['task_id'],
+         'task_sha256': g3_task.spec_sha256(spec), 'started': datetime.now(timezone.utc).isoformat(), 'intent': INTENT_T,
          'model': MODEL_ID, 'reasoning_effort': args.reasoning_effort, 'max_completion_tokens': args.max_completion_tokens, 'calls': [], 'steps': []}
 
     def save():
@@ -163,7 +175,7 @@ def main():
 
     # 1. Live evidence: TV from discovery, signed kernel facts (never fixtures).
     st, snap = http('/api/fabric-discover', {'device_id': 'fabric', 'providers': ['android']})
-    tv = next((d for d in snap.get('devices', []) if d['category'] == 'tv'), None)
+    tv = next((d for d in snap.get('devices', []) if d['category'] == CAT), None)
     if tv is None:
         return stop('KILL', reason='no TV in the live graph')
     st, sf = http('/api/v2/facts/signed?device=' + tv['key'])
@@ -177,16 +189,16 @@ def main():
     T['scope'] = {'grants': scope, 'source': 'live-snapshot-links'}
     st, cat = http('/api/v2/primitives/catalog')
     desc = {d['id']: d for d in cat['primitives']}
-    offer = [p for p in OFFER if desc.get(p, {}).get('manifest_allowed')]
+    offer = [p for p in OFFER_T if desc.get(p, {}).get('manifest_allowed')]
     schemas = {p: {k: v.get('type', 'string') for k, v in desc[p]['input_schema'].get('properties', {}).items()} for p in offer}
-    bundle = v4_evidence.resolve([{'device_id': fp, 'category': 'tv', 'permission_scope': scope,
+    bundle = v4_evidence.resolve([{'device_id': fp, 'category': CAT, 'permission_scope': scope,
                                    'facts': [{'kind': f['name'], 'value': f.get('value'), 'source': f.get('source', 'unknown'),
                                               'observed_at': time.time()} for f in kfacts]}], [], offer, time.time())
     ref_to_fact = {bf['evidence_ref']: kf for bf, kf in zip(bundle['devices'][0]['facts'], kfacts)}
     T['bundle_id'] = bundle['bundle_id']
 
     # 2. Baseline (fair ablation recorded, not a strawman claim): stocked deterministic path for the same task.
-    T['baseline'] = {'rules_planner': RulesPlanner(offer).propose(bundle, INTENT),
+    T['baseline'] = {'rules_planner': RulesPlanner(offer).propose(bundle, INTENT_T),
                      'stocked_path': 'device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task'}
 
     # 3. Meta generation through the broker-guarded hosted call; validation is the unchanged Forge code.
@@ -236,7 +248,7 @@ def main():
         T['replayed_from'] = {'path': Path(args.replay_from).name, 'candidate_digest': pc.get('digest'),
                               'model_calls': prior.get('calls'), 'note': 'no new model call; candidate generated by Muse Spark in the prior run'}
     for attempt in range(0 if cand else MAX_CALLS):
-        ok, body = v4_synthesize.synthesize(client, 'spark', bundle, INTENT, offer, 'tv', schemas=schemas)
+        ok, body = v4_synthesize.synthesize(client, 'spark', bundle, INTENT_T, offer, CAT, schemas=schemas)
         save()
         if ok:
             cand = body; break
@@ -256,9 +268,9 @@ def main():
     extra_src = [r for r in c['evidence_refs'] if isinstance(r, str) and r.startswith('src:')]
     cand_k = dict(c, evidence_refs=sorted({f['fact_id'] for f in cited} | {cat_fact['fact_id']}))
     expires = datetime.fromtimestamp(time.time() + 3600, timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    manifest = v4_substrate.to_manifest(cand_k, {'category': 'tv', 'device_fingerprint': fp},
+    manifest = v4_substrate.to_manifest(cand_k, {'category': CAT, 'device_fingerprint': fp},
                                         {'model': MODEL_ID, 'run_id': c['model_run_id'].replace('mr-', 'mr_')},
-                                        'Mute the TV (Meta-generated)', sorted(set(c['required_grants'])), required,
+                                        ('G3 task ' + spec['task_id'])[:80], sorted(set(c['required_grants'])), required,
                                         expires, inputs={}, evidence_extra=extra_src)
     T['manifest'] = manifest
     st, comp = http('/api/v2/manifests/compile', {'manifest': manifest, 'facts': kfacts})
@@ -271,18 +283,18 @@ def main():
     # 5. Oracle pre-read, owner grant (owner present, authorized in chat: two uses = act + restore), invoke, read-back.
     def oracle():
         st, r = http('/api/v2/execute', {'primitive_id': 'device_action', 'device_key': tv['key'],
-                                         'params': {'action': 'audio_state'}, 'consent': True})
+                                         'params': dict({'action': spec['oracle']['action']}, **({'args': spec['oracle']['args']} if spec['oracle']['args'] else {})), 'consent': True})
         res = r.get('result') or {}
         T['steps'].append({'oracle': res, 'tx': r.get('transaction_id'), 'state': r.get('state')}); return res
-    bad = effect_binding(manifest['steps'], desc)
+    bad = g3_task.effect_binding(manifest['steps'], desc, spec)
     if bad:
         return stop('KILL', reason='effect binding refused before grant: ' + bad)
     pre = oracle()
-    if not pre.get('readable'):
-        return stop('KILL', reason='state.audio unreadable before the run (UNKNOWN, not success)')
-    if pre.get('muted') is not False:
-        return stop('KILL', reason='TV already muted before the run: nothing to prove, no toggle sent')
-    st, g = http('/api/v2/manifests/grant', {'manifest': manifest, 'facts': kfacts, 'consent': True, 'max_uses': 2, 'ttl_s': 900})
+    if not g3_task.readable(pre, spec):
+        return stop('KILL', reason='oracle unreadable before the run (UNKNOWN, not success)')
+    if g3_task.observed(pre, spec):
+        return stop('KILL', reason='oracle already shows the expected value: nothing to prove, no effect sent')
+    st, g = http('/api/v2/manifests/grant', {'manifest': manifest, 'facts': kfacts, 'consent': True, 'max_uses': 2 if spec['restore']['mode'] == 'reinvoke' else 1, 'ttl_s': 900})
     T['grant'] = {'http': st, **{k: v for k, v in g.items() if k != 'grant'}, 'grant_id': (g.get('grant') or {}).get('grant_id')}
     if st != 200:
         return stop('KILL', reason='grant refused', code=g.get('code'))
@@ -307,9 +319,16 @@ def main():
         T['revoke_attempt'] = {'http': st, **rv}
         save()
         return st, rv
+    def owner_restore():
+        body = g3_task.restore_args(spec, pre)
+        st, r = http('/api/v2/execute', {'primitive_id': 'device_action', 'device_key': tv['key'],
+                                         'params': body, 'consent': True})
+        T['steps'].append({'owner_restore': body, 'http': st, 'state': r.get('state'), 'tx': r.get('transaction_id')}); save()
+        return st, r
     try:
         st1, r1, mid, st2, r2, post, record = act_restore_sequence(
-            invoke, oracle, revoke, sleep=time.sleep)
+            invoke, oracle, revoke, sleep=time.sleep, observed=lambda m: g3_task.observed(m, spec),
+            restore=None if spec['restore']['mode'] == 'reinvoke' else owner_restore)
     except Exception as e:
         return stop('KILL', reason='act/restore sequence crashed (revoke was attempted)',
                     error='%s: %s' % (type(e).__name__, str(e)[:200]))
@@ -321,7 +340,9 @@ def main():
     st, rv2 = invoke('after_revoke_must_refuse')
     st, recs = http('/api/v2/manifests/receipts')
     T['kernel_receipts'] = recs.get('receipts', [])[-3:]
-    ok, predicate = success_predicate(pre, mid, post, st1, r1, st2, T['steps'][-1]['http'])
+    act_ok = st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED')
+    restore_ok = st2 == 200 and (r2 or {}).get('state', (r2 or {}).get('status')) not in ('BLOCKED', 'FAILED')
+    ok, predicate = g3_task.predicate(spec, pre, mid, post, act_ok, restore_ok, T['steps'][-1]['http'])
     return stop('SUCCESS' if ok else 'FAILED_ORACLE', pre=pre, after_act=mid, after_restore=post,
                 act_status=r1.get('status'), restore_status=(r2 or {}).get('status'),
                 predicate=predicate,
