@@ -51,6 +51,66 @@ def draft_from_slots(slots, primitive_ids, model_run_id):
     return v4_ui.validate_patch(patch, primitive_ids)
 
 
+def emit_install_plan(patch, manifests, target_device_fp, profile_id,
+                      layout_version, evidence_refs=(), sources=None):
+    """Map an S2 patch to Claude's UIViewPlan (contract C1, offline).
+
+    manifests: {binding_primitive: manifest_hash} of COMPILED+APPROVED
+    manifests — refused when missing, never invented. sources: {status
+    widget_id: actionable widget_id}. Returns (plan, needed_hashes); the
+    caller assembles install bindings after owner approval. plan_hash is
+    computed with the kernel's own function.
+    """
+    import re
+    from src.substrate import kernel as K
+    if not isinstance(patch, dict) or not isinstance(patch.get('widgets'), list) \
+            or not patch['widgets']:
+        raise DraftError('PATCH_SHAPE')
+    if not isinstance(target_device_fp, str) or not target_device_fp:
+        raise DraftError('TARGET_FP_REQUIRED')
+    if not isinstance(profile_id, str) or not profile_id:
+        raise DraftError('PROFILE_REQUIRED')
+    if not isinstance(layout_version, int) or isinstance(layout_version, bool) \
+            or layout_version < 1:
+        raise DraftError('LAYOUT_VERSION_INVALID')
+    widgets = []
+    needed = set()
+    kinds = {w.get('widget_id') for w in patch['widgets']}
+    for w in patch['widgets']:
+        label = w.get('label', '')
+        if not isinstance(label, str) or K.BAD_TEXT.search(label):
+            raise DraftError('INJECTION_SUSPECT: %r' % (w.get('widget_id'),))
+        kind = w.get('kind')
+        if kind == 'button':
+            mh = (manifests or {}).get(w.get('binding_primitive'))
+            if not isinstance(mh, str) or not re.fullmatch(r'sha256:[0-9a-f]{64}', mh):
+                raise DraftError('UI_MANIFEST_REQUIRED: %s' % (w.get('widget_id'),))
+            needed.add(mh)
+            perm = 'Run %s' % (w.get('binding_primitive'),)
+            if len(perm) > 60:
+                raise DraftError('PERMISSION_LABEL_TOO_LONG')
+            widgets.append({'widget_id': w['widget_id'], 'kind': 'button',
+                            'label': label, 'binding': {'manifest_hash': mh, 'inputs': dict(w.get('params') or {})},
+                            'permission_label': perm})
+        elif kind == 'text':
+            widgets.append({'widget_id': w['widget_id'], 'kind': 'label',
+                            'label': label, 'binding': None, 'permission_label': ''})
+        elif kind == 'status':
+            src = (sources or {}).get(w['widget_id'])
+            if src not in kinds:
+                raise DraftError('STATUS_SOURCE_REQUIRED: %s' % (w.get('widget_id'),))
+            widgets.append({'widget_id': w['widget_id'], 'kind': 'status',
+                            'label': label, 'binding': None, 'permission_label': '',
+                            'source': src})
+        else:
+            raise DraftError('WIDGET_KIND: %r' % (kind,))
+    plan = {'target_device': target_device_fp, 'profile_id': profile_id,
+            'layout_version': layout_version, 'widgets': widgets,
+            'origin_model_run_id': patch.get('model_run_id'), 'evidence_refs': list(evidence_refs or [])}
+    plan['plan_hash'] = K.manifest_hash(plan)
+    return plan, needed
+
+
 def build_ui_prompt(intent_text, devices, primitive_ids):
     """Prompt offered to the Meta model at runtime (offline-built, deterministic)."""
     lines = ['UI_DRAFT v1. Intent: %s.' % (intent_text.strip()[:200]),
