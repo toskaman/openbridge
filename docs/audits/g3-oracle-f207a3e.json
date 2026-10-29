@@ -1,0 +1,5 @@
+{
+  "head": "f207a3ea9b145f969e9a52465ac21abfe02782e9",
+  "actual_success_predicate_accepts_unchanged_already_muted_state": true,
+  "qualification": "Actual predicate with synthetic successful read-only receipts; no full runner or hardware invoked."
+}
