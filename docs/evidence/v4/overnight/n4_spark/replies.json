@@ -1,0 +1,112 @@
+[
+ {
+  "prompt_id": "P7",
+  "text": "allume la lampe du salon",
+  "lang": "fr",
+  "status": "unsupported",
+  "skill_id": null,
+  "clarifying_question": null,
+  "ambiguities": [
+   "no registered skill matches"
+  ],
+  "usage": {
+   "usage": {
+    "completion_tokens": 895,
+    "prompt_tokens": 595,
+    "total_tokens": 1490,
+    "completion_tokens_details": {
+     "reasoning_tokens": 838
+    },
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    }
+   },
+   "estimated_cost_usd": 0.0045475,
+   "request_id": "chatcmpl-01a18777-c124-7460-a7c0-aa0e9353543f"
+  },
+  "reserved_usd": 0.1,
+  "elapsed_ms": 3587
+ },
+ {
+  "prompt_id": "P4",
+  "text": "mets la TV en pause s il te plait",
+  "lang": "en",
+  "status": "unsupported",
+  "skill_id": null,
+  "clarifying_question": null,
+  "ambiguities": [
+   "no registered skill matches"
+  ],
+  "usage": {
+   "usage": {
+    "completion_tokens": 827,
+    "prompt_tokens": 598,
+    "total_tokens": 1425,
+    "completion_tokens_details": {
+     "reasoning_tokens": 777
+    },
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    }
+   },
+   "estimated_cost_usd": 0.00426225,
+   "request_id": "chatcmpl-01a18777-cf9d-77b7-b581-d2b3a5002bb5"
+  },
+  "reserved_usd": 0.1,
+  "elapsed_ms": 3769
+ },
+ {
+  "prompt_id": "P1",
+  "text": "allume la lampe du salon et lance l aspirateur",
+  "lang": "fr",
+  "status": "resolved",
+  "skill_id": "vacuum.start",
+  "clarifying_question": null,
+  "ambiguities": [],
+  "usage": {
+   "usage": {
+    "completion_tokens": 1841,
+    "prompt_tokens": 600,
+    "total_tokens": 2441,
+    "completion_tokens_details": {
+     "reasoning_tokens": 1773
+    },
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    }
+   },
+   "estimated_cost_usd": 0.00857425,
+   "request_id": "chatcmpl-01a18777-f92c-72cf-94d5-428ca6f09517"
+  },
+  "reserved_usd": 0.1,
+  "elapsed_ms": 10640
+ },
+ {
+  "prompt_id": "P2",
+  "text": "turn it off",
+  "lang": "en",
+  "status": "unsupported",
+  "skill_id": null,
+  "clarifying_question": null,
+  "ambiguities": [
+   "no registered skill matches"
+  ],
+  "usage": {
+   "usage": {
+    "completion_tokens": 2435,
+    "prompt_tokens": 591,
+    "total_tokens": 3026,
+    "completion_tokens_details": {
+     "reasoning_tokens": 2397
+    },
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    }
+   },
+   "estimated_cost_usd": 0.0110875,
+   "request_id": "chatcmpl-01a18778-27c7-74fd-b89e-f26c22633790"
+  },
+  "reserved_usd": 0.1,
+  "elapsed_ms": 11909
+ }
+]
