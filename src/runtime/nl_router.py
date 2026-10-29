@@ -77,7 +77,7 @@ class OllamaIntentTransport:
             self.last_ok = False
             raise TransportError(str(e)) from None
         payload = {'model': self.model_id, 'stream': False, 'format': INTENT_SCHEMA,
-                   'keep_alive': '30s', 'options': {'temperature': 0, 'num_ctx': 4096},
+                   'keep_alive': '10m', 'options': {'temperature': 0, 'num_ctx': 4096},
                    'messages': [{'role': 'system', 'content':
                                   'Reply in English only as compact JSON matching the schema.'},
                                  {'role': 'user', 'content': prompt}]}
