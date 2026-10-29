@@ -26,6 +26,7 @@ from a request loop (open defect: 2 taps -> 16 executions, 28 Oct).
 """
 import hashlib
 import json
+import secrets
 import threading
 import time
 
@@ -60,6 +61,8 @@ class RemoteControls:
         self.suspended = set()   # (relay_id, control_id) suspended after an unusual burst
         self.history = []        # bounded outcome log (no free text from the device)
         self.layouts = {}        # relay_id -> {revision, acked, display: {control_id: {kind, label, value, source}}}
+        self.full_control = {}   # relay_id -> standing owner consent reported by the device (refreshed each poll)
+        self._fc_blocked = set() # relay_ids whose full control the PC owner emergency-blocked (device stays master)
         self._lock = threading.Lock()
         self._grant_send_lock = threading.Lock()  # order Companion updates through acknowledgement
         self._stop = threading.Event()
@@ -197,10 +200,56 @@ class RemoteControls:
         self._ensure_thread()
         return self.state()
 
+    def invoke_now(self, rid, control_id):
+        """Server-initiated invocation under the device's standing full-control consent.
+
+        Same rails as a press (point-of-dispatch revalidation, burst/interval/TTL,
+        router arm/invoke, receipts, status widgets). The device flag is refreshed
+        through get_status (which never drains the press queue) right before deciding.
+        """
+        if self.closed:
+            raise RemoteControlError(503, 'Remote controls are shut down')
+        self._relay(rid)
+        with self._lock:
+            if self._current_grant(rid, control_id) is None:
+                raise RemoteControlError(409, 'This control is no longer authorized')
+            if rid in self._fc_blocked:
+                raise RemoteControlError(409, 'Full control is blocked on the PC')
+        try:
+            device_flag = fabric_relay.reported_full_control(self._send(rid, 'get_status'))
+        except fabric_relay.RelayError as e:
+            raise RemoteControlError(409, str(e)) from None
+        with self._lock:
+            self.full_control[rid] = device_flag
+            if not device_flag:
+                raise RemoteControlError(409, 'Allow full control on the device first')
+        req = {'request_id': secrets.token_hex(16), 'control_id': control_id,
+               'pressed_at': int(self.clock() * 1000), 'gesture': 'full_control'}
+        return self.process(rid, req, origin='full_control')
+
+    def set_full_control_block(self, rid, blocked):
+        """PC-side emergency brake (and release) for a relay's full control.
+
+        The device stays the master switch: enabling is only possible on the
+        device, but either side can turn the effective state off at any time.
+        """
+        if self.closed:
+            raise RemoteControlError(503, 'Remote controls are shut down')
+        self._relay(rid)
+        with self._lock:
+            if blocked:
+                self._fc_blocked.add(rid)
+            else:
+                self._fc_blocked.discard(rid)
+        return self.state()
+
     def state(self):
         with self._lock:
             return {'controls': [{'relay_id': rid, 'control_id': cid, **{k: v for k, v in g.items() if k not in ('key_fp', 'grant', 'facts', 'manifest')}}
                                  for rid, cs in self.grants.items() for cid, g in cs.items()],
+                    'full_control': {rid: {'device': bool(self.full_control.get(rid)), 'blocked': rid in self._fc_blocked,
+                                          'effective': bool(self.full_control.get(rid)) and rid not in self._fc_blocked}
+                                     for rid in set(self.grants) | set(self.full_control)},
                     'history': list(self.history[-20:]), 'suspended': sorted(f'{a}/{b}' for a, b in self.suspended),
                     'transport': {rid: r.get('aead') or 'plaintext' for rid, r in getattr(getattr(self.server, 'relays', None), 'relays', {}).items()},
                     'layouts': {rid: {'revision': l['revision'], 'acked': l['acked'],
@@ -267,6 +316,8 @@ class RemoteControls:
             if r is None:                                   # relay revoked: its controls die with it
                 with self._lock:
                     self.grants.pop(rid, None)
+                    self.full_control.pop(rid, None)
+                    self._fc_blocked.discard(rid)
                 continue
             if r.get('busy'):
                 continue
@@ -282,6 +333,8 @@ class RemoteControls:
                 reqs = fabric_relay.validate_requests(reply, known)
             except fabric_relay.RelayError:
                 continue
+            with self._lock:
+                self.full_control[rid] = fabric_relay.reported_full_control(reply)
             if not r.get('online'):
                 r['online'], r['failures'] = True, 0
                 ledger = getattr(self.server, 'relay_ledger', None)
@@ -298,7 +351,7 @@ class RemoteControls:
                 done += 1
         return done
 
-    def process(self, rid, req):
+    def process(self, rid, req, origin='press'):
         from src.runtime.api_v2 import router
         from src.runtime.routing import RouteError
         actor = f'relay:{rid}'
@@ -306,7 +359,7 @@ class RemoteControls:
         now = self.clock()
         entry = {'at': now, 'relay_id': rid, 'control_id': req['control_id'], 'request_id': req['request_id'],
                  'seq': req.get('seq'), 'pressed_at': req.get('pressed_at'), 'gesture': req.get('gesture'), 'touch': req.get('touch'),
-                 'skill_id': None, 'invocation_id': None, 'transaction_id': None}
+                 'skill_id': None, 'invocation_id': None, 'transaction_id': None, 'origin': origin}
         with self._lock:
             grant = self._current_grant(rid, req['control_id'])
         if grant is None:
@@ -339,7 +392,7 @@ class RemoteControls:
         self._update_status(rid, req['control_id'], outcome, now)
         ev = {k: v for k, v in entry.items() if k not in ('at', 'touch', 'seq')}
         self._ex().emit('remote_request', device_seq=entry['seq'], **ev)
-        if not self.closed:
+        if origin == 'press' and not self.closed:
             try:
                 self._send(rid, 'report_result', {'request_id': req['request_id'], 'state': outcome, 'text': text[:80]})
             except fabric_relay.RelayError:

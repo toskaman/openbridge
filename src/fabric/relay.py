@@ -141,6 +141,12 @@ def applied_revision(report):
     return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= MAX_LAYOUT_REVISION else None
 
 
+def reported_full_control(report):
+    """Standing owner consent the device reports (explicit on-device toggle). Strict bool, default False."""
+    v = report.get('full_control') if isinstance(report, dict) else None
+    return v if isinstance(v, bool) else False
+
+
 def validate_requests(report, known_controls):
     """Requests from a relay are untrusted: only an id and the id of a control the owner authorized. The relay never
     supplies a skill, target or parameter; the PC takes those from the owner's grant."""
