@@ -4,9 +4,10 @@ import json
 import re
 
 SCHEMA_VERSION = 1
-# Declared per-primitive input schemas, mirrored in the synth prompt (v4-synth-3) so the
+# Declared per-primitive input schemas, mirrored in the synth prompt (v4-synth-4) so the
 # model sees the exact contract the validator enforces. INPUT_KEY_NAMES is pinned here
-# and drift-tested against android_actions.KEYS (the runtime truth).
+# and drift-tested against android_actions.KEYS (the runtime truth); INPUT_SCHEMAS keys
+# and INPUT_REQUIRED are drift-tested against the kernel registry input schemas.
 INPUT_KEY_NAMES = ('app_switch', 'back', 'captions', 'channel_down', 'channel_up', 'delete',
                    'digit_0', 'digit_1', 'digit_2', 'digit_3', 'digit_4', 'digit_5', 'digit_6',
                    'digit_7', 'digit_8', 'digit_9', 'down', 'enter', 'fast_forward', 'guide',
@@ -14,7 +15,13 @@ INPUT_KEY_NAMES = ('app_switch', 'back', 'captions', 'channel_down', 'channel_up
                    'notifications', 'ok', 'play_pause', 'power', 'previous', 'rewind', 'right',
                    'search', 'settings', 'sleep', 'stop', 'tv_input', 'up', 'volume_down',
                    'volume_up', 'wakeup')
-INPUT_SCHEMAS = {'input.key': {'key': 'string, one of: ' + ', '.join(INPUT_KEY_NAMES)}}
+INPUT_SCHEMAS = {'input.key': {'key': 'string, one of: ' + ', '.join(INPUT_KEY_NAMES)},
+                 'setting.set_exact': {'setting': 'string, one of: media_volume, screen_brightness, screen_timeout_ms',
+                                       'value': 'integer (kernel range per setting; screen_timeout_ms 10000..1800000)'},
+                 'state.read_setting': {'setting': 'string, one of: media_volume, screen_brightness, screen_timeout_ms'}}
+INPUT_REQUIRED = {'input.key': ('key',),
+                  'setting.set_exact': ('setting', 'value'),
+                  'state.read_setting': ('setting',)}
 ID = re.compile(r'[a-zA-Z][a-zA-Z0-9_.:-]{0,63}\Z')
 BUNDLE_KEYS = {'schema_version', 'bundle_id', 'observed_at', 'devices', 'relays', 'primitives', 'registry_digest'}
 SUSPICIOUS = re.compile(r'ignore\b|disregard|system prompt|shutdown|eval\(|;|\bexec\b', re.IGNORECASE)

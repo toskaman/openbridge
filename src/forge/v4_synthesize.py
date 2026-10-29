@@ -4,7 +4,7 @@ import secrets
 
 from src.forge import v4_schemas as S
 
-PROMPT_VERSION = 'v4-synth-3'
+PROMPT_VERSION = 'v4-synth-4'
 CANDIDATE_KEYS = {'schema_version', 'candidate_id', 'origin', 'intent', 'target_opaque_id',
                   'primitive_chain', 'preconditions', 'postconditions', 'required_grants',
                   'evidence_refs', 'model_run_id'}
@@ -44,7 +44,9 @@ def _input_schema_lines(primitive_ids):
             lines.append('- %s: no declared inputs; use "input": {} exactly' % pid)
             continue
         inner = ', '.join('"%s": %s' % (k, v) for k, v in sorted(schema.items()))
-        lines.append('- %s: "input": {%s}; undeclared keys are rejected' % (pid, inner))
+        req = S.INPUT_REQUIRED.get(pid, ())
+        lines.append('- %s: "input": {%s}; required: %s; undeclared keys are rejected'
+                     % (pid, inner, ', '.join(req) if req else 'none'))
     return '\n'.join(lines)
 
 
@@ -79,7 +81,7 @@ def build_prompt(bundle, intent_text, primitive_ids, target_category):
                 _input_schema_lines(primitive_ids), example))
 
 
-def validate_candidate(value, primitive_ids, bundle=None, schemas=None, sources=None):
+def validate_candidate(value, primitive_ids, bundle=None, schemas=None, sources=None, required=None):
     if not isinstance(value, dict) or set(value) != CANDIDATE_KEYS:
         raise SynthError('SCHEMA_REJECTED')
     if value['schema_version'] != S.SCHEMA_VERSION or value['origin'] != 'meta_generated':
@@ -100,6 +102,12 @@ def validate_candidate(value, primitive_ids, bundle=None, schemas=None, sources=
                 want = allowed[k]
                 if want == 'string' and not isinstance(v, str):
                     raise SynthError('INPUT_TYPE')
+                if want == 'integer' and (not isinstance(v, int) or isinstance(v, bool)):
+                    raise SynthError('INPUT_TYPE')
+        if required is not None and step['primitive_id'] in required:
+            for k in required[step['primitive_id']]:
+                if k not in step['input']:
+                    raise SynthError('MISSING_REQUIRED_INPUT: %s lacks %s' % (step['primitive_id'], k))
     if not isinstance(value['evidence_refs'], list) or not value['evidence_refs']:
         raise SynthError('EVIDENCE_REQUIRED')
     grants = value['required_grants']
@@ -124,7 +132,7 @@ def validate_candidate(value, primitive_ids, bundle=None, schemas=None, sources=
 
 
 def synthesize(client, tier, bundle, intent_text, primitive_ids, target_category,
-               schemas=None, sources=None):
+               schemas=None, sources=None, required=None):
     """Propose a candidate only. This layer has no staging path: hosts must call
     v4_substrate.compile_first (trusted kernel) before anything is staged."""
     prompt = build_prompt(bundle, intent_text, primitive_ids, target_category)
@@ -141,7 +149,7 @@ def synthesize(client, tier, bundle, intent_text, primitive_ids, target_category
     doc['model_run_id'] = 'mr-' + secrets.token_hex(8)
     try:
         cand = validate_candidate(doc, primitive_ids, bundle=bundle, schemas=schemas,
-                                  sources=sources)
+                                  sources=sources, required=required)
     except SynthError as e:
         return (False, {'status': 'SCHEMA_REJECTED', 'reason': str(e)[:120]})
     cand['digest'] = S.digest({k: v for k, v in cand.items()})
