@@ -13,6 +13,32 @@ class PlanError(ValueError):
     pass
 
 
+def emit_workflow(plan, manifest_hashes, model_run, title=None, max_parallel=2):
+    """Map a validated plan to Claude's obv4.1-wf workflow doc (contract C2).
+
+    manifest_hashes: {step_id: 'sha256:...'} of COMPILED+APPROVED manifests.
+    A step without one is refused — hashes are never invented. The owner still
+    signs the whole workflow at issue_grant; this only authors the DAG shape.
+    """
+    import re
+    if not isinstance(model_run, dict) or model_run.get('provider') != 'meta' \
+            or not model_run.get('model') or not model_run.get('run_id'):
+        raise PlanError('META_RUN_REQUIRED')
+    steps = plan.get('steps') or []
+    nodes = []
+    for s in steps:
+        mh = (manifest_hashes or {}).get(s['step_id'])
+        if not isinstance(mh, str) or not re.fullmatch(r'sha256:[0-9a-f]{64}', mh):
+            raise PlanError('MANIFEST_REQUIRED: %s' % (s.get('step_id'),))
+        nodes.append({'node_id': s['step_id'], 'manifest_hash': mh,
+                      'depends_on': list(s.get('depends_on') or [])})
+    return {'workflow_version': 'obv4.1-wf',
+            'workflow_id': 'wf-%s' % (plan.get('plan_id') or 'adhoc'),
+            'title': (title or plan.get('goal') or 'plan')[:80],
+            'origin': 'meta_generated', 'model_run': dict(model_run),
+            'nodes': nodes, 'max_parallel': max_parallel}
+
+
 def _step_shape(s):
     if not isinstance(s, dict):
         raise PlanError('STEP_MUST_BE_OBJECT')
