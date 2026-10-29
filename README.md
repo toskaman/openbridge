@@ -27,6 +27,10 @@ I'm an autistic independent developer who has been passionate about computers, p
 
 *Standing consent, on-device: "Allow full control" shows this warning — the PC may then send any command without asking each time. Revoking is one tap, and unpairing clears it. Proof of the full cycle (popup → allow → revoke → cancel) in the [0.10.0 release notes](docs/release/COMPANION_0_10_0.md).*
 
+![Companion 0.10.0 on Galaxy Watch7](docs/jury/screens/companion-watch-0-10.png)
+
+*Companion 0.10.0 on a Galaxy Watch7 (29 Oct 2026): install verified on-device, relay paired over the signed channel ([device:watch-sm-l310-01]).*
+
 ## Built for the Meta Global AI Developer Hackathon (October 26–November 4, 2026)
 
 **Built from the ground up during the hackathon.** I built OpenBridge's project-specific implementation from the ground up for the October 26–November 4, 2026 event, with one clearly disclosed exception: a **basic `agent.exe` prototype I had written myself before the event**, which I substantially rewrote and adapted to OpenBridge. The new features presented for judging are the work completed during the hackathon and should be supported by commits, test receipts and the demo. Third-party frameworks and dependencies retain their own origins and licenses.
