@@ -179,7 +179,7 @@ def main():
     desc = {d['id']: d for d in cat['primitives']}
     offer = [p for p in OFFER if desc.get(p, {}).get('manifest_allowed')]
     schemas = {p: {k: v.get('type', 'string') for k, v in desc[p]['input_schema'].get('properties', {}).items()} for p in offer}
-    bundle = v4_evidence.resolve([{'device_id': tv['key'], 'category': 'tv', 'permission_scope': scope,
+    bundle = v4_evidence.resolve([{'device_id': fp, 'category': 'tv', 'permission_scope': scope,
                                    'facts': [{'kind': f['name'], 'value': f.get('value'), 'source': f.get('source', 'unknown'),
                                               'observed_at': time.time()} for f in kfacts]}], [], offer, time.time())
     ref_to_fact = {bf['evidence_ref']: kf for bf, kf in zip(bundle['devices'][0]['facts'], kfacts)}
