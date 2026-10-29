@@ -1,0 +1,110 @@
+{
+ "model": "llama3.2:3b-instruct-q4_K_M",
+ "prompt": "v4-synth-3",
+ "cases": [
+  {
+   "id": "D1",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 21036
+  },
+  {
+   "id": "D2",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "GRANT_SCOPE"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 26450
+  },
+  {
+   "id": "D3",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 19193
+  },
+  {
+   "id": "D4",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 27095
+  },
+  {
+   "id": "D5",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 16230
+  },
+  {
+   "id": "D6",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 21548
+  },
+  {
+   "id": "D7",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 20777
+  },
+  {
+   "id": "D8",
+   "baseline": "ABSTAIN_UNSUPPORTED",
+   "valid": false,
+   "reason": [
+    "SCHEMA_REJECTED",
+    "UNKNOWN_TARGET"
+   ],
+   "evidence_precision": null,
+   "grants_ok": null,
+   "usage": {},
+   "latency_ms": 16117
+  }
+ ]
+}
