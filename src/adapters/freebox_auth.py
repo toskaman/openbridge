@@ -15,7 +15,8 @@ APP_ID = 'fr.openbridge.devicefabric'
 APP_NAME = 'OpenBridge Device Fabric'
 APP_VERSION = '0.2'
 BASE = 'http://mafreebox.freebox.fr'
-READ_ONLY_PATHS = ('lan/browser/interfaces/', 'lan/browser/pub/', 'system/', 'connection/', 'connection/ftth/', 'wifi/config/', 'wifi/ap/')
+READ_ONLY_PATHS = ('lan/browser/interfaces/', 'lan/browser/pub/', 'system/', 'connection/', 'connection/ftth/', 'wifi/config/', 'wifi/ap/',
+                   'dhcp/static_lease/')
 TOKEN_NAME = 'freebox-app-token'
 
 
@@ -113,6 +114,16 @@ class FreeboxSession:
                     raise
                 self.open_session()     # expired session: one renewal, no loop
                 return self._ok(self.t('GET', self.v + path, session=self.session))
+
+    def dhcp_leases(self):
+        """Static DHCP leases (read-only): which MAC always gets which IP. Empty list when none are configured."""
+        out = []
+        for lease in (self.get('dhcp/static_lease/') or [])[:1000]:
+            if not isinstance(lease, dict):
+                continue
+            out.append({'mac': str(lease.get('mac') or '')[:17], 'ip': str(lease.get('ip') or '')[:15],
+                        'comment': str(lease.get('comment') or '')[:60]})
+        return out
 
     def lan_hosts(self):
         out = []

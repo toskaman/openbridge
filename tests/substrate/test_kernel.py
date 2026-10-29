@@ -92,6 +92,23 @@ class Catalog(Base):
         for f in self.facts:
             self.assertEqual(validate('Fact', f), [])
 
+    def test_tuya_command_covers_all_typed_commands_with_optional_value(self):
+        from src.runtime.primitives import validate as strict, PrimitiveError
+        d = REG.NATIVE_PRIMITIVE_REGISTRY['vendor.tuya.command']
+        cmds = set(d['input_schema']['properties']['command']['enum'])
+        self.assertEqual(cmds, {'start', 'pause', 'dock', 'mode', 'move', 'seek', 'empty_dust',
+                                'reset_side_brush', 'reset_main_brush', 'reset_filter', 'water_level', 'work_mode'})
+        strict(d['input_schema'], {'command': 'seek'})
+        strict(d['input_schema'], {'command': 'mode', 'value': 'mop'})
+        strict(d['input_schema'], {'command': 'move', 'value': 'forward', 'move_s': 1.5})
+        with self.assertRaises(PrimitiveError):
+            strict(d['input_schema'], {'command': 'self_destruct'})
+        exe, build, cats = REG.BACKEND['vendor.tuya.command']
+        self.assertEqual(exe, 'tuya_command')
+        self.assertEqual(build({'command': 'seek'}), {'command': 'seek'})
+        self.assertEqual(build({'command': 'mode', 'value': 'mop'}), {'command': 'mode', 'value': 'mop'})
+        self.assertIn('vacuum', cats)
+
 
 class Compiler(Base):
     def test_valid_manifest_compiles(self):
