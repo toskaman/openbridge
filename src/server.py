@@ -303,6 +303,8 @@ class Handler(BaseHTTPRequestHandler):
                     self.server.fabric_lock.release()
                 self.server.fabric_snapshot=snap
                 self.server.fabric_registry=_
+                if 'android' in providers:
+                    self.server.restore_relays()
                 return self.reply(200,snap)
             if self.path.startswith('/api/agent-'):
                 agent=self.server.agent
@@ -359,8 +361,11 @@ class Handler(BaseHTTPRequestHandler):
         return self.reply(200, result)
 
 
-def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None, session_journal=None):
+def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None, session_journal=None,
+                  relay_store=None):
     server = LocalServer(('127.0.0.1', port), Handler)
+    # Durable pairings are opt-in per launcher (main passes a vault-backed store); tests stay hermetic.
+    server.relay_store = relay_store
     server.csrf_token = secrets.token_urlsafe(32)
     server.android = AndroidAdapter()
     server.android_events = AndroidEventMonitor(server.android)
@@ -434,6 +439,41 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.relay_pending = {}          # device handle -> pairing in progress (isolated per device)
     server.relay_pending_lock = threading.Lock()
     PAIRING_TTL = 120                  # mirrors the Companion 2-minute code expiry
+    def restore_relays(transport_factory=fabric_relay.http_transport):
+        """Re-enroll stored pairings whose device is attached again; each is proven with a signed get_status.
+        Never raises into discovery: a relay that cannot be proven stays enrolled but offline (re-probed later)."""
+        store = server.relay_store
+        out = []
+        if store is None:
+            return out
+        for rid, serial, key, declared, aead_v in store.load():
+            if rid in server.relays.relays:
+                continue
+            handle = server.android.handle_for(serial)
+            if handle is None:
+                continue
+            try:
+                url = server.android.forward_companion(handle)
+                send = transport_factory(url)
+                server.relays.enroll(rid, key, handle, declared)
+                relay = server.relays.relays[rid]
+                relay['url'] = url
+                if aead_v:
+                    from src.fabric import aead
+                    relay['send'], relay['aead'] = aead.encrypting_send(send, rid), aead_v
+                else:
+                    relay['send'] = send
+                status = fabric_relay.verify(key, relay['send'](relay, fabric_relay.command(key, rid, 'get_status')), relay['seen']).get('params', {})
+                relay['permissions'] = dict(status.get('permissions', {}))
+                relay['online'] = True
+                server.relay_ledger.proved(rid)
+                out.append((rid, 'RESTORED'))
+            except (fabric_relay.RelayError, OSError, ValueError) as e:
+                if rid in server.relays.relays:
+                    server.relays.relays[rid]['online'] = False
+                out.append((rid, 'OFFLINE: %s' % type(e).__name__))
+        return out
+    server.restore_relays = restore_relays
     def relay_action(path, body, transport_factory=fabric_relay.http_transport):
         import time
         if path == '/api/relay-pair-start':
@@ -477,6 +517,9 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 server.relays.relays[rid]['aead'] = aead.VERSION
             server.relays.relays[rid]['url'] = pending.get('url')
             server.relay_ledger.proved(rid)
+            if server.relay_store is not None:
+                server.relay_store.save(rid, server.android.serial_for(pending['handle']), key, declared,
+                                        server.relays.relays[rid].get('aead'))
             with server.relay_pending_lock:
                 server.relay_pending.pop(handle, None)
             return {'state': 'PAIRED', 'relay_id': rid, 'declared': declared, 'eligible_for_ble': rid in server.relays.eligible('ble_scan')}
@@ -618,7 +661,12 @@ def main():
     except (TransactionBlocked,OSError,sqlite3.Error):
         print('Simulated transaction journal unavailable; read-only inventory remains available.',flush=True)
     agent_dir=private_root/'agent' if args.agent and args.local_meta else None
-    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir) as server:
+    from src.fabric.credential_vault import Vault
+    from src.fabric.relay_store import RelayStore
+    relay_store = RelayStore(private_root / 'relays.json', Vault()) if os.environ.get('OPENBRIDGE_RELAY_STORE', '1') != '0' else None
+    if relay_store is not None and not relay_store.enabled:
+        print('No OS vault: Companion pairings stay in memory (re-pair after a restart).', flush=True)
+    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir,relay_store=relay_store) as server:
         if args.windows_bridge:
             server.windows_bridge=start_windows_bridge()
         print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
