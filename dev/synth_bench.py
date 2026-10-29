@@ -103,7 +103,7 @@ def main(argv=None):
         records.append(rec)
         print('%s valid=%s reason=%s ms=%d' % (rec['id'], rec['valid'], rec['reason'], rec['latency_ms']), flush=True)
         (out / 'BENCH.json').write_text(json.dumps(
-            {'model': MODEL_ID, 'prompt': 'v4-synth-3', 'cases': records}, indent=1), encoding='utf-8')
+            {'model': MODEL_ID, 'prompt': Y.PROMPT_VERSION, 'cases': records}, indent=1), encoding='utf-8')
     n_valid = sum(1 for r in records if r['valid'])
     print('SYNTH_BENCH valid=%d/%d provider_cost_usd=0.0' % (n_valid, len(records)))
     return 0

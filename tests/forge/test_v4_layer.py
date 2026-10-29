@@ -204,7 +204,7 @@ class Synthesize(unittest.TestCase):
                       'facts': [{'fact_id': 'f', 'kind': 'model', 'value': 'X',
                                  'source': 'ADB', 'observed_at': 1.0}]},))
         p = Y.build_prompt(b, 'mute tv', PRIMS, 'tv')
-        self.assertIn('v4-synth-3', p)
+        self.assertIn('v4-synth-4', p)
         self.assertIn(b['devices'][0]['opaque_id'], p)
         self.assertIn(b['devices'][0]['facts'][0]['evidence_ref'], p)
         self.assertIn('read_facts', p)
@@ -212,7 +212,8 @@ class Synthesize(unittest.TestCase):
 
     def test_prompt_states_candidate_contract(self):
         # G3 attempt-2 root cause: v4-synth-2 never showed the schema, so the model
-        # invented plan/evidence/primitive_ids. v4-synth-3 states all 10 model keys.
+        # invented plan/evidence/primitive_ids. v4-synth-3 states all 10 model keys;
+        # v4-synth-4 adds the true per-primitive input schemas + required keys.
         p = Y.build_prompt(bundle(), 'mute tv', ('input.key',), 'tv')
         for k in ('candidate_id', 'evidence_refs', 'intent', 'origin', 'postconditions',
                   'preconditions', 'primitive_chain', 'required_grants', 'schema_version',
@@ -304,6 +305,58 @@ class Synthesize(unittest.TestCase):
         bad = dict(base, required_grants=['admin'])
         with self.assertRaises(Y.SynthError):
             Y.validate_candidate(bad, PRIMS, schemas=schemas)
+
+
+class SynthRequiredInputs(unittest.TestCase):
+    # Sealed S4 run2 root cause: the prompt told the model setting.set_exact takes
+    # NO inputs ('use "input": {} exactly') and the validator accepted {}, so the
+    # kernel refused the manifest (INVALID_ARGS) after a paid model call.
+    SET_PRIMS = PRIMS + ('setting.set_exact',)
+    SCHEMAS = {'setting.set_exact': {'setting': 'string', 'value': 'integer'}}
+    REQUIRED = {'setting.set_exact': ['setting', 'value']}
+
+    def _cand(self, inp):
+        return {'schema_version': 1, 'candidate_id': 'c1', 'origin': 'meta_generated',
+                'intent': 'x', 'target_opaque_id': 't',
+                'primitive_chain': [{'primitive_id': 'setting.set_exact', 'input': inp}],
+                'preconditions': [], 'postconditions': [], 'required_grants': ['read'],
+                'evidence_refs': ['f1'], 'model_run_id': 'r1'}
+
+    def test_prompt_shows_setting_schema_and_required(self):
+        p = Y.build_prompt(bundle(), 'x', ('setting.set_exact',), 'tv')
+        self.assertIn('v4-synth-4', p)
+        self.assertIn('setting.set_exact', p)
+        self.assertIn('"setting"', p)
+        self.assertIn('"value"', p)
+        self.assertIn('required', p)
+        self.assertNotIn('no declared inputs', p)
+
+    def test_validator_rejects_missing_required_input(self):
+        with self.assertRaises(Y.SynthError) as e:
+            Y.validate_candidate(self._cand({}), self.SET_PRIMS,
+                                 schemas=self.SCHEMAS, required=self.REQUIRED)
+        self.assertIn('MISSING_REQUIRED_INPUT', str(e.exception))
+
+    def test_validator_accepts_full_typed_inputs(self):
+        Y.validate_candidate(self._cand({'setting': 'screen_timeout_ms', 'value': 120000}),
+                             self.SET_PRIMS, schemas=self.SCHEMAS, required=self.REQUIRED)
+
+    def test_validator_rejects_string_for_integer(self):
+        with self.assertRaises(Y.SynthError) as e:
+            Y.validate_candidate(self._cand({'setting': 'screen_timeout_ms', 'value': '120000'}),
+                                 self.SET_PRIMS, schemas=self.SCHEMAS, required=self.REQUIRED)
+        self.assertIn('INPUT_TYPE', str(e.exception))
+
+    def test_synth_contract_matches_kernel_registry(self):
+        from src.substrate import registry as R
+        for pid, keys in S.INPUT_SCHEMAS.items():
+            schema = R.NATIVE_PRIMITIVE_REGISTRY[pid]['input_schema']
+            self.assertEqual(set(keys), set(schema['properties']),
+                             'prompt/validator keys drifted from the kernel for ' + pid)
+        for pid, req in S.INPUT_REQUIRED.items():
+            schema = R.NATIVE_PRIMITIVE_REGISTRY[pid]['input_schema']
+            self.assertEqual(list(req), list(schema.get('required', [])),
+                             'required keys drifted from the kernel for ' + pid)
 
 
 class UIPlanner(unittest.TestCase):
