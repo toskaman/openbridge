@@ -130,6 +130,7 @@ def main():
         ap.add_argument(a, required=True)
     ap.add_argument('--free-balance-usd', type=float, required=True)
     ap.add_argument('--allowance-usd', type=float, default=0.80)
+    ap.add_argument('--max-completion-tokens', type=int, default=MAX_COMPLETION_TOKENS)
     ap.add_argument('--reasoning-effort', choices=['minimal', 'low', 'medium', 'high'], default=None,
                     help='Muse Spark reasoning_effort (cannot be disabled); recorded in the transcript')
     args = ap.parse_args()
@@ -142,7 +143,7 @@ def main():
 
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     T = {'kind': 'G3_INTEGRATION_SMOKE', 'started': datetime.now(timezone.utc).isoformat(), 'intent': INTENT,
-         'model': MODEL_ID, 'reasoning_effort': args.reasoning_effort, 'calls': [], 'steps': []}
+         'model': MODEL_ID, 'reasoning_effort': args.reasoning_effort, 'max_completion_tokens': args.max_completion_tokens, 'calls': [], 'steps': []}
 
     def save():
         (out / 'G3_SMOKE_TRANSCRIPT.json').write_text(json.dumps(T, indent=1, ensure_ascii=False), encoding='utf-8')
@@ -199,7 +200,7 @@ def main():
         except ModelBlocked as e:
             rec['status'] = 'BLOCKED'; rec['error'] = str(e); raise
         t0 = time.monotonic()
-        payload = {'model': MODEL_ID, 'temperature': 0, 'max_completion_tokens': MAX_COMPLETION_TOKENS,
+        payload = {'model': MODEL_ID, 'temperature': 0, 'max_completion_tokens': args.max_completion_tokens,
                    'messages': [{'role': 'user', 'content': prompt}]}
         if args.reasoning_effort:
             payload['reasoning_effort'] = args.reasoning_effort
