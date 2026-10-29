@@ -68,7 +68,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(415, {'error': 'JSON required'})
         try:
             lengths = self.headers.get_all('Content-Length', [])
-            if len(lengths) != 1 or self.headers.get('Transfer-Encoding') or not 0 <= int(lengths[0]) <= (700_000 if self.path == '/api/v2/voice/transcribe' else 65_536 if self.path.startswith('/api/v2/manifests/') else 8192):
+            if len(lengths) != 1 or self.headers.get('Transfer-Encoding') or not 0 <= int(lengths[0]) <= (700_000 if self.path == '/api/v2/voice/transcribe' else 65_536 if self.path.startswith(('/api/v2/manifests/', '/api/v2/workflows/')) else 8192):
                 raise ValueError()
             self.connection.settimeout(5)
             body = json.loads(self.rfile.read(int(lengths[0])))

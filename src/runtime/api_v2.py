@@ -6,7 +6,7 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
+GET_ROUTES = ('/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -24,7 +24,7 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/primitives/catalog', '/api/v2/facts/s
               '/api/v2/onboarding',
               '/api/v2/command/tiers',
               '/api/v2/companion/commands')
-POST_ROUTES = ('/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
+POST_ROUTES = ('/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
 
 
 import threading
@@ -143,6 +143,8 @@ def get(server, path, query):
             return 200, {'device_fingerprint': s.fingerprint(key), 'facts': s.facts(key)}
         except SubstrateError as e:
             return e.status, {'error': str(e), 'code': e.code}
+    if path == '/api/v2/workflows/receipts':
+        return 200, {'receipts': list(workflows(server).receipts[-30:])}
     if path == '/api/v2/manifests/receipts':
         return 200, {'receipts': list(substrate(server).receipts[-50:])}
     if path == '/api/v2/onboarding':
@@ -334,7 +336,27 @@ def apk_portal(server, body):
     return 200, server.apk_portal.state()
 
 
+def workflows(server):
+    if getattr(server, 'v4_workflows', None) is None:
+        from src.substrate.workflow import Workflows
+        server.v4_workflows = Workflows(substrate(server))
+    return server.v4_workflows
+
+
 def post(server, path, body):
+    if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
+        from src.substrate.kernel import SubstrateError
+        w = workflows(server)
+        try:
+            if path == '/api/v2/workflows/grant':           # owner path only (CSRF + Origin enforced by the server)
+                return 200, {'wgrant': w.issue_grant(body.get('workflow'), body.get('bindings'), body.get('consent'), body.get('ttl_s', 900))}
+            if path == '/api/v2/workflows/revoke':
+                w.revoke(str(body.get('wgrant_id', '')))
+                return 200, {'revoked': body.get('wgrant_id')}
+            if path == '/api/v2/workflows/run':
+                return 200, w.run(body.get('workflow'), body.get('wgrant'), body.get('bindings'), body.get('operation_id'))
+        except SubstrateError as e:
+            return e.status, dict({'error': str(e), 'code': e.code}, **e.extra)
     if path.startswith('/api/v2/manifests/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError
         s = substrate(server)

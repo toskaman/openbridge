@@ -21,7 +21,7 @@ this branch) and hardware runs today. Older planning documents were not taken as
 ## Gaps against the platform brief (honest status, prioritized for 4 Nov)
 | gap | status | plan |
 |---|---|---|
-| Multi-device workflows | manifests target ONE device; no dependency graph | P1: kernel workflow (DAG of per-device manifests, step receipts, partial-completion report, no blind retry) |
+| Multi-device workflows | **done on this branch**: `src/substrate/workflow.py`, owner-signed DAG, parallel across devices, skip-on-failure, cancel, signed receipts; TV+phone hardware run in `docs/evidence/v4/workflow` | next: Muse planner emits `obv4.1-wf`; durable workflow journal |
 | Transport confidentiality | relay messages are authenticated (HMAC) but **not encrypted**; voice clips plaintext on LAN | P1: AEAD envelope (key derived from the pairing key), version-negotiated |
 | Relay pairing persistence | relays live in server memory; a server restart needs re-pairing | P1: durable relay store (key wrapped by the vault), corrupt-state fail-closed |
 | Companion lifecycle | relay runs only while the app is open (no foreground service); Wear OS uses the same phone APK | P2: foreground service with visible notification; Wear-specific layout pass |
