@@ -10,7 +10,7 @@ Goal: prove the OpenBridge agent runs beyond the two dev PCs. All VM disk on
 | deb1 | Debian 13 trixie | 6.12.107 / 3.13.5 | 127.0.0.1:2222 | `E:/VMs/logs/agent-handshake-deb1-FINAL.log` (id=DEB1) |
 | deb2 | Debian 13 trixie | 6.12.107 / 3.13.5 | 127.0.0.1:2223 | `E:/VMs/logs/agent-handshake-deb2.log` (id=DEB2) |
 | deb12 | Debian 12 bookworm | 6.1.0-50 / 3.11.2 | 127.0.0.1:2224 | `E:/VMs/logs/agent-handshake-deb12.log` (id=DEB12) |
-| ub22 | Ubuntu 22.04.5 server | (pending §) | 127.0.0.1:2225 | (pending) |
+| ub22 | Ubuntu 22.04.5 server | 6.8.0-138 / 3.10.12 | 127.0.0.1:2225 | `E:/VMs/logs/agent-handshake-ub22.log` (id=UB22) |
 
 Method: preseed (Debian) / nocloud-net autoinstall (Ubuntu) over QEMU
 user-net (`http://10.0.2.2:8000`, host file server), SSH key `E:/VMs/keys/ob_vm`,
