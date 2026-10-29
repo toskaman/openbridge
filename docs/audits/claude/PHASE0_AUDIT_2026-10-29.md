@@ -23,7 +23,7 @@ this branch) and hardware runs today. Older planning documents were not taken as
 |---|---|---|
 | Multi-device workflows | **done on main**: `src/substrate/workflow.py`, owner-signed DAG, parallel across devices, skip-on-failure, cancel, signed receipts; TV+phone hardware run in `docs/evidence/v4/workflow` | next: Muse planner emits `obv4.1-wf`; durable workflow journal |
 | Transport confidentiality | **done (claude/relay-aead)**: aead1 envelope (stdlib encrypt-then-MAC), negotiated at pairing, plaintext refused afterwards, voice clips sealed; TV run in `docs/evidence/v4/aead1` | follow-up: PAKE pairing (6-digit code is brute-forceable offline from a recorded pairing) |
-| Relay pairing persistence | relays live in server memory; a server restart needs re-pairing | P1: durable relay store (key wrapped by the vault), corrupt-state fail-closed |
+| Relay pairing persistence | **done (claude/durable-relays)**: vault-held keys, atomic metadata, restore with signed proof after discovery; TV run in `docs/evidence/v4/durable-relays` | Wi-Fi ADB port changes break the serial match (fails safe) |
 | Companion lifecycle | relay runs only while the app is open (no foreground service); Wear OS uses the same phone APK | P2: foreground service with visible notification; Wear-specific layout pass |
 | File transfer, screen capture, contacts, calls | registry HYPOTHESIS only; nothing implemented | P1 file transfer (chunked, SHA-256, resume) then capture (MediaProjection consent); calls stay exploratory (remote-mic probe already negative) |
 | Windows companion | BridgeWindows lives outside the repo (unversioned); not audited here | P2: audit before integrating |

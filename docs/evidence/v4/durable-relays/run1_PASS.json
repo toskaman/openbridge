@@ -1,0 +1,48 @@
+{
+ "kind": "HW_DURABLE_RELAY",
+ "log": [
+  {
+   "at": "15:23:26",
+   "pair_start": {
+    "http": 200
+   }
+  },
+  {
+   "at": "15:23:35",
+   "pair_confirm": {
+    "http": 200,
+    "state": "PAIRED",
+    "relay_id": "relay-dabd2a796665"
+   }
+  },
+  {
+   "at": "15:23:35",
+   "transport_before_restart": {
+    "relay-dabd2a796665": "aead1"
+   }
+  },
+  {
+   "at": "15:23:44",
+   "transport_after_restart_and_discovery": {
+    "relay-dabd2a796665": "aead1"
+   }
+  },
+  {
+   "at": "15:23:45",
+   "owner_command_over_restored_relay": {
+    "http": 200,
+    "err": null
+   }
+  },
+  {
+   "at": "15:23:45",
+   "relay_fingerprint_matches_tv": {
+    "tv_fp": "fp-cb5949724ef84aa0"
+   }
+  },
+  {
+   "at": "15:23:45",
+   "done": true
+  }
+ ]
+}

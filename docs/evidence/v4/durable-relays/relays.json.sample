@@ -1,0 +1,19 @@
+{
+ "relays": {
+  "relay-dabd2a796665": {
+   "aead": "aead1",
+   "declared": {
+    "battery_powered": false,
+    "capabilities": [
+     "aead1",
+     "ble_scan",
+     "command_submit",
+     "remote_controls"
+    ]
+   },
+   "paired_at": 1793283815,
+   "serial": "192.168.1.15:5555"
+  }
+ },
+ "version": 1
+}

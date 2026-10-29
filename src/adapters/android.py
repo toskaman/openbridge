@@ -94,6 +94,14 @@ class AndroidAdapter:
         except (OSError, ValueError, subprocess.SubprocessError):
             return {'status': 'ADB_UNAVAILABLE', 'devices': []}
 
+    def serial_for(self, handle):
+        with self._lock:
+            return next((k for k, v in self._handles.items() if v == handle), None)
+
+    def handle_for(self, serial):
+        with self._lock:
+            return self._handles.get(serial)
+
     def install_companion(self, handle, apk_path):
         """Fixed `adb install -r <OpenBridge Companion APK>`; returns raw adb output for classification (never raises on refusal)."""
         with self._lock:
