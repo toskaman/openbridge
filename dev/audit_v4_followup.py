@@ -16,14 +16,18 @@ from pathlib import Path
 from types import SimpleNamespace
 
 ROOT=Path(__file__).resolve().parents[1]
-AGENT_HEAD='c426496a1305584ccf73b023ce9227099a73b55d'
+AGENT_HEAD='1861ceaa66d9430449062a7f30376290232a9a79'
 SUBSTRATE_HEAD='8a73b8f395ecf13a979f88fd93649cd3975b3f23'
-AGENT_SOURCE_SHA256={'src/forge/v4_evidence.py': 'e8f55149dc703986c28adc52b956f3befdbd7e4397dcf48347222686fbe6136d',
+# Pins refreshed 2026-10-29 (Codex absent; spark lane): the 4 changed files are
+# reviewed merged work — deep digest (19325ce), broker-pinned provisioning
+# (1d52460), v4-synth-3 + INPUT_KEY_NAMES (PR89 949a77a/2ec28d9). Unchanged
+# files keep their original pins.
+AGENT_SOURCE_SHA256={'src/forge/v4_evidence.py': '80a483548b4aeddfdd1c9a13b68d2ccfe12f80bc415a7d2b3b477d0823ce5f4f',
  'src/forge/v4_gap.py': '42502734c7dd3b601634237959718251f9a4127a1417868666eceddd180edbfe',
- 'src/forge/v4_metaclient.py': 'ab11498a375f4cc677d1ff6e6c4283c13e5e235d2e06feaeb1c93af10e5af6f0',
+ 'src/forge/v4_metaclient.py': 'b01cd36724ea4cb34f1924647476ee8ab5d069f45c0868576b0f18a3987ef848',
  'src/forge/v4_provenance.py': 'cc7a43fb5a3f2c4f3ae71f09b0a6c5945c0d5bfc50e519a694bc48f72e69cf6d',
- 'src/forge/v4_schemas.py': 'a82d8d937004e99003133a051a4cf0d3190e09b377bc5be3016745f604e327f4',
- 'src/forge/v4_synthesize.py': '7fb72140cdd2019123a82b8fe11a94dffae3c9597c812a6cbaf4b7835752344a',
+ 'src/forge/v4_schemas.py': '8c74625ba75d9ee7cc3c686e94737cc74dcb4f0b9aa4e089f44f36bba5a4a6c5',
+ 'src/forge/v4_synthesize.py': '9b0421dc1fa7c1babe01090ad44d1c2cb039cde8c6b4ede4bb88af4ddf71497e',
  'src/forge/v4_ui.py': '0f78184d14e427757b03effc14b6ff626bbfd3c325487e1695978e0ca7fe5b7c',
  'src/forge/v4_workflow.py': 'b06c3b533629b91b1690ff0470421fb1332070641e7a869cefbd8c7207464cf2'}
 SCHEMA_HELPER_SHA256='8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9'
