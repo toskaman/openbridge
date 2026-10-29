@@ -24,3 +24,12 @@ owner grant is verified. `layout_version` becomes the relay `revision`.
 Persisted on the device across app restarts; revocation of the grant blocks execution even though the widget is still
 drawn; clearing controls removes them; an offline relay is re-probed every 5 s; presses older than 30 s never run.
 Old Companions (≤0.7) ignore `kind` and render every control as a button: send v2 plans only to ≥0.8.
+
+---
+# Multi-device workflows — contract for Muse (`obv4.1-wf`)
+`{workflow_version: "obv4.1-wf", workflow_id, title (≤80), origin: "meta_generated", model_run: {provider: "meta", model, run_id},
+nodes: [{node_id, manifest_hash, depends_on: [node_id…]}] (1–16, acyclic), max_parallel: 1–4}`.
+Each node's manifest is a normal single-device obv4.1 manifest with its own owner grant. The owner then signs the
+exact workflow (`POST /api/v2/workflows/grant`, one use); `POST /api/v2/workflows/run` executes it. Statuses per node:
+VERIFIED/EXECUTED, FAILED, BLOCKED, INCONCLUSIVE (never retried), SKIPPED (a dependency did not succeed), CANCELLED.
+Workflow status: COMPLETED, PARTIAL, FAILED, CANCELLED. Receipts: `GET /api/v2/workflows/receipts`.

@@ -1,0 +1,253 @@
+{
+ "kind": "HW_MULTI_DEVICE_WORKFLOW",
+ "started": "2026-10-29T15:02:45+0100",
+ "log": [
+  {
+   "t": 2.11,
+   "manifests": {
+    "tv": {
+     "model_run": {
+      "model": "muse-spark-1.3",
+      "provider": "meta",
+      "run_id": "mr_2679619b7ab09920"
+     },
+     "steps": [
+      [
+       "input.key",
+       {
+        "key": "mute"
+       }
+      ],
+      [
+       "state.audio",
+       {}
+      ]
+     ],
+     "note": "Meta G3 steps, host-rebound"
+    },
+    "phone": {
+     "steps": [
+      [
+       "state.screen",
+       {}
+      ]
+     ],
+     "note": "FIXTURE read-only manifest (labelled meta_generated only because obv4.1 requires that origin; authored by Claude for this infrastructure test)"
+    }
+   }
+  },
+  {
+   "t": 2.11,
+   "node_grant": {
+    "http": 200,
+    "capability": "cand-mute-tv-audio-01",
+    "err": null
+   }
+  },
+  {
+   "t": 2.13,
+   "node_grant": {
+    "http": 200,
+    "capability": "phone.screen_read",
+    "err": null
+   }
+  },
+  {
+   "t": 2.34,
+   "oracle_pre": [
+    false,
+    20
+   ]
+  },
+  {
+   "t": 2.35,
+   "wgrant1": {
+    "http": 200,
+    "err": null
+   }
+  },
+  {
+   "t": 4.4,
+   "run1": {
+    "http": 200,
+    "status": "COMPLETED",
+    "nodes": [
+     [
+      "tv_mute",
+      "EXECUTED"
+     ],
+     [
+      "phone_read",
+      "EXECUTED"
+     ]
+    ],
+    "err": null
+   }
+  },
+  {
+   "t": 6.22,
+   "oracle_after_wf1": [
+    true,
+    0
+   ]
+  },
+  {
+   "t": 6.24,
+   "replay_wf1": {
+    "http": 409,
+    "code": "OPERATION_REPLAY"
+   }
+  },
+  {
+   "t": 6.25,
+   "wgrant2": {
+    "http": 200,
+    "err": null
+   }
+  },
+  {
+   "t": 7.95,
+   "run2": {
+    "http": 200,
+    "status": "COMPLETED",
+    "nodes": [
+     [
+      "tv_unmute",
+      "EXECUTED"
+     ]
+    ]
+   }
+  },
+  {
+   "t": 9.68,
+   "oracle_after_wf2": [
+    false,
+    20
+   ]
+  }
+ ],
+ "workflow_receipts": [
+  {
+   "operation_id": "op-41a1a3fa35b778f8e5323f5fa0ee9c60",
+   "workflow_hash": "sha256:9bb8d32925bbe7f8ce7d1ec5f137b7e45bd15f815da5ae9fa0cbbbe9daac6c2f",
+   "workflow_id": "wf.tv-mute-and-phone-read",
+   "wgrant_id": "wg-a2c7faf9542ed369",
+   "status": "COMPLETED",
+   "nodes": [
+    {
+     "node_id": "tv_mute",
+     "status": "EXECUTED",
+     "operation_id": "op-831f3198a2c2aa494230d0a75b0878e1",
+     "receipt_signature": "c8752e81f440b2efe6f5b145a648ad53c8f26a0b0bda32756adcb0fe31d44af8",
+     "error": null
+    },
+    {
+     "node_id": "phone_read",
+     "status": "EXECUTED",
+     "operation_id": "op-ec15b621ce667275c7596571ba8bb272",
+     "receipt_signature": "23551020a84f2164aa16e454cc4210a26ad9461a5f9e7f673a341092d311c8fc",
+     "error": null
+    }
+   ],
+   "started_at": "2026-10-29T14:02:47Z",
+   "finished_at": "2026-10-29T14:02:49Z",
+   "signature": "19e6c0fbc8c3681d1cfaf9ec109f6994744b59dc30f64831d6f9784b0e0e3635"
+  },
+  {
+   "operation_id": "op-85caf4f4da3791e83e7e016165750aad",
+   "workflow_hash": "sha256:7331c8490e07d877ca1521efa46f03c512d59a5201a2bd9c066bce80f91e7f36",
+   "workflow_id": "wf.tv-restore",
+   "wgrant_id": "wg-a0224dfce069a5b7",
+   "status": "COMPLETED",
+   "nodes": [
+    {
+     "node_id": "tv_unmute",
+     "status": "EXECUTED",
+     "operation_id": "op-e8e07723f8d7e37915e243e4f486f07c",
+     "receipt_signature": "a912a59dcd654c02e9819848b3e25e6e7db64ef3c7a246a462d83a764ed89109",
+     "error": null
+    }
+   ],
+   "started_at": "2026-10-29T14:02:51Z",
+   "finished_at": "2026-10-29T14:02:53Z",
+   "signature": "cd59db32f3d408aa3855fcd92a81cbe2ed8d6138b56921855220586e2079d4f1"
+  }
+ ],
+ "manifest_receipts": [
+  {
+   "operation_id": "op-ec15b621ce667275c7596571ba8bb272",
+   "manifest_hash": "sha256:16b41e825695fbe8f6bcc0917e085090846fca9fe34fb7f110a8b6959e5663de",
+   "origin": "meta_generated",
+   "device_fingerprint": "fp-2bea1245e733a82b",
+   "status": "EXECUTED",
+   "steps": [
+    {
+     "step_id": "s0",
+     "primitive_id": "state.screen",
+     "attempt": 1,
+     "transaction_id": "tx-492bae7ec7f59820",
+     "status": "EXECUTED"
+    }
+   ],
+   "error": null,
+   "started_at": "2026-10-29T14:02:47Z",
+   "finished_at": "2026-10-29T14:02:48Z",
+   "signature": "23551020a84f2164aa16e454cc4210a26ad9461a5f9e7f673a341092d311c8fc"
+  },
+  {
+   "operation_id": "op-831f3198a2c2aa494230d0a75b0878e1",
+   "manifest_hash": "sha256:2619d2e1028070042576dd1dac61ece294bbfecb2326ec776e059746e19aa2a0",
+   "origin": "meta_generated",
+   "device_fingerprint": "fp-49143ea61b93d3c8",
+   "status": "EXECUTED",
+   "steps": [
+    {
+     "step_id": "s0",
+     "primitive_id": "input.key",
+     "attempt": 1,
+     "transaction_id": "tx-66125cc81055972d",
+     "status": "EXECUTED"
+    },
+    {
+     "step_id": "s1",
+     "primitive_id": "state.audio",
+     "attempt": 1,
+     "transaction_id": "tx-15bb1cb25f5d0c2a",
+     "status": "EXECUTED"
+    }
+   ],
+   "error": null,
+   "started_at": "2026-10-29T14:02:47Z",
+   "finished_at": "2026-10-29T14:02:49Z",
+   "signature": "c8752e81f440b2efe6f5b145a648ad53c8f26a0b0bda32756adcb0fe31d44af8"
+  },
+  {
+   "operation_id": "op-e8e07723f8d7e37915e243e4f486f07c",
+   "manifest_hash": "sha256:2619d2e1028070042576dd1dac61ece294bbfecb2326ec776e059746e19aa2a0",
+   "origin": "meta_generated",
+   "device_fingerprint": "fp-49143ea61b93d3c8",
+   "status": "EXECUTED",
+   "steps": [
+    {
+     "step_id": "s0",
+     "primitive_id": "input.key",
+     "attempt": 1,
+     "transaction_id": "tx-175c560085abae5d",
+     "status": "EXECUTED"
+    },
+    {
+     "step_id": "s1",
+     "primitive_id": "state.audio",
+     "attempt": 1,
+     "transaction_id": "tx-df3cccbeda29fc3c",
+     "status": "EXECUTED"
+    }
+   ],
+   "error": null,
+   "started_at": "2026-10-29T14:02:51Z",
+   "finished_at": "2026-10-29T14:02:53Z",
+   "signature": "a912a59dcd654c02e9819848b3e25e6e7db64ef3c7a246a462d83a764ed89109"
+  }
+ ],
+ "finished": "2026-10-29T15:02:55+0100"
+}
