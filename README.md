@@ -4,7 +4,11 @@
 
 Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier* · MIT licence
 
-[Documentation](docs/README.md) · [Release status and next tasks](docs/RELEASE_STATUS.md) · [Evidence](docs/RELEASE_EVIDENCE.md)
+[Documentation](docs/README.md) · [Release status and next tasks](docs/RELEASE_STATUS.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Hackathon entry](#hackathon-entry--meta-global-ai-developer-hackathon-2026) · [About the author](#about-the-author)
+
+## About the author
+
+Hi, I'm **toskaman** — an autistic developer who has been passionate about computers and new technology since early childhood. I learn by building: networks, devices, automation, and now AI systems that behave predictably in the real world. OpenBridge is a **solo entry**: designed, built, tested on real hardware in my own home, and documented by me. Predictability is a feature here, not a slogan — every action asks first, shows its proof, and can be undone exactly.
 
 ![Real Device Fabric run, household names redacted](docs/jury/screens/fabric-tv-relay-redacted-1440.png)
 
@@ -17,6 +21,26 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 ![Companion 0.4.0 on a real phone: typed command parsed on the PC, outcome reported back](docs/jury/screens/companion-ask-phone.png)
 
 *Companion 0.4.0 on a real phone (28 Oct 2026): the owner types "How many devices are online", the PC parses it with local Llama over the signed relay channel, and the outcome — "fabric.status ready — review on this PC" — is reported back on the phone. The phone never executes; approval happens on the PC.*
+
+## Hackathon entry — Meta Global AI Developer Hackathon 2026
+
+**Track: Indie Developer** (solo entry by toskaman). Judged on creativity, technical ambition, and whether it works — this README links the working proof for every claim.
+
+**Primary theme — Push the Frontier.** *"Give a machine a new capability… unlock a better way to understand and control a physical system."*
+- A new capability from Meta models: Muse Spark 1.3 synthesizes device skills OpenBridge never had, from a typed intent, through a deterministic kernel that compiles, grants, executes, verifies and undoes them. Proven by a **sealed held-out run on a real TV** (commit-reveal spec, 3 attempts with 2 honestly reported KILLs, final SUCCESS loop, $0.0203 total): [sealed evidence](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md).
+- A better way to control physical systems: the PC reaches BLE devices it cannot hear through signed phone/TV relays ([handover](docs/release/COMPLETE_HANDOVER.md)); skills route across relays with leases and exact-once dedup; the relay channel is now encrypted (aead1) and pairings survive restarts (OS-vault keys).
+
+**Secondary theme — Build for Your World.** This is my own home: Freebox router, robot vacuum, Android TV, phone, Galaxy Watch7, two PCs. OpenBridge removes the mental load of "what is connected, what can it do, can I undo it" — with natural-language control (Ask OpenBridge, EN/FR), one-tap watch/phone controls, and exact Undo everywhere.
+
+**Bonus awards — where OpenBridge stands.**
+- **Best Agentic Use-Case ($5k) — strongest claim.** The model performs the meaningful steps (compose a skill from intent → grounded proposal → approval → deployment → independent verification → revocation) while a deterministic gate keeps authorization, consent and execution. Sealed proof above; autonomy is measured, never unlimited.
+- **Best Build on Meta Open Weight Models ($10k).** Muse Glimmer 30B runs locally (digest = official registry manifest, [receipt](docs/glimmer-smoke-receipt.json)) and Llama 3.2 3B serves local parsing/voice; recorded advisor evaluation 56/60 usable explanations vs 0/60 for the small model ([methodology](docs/benchmark/STATUS.md)). No model-advantage claim beyond what is measured.
+- **Most Viral ($20k) / Community Vote ($10k).** Owner-side (public demo, gallery votes). The project is demo-ready: live hardware, reproducible scripts, real receipts.
+- **Best Creative Build ($5k) — not entered.** No genuine Muse Image/Wonder runtime use; a Wonder build-time design receipt exists ([receipt](docs/forge/meta-web-design-receipt.json)) but the main shell was replaced since, as documented — not a qualifying claim.
+
+**Judging rubric (Impact 30 / Meta tooling 25 / Tech depth 20 / Demo 25).** Impact: real household control with undo. Meta tooling: Spark synthesis + Glimmer/Llama local + Voice Transcribe, Meta-only at runtime ([registry](src/ai/registry.py)). Depth: typed contracts, capability leases, encrypted relays, 820+ tests green on Windows + Linux CI. Demo: live on real devices, receipts for every step.
+
+**Built for this event (Oct 27 – Nov 4 building period):** B2 skill routing, B3 Companion controls, Ask OpenBridge, sealed G3 + v4-synth-4, encrypted/durable relays, the V4 table below, and all dated evidence. Pre-existing foundation (discovery/graph/consent core) is marked as such in [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
 ## The problem
 Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) behind different permission screens. Tools either see one transport at a time or ask for broad control. Owners cannot tell what is really connected, what each device can do, and whether a change can be undone.
@@ -69,6 +93,13 @@ Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDW
 Current release status and remaining acceptance gates: [release index](docs/RELEASE_STATUS.md) and [submission worksheet](docs/release/SUBMISSION_EVIDENCE.md).
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
+
+## What's new (29 Oct 2026)
+- **Sealed held-out skill synthesis (G3)**: commit-reveal spec, Muse Spark 1.3 composes a TV skill the system never had — compile → grant → act → independent verify → owner restore → revoke, loop `300000 → 60000 → 300000` on live hardware, $0.0203 over 3 calls, 2 KILLs honestly retained ([SUCCESS reveal](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md)).
+- **v4-synth-4**: true per-primitive input schemas in the prompt, required-input/integer enforcement in the validator, contract tests pinning both against the kernel registry.
+- **Encrypted + durable relays**: AEAD-sealed relay channel (standard-crypto review) and OS-vault-held pairing keys — pairings survive server restarts with no re-typing.
+- **Sealed UI publish, verified on screen**: server-driven controls install over the encrypted channel and render on the TV (Companion 0.9.0); label E2E with screen read-back.
+- Companion 0.9.0 (relay AEAD, voice orb, glyph buttons) on phone + TV; PRs 89–107 merged; full suite green on Windows + Linux CI.
 
 ## What's new (28 Oct 2026)
 - **B2 skill routing**: typed contracts, AUTO/PREFERRED/PINNED, leases, dedup; hardware TV-to-phone handover + frozen 32/32 evaluation with Spark design review.
