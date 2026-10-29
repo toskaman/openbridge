@@ -177,7 +177,7 @@ def main():
     st, snap = http('/api/fabric-discover', {'device_id': 'fabric', 'providers': ['android']})
     tv = next((d for d in snap.get('devices', []) if d['category'] == CAT), None)
     if tv is None:
-        return stop('KILL', reason='no TV in the live graph')
+        return stop('KILL', reason='no %s in the live graph' % CAT)
     st, sf = http('/api/v2/facts/signed?device=' + tv['key'])
     if st != 200:
         return stop('KILL', reason='signed facts unavailable', http=st)
@@ -199,7 +199,9 @@ def main():
 
     # 2. Baseline (fair ablation recorded, not a strawman claim): stocked deterministic path for the same task.
     T['baseline'] = {'rules_planner': RulesPlanner(offer).propose(bundle, INTENT_T),
-                     'stocked_path': 'device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task'}
+                     'stocked_path': ('device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task'
+                                        if spec is g3_task.MUTE_SMOKE else
+                                        'no prebuilt skill covers %s; the generic Executor primitive exists (the model must compose it)' % spec['task_id'])}
 
     # 3. Meta generation through the broker-guarded hosted call; validation is the unchanged Forge code.
     transport = MetaTransport(Vault().get('meta-api-key'))
