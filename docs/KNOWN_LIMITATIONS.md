@@ -13,6 +13,16 @@ BridgeWindows diagnostics use read-only allowlisted methods. A separate consent-
 
 The current v4 adapter uses mutual HMAC challenge-response and session-MAC envelopes; it does not transmit the pre-shared key. Payloads are authenticated, not encrypted. Keep the link on a trusted LAN. OpenBridge still accepts one agent at a time; the separate bridge's multi-PC support is not yet ported. The adapter is off unless the server is started with `--windows-bridge`.
 
+## Corrected 29 Oct (supersedes stale rows above, history preserved)
+
+- Multi-PC: the OpenBridge server now accepts up to 8 agents (rewritten accept loop); second PC verified with binary swap + hash match. The "one agent at a time" row above is stale.
+- Tuya vacuum: owner-linked AND commanded (facts + seek beep verified on hardware 29 Oct; full 12-command surface model-composable, mode/water/resets unit-tested only). The "DISCOVERED only" matrix row is stale.
+- Companion is 0.10.0 (was 0.4.0/0.9.0 in older rows): encrypted relay channel (aead1), durable pairings, Allow-full-control toggle with warning popup. Relay runs only while the app is open.
+- Watch: Companion 0.9.0 installed, PAIRED/READY verified; the signed wire probe is UNVERIFIED (adb transport died, needs physical wake). Watch-to-TV control is not claimed.
+- Sealed G3 (29 Oct): held-out skill synthesis proven on live TV with 2 honestly reported KILLs; the seal was same-party (Spark), disclosed as weakened held-out in the REVEAL docs.
+- VM fleet: agent wire protocol proven on Debian 13 x2, Debian 12, Ubuntu 22.04, Debian 13 ARM64. The Android Companion was NOT tested in any VM. XP blocked (no product key), Win7 blocked (no media), x86 guest unstaged. See the [device registry](DEVICE_EVIDENCE.json).
+- Freebox: reads only by policy (leases + inventory verified); no writes exist.
+
 ## Added 27 Oct
 - Tuya vacuum: owner-linked through the owner's own Tuya IoT Cloud project (`python -m dev.tuya_link`); reads plus suction/volume with exact Undo; robot commands (start, moves, dock, resets…) are irreversible and need consent per command; manual moves auto-stop after at most 3 s. OpenBridge never extracts keys from apps, caches or traffic.
 - BridgeWindows agent: v4 uses mutual authentication and session MACs without payload encryption; OpenBridge diagnostics are read-only, with the separate owner-consented `pc_job` exception. OpenBridge `--windows-bridge` and the BridgeWindows daemon both need port 9876; run one at a time.

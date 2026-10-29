@@ -1,4 +1,42 @@
-# Hardware test matrix
+# OpenBridge — Hardware Compatibility and Evidence
+
+> Generated from `docs/DEVICE_EVIDENCE.json` by `python -m dev.device_registry --render`.
+> No entry implies support for all functions. Physical and virtual environments are distinct.
+
+| Device | Environment | Integration | Platform | Result | Validity | Tested operations | Date (UTC) | Evidence |
+|---|---|---|---|---|---|---|---|---|
+| 32-bit Linux guest | FULL_GUEST_OS | NONE | QEMU i386 guest | UNVERIFIED | CURRENT | guest install | 2026-10-29T19:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Debian 12 VM (bookworm) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T18:25:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Debian 13 VM (ARM64) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU aarch64 guest (TCG) | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T19:53:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Debian 13 VM (first guest) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T17:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Debian 13 VM (second guest) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T17:05:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Freebox Delta S (owner router) | REAL_HARDWARE | HOST_APP_ADAPTER | Freebox API v8 | VERIFIED | CURRENT | freebox authorized session, freebox static DHCP leases read, freebox LAN hosts inventory | 2026-10-29T18:15:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Galaxy Watch7 44 mm (Wear OS) | REAL_HARDWARE | NATIVE_COMPANION | Wear OS watch | VERIFIED | CURRENT | companion install 0.9.0 on watch, launch shows PAIRED READY on 480x480 UI, relay server LISTEN on device port | 2026-10-29T16:45:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Galaxy Watch7 44 mm (Wear OS) | REAL_HARDWARE | NATIVE_COMPANION | Wear OS watch | UNVERIFIED | CURRENT | signed relay round-trip to watch relay | 2026-10-29T17:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Owner Android TV (Android 10) | REAL_HARDWARE | NATIVE_COMPANION | Android TV | VERIFIED | CURRENT | companion install 0.10.0, launch shows PAIRED READY, re-pair after server reload, flag reported false on signed get_status | 2026-10-29T18:00:00Z | [COMPANION_0_10_0.md](release/COMPANION_0_10_0.md), [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Owner phone (rugged model, Android 13) | REAL_HARDWARE | NATIVE_COMPANION | Android phone | VERIFIED | CURRENT | companion install 0.10.0, full-control button shows warning popup, allow sets standing consent flag, revoke clears flag instantly, cancel leaves flag off, flag reported on signed get_status | 2026-10-29T17:45:00Z | [COMPANION_0_10_0.md](release/COMPANION_0_10_0.md), [companion-0-10-phone-main.png](jury/screens/companion-0-10-phone-main.png), [companion-0-10-full-control-popup.png](jury/screens/companion-0-10-full-control-popup.png) |
+| Second PC (Windows 11, Intel i5-12600H) | REAL_HARDWARE | HOST_APP_ADAPTER | Windows PC agent v4 | VERIFIED | CURRENT | agent remote exec whoami, agent staged upload with integrity verify, agent binary swap to fixed build, agent remote hash matches fresh sha, agent single CONNECTED log after mutual auth | 2026-10-29T18:05:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Tuya robot vacuum (owner-linked) | REAL_HARDWARE | HOST_APP_ADAPTER | Tuya local robot | VERIFIED | CURRENT | vacuum facts read (status, battery, suction, volume, fault), vacuum seek beep command | 2026-10-29T18:15:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Ubuntu 22.04 VM (server) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T18:53:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Windows 7 guest | FULL_GUEST_OS | NONE | QEMU x86_64 guest | BLOCKED | CURRENT | guest install | 2026-10-29T19:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+| Windows XP guest (32-bit) | FULL_GUEST_OS | NONE | QEMU x86 guest | BLOCKED | CURRENT | guest install | 2026-10-29T19:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
+
+## Interpretation
+
+- **VERIFIED**: a specific operation passed a recorded, independent postcondition check; see the cited evidence.
+- **FAILED / BLOCKED / UNVERIFIED / STALE**: not a verified working operation; investigate or retest.
+- **FULL_GUEST_OS + PROTOCOL_ENDPOINT**: the agent wire protocol was proven in a VM guest — not the Android Companion, not physical hardware.
+- **EMULATOR_HOST_BRIDGE**: host controls an emulator, not an original physical console.
+
+---
+
+# Hardware test history (26–28 Oct 2026, archived)
+
+> Historical rows preserved verbatim. Some statements are superseded by the
+> generated matrix above (vacuum now owner-linked and commanded, multi-PC
+> implemented, Companion 0.10.0, VM fleet proven). See `DEVICE_EVIDENCE.json`.
+
+# Hardware test matrix (archive)
 
 | Scenario | Status | Evidence |
 |---|---|---|

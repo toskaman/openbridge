@@ -4,11 +4,12 @@
 
 Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier* · MIT licence
 
-[Documentation](docs/README.md) · [Release status and next tasks](docs/RELEASE_STATUS.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Hackathon entry](#hackathon-entry--meta-global-ai-developer-hackathon-2026) · [About the author](#about-the-author)
+[Documentation](docs/README.md) · [Release status and next tasks](docs/RELEASE_STATUS.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Hackathon entry](#built-for-the-meta-global-ai-developer-hackathon-october-26november-4-2026) · [About the developer](#about-the-developer) · [Device matrix](docs/HARDWARE_TEST_MATRIX.md)
 
-## About the author
+<!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
+## About the developer
 
-Hi, I'm **toskaman** — an autistic developer who has been passionate about computers and new technology since early childhood. I learn by building: networks, devices, automation, and now AI systems that behave predictably in the real world. OpenBridge is a **solo entry**: designed, built, tested on real hardware in my own home, and documented by me. Predictability is a feature here, not a slogan — every action asks first, shows its proof, and can be undone exactly.
+I'm an autistic independent developer who has been passionate about computers, programming, hardware and emerging technologies since childhood. I've always enjoyed exploring how systems work and discovering new ways for different technologies to connect. OpenBridge brings these interests together: making real devices easier to understand, connect and control through Meta AI.
 
 ![Real Device Fabric run, household names redacted](docs/jury/screens/fabric-tv-relay-redacted-1440.png)
 
@@ -26,25 +27,47 @@ Hi, I'm **toskaman** — an autistic developer who has been passionate about com
 
 *Standing consent, on-device: "Allow full control" shows this warning — the PC may then send any command without asking each time. Revoking is one tap, and unpairing clears it. Proof of the full cycle (popup → allow → revoke → cancel) in the [0.10.0 release notes](docs/release/COMPANION_0_10_0.md).*
 
-## Hackathon entry — Meta Global AI Developer Hackathon 2026
+## Built for the Meta Global AI Developer Hackathon (October 26–November 4, 2026)
 
-**Track: Indie Developer** (solo entry by toskaman). Judged on creativity, technical ambition, and whether it works — this README links the working proof for every claim.
+**Built from the ground up during the hackathon.** I built OpenBridge's project-specific implementation from the ground up for the October 26–November 4, 2026 event, with one clearly disclosed exception: a **basic `agent.exe` prototype I had written myself before the event**, which I substantially rewrote and adapted to OpenBridge. The new features presented for judging are the work completed during the hackathon and should be supported by commits, test receipts and the demo. Third-party frameworks and dependencies retain their own origins and licenses.
 
-**Primary theme — Push the Frontier.** *"Give a machine a new capability… unlock a better way to understand and control a physical system."*
-- A new capability from Meta models: Muse Spark 1.3 synthesizes device skills OpenBridge never had, from a typed intent, through a deterministic kernel that compiles, grants, executes, verifies and undoes them. Proven by a **sealed held-out run on a real TV** (commit-reveal spec, 3 attempts with 2 honestly reported KILLs, final SUCCESS loop, $0.0203 total): [sealed evidence](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md).
-- A better way to control physical systems: the PC reaches BLE devices it cannot hear through signed phone/TV relays ([handover](docs/release/COMPLETE_HANDOVER.md)); skills route across relays with leases and exact-once dedup; the relay channel is now encrypted (aead1) and pairings survive restarts (OS-vault keys).
+**Track — Indie Developer.** An independent developer-led project, with contributors and contributions accurately listed in the submission.
 
-**Secondary theme — Build for Your World.** This is my own home: Freebox router, robot vacuum, Android TV, phone, Galaxy Watch7, two PCs. OpenBridge removes the mental load of "what is connected, what can it do, can I undo it" — with natural-language control (Ask OpenBridge, EN/FR), one-tap watch/phone controls, and exact Undo everywhere.
+**Primary theme — Push the Frontier.** OpenBridge explores how Meta models can inspect unfamiliar physical devices, identify verified interfaces, synthesize missing authorized capabilities, test a plan, and coordinate heterogeneous hardware. It targets the real-world challenge of giving devices new interoperable controls, rather than offering a generic AI chatbot. **Only capabilities backed by actual model, code and device evidence should be claimed as completed.**
 
-**Bonus awards — where OpenBridge stands.**
-- **Best Agentic Use-Case ($5k) — strongest claim.** The model performs the meaningful steps (compose a skill from intent → grounded proposal → approval → deployment → independent verification → revocation) while a deterministic gate keeps authorization, consent and execution. Sealed proof above; autonomy is measured, never unlimited.
-- **Best Build on Meta Open Weight Models ($10k).** Muse Glimmer 30B runs locally (digest = official registry manifest, [receipt](docs/glimmer-smoke-receipt.json)) and Llama 3.2 3B serves local parsing/voice; recorded advisor evaluation 56/60 usable explanations vs 0/60 for the small model ([methodology](docs/benchmark/STATUS.md)). No model-advantage claim beyond what is measured.
-- **Most Viral ($20k) / Community Vote ($10k).** Owner-side (public demo, gallery votes). The project is demo-ready: live hardware, reproducible scripts, real receipts.
-- **Best Creative Build ($5k) — not entered.** No genuine Muse Image/Wonder runtime use; a Wonder build-time design receipt exists ([receipt](docs/forge/meta-web-design-receipt.json)) but the main shell was replaced since, as documented — not a qualifying claim.
+**Secondary alignment — Build for Your World.** The project addresses a recurring problem I know personally: otherwise useful computers, phones, watches, televisions and other devices often cannot work together easily. OpenBridge seeks to translate a user's goal into safe operations across their existing hardware.
 
-**Judging rubric (Impact 30 / Meta tooling 25 / Tech depth 20 / Demo 25).** Impact: real household control with undo. Meta tooling: Spark synthesis + Glimmer/Llama local + Voice Transcribe, Meta-only at runtime ([registry](src/ai/registry.py)). Depth: typed contracts, capability leases, encrypted relays, 820+ tests green on Windows + Linux CI. Demo: live on real devices, receipts for every step.
+### Why it may qualify for the hackathon bonus awards
 
-**Built for this event (Oct 27 – Nov 4 building period):** B2 skill routing, B3 Companion controls, Ask OpenBridge, sealed G3 + v4-synth-4, encrypted/durable relays, the V4 table below, and all dated evidence. Pre-existing foundation (discovery/graph/consent core) is marked as such in [CONTRIBUTIONS](CONTRIBUTIONS.md).
+| Bonus award | Project fit | Proof or requirement to verify |
+|---|---|---|
+| Best Agentic Use-Case | Meta-led multi-step discovery, capability synthesis, verification, and cross-device orchestration | Run a genuine autonomous task with independent real-world result receipts and an honest baseline comparison |
+| Best Build on Meta Open Weight Models | Meta open-weight inference can contribute to local planning or capability discovery | Verify a substantial completed workflow actually uses eligible Muse Glimmer or Muse Spark Open weights; record model provenance and inference environment |
+| Best Creative Build | Potential creative, user-facing UI or media experience with Muse Image or Muse Wonder | Demonstrate an original **working** integration with an eligible model, rather than static AI-generated decoration |
+| Most Viral Project | A clear and surprising real-device demonstration is understandable to a wide audience | Publish and submit an authentic post on X and follow the official measured engagement window |
+| Community Vote | A usable product and reproducible public demonstration can appeal to other participants | Submit a working accessible gallery entry; follow the verified-account voting rules |
+
+These are **candidate award alignments, not organizer-confirmed eligibility or promises of prizes**. The organizer's decisions and the official final rules control.
+
+### Verified device compatibility
+
+OpenBridge maintains a [living hardware compatibility matrix](docs/HARDWARE_TEST_MATRIX.md), updated as devices are enrolled, tested, changed or regressed. Records distinguish **physical hardware**, **full guest operating systems**, **official emulators**, **protocol simulators**, **emulator-host adapters** and **mocks**. Only operations that passed independent verification are labeled verified. A simulated or emulated device must never be counted as an independently verified physical device.
+
+To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVIDENCE.md), [known limitations](docs/KNOWN_LIMITATIONS.md) and commit-specific test receipts. Links must be reconciled with the actual repository before publishing; do not publish a broken link or a claim without an existing source.
+
+### Competition evaluation
+
+- **Impact (30%)** — cross-device workflows that solve an observable real problem.
+- **Use of Meta AI Tooling (25%)** — traceable Meta-driven capability synthesis and orchestration beyond predetermined macros.
+- **Technical Depth & Execution (20%)** — authorization, independent postcondition checks, idempotency, lifecycle resilience and accurate failure handling.
+- **Demo (25%)** — a repeatable, real-device demonstration with a visible result and a transparent account of what was built during the event.
+
+The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
+
+### Event-built evidence (29 Oct, this commit)
+
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.10.0 full-control cycle on [device:phone-companion-01]; [device:tv-companion-01] paired; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]. Full list in the [device registry](docs/DEVICE_EVIDENCE.json).
+<!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem
 Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) behind different permission screens. Tools either see one transport at a time or ask for broad control. Owners cannot tell what is really connected, what each device can do, and whether a change can be undone.
