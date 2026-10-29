@@ -171,3 +171,13 @@ class ClaudeBindingHolds(unittest.TestCase):
                                    lambda: (200, {'revoked': 'g'}), sleep=lambda s: None)
         self.assertEqual(calls, ['act'])          # no blind second toggle
         self.assertEqual(out[6]['http'], 200)     # revoke still ran
+
+
+class TraceIdContract(unittest.TestCase):
+    def test_runner_trace_ids_match_invoke_schema(self):
+        # Attempt 3 was refused by the kernel (SCHEMA) because 'g3act' is 5 chars; the kernel pattern is 6-64.
+        import re
+        src = open('dev/run_g3_smoke.py', encoding='utf-8').read()
+        self.assertIn("('g3-' + tag)[:40] + '-' + secrets.token_hex(3)", src)
+        for tag in ('act', 'restore', 'after_revoke_must_refuse'):
+            self.assertRegex(('g3-' + tag)[:40] + '-abcdef', r'^[A-Za-z0-9_-]{6,64}$')
