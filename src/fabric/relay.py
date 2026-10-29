@@ -324,8 +324,9 @@ def voice_url(base_url, key, clip_id, now=None):
         base_url.rstrip('/'), clip_id, ts, nonce, voice_sig(key, clip_id, ts, nonce))
 
 
-def fetch_voice(base_url, key, clip_id, expected_bytes, expected_sha256, timeout=25):
-    """Download raw PCM16 mono 16 kHz bytes from a paired relay. Same local scope as http_transport."""
+def fetch_voice(base_url, key, clip_id, expected_bytes, expected_sha256, timeout=25, relay_id=None, aead_version=None):
+    """Download raw PCM16 mono 16 kHz bytes from a paired relay. Same local scope as http_transport.
+    With aead1 negotiated the body must come back sealed (X-OB-Enc: aead1) and is authenticated before use."""
     _check_scope(base_url)
     if not isinstance(expected_bytes, int) or expected_bytes <= 0 or expected_bytes > VOICE_MAX_BYTES:
         raise RelayError('Bad voice size')
@@ -336,13 +337,22 @@ def fetch_voice(base_url, key, clip_id, expected_bytes, expected_sha256, timeout
     try:
         req = Request(voice_url(base_url, key, clip_id), method='GET')
         with _opener().open(req, timeout=timeout) as r:
-            raw = r.read(expected_bytes + 1)
+            sealed = r.headers.get('X-OB-Enc')
+            raw = r.read(expected_bytes + 1 + (48 if aead_version else 0))
     except HTTPError as error:
         try:
             detail = error.read(200).decode('utf-8', 'replace')
         finally:
             error.close()
         raise RelayError('Relay refused voice: ' + detail) from None
+    if aead_version:
+        if sealed != aead_version:
+            raise RelayError('Voice clip arrived unencrypted after aead1 was negotiated (refused)')
+        from src.fabric import aead
+        try:
+            raw = aead.open_voice(key, relay_id, clip_id, raw)
+        except aead.AeadError as e:
+            raise RelayError('Voice clip rejected: %s' % e) from None
     if len(raw) != expected_bytes:
         raise RelayError('Voice clip size mismatch')
     if hashlib.sha256(raw).hexdigest() != expected_sha256:

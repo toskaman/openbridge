@@ -202,6 +202,7 @@ class RemoteControls:
             return {'controls': [{'relay_id': rid, 'control_id': cid, **{k: v for k, v in g.items() if k not in ('key_fp', 'grant', 'facts', 'manifest')}}
                                  for rid, cs in self.grants.items() for cid, g in cs.items()],
                     'history': list(self.history[-20:]), 'suspended': sorted(f'{a}/{b}' for a, b in self.suspended),
+                    'transport': {rid: r.get('aead') or 'plaintext' for rid, r in getattr(getattr(self.server, 'relays', None), 'relays', {}).items()},
                     'layouts': {rid: {'revision': l['revision'], 'acked': l['acked'],
                                       'display': [{'control_id': k, **v} for k, v in l['display'].items()]}
                                 for rid, l in self.layouts.items()},

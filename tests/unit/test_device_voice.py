@@ -212,7 +212,7 @@ class VoiceText(unittest.TestCase):
                 mock.patch.object(stt_local, 'available', return_value=True), \
                 mock.patch.object(stt_local, 'transcribe_pcm', return_value={'transcript': '  start vacuum '}) as t:
             self.assertEqual(cc._voice_text('r1', relay, item), 'start vacuum')
-            f.assert_called_once_with('http://127.0.0.1:9', KEY, 'c', len(PCM), mock.ANY)
+            f.assert_called_once_with('http://127.0.0.1:9', KEY, 'c', len(PCM), mock.ANY, relay_id=mock.ANY, aead_version=None)
             t.assert_called_once_with(PCM, 'fr')
 
     def test_download_failure_reports_and_skips(self):

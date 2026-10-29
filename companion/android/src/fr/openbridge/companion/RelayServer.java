@@ -225,15 +225,21 @@ final class RelayServer {
                 if (!MessageDigest.isEqual(hex(hmac(key, "voice-v1|" + clip + "|" + t + "|" + nonce)).getBytes(), sig.getBytes())) ok = false;
             } catch (Exception e) { ok = false; }
         }
-        byte[] pcm = ok ? clips.get(clip) : null;
+        byte[] pcm;
+        synchronized (commands) { pcm = ok ? clips.get(clip) : null; }   // same lock as submitVoice/report
         if (!ok || pcm == null) { respond(c, ok ? 404 : 403, "{\"error\":\"" + (ok ? "gone" : "forbidden") + "\"}"); return; }
-        byte[] head = ("HTTP/1.0 200 X\r\nContent-Type: application/octet-stream\r\nContent-Length: " + pcm.length + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
+        String enc = "";
+        if (prefs.getBoolean("require_aead", false)) {               // aead1 negotiated: the clip never leaves in clear
+            pcm = Aead.sealVoice(key, Aead.VERSION + "|" + relayId() + "|voice|" + clip, pcm);
+            enc = "X-OB-Enc: " + Aead.VERSION + "\r\n";
+        }
+        byte[] head = ("HTTP/1.0 200 X\r\nContent-Type: application/octet-stream\r\n" + enc + "Content-Length: " + pcm.length + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
         OutputStream out = c.getOutputStream();
         out.write(head); out.write(pcm); out.flush();
     }
 
     void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } prefs.edit().remove("controls").apply();
-        prefs.edit().remove("key").putBoolean("owner_enabled", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
+        prefs.edit().remove("key").remove("require_aead").putBoolean("owner_enabled", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
     boolean scanPermission() {
@@ -293,8 +299,22 @@ final class RelayServer {
         char[] buf = new char[length]; int read = 0;
         while (read < length) { int n = in.read(buf, read, length - read); if (n < 0) break; read += n; }
         JSONObject msg = new JSONObject(new String(buf, 0, read));
+        // aead1: once the PC has sent one sealed message, plaintext commands are refused (no silent downgrade).
+        boolean sealed = Aead.VERSION.equals(msg.optString("enc"));
+        byte[] k = key();
+        String rid = relayId();
+        if (sealed) {
+            if (k == null || !rid.equals(msg.optString("relay_id"))) { respond(c, 403, "{\"error\":\"not paired\"}"); return; }
+            try { msg = new JSONObject(new String(Aead.open(k, Aead.aad(rid, "pc>relay"), msg), StandardCharsets.UTF_8)); }
+            catch (Exception e) { respond(c, 403, "{\"error\":\"bad envelope\"}"); return; }
+            if (!prefs.getBoolean("require_aead", false)) prefs.edit().putBoolean("require_aead", true).apply();
+        }
         JSONObject reply;
-        try { reply = dispatch(msg); } catch (SecurityException e) { respond(c, 403, new JSONObject().put("error", e.getMessage()).toString()); return; }
+        try { reply = dispatch(msg, sealed); } catch (SecurityException e) { respond(c, 403, new JSONObject().put("error", e.getMessage()).toString()); return; }
+        if (sealed) {
+            respond(c, 200, Aead.seal(k, Aead.aad(rid, "relay>pc"), reply.toString().getBytes(StandardCharsets.UTF_8), null).toString());
+            return;
+        }
         respond(c, 200, reply.toString());
     }
 
@@ -305,7 +325,7 @@ final class RelayServer {
         out.write(b); out.flush();
     }
 
-    private JSONObject dispatch(JSONObject msg) throws Exception {
+    private JSONObject dispatch(JSONObject msg, boolean sealed) throws Exception {
         if ("pair_request".equals(msg.optString("op"))) return pairRequest(msg);
         byte[] key = key();
         JSONObject cmd;
@@ -315,7 +335,12 @@ final class RelayServer {
             key = key();
         } else {
             JSONObject viaPending = null;
-            try { cmd = verify(key, msg); }
+            try {
+                // After aead1 was negotiated, the current key is only accepted inside a sealed envelope;
+                // a plaintext command can only be the first command of an owner-started re-pairing.
+                if (!sealed && prefs.getBoolean("require_aead", false)) throw new SecurityException("encryption required");
+                cmd = verify(key, msg);
+            }
             catch (SecurityException e) {
                 // Re-pairing: a fresh on-screen code may replace the old key, never the reverse.
                 viaPending = pendingCode != null ? confirmPairing(msg) : null;
@@ -430,6 +455,7 @@ final class RelayServer {
         if (bleHardware()) caps.put("ble_scan");
         caps.put("remote_controls");
         caps.put("command_submit");
+        caps.put(Aead.VERSION);
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
                 .put("sdk", Build.VERSION.SDK_INT).put("television", tv);
@@ -474,7 +500,7 @@ final class RelayServer {
         JSONObject body;
         try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
         // Pairing with the on-screen code is the owner's consent: scans are enabled right away (pausable in the app).
-        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).apply(); pendingCode = null; ui.code(null);
+        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).apply(); pendingCode = null; ui.code(null);
         ui.status("Paired with OpenBridge. Bluetooth scans are available while this app is open.");
         return body;
     }

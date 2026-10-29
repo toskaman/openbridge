@@ -470,6 +470,11 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             declared = fabric_relay.verify(key, reply, None).get('params', {})
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
+            if 'aead1' in (declared.get('capabilities') or []):
+                from src.fabric import aead
+                # From here on every message to this relay is sealed and every reply must be sealed.
+                server.relays.relays[rid]['send'] = aead.encrypting_send(pending['send'], rid)
+                server.relays.relays[rid]['aead'] = aead.VERSION
             server.relays.relays[rid]['url'] = pending.get('url')
             server.relay_ledger.proved(rid)
             with server.relay_pending_lock:

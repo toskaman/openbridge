@@ -26,6 +26,15 @@ drawn; clearing controls removes them; an offline relay is re-probed every 5 s; 
 Old Companions (≤0.7) ignore `kind` and render every control as a button: send v2 plans only to ≥0.8.
 
 ---
+# Relay transport aead1 (Companion ≥ 0.9.0)
+The Companion declares `aead1` in its capabilities. After pairing, the PC wraps every signed relay message as
+`{enc: "aead1", relay_id, n, c, t}` (aad `aead1|<relay_id>|pc>relay`), and the reply must come back sealed
+(`relay>pc`). The first sealed message makes the Companion refuse plaintext commands; only a new owner pairing
+(fresh on-screen code) resets this. Voice clips are served as `nonce|tag|ciphertext` with `X-OB-Enc: aead1`.
+Spec and shared vector: `src/fabric/aead.py`, `tests/fabric/fixtures/aead1_vector.json`.
+
+---
+
 # Multi-device workflows — contract for Muse (`obv4.1-wf`)
 `{workflow_version: "obv4.1-wf", workflow_id, title (≤80), origin: "meta_generated", model_run: {provider: "meta", model, run_id},
 nodes: [{node_id, manifest_hash, depends_on: [node_id…]}] (1–16, acyclic), max_parallel: 1–4}`.
