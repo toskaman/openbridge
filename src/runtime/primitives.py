@@ -395,6 +395,9 @@ class Executor:
         if rid not in self.ctx.relays.relays:
             raise PrimitiveError('UNKNOWN_RELAY', 'Unknown relay')
         self.ctx.relays.revoke(rid)
+        store = getattr(self.ctx, 'relay_store', None)
+        if store is not None:
+            store.remove(rid)                     # a revoked pairing must not come back after a restart
         gone = rid not in self.ctx.relays.relays
         return ('VERIFIED' if gone else 'FAILED'), 'paired', ('revoked' if gone else 'paired'), gone, {}
 
