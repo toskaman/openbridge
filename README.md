@@ -18,9 +18,13 @@ Hi, I'm **toskaman** — an autistic developer who has been passionate about com
 
 *Ask OpenBridge: type a request in English or French; tiered Meta-only routing (free local Llama/Glimmer, cloud Spark only with explicit consent) resolves it to a registered skill, shows a fingerprint-bound preview, and executes only after owner approval. Local tiers verified live; cloud path unit-tested, broker unconfigured in this capture.*
 
-![Companion 0.4.0 on a real phone: typed command parsed on the PC, outcome reported back](docs/jury/screens/companion-ask-phone.png)
+![Companion 0.10.0 on a real phone](docs/jury/screens/companion-0-10-phone-main.png)
 
-*Companion 0.4.0 on a real phone (28 Oct 2026): the owner types "How many devices are online", the PC parses it with local Llama over the signed relay channel, and the outcome — "fabric.status ready — review on this PC" — is reported back on the phone. The phone never executes; approval happens on the PC.*
+*Companion 0.10.0 on a real phone (29 Oct 2026): voice orb, typed commands, live link/Bluetooth/scan tiles, and owner controls — all over the signed, encrypted relay channel.*
+
+![Allow full control warning popup](docs/jury/screens/companion-0-10-full-control-popup.png)
+
+*Standing consent, on-device: "Allow full control" shows this warning — the PC may then send any command without asking each time. Revoking is one tap, and unpairing clears it. Proof of the full cycle (popup → allow → revoke → cancel) in the [0.10.0 release notes](docs/release/COMPANION_0_10_0.md).*
 
 ## Hackathon entry — Meta Global AI Developer Hackathon 2026
 
@@ -99,7 +103,7 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 - **v4-synth-4**: true per-primitive input schemas in the prompt, required-input/integer enforcement in the validator, contract tests pinning both against the kernel registry.
 - **Encrypted + durable relays**: AEAD-sealed relay channel (standard-crypto review) and OS-vault-held pairing keys — pairings survive server restarts with no re-typing.
 - **Sealed UI publish, verified on screen**: server-driven controls install over the encrypted channel and render on the TV (Companion 0.9.0); label E2E with screen read-back.
-- Companion 0.9.0 (relay AEAD, voice orb, glyph buttons) on phone + TV; PRs 89–107 merged; full suite green on Windows + Linux CI.
+- Companion 0.10.0 (Allow-full-control toggle + warning popup, relay AEAD, voice orb) on phone + TV; server invoke rails (PR109); full tuya surface + Freebox leases (PR111); full suite green on Windows + Linux CI.
 
 ## What's new (28 Oct 2026)
 - **B2 skill routing**: typed contracts, AUTO/PREFERRED/PINNED, leases, dedup; hardware TV-to-phone handover + frozen 32/32 evaluation with Spark design review.
