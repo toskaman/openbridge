@@ -73,7 +73,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private LinearLayout systemBody, checklist;
     private TextView systemToggle, statusLine;
     private boolean systemOpen, systemTouched;
-    private Button setup, bluetooth, location, permission, enable, unpair;
+    private Button setup, bluetooth, location, permission, enable, unpair, fullctl;
     private boolean setupRunning;
     private ScrollView scroll;
 
@@ -192,7 +192,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         permission = button("Allow Bluetooth scanning", false);
         enable = button("Pause scans", false);
         unpair = button("Remove pairing", false);
-        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
+        fullctl = button("Allow full control", false);
+        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
         statusLine = text("Starting…", 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
 
@@ -237,6 +238,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         permission.setOnClickListener(v -> requestScanPermission());
         enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); log(relay.ownerEnabled() ? "Scans resumed" : "Scans paused by you"); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
+        fullctl.setOnClickListener(v -> toggleFullControl());
 
         relay.start(); refresh(); controls(relay.controls());
         setCaption(relay.paired() ? "Hi. Ask me anything — type, or tap the orb to talk." : "Open OpenBridge on your PC to pair this device.");
@@ -455,6 +457,17 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         status(tv ? "Turn Bluetooth on in Settings > Remotes & Accessories, then come back." : "Turn Bluetooth on from the quick settings panel, then come back.");
     }
 
+    /** Standing consent for PC-initiated control. Turning it on shows a warning first; turning it off is instant. */
+    private void toggleFullControl() {
+        if (relay.fullControl()) { relay.setFullControl(false); log("Full control revoked on this device"); refresh(); return; }
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Allow full control?")
+                .setMessage("OpenBridge on your PC will be able to send ALL commands to this device's controls without asking you each time. Only allow this on your own devices. You can revoke it here at any moment.")
+                .setNegativeButton("Cancel", (d, w) -> { })
+                .setPositiveButton("Allow", (d, w) -> { relay.setFullControl(true); log("Full control allowed on this device"); orb.pulse(); refresh(); })
+                .show();
+    }
+
     private void requestScanPermission() {
         String perm = Build.VERSION.SDK_INT >= 31 ? "android.permission.BLUETOOTH_SCAN" : "android.permission.ACCESS_FINE_LOCATION";
         android.content.SharedPreferences ui = getSharedPreferences("ui", MODE_PRIVATE);
@@ -522,6 +535,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             row("Scan permission", perm, perm ? "Granted" : "Not granted yet");
             row("Paired with a PC", paired, paired ? "Yes" : "Not yet");
             if (paired) row("Scans", enabled, enabled ? "While this app is open" : "Paused by you");
+            if (paired) row("Full control", relay.fullControl(), relay.fullControl() ? "Allowed — the PC may act without asking" : "Off");
             boolean ready = !ble || (on && loc && perm);
             setup.setVisibility(ble && !ready ? View.VISIBLE : View.GONE);
             bluetooth.setVisibility(ble && !on ? View.VISIBLE : View.GONE);
@@ -529,6 +543,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             permission.setVisibility(ble && !perm ? View.VISIBLE : View.GONE);
             enable.setText(enabled ? "Pause scans" : "Resume scans");
             enable.setVisibility(paired ? View.VISIBLE : View.GONE);
+            fullctl.setText(relay.fullControl() ? "Revoke full control" : "Allow full control");
+            fullctl.setVisibility(paired ? View.VISIBLE : View.GONE);
             unpair.setVisibility(paired ? View.VISIBLE : View.GONE);
             if (!systemTouched) systemOpen = !ready || !paired;
             renderSystem();

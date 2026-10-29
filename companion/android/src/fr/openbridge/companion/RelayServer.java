@@ -112,6 +112,9 @@ final class RelayServer {
     boolean paired() { return prefs.contains("key"); }
     boolean ownerEnabled() { return prefs.getBoolean("owner_enabled", false); }
     void setOwnerEnabled(boolean v) { prefs.edit().putBoolean("owner_enabled", v).apply(); }
+    /** Standing owner consent for PC-initiated invokes. Explicit on-device toggle only, default off. */
+    boolean fullControl() { return paired() && prefs.getBoolean("full_control", false); }
+    void setFullControl(boolean v) { prefs.edit().putBoolean("full_control", v).apply(); }
     String relayId() {
         String id = prefs.getString("relay_id", null);
         if (id == null) { id = "relay-" + hex(bytes(6)); prefs.edit().putString("relay_id", id).apply(); }
@@ -239,7 +242,7 @@ final class RelayServer {
     }
 
     void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } prefs.edit().remove("controls").apply();
-        prefs.edit().remove("key").remove("require_aead").putBoolean("owner_enabled", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
+        prefs.edit().remove("key").remove("require_aead").putBoolean("owner_enabled", false).putBoolean("full_control", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
     boolean scanPermission() {
@@ -458,7 +461,7 @@ final class RelayServer {
         caps.put(Aead.VERSION);
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
-                .put("sdk", Build.VERSION.SDK_INT).put("television", tv);
+                .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("full_control", fullControl());
     }
 
     private synchronized JSONObject pairRequest(JSONObject msg) throws Exception {
