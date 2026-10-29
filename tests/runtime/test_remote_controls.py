@@ -20,6 +20,7 @@ class FakeCompanion:
         self.clock = time.time
         self.pending = {}
         self.revision, self.status = 0, {}       # layout v2: applied revision (ACK) and status values
+        self.full_control = False                # explicit on-device "Allow full control" toggle
 
     def press(self, control_id, request_id=None, **extra):
         rid = request_id or ('%032x' % (len(self.ops) * 7919 + int(time.time() * 1000) % 100000 + len(self.queue)))
@@ -37,13 +38,13 @@ class FakeCompanion:
         elif msg['op'] == 'update_status':
             self.status.update({k: v for k, v in msg['params']['values'].items() if k in self.status})   # queue untouched
         elif msg['op'] == 'get_requests':
-            params, self.queue = {'requests': self.queue, 'applied_revision': self.revision}, []
+            params, self.queue = {'requests': self.queue, 'applied_revision': self.revision, 'full_control': self.full_control}, []
             self.pending.update({r['request_id']: True for r in params['requests']})
         elif msg['op'] == 'report_result':
             if self.pending.pop(msg['params']['request_id'], None):     # unknown or late results are ignored, like the Java
                 self.results.append(msg['params'])
         elif msg['op'] in ('get_status', 'discover_capabilities'):
-            params = {'capabilities': ['remote_controls'], 'permissions': {}}
+            params = {'capabilities': ['remote_controls'], 'permissions': {}, 'full_control': self.full_control}
         t = int(time.time())
         reply = {'protocol': R.PROTOCOL, 'relay_id': msg['relay_id'], 'op': 'reply', 'params': params, 'nonce': 'r' + msg['nonce'], 'issued_at': t, 'expires_at': t + 30}
         return {**reply, 'mac': R.sign(self.key, reply)}
@@ -191,6 +192,53 @@ class Burst(unittest.TestCase):
         cid = self.vol_up()                                               # explicit re-grant
         self.companion.press(cid, request_id='%032x' % 3000); self.rc.poll_once()
         self.assertEqual(len(self.calls), 4)
+
+
+class FullControl(unittest.TestCase):
+    """Server-initiated invocation under the device's standing consent."""
+    setUp = RemoteControls.setUp
+    grant = RemoteControls.grant
+    vol_up = RemoteControls.vol_up
+
+    def test_invoke_refused_until_device_allows(self):
+        cid = self.vol_up()
+        with self.assertRaises(RemoteControlError) as e:
+            self.rc.invoke_now('r-watch', cid)
+        self.assertEqual(e.exception.status, 409)
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.rc.state()['full_control']['r-watch'],
+                         {'device': False, 'blocked': False, 'effective': False})
+
+    def test_invoke_runs_once_with_same_rails(self):
+        cid = self.vol_up()
+        self.companion.full_control = True
+        entry = self.rc.invoke_now('r-watch', cid)
+        self.assertEqual(entry['state'], 'EXECUTED')
+        self.assertEqual(entry['origin'], 'full_control')
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.companion.results, [])          # no phantom device result
+        self.assertTrue(self.rc.state()['full_control']['r-watch']['effective'])
+        self.rc.invoke_now('r-watch', cid)                    # too fast: same interval rail as presses
+        self.assertEqual(len(self.calls), 1)
+
+    def test_pc_block_overrides_device_flag(self):
+        cid = self.vol_up()
+        self.companion.full_control = True
+        self.rc.set_full_control_block('r-watch', True)
+        with self.assertRaises(RemoteControlError):
+            self.rc.invoke_now('r-watch', cid)
+        self.assertEqual(self.calls, [])
+        self.assertFalse(self.rc.state()['full_control']['r-watch']['effective'])
+        self.rc.set_full_control_block('r-watch', False)
+        self.rc.invoke_now('r-watch', cid)
+        self.assertEqual(len(self.calls), 1)
+
+    def test_press_path_unaffected_by_flag(self):
+        cid = self.vol_up()
+        self.companion.press(cid)                             # physical press works with the flag off
+        self.assertEqual(self.rc.poll_once(), 1)
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.rc.state()['history'][-1]['origin'], 'press')
 
 
 class ReviewFailures(unittest.TestCase):

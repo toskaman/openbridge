@@ -24,7 +24,8 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primiti
               '/api/v2/onboarding',
               '/api/v2/command/tiers',
               '/api/v2/companion/commands')
-POST_ROUTES = ('/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
+POST_ROUTES = ('/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
 
 
 import threading
@@ -396,6 +397,22 @@ def post(server, path, body):
             return e.status, {'error': str(e)}
         except RelayError as e:
             return 409, {'error': str(e)}
+    if path == '/api/v2/remote_controls/invoke':
+        from src.runtime.remote_controls import RemoteControlError
+        try:
+            if not isinstance(body, dict) or body.get('consent') is not True:
+                return 400, {'error': 'relay_id, control_id and consent: true are required'}
+            return 200, remote_controls(server).invoke_now(body.get('relay_id'), body.get('control_id'))
+        except RemoteControlError as e:
+            return e.status, {'error': str(e)}
+    if path == '/api/v2/remote_controls/full_control':
+        from src.runtime.remote_controls import RemoteControlError
+        try:
+            if not isinstance(body, dict) or not isinstance(body.get('blocked'), bool) or body.get('consent') is not True:
+                return 400, {'error': 'relay_id, blocked: bool and consent: true are required'}
+            return 200, remote_controls(server).set_full_control_block(body.get('relay_id'), body.get('blocked'))
+        except RemoteControlError as e:
+            return e.status, {'error': str(e)}
     if path in ('/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke') and isinstance(body, dict):
         from src.runtime.routing import RouteError
         r = router(server)
