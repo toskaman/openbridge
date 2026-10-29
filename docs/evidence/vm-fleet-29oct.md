@@ -11,6 +11,7 @@ Goal: prove the OpenBridge agent runs beyond the two dev PCs. All VM disk on
 | deb2 | Debian 13 trixie | 6.12.107 / 3.13.5 | 127.0.0.1:2223 | `E:/VMs/logs/agent-handshake-deb2.log` (id=DEB2) |
 | deb12 | Debian 12 bookworm | 6.1.0-50 / 3.11.2 | 127.0.0.1:2224 | `E:/VMs/logs/agent-handshake-deb12.log` (id=DEB12) |
 | ub22 | Ubuntu 22.04.5 server | 6.8.0-138 / 3.10.12 | 127.0.0.1:2225 | `E:/VMs/logs/agent-handshake-ub22.log` (id=UB22) |
+| arm64 | Debian 13 trixie aarch64 | 6.12.107 / 3.13.5 | 127.0.0.1:2226 | `E:/VMs/logs/agent-handshake-arm64.log` (id=ARM64) |
 
 Method: preseed (Debian) / nocloud-net autoinstall (Ubuntu) over QEMU
 user-net (`http://10.0.2.2:8000`, host file server), SSH key `E:/VMs/keys/ob_vm`,
@@ -41,10 +42,16 @@ Install serial logs: `E:/VMs/logs/deb1-install-serial.log`,
   would need an XP-targeted rebuild (BCrypt/GetTickCount64 unavailable on XP).
 - **Windows 7**: no ISO anywhere on E: (full-disk hunt). Nothing staged.
   Win7 setup allows keyless install (30-day grace), so this is media-only.
-- **ARM64**: `debian-13.7.0-arm64-netinst.iso` + `qemu-system-aarch64` present,
-  `edk2-aarch64-code.fd` ships with QEMU. Install launched 29 Oct ~19:50 with
-  direct kernel boot (`-machine virt`, TCG): `E:/VMs/logs/arm64-install-serial.log`.
-  TCG cross-arch is hours-slow; status open at time of writing.
+- **ARM64: PROVEN.** `debian-installer/arm64/linux+initrd.gz` (trixie), direct
+  kernel boot on `-machine virt` (TCG, ~1 h install):
+  `E:/VMs/logs/arm64-install-serial.log` ends with `Finishing the installation`
+  + `reboot: Restarting system`. The UEFI disk boot had no GRUB (installed
+  without UEFI present), so the kernel+initrd were extracted from the installed
+  disk with a stdlib GPT+ext4 reader (`ext4get.py`) and the disk is booted
+  direct-kernel (`root=/dev/vda3 console=ttyAMA0`):
+  `E:/VMs/logs/arm64-boot-serial.log` shows the `ob-arm64 login:` prompt with
+  sshd up. Agent handshake: `E:/VMs/logs/agent-handshake-arm64.log`
+  (`arch=aarch64`, mutual PSK, ping/diag/exec OK).
 - **x86 (32-bit) guest**: no i386 media staged.
 
 ## Incidental finding (fixed same day)
