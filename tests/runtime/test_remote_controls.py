@@ -308,3 +308,28 @@ class PendingAck(unittest.TestCase):
         self.rc.poll_once()
         self.assertEqual(self.calls, [])
         self.assertIn('%032x' % 3, self.companion.pending)   # device shows "Not confirmed" after 20 s; never re-sent
+
+
+def _test_offline_relay_is_reprobed_and_queued_press_runs(self):
+    # Hardware finding (TV, 29 Oct): one failed poll during a Companion restart left the relay offline forever.
+    cid = self.vol_up()
+    real = self.companion.__call__
+    down = {'on': True}
+    def flaky(relay, message):
+        if down['on']:
+            raise OSError('connection refused')
+        return real(relay, message)
+    self.server.relays.relays['r-watch']['send'] = flaky
+    self.rc.poll_once()                                   # fails: relay marked offline
+    self.assertFalse(self.server.relays.relays['r-watch']['online'])
+    down['on'] = False
+    self.companion.press(cid)
+    self.clock.t += 1
+    self.assertEqual(self.rc.poll_once(), 0)              # within the probe interval: not yet
+    self.clock.t += 5
+    self.assertEqual(self.rc.poll_once(), 1)              # re-probed, back online, press processed
+    self.assertTrue(self.server.relays.relays['r-watch']['online'])
+    self.assertEqual(len(self.calls), 1)
+
+
+RemoteControls.test_offline_relay_is_reprobed_and_queued_press_runs = _test_offline_relay_is_reprobed_and_queued_press_runs

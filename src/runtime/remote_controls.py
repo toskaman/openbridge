@@ -33,6 +33,7 @@ from src.fabric import relay as fabric_relay
 
 POLL_S = 1.5
 MAX_PER_POLL = 8
+RECONNECT_PROBE_S = 5      # an offline relay with controls is re-probed at most this often
 MIN_INTERVAL_S = 0.5              # per control: one invocation per half second at most
 BURST, BURST_WINDOW_S = 3, 10.0   # more presses than this in the window: the control is suspended until re-granted
 REQUEST_TTL_S = 30                # a press older (or further in the future, clock skew) than this is never executed
@@ -80,7 +81,7 @@ class RemoteControls:
         try:
             return fabric_relay.verify(r['key'], r['send'](r, msg), r['seen']).get('params', {})
         except (OSError, TimeoutError) as error:
-            r['online'] = False
+            r['online'], r['last_probe'] = False, self.clock()
             raise fabric_relay.RelayError(f'Relay unreachable: {type(error).__name__}') from None
 
     def set_controls(self, body):
@@ -266,13 +267,26 @@ class RemoteControls:
                 with self._lock:
                     self.grants.pop(rid, None)
                 continue
-            if not r.get('online') or r.get('busy'):
+            if r.get('busy'):
                 continue
+            if not r.get('online'):
+                # A Companion restart or Wi-Fi blip marked it offline; probe it again (bounded) instead of
+                # abandoning its controls. A signed get_requests reply is itself the proof that brings it back.
+                now = self.clock()
+                if now - r.get('last_probe', 0) < RECONNECT_PROBE_S:
+                    continue
+                r['last_probe'] = now
             try:
                 reply = self._send(rid, 'get_requests')
                 reqs = fabric_relay.validate_requests(reply, known)
             except fabric_relay.RelayError:
                 continue
+            if not r.get('online'):
+                r['online'], r['failures'] = True, 0
+                ledger = getattr(self.server, 'relay_ledger', None)
+                if ledger is not None:
+                    ledger.proved(rid)
+                self._ex().emit('relay_reconnected', relay_id=rid)
             ack = fabric_relay.applied_revision(reply)
             if ack is not None:
                 with self._lock:
