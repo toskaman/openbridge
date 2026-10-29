@@ -19,6 +19,7 @@ class FakeCompanion:
         self.key, self.seen, self.controls, self.queue, self.results, self.ops = key, {}, [], [], [], []
         self.clock = time.time
         self.pending = {}
+        self.revision, self.status = 0, {}       # layout v2: applied revision (ACK) and status values
 
     def press(self, control_id, request_id=None, **extra):
         rid = request_id or ('%032x' % (len(self.ops) * 7919 + int(time.time() * 1000) % 100000 + len(self.queue)))
@@ -31,8 +32,12 @@ class FakeCompanion:
         params = {}
         if msg['op'] == 'set_controls':
             self.controls = msg['params']['controls']; self.queue = []
+            self.revision = msg['params'].get('revision', 0)
+            self.status = {c['control_id']: c.get('value', '') for c in self.controls if c.get('kind') == 'status'}
+        elif msg['op'] == 'update_status':
+            self.status.update({k: v for k, v in msg['params']['values'].items() if k in self.status})   # queue untouched
         elif msg['op'] == 'get_requests':
-            params, self.queue = {'requests': self.queue}, []
+            params, self.queue = {'requests': self.queue, 'applied_revision': self.revision}, []
             self.pending.update({r['request_id']: True for r in params['requests']})
         elif msg['op'] == 'report_result':
             if self.pending.pop(msg['params']['request_id'], None):     # unknown or late results are ignored, like the Java
@@ -303,3 +308,28 @@ class PendingAck(unittest.TestCase):
         self.rc.poll_once()
         self.assertEqual(self.calls, [])
         self.assertIn('%032x' % 3, self.companion.pending)   # device shows "Not confirmed" after 20 s; never re-sent
+
+
+def _test_offline_relay_is_reprobed_and_queued_press_runs(self):
+    # Hardware finding (TV, 29 Oct): one failed poll during a Companion restart left the relay offline forever.
+    cid = self.vol_up()
+    real = self.companion.__call__
+    down = {'on': True}
+    def flaky(relay, message):
+        if down['on']:
+            raise OSError('connection refused')
+        return real(relay, message)
+    self.server.relays.relays['r-watch']['send'] = flaky
+    self.rc.poll_once()                                   # fails: relay marked offline
+    self.assertFalse(self.server.relays.relays['r-watch']['online'])
+    down['on'] = False
+    self.companion.press(cid)
+    self.clock.t += 1
+    self.assertEqual(self.rc.poll_once(), 0)              # within the probe interval: not yet
+    self.clock.t += 5
+    self.assertEqual(self.rc.poll_once(), 1)              # re-probed, back online, press processed
+    self.assertTrue(self.server.relays.relays['r-watch']['online'])
+    self.assertEqual(len(self.calls), 1)
+
+
+RemoteControls.test_offline_relay_is_reprobed_and_queued_press_runs = _test_offline_relay_is_reprobed_and_queued_press_runs

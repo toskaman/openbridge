@@ -319,6 +319,60 @@ class UIPlan(Base):
         state = json.dumps(self.rc.state())
         self.assertNotIn('signature', state)                                  # grants are not exposed by GET
 
+    def plan_v2(self, m, version=3):
+        h = manifest_hash(m)
+        return self.plan(m, layout_version=version, widgets=[
+            {'widget_id': 'title', 'kind': 'label', 'label': 'Living room TV', 'binding': None, 'permission_label': ''},
+            {'widget_id': 'mute', 'kind': 'confirm', 'label': 'Mute', 'binding': {'manifest_hash': h, 'inputs': {}},
+             'permission_label': 'control TV keys'},
+            {'widget_id': 'last', 'kind': 'status', 'label': 'Last mute', 'source': 'mute', 'binding': None, 'permission_label': ''}])
+
+    def test_v2_layout_kinds_revision_ack_and_status(self):
+        m = self.manifest()
+        g, _ = self.s.issue_grant(m, self.facts, True, max_uses=5)
+        out = self.install(self.plan_v2(m), m, g)
+        kinds = {c['label']: c.get('kind', 'button') for c in self.comp.controls}
+        self.assertEqual(kinds, {'Living room TV': 'label', 'Mute': 'confirm', 'Last mute': 'status'})
+        self.assertEqual(self.comp.revision, 3)
+        self.assertNotIn('manifest', json.dumps(self.comp.controls))           # the device never sees grants/manifests
+        cid = out['installed'][0]
+        st_id = next(c['control_id'] for c in self.comp.controls if c.get('kind') == 'status')
+        self.rc.poll_once()
+        self.assertEqual(self.rc.state()['layouts']['r-tv']['acked'], 3)      # device ACK of the rendered revision
+        # A plain hold on a confirm widget is refused by the PC (not only by the UI); nothing executes.
+        self.comp.press(cid, request_id='%032x' % 21, gesture='long_press')
+        self.rc.poll_once()
+        self.assertEqual(self.calls, [])
+        self.assertIn('confirm on the device first', self.comp.results[-1]['text'])
+        self.assertIn('blocked', self.comp.status[st_id])
+        # Confirmed press runs the manifest once; the status widget shows the outcome without resetting the queue.
+        self.t[0] += 3
+        self.comp.press(cid, request_id='%032x' % 22, gesture='confirm')
+        self.rc.poll_once()
+        self.assertEqual(len(self.calls), 2)
+        self.assertTrue(self.comp.status[st_id].startswith('done'))
+        # Revocation: the grant is revoked, so the control no longer executes; its status says so.
+        self.s.revoke(g['grant_id'])
+        self.t[0] += 3
+        self.comp.press(cid, request_id='%032x' % 23, gesture='confirm')
+        self.rc.poll_once()
+        self.assertEqual(len(self.calls), 2)
+        self.assertTrue(self.comp.status[st_id].startswith(('blocked', 'not authorized')))
+
+    def test_v2_status_must_reference_an_action_and_labels_cannot_bind(self):
+        m = self.manifest()
+        g, _ = self.s.issue_grant(m, self.facts, True)
+        p = self.plan_v2(m)
+        p['widgets'][2]['source'] = 'title'; del p['plan_hash']; p['plan_hash'] = manifest_hash(p)
+        self.rejects('UI_BINDING', self.install, p, m, g)
+        p = self.plan_v2(m)
+        p['widgets'][0]['binding'] = {'manifest_hash': manifest_hash(m), 'inputs': {}}; del p['plan_hash']; p['plan_hash'] = manifest_hash(p)
+        self.rejects('UI_BINDING', self.install, p, m, g)
+        p = self.plan_v2(m)
+        p['widgets'][1]['source'] = 'mute'; del p['plan_hash']; p['plan_hash'] = manifest_hash(p)
+        self.rejects('UI_BINDING', self.install, p, m, g)
+        self.assertEqual(self.comp.controls, [])
+
     def test_plan_rejections(self):
         m = self.manifest()
         g, _ = self.s.issue_grant(m, self.facts, True)

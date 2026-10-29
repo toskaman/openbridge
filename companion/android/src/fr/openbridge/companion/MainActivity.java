@@ -566,11 +566,24 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         runOnUiThread(() -> {
             int before = controlsBox.getChildCount();
             controlsBox.removeAllViews();
+            int actions = 0;
             for (int i = 0; i < c.length(); i++) {
                 org.json.JSONObject o = c.optJSONObject(i); if (o == null) continue;
-                String id = o.optString("control_id");
-                Button b = button(o.optString("label"), false);
-                b.setTag(new String[]{id, o.optString("label")});
+                String id = o.optString("control_id"), label = o.optString("label"), kind = o.optString("kind", "button");
+                if ("label".equals(kind)) {                         // layout v2: information only, never an action
+                    TextView t = text(label, 13, true, MUTED); t.setPadding(dp(2), dp(4), 0, dp(2));
+                    controlsBox.addView(t); controlsBox.addView(spacer(4)); continue;
+                }
+                if ("status".equals(kind)) {                        // last outcome of another control, pushed by the PC
+                    String v = o.optString("value", "");
+                    TextView t = text(label + "  ·  " + (v.isEmpty() ? "no result yet" : v), 13, false, v.startsWith("done") ? OK : v.isEmpty() ? FAINT : WARN);
+                    t.setPadding(dp(2), dp(2), 0, dp(2)); t.setFocusable(true);
+                    controlsBox.addView(t); controlsBox.addView(spacer(6)); continue;
+                }
+                actions++;
+                final boolean confirm = "confirm".equals(kind);
+                Button b = button(label, false);
+                b.setTag(new String[]{id, label});
                 // Hold to send: a tap does nothing, so stray or phantom touches (watch off the wrist) never send a command.
                 final org.json.JSONObject[] down = new org.json.JSONObject[1];
                 b.setOnTouchListener((v, e) -> {
@@ -581,25 +594,40 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                     }
                     return false;                                   // keep the normal click / long-click handling
                 });
-                b.setOnClickListener(v -> resultText.setText("Hold the button to send"));
+                b.setOnClickListener(v -> resultText.setText(confirm ? "Hold, then confirm" : "Hold the button to send"));
                 b.setOnLongClickListener(v -> {
                     org.json.JSONObject touch = down[0];
                     try { if (touch != null) { touch.put("down_ms", android.os.SystemClock.uptimeMillis() - touch.getLong("t")); touch.remove("t"); } } catch (Exception ignored) { }
                     down[0] = null;
-                    String s = relay.press(id, touch == null ? "key" : "long_press", touch);
-                    if (s != null) {
-                        resultText.setText(s);
-                        if (s.startsWith("Sent")) { log("Pressed " + o.optString("label")); thinkingUntil = System.currentTimeMillis() + 20_000; orb.pulse(); updateOrb(); }
+                    if (confirm) {                                  // the PC refuses a confirm control without this step
+                        new android.app.AlertDialog.Builder(this)
+                                .setTitle("Confirm")
+                                .setMessage("Run \"" + label + "\" now?")
+                                .setNegativeButton("Cancel", (d, w) -> resultText.setText("Cancelled"))
+                                .setPositiveButton("Run", (d, w) -> sendPress(id, label, "confirm", touch))
+                                .show();
+                        return true;
                     }
-                    renderBusy();                                   // feedback on the button itself: "Sending…", disabled
+                    sendPress(id, label, touch == null ? "key" : "long_press", touch);
                     return true;
                 });
                 controlsBox.addView(b); controlsBox.addView(spacer(8));
             }
             controlsCard.setVisibility(c.length() > 0 ? View.VISIBLE : View.GONE);
-            if (before != controlsBox.getChildCount() && c.length() > 0) { log(c.length() + " control(s) authorized by your PC"); orb.pulse(); }
+            if (before != controlsBox.getChildCount() && actions > 0) { log(actions + " control(s) authorized by your PC"); orb.pulse(); }
+            relay.markRendered(relay.layoutRevision());             // ACK: this revision is on screen
+            renderBusy();
             refresh();
         });
+    }
+
+    private void sendPress(String id, String label, String gesture, org.json.JSONObject touch) {
+        String s = relay.press(id, gesture, touch);
+        if (s != null) {
+            resultText.setText(s);
+            if (s.startsWith("Sent")) { log("Pressed " + label); thinkingUntil = System.currentTimeMillis() + 20_000; orb.pulse(); updateOrb(); }
+        }
+        renderBusy();                                               // feedback on the button itself: "Sending…", disabled
     }
 
     @Override public void result(String text) {

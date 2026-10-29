@@ -383,13 +383,22 @@ class Substrate:
         rid = body.get('relay_id')
         if self.relay_fingerprint(rid) != plan['target_device']:
             raise SubstrateError('UI_TARGET', 'The plan targets another device than this relay', 409)
-        specs = []
+        specs, display = [], []
+        ids = [w['widget_id'] for w in plan['widgets']]
+        if len(set(ids)) != len(ids):
+            raise SubstrateError('UI_BINDING', 'widget_id values must be unique')
+        actionable = {w['widget_id'] for w in plan['widgets'] if w['kind'] in ('button', 'confirm')}
         for w in plan['widgets']:
             if not self._text_ok(w['label']) or not self._text_ok(w['permission_label']):
                 raise SubstrateError('INJECTION', 'Widget text contains control or script markers')
-            if w['kind'] == 'label':
+            if 'source' in w and w['kind'] != 'status':
+                raise SubstrateError('UI_BINDING', f'only a status widget has a source ({w["widget_id"]})')
+            if w['kind'] in ('label', 'status'):
                 if w['binding'] is not None:
-                    raise SubstrateError('UI_BINDING', 'A label cannot be bound to an action')
+                    raise SubstrateError('UI_BINDING', f'a {w["kind"]} cannot be bound to an action')
+                if w['kind'] == 'status' and w.get('source') not in actionable:
+                    raise SubstrateError('UI_BINDING', f'status {w["widget_id"]} must name a button/confirm widget as source')
+                display.append({'widget_id': w['widget_id'], 'kind': w['kind'], 'label': w['label'], 'source': w.get('source')})
                 continue
             b = w['binding']
             if b is None:
@@ -400,14 +409,14 @@ class Substrate:
             c = self.compile(bound['manifest'], bound.get('facts') or [], b['inputs'])
             self._check_grant(bound.get('grant'), c['manifest_hash'], bound['manifest']['target']['device_fingerprint'], c['permissions'])
             specs.append({'label': w['label'], 'manifest': bound['manifest'], 'grant': bound['grant'], 'facts': bound.get('facts') or [],
-                          'manifest_hash': c['manifest_hash'], 'inputs': b['inputs']})
+                          'manifest_hash': c['manifest_hash'], 'inputs': b['inputs'], 'kind': w['kind'], 'widget_id': w['widget_id']})
         from src.runtime.remote_controls import RemoteControlError
         from src.fabric.relay import RelayError
         try:
-            state = remote_controls(self.server).set_manifest_controls(rid, specs)
+            state = remote_controls(self.server).set_manifest_controls(rid, specs, plan['layout_version'], display)
         except RemoteControlError as e:
             raise SubstrateError('UI_INSTALL', str(e), e.status) from None
         except RelayError as e:
             raise SubstrateError('UI_INSTALL', f'Companion unreachable: {e}', 409) from None
-        self._ex().emit('ui_plan_installed', relay_id=rid, plan_hash=plan['plan_hash'], layout_version=plan['layout_version'], buttons=len(specs))
+        self._ex().emit('ui_plan_installed', relay_id=rid, plan_hash=plan['plan_hash'], layout_version=plan['layout_version'], buttons=len(specs), display=len(display))
         return {'plan_hash': plan['plan_hash'], 'installed': [c['control_id'] for c in state['controls'] if c.get('relay_id') == rid]}

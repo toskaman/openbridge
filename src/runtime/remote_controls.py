@@ -33,6 +33,7 @@ from src.fabric import relay as fabric_relay
 
 POLL_S = 1.5
 MAX_PER_POLL = 8
+RECONNECT_PROBE_S = 5      # an offline relay with controls is re-probed at most this often
 MIN_INTERVAL_S = 0.5              # per control: one invocation per half second at most
 BURST, BURST_WINDOW_S = 3, 10.0   # more presses than this in the window: the control is suspended until re-granted
 REQUEST_TTL_S = 30                # a press older (or further in the future, clock skew) than this is never executed
@@ -58,6 +59,7 @@ class RemoteControls:
         self._recent = {}        # (relay_id, control_id) -> recent request times
         self.suspended = set()   # (relay_id, control_id) suspended after an unusual burst
         self.history = []        # bounded outcome log (no free text from the device)
+        self.layouts = {}        # relay_id -> {revision, acked, display: {control_id: {kind, label, value, source}}}
         self._lock = threading.Lock()
         self._grant_send_lock = threading.Lock()  # order Companion updates through acknowledgement
         self._stop = threading.Event()
@@ -79,7 +81,7 @@ class RemoteControls:
         try:
             return fabric_relay.verify(r['key'], r['send'](r, msg), r['seen']).get('params', {})
         except (OSError, TimeoutError) as error:
-            r['online'] = False
+            r['online'], r['last_probe'] = False, self.clock()
             raise fabric_relay.RelayError(f'Relay unreachable: {type(error).__name__}') from None
 
     def set_controls(self, body):
@@ -118,9 +120,12 @@ class RemoteControls:
             out[cid] = {'label': label, 'skill_id': skill, 'target': target, 'params': params, 'generation': gen, 'key_fp': fp}
         return self._install(rid, gen, fp, out)
 
-    def set_manifest_controls(self, rid, specs):
-        """V4: buttons bound to owner-approved Meta manifests (validated UIViewPlan). Owner path only.
-        specs: [{label, manifest, grant, facts, inputs}] already compiled and grant-checked by the substrate."""
+    def set_manifest_controls(self, rid, specs, revision=None, display=()):
+        """V4: controls bound to owner-approved Meta manifests (validated UIViewPlan). Owner path only.
+        specs: [{label, manifest, grant, facts, inputs[, kind, widget_id]}] already compiled and grant-checked by the substrate;
+        kind 'confirm' requires an on-device confirmation that the PC checks on every request.
+        display: [{widget_id, kind: status|label, label[, source]}] never executes anything; a status shows the last
+        outcome of its source widget. revision is the plan layout_version, acknowledged by the device."""
         if self.closed:
             raise RemoteControlError(503, 'Remote controls are shut down')
         relay = self._relay(rid)
@@ -129,15 +134,25 @@ class RemoteControls:
         with self._lock:
             self.generation += 1
             gen = self.generation
-        fp, out = _key_fp(relay['key']), {}
+        if len(specs) + len(display) > fabric_relay.MAX_CONTROLS:
+            raise RemoteControlError(400, f'At most {fabric_relay.MAX_CONTROLS} widgets')
+        fp, out, by_widget = _key_fp(relay['key']), {}, {}
         for s in specs:
             digest = hashlib.sha256(json.dumps([rid, s['manifest_hash'], s['inputs'], s['label']], sort_keys=True).encode()).hexdigest()[:10]
-            out[f'ctl-{digest}-g{gen}'] = {'kind': 'manifest', 'label': s['label'], 'skill_id': s['manifest']['capability_id'], 'target': None,
-                                            'params': s['inputs'], 'manifest': s['manifest'], 'grant': s['grant'], 'facts': s['facts'],
-                                            'manifest_hash': s['manifest_hash'], 'generation': gen, 'key_fp': fp}
-        return self._install(rid, gen, fp, out)
+            cid = f'ctl-{digest}-g{gen}'
+            out[cid] = {'kind': 'manifest', 'ui_kind': s.get('kind', 'button'), 'label': s['label'], 'skill_id': s['manifest']['capability_id'],
+                        'target': None, 'params': s['inputs'], 'manifest': s['manifest'], 'grant': s['grant'], 'facts': s['facts'],
+                        'manifest_hash': s['manifest_hash'], 'generation': gen, 'key_fp': fp}
+            if s.get('widget_id'):
+                by_widget[s['widget_id']] = cid
+        shown = {}
+        for d in display:
+            digest = hashlib.sha256(json.dumps([rid, d['widget_id'], d['label']], sort_keys=True).encode()).hexdigest()[:10]
+            shown[f'ui-{digest}-g{gen}'] = {'kind': d['kind'], 'label': d['label'], 'value': '' if d['kind'] == 'status' else None,
+                                            'source': by_widget.get(d.get('source'))}
+        return self._install(rid, gen, fp, out, shown, revision)
 
-    def _install(self, rid, gen, fp, out):
+    def _install(self, rid, gen, fp, out, shown=None, revision=None):
         with self._lock:                                 # owner-update order survives delayed network replies
             if self.closed:
                 raise RemoteControlError(503, 'Remote controls are shut down')
@@ -154,11 +169,30 @@ class RemoteControls:
                 superseded = self.closed or self._grant_versions.get(rid) != gen
             if superseded:
                 return self.state()
-            self._send(rid, 'set_controls', {'controls': [{'control_id': k, 'label': v['label']} for k, v in out.items()]})
+            items = []
+            for k, v in out.items():
+                c = {'control_id': k, 'label': v['label']}
+                if v.get('ui_kind', 'button') != 'button':
+                    c['kind'] = v['ui_kind']
+                items.append(c)
+            for k, v in (shown or {}).items():
+                c = {'control_id': k, 'label': v['label'], 'kind': v['kind']}
+                if v['value'] is not None:
+                    c['value'] = v['value']
+                items.append(c)
+            params = {'controls': items}
+            if revision is not None:
+                params['revision'] = revision
+            self._send(rid, 'set_controls', params)
             with self._lock:
                 current_relay = self.server.relays.relays.get(rid)
                 if out and not self.closed and self._grant_versions.get(rid) == gen and current_relay and _key_fp(current_relay['key']) == fp:
                     self.grants[rid] = out
+                if not self.closed and self._grant_versions.get(rid) == gen:
+                    if shown or revision is not None:
+                        self.layouts[rid] = {'revision': revision, 'acked': None, 'display': dict(shown or {})}
+                    else:
+                        self.layouts.pop(rid, None)
         self._ex().emit('remote_controls', relay_id=rid, count=len(out), generation=gen)
         self._ensure_thread()
         return self.state()
@@ -168,6 +202,9 @@ class RemoteControls:
             return {'controls': [{'relay_id': rid, 'control_id': cid, **{k: v for k, v in g.items() if k not in ('key_fp', 'grant', 'facts', 'manifest')}}
                                  for rid, cs in self.grants.items() for cid, g in cs.items()],
                     'history': list(self.history[-20:]), 'suspended': sorted(f'{a}/{b}' for a, b in self.suspended),
+                    'layouts': {rid: {'revision': l['revision'], 'acked': l['acked'],
+                                      'display': [{'control_id': k, **v} for k, v in l['display'].items()]}
+                                for rid, l in self.layouts.items()},
                     'closed': self.closed}
 
     def close(self):
@@ -175,6 +212,7 @@ class RemoteControls:
         with self._lock:
             self.closed = True
             self.grants.clear()
+            self.layouts.clear()
         self._stop.set()
         t = self._thread
         if t is not None and t is not threading.current_thread():
@@ -219,6 +257,9 @@ class RemoteControls:
             if self.closed:
                 return 0
             relays = {rid: set(cs) for rid, cs in self.grants.items()}
+            for rid, l in self.layouts.items():          # display-only layouts are polled until the device acknowledges them
+                if rid not in relays and l['revision'] is not None and l['acked'] != l['revision']:
+                    relays[rid] = set()
         done = 0
         for rid, known in relays.items():
             r = self.server.relays.relays.get(rid)
@@ -226,12 +267,31 @@ class RemoteControls:
                 with self._lock:
                     self.grants.pop(rid, None)
                 continue
-            if not r.get('online') or r.get('busy'):
+            if r.get('busy'):
                 continue
+            if not r.get('online'):
+                # A Companion restart or Wi-Fi blip marked it offline; probe it again (bounded) instead of
+                # abandoning its controls. A signed get_requests reply is itself the proof that brings it back.
+                now = self.clock()
+                if now - r.get('last_probe', 0) < RECONNECT_PROBE_S:
+                    continue
+                r['last_probe'] = now
             try:
-                reqs = fabric_relay.validate_requests(self._send(rid, 'get_requests'), known)
+                reply = self._send(rid, 'get_requests')
+                reqs = fabric_relay.validate_requests(reply, known)
             except fabric_relay.RelayError:
                 continue
+            if not r.get('online'):
+                r['online'], r['failures'] = True, 0
+                ledger = getattr(self.server, 'relay_ledger', None)
+                if ledger is not None:
+                    ledger.proved(rid)
+                self._ex().emit('relay_reconnected', relay_id=rid)
+            ack = fabric_relay.applied_revision(reply)
+            if ack is not None:
+                with self._lock:
+                    if rid in self.layouts:
+                        self.layouts[rid]['acked'] = ack
             for req in reqs[:MAX_PER_POLL - done]:
                 self.process(rid, req)
                 done += 1
@@ -266,6 +326,8 @@ class RemoteControls:
                 outcome, text = 'DUPLICATE', f"{grant['label']}: already done"     # a re-sent press: never dispatched twice
             elif now - self._last.get(key, 0) < MIN_INTERVAL_S:
                 outcome, text = 'BLOCKED', 'Too fast; press again'
+            elif grant.get('ui_kind') == 'confirm' and req.get('gesture') != 'confirm':
+                outcome, text = 'BLOCKED', f"{grant['label']}: confirm on the device first"
             else:
                 outcome, text = self._dispatch(rid, req, grant, actor, entry)
                 self._last[key] = now
@@ -273,6 +335,7 @@ class RemoteControls:
         with self._lock:
             self.history.append(entry)
             del self.history[:-100]
+        self._update_status(rid, req['control_id'], outcome, now)
         ev = {k: v for k, v in entry.items() if k not in ('at', 'touch', 'seq')}
         self._ex().emit('remote_request', device_seq=entry['seq'], **ev)
         if not self.closed:
@@ -281,6 +344,24 @@ class RemoteControls:
             except fabric_relay.RelayError:
                 pass
         return entry
+
+    def _update_status(self, rid, cid, outcome, now):
+        """Status widgets show the last outcome of their source control. Sent as update_status, which never resets
+        pending device requests (a full set_controls would)."""
+        with self._lock:
+            l = self.layouts.get(rid)
+            targets = [k for k, v in (l or {}).get('display', {}).items() if v['kind'] == 'status' and v['source'] == cid]
+            if not targets:
+                return
+            word = {'VERIFIED': 'done, verified', 'EXECUTED': 'done', 'REVOKED': 'not authorized'}.get(outcome, outcome.lower().replace('_', ' '))
+            value = (word + ' ' + time.strftime('%H:%M', time.localtime(now)))[:fabric_relay.MAX_STATUS_TEXT]
+            for k in targets:
+                l['display'][k]['value'] = value
+        if not self.closed:
+            try:
+                self._send(rid, 'update_status', {'values': {k: value for k in targets}})
+            except fabric_relay.RelayError:
+                pass
 
     def _dispatch(self, rid, req, grant, actor, entry):
         if grant.get('kind') == 'manifest':

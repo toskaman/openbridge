@@ -118,6 +118,11 @@ public class VoiceOrbView extends View {
         int w = getWidth(), h = getHeight();
         float cx = w / 2f, cy = h / 2f;
         float R = Math.min(w, h) * 0.30f * (1f + 0.06f * level + 0.05f * pulse * pulse);
+        if (Float.isNaN(level) || Float.isNaN(energy)) { level = 0f; energy = 0f; }   // never let a bad frame poison later ones
+        if (!(R >= 1f)) {                       // not laid out yet (0x0 on some TVs): RadialGradient needs radius > 0
+            if (isAttachedToWindow() && getVisibility() == VISIBLE) postInvalidateOnAnimation();
+            return;
+        }
 
         // Ambient halo
         float haloR = R * (2.0f + 0.5f * energy);
