@@ -17,6 +17,11 @@ RESERVATION_MICRO_USD = 100_000
 ALLOWED_FACTS = {'battery_percent', 'storage_free_gb', 'screen_timeout_seconds'}
 EVAL_ALLOWANCE_MAX_USD = 1.00
 EVAL_OBSERVATION_MAX_AGE_S = 24 * 3600
+# Owner-raised 2026-10-29 (chat: $128 free credits observed, supervised G3 retry
+# ordered; prior $1.00 exhausted by G3 attempts + N4). Per-observation allowance
+# max is UNCHANGED ($1.00); only the lifetime global ceiling moves. Trust
+# post-review still pending: this must be ratified or reverted on review.
+GLOBAL_LEDGER_CAP_MICRO_USD = 2_000_000
 
 
 def resolve_ledger(explicit=None):
@@ -137,7 +142,7 @@ class RuntimeModelBroker:
                     raise ModelBlocked('Allowance/authz mismatch for this observation')
             used = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations WHERE observation=?',(observation,)).fetchone()[0]
             total = db.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations').fetchone()[0]
-            if used+RESERVATION_MICRO_USD > ceiling or total+RESERVATION_MICRO_USD > 1_000_000:
+            if used+RESERVATION_MICRO_USD > ceiling or total+RESERVATION_MICRO_USD > GLOBAL_LEDGER_CAP_MICRO_USD:
                 raise ModelBlocked('Conservative local credit budget exhausted')
             db.execute('INSERT INTO reservations(observation,reserved,recorded,allowance,authz) VALUES(?,?,?,?,?)',
                        (observation,RESERVATION_MICRO_USD,time.time(),allowance_micro,authz))
