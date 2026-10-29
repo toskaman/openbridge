@@ -138,3 +138,36 @@ class ActRestoreSequence(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ClaudeBindingHolds(unittest.TestCase):
+    CAT = {'input.key': {'side_effect_class': 'IRREVERSIBLE'}, 'state.audio': {'side_effect_class': 'READ'},
+           'state.screen': {'side_effect_class': 'READ'}, 'app.launch': {'side_effect_class': 'IRREVERSIBLE'}}
+
+    def b(self, steps):
+        from dev.run_g3_smoke import effect_binding
+        return effect_binding(steps, self.CAT)
+
+    def test_mute_plus_reads_is_bound(self):
+        self.assertIsNone(self.b([{'primitive_id': 'state.screen', 'args': {}},
+                                  {'primitive_id': 'input.key', 'args': {'key': 'mute'}},
+                                  {'primitive_id': 'state.audio', 'args': {}}]))
+
+    def test_other_key_extra_effect_or_none_refused(self):
+        self.assertIsNotNone(self.b([{'primitive_id': 'input.key', 'args': {'key': 'power'}}]))
+        self.assertIsNotNone(self.b([{'primitive_id': 'input.key', 'args': {'key': 'mute'}},
+                                     {'primitive_id': 'input.key', 'args': {'key': 'mute'}}]))
+        self.assertIsNotNone(self.b([{'primitive_id': 'input.key', 'args': {'key': 'mute'}},
+                                     {'primitive_id': 'app.launch', 'args': {'package': 'x.y'}}]))
+        self.assertIsNotNone(self.b([{'primitive_id': 'state.audio', 'args': {}}]))
+        self.assertIsNotNone(self.b([{'primitive_id': 'unknown.thing', 'args': {}}]))
+
+    def test_no_restore_when_transition_not_observed(self):
+        from dev.run_g3_smoke import act_restore_sequence
+        calls = []
+        def invoke(tag):
+            calls.append(tag); return 200, {'status': 'EXECUTED'}
+        out = act_restore_sequence(invoke, lambda: {'muted': False, 'readable': True},
+                                   lambda: (200, {'revoked': 'g'}), sleep=lambda s: None)
+        self.assertEqual(calls, ['act'])          # no blind second toggle
+        self.assertEqual(out[6]['http'], 200)     # revoke still ran

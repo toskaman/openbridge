@@ -84,6 +84,19 @@ def success_predicate(pre, mid, post, st1, r1, st2, after_revoke_http):
     return (not reasons), reasons
 
 
+def effect_binding(steps, catalog):
+    """Owner consent covers ONE effect: a single input.key{key: mute}. Every other step must be a
+    READ-class primitive. Anything else is KILLed before a grant (generic compiler validity is not
+    consent for an arbitrary key chain)."""
+    effects = [s for s in steps if (catalog.get(s.get('primitive_id')) or {}).get('side_effect_class') != 'READ']
+    if len(effects) != 1:
+        return 'plan must contain exactly one effect step (got %d)' % len(effects)
+    e = effects[0]
+    if e.get('primitive_id') != 'input.key' or e.get('args') != {'key': 'mute'}:
+        return 'the only allowed effect is input.key {"key": "mute"}'
+    return None
+
+
 def act_restore_sequence(invoke, oracle, revoke, sleep=time.sleep):
     """Act -> oracle -> conditional restore -> oracle, revoke always attempted.
 
@@ -96,7 +109,9 @@ def act_restore_sequence(invoke, oracle, revoke, sleep=time.sleep):
         st1, r1 = invoke('act')
         sleep(1.5)
         mid = oracle()
-        if st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED'):
+        # Restore only after an OBSERVED transition: an executed act whose effect was not seen
+        # is reconciled by the owner, never by a second blind toggle.
+        if st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED') and (mid or {}).get('muted') is True:
             st2, r2 = invoke('restore')
             sleep(1.5)
             post = oracle()
@@ -243,9 +258,14 @@ def main():
                                          'params': {'action': 'audio_state'}, 'consent': True})
         res = r.get('result') or {}
         T['steps'].append({'oracle': res, 'tx': r.get('transaction_id'), 'state': r.get('state')}); return res
+    bad = effect_binding(manifest['steps'], desc)
+    if bad:
+        return stop('KILL', reason='effect binding refused before grant: ' + bad)
     pre = oracle()
     if not pre.get('readable'):
         return stop('KILL', reason='state.audio unreadable before the run (UNKNOWN, not success)')
+    if pre.get('muted') is not False:
+        return stop('KILL', reason='TV already muted before the run: nothing to prove, no toggle sent')
     st, g = http('/api/v2/manifests/grant', {'manifest': manifest, 'facts': kfacts, 'consent': True, 'max_uses': 2, 'ttl_s': 900})
     T['grant'] = {'http': st, **{k: v for k, v in g.items() if k != 'grant'}, 'grant_id': (g.get('grant') or {}).get('grant_id')}
     if st != 200:
