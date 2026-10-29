@@ -504,6 +504,18 @@ class CloudTransport(unittest.TestCase):
         self.assertEqual(d['status'], 'escalation_required')
         self.assertEqual(cloud.calls, [])
 
+    def test_high_sends_cloud_at_most_once(self):
+        # N4 finding: a non-terminal first cloud reply must not trigger a second reserve + send.
+        from src.runtime.nl_router import parse, TransportError
+        gates = []
+        bad = dict(good_reply(), targets=[], status='draft') if isinstance(good_reply(), dict) else {}
+        for cloud in (FakeTransport(bad), FakeTransport(error=TransportError('down'))):
+            gates.clear()
+            parse('Start my vacuum', 'en', 'high', None, cloud, cloud_allowed=True,
+                  before_cloud=lambda: gates.append(1))
+            self.assertEqual(len(cloud.calls), 1)
+            self.assertEqual(len(gates), 1)
+
 
 def api_server():
     srv = FakeServer()
