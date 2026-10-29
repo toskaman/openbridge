@@ -113,6 +113,21 @@ class AllowancePath(unittest.TestCase):
             with self.assertRaises(ModelBlocked):
                 b._reserve()
 
+    def test_global_lifetime_cap_two_dollars(self):
+        # Owner-raised 2026-10-29 ($1.00 exhausted; $128 observed). Hermetic:
+        # 20 x $0.10 across two observations pass, the 21st is refused.
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'b.sqlite3'
+            for obs in ('obs-a', 'obs-b'):
+                b = RuntimeModelBroker(p, permit(obs, 600), evaluation_allowance_usd=1.00,
+                                       evaluation_authz='a')
+                for _ in range(10):
+                    b._reserve()
+            c = RuntimeModelBroker(p, permit('obs-c', 600), evaluation_allowance_usd=1.00,
+                                   evaluation_authz='a')
+            with self.assertRaises(ModelBlocked):
+                c._reserve()
+
     def test_ledger_row_records_allowance_and_authz(self):
         import sqlite3
         with tempfile.TemporaryDirectory() as d:
