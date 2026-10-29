@@ -1,0 +1,397 @@
+{
+ "kind": "G3_INTEGRATION_SMOKE",
+ "started": "2026-10-29T13:03:18.534518+00:00",
+ "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": "low",
+ "max_completion_tokens": 8000,
+ "calls": [
+  {
+   "prompt_sha256": "efcb969fce37c4caa585b53daf54165c8a2682bb1284118e699310f9dd0da126",
+   "elapsed_ms": 6472,
+   "request_id": "chatcmpl-01a187c2-1f23-7030-9d3c-72ea9a8c9832",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 993,
+    "completion_tokens": 1294
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 1143,
+   "estimated_cost_usd": 0.00674075,
+   "reply": "{\"schema_version\":1,\"candidate_id\":\"cand-mute-tv-audio-01\",\"origin\":\"meta_generated\",\"intent\":\"Mute the TV audio, then confirm by reading the media stream state that it reports muted.\",\"target_opaque_id\":\"opaque:device:e5ab722731e4e638\",\"primitive_chain\":[{\"primitive_id\":\"input.key\",\"input\":{\"key\":\"mute\"}},{\"primitive_id\":\"state.audio\",\"input\":{}}],\"preconditions\":[],\"postconditions\":[\"audio_muted\"],\"required_grants\":[\"control\",\"read\"],\"evidence_refs\":[\"opaque:fact:18cb2d8d988fa7fc\",\"opaque:fact:4ae41f08a09c8396\"]}",
+   "status": "RECORDED"
+  }
+ ],
+ "steps": [
+  {
+   "oracle": {
+    "stream": "music",
+    "muted": false,
+    "volume_index": 20,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "tx": "tx-b972f478c2e83435",
+   "state": "EXECUTED"
+  },
+  {
+   "invoke": "act",
+   "http": 200,
+   "receipt": {
+    "operation_id": "op-d9c1a2152557bffd19cfe9015ea55712",
+    "manifest_hash": "sha256:22ddffb1a17273a988e2fc91c96c155ba0d82d6aedf954b1b2cc4aae216b9d26",
+    "origin": "meta_generated",
+    "device_fingerprint": "fp-06001add225b986c",
+    "status": "EXECUTED",
+    "steps": [
+     {
+      "step_id": "s0",
+      "primitive_id": "input.key",
+      "attempt": 1,
+      "transaction_id": "tx-17ef2a7722110ae6",
+      "status": "EXECUTED"
+     },
+     {
+      "step_id": "s1",
+      "primitive_id": "state.audio",
+      "attempt": 1,
+      "transaction_id": "tx-0782cfd2208f37e4",
+      "status": "EXECUTED"
+     }
+    ],
+    "error": null,
+    "started_at": "2026-10-29T13:03:28Z",
+    "finished_at": "2026-10-29T13:03:30Z",
+    "signature": "95e8377bc5ef53dbf948cd3c6864e9d22514bb2838bad3bd571e72e0198727bf"
+   }
+  },
+  {
+   "oracle": {
+    "stream": "music",
+    "muted": true,
+    "volume_index": 0,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "tx": "tx-441874505a12b9e4",
+   "state": "EXECUTED"
+  },
+  {
+   "invoke": "restore",
+   "http": 200,
+   "receipt": {
+    "operation_id": "op-93efece507daac11f1b1e2161c8a163e",
+    "manifest_hash": "sha256:22ddffb1a17273a988e2fc91c96c155ba0d82d6aedf954b1b2cc4aae216b9d26",
+    "origin": "meta_generated",
+    "device_fingerprint": "fp-06001add225b986c",
+    "status": "EXECUTED",
+    "steps": [
+     {
+      "step_id": "s0",
+      "primitive_id": "input.key",
+      "attempt": 1,
+      "transaction_id": "tx-1072f4ebd84ee654",
+      "status": "EXECUTED"
+     },
+     {
+      "step_id": "s1",
+      "primitive_id": "state.audio",
+      "attempt": 1,
+      "transaction_id": "tx-defc4ee4da6e80c7",
+      "status": "EXECUTED"
+     }
+    ],
+    "error": null,
+    "started_at": "2026-10-29T13:03:32Z",
+    "finished_at": "2026-10-29T13:03:33Z",
+    "signature": "7bd218c0c2ecd8410b397a5c139a9a02d27ee6d192a60c3b14033d6acbd5ae59"
+   }
+  },
+  {
+   "oracle": {
+    "stream": "music",
+    "muted": false,
+    "volume_index": 20,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "tx": "tx-4105afc632009b07",
+   "state": "EXECUTED"
+  },
+  {
+   "invoke": "after_revoke_must_refuse",
+   "http": 403,
+   "receipt": {
+    "error": "Grant revoked",
+    "code": "GRANT_REVOKED"
+   }
+  }
+ ],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "autorisé pour l’essai G3, 5 $ maximum",
+  "observation_id": "owner-chat-20261029T1403-129usd",
+  "observed_at": "2026-10-29T14:02:59+01:00",
+  "free_balance_usd_lower_bound": 129.0
+ },
+ "target": {
+  "device_fingerprint": "fp-06001add225b986c",
+  "fact_count": 13
+ },
+ "scope": {
+  "grants": [
+   "control",
+   "read"
+  ],
+  "source": "live-snapshot-links"
+ },
+ "bundle_id": "b-12d2604cdfa66387",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Mute the TV audio, then confirm by reading the media stream state that it report'"
+  },
+  "stocked_path": "device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task"
+ },
+ "synthesis_rejects": [],
+ "candidate": {
+  "schema_version": 1,
+  "candidate_id": "cand-mute-tv-audio-01",
+  "origin": "meta_generated",
+  "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+  "target_opaque_id": "opaque:device:e5ab722731e4e638",
+  "primitive_chain": [
+   {
+    "primitive_id": "input.key",
+    "input": {
+     "key": "mute"
+    }
+   },
+   {
+    "primitive_id": "state.audio",
+    "input": {}
+   }
+  ],
+  "preconditions": [],
+  "postconditions": [
+   "audio_muted"
+  ],
+  "required_grants": [
+   "control",
+   "read"
+  ],
+  "evidence_refs": [
+   "opaque:fact:18cb2d8d988fa7fc",
+   "opaque:fact:4ae41f08a09c8396"
+  ],
+  "model_run_id": "mr-2679619b7ab09920",
+  "digest": "b94ee74fd35f5be5b7e877f56e4892377aecbabbb351bb566733a1a7f1c94994"
+ },
+ "prompt_sha256": "07d25d9178d3a630983dbad81440de557e7ae8cd0718c9788a0711c50ce0f2b6",
+ "manifest": {
+  "capability_id": "cand-mute-tv-audio-01",
+  "evidence_refs": [
+   "f-3914f4d95dc75613",
+   "f-f4ce69e8b0494637"
+  ],
+  "expires_at": "2026-10-29T14:03:27Z",
+  "facts_required": [
+   "f-3914f4d95dc75613",
+   "f-f4ce69e8b0494637"
+  ],
+  "inputs": {},
+  "manifest_version": "obv4.1",
+  "max_fact_age_s": 600,
+  "model_run": {
+   "model": "muse-spark-1.3",
+   "provider": "meta",
+   "run_id": "mr_2679619b7ab09920"
+  },
+  "origin": "meta_generated",
+  "permissions_requested": [
+   "control",
+   "read"
+  ],
+  "steps": [
+   {
+    "step_id": "s0",
+    "primitive_id": "input.key",
+    "args": {
+     "key": "mute"
+    },
+    "on_uncertain": "INCONCLUSIVE"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "state.audio",
+    "args": {},
+    "on_uncertain": "INCONCLUSIVE"
+   }
+  ],
+  "target": {
+   "category": "tv",
+   "device_fingerprint": "fp-06001add225b986c"
+  },
+  "title": "Mute the TV (Meta-generated)"
+ },
+ "compile": {
+  "http": 200,
+  "manifest_hash": "sha256:22ddffb1a17273a988e2fc91c96c155ba0d82d6aedf954b1b2cc4aae216b9d26",
+  "plan": [
+   {
+    "step_id": "s0",
+    "primitive_id": "input.key",
+    "args": {
+     "key": "mute"
+    },
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "IRREVERSIBLE",
+    "idempotency": "NON_IDEMPOTENT"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "state.audio",
+    "args": {},
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "READ",
+    "idempotency": "IDEMPOTENT"
+   }
+  ],
+  "permissions": [
+   "control",
+   "read"
+  ],
+  "effects": [
+   "IRREVERSIBLE",
+   "READ"
+  ],
+  "origin": "meta_generated",
+  "dispatches": 2
+ },
+ "grant": {
+  "http": 200,
+  "manifest_hash": "sha256:22ddffb1a17273a988e2fc91c96c155ba0d82d6aedf954b1b2cc4aae216b9d26",
+  "permissions": [
+   "control",
+   "read"
+  ],
+  "effects": [
+   "IRREVERSIBLE",
+   "READ"
+  ],
+  "grant_id": "g-2b776e75fbfd62bd"
+ },
+ "revoke_attempt": {
+  "http": 200,
+  "revoked": "g-2b776e75fbfd62bd"
+ },
+ "revoke": {
+  "http": 200,
+  "revoked": "g-2b776e75fbfd62bd"
+ },
+ "kernel_receipts": [
+  {
+   "operation_id": "op-d9c1a2152557bffd19cfe9015ea55712",
+   "manifest_hash": "sha256:22ddffb1a17273a988e2fc91c96c155ba0d82d6aedf954b1b2cc4aae216b9d26",
+   "origin": "meta_generated",
+   "device_fingerprint": "fp-06001add225b986c",
+   "status": "EXECUTED",
+   "steps": [
+    {
+     "step_id": "s0",
+     "primitive_id": "input.key",
+     "attempt": 1,
+     "transaction_id": "tx-17ef2a7722110ae6",
+     "status": "EXECUTED"
+    },
+    {
+     "step_id": "s1",
+     "primitive_id": "state.audio",
+     "attempt": 1,
+     "transaction_id": "tx-0782cfd2208f37e4",
+     "status": "EXECUTED"
+    }
+   ],
+   "error": null,
+   "started_at": "2026-10-29T13:03:28Z",
+   "finished_at": "2026-10-29T13:03:30Z",
+   "signature": "95e8377bc5ef53dbf948cd3c6864e9d22514bb2838bad3bd571e72e0198727bf"
+  },
+  {
+   "operation_id": "op-93efece507daac11f1b1e2161c8a163e",
+   "manifest_hash": "sha256:22ddffb1a17273a988e2fc91c96c155ba0d82d6aedf954b1b2cc4aae216b9d26",
+   "origin": "meta_generated",
+   "device_fingerprint": "fp-06001add225b986c",
+   "status": "EXECUTED",
+   "steps": [
+    {
+     "step_id": "s0",
+     "primitive_id": "input.key",
+     "attempt": 1,
+     "transaction_id": "tx-1072f4ebd84ee654",
+     "status": "EXECUTED"
+    },
+    {
+     "step_id": "s1",
+     "primitive_id": "state.audio",
+     "attempt": 1,
+     "transaction_id": "tx-defc4ee4da6e80c7",
+     "status": "EXECUTED"
+    }
+   ],
+   "error": null,
+   "started_at": "2026-10-29T13:03:32Z",
+   "finished_at": "2026-10-29T13:03:33Z",
+   "signature": "7bd218c0c2ecd8410b397a5c139a9a02d27ee6d192a60c3b14033d6acbd5ae59"
+  }
+ ],
+ "status": "SUCCESS",
+ "pre": {
+  "stream": "music",
+  "muted": false,
+  "volume_index": 20,
+  "max_index": 100,
+  "devices": [
+   "headphone"
+  ],
+  "readable": true
+ },
+ "after_act": {
+  "stream": "music",
+  "muted": true,
+  "volume_index": 0,
+  "max_index": 100,
+  "devices": [
+   "headphone"
+  ],
+  "readable": true
+ },
+ "after_restore": {
+  "stream": "music",
+  "muted": false,
+  "volume_index": 20,
+  "max_index": 100,
+  "devices": [
+   "headphone"
+  ],
+  "readable": true
+ },
+ "act_status": "EXECUTED",
+ "restore_status": "EXECUTED",
+ "predicate": [],
+ "after_revoke": "GRANT_REVOKED",
+ "finished": "2026-10-29T13:03:35.786698+00:00"
+}

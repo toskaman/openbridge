@@ -38,3 +38,26 @@ right (mute key, then `state.audio` read-back) — the gap is the prompt contrac
   uses the stable kernel fingerprint.
 - Status: the generation → validation → kernel compile → owner grant chain is demonstrated on live
   evidence; invoke → physical read-back is NOT yet demonstrated. Next run needs a fresh owner observation.
+
+## Attempt 4 — SUCCESS (29 Oct 14:03 CET, owner present at the TV)
+Owner observation: balance 129 USD at 14:02:59+01:00, authz "autorisé pour l'essai G3, 5 $ maximum".
+The run used the code caps: allowance 0.80 USD on this observation, global ledger 2.00 USD.
+
+| step | result |
+|---|---|
+| Muse Spark 1.3 (v4-synth-3, reasoning low) | **1 call**, valid candidate first try: `input.key {"key":"mute"}` → `state.audio`; ~$0.0067 estimated (request chatcmpl-01a187c2…) |
+| effect binding | one mute effect + one READ: pass |
+| kernel compile | COMPILED sha256:22ddffb1…, permissions control+read |
+| oracle before | muted=false, 20/100 (tx-b972f478…) |
+| owner grant | g-2b776e75… (2 uses) |
+| invoke act | EXECUTED: input.key tx-17ef2a77…, state.audio tx-0782cfd2… (signed receipt) |
+| oracle after act | **muted=true, 0/100** (tx-44187450…) |
+| invoke restore | EXECUTED: tx-1072f4eb…, tx-defc4ee4… (signed receipt) |
+| oracle after restore | muted=false, 20/100: **equal to the pre-run object** |
+| revoke | HTTP 200 |
+| invoke after revoke | **403 GRANT_REVOKED** |
+
+Predicate: SUCCESS, no failed conditions. **Scope (unchanged):** this is an INTEGRATION SMOKE on a public target
+(TV mute), not held-out novelty. The stocked deterministic path can also do this task. What it proves is the
+chain Meta generation → validation → effect binding → kernel compile → owner grant → physical invoke →
+independent read-back → restore → revoke → refusal after revoke, on owned hardware.
