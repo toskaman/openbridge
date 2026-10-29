@@ -1,0 +1,292 @@
+{
+ "kind": "HW_UI_LAYOUT_V2",
+ "started": "2026-10-29T14:54:20+0100",
+ "press_method": "adb-injected long-press + dialog tap (owner-authorized automation)",
+ "log": [
+  {
+   "t": 6.4,
+   "pair_start": {
+    "http": 200,
+    "err": null
+   }
+  },
+  {
+   "t": 13.0,
+   "pair_confirm": {
+    "http": 200,
+    "state": "PAIRED",
+    "err": null,
+    "relay_id": "relay-dabd2a796665"
+   }
+  },
+  {
+   "t": 13.0,
+   "manifest": {
+    "model_run": {
+     "model": "muse-spark-1.3",
+     "provider": "meta",
+     "run_id": "mr_2679619b7ab09920"
+    },
+    "steps": [
+     [
+      "input.key",
+      {
+       "key": "mute"
+      }
+     ],
+     [
+      "state.audio",
+      {}
+     ]
+    ],
+    "host_rebinding": "target fingerprint, required fact and expiry refreshed; Meta steps unchanged"
+   }
+  },
+  {
+   "t": 13.0,
+   "grant": {
+    "http": 200,
+    "grant_id": "g-07549b1cdd394b7b",
+    "err": null
+   }
+  },
+  {
+   "t": 13.2,
+   "ui_install": {
+    "http": 200,
+    "installed": [
+     "ctl-ebb02e1b41-g1"
+    ],
+    "err": null,
+    "code": null
+   }
+  },
+  {
+   "t": 19.9,
+   "screen_after_install": {
+    "texts": [
+     "Mute toggle",
+     "Living room TV",
+     "Last result  ·  no result yet"
+    ]
+   }
+  },
+  {
+   "t": 19.9,
+   "layout_ack": {
+    "revision": 7,
+    "acked": 7,
+    "display": [
+     {
+      "control_id": "ui-b981783366-g1",
+      "kind": "label",
+      "label": "Living room TV",
+      "value": null,
+      "source": null
+     },
+     {
+      "control_id": "ui-e79de86fad-g1",
+      "kind": "status",
+      "label": "Last result",
+      "value": "",
+      "source": "ctl-ebb02e1b41-g1"
+     }
+    ]
+   }
+  },
+  {
+   "t": 20.3,
+   "oracle_pre": [
+    false,
+    20
+   ]
+  },
+  {
+   "t": 30.0,
+   "press1_dialog": {
+    "texts": [
+     "Confirm",
+     "CANCEL",
+     "RUN"
+    ]
+   }
+  },
+  {
+   "t": 33.0,
+   "result1": {
+    "at": 1793282091.59613,
+    "relay_id": "relay-dabd2a796665",
+    "control_id": "ctl-ebb02e1b41-g1",
+    "request_id": "deca73c74fc15228216cc045bfb6a81d",
+    "seq": 4,
+    "pressed_at": 1793282090242,
+    "gesture": "confirm",
+    "touch": {
+     "tool": 0,
+     "pressure": 1,
+     "size": 1,
+     "down_ms": 409
+    },
+    "skill_id": "cand-mute-tv-audio-01",
+    "invocation_id": "op-deca73c74fc15228216cc045bfb6a81d",
+    "transaction_id": "tx-602e8edad230bfda",
+    "state": "EXECUTED"
+   }
+  },
+  {
+   "t": 34.9,
+   "oracle_after_press1": [
+    true,
+    0
+   ]
+  },
+  {
+   "t": 38.9,
+   "status_on_screen1": [
+    "Last result  ·  done 14:54"
+   ]
+  },
+  {
+   "t": 50.4,
+   "press2_dialog": {
+    "texts": [
+     "Confirm",
+     "CANCEL",
+     "RUN"
+    ]
+   }
+  },
+  {
+   "t": 53.6,
+   "result2": {
+    "at": 1793282112.5896442,
+    "relay_id": "relay-dabd2a796665",
+    "control_id": "ctl-ebb02e1b41-g1",
+    "request_id": "f7de732e942816545f8301677c0f38aa",
+    "seq": 5,
+    "pressed_at": 1793282110644,
+    "gesture": "confirm",
+    "touch": {
+     "tool": 0,
+     "pressure": 1,
+     "size": 1,
+     "down_ms": 409
+    },
+    "skill_id": "cand-mute-tv-audio-01",
+    "invocation_id": "op-f7de732e942816545f8301677c0f38aa",
+    "transaction_id": "tx-d18eab557bec9de3",
+    "state": "EXECUTED"
+   }
+  },
+  {
+   "t": 55.4,
+   "oracle_after_press2": [
+    false,
+    20
+   ]
+  },
+  {
+   "t": 62.9,
+   "screen_after_restart": {
+    "texts": [
+     "Mute toggle",
+     "Living room TV",
+     "Last result  ·  done 14:55"
+    ]
+   }
+  },
+  {
+   "t": 67.0,
+   "layout_ack_after_restart": {
+    "revision": 7,
+    "acked": 7,
+    "display": [
+     {
+      "control_id": "ui-b981783366-g1",
+      "kind": "label",
+      "label": "Living room TV",
+      "value": null,
+      "source": null
+     },
+     {
+      "control_id": "ui-e79de86fad-g1",
+      "kind": "status",
+      "label": "Last result",
+      "value": "done 14:55",
+      "source": "ctl-ebb02e1b41-g1"
+     }
+    ]
+   }
+  },
+  {
+   "t": 67.0,
+   "revoke": {
+    "http": 200
+   }
+  },
+  {
+   "t": 77.9,
+   "press_after_revoke_dialog": {
+    "texts": [
+     "Confirm",
+     "CANCEL",
+     "RUN"
+    ]
+   }
+  },
+  {
+   "t": 79.0,
+   "result_after_revoke": {
+    "at": 1793282139.6192768,
+    "relay_id": "relay-dabd2a796665",
+    "control_id": "ctl-ebb02e1b41-g1",
+    "request_id": "ef44c5a3973bbd752af1b380b4006e25",
+    "seq": 6,
+    "pressed_at": 1793282138170,
+    "gesture": "confirm",
+    "touch": {
+     "tool": 0,
+     "pressure": 1,
+     "size": 1,
+     "down_ms": 410
+    },
+    "skill_id": "cand-mute-tv-audio-01",
+    "invocation_id": null,
+    "transaction_id": null,
+    "state": "BLOCKED"
+   }
+  },
+  {
+   "t": 80.7,
+   "oracle_after_revoked_press": {
+    "before": [
+     false,
+     20
+    ],
+    "after": [
+     false,
+     20
+    ]
+   }
+  },
+  {
+   "t": 85.6,
+   "status_on_screen_after_revoke": [
+    "Last result  ·  blocked 14:55"
+   ]
+  },
+  {
+   "t": 85.8,
+   "cleanup": {
+    "http": 200
+   }
+  },
+  {
+   "t": 92.0,
+   "screen_after_cleanup": {
+    "has_mute": false
+   }
+  }
+ ],
+ "finished": "2026-10-29T14:55:52+0100"
+}
