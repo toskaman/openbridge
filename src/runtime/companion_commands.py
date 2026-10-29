@@ -43,7 +43,8 @@ class CompanionCommands:
         else:
             try:
                 pcm = fabric_relay.fetch_voice(relay['url'], relay['key'], item['clip_id'],
-                                                item['bytes'], item['sha256'])
+                                                item['bytes'], item['sha256'], relay_id=rid,
+                                                aead_version=relay.get('aead'))
                 doc = stt_local.transcribe_pcm(pcm, item['lang'])
                 heard = ' '.join(str(doc.get('transcript', '')).split())
                 if heard:
