@@ -11,6 +11,12 @@ import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.speech.tts.TextToSpeech;
+import java.io.ByteArrayOutputStream;
+import java.util.Locale;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -39,6 +45,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private boolean setupRunning;
     private ScrollView scroll;
     private Button setup;
+    private static final int VOICE_PERM = 11;
+    private static final int VOICE_RATE = 16000, VOICE_MAX_S = 15;
+    private AudioRecord recorder;
+    private Thread recordThread;
+    private volatile boolean recording;
+    private Button mic;
+    private TextToSpeech tts;
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -69,19 +82,28 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         root.addView(controlsCard); root.addView(spacer(14));
 
         commandCard = card(); commandCard.setVisibility(View.GONE);
-        commandCard.addView(text("ASK FROM HERE · typed, reviewed on your PC", 12, true, MUTED));
+        commandCard.addView(text("ASK FROM HERE · type or speak, reviewed on your PC", 12, true, MUTED));
         commandInput = new EditText(this); commandInput.setHint("e.g. Start my vacuum");
         commandInput.setTextColor(TEXT); commandInput.setHintTextColor(MUTED);
         commandInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, tv ? 20 : 16);
         commandInput.setSingleLine(true);
         commandCard.addView(commandInput);
+        LinearLayout sendRow = new LinearLayout(this); sendRow.setOrientation(LinearLayout.HORIZONTAL);
         Button send = button("Send to PC", true);
         send.setOnClickListener(v -> {
             String s = relay.submitCommand(commandInput.getText().toString());
             commandResult.setText(s);
             if (s != null && s.startsWith("Sent")) commandInput.setText("");
         });
-        commandCard.addView(send);
+        sendRow.addView(send, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        mic = button("Speak", false);
+        mic.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_btn_speak_now, 0, 0, 0);
+        mic.setCompoundDrawablePadding(dp(8));
+        mic.setOnClickListener(v -> toggleRecord());
+        LinearLayout.LayoutParams micLp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        micLp.leftMargin = dp(10);
+        sendRow.addView(mic, micLp);
+        commandCard.addView(sendRow);
         commandResult = text("", 14, false, OK); commandCard.addView(commandResult);
         root.addView(commandCard); root.addView(spacer(14));
 
@@ -110,6 +132,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
         relay.start(); refresh(); controls(relay.controls());
+        try {
+            tts = new TextToSpeech(this, status -> {
+                if (status != TextToSpeech.SUCCESS) { tts = null; return; }
+                int r = tts.setLanguage(Locale.getDefault());
+                if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) tts.setLanguage(Locale.ENGLISH);
+            });
+        } catch (Exception e) { tts = null; }   // no TTS engine: results still show as text
         final android.os.Handler h = new android.os.Handler(getMainLooper());
         h.postDelayed(new Runnable() { @Override public void run() {
             String s = relay.expirePending(); if (s != null) resultText.setText(s);
@@ -178,6 +207,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     @Override public void onRequestPermissionsResult(int r, String[] p, int[] g) {
         boolean granted = g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED;
         if (r == 2 && granted) { turnOnBluetooth(); return; }
+        if (r == VOICE_PERM) {
+            if (granted) startRecord(); else commandResult.setText("Microphone declined — type instead.");
+            return;
+        }
         if (!granted) setupRunning = false;     // owner declined: stop asking
         refresh(); nextSetupStep();
     }
@@ -185,8 +218,74 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         if (c != RESULT_OK) setupRunning = false;
         refresh(); nextSetupStep();
     }
+
+    /** Device-side voice: record raw PCM16 here, the PC transcribes with local Meta STT and
+        reports back; this device speaks the report. Sound never leaves this flow except to the paired PC. */
+    private void toggleRecord() {
+        if (recording) { stopRecord(false); return; }
+        if (checkSelfPermission("android.permission.RECORD_AUDIO") != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{"android.permission.RECORD_AUDIO"}, VOICE_PERM); return;
+        }
+        startRecord();
+    }
+
+    private void startRecord() {
+        int min = AudioRecord.getMinBufferSize(VOICE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+        if (min <= 0) { commandResult.setText("Voice recording is not supported on this device."); return; }
+        try {
+            recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, VOICE_RATE, AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, Math.max(min * 2, VOICE_RATE * 2));
+            if (recorder.getState() != AudioRecord.STATE_INITIALIZED) throw new IllegalStateException("init");
+        } catch (Exception e) { commandResult.setText("Microphone unavailable."); recorder = null; return; }
+        final int cap = VOICE_RATE * 2 * VOICE_MAX_S;
+        final ByteArrayOutputStream pcm = new ByteArrayOutputStream(cap);
+        recording = true;
+        mic.setText("Stop");
+        commandResult.setText("Recording — tap Stop to send (15 s max).");
+        recordThread = new Thread(() -> {
+            short[] buf = new short[VOICE_RATE / 5];
+            byte[] raw = new byte[buf.length * 2];
+            try {
+                recorder.startRecording();
+                while (recording && pcm.size() < cap) {
+                    int n = recorder.read(buf, 0, buf.length);
+                    if (n <= 0) break;
+                    for (int i = 0; i < n; i++) { raw[2 * i] = (byte) buf[i]; raw[2 * i + 1] = (byte) (buf[i] >> 8); }
+                    pcm.write(raw, 0, n * 2);
+                }
+            } catch (Exception ignored) { }
+            final byte[] clip = pcm.toByteArray();
+            runOnUiThread(() -> stopRecord(clip, pcm.size() >= cap));
+        }, "openbridge-voice");
+        recordThread.start();
+    }
+
+    /** UI-thread stop (tap): the reader thread finishes and queues. Cancel (pause) drops the clip. */
+    private boolean dropClip;
+    private void stopRecord(boolean cancel) {
+        recording = false;
+        dropClip = cancel;
+        mic.setText("Speak");
+        if (cancel) commandResult.setText("Voice cancelled.");
+    }
+
+    private void stopRecord(byte[] clip, boolean capped) {
+        recording = false;
+        releaseRecorder();
+        mic.setText("Speak");
+        if (dropClip) { dropClip = false; return; }
+        if (clip == null || clip.length < 16000) { commandResult.setText("Too short — hold a little longer."); return; }
+        String s = relay.submitVoice(clip);
+        commandResult.setText((capped ? "15 s limit — " : "") + s);
+    }
+
+    private void releaseRecorder() {
+        recording = false;
+        if (recorder != null) { try { recorder.stop(); } catch (Exception ignored) { } try { recorder.release(); } catch (Exception ignored) { } recorder = null; }
+    }
     @Override protected void onResume() { super.onResume(); relay.foreground = true; relay.start(); refresh(); }
-    @Override protected void onPause() { relay.foreground = false; super.onPause(); }
+    @Override protected void onPause() { if (recording) stopRecord(true); relay.foreground = false; super.onPause(); }
+    @Override protected void onDestroy() { releaseRecorder(); if (tts != null) { try { tts.shutdown(); } catch (Exception ignored) { } } super.onDestroy(); }
 
     private void refresh() {
         runOnUiThread(() -> {
@@ -263,6 +362,16 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     }
     @Override public void result(String text) { runOnUiThread(() -> { resultText.setText(text); renderBusy(); }); }
     @Override public void commandResult(String text) { runOnUiThread(() -> commandResult.setText(text)); }
+    /** Voice-originated reports are spoken on this device; typed ones stay silent. */
+    @Override public void commandResult(String text, boolean voice) {
+        runOnUiThread(() -> {
+            commandResult.setText(text);
+            if (voice && tts != null && text != null && !text.isEmpty()) {
+                try { tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ob-voice"); }
+                catch (Exception ignored) { }
+            }
+        });
+    }
 
     /** One press in flight per control: the button shows "Sending…" and ignores presses until the PC answers or 20 s pass. */
     private void renderBusy() {

@@ -291,8 +291,19 @@ def voice(server, path, body):
         pcm = base64.b64decode(body['audio_b64'], validate=True)
     except (binascii.Error, ValueError):
         return 400, {'error': 'invalid audio'}
+    # Local-only (Sol audit): on-device Meta STT costs nothing and keeps audio home.
+    # No silent cloud fallback — a cloud call would need explicit owner consent plus a
+    # fresh credit reservation, which this endpoint does not take.
+    from src.ai import stt_local
     try:
-        return 200, voice_stt.transcribe(pcm, _meta_key(), body.get('language', 'fr'))
+        if not stt_local.available():
+            raise voice_stt.STTBlocked('local STT model not installed on this PC')
+        try:
+            return 200, stt_local.transcribe_pcm(bytes(pcm), body.get('language', 'fr'))
+        except voice_stt.STTBlocked:
+            raise
+        except Exception as e:
+            raise OSError(f'local STT failed ({type(e).__name__})') from e
     except voice_stt.STTBlocked as e:
         return 409, {'error': str(e), 'fallback': 'type the command instead'}
     except OSError as e:

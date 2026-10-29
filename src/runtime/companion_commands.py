@@ -31,6 +31,34 @@ class CompanionCommands:
             r['online'] = False
             raise fabric_relay.RelayError('Relay unreachable') from None
 
+    def _voice_text(self, rid, relay, item):
+        """Download + locally transcribe a voice clip. Returns the transcript, or None
+        after reporting the failure back to the device (which then drops the clip)."""
+        from src.ai import stt_local, voice_stt
+        reason = None
+        if not relay.get('url'):
+            reason = 'Voice needs a fresh pairing — pair this device again'
+        elif not stt_local.available():
+            reason = 'Voice model not installed on this PC — type instead'
+        else:
+            try:
+                pcm = fabric_relay.fetch_voice(relay['url'], relay['key'], item['clip_id'],
+                                                item['bytes'], item['sha256'])
+                doc = stt_local.transcribe_pcm(pcm, item['lang'])
+                heard = ' '.join(str(doc.get('transcript', '')).split())
+                if heard:
+                    return heard
+                reason = 'Did not catch that — try again or type'
+            except (fabric_relay.RelayError, voice_stt.STTBlocked, OSError):
+                reason = 'Voice download failed — try again or type'
+        try:
+            self._send(rid, 'report_command',
+                       {'request_id': item['request_id'], 'status': 'escalation_required',
+                        'text': reason[:fabric_relay.MAX_COMMAND_REPORT]})
+        except fabric_relay.RelayError:
+            pass
+        return None
+
     def _report_text(self, doc):
         st = doc['status']
         if st == 'resolved':
@@ -60,11 +88,19 @@ class CompanionCommands:
                 with self._lock:
                     if c['request_id'] in self.pending:
                         continue
+                text = c.get('text', '')
+                if c.get('kind') == 'voice':
+                    # Device-side voice: download the clip, transcribe with local Meta STT,
+                    # then parse exactly like typed text. Sound stays on the device; only
+                    # the transcript flows through the existing parse path.
+                    text = self._voice_text(rid, r, c)
+                    if text is None:
+                        continue
                 quality = c['quality'] if c['quality'] in ('low', 'medium') else 'auto'
-                doc = N.parse(c['text'], c['lang'], quality, low, None, medium,
+                doc = N.parse(text, c['lang'], quality, low, None, medium,
                               cloud_allowed=False)
                 with self._lock:
-                    self.pending[c['request_id']] = {'relay_id': rid, 'text': c['text'],
+                    self.pending[c['request_id']] = {'relay_id': rid, 'text': text,
                                                      'lang': c['lang'], 'intent': doc}
                     self._order.append(c['request_id'])
                     while len(self._order) > MAX_PENDING:
