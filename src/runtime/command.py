@@ -6,6 +6,8 @@ consent, re-resolves targets (a revocation between approve and execute blocks),
 and dispatches exactly once through the existing Router/Executor. P0 handles
 one device per command; groups arrive later.
 """
+import threading
+
 from src.runtime import intent as I
 from src.runtime import skills as S
 
@@ -214,33 +216,81 @@ def _exec_cache(server):
     if getattr(server, 'command_executions', None) is None:
         server.command_executions = {}
         server.command_exec_order = []
+    if getattr(server, 'command_inflight', None) is None:
+        server.command_inflight = {}
+        server.command_exec_lock = threading.Lock()
     return server.command_executions, server.command_exec_order
 
 
+def _store(server, key, rc):
+    cache, order = server.command_executions, server.command_exec_order
+    cache[key] = rc
+    order.append(key)
+    while len(order) > MAX_EXECUTIONS:
+        cache.pop(order.pop(0), None)
+
+
 def execute(server, doc, consent=False, preview=None):
-    from src.runtime.api_v2 import router, executor
     if consent is not True:
         raise CommandError(400, 'fresh consent is required to execute')
     if not isinstance(preview, dict) or preview.get('skill_id') != (doc or {}).get('skill_id') \
             or not isinstance(preview.get('fingerprint'), str):
         raise CommandError(400, 'execute needs the preview returned by approve for this intent')
     key = ((doc or {}).get('intent_id'), preview['fingerprint'])
-    cache, order = _exec_cache(server)
-    if key in cache:
-        return cache[key]   # idempotent retry: same receipt, no second dispatch
+    cache, _ = _exec_cache(server)
+    lock, inflight = server.command_exec_lock, server.command_inflight
+    # Atomic per-intent claim (V4-S1): one owner dispatches; concurrent retries of the
+    # same (intent, approved binding) wait and get the same outcome. No global lock
+    # is held across the dispatch, so unrelated intents run independently.
+    while True:
+        with lock:
+            if key in cache:
+                return cache[key]   # idempotent retry: same receipt, no second dispatch
+            ev = inflight.get(key)
+            if ev is None:
+                ev = inflight[key] = threading.Event()
+                break
+        ev.wait(timeout=660)
+        with lock:
+            if key in cache:
+                return cache[key]
+            if inflight.get(key) is ev:
+                raise CommandError(409, 'the same intent is still executing; retry later')
+        # the owner failed before dispatching: loop and try to claim it ourselves
+    dispatched = [False]
+    try:
+        rc = _execute_claimed(server, doc, preview, dispatched)
+        with lock:
+            _store(server, key, rc)
+        return rc
+    except CommandError:
+        if dispatched[0]:
+            with lock:
+                _store(server, key, {'state': 'INCONCLUSIVE', 'transaction_id': None,
+                                     'error': 'dispatch outcome unknown; not retried'})
+        raise
+    except Exception:
+        if dispatched[0]:   # outcome unknown: never re-dispatch on retry
+            with lock:
+                _store(server, key, {'state': 'INCONCLUSIVE', 'transaction_id': None,
+                                     'error': 'dispatch outcome unknown; not retried'})
+        raise
+    finally:
+        with lock:
+            inflight.pop(key, None)
+        ev.set()
+
+
+def _execute_claimed(server, doc, preview, dispatched):
+    from src.runtime.api_v2 import router, executor
     prev = approve(server, doc)   # re-resolves everything; revocations block here
     if prev['fingerprint'] != preview['fingerprint']:
         raise CommandError(409, 'target, params or route changed since approval; review again')
     if prev['primitive_id'] == 'fabric_status':
         from src.runtime.fabric_status import summarize
         relays = getattr(getattr(server, 'relays', None), 'relays', None) or {}
-        rc = {'state': 'READ', 'transaction_id': None,
-              'summary': summarize(_devices(server), relays)}
-        cache[key] = rc
-        order.append(key)
-        while len(order) > MAX_EXECUTIONS:
-            cache.pop(order.pop(0), None)
-        return rc
+        return {'state': 'READ', 'transaction_id': None,
+                'summary': summarize(_devices(server), relays)}
     if prev['primitive_id'].startswith('b2:'):
         from src.runtime.routing import RouteError, SKILLS
         r = router(server)
@@ -254,14 +304,11 @@ def execute(server, doc, consent=False, preview=None):
             body.update(skill_id=skill, params=prev['params'], consent=True)
             if target is not None:
                 body['target'] = target
-            rc = r.invoke(body)
+            dispatched[0] = True
+            return r.invoke(body)
         except RouteError as e:
+            dispatched[0] = False   # RouteError is a refusal before dispatch
             raise CommandError(e.status, str(e)) from None
-    else:
-        rc = executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
-                                      prev['params'], True)
-    cache[key] = rc
-    order.append(key)
-    while len(order) > MAX_EXECUTIONS:
-        cache.pop(order.pop(0), None)
-    return rc
+    dispatched[0] = True
+    return executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
+                                    prev['params'], True)

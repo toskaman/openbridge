@@ -1,0 +1,28 @@
+{
+ "note": "Generated with the fixed test key b\"k\"*32 and clock 1800000000; fingerprints, fact signatures and grant signatures only verify against that key (tests/substrate/test_kernel.py).",
+ "primitives": [
+  "device.read_descriptor",
+  "device.probe_actions",
+  "state.read_setting",
+  "state.screen",
+  "app.list",
+  "input.key",
+  "app.launch",
+  "url.open",
+  "input.text",
+  "input.tap",
+  "setting.set_exact",
+  "setting.restore",
+  "ble.scan_via_relay",
+  "vendor.tuya.command",
+  "vendor.tuya.setting_exact",
+  "pc.job",
+  "files.open_user_granted_uri",
+  "files.transfer_chunks",
+  "screen.capture_session_approved",
+  "screen.present_image",
+  "calls.request_contact_lookup",
+  "calls.place_call_with_confirmation",
+  "remote.request_shutdown"
+ ]
+}

@@ -1,0 +1,40 @@
+{
+ "kind": "G3_INTEGRATION_SMOKE",
+ "started": "2026-10-29T12:56:06.461556+00:00",
+ "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": null,
+ "max_completion_tokens": 4000,
+ "calls": [],
+ "steps": [],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "autorisé pour l’essai G3, 0,80 $ maximum",
+  "observation_id": "meta-dashboard-20261029T0010",
+  "observed_at": "2026-10-29T00:10:00+01:00",
+  "free_balance_usd_lower_bound": 132.0
+ },
+ "target": {
+  "device_fingerprint": "fp-acfb16b47e01d998",
+  "fact_count": 13
+ },
+ "scope": {
+  "grants": [
+   "control",
+   "read"
+  ],
+  "source": "live-snapshot-links"
+ },
+ "bundle_id": "b-a796f6cea2c41653",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Mute the TV audio, then confirm by reading the media stream state that it report'"
+  },
+  "stocked_path": "device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task"
+ },
+ "status": "KILL",
+ "reason": "replayed candidate no longer binds to live evidence: UNKNOWN_TARGET",
+ "finished": "2026-10-29T12:56:11.049328+00:00"
+}

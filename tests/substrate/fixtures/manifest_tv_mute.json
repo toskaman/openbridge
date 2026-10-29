@@ -1,0 +1,45 @@
+{
+ "capability_id": "tv.mute_toggle",
+ "evidence_refs": [
+  "f-a8477062bde7bd72",
+  "src:android/keyevent/KEYCODE_VOLUME_MUTE"
+ ],
+ "expires_at": "2027-01-15T09:00:00Z",
+ "facts_required": [
+  "f-a8477062bde7bd72"
+ ],
+ "inputs": {},
+ "manifest_version": "obv4.1",
+ "max_fact_age_s": 600,
+ "model_run": {
+  "model": "muse-spark-1.3",
+  "provider": "meta",
+  "run_id": "run_0001abc"
+ },
+ "origin": "meta_generated",
+ "permissions_requested": [
+  "control",
+  "read"
+ ],
+ "steps": [
+  {
+   "args": {
+    "key": "mute"
+   },
+   "on_uncertain": "INCONCLUSIVE",
+   "primitive_id": "input.key",
+   "step_id": "mute"
+  },
+  {
+   "args": {},
+   "on_uncertain": "INCONCLUSIVE",
+   "primitive_id": "state.screen",
+   "step_id": "check"
+  }
+ ],
+ "target": {
+  "category": "tv",
+  "device_fingerprint": "fp-7d29859f5f5e1153"
+ },
+ "title": "Mute the TV"
+}

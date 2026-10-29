@@ -1,0 +1,27 @@
+{
+ "device_fingerprint": "fp-7d29859f5f5e1153",
+ "error": null,
+ "finished_at": "2027-01-15T08:00:00Z",
+ "manifest_hash": "sha256:c6e6bb444e406807d38e00f15973dea32af888f73df2f3707660b72179fa8ab0",
+ "operation_id": "op-00000000000000000000000000000000",
+ "origin": "meta_generated",
+ "signature": "957f237d9542796e0fc552adccc1f0d938eb52a660eb5f6838c88c78647bfc44",
+ "started_at": "2027-01-15T08:00:00Z",
+ "status": "VERIFIED",
+ "steps": [
+  {
+   "attempt": 1,
+   "primitive_id": "input.key",
+   "status": "VERIFIED",
+   "step_id": "mute",
+   "transaction_id": "tx-6c6602a76e8e2c07"
+  },
+  {
+   "attempt": 1,
+   "primitive_id": "state.screen",
+   "status": "VERIFIED",
+   "step_id": "check",
+   "transaction_id": "tx-fabf04212a863083"
+  }
+ ]
+}

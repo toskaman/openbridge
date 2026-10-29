@@ -484,5 +484,9 @@ dialog::backdrop{background:rgba(3,6,14,.7);backdrop-filter:blur(4px)}
 .ask-kv .k{color:var(--muted);min-width:110px;}
 .ask-kv .v{color:var(--text);font-family:var(--mono);word-break:break-all;}
 .ask-error{color:var(--bad);}
+.ghost.recording{border-color:var(--bad);color:var(--bad);}
+@media (prefers-reduced-motion:no-preference){
+.ghost.recording{animation:ob-rec 1.2s ease-in-out infinite;}}
+@keyframes ob-rec{50%{opacity:.55;}}
 @media (max-width:640px){.ask-kv .k{min-width:84px;}.ask-composer{flex-wrap:wrap;}}
 @media (prefers-reduced-motion:reduce){.ask-panel *{transition:none!important;}}

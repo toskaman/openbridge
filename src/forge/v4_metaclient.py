@@ -28,11 +28,22 @@ class MetaClient:
         return (True, body)
 
 
-def ollama_transport(endpoint, model, json_mode=True, urlopen=None):
-    """Bind an Ollama /api/chat endpoint as a MetaClient transport (local Meta only)."""
+def ollama_transport(endpoint, model, json_mode=True, urlopen=None, pinned_models=None):
+    """Bind an Ollama /api/chat endpoint as a MetaClient transport (local Meta only).
+
+    The expected model id is pinned: a response echoing a different model is a
+    transport failure, never silently accepted. Pass pinned_models from the
+    Meta broker registry at runtime wiring time; without it the transport is
+    echo-checked only and marked as such (dev/test use).
+    """
     import json as _json
     import urllib.request as _url
+    if not model or not isinstance(model, str):
+        raise ValueError('expected model id is required')
+    if pinned_models is not None and model not in pinned_models:
+        raise ValueError('model not in broker-pinned set')
     _open = urlopen or _url.urlopen
+    _provisioning = 'broker-pinned' if pinned_models is not None else 'echo-only'
 
     def call(prompt, budget):
         payload = {'model': model, 'stream': False,
@@ -48,13 +59,29 @@ def ollama_transport(endpoint, model, json_mode=True, urlopen=None):
             raise
         except Exception as e:
             raise TransportFailed(type(e).__name__) from None
+        if data.get('model') != model:
+            raise TransportFailed('MODEL_IDENTITY_MISMATCH')
         try:
             text = data['message']['content']
         except (KeyError, TypeError):
             raise TransportFailed('BAD_ENVELOPE') from None
-        return (True, {'text': text, 'usage': {'prompt_eval': data.get('prompt_eval_count'),
-                                              'eval': data.get('eval_count')}})
+        return (True, {'text': text, 'provisioning': _provisioning,
+                       'usage': {'prompt_eval': data.get('prompt_eval_count'),
+                                 'eval': data.get('eval_count')}})
     return call
+
+
+def transport_from_broker(broker, json_mode=True, urlopen=None):
+    """Runtime wiring: only a digest-provisioned broker yields a transport.
+
+    ready() verifies the pinned (model id, weight digest) against the live
+    Ollama catalog; the transport then pins that id for echo checks. Raises
+    ValueError while unprovisioned — never returns an unchecked transport.
+    """
+    if not broker.ready():
+        raise ValueError('broker model not provisioned (digest mismatch or unavailable)')
+    return ollama_transport(broker.endpoint, broker.model_id, json_mode, urlopen,
+                            pinned_models={broker.model_id})
 
 
 class RulesPlanner:

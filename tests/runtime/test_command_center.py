@@ -364,6 +364,19 @@ class CommandService(unittest.TestCase):
         with self.assertRaises(TransportError):
             bad('prompt')
 
+    def test_ollama_transport_keeps_model_warm(self):
+        # N3: keep_alive 10m keeps llama resident between demo commands (~7s reload saved).
+        from src.runtime.nl_router import OllamaIntentTransport
+        seen = []
+        def chat(p):
+            seen.append(p)
+            return {'model': 'llama3.2:3b-instruct-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': '{"a": 1}'}, 'prompt_eval_count': 10, 'eval_count': 5}
+        t = OllamaIntentTransport('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437',
+                                  catalog=lambda: {'models': []}, chat=chat)
+        t('prompt')
+        self.assertEqual(seen[0]['keep_alive'], '10m')
+
     def test_approve_previews_without_dispatch(self):
         from src.runtime.command import approve
         srv = FakeServer()
@@ -490,6 +503,18 @@ class CloudTransport(unittest.TestCase):
                   cloud_allowed=True, before_cloud=gate)
         self.assertEqual(d['status'], 'escalation_required')
         self.assertEqual(cloud.calls, [])
+
+    def test_high_sends_cloud_at_most_once(self):
+        # N4 finding: a non-terminal first cloud reply must not trigger a second reserve + send.
+        from src.runtime.nl_router import parse, TransportError
+        gates = []
+        bad = dict(good_reply(), targets=[], status='draft') if isinstance(good_reply(), dict) else {}
+        for cloud in (FakeTransport(bad), FakeTransport(error=TransportError('down'))):
+            gates.clear()
+            parse('Start my vacuum', 'en', 'high', None, cloud, cloud_allowed=True,
+                  before_cloud=lambda: gates.append(1))
+            self.assertEqual(len(cloud.calls), 1)
+            self.assertEqual(len(gates), 1)
 
 
 def api_server():

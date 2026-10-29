@@ -39,12 +39,17 @@ final class RelayServer {
     static final int MAX_OBSERVATIONS = 200;
     private static final int MAX_BODY = 16384;
 
-    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void commandResult(String text) { } }
+    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); } }
     static final int MAX_CONTROLS = 12, MAX_QUEUE = 16;
     static final int MAX_COMMANDS = 8, MAX_COMMAND_TEXT = 500;
     /** Owner-typed NL commands queued on this device; the PC drains them and reports parse outcomes. Never auto-executed. */
     private final java.util.ArrayDeque<JSONObject> commands = new java.util.ArrayDeque<>();
     private final java.util.Set<String> pendingCommands = new java.util.HashSet<>();
+    /** Voice clips: raw PCM16 mono 16 kHz, at most 15 s (480 000 bytes), at most 3 held. Dropped when the PC reports. */
+    static final int VOICE_MAX_BYTES = 480000, MAX_CLIPS = 3;
+    private final Map<String, byte[]> clips = new LinkedHashMap<>();
+    private final Map<String, String> clipRequest = new java.util.HashMap<>();   // clip_id -> request_id
+    private final java.util.Set<String> voiceRequests = new java.util.HashSet<>();
     /** Owner-authorized controls pushed by the paired PC (label + id only; the PC keeps skill, target and params). */
     private JSONArray controls = new JSONArray();
     private final java.util.ArrayDeque<JSONObject> requests = new java.util.ArrayDeque<>();
@@ -160,7 +165,65 @@ final class RelayServer {
         return "Sent to your PC…";
     }
 
-    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); } prefs.edit().remove("controls").apply();
+    /** Queue one owner-recorded voice clip: the PC downloads the bytes, transcribes locally, parses as text. */
+    String submitVoice(byte[] pcm) {
+        if (!paired()) return "Not paired with a PC";
+        if (pcm == null || pcm.length < 16000 || pcm.length > VOICE_MAX_BYTES || pcm.length % 2 != 0)
+            return pcm != null && pcm.length < 16000 ? "Too short — hold a little longer" : "Voice clip too long (15 seconds max)";
+        synchronized (commands) {
+            if (commands.size() >= MAX_COMMANDS) return "Too many pending commands; wait for the PC";
+            try {
+                String lang = java.util.Locale.getDefault().getLanguage().startsWith("fr") ? "fr" : "en";
+                String clip = "v" + hex(bytes(6));
+                MessageDigest sha = MessageDigest.getInstance("SHA-256");
+                String req = hex(bytes(16));
+                commands.add(new JSONObject().put("request_id", req).put("kind", "voice").put("clip_id", clip)
+                        .put("bytes", pcm.length).put("sha256", hex(sha.digest(pcm))).put("lang", lang).put("quality", "auto"));
+                clips.put(clip, pcm); clipRequest.put(clip, req); voiceRequests.add(req);
+                while (clips.size() > MAX_CLIPS) {  // evict oldest held clip and its queued announcement
+                    String old = clips.keySet().iterator().next();
+                    clips.remove(old); String rq = clipRequest.remove(old); voiceRequests.remove(rq);
+                    commands.removeIf(o -> rq != null && rq.equals(o.optString("request_id")));
+                }
+            } catch (Exception e) { return "Could not queue the voice clip"; }
+        }
+        return "Sent voice to your PC…";
+    }
+
+    /** One-shot signed download of a queued voice clip. Mirrors the PC's voice_url HMAC byte for byte. */
+    private void serveVoice(Socket c, String request) throws Exception {
+        Map<String, String> q = new LinkedHashMap<>();
+        String qs = request.substring("GET /voice?".length(), request.lastIndexOf(' '));
+        for (String part : qs.split("&")) { int eq = part.indexOf('='); if (eq > 0) q.put(part.substring(0, eq), part.substring(eq + 1)); }
+        byte[] key = key();
+        String clip = q.get("clip"), ts = q.get("ts"), nonce = q.get("nonce"), sig = q.get("sig");
+        long now = System.currentTimeMillis() / 1000, t = -1;
+        try { t = Long.parseLong(ts == null ? "" : ts); } catch (NumberFormatException ignored) { }
+        boolean ok = key != null && clip != null && clip.matches("[a-z0-9-]{1,32}")
+                && t > 0 && Math.abs(now - t) <= 120 && nonce != null && nonce.matches("[0-9a-f]{16}") && sig != null;
+        if (ok) {
+            synchronized (seen) {
+                if (seen.containsKey("v" + nonce)) ok = false;
+                else {
+                    seen.values().removeIf(exp -> exp < now);
+                    if (seen.size() >= MAX_NONCES) ok = false;
+                    else { seen.put("v" + nonce, t + 120); }
+                }
+            }
+        }
+        if (ok) {
+            try {
+                if (!MessageDigest.isEqual(hex(hmac(key, "voice-v1|" + clip + "|" + t + "|" + nonce)).getBytes(), sig.getBytes())) ok = false;
+            } catch (Exception e) { ok = false; }
+        }
+        byte[] pcm = ok ? clips.get(clip) : null;
+        if (!ok || pcm == null) { respond(c, ok ? 404 : 403, "{\"error\":\"" + (ok ? "gone" : "forbidden") + "\"}"); return; }
+        byte[] head = ("HTTP/1.0 200 X\r\nContent-Type: application/octet-stream\r\nContent-Length: " + pcm.length + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
+        OutputStream out = c.getOutputStream();
+        out.write(head); out.write(pcm); out.flush();
+    }
+
+    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } prefs.edit().remove("controls").apply();
         prefs.edit().remove("key").putBoolean("owner_enabled", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
@@ -207,7 +270,13 @@ final class RelayServer {
         BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8));
         String line; int length = -1;
         String request = in.readLine();
-        if (request == null || !request.startsWith("POST /ob ")) { respond(c, 404, "{\"error\":\"not found\"}"); return; }
+        if (request == null) { respond(c, 404, "{\"error\":\"not found\"}"); return; }
+        if (request.startsWith("GET /voice?")) {
+            while ((line = in.readLine()) != null && !line.isEmpty()) { }   // consume headers, no body
+            try { serveVoice(c, request); } catch (Exception e) { respond(c, 403, "{\"error\":\"forbidden\"}"); }
+            return;
+        }
+        if (!request.startsWith("POST /ob ")) { respond(c, 404, "{\"error\":\"not found\"}"); return; }
         while ((line = in.readLine()) != null && !line.isEmpty()) {
             if (line.toLowerCase().startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
         }
@@ -297,8 +366,18 @@ final class RelayServer {
             case "report_command": {
                 JSONObject p = cmd.getJSONObject("params");
                 String text = p.optString("text", "");
-                synchronized (commands) { if (!pendingCommands.remove(p.optString("request_id"))) break; }   // unknown or late: ignored
-                ui.commandResult(text.length() > 160 ? text.substring(0, 160) : text); break;
+                boolean voice;
+                synchronized (commands) {
+                    if (!pendingCommands.remove(p.optString("request_id"))) break;   // unknown or late: ignored
+                    voice = voiceRequests.remove(p.optString("request_id"));
+                    if (voice) {   // clip served its purpose: drop the bytes
+                        String drop = null;
+                        for (Map.Entry<String, String> e : clipRequest.entrySet())
+                            if (p.optString("request_id").equals(e.getValue())) { drop = e.getKey(); break; }
+                        if (drop != null) { clips.remove(drop); clipRequest.remove(drop); }
+                    }
+                }
+                ui.commandResult(text.length() > 160 ? text.substring(0, 160) : text, voice); break;
             }
             case "revoke_access": unpair(); break;
             default: throw new SecurityException("unknown op");
