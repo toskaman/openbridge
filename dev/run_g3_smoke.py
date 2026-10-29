@@ -27,7 +27,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 INTENT = 'Mute the TV audio, then confirm by reading the media stream state that it reports muted.'
 MAX_CALLS = 3
-MAX_COMPLETION_TOKENS = 4000
+# Owner order 2026-10-29 (retry run branch only): bigger reasoning budget after
+# attempt-1 exhausted 4000 tokens. Recorded in transcript; not for main.
+MAX_COMPLETION_TOKENS = 8000
 OFFER = ('input.key', 'state.audio', 'state.screen', 'state.read_setting', 'app.list', 'device.read_descriptor')
 
 
