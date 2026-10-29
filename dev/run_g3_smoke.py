@@ -53,6 +53,59 @@ def strip_fences(text):
     return m[1] if m else text
 
 
+def resolve_scope(tv):
+    """Live grant scope from discovery links. (None, reason) when unverifiable:
+    the runner must KILL, never invent a default scope (Sol HOLD)."""
+    grants = sorted({g for l in ((tv or {}).get('links') or []) for g in (l.get('grants') or [])})
+    if not grants or not all(isinstance(g, str) and g for g in grants):
+        return None, 'grant scope unverifiable from live links (refusing invented scope)'
+    return grants, None
+
+
+def success_predicate(pre, mid, post, st1, r1, st2, after_revoke_http):
+    """SUCCESS requires a muted=false->true TRANSITION plus full restore: an
+    already-muted oracle scores no success (Sol HOLD: no-op false-success)."""
+    reasons = []
+    if not isinstance(pre, dict) or pre.get('muted') is not False:
+        reasons.append('pre must show muted=false (already-muted scores no success)')
+    if not isinstance(mid, dict) or mid.get('muted') is not True:
+        reasons.append('post-act oracle must show muted=true')
+    if post != pre:
+        reasons.append('post-restore oracle must equal the pre-run oracle')
+    if not (st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED')):
+        reasons.append('act invoke must be VERIFIED/EXECUTED')
+    if st2 != 200:
+        reasons.append('restore invoke must succeed')
+    if after_revoke_http == 200:
+        reasons.append('invoke after revoke must be refused')
+    return (not reasons), reasons
+
+
+def act_restore_sequence(invoke, oracle, revoke, sleep=time.sleep):
+    """Act -> oracle -> conditional restore -> oracle, revoke always attempted.
+
+    Restore runs ONLY if act executed (no blind restore after an unknown act);
+    revoke runs in a finally and its own crash is recorded, never raised
+    (Sol HOLD). Returns (st1, r1, mid, st2, r2, post, revoke_record).
+    """
+    st1 = r1 = mid = st2 = r2 = post = None
+    try:
+        st1, r1 = invoke('act')
+        sleep(1.5)
+        mid = oracle()
+        if st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED'):
+            st2, r2 = invoke('restore')
+            sleep(1.5)
+            post = oracle()
+    finally:
+        try:
+            st, rv = revoke()
+        except Exception as e:
+            st, rv = -1, {'error': '%s: %s' % (type(e).__name__, str(e)[:200])}
+        record = {'http': st, **(rv if isinstance(rv, dict) else {})}
+    return st1, r1, mid, st2, r2, post, record
+
+
 def main():
     ap = argparse.ArgumentParser()
     for a in ('--base', '--observation-id', '--observed-at', '--authz-file', '--out'):
@@ -97,7 +150,9 @@ def main():
         return stop('KILL', reason='signed facts unavailable', http=st)
     fp, kfacts = sf['device_fingerprint'], sf['facts']
     T['target'] = {'device_fingerprint': fp, 'fact_count': len(kfacts)}
-    scope = sorted({g for l in tv.get('links', []) for g in (l.get('grants') or [])} or {'observe', 'read', 'control'})
+    scope, scope_err = resolve_scope(tv)
+    if scope_err:
+        return stop('KILL', reason=scope_err)
     st, cat = http('/api/v2/primitives/catalog')
     desc = {d['id']: d for d in cat['primitives']}
     offer = [p for p in OFFER if desc.get(p, {}).get('manifest_allowed')]
@@ -199,21 +254,37 @@ def main():
         st, rc = http('/api/v2/manifests/invoke', {'manifest': manifest, 'grant': grant, 'facts': kfacts, 'request': req})
         T['steps'].append({'invoke': tag, 'http': st, 'receipt': rc}); save()
         return st, rc
-    st1, r1 = invoke('act')
-    time.sleep(1.5)
-    mid = oracle()
-    st2, r2 = invoke('restore')
-    time.sleep(1.5)
-    post = oracle()
-    st, rv = http('/api/v2/manifests/revoke', {'grant_id': grant['grant_id']})
-    T['revoke'] = {'http': st, **rv}
+    def revoke():
+        # Stash the attempt in the transcript: if act/oracle crashes, the finally
+        # still revokes but its record would otherwise be lost with the exception.
+        try:
+            st, rv = http('/api/v2/manifests/revoke', {'grant_id': grant['grant_id']})
+        except Exception as e:
+            T['revoke_attempt'] = {'http': -1,
+                                   'error': '%s: %s' % (type(e).__name__, str(e)[:200])}
+            save()
+            raise
+        T['revoke_attempt'] = {'http': st, **rv}
+        save()
+        return st, rv
+    try:
+        st1, r1, mid, st2, r2, post, record = act_restore_sequence(
+            invoke, oracle, revoke, sleep=time.sleep)
+    except Exception as e:
+        return stop('KILL', reason='act/restore sequence crashed (revoke was attempted)',
+                    error='%s: %s' % (type(e).__name__, str(e)[:200]))
+    T['revoke'] = record
+    save()
+    if not (st1 == 200 and (r1 or {}).get('status') in ('VERIFIED', 'EXECUTED')):
+        return stop('KILL', reason='act did not execute; restore skipped (no blind restore)',
+                    pre=pre, after_act=mid, act_status=(r1 or {}).get('status'))
     st, rv2 = invoke('after_revoke_must_refuse')
     st, recs = http('/api/v2/manifests/receipts')
     T['kernel_receipts'] = recs.get('receipts', [])[-3:]
-    ok = (st1 == 200 and r1.get('status') in ('VERIFIED', 'EXECUTED') and mid.get('muted') is True
-          and st2 == 200 and post == pre and T['steps'][-1]['http'] != 200)
+    ok, predicate = success_predicate(pre, mid, post, st1, r1, st2, T['steps'][-1]['http'])
     return stop('SUCCESS' if ok else 'FAILED_ORACLE', pre=pre, after_act=mid, after_restore=post,
-                act_status=r1.get('status'), restore_status=r2.get('status'),
+                act_status=r1.get('status'), restore_status=(r2 or {}).get('status'),
+                predicate=predicate,
                 after_revoke=T['steps'][-1].get('receipt', {}).get('code'))
 
 
