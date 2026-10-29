@@ -29,6 +29,8 @@ class FakeBox:
                     'l2ident':{'id':'00:1a:2b:3c:4d:5e','type':'mac_address'},'l3connectivities':[{'af':'ipv4','addr':'192.168.1.40','active':True}]},
                    {'primary_name':'iPhone','host_type':'smartphone','active':False,'l2ident':{'id':'da:11:22:33:44:55','type':'mac_address'},'l3connectivities':[]}]}
         if path.endswith('lan/browser/interfaces/'):return {'success':True,'result':[{'name':'pub','host_count':2}]}
+        if path.endswith('dhcp/static_lease/'):
+            return {'success':True,'result':[{'mac':'00:1a:2b:3c:4d:5e','ip':'192.168.1.50','comment':'printer'},'junk',{'mac':'aa:bb:cc:dd:ee:ff','ip':'192.168.1.51'}]}
         return {'success':False,'error_code':'unexpected'}
 
 
@@ -53,6 +55,13 @@ class FreeboxAuthTests(unittest.TestCase):
     def test_expired_session_renews_once(self):
         box=FakeBox();box.expire_once=True;v=MemVault();v.put(TOKEN_NAME,'TOKEN');s=FreeboxSession(v,12,transport=box)
         self.assertEqual(len(s.lan_hosts()),2)
+
+    def test_static_dhcp_leases_are_read_only_and_shaped(self):
+        box=FakeBox();v=MemVault();v.put(TOKEN_NAME,'TOKEN');s=FreeboxSession(v,12,transport=box)
+        leases=s.dhcp_leases()
+        self.assertEqual(leases,[{'mac':'00:1a:2b:3c:4d:5e','ip':'192.168.1.50','comment':'printer'},
+                                 {'mac':'aa:bb:cc:dd:ee:ff','ip':'192.168.1.51','comment':''}])
+        self.assertTrue(all(m=='GET' for m,p,_ in box.calls if 'login' not in p))
 
     def test_non_allowlisted_path_and_no_vault_refused(self):
         s=FreeboxSession(MemVault(),12,transport=FakeBox())

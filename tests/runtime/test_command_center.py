@@ -82,6 +82,12 @@ class SkillRegistry(unittest.TestCase):
         self.assertEqual(validate_contract(c), [])
         self.assertIsNotNone(get('vacuum.pause'))
         self.assertIsNotNone(get('vacuum.dock'))
+        for sid, cmd in (('vacuum.seek', 'seek'), ('vacuum.empty_dust', 'empty_dust')):
+            s = get(sid)
+            self.assertIsNotNone(s, sid)
+            self.assertEqual(s['primitive_id'], 'tuya_command', sid)
+            self.assertEqual(s['params'], {'command': cmd}, sid)
+            self.assertEqual(validate_contract(s), [], sid)
 
     def test_verification_status_is_honest(self):
         from src.runtime.skills import get, VERIFICATION
