@@ -1,0 +1,29 @@
+{
+  "audited_head": "dcf852775aab0a4129b1c9e117f9457db77f985d",
+  "checks": [
+    {
+      "conclusion": "success",
+      "head_sha": "dcf852775aab0a4129b1c9e117f9457db77f985d",
+      "html_url": "https://github.com/toskaman/openbridge/actions/runs/40731946066/job/122970299734",
+      "id": 122970299734,
+      "name": "test (ubuntu-latest)",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "head_sha": "dcf852775aab0a4129b1c9e117f9457db77f985d",
+      "html_url": "https://github.com/toskaman/openbridge/actions/runs/40731946066/job/122970299240",
+      "id": 122970299240,
+      "name": "browser",
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "head_sha": "dcf852775aab0a4129b1c9e117f9457db77f985d",
+      "html_url": "https://github.com/toskaman/openbridge/actions/runs/40731946066/job/122970298660",
+      "id": 122970298660,
+      "name": "test (windows-latest)",
+      "status": "completed"
+    }
+  ]
+}

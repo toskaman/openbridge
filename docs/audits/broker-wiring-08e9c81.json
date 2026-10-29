@@ -1,0 +1,30 @@
+{
+  "kernel_head": "7e6196a097a082459e2c4d10f35d2260425e6397",
+  "forge_head": "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4",
+  "source_sha256": {
+    "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4:src/forge/v4_schemas.py": "ab7edfcd950423979bd4807ee7559792cab331354a97042103e53ecc4decdf68",
+    "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4:src/forge/v4_evidence.py": "80a483548b4aeddfdd1c9a13b68d2ccfe12f80bc415a7d2b3b477d0823ce5f4f",
+    "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4:src/forge/v4_metaclient.py": "b01cd36724ea4cb34f1924647476ee8ab5d069f45c0868576b0f18a3987ef848",
+    "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4:src/forge/v4_synthesize.py": "82b3e5cb502a5f1f39fbca2125eebece61262212e72ed775849950cf0f80fac6",
+    "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4:src/forge/v4_substrate.py": "ba8923d14aacfa7aeba6bf8fed07d9a91fa2c374b7f4d8225a5ce0f726692dab",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:src/substrate/v4_contract.schema.json": "9d10792be54f074e1b3be7a5d52be1cb7f2ca90e4fae65f3fded88000a947e31",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:src/substrate/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:src/substrate/registry.py": "cd2922da390f32c54d972d5be174a708da7476ff39155256f8e7d5978367d170",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:src/substrate/kernel.py": "13b12fb47733e12c86482247175d582eaa8cb71d01d98e29b821e06597462103",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:tests/substrate/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:tests/substrate/test_kernel.py": "6c57dcafbc4efaa3d9f4461005fd4fa293a913d0c4267e4cae8d2111e51d2368",
+    "7e6196a097a082459e2c4d10f35d2260425e6397:tests/substrate/test_forge_wiring.py": "afce8c42a02feb37dfca7a9c0cf8900dcff088c833a25e00ed25198ddb6bac54",
+    "08e9c815d752d3044c1b83887ab0cc7ff0a67ec4:tests/forge/test_v4_layer.py": "03d85f5d7972eb60dcf75d33c503f6837a2bc71fc471f9bb72ed9cdc26ef2b0a"
+  },
+  "tests_run": 39,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "success": true,
+  "test_output": ".......................................\n----------------------------------------------------------------------\nRan 39 tests in 0.021s\n\nOK\n",
+  "scope": "Four real compiler tests and35 agent-layer tests, including real LocalMetaBroker digest readiness with injected catalog/chat responses. No live model endpoint or hardware.",
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0,
+  "release_gate": "BLOCKED: live credit override, fair unseen evaluation and physical acceptance remain"
+}

@@ -1,0 +1,53 @@
+{
+  "results": {
+    "before": {
+      "source_head": "8a73b8f395ecf13a979f88fd93649cd3975b3f23",
+      "kernel_source_blob_sha256": "9a8e818fceac3b80d47ac78c19177edca20c9f83ee2d41a7649c77d5183cf665",
+      "schema_helper_sha256": "8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9",
+      "source_equality_checked": true,
+      "schema_validation": "actual PR72 contract/schema_errors; no schema bypass",
+      "compile_device_lookup_and_executor": "mocked; probes isolate admission/trust rather than full physical compile pipeline",
+      "same_operation_mock_effects": 2,
+      "grant_uses": {
+        "g-b9eec454f467a7f0": 2
+      },
+      "errors": [],
+      "current_provenance_downgrade_accepted": true,
+      "signed_unverified_fact_accepted": true,
+      "actual_provider_calls": 0,
+      "actual_hardware_calls": 0
+    },
+    "after": {
+      "source_head": "366784fcbf039f18de26b3c7be60813eb70a76f6",
+      "kernel_source_blob_sha256": "13b12fb47733e12c86482247175d582eaa8cb71d01d98e29b821e06597462103",
+      "schema_helper_sha256": "8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9",
+      "source_equality_checked": true,
+      "schema_validation": "actual PR72 contract/schema_errors; no schema bypass",
+      "compile_device_lookup_and_executor": "mocked; probes isolate admission/trust rather than full physical compile pipeline",
+      "same_operation_mock_effects": 1,
+      "grant_uses": {
+        "g-b9eec454f467a7f0": 1
+      },
+      "errors": [
+        "SubstrateError:operation_id already used"
+      ],
+      "current_provenance_downgrade_accepted": false,
+      "signed_unverified_fact_accepted": false,
+      "actual_provider_calls": 0,
+      "actual_hardware_calls": 0
+    }
+  },
+  "checks": {
+    "old_duplicate_reproduced": true,
+    "new_single_effect": true,
+    "new_replay_rejected": true,
+    "old_fact_gaps_reproduced": true,
+    "new_fact_gaps_rejected": true
+  },
+  "harness_sha256": "ac53a27b7e673a074cf4af56b38d39006610869b403702db9b0d4202350ea229",
+  "scope": "Real invoke/schema/signatures/fact checks; mocked compile, device lookup and effects; two concurrent callers with bounded compile delay. Narrow findings S4/S5 only.",
+  "release_gate": "BLOCKED: other findings and acceptance gates remain open",
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0
+}

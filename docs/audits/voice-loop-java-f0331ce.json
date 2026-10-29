@@ -1,0 +1,12 @@
+{
+  "head": "f0331ce6cd7118a680781142e3819b78a923fc58",
+  "javac_exit": 0,
+  "source_count": 3,
+  "source_sha256": {
+    "companion/android/src/fr/openbridge/companion/Canon.java": "3635d320cc60d520d1a873eb567d016affcf3bbbc544b3f1b69348c11f49b901",
+    "companion/android/src/fr/openbridge/companion/MainActivity.java": "75a999b6a20bd9746bc1ee0d46edea1c7b4f9ae5f049c9c3117958b9a4f8f2e4",
+    "companion/android/src/fr/openbridge/companion/RelayServer.java": "cdd1a38cf88612495876bb89c0e0c3c0558b536e7e071912905e7f65e4236df5"
+  },
+  "stderr": "",
+  "scope": "compile only; no signing/install/recording"
+}

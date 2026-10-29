@@ -1,0 +1,34 @@
+{
+  "agent": {
+    "source_head": "c426496a1305584ccf73b023ce9227099a73b55d",
+    "evidence_refs_sent_in_prompt": false,
+    "target_id_sent_in_prompt": false,
+    "untrusted_candidate_accepted": true,
+    "candidate_changes": "foreign target, invented evidence, extra untyped input, expanded grant",
+    "unapproved_model_envelope_accepted": true,
+    "fake_request_model": "not-meta-audit",
+    "registry_digest_changed_on_mapping_change": false,
+    "actual_provider_calls": 0,
+    "actual_hardware_calls": 0,
+    "qualification": "Scaffold/proposal checks only; no deployed kernel escape or actual non-Meta request is claimed."
+  },
+  "substrate_pr72": {
+    "source_head": "8a73b8f395ecf13a979f88fd93649cd3975b3f23",
+    "schema_validation": "actual PR72 contract/schema_errors; no schema bypass",
+    "compile_device_lookup_and_executor": "mocked; probes isolate admission/trust rather than full physical compile pipeline",
+    "same_operation_mock_effects": 2,
+    "grant_uses": {
+      "g-b9eec454f467a7f0": 2
+    },
+    "errors": [],
+    "current_provenance_downgrade_accepted": true,
+    "signed_unverified_fact_accepted": true,
+    "actual_provider_calls": 0,
+    "actual_hardware_calls": 0
+  },
+  "security_release_gate": "BLOCKED",
+  "auditor_revision": "2787d4e30b341873324c90bb4b0761a395dbcbb4",
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0
+}

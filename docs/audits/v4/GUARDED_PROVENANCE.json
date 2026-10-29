@@ -1,0 +1,22 @@
+{
+  "auditor_revision": "d945edb24815f579a515b3892ee7272ee0f8ed72",
+  "test_command": "python -B -m unittest discover -s tests -q",
+  "test_exit_code": 0,
+  "test_methods": 631,
+  "focused_audit_methods": 8,
+  "elapsed_s": 42.705,
+  "raw_output_sha256": "2d3d8425cf9010c093a0c3d0750f663b4bae7089c225cafeea9a9dd4899f4aa8",
+  "public_output_sha256": "2e1a3ee1e0a66a81a03cb0e5a218a18ba86e4ff1bda48406ba1adb213f1320b8",
+  "probe_command": "python -B -m dev.audit_v4_followup --output docs/audits/v4/current-head-receipt-guarded.json",
+  "probe_exit_code": 2,
+  "probe_exit_meaning": "Expected BLOCKED security gate; successful evidence collection",
+  "source_guards": "Eight agent source files and checkout schema helper are verified before issuing a receipt; kernel/contract/fixtures are extracted from immutable PR72 Git objects.",
+  "upstream_context": "PR73 and75 merged explanation-v2 preparation/attestation; no v2 inference executed by Sol.",
+  "unchanged_permit_function_ast_sha256": {
+    "dcf852775aab0a4129b1c9e117f9457db77f985d": "3383d92e501bec940880e7de5aa3bd51c5a4c52743ff42852ff415005470f641",
+    "545e380": "3383d92e501bec940880e7de5aa3bd51c5a4c52743ff42852ff415005470f641"
+  },
+  "actual_hardware_calls": 0,
+  "actual_provider_calls": 0,
+  "actual_spend_usd": 0
+}

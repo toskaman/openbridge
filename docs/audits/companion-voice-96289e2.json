@@ -1,0 +1,15 @@
+{
+  "head": "96289e244a294db9c2179a6e24966a7156b779df",
+  "javac_exit": 0,
+  "java_source_count": 3,
+  "source_sha256": {
+    "companion/android/src/fr/openbridge/companion/Canon.java": "3635d320cc60d520d1a873eb567d016affcf3bbbc544b3f1b69348c11f49b901",
+    "companion/android/src/fr/openbridge/companion/MainActivity.java": "c36844bc30014408179497e49ed5e48faa1a3be9c386c7cec1138842c5fbec9f",
+    "companion/android/src/fr/openbridge/companion/RelayServer.java": "2f0df935d0829c475f5b5b54ec8a8a95761cf3b3379849ac57b27ba40e62ad5e"
+  },
+  "stderr": "",
+  "actual_installs": 0,
+  "actual_microphone_or_hardware_calls": 0,
+  "actual_provider_calls": 0,
+  "scope": "javac compile only, no dex/package/signing/installation/runtime test"
+}

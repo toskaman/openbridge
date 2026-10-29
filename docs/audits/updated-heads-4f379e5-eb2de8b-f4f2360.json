@@ -1,0 +1,58 @@
+{
+  "commands": {
+    "before": {
+      "evidence": "SIMULATED",
+      "same_intent": true,
+      "requests": 2,
+      "mock_effects": 2,
+      "transactions": [
+        "tx-d60e450625ad9b24",
+        "tx-dea0d4d91b3bb55f"
+      ],
+      "cache_entries": 1,
+      "single_effect_gate": false,
+      "actual_hardware_calls": 0,
+      "note": "Actual Executor used; fake runner effects deliberately serialized, so per-device execution lock is respected."
+    },
+    "after": {
+      "evidence": "SIMULATED",
+      "same_intent": true,
+      "requests": 2,
+      "mock_effects": 1,
+      "transactions": [
+        "tx-abd28d7861c39c2e",
+        "tx-abd28d7861c39c2e"
+      ],
+      "cache_entries": 1,
+      "single_effect_gate": true,
+      "actual_hardware_calls": 0,
+      "note": "Actual Executor used; fake runner effects deliberately serialized, so per-device execution lock is respected."
+    }
+  },
+  "credit": {
+    "head": "eb2de8b39068876c3525b97dddc9f357679ea1e7",
+    "reservations": 16,
+    "reserved_usd": 1.6,
+    "allowance_usd": 0.8,
+    "cross_output_cap_enforced": false
+  },
+  "adapter": {
+    "wire_head": "f4f236075cbfce354b1b0cd809ee511f15d0652e",
+    "kernel_head": "366784fcbf039f18de26b3c7be60813eb70a76f6",
+    "result": {
+      "status": "COMPILED",
+      "manifest_hash": "sha256:4fd7d006cdb5168d1e9f6df7533c9d5dcda361da27b6d80096e96cff16f9ef3b",
+      "compiled": {
+        "audit_mock_compile": true
+      }
+    },
+    "hash_matches_actual_kernel": true,
+    "scope": "Actual class/module helper resolution and Unicode hash; compile overridden, not end-to-end compilation."
+  },
+  "command_head": "4f379e534b776914468144aa7f5eebf581c32a2b",
+  "command_harness_sha256": "39d6981ecdfca0bdf41d829594e7e5848ea5fc713673171ee97aa1ab39768f89",
+  "actual_provider_calls": 0,
+  "actual_hardware_calls": 0,
+  "actual_spend_usd": 0,
+  "release_gate": "BLOCKED"
+}

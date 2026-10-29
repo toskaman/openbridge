@@ -1,0 +1,13 @@
+Public copy: local root/home paths redacted; no result lines changed.
+<USER_HOME>\AppData\Local\Python\pythoncore-3.14-64\Lib\tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 409: 'Conflict'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+<PROJECT>\tests\runtime\test_command_center.py:767: ResourceWarning: unclosed file <_io.TextIOWrapper name='src/runtime/fabric_status.py' mode='r' encoding='utf-8'>
+  src = open('src/runtime/fabric_status.py', encoding='utf-8').read()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+<PROJECT>\tests\runtime\test_command_center.py:139: ResourceWarning: unclosed file <_io.TextIOWrapper name='config/runtime_models.json' mode='r' encoding='utf-8'>
+  manifest = json.load(open('config/runtime_models.json', encoding='utf-8'))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+----------------------------------------------------------------------
+Ran 605 tests in 44.671s
+
+OK
