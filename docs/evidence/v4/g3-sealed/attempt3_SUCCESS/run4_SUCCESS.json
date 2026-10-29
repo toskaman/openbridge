@@ -1,0 +1,360 @@
+{
+ "kind": "G3_SEALED_TASK",
+ "task_id": "sealed-p1c-tv-timeout",
+ "task_sha256": "0f1c5badf673d1210feae1ba08e80211a6b663b5aa0fe365a1eaf3e79a8c74a2",
+ "started": "2026-10-29T15:11:04.012918+00:00",
+ "intent": "Change the TV screen timeout to 1 minute (60000 ms), then confirm by reading the setting back.",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": "low",
+ "max_completion_tokens": 8000,
+ "calls": [
+  {
+   "prompt_sha256": "f22850b071c2639e28970cd61cfa6f89f60540e278a04aa2a5fecd817f663d38",
+   "elapsed_ms": 5465,
+   "request_id": "chatcmpl-01a18837-0c5c-72d9-95ae-bab6247ea38f",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 907,
+    "completion_tokens": 1435
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 1243,
+   "estimated_cost_usd": 0.0072325,
+   "reply": "{\"schema_version\":1,\"candidate_id\":\"cand-tv-timeout-60000-01\",\"origin\":\"meta_generated\",\"intent\":\"Change the TV screen timeout to 1 minute (60000 ms), then confirm by reading the setting back.\",\"target_opaque_id\":\"opaque:device:afb4b23fd8674fad\",\"primitive_chain\":[{\"primitive_id\":\"device.read_descriptor\",\"input\":{}},{\"primitive_id\":\"setting.set_exact\",\"input\":{\"setting\":\"screen_timeout_ms\",\"value\":60000}},{\"primitive_id\":\"state.read_setting\",\"input\":{\"setting\":\"screen_timeout_ms\"}}],\"preconditions\":[],\"postconditions\":[],\"required_grants\":[\"control\",\"read\"],\"evidence_refs\":[\"opaque:fact:4f653ff728f2096b\",\"opaque:fact:547fdeea7c54332f\",\"opaque:fact:ab63d8f0fb65c686\"]}",
+   "status": "RECORDED"
+  }
+ ],
+ "steps": [
+  {
+   "oracle": {
+    "setting": "screen_timeout_ms",
+    "value": 300000
+   },
+   "tx": "tx-b4724664cabe17fb",
+   "state": "EXECUTED"
+  },
+  {
+   "invoke": "act",
+   "http": 200,
+   "receipt": {
+    "operation_id": "op-c47745b8e488dd6b280538efed7c1909",
+    "manifest_hash": "sha256:f4e88d8ab6a18a99d8f782b3b4fe9d921f8a2b53304c7aede856727dd0d412f7",
+    "origin": "meta_generated",
+    "device_fingerprint": "fp-5e47507bab8903df",
+    "status": "EXECUTED",
+    "steps": [
+     {
+      "step_id": "s0",
+      "primitive_id": "device.read_descriptor",
+      "attempt": 1,
+      "transaction_id": "tx-c552536ff9965866",
+      "status": "VERIFIED"
+     },
+     {
+      "step_id": "s1",
+      "primitive_id": "setting.set_exact",
+      "attempt": 1,
+      "transaction_id": "tx-f2e50673a06e6f50",
+      "status": "VERIFIED"
+     },
+     {
+      "step_id": "s2",
+      "primitive_id": "state.read_setting",
+      "attempt": 1,
+      "transaction_id": "tx-1ba73a949d97d0b0",
+      "status": "EXECUTED"
+     }
+    ],
+    "error": null,
+    "started_at": "2026-10-29T15:11:11Z",
+    "finished_at": "2026-10-29T15:11:13Z",
+    "signature": "8e7857aa03cc742fbc72741538232dc4ccd1572f737e29514a6b671e64f352b0"
+   }
+  },
+  {
+   "oracle": {
+    "setting": "screen_timeout_ms",
+    "value": 60000
+   },
+   "tx": "tx-6e6f6a21323eb30f",
+   "state": "EXECUTED"
+  },
+  {
+   "owner_restore": {
+    "action": "set",
+    "args": {
+     "setting": "screen_timeout_ms",
+     "value": 300000
+    }
+   },
+   "http": 200,
+   "state": "VERIFIED",
+   "tx": "tx-0f1a1a95ea4c9c53"
+  },
+  {
+   "oracle": {
+    "setting": "screen_timeout_ms",
+    "value": 300000
+   },
+   "tx": "tx-e9216656f180b4d7",
+   "state": "EXECUTED"
+  },
+  {
+   "invoke": "after_revoke_must_refuse",
+   "http": 403,
+   "receipt": {
+    "error": "Grant revoked",
+    "code": "GRANT_REVOKED"
+   }
+  }
+ ],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "OK owner 29Oct chat: essai G3 scelle S4 (subst Sol), 5$ max, obs 128$",
+  "observation_id": "owner-chat-20261029T1625-128usd",
+  "observed_at": "2026-10-29T16:11:03+01:00",
+  "free_balance_usd_lower_bound": 128.0
+ },
+ "target": {
+  "device_fingerprint": "fp-5e47507bab8903df",
+  "fact_count": 13
+ },
+ "scope": {
+  "grants": [
+   "control",
+   "read"
+  ],
+  "source": "live-snapshot-links"
+ },
+ "bundle_id": "b-acabaef450c57f45",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Change the TV screen timeout to 1 minute (60000 ms), then confirm by reading the'"
+  },
+  "stocked_path": "no prebuilt skill covers sealed-p1c-tv-timeout; the generic Executor primitive exists (the model must compose it)"
+ },
+ "synthesis_rejects": [],
+ "candidate": {
+  "schema_version": 1,
+  "candidate_id": "cand-tv-timeout-60000-01",
+  "origin": "meta_generated",
+  "intent": "Change the TV screen timeout to 1 minute (60000 ms), then confirm by reading the setting back.",
+  "target_opaque_id": "opaque:device:afb4b23fd8674fad",
+  "primitive_chain": [
+   {
+    "primitive_id": "device.read_descriptor",
+    "input": {}
+   },
+   {
+    "primitive_id": "setting.set_exact",
+    "input": {
+     "setting": "screen_timeout_ms",
+     "value": 60000
+    }
+   },
+   {
+    "primitive_id": "state.read_setting",
+    "input": {
+     "setting": "screen_timeout_ms"
+    }
+   }
+  ],
+  "preconditions": [],
+  "postconditions": [],
+  "required_grants": [
+   "control",
+   "read"
+  ],
+  "evidence_refs": [
+   "opaque:fact:4f653ff728f2096b",
+   "opaque:fact:547fdeea7c54332f",
+   "opaque:fact:ab63d8f0fb65c686"
+  ],
+  "model_run_id": "mr-19101389faaa4962",
+  "digest": "bbf96e702e1845bfba33a8331e352dd5014b3d0ad26bb8ba2a03dda2e37ef3cf"
+ },
+ "prompt_sha256": "aa23611de2e25c0b422e73c9e15392a10740dfa014b4f121a0dc5d329ede6b89",
+ "manifest": {
+  "capability_id": "cand-tv-timeout-60000-01",
+  "evidence_refs": [
+   "f-94d8da07b2eea2ef",
+   "f-9dbe9faaf474af6f",
+   "f-d3ccb359e1940aff"
+  ],
+  "expires_at": "2026-10-29T16:11:11Z",
+  "facts_required": [
+   "f-94d8da07b2eea2ef",
+   "f-9dbe9faaf474af6f",
+   "f-d3ccb359e1940aff"
+  ],
+  "inputs": {},
+  "manifest_version": "obv4.1",
+  "max_fact_age_s": 600,
+  "model_run": {
+   "model": "muse-spark-1.3",
+   "provider": "meta",
+   "run_id": "mr_19101389faaa4962"
+  },
+  "origin": "meta_generated",
+  "permissions_requested": [
+   "control",
+   "read"
+  ],
+  "steps": [
+   {
+    "step_id": "s0",
+    "primitive_id": "device.read_descriptor",
+    "args": {},
+    "on_uncertain": "INCONCLUSIVE"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "setting.set_exact",
+    "args": {
+     "setting": "screen_timeout_ms",
+     "value": 60000
+    },
+    "on_uncertain": "INCONCLUSIVE"
+   },
+   {
+    "step_id": "s2",
+    "primitive_id": "state.read_setting",
+    "args": {
+     "setting": "screen_timeout_ms"
+    },
+    "on_uncertain": "INCONCLUSIVE"
+   }
+  ],
+  "target": {
+   "category": "tv",
+   "device_fingerprint": "fp-5e47507bab8903df"
+  },
+  "title": "G3 task sealed-p1c-tv-timeout"
+ },
+ "compile": {
+  "http": 200,
+  "manifest_hash": "sha256:f4e88d8ab6a18a99d8f782b3b4fe9d921f8a2b53304c7aede856727dd0d412f7",
+  "plan": [
+   {
+    "step_id": "s0",
+    "primitive_id": "device.read_descriptor",
+    "args": {},
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "READ",
+    "idempotency": "IDEMPOTENT"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "setting.set_exact",
+    "args": {
+     "setting": "screen_timeout_ms",
+     "value": 60000
+    },
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "REVERSIBLE_EXACT",
+    "idempotency": "IDEMPOTENT"
+   },
+   {
+    "step_id": "s2",
+    "primitive_id": "state.read_setting",
+    "args": {
+     "setting": "screen_timeout_ms"
+    },
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "READ",
+    "idempotency": "IDEMPOTENT"
+   }
+  ],
+  "permissions": [
+   "control",
+   "read"
+  ],
+  "effects": [
+   "READ",
+   "REVERSIBLE_EXACT"
+  ],
+  "origin": "meta_generated",
+  "dispatches": 3
+ },
+ "grant": {
+  "http": 200,
+  "manifest_hash": "sha256:f4e88d8ab6a18a99d8f782b3b4fe9d921f8a2b53304c7aede856727dd0d412f7",
+  "permissions": [
+   "control",
+   "read"
+  ],
+  "effects": [
+   "READ",
+   "REVERSIBLE_EXACT"
+  ],
+  "grant_id": "g-b0f2552915dba95e"
+ },
+ "revoke_attempt": {
+  "http": 200,
+  "revoked": "g-b0f2552915dba95e"
+ },
+ "revoke": {
+  "http": 200,
+  "revoked": "g-b0f2552915dba95e"
+ },
+ "kernel_receipts": [
+  {
+   "operation_id": "op-c47745b8e488dd6b280538efed7c1909",
+   "manifest_hash": "sha256:f4e88d8ab6a18a99d8f782b3b4fe9d921f8a2b53304c7aede856727dd0d412f7",
+   "origin": "meta_generated",
+   "device_fingerprint": "fp-5e47507bab8903df",
+   "status": "EXECUTED",
+   "steps": [
+    {
+     "step_id": "s0",
+     "primitive_id": "device.read_descriptor",
+     "attempt": 1,
+     "transaction_id": "tx-c552536ff9965866",
+     "status": "VERIFIED"
+    },
+    {
+     "step_id": "s1",
+     "primitive_id": "setting.set_exact",
+     "attempt": 1,
+     "transaction_id": "tx-f2e50673a06e6f50",
+     "status": "VERIFIED"
+    },
+    {
+     "step_id": "s2",
+     "primitive_id": "state.read_setting",
+     "attempt": 1,
+     "transaction_id": "tx-1ba73a949d97d0b0",
+     "status": "EXECUTED"
+    }
+   ],
+   "error": null,
+   "started_at": "2026-10-29T15:11:11Z",
+   "finished_at": "2026-10-29T15:11:13Z",
+   "signature": "8e7857aa03cc742fbc72741538232dc4ccd1572f737e29514a6b671e64f352b0"
+  }
+ ],
+ "status": "SUCCESS",
+ "pre": {
+  "setting": "screen_timeout_ms",
+  "value": 300000
+ },
+ "after_act": {
+  "setting": "screen_timeout_ms",
+  "value": 60000
+ },
+ "after_restore": {
+  "setting": "screen_timeout_ms",
+  "value": 300000
+ },
+ "act_status": "EXECUTED",
+ "restore_status": null,
+ "predicate": [],
+ "after_revoke": "GRANT_REVOKED",
+ "finished": "2026-10-29T15:11:17.718280+00:00"
+}
