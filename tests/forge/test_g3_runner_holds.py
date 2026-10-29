@@ -14,15 +14,22 @@ def ok_act():
 
 
 class ResolveScope(unittest.TestCase):
-    def test_live_grants_pass_through_sorted(self):
-        tv = {'links': [{'grants': ['control', 'observe']}, {'grants': ['read']}]}
-        scope, err = resolve_scope(tv)
+    def test_live_snapshot_links_for_tv_key(self):
+        links = [{'parent': 'pc', 'child': 'tv1', 'transport': 'WIFI', 'grants': ['read', 'control']},
+                 {'parent': 'pc', 'child': 'phone', 'transport': 'USB', 'grants': ['observe']}]
+        scope, err = resolve_scope(links, 'tv1')
         self.assertIsNone(err)
-        self.assertEqual(scope, ['control', 'observe', 'read'])
+        self.assertEqual(scope, ['control', 'read'])
+
+    def test_other_children_ignored(self):
+        links = [{'parent': 'pc', 'child': 'phone', 'transport': 'USB', 'grants': ['observe']}]
+        scope, err = resolve_scope(links, 'tv1')
+        self.assertIsNone(scope)
+        self.assertIn('refusing invented scope', err)
 
     def test_missing_links_kills_never_invents(self):
-        for tv in ({}, {'links': []}, {'links': [{}]}, {'links': [{'grants': []}]}):
-            scope, err = resolve_scope(tv)
+        for links in (None, [], [{}], [{'child': 'tv1'}], [{'child': 'tv1', 'grants': []}]):
+            scope, err = resolve_scope(links, 'tv1')
             self.assertIsNone(scope)
             self.assertIn('refusing invented scope', err)
 

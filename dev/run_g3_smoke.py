@@ -55,10 +55,13 @@ def strip_fences(text):
     return m[1] if m else text
 
 
-def resolve_scope(tv):
-    """Live grant scope from discovery links. (None, reason) when unverifiable:
-    the runner must KILL, never invent a default scope (Sol HOLD)."""
-    grants = sorted({g for l in ((tv or {}).get('links') or []) for g in (l.get('grants') or [])})
+def resolve_scope(links, tv_key):
+    """Live grant scope from the SAME discover response (snapshot-level links,
+    filtered by child key). (None, reason) when unverifiable: the runner must
+    KILL, never invent a default scope (Sol HOLD). Device keys rotate between
+    discovers, so links and key must come from one response."""
+    grants = sorted({g for l in (links or []) if isinstance(l, dict) and l.get('child') == tv_key
+                     for g in (l.get('grants') or [])})
     if not grants or not all(isinstance(g, str) and g for g in grants):
         return None, 'grant scope unverifiable from live links (refusing invented scope)'
     return grants, None
@@ -152,9 +155,10 @@ def main():
         return stop('KILL', reason='signed facts unavailable', http=st)
     fp, kfacts = sf['device_fingerprint'], sf['facts']
     T['target'] = {'device_fingerprint': fp, 'fact_count': len(kfacts)}
-    scope, scope_err = resolve_scope(tv)
+    scope, scope_err = resolve_scope(snap.get('links'), tv['key'])
     if scope_err:
         return stop('KILL', reason=scope_err)
+    T['scope'] = {'grants': scope, 'source': 'live-snapshot-links'}
     st, cat = http('/api/v2/primitives/catalog')
     desc = {d['id']: d for d in cat['primitives']}
     offer = [p for p in OFFER if desc.get(p, {}).get('manifest_allowed')]
