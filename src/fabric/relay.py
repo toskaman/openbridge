@@ -15,7 +15,7 @@ import time
 PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
               'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
-              'get_commands', 'report_command', 'update_status')
+              'get_commands', 'report_command', 'update_status', 'get_transfers', 'read_chunk', 'finish_transfer')
 MAX_CONTROLS, MAX_REQUESTS = 12, 16
 CONTROL_KINDS = ('button', 'confirm', 'status', 'label')   # layout v2; a missing kind means 'button' (v1 devices)
 MAX_STATUS_TEXT, MAX_LAYOUT_REVISION = 40, 100000
@@ -27,6 +27,8 @@ SHA256 = re.compile(r'^[0-9a-f]{64}$')
 VOICE_MAX_BYTES = 512 * 1024   # 15 s of 16 kHz PCM16 mono is 480 000 bytes; margin, hard cap
 VOICE_URL_SKEW = 120           # seconds of clock skew tolerated on a voice download URL
 MAX_SCAN_SECONDS = 15
+TRANSFER_ID = re.compile(r'^t[0-9a-f]{16,32}$')
+MAX_CHUNK, MAX_TRANSFER_BYTES = 96 * 1024, 64 * 1024 * 1024
 MAX_OBSERVATIONS = 200
 COMMAND_TTL = 30
 
@@ -66,6 +68,18 @@ def command(key, relay_id, op, params=None, now=None):
         rev = params.get('revision')
         if rev is not None and (not isinstance(rev, int) or isinstance(rev, bool) or not 1 <= rev <= MAX_LAYOUT_REVISION):
             raise RelayError('Layout revision must be an integer 1-100000')
+    if op == 'get_transfers' and params:
+        raise RelayError('get_transfers takes no parameters')
+    if op == 'read_chunk':
+        off, ln = params.get('offset'), params.get('length')
+        if set(params) != {'transfer_id', 'offset', 'length'} or not TRANSFER_ID.match(str(params.get('transfer_id', ''))) \
+                or not isinstance(off, int) or isinstance(off, bool) or not 0 <= off < MAX_TRANSFER_BYTES \
+                or not isinstance(ln, int) or isinstance(ln, bool) or not 0 < ln <= MAX_CHUNK:
+            raise RelayError('read_chunk needs transfer_id, offset and 1-%d bytes' % MAX_CHUNK)
+    if op == 'finish_transfer':
+        if set(params) != {'transfer_id', 'status'} or not TRANSFER_ID.match(str(params.get('transfer_id', ''))) \
+                or params.get('status') not in ('received', 'failed', 'cancelled'):
+            raise RelayError('Malformed finish_transfer')
     if op == 'update_status':
         vals = params.get('values')
         if set(params) != {'values'} or not isinstance(vals, dict) or not 0 < len(vals) <= MAX_CONTROLS or not all(
@@ -211,7 +225,7 @@ class RelayManager:
         self._lock = threading.Lock()
 
     def enroll(self, relay_id, key, device_key, declared):
-        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls', 'command_submit')}
+        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls', 'command_submit', 'file_offer')}
         self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
                                  'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
                                  'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}
