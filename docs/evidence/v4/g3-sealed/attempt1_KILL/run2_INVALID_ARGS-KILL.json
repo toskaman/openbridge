@@ -1,0 +1,153 @@
+{
+ "kind": "G3_SEALED_TASK",
+ "task_id": "sealed-p1-tv-timeout",
+ "task_sha256": "a97a8f41c8a2d8ad3f6f0113450c13e4812a6f8ad6732f3420993b4c7ecf404e",
+ "started": "2026-10-29T14:57:40.971648+00:00",
+ "intent": "Change the TV screen timeout to 2 minutes (120000 ms), then confirm by reading the setting back.",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": "low",
+ "max_completion_tokens": 8000,
+ "calls": [
+  {
+   "prompt_sha256": "baa7ab4e98da02a8592e349ab06613f1ab85f38a7fed4bfcdb4c03f42981c750",
+   "elapsed_ms": 4182,
+   "request_id": "chatcmpl-01a1882a-c6f8-74d2-a3c7-b873f99929e6",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 841,
+    "completion_tokens": 1146
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 966,
+   "estimated_cost_usd": 0.00592175,
+   "reply": "{\"candidate_id\":\"cand-tv-screentimeout-120000-01\",\"evidence_refs\":[\"opaque:fact:4f653ff728f2096b\",\"opaque:fact:547fdeea7c54332f\",\"opaque:fact:ab63d8f0fb65c686\"],\"intent\":\"Change the TV screen timeout to 2 minutes (120000 ms), then confirm by reading the setting back.\",\"origin\":\"meta_generated\",\"postconditions\":[],\"preconditions\":[],\"primitive_chain\":[{\"primitive_id\":\"device.read_descriptor\",\"input\":{}},{\"primitive_id\":\"setting.set_exact\",\"input\":{}},{\"primitive_id\":\"state.read_setting\",\"input\":{}}],\"required_grants\":[\"control\",\"read\"],\"schema_version\":1,\"target_opaque_id\":\"opaque:device:afb4b23fd8674fad\"}",
+   "status": "RECORDED"
+  }
+ ],
+ "steps": [],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "OK owner 29Oct chat: essai G3 scelle S4 (subst Sol), 5$ max, obs 128$",
+  "observation_id": "owner-chat-20261029T1600-128usd",
+  "observed_at": "2026-10-29T15:57:40+01:00",
+  "free_balance_usd_lower_bound": 128.0
+ },
+ "target": {
+  "device_fingerprint": "fp-5e47507bab8903df",
+  "fact_count": 13
+ },
+ "scope": {
+  "grants": [
+   "control",
+   "read"
+  ],
+  "source": "live-snapshot-links"
+ },
+ "bundle_id": "b-dd8b893bf33a7dab",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Change the TV screen timeout to 2 minutes (120000 ms), then confirm by reading t'"
+  },
+  "stocked_path": "no prebuilt skill covers sealed-p1-tv-timeout; the generic Executor primitive exists (the model must compose it)"
+ },
+ "synthesis_rejects": [],
+ "candidate": {
+  "candidate_id": "cand-tv-screentimeout-120000-01",
+  "evidence_refs": [
+   "opaque:fact:4f653ff728f2096b",
+   "opaque:fact:547fdeea7c54332f",
+   "opaque:fact:ab63d8f0fb65c686"
+  ],
+  "intent": "Change the TV screen timeout to 2 minutes (120000 ms), then confirm by reading the setting back.",
+  "origin": "meta_generated",
+  "postconditions": [],
+  "preconditions": [],
+  "primitive_chain": [
+   {
+    "primitive_id": "device.read_descriptor",
+    "input": {}
+   },
+   {
+    "primitive_id": "setting.set_exact",
+    "input": {}
+   },
+   {
+    "primitive_id": "state.read_setting",
+    "input": {}
+   }
+  ],
+  "required_grants": [
+   "control",
+   "read"
+  ],
+  "schema_version": 1,
+  "target_opaque_id": "opaque:device:afb4b23fd8674fad",
+  "model_run_id": "mr-aef04bde8b76c9a5",
+  "digest": "493e6f27bd4d784d1bdab866b1d08f57594d1e49f7bf7ac190e46d905465850e"
+ },
+ "prompt_sha256": "253ec4b5ad6d5cec9f0946bdc8309d75d56f817bbb11844253689ff6c731eb9f",
+ "manifest": {
+  "capability_id": "cand-tv-screentimeout-120000-01",
+  "evidence_refs": [
+   "f-94d8da07b2eea2ef",
+   "f-9dbe9faaf474af6f",
+   "f-d3ccb359e1940aff"
+  ],
+  "expires_at": "2026-10-29T15:57:47Z",
+  "facts_required": [
+   "f-94d8da07b2eea2ef",
+   "f-9dbe9faaf474af6f",
+   "f-d3ccb359e1940aff"
+  ],
+  "inputs": {},
+  "manifest_version": "obv4.1",
+  "max_fact_age_s": 600,
+  "model_run": {
+   "model": "muse-spark-1.3",
+   "provider": "meta",
+   "run_id": "mr_aef04bde8b76c9a5"
+  },
+  "origin": "meta_generated",
+  "permissions_requested": [
+   "control",
+   "read"
+  ],
+  "steps": [
+   {
+    "step_id": "s0",
+    "primitive_id": "device.read_descriptor",
+    "args": {},
+    "on_uncertain": "INCONCLUSIVE"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "setting.set_exact",
+    "args": {},
+    "on_uncertain": "INCONCLUSIVE"
+   },
+   {
+    "step_id": "s2",
+    "primitive_id": "state.read_setting",
+    "args": {},
+    "on_uncertain": "INCONCLUSIVE"
+   }
+  ],
+  "target": {
+   "category": "tv",
+   "device_fingerprint": "fp-5e47507bab8903df"
+  },
+  "title": "G3 task sealed-p1-tv-timeout"
+ },
+ "compile": {
+  "http": 400,
+  "error": "s1.setting required",
+  "code": "INVALID_ARGS"
+ },
+ "status": "KILL",
+ "reason": "kernel rejected the generated manifest",
+ "code": "INVALID_ARGS",
+ "finished": "2026-10-29T14:57:47.310155+00:00"
+}
