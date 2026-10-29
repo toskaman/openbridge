@@ -1,0 +1,274 @@
+{
+ "kind": "G3_INTEGRATION_SMOKE",
+ "started": "2026-10-29T12:54:03.727709+00:00",
+ "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": "low",
+ "max_completion_tokens": 8000,
+ "calls": [
+  {
+   "prompt_sha256": "dde9450b2f8f857172b31c92603e87a7cca0ed9b8674d370080d2c39aee20877",
+   "elapsed_ms": 4716,
+   "request_id": "chatcmpl-01a187b9-ac09-73cf-b409-c21452693807",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 995,
+    "completion_tokens": 1097
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 933,
+   "estimated_cost_usd": 0.005906,
+   "reply": "{\"candidate_id\":\"cand-mute-tv-001\",\"evidence_refs\":[\"opaque:device:b04fc4a42c301dd4\",\"opaque:fact:2a2007f6c4b69a9d\",\"opaque:fact:76e5d647c26dc930\"],\"intent\":\"Mute the TV audio, then confirm by reading the media stream state that it reports muted..\",\"origin\":\"meta_generated\",\"postconditions\":[],\"preconditions\":[],\"primitive_chain\":[{\"primitive_id\":\"input.key\",\"input\":{\"key\":\"mute\"}},{\"primitive_id\":\"state.audio\",\"input\":{}}],\"required_grants\":[\"control\",\"read\"],\"schema_version\":1,\"target_opaque_id\":\"opaque:device:b04fc4a42c301dd4\"}",
+   "status": "RECORDED"
+  },
+  {
+   "prompt_sha256": "dde9450b2f8f857172b31c92603e87a7cca0ed9b8674d370080d2c39aee20877",
+   "elapsed_ms": 4452,
+   "request_id": "chatcmpl-01a187b9-bd7b-716f-936f-a1b8cd95c090",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 995,
+    "completion_tokens": 1154
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 1000,
+   "estimated_cost_usd": 0.00614825,
+   "reply": "{\"schema_version\":1,\"candidate_id\":\"cand-mute-tv-audio-01\",\"origin\":\"meta_generated\",\"intent\":\"Mute the TV audio, then confirm by reading the media stream state that it reports muted.\",\"target_opaque_id\":\"opaque:device:b04fc4a42c301dd4\",\"primitive_chain\":[{\"primitive_id\":\"input.key\",\"input\":{\"key\":\"mute\"}},{\"primitive_id\":\"state.audio\",\"input\":{}}],\"preconditions\":[],\"postconditions\":[\"TV audio muted\"],\"required_grants\":[\"control\",\"read\"],\"evidence_refs\":[\"opaque:fact:2a2007f6c4b69a9d\",\"opaque:fact:76e5d647c26dc930\"]}",
+   "status": "RECORDED"
+  }
+ ],
+ "steps": [
+  {
+   "oracle": {
+    "stream": "music",
+    "muted": false,
+    "volume_index": 20,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "tx": "tx-1ad3bc18b9490099",
+   "state": "EXECUTED"
+  },
+  {
+   "invoke": "act",
+   "http": 400,
+   "receipt": {
+    "error": "$.trace_id: does not match ^[A-Za-z0-9_-]{6,64}$",
+    "code": "SCHEMA"
+   }
+  },
+  {
+   "oracle": {
+    "stream": "music",
+    "muted": false,
+    "volume_index": 20,
+    "max_index": 100,
+    "devices": [
+     "headphone"
+    ],
+    "readable": true
+   },
+   "tx": "tx-431ccbea48a6b675",
+   "state": "EXECUTED"
+  }
+ ],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "autorisé pour l’essai G3, 0,80 $ maximum",
+  "observation_id": "meta-dashboard-20261029T0010",
+  "observed_at": "2026-10-29T00:10:00+01:00",
+  "free_balance_usd_lower_bound": 132.0
+ },
+ "target": {
+  "device_fingerprint": "fp-acfb16b47e01d998",
+  "fact_count": 13
+ },
+ "scope": {
+  "grants": [
+   "control",
+   "read"
+  ],
+  "source": "live-snapshot-links"
+ },
+ "bundle_id": "b-aa0b93f4e90083de",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Mute the TV audio, then confirm by reading the media stream state that it report'"
+  },
+  "stocked_path": "device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task"
+ },
+ "synthesis_rejects": [
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "INVENTED_EVIDENCE_REF"
+  }
+ ],
+ "candidate": {
+  "schema_version": 1,
+  "candidate_id": "cand-mute-tv-audio-01",
+  "origin": "meta_generated",
+  "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+  "target_opaque_id": "opaque:device:b04fc4a42c301dd4",
+  "primitive_chain": [
+   {
+    "primitive_id": "input.key",
+    "input": {
+     "key": "mute"
+    }
+   },
+   {
+    "primitive_id": "state.audio",
+    "input": {}
+   }
+  ],
+  "preconditions": [],
+  "postconditions": [
+   "TV audio muted"
+  ],
+  "required_grants": [
+   "control",
+   "read"
+  ],
+  "evidence_refs": [
+   "opaque:fact:2a2007f6c4b69a9d",
+   "opaque:fact:76e5d647c26dc930"
+  ],
+  "model_run_id": "mr-5b759f5d5e682e13",
+  "digest": "235658924d40eddb3e819b493333709d52b0749ec1d3b1e683daf5a94ae711a4"
+ },
+ "prompt_sha256": "be4b9269af765d9c89536e5240694b0e16ec5c57744f35a5ef10edd4511a5d60",
+ "manifest": {
+  "capability_id": "cand-mute-tv-audio-01",
+  "evidence_refs": [
+   "f-30b87ea368200065",
+   "f-e8810d317f1cdee4"
+  ],
+  "expires_at": "2026-10-29T13:54:18Z",
+  "facts_required": [
+   "f-30b87ea368200065",
+   "f-e8810d317f1cdee4"
+  ],
+  "inputs": {},
+  "manifest_version": "obv4.1",
+  "max_fact_age_s": 600,
+  "model_run": {
+   "model": "muse-spark-1.3",
+   "provider": "meta",
+   "run_id": "mr_5b759f5d5e682e13"
+  },
+  "origin": "meta_generated",
+  "permissions_requested": [
+   "control",
+   "read"
+  ],
+  "steps": [
+   {
+    "step_id": "s0",
+    "primitive_id": "input.key",
+    "args": {
+     "key": "mute"
+    },
+    "on_uncertain": "INCONCLUSIVE"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "state.audio",
+    "args": {},
+    "on_uncertain": "INCONCLUSIVE"
+   }
+  ],
+  "target": {
+   "category": "tv",
+   "device_fingerprint": "fp-acfb16b47e01d998"
+  },
+  "title": "Mute the TV (Meta-generated)"
+ },
+ "compile": {
+  "http": 200,
+  "manifest_hash": "sha256:06abde316a8b8fc733139571bcea073dbbef4c33fbc92f87ef0d5bf8e33bde9c",
+  "plan": [
+   {
+    "step_id": "s0",
+    "primitive_id": "input.key",
+    "args": {
+     "key": "mute"
+    },
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "IRREVERSIBLE",
+    "idempotency": "NON_IDEMPOTENT"
+   },
+   {
+    "step_id": "s1",
+    "primitive_id": "state.audio",
+    "args": {},
+    "repeat": 1,
+    "on_uncertain": "INCONCLUSIVE",
+    "side_effect_class": "READ",
+    "idempotency": "IDEMPOTENT"
+   }
+  ],
+  "permissions": [
+   "control",
+   "read"
+  ],
+  "effects": [
+   "IRREVERSIBLE",
+   "READ"
+  ],
+  "origin": "meta_generated",
+  "dispatches": 2
+ },
+ "grant": {
+  "http": 200,
+  "manifest_hash": "sha256:06abde316a8b8fc733139571bcea073dbbef4c33fbc92f87ef0d5bf8e33bde9c",
+  "permissions": [
+   "control",
+   "read"
+  ],
+  "effects": [
+   "IRREVERSIBLE",
+   "READ"
+  ],
+  "grant_id": "g-d7d88f2acfc3b6e3"
+ },
+ "revoke_attempt": {
+  "http": 200,
+  "revoked": "g-d7d88f2acfc3b6e3"
+ },
+ "revoke": {
+  "http": 200,
+  "revoked": "g-d7d88f2acfc3b6e3"
+ },
+ "status": "KILL",
+ "reason": "act did not execute; restore skipped (no blind restore)",
+ "pre": {
+  "stream": "music",
+  "muted": false,
+  "volume_index": 20,
+  "max_index": 100,
+  "devices": [
+   "headphone"
+  ],
+  "readable": true
+ },
+ "after_act": {
+  "stream": "music",
+  "muted": false,
+  "volume_index": 20,
+  "max_index": 100,
+  "devices": [
+   "headphone"
+  ],
+  "readable": true
+ },
+ "act_status": null,
+ "finished": "2026-10-29T12:54:20.411061+00:00"
+}

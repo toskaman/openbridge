@@ -25,3 +25,16 @@ right (mute key, then `state.audio` read-back) — the gap is the prompt contrac
    using placeholder ids only (no answer leakage).
 2. `reasoning_effort: low` (or `minimal`) recorded in the frozen procedure; attempt 1 shows default exhausts 4000.
 3. New freeze of the prompt bytes; the remaining $0.20 of this allowance (2 calls) or a fresh owner allowance.
+
+## Attempt 3 (29 Oct ~13:00, owner "go", v4-synth-3, reasoning_effort=low, max 8000 tokens)
+- 2 calls (~$0.012 estimated; $0.20 reserved, the allowance on this observation is now spent): call 1 rejected
+  by the validator, **call 2 produced a valid Meta candidate**: `input.key {"key":"mute"}` then `state.audio`.
+- Effect binding passed (one mute effect, one READ). Kernel **COMPILED** (manifest sha256:06abde31…,
+  permissions control+read, 2 dispatches). Pre-oracle muted=false 20/100. Owner grant g-d7d88f2a… issued (2 uses).
+- **Invoke refused by the kernel (SCHEMA)**: the runner's own trace_id `g3act` was 5 chars (contract 6–64).
+  No device action. Grant revoked in `finally` (HTTP 200). Runner bug, fixed with a regression test.
+- Attempt 3b (replay of the recorded candidate, no model call): refused `UNKNOWN_TARGET`. The bundle used
+  the rotating discovery key as device id, so the cited opaque ids no longer bind. Fixed: the bundle now
+  uses the stable kernel fingerprint.
+- Status: the generation → validation → kernel compile → owner grant chain is demonstrated on live
+  evidence; invoke → physical read-back is NOT yet demonstrated. Next run needs a fresh owner observation.
