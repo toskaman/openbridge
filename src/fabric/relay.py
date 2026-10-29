@@ -15,8 +15,10 @@ import time
 PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
               'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
-              'get_commands', 'report_command')
+              'get_commands', 'report_command', 'update_status')
 MAX_CONTROLS, MAX_REQUESTS = 12, 16
+CONTROL_KINDS = ('button', 'confirm', 'status', 'label')   # layout v2; a missing kind means 'button' (v1 devices)
+MAX_STATUS_TEXT, MAX_LAYOUT_REVISION = 40, 100000
 MAX_COMMANDS, MAX_COMMAND_TEXT, MAX_COMMAND_REPORT = 8, 500, 160
 CONTROL_ID = re.compile(r'^[a-z0-9-]{4,40}$')
 REQUEST_ID = re.compile(r'^[0-9a-f]{32}$')
@@ -54,10 +56,21 @@ def command(key, relay_id, op, params=None, now=None):
             raise RelayError('Only bounded BLE discovery (1-15 s) is allowed')
     if op == 'set_controls':
         cs = params.get('controls')
-        if not isinstance(cs, list) or len(cs) > MAX_CONTROLS or not all(
-                isinstance(c, dict) and set(c) == {'control_id', 'label'} and CONTROL_ID.match(str(c['control_id']))
-                and isinstance(c['label'], str) and 0 < len(c['label']) <= 40 for c in cs):
-            raise RelayError('Controls must be at most 12 {control_id, label} entries')
+        if set(params) - {'controls', 'revision'} or not isinstance(cs, list) or len(cs) > MAX_CONTROLS or not all(
+                isinstance(c, dict) and {'control_id', 'label'} <= set(c) <= {'control_id', 'label', 'kind', 'value'}
+                and CONTROL_ID.match(str(c['control_id'])) and isinstance(c['label'], str) and 0 < len(c['label']) <= 40
+                and c.get('kind', 'button') in CONTROL_KINDS
+                and (c.get('value') is None or (isinstance(c['value'], str) and len(c['value']) <= MAX_STATUS_TEXT))
+                for c in cs):
+            raise RelayError('Controls must be at most 12 {control_id, label[, kind, value]} entries')
+        rev = params.get('revision')
+        if rev is not None and (not isinstance(rev, int) or isinstance(rev, bool) or not 1 <= rev <= MAX_LAYOUT_REVISION):
+            raise RelayError('Layout revision must be an integer 1-100000')
+    if op == 'update_status':
+        vals = params.get('values')
+        if set(params) != {'values'} or not isinstance(vals, dict) or not 0 < len(vals) <= MAX_CONTROLS or not all(
+                CONTROL_ID.match(str(k)) and isinstance(v, str) and len(v) <= MAX_STATUS_TEXT for k, v in vals.items()):
+            raise RelayError('Status update must map at most 12 control ids to short text')
     if op == 'report_result':
         if set(params) - {'request_id', 'state', 'text'} or not REQUEST_ID.match(str(params.get('request_id', ''))) or len(str(params.get('text', ''))) > 80:
             raise RelayError('Malformed result report')
@@ -122,6 +135,12 @@ def validate_report(report):
     return clean
 
 
+def applied_revision(report):
+    """Layout revision the device says it rendered (device ACK), or None when absent/malformed."""
+    v = report.get('applied_revision') if isinstance(report, dict) else None
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= MAX_LAYOUT_REVISION else None
+
+
 def validate_requests(report, known_controls):
     """Requests from a relay are untrusted: only an id and the id of a control the owner authorized. The relay never
     supplies a skill, target or parameter; the PC takes those from the owner's grant."""
@@ -137,7 +156,7 @@ def validate_requests(report, known_controls):
             clean['pressed_at'] = r['pressed_at']                    # device time, milliseconds
         if isinstance(r.get('seq'), int) and not isinstance(r.get('seq'), bool) and 0 <= r['seq'] < 2 ** 53:
             clean['seq'] = r['seq']
-        if r.get('gesture') in ('long_press', 'click', 'key'):
+        if r.get('gesture') in ('long_press', 'click', 'key', 'confirm'):
             clean['gesture'] = r['gesture']
         t = r.get('touch')
         if isinstance(t, dict):

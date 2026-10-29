@@ -54,6 +54,11 @@ final class RelayServer {
     private JSONArray controls = new JSONArray();
     private final java.util.ArrayDeque<JSONObject> requests = new java.util.ArrayDeque<>();
     private long lastPress;
+    /** Layout v2: revision the PC asked for, and the revision the screen actually rendered (reported back as the ACK). */
+    private volatile long renderedRevision = -1;
+    void markRendered(long revision) { renderedRevision = revision; }
+    long layoutRevision() { return prefs.getLong("layout_revision", 0); }
+    static boolean actionKind(String kind) { return "button".equals(kind) || "confirm".equals(kind); }
     static final long PENDING_TIMEOUT_MS = 20_000;
     /** request_id -> time the PC fetched it. Cleared by the PC's signed result; never re-sent (at-most-once). */
     private final java.util.Map<String, Long> pending = new java.util.HashMap<>();
@@ -132,6 +137,10 @@ final class RelayServer {
             JSONArray cs = controls();
             for (int i = 0; i < cs.length(); i++) if (cs.optJSONObject(i) != null && controlId.equals(cs.optJSONObject(i).optString("control_id"))) known = true;
             if (!known) return "This control is no longer authorized";
+            for (int i = 0; i < cs.length(); i++) {
+                JSONObject c = cs.optJSONObject(i);
+                if (c != null && controlId.equals(c.optString("control_id")) && !actionKind(c.optString("kind", "button"))) return "This item only shows information";
+            }
             if (requests.size() >= MAX_QUEUE) return "Too many pending requests; wait for the PC";
             for (JSONObject q : requests) if (controlId.equals(q.optString("control_id"))) return "Already sending…";
             if (pendingControls.containsValue(controlId)) return "Already sending…";   // one press in flight per control
@@ -334,13 +343,40 @@ final class RelayServer {
                 JSONArray clean = new JSONArray();
                 for (int i = 0; i < in.length(); i++) {
                     JSONObject c = in.getJSONObject(i);
-                    String id = c.getString("control_id"), label = c.getString("label");
+                    String id = c.getString("control_id"), label = c.getString("label"), kind = c.optString("kind", "button");
                     if (!id.matches("[a-z0-9-]{4,40}") || label.isEmpty() || label.length() > 40) throw new SecurityException("bounds");
-                    clean.put(new JSONObject().put("control_id", id).put("label", label));
+                    if (!kind.matches("button|confirm|status|label")) throw new SecurityException("bounds");
+                    String value = c.has("value") ? c.getString("value") : null;
+                    if (value != null && value.length() > 40) throw new SecurityException("bounds");
+                    JSONObject o = new JSONObject().put("control_id", id).put("label", label).put("kind", kind);
+                    if ("status".equals(kind)) o.put("value", value == null ? "" : value);
+                    clean.put(o);
                 }
+                long revision = cmd.getJSONObject("params").optLong("revision", 0);
+                if (revision < 0 || revision > 100000) throw new SecurityException("bounds");
                 synchronized (requests) { controls = clean; requests.clear(); pending.clear(); pendingControls.clear(); }
-                prefs.edit().putString("controls", clean.toString()).apply();
+                prefs.edit().putString("controls", clean.toString()).putLong("layout_revision", revision).apply();
                 ui.controls(clean); break;
+            }
+            case "update_status": {
+                // Status values only: pending presses and the layout stay as they are.
+                JSONObject vals = cmd.getJSONObject("params").getJSONObject("values");
+                if (vals.length() == 0 || vals.length() > MAX_CONTROLS) throw new SecurityException("bounds");
+                JSONArray cs;
+                synchronized (requests) {
+                    cs = controls();
+                    for (int i = 0; i < cs.length(); i++) {
+                        JSONObject c = cs.getJSONObject(i);
+                        String id = c.optString("control_id");
+                        if ("status".equals(c.optString("kind")) && vals.has(id)) {
+                            String v = vals.getString(id);
+                            if (v.length() > 40) throw new SecurityException("bounds");
+                            c.put("value", v);
+                        }
+                    }
+                }
+                prefs.edit().putString("controls", cs.toString()).apply();
+                ui.controls(cs); break;
             }
             case "get_requests": {
                 JSONArray out = new JSONArray();
@@ -348,7 +384,9 @@ final class RelayServer {
                 synchronized (requests) {
                     while (!requests.isEmpty()) { JSONObject r = requests.poll(); out.put(r); pending.put(r.getString("request_id"), now); pendingControls.put(r.getString("request_id"), r.optString("control_id")); }
                 }
-                params.put("requests", out); break;
+                params.put("requests", out);
+                if (renderedRevision >= 0) params.put("applied_revision", renderedRevision);
+                break;
             }
             case "report_result": {
                 JSONObject p = cmd.getJSONObject("params");

@@ -19,6 +19,7 @@ class FakeCompanion:
         self.key, self.seen, self.controls, self.queue, self.results, self.ops = key, {}, [], [], [], []
         self.clock = time.time
         self.pending = {}
+        self.revision, self.status = 0, {}       # layout v2: applied revision (ACK) and status values
 
     def press(self, control_id, request_id=None, **extra):
         rid = request_id or ('%032x' % (len(self.ops) * 7919 + int(time.time() * 1000) % 100000 + len(self.queue)))
@@ -31,8 +32,12 @@ class FakeCompanion:
         params = {}
         if msg['op'] == 'set_controls':
             self.controls = msg['params']['controls']; self.queue = []
+            self.revision = msg['params'].get('revision', 0)
+            self.status = {c['control_id']: c.get('value', '') for c in self.controls if c.get('kind') == 'status'}
+        elif msg['op'] == 'update_status':
+            self.status.update({k: v for k, v in msg['params']['values'].items() if k in self.status})   # queue untouched
         elif msg['op'] == 'get_requests':
-            params, self.queue = {'requests': self.queue}, []
+            params, self.queue = {'requests': self.queue, 'applied_revision': self.revision}, []
             self.pending.update({r['request_id']: True for r in params['requests']})
         elif msg['op'] == 'report_result':
             if self.pending.pop(msg['params']['request_id'], None):     # unknown or late results are ignored, like the Java
