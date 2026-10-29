@@ -94,8 +94,14 @@ class VoiceItems(unittest.TestCase):
 class StubVoice(BaseHTTPRequestHandler):
     body = PCM
     code = 200
+    redirect_to = None
 
     def do_GET(self):
+        if self.redirect_to is not None:
+            self.send_response(302)
+            self.send_header('Location', self.redirect_to)
+            self.end_headers()
+            return
         self.send_response(self.code)
         self.send_header('Content-Length', str(len(self.body)))
         self.end_headers()
@@ -132,6 +138,40 @@ class FetchVoice(unittest.TestCase):
         with self.assertRaises(R.RelayError):
             R.fetch_voice(self.url, KEY, 'clip-1', len(PCM), hashlib.sha256(PCM).hexdigest())
         StubVoice.body = PCM
+
+    def test_redirect_never_followed(self):
+        # Sol audit: a 302 must not carry the download off the scope-checked URL —
+        # even to loopback, even when the target would pass size+sha.
+        class EvilVoice(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.send_header('Content-Length', str(len(PCM)))
+                self.end_headers()
+                self.wfile.write(PCM)
+
+            def log_message(self, *a):
+                pass
+
+        evil = HTTPServer(('127.0.0.1', 0), EvilVoice)
+        threading.Thread(target=evil.serve_forever, daemon=True).start()
+        try:
+            StubVoice.body, StubVoice.code = PCM, 200
+            target = 'http://127.0.0.1:%d/voice' % evil.server_port
+            StubVoice.redirect_to = target
+            try:
+                with self.assertRaises(R.RelayError):
+                    R.fetch_voice(self.url, KEY, 'clip-1', len(PCM), hashlib.sha256(PCM).hexdigest())
+            finally:
+                StubVoice.redirect_to = None
+            StubVoice.redirect_to = 'http://8.8.8.8/voice'
+            try:
+                with self.assertRaises(R.RelayError):
+                    R.fetch_voice(self.url, KEY, 'clip-1', len(PCM), hashlib.sha256(PCM).hexdigest())
+            finally:
+                StubVoice.redirect_to = None
+        finally:
+            evil.shutdown()
+            evil.server_close()
 
     def test_refused_and_out_of_scope(self):
         StubVoice.code = 404
@@ -255,15 +295,16 @@ class TranscribeRouting(unittest.TestCase):
         self.assertEqual((code, doc['backend']), (200, 'local-mms'))
         t.assert_called_once_with(PCM, 'fr')
 
-    def test_cloud_fallback_without_local(self):
+    def test_no_cloud_fallback_without_local(self):
+        # Sol audit: no silent cloud STT (would need consent + fresh reservation).
         import base64
         body = {'audio_b64': base64.b64encode(PCM).decode()}
         with mock.patch.object(stt_local, 'available', return_value=False), \
-                mock.patch.object(voice_stt, 'transcribe', return_value={'transcript': 'y'}) as t, \
-                mock.patch.object(api_v2, '_meta_key', return_value='k'):
+                mock.patch.object(voice_stt, 'transcribe',
+                                  side_effect=AssertionError('cloud must not run')):
             code, doc = api_v2.voice(FakeServer({}), '/api/v2/voice/transcribe', body)
-        self.assertEqual((code, doc['transcript']), (200, 'y'))
-        t.assert_called_once_with(PCM, 'k', 'fr')
+        self.assertEqual(code, 409)
+        self.assertEqual(doc['fallback'], 'type the command instead')
 
     def test_local_crash_is_503_not_500(self):
         import base64
