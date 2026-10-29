@@ -32,3 +32,13 @@ The Companion declares `aead1` in its capabilities. After pairing, the PC wraps 
 (`relay>pc`). The first sealed message makes the Companion refuse plaintext commands; only a new owner pairing
 (fresh on-screen code) resets this. Voice clips are served as `nonce|tag|ciphertext` with `X-OB-Enc: aead1`.
 Spec and shared vector: `src/fabric/aead.py`, `tests/fabric/fixtures/aead1_vector.json`.
+
+---
+
+# Multi-device workflows — contract for Muse (`obv4.1-wf`)
+`{workflow_version: "obv4.1-wf", workflow_id, title (≤80), origin: "meta_generated", model_run: {provider: "meta", model, run_id},
+nodes: [{node_id, manifest_hash, depends_on: [node_id…]}] (1–16, acyclic), max_parallel: 1–4}`.
+Each node's manifest is a normal single-device obv4.1 manifest with its own owner grant. The owner then signs the
+exact workflow (`POST /api/v2/workflows/grant`, one use); `POST /api/v2/workflows/run` executes it. Statuses per node:
+VERIFIED/EXECUTED, FAILED, BLOCKED, INCONCLUSIVE (never retried), SKIPPED (a dependency did not succeed), CANCELLED.
+Workflow status: COMPLETED, PARTIAL, FAILED, CANCELLED. Receipts: `GET /api/v2/workflows/receipts`.
