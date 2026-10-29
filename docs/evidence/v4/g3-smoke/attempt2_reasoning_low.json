@@ -1,0 +1,95 @@
+{
+ "kind": "G3_INTEGRATION_SMOKE",
+ "started": "2026-10-28T23:13:57.221504+00:00",
+ "intent": "Mute the TV audio, then confirm by reading the media stream state that it reports muted.",
+ "model": "muse-spark-1.3",
+ "reasoning_effort": "low",
+ "calls": [
+  {
+   "prompt_sha256": "5d89b60466b00eb63c70d9c0abb2473c3a0f40168270cfcab0b31ae19f53cb86",
+   "elapsed_ms": 6598,
+   "request_id": "chatcmpl-01a184ca-dbad-759c-9847-8c04ee8cc2ad",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 542,
+    "completion_tokens": 1886
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 1756,
+   "estimated_cost_usd": 0.008693,
+   "reply": "{\"target_opaque_id\":\"opaque:device:733c3bc635a3d62d\",\"primitive_ids\":[\"app.list\",\"device.read_descriptor\",\"input.key\",\"state.audio\",\"state.read_setting\",\"state.screen\"],\"bundle_digest\":\"e4f569f4d2479e79de8526d6e6a318e5f341b749f45041aefa4a988fea16cd93\",\"evidence\":[\"opaque:fact:5dce73e9a6525ff5\",\"opaque:fact:239d49aebf7cd5fa\"]}",
+   "status": "RECORDED"
+  },
+  {
+   "prompt_sha256": "5d89b60466b00eb63c70d9c0abb2473c3a0f40168270cfcab0b31ae19f53cb86",
+   "elapsed_ms": 5919,
+   "request_id": "chatcmpl-01a184ca-f2d7-7585-916b-59b02a97b758",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 542,
+    "completion_tokens": 1770
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 1320,
+   "estimated_cost_usd": 0.0082,
+   "reply": "{\"bundle_digest\":\"e4f569f4d2479e79de8526d6e6a318e5f341b749f45041aefa4a988fea16cd93\",\"target_opaque_id\":\"opaque:device:733c3bc635a3d62d\",\"target_category\":\"tv\",\"intent\":\"Mute the TV audio, then confirm by reading the media stream state that it reports muted.\",\"primitive_ids\":[\"app.list\",\"device.read_descriptor\",\"input.key\",\"state.audio\",\"state.read_setting\",\"state.screen\"],\"plan\":[{\"primitive_id\":\"device.read_descriptor\",\"description\":\"Verify target is television device\"},{\"primitive_id\":\"state.screen\",\"description\":\"Verify screen is on for TV control\"},{\"primitive_id\":\"app.list\",\"description\":\"List apps to ensure context\"},{\"primitive_id\":\"state.read_setting\",\"description\":\"Read current audio settings context\"},{\"primitive_id\":\"input.key\",\"operation\":\"KEYCODE_MUTE\",\"description\":\"Mute the TV audio\"},{\"primitive_id\":\"state.audio\",\"operation\":\"read_media_muted\",\"description\":\"Confirm media stream state reports muted\"}],\"evidence_ids\":[\"opaque:device:733c3bc635a3d62d\",\"opaque:fact:5dce73e9a6525ff5\",\"opaque:fact:efdba95a907595a5\",\"opaque:fact:87fb293469da8a62\",\"opaque:fact:3b14a2d6970d6d5b\",\"opaque:fact:239d49aebf7cd5fa\",\"opaque:fact:e705c2b8c1ee3b0b\",\"opaque:fact:636809bcb6ddaee4\",\"opaque:fact:dc3855a999603643\",\"opaque:fact:054d67bfdc7a13d3\",\"opaque:fact:deb16cfe1287d8b2\",\"opaque:fact:0d324a245bda4a78\",\"opaque:fact:713d4dcfa34981b1\",\"opaque:fact:83c2f31bbd3a4b0b\"]}",
+   "status": "RECORDED"
+  },
+  {
+   "prompt_sha256": "5d89b60466b00eb63c70d9c0abb2473c3a0f40168270cfcab0b31ae19f53cb86",
+   "elapsed_ms": 7107,
+   "request_id": "chatcmpl-01a184cb-0e82-75ba-a131-5c27386d23b9",
+   "model": "muse-spark-1.3",
+   "finish_reason": "stop",
+   "usage": {
+    "prompt_tokens": 542,
+    "completion_tokens": 1878
+   },
+   "reserved_usd": 0.1,
+   "reasoning_tokens": 1450,
+   "estimated_cost_usd": 0.008659,
+   "reply": "{\"target_opaque_id\":\"opaque:device:733c3bc635a3d62d\",\"primitive_ids\":[\"app.list\",\"device.read_descriptor\",\"input.key\",\"state.audio\",\"state.read_setting\",\"state.screen\"],\"target_category\":\"tv\",\"intent\":\"Mute the TV audio, then confirm by reading the media stream state that it reports muted.\",\"bundle_digest\":\"e4f569f4d2479e79de8526d6e6a318e5f341b749f45041aefa4a988fea16cd93\",\"evidence\":[\"opaque:device:733c3bc635a3d62d\",\"opaque:fact:5dce73e9a6525ff5\",\"opaque:fact:efdba95a907595a5\",\"opaque:fact:87fb293469da8a62\",\"opaque:fact:3b14a2d6970d6d5b\",\"opaque:fact:239d49aebf7cd5fa\",\"opaque:fact:e705c2b8c1ee3b0b\",\"opaque:fact:636809bcb6ddaee4\",\"opaque:fact:dc3855a999603643\",\"opaque:fact:054d67bfdc7a13d3\",\"opaque:fact:deb16cfe1287d8b2\",\"opaque:fact:0d324a245bda4a78\",\"opaque:fact:713d4dcfa34981b1\",\"opaque:fact:83c2f31bbd3a4b0b\"],\"plan\":[{\"primitive_id\":\"device.read_descriptor\",\"action\":\"verify television device\"},{\"primitive_id\":\"app.list\",\"action\":\"list apps for context\"},{\"primitive_id\":\"state.screen\",\"action\":\"confirm screen on\"},{\"primitive_id\":\"state.read_setting\",\"action\":\"read current audio setting\"},{\"primitive_id\":\"input.key\",\"action\":\"send mute key\"},{\"primitive_id\":\"state.audio\",\"action\":\"read media stream state to confirm muted\"}]}",
+   "status": "RECORDED"
+  }
+ ],
+ "steps": [],
+ "budget": {
+  "ledger": "C:\\Users\\TheBox\\AppData\\Local\\OpenBridge\\budget.sqlite3",
+  "allowance_usd": 0.8,
+  "authz": "autorisé pour l’essai G3, 0,80 $ maximum",
+  "observation_id": "meta-dashboard-20261029T0010",
+  "observed_at": "2026-10-29T00:10:00+01:00",
+  "free_balance_usd_lower_bound": 132.0
+ },
+ "target": {
+  "device_fingerprint": "fp-cb29c7d289439e8e",
+  "fact_count": 13
+ },
+ "bundle_id": "b-f950f9f3973d27d4",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Mute the TV audio, then confirm by reading the media stream state that it report'"
+  },
+  "stocked_path": "device_action key=mute exists in the prebuilt catalog (Executor); a stocked path CAN do this task"
+ },
+ "synthesis_rejects": [
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "SCHEMA_REJECTED"
+  },
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "SCHEMA_REJECTED"
+  },
+  {
+   "status": "SCHEMA_REJECTED",
+   "reason": "SCHEMA_REJECTED"
+  }
+ ],
+ "status": "KILL",
+ "reason": "no valid candidate within the frozen call budget",
+ "finished": "2026-10-28T23:14:22.226978+00:00"
+}
