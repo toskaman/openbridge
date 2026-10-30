@@ -309,6 +309,35 @@ def _execute_claimed(server, doc, preview, dispatched):
         except RouteError as e:
             dispatched[0] = False   # RouteError is a refusal before dispatch
             raise CommandError(e.status, str(e)) from None
+    iid = doc.get('intent_id')
+    store = None
+    if isinstance(iid, str) and iid and len(iid) <= 96:
+        from src.runtime.state_store import StateStore, StateError
+        import time as _t
+        store = StateStore.for_server(server)
+        if store is not None:
+            try:
+                claimed, row = store.claim_invocation('intent', iid, _t.time())
+            except StateError as e:
+                raise CommandError(503, '%s: %s' % (e.code, e)) from None
+            if not claimed:
+                if row['state'] == 'DONE':
+                    raise CommandError(409, 'DUPLICATE_REQUEST: this intent was already handled')
+                raise CommandError(409, 'UNCERTAIN_OUTCOME: this intent is already running elsewhere or was interrupted; start a fresh intent')
     dispatched[0] = True
-    return executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
-                                    prev['params'], True)
+    try:
+        rc = executor(server).execute(prev['primitive_id'], prev['device_keys'][0],
+                                      prev['params'], True)
+    except Exception:
+        if store is not None:
+            try:
+                store.finish_invocation('intent', iid, preview['fingerprint'], _t.time())
+            except StateError:
+                pass   # leftover EXECUTING fails closed: never re-dispatch an uncertain intent
+        raise
+    if store is not None:
+        try:
+            store.finish_invocation('intent', iid, preview['fingerprint'], _t.time())
+        except StateError:
+            pass
+    return rc
