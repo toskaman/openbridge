@@ -58,6 +58,18 @@ restore → revoke never executed. The phone was never touched: brightness still
 - Do NOT claim G3 success. Cite this report as: sealed procedure executed with
   integrity; synthesis blocked by local-GPU throughput; hosted arm pending.
 
+## Independent evaluator verdict: SEALED-PROCEDURE-SOUND
+
+Separate evaluator agent audited the branch read-only (HEAD f982fc1): spec
+sha recomputes OK; all 10 freeze hashes + 2 addendum hashes match their
+commits byte-for-byte; timeline cf73eb8 < 6541017 < f982fc1 linear, results
+only in the last commit; transcripts match this report's table; no
+candidate/compile/grant ever ran; runner refuses wrong-sha specs and the
+replay path re-validates against fresh evidence. 4 cosmetic notes, 0 flaws
+(notably: the replay path is code-present but never executed end-to-end —
+smoke-test before future use). Negative result judged "neither over-claimed
+nor hidden".
+
 ## Pending: Spark hosted arm (owner-gated)
 
 Run a FRESH sealed task (this one is public now — Sol picks a new secret value,
