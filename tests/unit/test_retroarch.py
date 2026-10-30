@@ -1,6 +1,7 @@
 """RetroArch network-command adapter (loopback UDP, real socket, fake server)."""
 import socket
 import threading
+import time
 import unittest
 
 from src.adapters.retroarch import RetroArch, RetroArchError
@@ -49,6 +50,9 @@ class RetroArchTests(unittest.TestCase):
         srv = FakeRetroArch()
         try:
             self.assertEqual(RetroArch(port=srv.port).command('VOLUME_UP'), 'SENT')
+            deadline = time.monotonic() + 5.0  # UDP thread may lag on loaded CI
+            while 'VOLUME_UP' not in srv.seen and time.monotonic() < deadline:
+                time.sleep(0.05)
             self.assertEqual(srv.seen, ['VOLUME_UP'])
         finally:
             srv.close()
