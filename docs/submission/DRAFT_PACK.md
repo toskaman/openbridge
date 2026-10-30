@@ -79,6 +79,9 @@ owner approves every action.
 ## Honest limits (state on the form)
 - Sealed G3 seal was same-party (Spark substituted for unavailable Sol);
   mechanics + honesty proven, held-out novelty weakened — disclosed in REVEAL.
+  Model side frozen 30 Oct (`docs/evidence/v4/g3-frozen-20261030/FREEZE.md`,
+  main `f5124f6`) with local baselines; the sealed task + independent run
+  await the independent party (no scored re-run yet).
 - Watch wireless adb transport drops when the watch dozes (re-pair needs the
   owner to read a fresh IP:port); relay pairing itself persists.
 - Android Companion NOT tested in any VM (VM proofs are agent-protocol only).

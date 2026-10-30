@@ -1,0 +1,86 @@
+{
+ "kind": "G3_BASELINE_PUBLIC",
+ "intent": "Set the TV screen timeout to 45 seconds",
+ "offer": [
+  "setting.set_exact"
+ ],
+ "target_category": "tv",
+ "bundle_synthetic": true,
+ "bundle_id": "b-90dbe00676a81a8d",
+ "prompt_version": "v4-synth-4",
+ "results": {
+  "rules": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Set the TV screen timeout to 45 seconds'"
+  },
+  "llama3b": {
+   "attempts": [
+    {
+     "ok": false,
+     "elapsed_ms": 21760,
+     "usage": {},
+     "prompt_sha256": null,
+     "status": "SCHEMA_REJECTED",
+     "reason": "GRANT_SCOPE"
+    },
+    {
+     "ok": false,
+     "elapsed_ms": 14129,
+     "usage": {},
+     "prompt_sha256": null,
+     "status": "SCHEMA_REJECTED",
+     "reason": "GRANT_SCOPE"
+    },
+    {
+     "ok": false,
+     "elapsed_ms": 14608,
+     "usage": {},
+     "prompt_sha256": null,
+     "status": "SCHEMA_REJECTED",
+     "reason": "GRANT_SCOPE"
+    }
+   ]
+  },
+  "glimmer30b": {
+   "attempts": [
+    {
+     "ok": false,
+     "elapsed_ms": 120001,
+     "usage": {},
+     "prompt_sha256": null,
+     "status": "MODEL_UNAVAILABLE",
+     "reason": ""
+    },
+    {
+     "ok": false,
+     "elapsed_ms": 120018,
+     "usage": {},
+     "prompt_sha256": null,
+     "status": "MODEL_UNAVAILABLE",
+     "reason": ""
+    },
+    {
+     "ok": false,
+     "elapsed_ms": 120006,
+     "usage": {},
+     "prompt_sha256": null,
+     "status": "MODEL_UNAVAILABLE",
+     "reason": ""
+    }
+   ]
+  }
+ },
+ "analysis": {
+  "rules": "ABSTAIN_UNSUPPORTED as designed: no prebuilt template covers a P1-shape intent (pool hygiene holds).",
+  "llama3b": "0/3: valid JSON, right primitive, but required_grants duplicated control (GRANT_SCOPE); evidence_refs/target id also malformed and value 45 instead of 45000 ms (raw sample below). Genuine small-model composition failure; the validator correctly rejected all three.",
+  "glimmer30b": "0/3: MODEL_UNAVAILABLE at the frozen 120 s budget on all attempts (cold and warm). v4-synth-4 prompt eval + 512-token cap exceeds the budget at ~7 tok/s on this box. Historical v2-shape success stands, but v4-synth-4 is out of reach here within budget.",
+  "raw_llama_sample_grants": [
+   "control",
+   "observe",
+   "read",
+   "control"
+  ],
+  "raw_llama_sample_value": 45,
+  "sealed_implication": "Local baselines do not clear the bar on this shape; the sealed run needs hosted Spark (owner-observed budget) or a longer local budget, decided by the independent party."
+ }
+}
