@@ -757,5 +757,34 @@
   "status": "VERIFIED",
   "test_id": "companion-0.12.0-lan-discovery-noadb",
   "test_utc": "2026-10-30T21:50:00Z"
+ },
+ {
+  "commit_sha": "ffdbaff1c5cccbee3cca94f424b338dbb79d6331",
+  "companion_version": "n/a (Tuya LAN)",
+  "device_alias": "Owner Tuya robot vacuum",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/release/P30_GATES_AND_REPORT.md"
+  ],
+  "independent_oracle": "tinytuya LAN status round-trip (facts) plus post-command status stability (charge_done unchanged)",
+  "integration": "HOST_APP_ADAPTER",
+  "limitations": [
+   "Seek beep not ear-confirmed this run (owner present, momentary command reports no lasting state by design)",
+   "No movement/start commands issued (docked, night)"
+  ],
+  "operations": [
+   "facts re-read live (charge_done, battery 100, suction normal)",
+   "seek command accepted, status stable charge_done"
+  ],
+  "os_version": "Tuya firmware 3.4",
+  "permissions": [
+   "owner-linked local key (existing tuya.json, no new secrets)",
+   "blanket owner test authorization for benign commands"
+  ],
+  "platform": "Tuya local robot",
+  "public_device_id": "vacuum-tuya-01",
+  "status": "VERIFIED",
+  "test_id": "vacuum-30oct-liveness-facts-seek",
+  "test_utc": "2026-10-30T22:20:00Z"
  }
 ]
