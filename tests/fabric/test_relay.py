@@ -193,6 +193,32 @@ class PairingIsolationTests(unittest.TestCase):
             self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
         self.assertNotIn('android-h1', self.server.relay_pending)
 
+    def test_wrong_codes_are_limited_then_pairing_invalidated(self):
+        # §3.3: online guessing must not be unlimited. After 5 failed confirms the
+        # pending pairing is invalidated (even the right code is then refused) and a
+        # fresh pair-start is required.
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        for _ in range(5):
+            with self.assertRaises(R.RelayError):
+                self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '000000'})
+        self.assertNotIn('android-h1', self.server.relay_pending)
+        with self.assertRaisesRegex(R.RelayError, 'No pairing in progress'):
+            self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        conf = self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '111111'})
+        self.assertEqual(conf['state'], 'PAIRED')
+
+    def test_attempts_on_one_handle_do_not_affect_other_handle(self):
+        # §3.3: the attempt counter is per pending pairing, not global.
+        self.start('android-h1', 'phone', '111111', 'aa' * 8)
+        self.start('android-h2', 'tv', '222222', 'bb' * 8)
+        for _ in range(5):
+            with self.assertRaises(R.RelayError):
+                self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h1', 'code': '000000'})
+        self.assertNotIn('android-h1', self.server.relay_pending)
+        conf = self.server.relay_action('/api/relay-pair-confirm', {'device_id': 'android-h2', 'code': '222222'})
+        self.assertEqual((conf['state'], conf['relay_id']), ('PAIRED', 'tv'))
+
 
 class NonceBoundTests(unittest.TestCase):
     def test_seen_nonces_bounded_without_reopening_replay(self):
