@@ -13,11 +13,11 @@ Executor persistence serializes snapshot creation with saving. Unresolved receip
 ## Exact scope
 
 - Completed unresolved changing outcomes (FAILED, PARTIAL, UNKNOWN_TIMEOUT) survive a successful save and restart. Resolved receipts are not a durable transaction history.
-- This is not a pre-dispatch crash journal. Process failure before the unresolved receipt is saved can still lose that outcome; the separate session journal covers its own recorded changes only.
-- File locks coordinate state updates, not cross-process device execution or a global admission cap. Run a single device-execution owner for a session.
+- Invocation ids are journaled before dispatch (atomic EXECUTING claim) and marked DONE after. A crash leaves an EXECUTING row that refuses any re-execution of that id as UNCERTAIN after restart; a DONE row refuses as duplicate. Unresolved receipts are still saved after the outcome: process failure before the receipt save can lose that outcome record, but the invocation itself is never re-executed blindly.
+- File locks coordinate state updates and invocation-id admission (an id claimed in one process is refused in another), but not cross-process device execution ordering or a global admission cap. Run a single device-execution owner for a session.
 - Acknowledgement tombstones are retained without automatic pruning. State has a 16MiB limit; exceeding it fails visibly instead of discarding recovery information. Archival/compaction requires a separate safe design.
 - This change does not automatically replay, acknowledge, undo or execute anything on startup. It does not restore remote-control grants.
 
 ## Verification
 
-Temporary-file tests cover invalid/malformed state, policy write failures, receipt/acknowledgement failures, four independent process writers, independent policy/receipt owners and stale snapshots. The API regression checks failed acknowledgement returns503. Hardware and hosted models are not involved. Physical power interruption and a full pre-dispatch crash-recovery protocol are outside this evidence.
+Temporary-file tests cover invalid/malformed state, policy write failures, receipt/acknowledgement failures, four independent process writers, independent policy/receipt owners and stale snapshots. The API regression checks failed acknowledgement returns503. Journal tests cover claim exclusivity, DONE recording, malformed rows, restart refusal of finished ids, crash-uncertain refusal, memory-prune gaps and cross-process-shaped second writers. Hardware and hosted models are not involved. Physical power interruption is outside this evidence; crash recovery refuses re-execution and never replays.

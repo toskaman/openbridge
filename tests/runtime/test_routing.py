@@ -308,3 +308,66 @@ class LeaseProof(Base):
         tv = self.by_dev(doc, self.keys['tv'])
         self.assertEqual((tv['state'], doc['selected_route_id']), ('READY', tv['route_id']))
         self.assertEqual(self.by_dev(doc, self.keys['phone'])['reason'], 'lease_stale')
+
+
+class DurableJournal(Base):
+    def arm_with_id(self, doc, inv_id, params=None):
+        return self.router.arm({'skill_id': 'ble_scan_room', 'route_id': doc['selected_route_id'],
+                                'params': params or {'seconds': 8}, 'consent': True}, invocation_id=inv_id)
+
+    def test_completed_invocation_survives_restart(self):
+        # §3.4/§3.5: a re-sent invocation id after a server restart is refused, never re-executed.
+        from src.runtime.routing import Router
+        lease = self.arm_with_id(self.routes(), 'inv-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        self.invoke(lease)
+        self.assertEqual(len(self.calls), 1)
+        fresh = Router(self.server)                       # restart: empty memory, same journal file
+        fresh.clock = self.clock
+        with self.assertRaises(RouteError) as e:
+            fresh.arm({'skill_id': 'ble_scan_room', 'route_id': self.routes()['selected_route_id'],
+                       'params': {'seconds': 8}, 'consent': True}, invocation_id='inv-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        self.assertEqual(e.exception.code, 'DUPLICATE_REQUEST')
+        self.assertEqual(len(self.calls), 1)
+
+    def test_crashed_invocation_is_uncertain_after_restart(self):
+        # §3.5: an EXECUTING journal row with no DONE (crash between claim and finish) refuses
+        # re-execution with an honest UNCERTAIN outcome instead of a misleading success or retry.
+        import time as _time
+        from src.runtime.routing import Router
+        from src.runtime.state_store import StateStore
+        StateStore.for_server(self.server).claim_invocation('owner', 'inv-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', _time.time())
+        fresh = Router(self.server)
+        fresh.clock = self.clock
+        doc = self.routes()
+        arm_body = {'skill_id': 'ble_scan_room', 'route_id': doc['selected_route_id'],
+                    'params': {'seconds': 8}, 'consent': True}
+        with self.assertRaises(RouteError) as e:
+            fresh.arm(dict(arm_body), invocation_id='inv-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+        self.assertEqual(e.exception.code, 'UNCERTAIN_OUTCOME')
+        lease = fresh.arm(dict(arm_body), invocation_id='inv-cccccccccccccccccccccccccccccccc')
+        with self.assertRaises(RouteError) as e2:
+            fresh.invoke({'invocation_id': 'inv-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'skill_id': 'ble_scan_room', 'route_id': lease['route_id'],
+                          'lease_id': lease['lease_id'], 'graph_revision': lease['graph_revision'],
+                          'params': {'seconds': 8}, 'consent': True})
+        self.assertEqual(e2.exception.code, 'UNCERTAIN_OUTCOME')
+        self.assertEqual(self.calls, [])
+        ok = fresh.invoke({'invocation_id': lease['invocation_id'], 'skill_id': 'ble_scan_room',
+                           'route_id': lease['route_id'], 'lease_id': lease['lease_id'],
+                           'graph_revision': lease['graph_revision'], 'params': {'seconds': 8}, 'consent': True})
+        self.assertEqual(ok['state'], 'VERIFIED')
+        self.assertEqual(len(self.calls), 1)
+
+    def test_finished_id_stays_refused_after_memory_prune(self):
+        # §3.4: the journal (wall clock) outlives the memory completed TTL; no re-execution in the gap.
+        lease = self.arm_with_id(self.routes(), 'inv-dddddddddddddddddddddddddddddddd', {'seconds': 8})
+        self.invoke(lease)
+        self.assertEqual(len(self.calls), 1)
+        self.clock.t += 601
+        self.server.relay_ledger.record('r-tv', []); self.server.relay_ledger.record('r-ph', [])
+        self.invoke(self.arm(self.routes()))              # unrelated invoke prunes the TTL-expired memory entry
+        self.assertEqual(len(self.calls), 2)
+        lease3 = self.arm_with_id(self.routes(), 'inv-dddddddddddddddddddddddddddddddd', {'seconds': 5})
+        with self.assertRaises(RouteError) as e:
+            self.invoke(lease3, {'seconds': 5})
+        self.assertEqual(e.exception.code, 'DUPLICATE_REQUEST')
+        self.assertEqual(len(self.calls), 2)
