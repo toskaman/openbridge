@@ -1,6 +1,7 @@
 """retro_command primitive + skill (SIMULATED_VERIFIED: fake UDP server)."""
 import socket
 import threading
+import time
 import unittest
 
 from tests.runtime.test_primitives import ctx
@@ -55,6 +56,9 @@ class RetroPrimitive(unittest.TestCase):
         self.assertEqual(r['state'], 'EXECUTED_UNVERIFIED')
         self.assertFalse(r['verified'])
         self.assertEqual(r['result'], {'sent': 'SENT'})
+        deadline = time.monotonic() + 5.0  # UDP thread may lag on loaded CI
+        while 'VOLUME_UP' not in self.srv.seen and time.monotonic() < deadline:
+            time.sleep(0.05)
         self.assertIn('VOLUME_UP', self.srv.seen)
 
     def test_needs_consent(self):
