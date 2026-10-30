@@ -5,6 +5,8 @@
 
 | Device | Environment | Integration | Platform | Result | Validity | Tested operations | Date (UTC) | Evidence |
 |---|---|---|---|---|---|---|---|---|
+| BV9300 Pro (USB) | REAL_HARDWARE | HOST_APP_ADAPTER | muse-glimmer:30b-q4_K_M :11438 (digest verified) | VERIFIED | CURRENT | Glimmer candidate cap-bbd643db0267 validated first attempt, Glimmer candidate cap-18904cbf7bae validated first attempt, both published to obv4.1 manifests then revoked | 2026-10-30T19:45:00Z | [p30-glimmer-synthesis-30oct.md](evidence/p30-glimmer-synthesis-30oct.md) |
+| BV9300 Pro + Pixel 6 AVD | REAL_HARDWARE | HOST_APP_ADAPTER | openbridge CLI (in-process core) | VERIFIED | CURRENT | wf-p30-phone-avd2: phone capture EXECUTED, wf-p30-phone-avd2: AVD capture EXECUTED, wf-p30-phone-avd2: montage EXECUTED (4776x2400), wf-p30-fault: ghost FAILED honest, no replay | 2026-10-30T19:32:55Z | [p30-cli-orchestration-30oct.md](evidence/p30-cli-orchestration-30oct.md) |
 | Debian 12 VM (bookworm) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T18:25:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
 | Debian 13 VM (ARM64) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU aarch64 guest (TCG) | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T19:53:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
 | Debian 13 VM (first guest) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T17:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
