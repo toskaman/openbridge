@@ -74,11 +74,19 @@ class Router:
         self.selected = {}           # (skill_id, target) -> last selected route_id (for route_changed)
         self.ledger = rc.InvocationLedger()
         self.completed = {}          # (actor, invocation_id) -> (binding, request fingerprint, finished)
+        self._inflight = set()         # (actor, invocation_id) between lease checks and ledger handoff (same-process joiners skip the journal claim)
         self._lock = threading.RLock()
         from src.runtime.state_store import StateStore
         self._store = StateStore.for_server(server)
         self._state_error = ''
         self._refresh_state()
+        if self._store is not None and not self._state_error:
+            from src.runtime.state_store import StateError
+            try:                       # a restart must not re-execute a re-sent id: DONE rows refuse as duplicates,
+                for row in self._store.load_invocations(time.time()):   # leftover EXECUTING rows (fingerprint None) refuse as uncertain
+                    self.completed[(row['actor'], row['invocation_id'])] = (None, row.get('fingerprint'), self.clock())
+            except StateError as error:
+                self._state_error = str(error)
 
     def _refresh_state(self):
         if self._store is None or self._state_error:
@@ -385,7 +393,10 @@ class Router:
         if body.get('consent') is not True:
             raise RouteError(400, 'CONSENT_REQUIRED', 'consent: true is required to arm an invocation')
         with self._lock:
-            if invocation_id is not None and (actor, invocation_id) in self.completed:
+            done = self.completed.get((actor, invocation_id)) if invocation_id is not None else None
+            if done is not None:
+                if done[1] is None:    # journal EXECUTING row with no DONE: a crash interrupted it; never re-arm it
+                    raise RouteError(409, 'UNCERTAIN_OUTCOME', 'A previous invocation with this id was interrupted; use a fresh invocation id')
                 raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
             doc = self._evaluate(skill_id, target)
             self._validate_input(skill_id, params)
@@ -425,6 +436,8 @@ class Router:
                 done = self.completed.get((actor, req['invocation_id']))
                 if done is None:
                     raise RouteError(409, 'CONSENT_VOID', 'No armed invocation with this id (expired, voided by a route change, or never armed); review again')
+                if done[1] is None:
+                    raise RouteError(409, 'UNCERTAIN_OUTCOME', 'A previous invocation with this id was interrupted; use a fresh invocation id')
                 if done[1] != _fp(dict(req, target=target)):
                     raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different skill, route, lease or params')
                 b = done[0]
@@ -459,9 +472,28 @@ class Router:
                 raise RouteError(409, 'CONSENT_VOID', f'{void}: review again')
             binding = rc.binding_hash(actor, req, inv['target_identity'], inv['authority_rev'])
             inv['status'] = 'executing'
+            ikey = (actor, req['invocation_id'])
+            join = ikey in self._inflight
+            if not join:
+                self._inflight.add(ikey)
         def dispatch():
             ex = self._ex()
             return ex.execute(route['_primitive'], route['_key'], route['_params'](req['params']), consent=True)
+        if not join and self._store is not None:      # pre-dispatch journal claim (atomic cross-process admission);
+            from src.runtime.state_store import StateError   # same-process joiners skip it and let the ledger hand them the one result
+            try:
+                claimed, row = self._store.claim_invocation(actor, req['invocation_id'], time.time())
+            except StateError as error:
+                with self._lock:
+                    self._inflight.discard(ikey)
+                raise RouteError(503, error.code, str(error)) from None
+            if not claimed:
+                with self._lock:
+                    self._inflight.discard(ikey)
+                    self.completed[ikey] = (binding, row.get('fingerprint'), self.clock())
+                if row['state'] == 'DONE':
+                    raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
+                raise RouteError(409, 'UNCERTAIN_OUTCOME', 'An invocation with this id is already running elsewhere or was interrupted; use a fresh invocation id')
         try:
             receipt = self.ledger.run(actor, req['invocation_id'], binding, dispatch)
         except rc.InvocationIdReused:
@@ -475,4 +507,11 @@ class Router:
                     self.completed[(actor, req['invocation_id'])] = (binding, _fp(dict(req, target=target)), now)
                 if self.invocations.get(key, {}).get('invocation_id') == req['invocation_id']:
                     self.invocations.pop(key, None)
+                self._inflight.discard((actor, req['invocation_id']))
+            if self._store is not None:
+                from src.runtime.state_store import StateError
+                try:
+                    self._store.finish_invocation(actor, req['invocation_id'], _fp(dict(req, target=target)), time.time())
+                except StateError as error:
+                    self._state_error = str(error)   # durability unproven: block further changing ops until review + restart
         return dict(receipt, invocation_id=req['invocation_id'], route_id=req['route_id'], skill_id=req['skill_id'])

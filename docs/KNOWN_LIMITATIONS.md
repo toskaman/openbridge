@@ -20,6 +20,7 @@ The current v4 adapter uses mutual HMAC challenge-response and session-MAC envel
 - XP SP3 + Win7 SP1: legacy C agent VERIFIED on real QEMU guests (mutual-auth HIT + RPC exec exit 0 + screenshots); VMs deleted after proofs.
 - Registry holds realized tests only (15 rows, all VERIFIED): the merely-planned i386 guest moved to the catalog below.
 - Pairing: `relay-pair-confirm` now allows 5 code guesses per pending pairing, then invalidates it (fresh pair-start with a new on-device code required; per-handle counters; transport errors don't burn attempts). Residual: the 6-digit code (PBKDF2-HMAC-SHA256 200k) still falls to offline brute force if an attacker captures the pairing transcript (minutes on GPU), yielding the long-lived relay key. Pairing runs over adb-forwarded loopback, never raw LAN; USB adb is recommended for enrollment. Follow-up design: PAKE (SPAKE2/CPACE) enrollment, which needs a Companion protocol change + reinstall on every device.
+- Restart-safe duplicates: invocation ids are journaled pre-dispatch (EXECUTING→DONE); a re-sent id after crash/restart is refused (DONE→duplicate, interrupted→honest UNCERTAIN, never blind re-execution); the atomic claim also refuses an id across processes. Substrate grants stay process-bound (per-process key), so a restart voids them. Residual: the 28 Oct 2-taps→16-executions root cause is still open; distinct-id floods are capped by the burst limiter (3/10 s + suspension) and every history entry carries seq/touch evidence for diagnosis.
 
 ## Planned test targets (catalog, 30 Oct)
 

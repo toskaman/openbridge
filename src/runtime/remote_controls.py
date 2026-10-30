@@ -391,13 +391,16 @@ class RemoteControls:
                 last = self._last.get(key, 0)
             if suspend_now:
                 self._ex().emit('remote_control_suspended', relay_id=rid, control_id=req['control_id'], presses=len(recent))
+            done = router(self.server).completed.get((actor, 'inv-' + req['request_id']))
             if origin == 'full_control' and not self._fc_fresh(rid):
                 outcome, text = 'REVOKED', 'Full control is off or blocked'
             elif not isinstance(pressed, int) or abs(now - pressed / 1000) > REQUEST_TTL_S:
                 outcome, text = 'EXPIRED', f"{grant['label']}: request too old; press again"
             elif suspended:
                 outcome, text = 'SUSPENDED', f"{grant['label']}: paused (unusual repeated presses); re-enable on the PC"
-            elif (actor, 'inv-' + req['request_id']) in router(self.server).completed:
+            elif done is not None and done[1] is None:
+                outcome, text = 'UNCERTAIN', f"{grant['label']}: interrupted; press again for a fresh request"
+            elif done is not None:
                 outcome, text = 'DUPLICATE', f"{grant['label']}: already done"     # a re-sent press: never dispatched twice
             elif now - last < MIN_INTERVAL_S:
                 outcome, text = 'BLOCKED', 'Too fast; press again'
@@ -470,6 +473,10 @@ class RemoteControls:
                 text += f' ({after})'
             return outcome, text
         except RouteError as e:
+            if e.code == 'UNCERTAIN_OUTCOME':
+                return 'UNCERTAIN', f"{grant['label']}: interrupted; press again"[:80]
+            if e.code == 'DUPLICATE_REQUEST':
+                return 'DUPLICATE', f"{grant['label']}: already done"
             return 'BLOCKED', f"{grant['label']}: {e}"[:80]
 
     def _dispatch_manifest(self, rid, req, grant, entry):

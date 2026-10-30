@@ -3,7 +3,10 @@
 All readers/writers cooperate through a path-scoped thread lock and OS file lock.
 Unique temporary files are flushed before replacement. No automatic corruption reset.
 Receipt merges retain other writers and acknowledgement tombstones prevent resurrection.
-This stores completed unresolved outcomes, not a crash-safe pre-dispatch transaction log.
+This stores completed unresolved outcomes plus a pre-dispatch invocation journal: an id is
+claimed EXECUTING before any dispatch and marked DONE after, so a crash or a second process
+can never cause a blind re-execution of the same id (DONE refuses as duplicate, a leftover
+EXECUTING refuses as uncertain).
 """
 import json
 import os
@@ -15,6 +18,9 @@ from pathlib import Path
 
 VERSION = 1
 MAX_BYTES = 16 * 1024 * 1024
+INVOCATION_DONE_TTL_S = 600          # mirrors InvocationLedger.ttl_s: finished ids stay refused that long
+INVOCATION_EXECUTING_TTL_S = 86400   # a leftover EXECUTING row refuses re-execution for a day (ids are single-use)
+MAX_INVOCATIONS = 4096               # mirrors the in-memory caps; beyond this new claims fail closed
 _LOCKS = {}
 _LOCKS_GUARD = threading.Lock()
 
@@ -106,6 +112,32 @@ class StateStore:
         ack = d.get('acknowledged', [])
         if not isinstance(ack, list) or not all(isinstance(x, str) and x and len(x) <= 96 for x in ack):
             raise ValueError('invalid acknowledgements')
+        invs = d.get('invocations', [])
+        if not isinstance(invs, list) or len(invs) > MAX_INVOCATIONS:
+            raise ValueError('invalid invocations')
+        seen_inv = set()
+        for r in invs:
+            if not isinstance(r, dict):
+                raise ValueError('invalid invocation')
+            actor, iid = r.get('actor'), r.get('invocation_id')
+            if not isinstance(actor, str) or not actor or len(actor) > 128:
+                raise ValueError('invalid invocation actor')
+            if not isinstance(iid, str) or not iid or len(iid) > 96 or (actor, iid) in seen_inv:
+                raise ValueError('invalid invocation id')
+            seen_inv.add((actor, iid))
+            fp = r.get('fingerprint')
+            if fp is not None and (not isinstance(fp, str) or len(fp) != 64):
+                raise ValueError('invalid invocation fingerprint')
+            if r.get('state') not in ('EXECUTING', 'DONE'):
+                raise ValueError('invalid invocation state')
+            if r.get('state') == 'DONE' and (fp is None or not isinstance(r.get('finished_at'), (int, float))
+                                             or isinstance(r.get('finished_at'), bool)):
+                raise ValueError('finished invocation needs a fingerprint and finish time')
+            if not isinstance(r.get('started_at'), (int, float)) or isinstance(r.get('started_at'), bool):
+                raise ValueError('invalid invocation time')
+            fa = r.get('finished_at')
+            if fa is not None and (not isinstance(fa, (int, float)) or isinstance(fa, bool)):
+                raise ValueError('invalid invocation time')
         return d
 
     def _read(self):
@@ -166,3 +198,52 @@ class StateStore:
             d['unresolved'] = [r for tx, r in saved.items() if tx not in ack]
             d['acknowledged'] = sorted(ack)
         self._mutate(change)
+
+    @staticmethod
+    def _prune_invocations(invs, now):
+        return [r for r in invs
+                if not (r['state'] == 'DONE' and now - r['finished_at'] > INVOCATION_DONE_TTL_S)
+                and not (r['state'] == 'EXECUTING' and now - r['started_at'] > INVOCATION_EXECUTING_TTL_S)]
+
+    def claim_invocation(self, actor, invocation_id, now):
+        """Pre-dispatch journal claim: the atomic cross-process admission for an invocation id.
+
+        Returns (True, None) when this call inserted the EXECUTING row and the caller may dispatch,
+        else (False, row) with the existing DONE/EXECUTING entry and the caller must refuse."""
+        out = {}
+
+        def change(d):
+            invs = self._prune_invocations(d.get('invocations', []), now)
+            for r in invs:
+                if r['actor'] == actor and r['invocation_id'] == invocation_id:
+                    d['invocations'] = invs
+                    out['row'] = r
+                    return
+            if len(invs) >= MAX_INVOCATIONS:
+                d['invocations'] = invs
+                raise StateError('STATE_JOURNAL_FULL', 'invocation journal is full; retry after entries expire')
+            d['invocations'] = invs + [{'actor': actor, 'invocation_id': invocation_id, 'fingerprint': None,
+                                        'state': 'EXECUTING', 'started_at': now, 'finished_at': None}]
+            out['row'] = None
+        self._mutate(change)
+        return (out['row'] is None), out['row']
+
+    def finish_invocation(self, actor, invocation_id, fingerprint, now):
+        """EXECUTING -> DONE compare-and-set. True iff this call transitioned the row; a missing or
+        already-DONE row is left untouched (another joiner of the same invocation finished it)."""
+        out = {}
+
+        def change(d):
+            invs = self._prune_invocations(d.get('invocations', []), now)
+            out['done'] = False
+            for r in invs:
+                if r['actor'] == actor and r['invocation_id'] == invocation_id and r['state'] == 'EXECUTING':
+                    r['fingerprint'], r['state'], r['finished_at'] = fingerprint, 'DONE', now
+                    out['done'] = True
+            d['invocations'] = invs
+        self._mutate(change)
+        return out['done']
+
+    def load_invocations(self, now):
+        """Pruned journal view for boot load (read-only; pruning is persisted by the next write)."""
+        return list(self._prune_invocations(self.load().get('invocations', []), now))

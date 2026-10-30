@@ -429,3 +429,41 @@ def _test_concurrent_presses_keep_exact_burst_accounting(self):
 
 RemoteControls.test_full_control_revoked_midflight_is_not_executed = _test_full_control_revoked_midflight_is_not_executed
 RemoteControls.test_concurrent_presses_keep_exact_burst_accounting = _test_concurrent_presses_keep_exact_burst_accounting
+
+
+def _test_resent_press_after_router_restart_is_refused_without_reexecution(self):
+    # §3.4/§3.5: the invocation journal outlives the process; a press the device
+    # re-reports after a restart is a duplicate, never re-executed.
+    from src.runtime.routing import Router
+    cid = self.vol_up()
+    rid = self.companion.press(cid)
+    self.assertEqual(self.rc.poll_once(), 1)
+    self.assertEqual(len(self.calls), 1)
+    self.server.skill_router = Router(self.server)      # restart: fresh memory, same journal file
+    self.server.skill_router.clock = self.clock
+    self.clock.t += 2
+    self.companion.press(cid, request_id=rid)
+    self.rc.poll_once()
+    self.assertEqual(len(self.calls), 1)
+    self.assertIn('already done', self.companion.results[-1]['text'])
+
+
+def _test_press_interrupted_by_crash_gets_honest_uncertain_outcome(self):
+    # §3.5: an EXECUTING journal row with no DONE (crash between claim and finish) must not
+    # report success; the device gets an honest UNCERTAIN and the owner presses again.
+    import time as _time
+    from src.runtime.routing import Router
+    from src.runtime.state_store import StateStore
+    cid = self.vol_up()
+    rid = '%032x' % 4242
+    StateStore.for_server(self.server).claim_invocation('relay:r-watch', 'inv-' + rid, _time.time())
+    self.server.skill_router = Router(self.server)
+    self.server.skill_router.clock = self.clock
+    self.companion.press(cid, request_id=rid)
+    self.rc.poll_once()
+    self.assertEqual(self.calls, [])
+    self.assertEqual(self.rc.history[-1]['state'], 'UNCERTAIN')
+
+
+RemoteControls.test_resent_press_after_router_restart_is_refused_without_reexecution = _test_resent_press_after_router_restart_is_refused_without_reexecution
+RemoteControls.test_press_interrupted_by_crash_gets_honest_uncertain_outcome = _test_press_interrupted_by_crash_gets_honest_uncertain_outcome
