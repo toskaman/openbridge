@@ -149,12 +149,16 @@ def get(server, path, query):
     if path == '/api/v2/manifests/receipts':
         return 200, {'receipts': list(substrate(server).receipts[-50:])}
     if path == '/api/v2/onboarding':
-        from src.fabric import onboarding
+        from src.fabric import agent_matrix, onboarding
         apk = getattr(server, 'companion_apk', None)
         portal = getattr(server, 'apk_portal', None)
+        agent_dir = getattr(server, 'agent_dir', None) or 'artifacts/agent'
+        matrix = [{k: v for k, v in m.items() if k != 'path'}
+                  for m in agent_matrix.matrix_status(apk, agent_dir)]
         return 200, {'candidates': onboarding.candidates(server.fabric_snapshot, server.fabric_registry, bool(apk and apk.exists())),
                      'discovered': server.fabric_snapshot is not None,
                      'apk_portal': portal.state() if portal else {'running': False},
+                     'agent_matrix': matrix,
                      'note': None if server.fabric_snapshot else 'Run discovery first: nothing is probed until you ask.'}
     if path == '/api/v2/catalog':
         from src.fabric import android_actions as aa
@@ -315,8 +319,9 @@ def voice(server, path, body):
 
 def apk_portal(server, body):
     from src.fabric.apk_portal import ApkPortal
+    from src.fabric import agent_matrix
     from src.fabric.mdns import default_scope, lan_interface_ip
-    if set(body) - {'minutes', 'stop'}:
+    if set(body) - {'minutes', 'stop', 'artifact'}:
         return 400, {'error': 'Unexpected fields'}
     old = getattr(server, 'apk_portal', None)
     if body.get('stop') is True:
@@ -325,16 +330,33 @@ def apk_portal(server, body):
         return 200, {'running': False}
     if old and old.running():
         return 200, old.state()
+    artifact_id = body.get('artifact')
+    serve_path, filename, content_type, url_path = server.companion_apk, None, None, None
+    if artifact_id is not None:
+        if not isinstance(artifact_id, str):
+            return 400, {'error': 'artifact must be an entry id'}
+        agent_dir = getattr(server, 'agent_dir', None) or 'artifacts/agent'
+        hit = next((m for m in agent_matrix.matrix_status(server.companion_apk, agent_dir)
+                    if m['id'] == artifact_id), None)
+        if hit is None:
+            return 400, {'error': f'Unknown artifact: {artifact_id[:32]}'}
+        if 'path' not in hit:
+            return 409, {'error': hit['reason']}
+        serve_path, filename, content_type = hit['path'], hit['filename'], hit['content_type']
+        url_path = '/' + hit['filename']
     ip = lan_interface_ip(default_scope())
     if not ip:
         return 409, {'error': 'No private LAN interface found on this PC'}
     try:
-        server.apk_portal = ApkPortal(server.companion_apk, ip, body.get('minutes', 10)).start()
-    except FileNotFoundError:
+        server.apk_portal = ApkPortal(serve_path, ip, body.get('minutes', 10), filename=filename,
+                                      content_type=content_type, url_path=url_path).start()
+    except FileNotFoundError as e:
+        if artifact_id is not None:
+            return 409, {'error': str(e)}
         return 409, {'error': 'Companion APK not built on this PC (python -m dev.build_companion)'}
     except (ValueError, OSError) as e:
         return 409, {'error': f'Cannot open the LAN download: {type(e).__name__}'}
-    return 200, server.apk_portal.state()
+    return 200, server.apk_portal.state() | {'artifact': artifact_id}
 
 
 def workflows(server):

@@ -586,6 +586,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.guide_for_error = guide_for_error
     server.companion_install = {'state': 'IDLE'}
     server.companion_apk = Path(os.environ.get('OPENBRIDGE_COMPANION_APK', 'artifacts/companion/openbridge-companion.apk'))
+    server.agent_dir = Path(os.environ.get('OPENBRIDGE_AGENT_DIR', 'artifacts/agent'))
     def start_companion_install(handle, attempts=40, delay=15):
         from src.fabric.guidance import classify_install, guide
         if server.companion_install.get('state') == 'RETRYING':
