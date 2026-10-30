@@ -43,7 +43,7 @@ Only after all five steps does the entry earn a registry row, a matrix render, a
 
 | # | Target | Priority | Step-1 program |
 |---|---|---|---|
-| 1 | ESP32 + TFT screen | P1 | Native agent firmware + on-screen UI |
+| 1 | ESP32 + TFT screen | P1 PROMOTED (emulated link) | Native IDF agent VERIFIED on QEMU-ESP32 (registry row `esp32-idf-qemu-01`); TFT-on-silicon + WiFi + physical run remain open |
 | 2 | Playdate | P1 | Native app (official SDK) |
 | 3 | Samsung Tizen + LG webOS (TV) | P1 | Native TV app per vendor SDK |
 | 4 | Minitel + ESP32 serial gateway | P1 | Videotex UI on terminal, network agent on gateway |

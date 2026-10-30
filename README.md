@@ -130,7 +130,7 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 - **Legacy Windows proven, then cleaned**: legacy C agent (subsystem 5.01, software SHA-256/HMAC) ran mutual-auth + RPC exec on real XP SP3 + Win7 SP1 QEMU guests with screenshots; VMs deleted after proofs, trace kept in [legacy evidence](docs/evidence/vm-legacy-xp-win7-30oct.md) and the [registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
 - **P0 hardening batch (PR126–PR130, PR135)**: point-of-dispatch full-control recheck, pairing attempt limits, crash-safe invocation journal with honest UNCERTAIN, supervised STT worker, HTTP-level relay-scan verification, idempotency keys + journal claims on HTTP execute and direct intents.
 - **Device connect (PR133)**: hardware agent matrix (correct agent per hardware), auto connection planner, per-device connect tutorials and guided agent pick.
-- **ESP32 P1**: native agent firmware compiles (941 KB) + host protocol proof 3/3; QEMU boot blocked, documented as blocked.
+- **ESP32 P1**: native IDF agent VERIFIED on QEMU-ESP32 (registry row 16: AUTH + ping + execs + cross-device CROSS_OK via serial gateway); Arduino build keeps the physical WiFi/TFT path.
 - Full suite 894 green on Windows + Linux CI.
 
 ## What's new (29 Oct 2026)
