@@ -204,7 +204,7 @@ class Synthesize(unittest.TestCase):
                       'facts': [{'fact_id': 'f', 'kind': 'model', 'value': 'X',
                                  'source': 'ADB', 'observed_at': 1.0}]},))
         p = Y.build_prompt(b, 'mute tv', PRIMS, 'tv')
-        self.assertIn('v4-synth-4', p)
+        self.assertIn('v4-synth-5', p)
         self.assertIn(b['devices'][0]['opaque_id'], p)
         self.assertIn(b['devices'][0]['facts'][0]['evidence_ref'], p)
         self.assertIn('read_facts', p)
@@ -324,7 +324,7 @@ class SynthRequiredInputs(unittest.TestCase):
 
     def test_prompt_shows_setting_schema_and_required(self):
         p = Y.build_prompt(bundle(), 'x', ('setting.set_exact',), 'tv')
-        self.assertIn('v4-synth-4', p)
+        self.assertIn('v4-synth-5', p)
         self.assertIn('setting.set_exact', p)
         self.assertIn('"setting"', p)
         self.assertIn('"value"', p)
