@@ -39,6 +39,13 @@ Every public claim, its status and where to check it. A claim without evidence i
 | 1,000-turn eval kit: rules baseline, 200/200 convs, 0 crashes/sends | MEASURED (rules 1.4%; model tiers pending, oracles sealed) | docs/benchmark/EVAL_1000_RULES_BASELINE.md (§11 `070392a`) |
 | Multi-device orchestration: DAG workflows, 9 scenarios, 9 new skills | SIMULATED_VERIFIED + live USB capture/send/montage | tests/runtime/test_workflows.py, docs/evidence/s7-live-usb-30oct.md (§7 `1e8066a`) |
 | Official Android emulator driven via adb (level 4, no companion) | EMULATOR_VERIFIED (capture/probe/send + cleanup) | docs/evidence/avd-ob-pixel-30oct.md (registry row 18) |
+| Relay dashboards: generated/patched/saved/restored UIs, reconnect repush | SIMULATED_VERIFIED (live watch run owner-gated) | tests/unit/test_dashboards*.py (§8 `972b545`) |
+| RetroArch loopback control (VERSION/GET_STATUS verified; VOLUME_UP sent-unverified) | REAL_HARDWARE_VERIFIED (localhost, menu-state only) | docs/evidence/retroarch-loopback-30oct.md (registry row 19, §13 `db5dedf`) |
+| Stress hardening: locks, byte cap, typed IO, crash drill | SIMULATED_VERIFIED + crash drill 5/5 | docs/STRESS_14_REPORT.md (§14 `ef58712`) |
+| CLI + headless + GUI/CLI parity + jury pack | REAL_HARDWARE_VERIFIED (CLI live runs) + SIMULATED_VERIFIED (parity) | docs/CLI_REFERENCE.md, docs/P30_MODEL_MATRIX.md, docs/release/P30_GATES_AND_REPORT.md (§P30 `73cfef5`) |
+| Glimmer-synthesized capabilities validated + published + revoked (2) | REAL_HARDWARE_VERIFIED (live phone bundle; pending-kernel staging) | docs/evidence/p30-glimmer-synthesis-30oct.md (registry row 20) |
+| Phone+AVD orchestration via CLI, sha-verified montage | REAL_HARDWARE_VERIFIED (phone) + EMULATOR_VERIFIED (AVD) | docs/evidence/p30-cli-orchestration-30oct.md (registry row 21) |
+| Paid Meta cloud end-to-end | BLOCKED (no key, no spend order) | preflight + budget guard unit-tested; $0 spent |
 
 ## Never claimed
 ACID transactions; zero-knowledge or anonymous cloud calls; 2D or person location from BLE RSSI; that BLE presence proves interference; fabricated scores; organizer acceptance or bonus eligibility.
