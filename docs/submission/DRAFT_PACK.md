@@ -62,9 +62,13 @@ owner approves every action.
 ## Meta AI use (substantive, exclusive in production inference)
 - Llama 3.2 3B (local, Ollama): NL parsing + candidate drafting; every live
   parse cites the model id in machine-readable provenance.
-- Muse Glimmer 30B (local): medium tier; honestly reported UNUSABLE on this box
-  (30b-q4 needs 12.8 GB CUDA, 10.8 GB free; OOM → honest `escalation_required`)
-  — never simulated.
+- Muse Glimmer 30B (local): medium tier; conditional on a free GPU.
+  Re-probed 30 Oct afternoon: loads in ~23 s cold, runs ~7–8 tok/s warm
+  through the broker path, digest matches the manifest — but pins ~14.3 GB
+  VRAM, so it OOMs whenever the GPU is shared (earlier UNUSABLE report) and
+  rambles whitespace on terse exact-word prompts (production uses structured
+  `format`, unaffected). Honest `escalation_required` when unavailable —
+  never simulated, never silently substituted.
 - Muse Spark 1.3 (hosted, explicit consent + broker-guarded spend): high tier,
   frozen explanation evals, G3 synthesis. Ledger: $2.00 global cap; sealed G3
   total $0.0203 over 3 calls. Every cent receipted in `LOCALAPPDATA/OpenBridge/budget.sqlite3`.
