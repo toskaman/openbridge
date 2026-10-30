@@ -34,7 +34,7 @@ def fake_shell(*args):
         return 'whitelist:\n  com.other\n'
     if cmd.startswith('am start'):
         return 'Starting: Intent { act=android.settings.BLUETOOTH_SETTINGS }\nStatus: ok\n'
-    if 'WRITE_SECURE_SETTINGS' in cmd and cmd.startswith('appops set'):
+    if cmd.startswith('pm grant com.android.shell'):
         return ''
     raise OSError('unknown ' + cmd)
 
@@ -46,6 +46,7 @@ class Catalog(unittest.TestCase):
         self.assertEqual(body['package'], 'fr.openbridge.companion')
         self.assertGreaterEqual(len(body['permissions']), 10)
         self.assertTrue(all(p['steps'] for p in body['permissions']))
+        self.assertIn('bluetooth_scan', body['capability_map'])
 
 
 class State(unittest.TestCase):
@@ -80,7 +81,8 @@ class OpenRecheck(unittest.TestCase):
                                  {'device': 'dev-ph', 'permission': 'write_secure_settings',
                                   'consent': True})
         self.assertEqual(code, 200)
-        self.assertIn('--uid', body['argv'])
+        self.assertEqual(body['argv'][:2], ['pm', 'grant'])
+        self.assertIn('android.permission.WRITE_SECURE_SETTINGS', body['argv'])
 
     def test_open_needs_consent_and_known_perm(self):
         s = srv(snap(), fake_shell)

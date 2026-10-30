@@ -17,8 +17,16 @@ class Parsers(unittest.TestCase):
 
     def test_parse_whitelist(self):
         self.assertTrue(P.parse_whitelist('system-excidle whitelist:\n  fr.openbridge.companion\n', 'fr.openbridge.companion'))
+        self.assertTrue(P.parse_whitelist('system-excidle,fr.openbridge.companion,10345\n', 'fr.openbridge.companion'))
+        self.assertFalse(P.parse_whitelist('system-excidle,com.other,10057\n', 'fr.openbridge.companion'))
         self.assertFalse(P.parse_whitelist('whitelist:\n  com.other\n', 'fr.openbridge.companion'))
         self.assertIsNone(P.parse_whitelist('', 'fr.openbridge.companion'))
+
+    def test_parse_perm_grant(self):
+        self.assertTrue(P.parse_perm_grant('install permissions:\n  android.permission.X: granted=true\n', 'android.permission.X'))
+        self.assertFalse(P.parse_perm_grant('android.permission.X: granted=false', 'android.permission.X'))
+        self.assertIsNone(P.parse_perm_grant('no permissions here', 'android.permission.X'))
+        self.assertIsNone(P.parse_perm_grant('', 'android.permission.X'))
 
     def test_parse_setting_contains(self):
         self.assertTrue(P.parse_setting_contains('fr.openbridge.companion/.Svc', 'fr.openbridge.companion'))
@@ -27,6 +35,7 @@ class Parsers(unittest.TestCase):
 
     def test_parse_device_admin(self):
         self.assertTrue(P.parse_device_admin('admin=ComponentInfo{fr.openbridge.companion/.R}', 'fr.openbridge.companion'))
+        self.assertTrue(P.parse_device_admin('Enabled Device Admins (User 0):\n  33: fr.openbridge.companion\n', 'fr.openbridge.companion'))
         self.assertFalse(P.parse_device_admin('no admins', 'fr.openbridge.companion'))
         self.assertIsNone(P.parse_device_admin('', 'fr.openbridge.companion'))
 
@@ -43,7 +52,7 @@ class Catalog(unittest.TestCase):
             for k in ('id', 'os', 'title', 'applies_to', 'declared', 'why', 'breaks', 'verify', 'steps'):
                 self.assertIn(k, e, e.get('id'))
             self.assertTrue(e['why'] and e['breaks'] and e['steps'])
-            self.assertIn(e['verify']['method'], ('appops', 'whitelist', 'setting', 'admin', 'interactive'))
+            self.assertIn(e['verify']['method'], ('appops', 'whitelist', 'setting', 'admin', 'permgrant', 'interactive'))
             if e['verify']['method'] != 'interactive':
                 self.assertTrue(e['verify'].get('argv'))
 
@@ -73,8 +82,8 @@ class Verify(unittest.TestCase):
                 return 'null'
             if 'device_policy' in cmd:
                 return 'no admins'
-            if 'WRITE_SECURE_SETTINGS' in cmd:
-                return 'WRITE_SECURE_SETTINGS: allow;'
+            if 'dumpsys package' in cmd:
+                return 'install permissions:\n  android.permission.WRITE_SECURE_SETTINGS: granted=true\n'
             raise OSError('unknown ' + cmd)
         states = {s['id']: s for s in P.verify_all(run, package='fr.openbridge.companion', sdk=33)}
         self.assertEqual(states['bluetooth_scan']['state'], 'granted')

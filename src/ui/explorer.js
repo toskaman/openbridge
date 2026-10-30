@@ -2,7 +2,17 @@
    through /api/v2/execute with an explicit confirmation for effects; reads run
    directly and show their value. Nothing here invents capabilities: all data
    comes from /api/v2/capabilities/*, and a revoked grant disables the button. */
-const ex = { explore: null, layouts: [], active: null, rendered: null, filter: 'all', version: 0 };
+const ex = { explore: null, layouts: [], active: null, rendered: null, filter: 'all', version: 0, perms: null };
+
+function exPermHint(label) {
+  if (!ex.perms) return '';
+  const t = ' ' + (label || '').toLowerCase() + ' ';
+  for (const p of ex.perms.permissions || []) {
+    const matchers = (ex.perms.capability_map || {})[p.id] || [];
+    if (matchers.some((m) => t.includes(m))) return `Grant hint: ${p.title} — ${p.steps[0]}`;
+  }
+  return '';
+}
 
 async function renderExplore() {
   const root = document.querySelector('[data-view="explore"] .explore-body');
@@ -60,6 +70,7 @@ async function exRefresh(root, full) {
   try {
     if (full || !ex.explore) ex.explore = await request('/api/v2/capabilities/explore');
     ex.layouts = (await request('/api/v2/capabilities/layouts')).layouts || [];
+    try { if (!ex.perms) ex.perms = await request('/api/v2/permissions/catalog'); } catch { ex.perms = null; }
     const sel = document.querySelector('#ex-layouts');
     if (sel) {
       sel.replaceChildren();
@@ -158,7 +169,9 @@ function exWidget(w, deviceKey) {
     row.append(r, val, set);
   } else {
     const b = element('button', w.kind === 'status' ? 'Read' : 'Run', w.kind === 'status' ? 'ghost' : 'secondary');
-    b.disabled = !w.enabled; b.title = w.enabled ? '' : (w.reason || 'Not available');
+    const hint = !w.enabled && w.status === 'REQUIRES_PERMISSION' ? exPermHint(w.label) : '';
+    b.disabled = !w.enabled;
+    b.title = w.enabled ? '' : ((w.reason || 'Not available') + (hint ? ' … ' + hint : ''));
     b.addEventListener('click', () => exTap(w, deviceKey, {}, out));
     row.append(b);
   }

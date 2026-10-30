@@ -126,11 +126,11 @@ CATALOG = [
      'applies_to': 'shell', 'declared': True, 'min_sdk': None,
      'why': 'Lets PC-driven automation write secure/global settings over adb.',
      'breaks': ['secure/global settings writes from the PC'],
-     'verify': {'method': 'appops', 'op': 'WRITE_SECURE_SETTINGS', 'target': 'shell',
-                'argv': ['appops', 'get', 'com.android.shell', 'WRITE_SECURE_SETTINGS']},
+     'verify': {'method': 'permgrant', 'perm': 'android.permission.WRITE_SECURE_SETTINGS',
+                'argv': ['dumpsys', 'package', 'com.android.shell']},
      'intent': None,
-     'grant': {'method': 'adb-appops',
-               'argv': ['appops', 'set', '--uid', '2000', 'WRITE_SECURE_SETTINGS', 'allow']},
+     'grant': {'method': 'adb-pm-grant',
+               'argv': ['pm', 'grant', 'com.android.shell', 'android.permission.WRITE_SECURE_SETTINGS']},
      'steps': ['Tap Grant (runs one documented adb command with your consent)', 'State is rechecked immediately']},
 ]
 
@@ -162,7 +162,16 @@ def parse_appops(text, op):
 def parse_whitelist(text, pkg):
     if not (text or '').strip():
         return None
-    return bool(re.search(r'^\s*%s\s*$' % re.escape(pkg), text, re.M))
+    return bool(re.search(r'(^|,)\s*%s\s*(,|$)' % re.escape(pkg), text, re.M))
+
+
+def parse_perm_grant(text, perm):
+    m = re.search(r'^%s:\s*granted=(true|false)\s*$' % re.escape(perm or ''), text or '', re.M)
+    if not m:
+        m = re.search(r'%s:\s*granted=(true|false)' % re.escape(perm or ''), text or '')
+    if not m:
+        return None
+    return m[1] == 'true'
 
 
 def parse_setting_contains(text, pkg):
@@ -228,6 +237,9 @@ def _verify_entry(run, entry, package, sdk):
         state = 'granted' if b else 'denied' if b is False else 'unknown'
     elif v['method'] == 'admin':
         b = parse_device_admin(text, package)
+        state = 'granted' if b else 'denied' if b is False else 'unknown'
+    elif v['method'] == 'permgrant':
+        b = parse_perm_grant(text, v['perm'])
         state = 'granted' if b else 'denied' if b is False else 'unknown'
     else:
         state = 'unknown'
