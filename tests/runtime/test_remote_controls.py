@@ -381,3 +381,51 @@ def _test_offline_relay_is_reprobed_and_queued_press_runs(self):
 
 
 RemoteControls.test_offline_relay_is_reprobed_and_queued_press_runs = _test_offline_relay_is_reprobed_and_queued_press_runs
+
+
+def _test_full_control_revoked_midflight_is_not_executed(self):
+    # §3.2: the owner turns full control OFF on the device after invoke_now's
+    # pre-check but before dispatch. Point-of-dispatch must recheck and refuse.
+    cid = self.vol_up()
+    self.companion.full_control = True
+    real = self.companion.__call__
+    seen = {'n': 0}
+
+    def flip(relay, message):
+        out = real(relay, message)
+        seen['n'] += 1
+        if seen['n'] == 1:
+            self.companion.full_control = False
+        return out
+
+    self.server.relays.relays['r-watch']['send'] = flip
+    entry = self.rc.invoke_now('r-watch', cid)
+    self.assertEqual(entry['state'], 'REVOKED')
+    self.assertEqual(self.calls, [])
+
+
+def _test_concurrent_presses_keep_exact_burst_accounting(self):
+    # §3.2: burst counters are read-modify-write shared state; concurrent
+    # dispatches must not lose updates. Forced thread switches make the
+    # pre-fix race deterministic; the locked fix keeps exact counts.
+    import sys
+    import threading
+    cid = self.vol_up()
+    old_interval = sys.getswitchinterval()
+    sys.setswitchinterval(1e-6)
+    try:
+        def hammer(k):
+            for i in range(50):
+                self.rc.process('r-watch', {'control_id': cid, 'request_id': 't%d-%d' % (k, i),
+                                            'pressed_at': int(self.clock() * 1000), 'gesture': 'press'})
+
+        ts = [threading.Thread(target=hammer, args=(k,)) for k in range(8)]
+        [t.start() for t in ts]
+        [t.join() for t in ts]
+    finally:
+        sys.setswitchinterval(old_interval)
+    self.assertEqual(len(self.rc._recent[('r-watch', cid)]), 400)
+
+
+RemoteControls.test_full_control_revoked_midflight_is_not_executed = _test_full_control_revoked_midflight_is_not_executed
+RemoteControls.test_concurrent_presses_keep_exact_burst_accounting = _test_concurrent_presses_keep_exact_burst_accounting
