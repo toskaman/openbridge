@@ -6,7 +6,7 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
+GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/permissions/state', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -27,7 +27,7 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/contract', '/api/v2/workflows/r
               '/api/v2/capabilities/explore',
               '/api/v2/capabilities/layouts',
               '/api/v2/capabilities/render')
-POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
+POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
               '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup',)
 
 
@@ -346,6 +346,10 @@ def get(server, path, query):
     if path == '/api/v2/diagnosis':
         from src.runtime.fabric_diagnosis import diagnose
         return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), to_json(ex.recovery()))}
+    if path == '/api/v2/permissions/catalog':
+        from src.fabric import permissions as P
+        return 200, {'package': P.COMPANION_PKG, 'permissions': P.CATALOG,
+                     'capability_map': P.CAPABILITY_MAP}
     snap = server.fabric_snapshot
     if snap is None:
         return 409, {'error': 'No graph yet; execute bounded_discovery first'}
@@ -407,6 +411,25 @@ def get(server, path, query):
     if path == '/api/v2/hardware/facts':
         dev = (q.get('device') or [None])[0]
         return 200, _hardware_facts(server, only=dev)
+    if path == '/api/v2/permissions/state':
+        from src.fabric import permissions as P
+        dev = (q.get('device') or [None])[0]
+        devices = [d for d in snap['devices'] if dev in (None, d['key'])]
+        if dev is not None and not devices:
+            return 404, {'error': 'Unknown device'}
+        out = []
+        for d in devices:
+            if d.get('category') not in ('phone', 'tv', 'watch', 'android', 'tablet'):
+                out.append({'key': d['key'], 'supported': False, 'note': 'android only in v1'})
+                continue
+            runner = _hardware_runner(server, d['key'])
+            if runner is None:
+                out.append({'key': d['key'], 'supported': False, 'note': 'no shell runner for that device'})
+                continue
+            sdk = _perm_sdk(runner)
+            out.append({'key': d['key'], 'category': d.get('category'), 'label': d.get('label', d['key']),
+                        'supported': True, 'sdk': sdk, 'states': P.verify_all(runner, sdk=sdk)})
+        return 200, {'devices': out}
     return 404, {'error': 'Not found'}
 
 
@@ -602,7 +625,40 @@ def _idem_finish(server, key, fingerprint):
         _idem_seen(server)[key] = ('DONE', _t.monotonic())
 
 
+def _perm_sdk(runner):
+    try:
+        return int((runner('getprop', 'ro.build.version.sdk') or '').strip())
+    except Exception:
+        return None
+
+
 def post(server, path, body):
+    if path in ('/api/v2/permissions/open', '/api/v2/permissions/recheck') and isinstance(body, dict):
+        from src.fabric import permissions as P
+        if server.fabric_snapshot is None:
+            return 409, {'error': 'No graph yet; execute bounded_discovery first'}
+        key = body.get('device', '')
+        d = next((x for x in server.fabric_snapshot['devices'] if x['key'] == key), None)
+        if d is None:
+            return 404, {'error': 'Unknown device'}
+        entry = next((e for e in P.CATALOG if e['id'] == body.get('permission', '')), None)
+        if entry is None:
+            return 400, {'error': 'unknown permission'}
+        runner = _hardware_runner(server, key)
+        if runner is None:
+            return 409, {'error': 'no shell runner for that device'}
+        if path == '/api/v2/permissions/recheck':
+            return 200, P.verify_one(runner, entry['id'], sdk=_perm_sdk(runner))
+        if body.get('consent') is not True:
+            return 400, {'error': 'consent: true is required'}
+        argv = P.grant_command(entry, P.COMPANION_PKG) or P.intent_command(entry, P.COMPANION_PKG)
+        if argv is None:
+            return 400, {'error': 'no open action for this permission (in-app only)'}
+        try:
+            text = runner(*argv)
+        except Exception as e:
+            return 409, {'error': 'command failed: %s' % e}
+        return 200, {'argv': argv, 'output': (text or '')[:500]}
     if path in ('/api/v2/hardware/rank', '/api/v2/hardware/bench') and isinstance(body, dict):
         from src.fabric import hardware_intel as H
         if server.fabric_snapshot is None:
