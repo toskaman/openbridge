@@ -50,7 +50,9 @@ class CompanionCommands:
                 if heard:
                     return heard
                 reason = 'Did not catch that — try again or type'
-            except (fabric_relay.RelayError, voice_stt.STTBlocked, OSError):
+            except voice_stt.STTBlocked as blocked:
+                reason = str(blocked)      # worker crash/timeout/low-RAM: report it, not a download failure
+            except (fabric_relay.RelayError, OSError):
                 reason = 'Voice download failed — try again or type'
         try:
             self._send(rid, 'report_command',
