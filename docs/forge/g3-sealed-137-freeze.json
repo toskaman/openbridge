@@ -1,0 +1,35 @@
+{
+ "kind": "G3_SEALED_FREEZE",
+ "task_id": "sealed-phone-brightness-137",
+ "spec_sha256": "0c42bb0cd9a2f4913ad26b2fceb888962cbbccc27254adf877d1a07ad07328d5",
+ "spec_note": "content sealed: Sol independent subagent; spec revealed post-run; runner refuses any other sha",
+ "frozen_at": "2026-10-30T15:35:56+00:00",
+ "main_commit": "523fc3851437683ef9c9e270ed5540cd25642f50",
+ "prompt_version": "v4-synth-4",
+ "file_sha256": {
+  "dev/run_g3_local.py": "2a8a7d3cd297e9c903e43e83cea178364537d051d4adab6eeb351397b1ec2fc6",
+  "dev/run_g3_smoke.py": "1524c29a8a077040bc0876b9d0f8e1a9b049762fc3e59e9cdc2d1e450519dff7",
+  "dev/g3_task.py": "de5ea3b408d8c4b9aa07b162590e7e19135bdfa88b920dea96a83e1eeb5ed96f",
+  "src/forge/v4_synthesize.py": "6fc576d3a1e5edd6157b7b99d93ca0d8e3f71a2da5e3d4a2bf39017dcfef5190",
+  "src/forge/v4_evidence.py": "80a483548b4aeddfdd1c9a13b68d2ccfe12f80bc415a7d2b3b477d0823ce5f4f",
+  "src/forge/v4_substrate.py": "ba8923d14aacfa7aeba6bf8fed07d9a91fa2c374b7f4d8225a5ce0f726692dab",
+  "src/forge/v4_metaclient.py": "b01cd36724ea4cb34f1924647476ee8ab5d069f45c0868576b0f18a3987ef848",
+  "src/substrate/registry.py": "d787983e8a075d64116666c870de58168f8f0ef4d246d5b8e37092e858d9db3b",
+  "src/server.py": "16399ca2d9350132f9ddc83438e8abeabb667fa7fba08fd307b373f7d3d92d35",
+  "docs/forge/G3_SEALED_TASK_PROTOCOL.md": "5839768ad30f6d449b93c9b49a993f2ea701585f8a126747d9f586022fc25bd1"
+ },
+ "models": {
+  "glimmer": {
+   "model_id": "muse-glimmer:30b-q4_K_M",
+   "endpoint": "http://127.0.0.1:11438"
+  },
+  "llama": {
+   "model_id": "llama3.2:3b-instruct-q4_K_M",
+   "endpoint": "http://127.0.0.1:11437"
+  }
+ },
+ "budget_usd": 0,
+ "max_calls_per_arm": 3,
+ "authorization": "standing owner autonomy orders for reversible lab tests; oracle pre-read + deterministic restore + revoke; no fresh per-run authz file for local runs",
+ "note": "FREEZE ONLY: no spec content, no transcript, no results in this commit."
+}
