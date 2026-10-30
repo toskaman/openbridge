@@ -439,6 +439,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.relay_pending = {}          # device handle -> pairing in progress (isolated per device)
     server.relay_pending_lock = threading.Lock()
     PAIRING_TTL = 120                  # mirrors the Companion 2-minute code expiry
+    PAIRING_MAX_ATTEMPTS = 5         # online code guesses per pending pairing; then a fresh code is required
     def restore_relays(transport_factory=fabric_relay.http_transport):
         """Re-enroll stored pairings whose device is attached again; each is proven with a signed get_status.
         Never raises into discovery: a relay that cannot be proven stays enrolled but offline (re-probed later)."""
@@ -504,10 +505,18 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 if time.monotonic() - pending['started_at'] > PAIRING_TTL:
                     del server.relay_pending[handle]
                     raise fabric_relay.RelayError('Pairing code expired; start pairing again')
-            key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
-            rid = pending['hello']['relay_id']
-            reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
-            declared = fabric_relay.verify(key, reply, None).get('params', {})
+            try:
+                key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
+                rid = pending['hello']['relay_id']
+                reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
+                declared = fabric_relay.verify(key, reply, None).get('params', {})
+            except fabric_relay.RelayError:     # wrong code or refused proof: count it; transport errors (OSError/
+                with server.relay_pending_lock:  # TimeoutError) propagate uncounted so a flaky link cannot burn a pairing
+                    pending['attempts'] = pending.get('attempts', 0) + 1
+                    if pending['attempts'] >= PAIRING_MAX_ATTEMPTS:
+                        server.relay_pending.pop(handle, None)
+                        raise fabric_relay.RelayError('Too many wrong codes; start pairing again') from None
+                raise
             server.relays.enroll(rid, key, pending['handle'], declared)
             server.relays.relays[rid]['send'] = pending['send']
             if 'aead1' in (declared.get('capabilities') or []):
