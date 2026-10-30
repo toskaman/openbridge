@@ -103,3 +103,84 @@ class AndroidCompatibilityTests(unittest.TestCase):
         self.assertNotIn('battery_percent',facts)
         self.assertIn('battery_percent',r['unavailable']);self.assertIn('android_version',r['unavailable'])
         self.assertEqual(facts['ram_total_gb'],2.0)
+
+
+class AndroidTransferTests(unittest.TestCase):
+    def adapter(self, handler):
+        calls = []
+        def run(args, **kwargs):
+            calls.append(args)
+            return handler(args, kwargs)
+        a = AndroidAdapter(executable='adb', runner=run)
+        a._handles['SERIAL1'] = 'h-1'
+        return a, calls
+
+    def test_pull_returns_bytes_with_fixed_argv(self):
+        def h(args, kw):
+            if args[3:] == ['exec-out', 'cat', '/sdcard/Download/a.bin']:
+                return subprocess.CompletedProcess(args, 0, b'\x00\x01\x02', b'')
+            return subprocess.CompletedProcess(args, 1, b'', b'nope')
+        a, calls = self.adapter(h)
+        self.assertEqual(a.pull_file('h-1', '/sdcard/Download/a.bin'), b'\x00\x01\x02')
+        self.assertEqual(calls[-1][:4], ['adb', '-s', 'SERIAL1', 'exec-out'])
+
+    def test_pull_rejects_unknown_handle_without_exec(self):
+        a, calls = self.adapter(lambda args, kw: subprocess.CompletedProcess(args, 0, b'', b''))
+        with self.assertRaises(ValueError):
+            a.pull_file('h-ghost', '/sdcard/Download/a.bin')
+        self.assertEqual(calls, [])
+
+    def test_pull_rejects_paths_outside_allowlist(self):
+        a, calls = self.adapter(lambda args, kw: subprocess.CompletedProcess(args, 0, b'', b''))
+        for bad in ('/data/data/x', '/sdcard/../etc/passwd', 'relative/path',
+                    '/sdcard/a;b', '/sdcard/a b', '/etc/hosts', ''):
+            with self.assertRaises(ValueError, msg=bad):
+                a.pull_file('h-1', bad)
+        self.assertEqual(calls, [])
+
+    def test_pull_rejects_oversize(self):
+        def h(args, kw):
+            return subprocess.CompletedProcess(args, 0, b'x' * 100, b'')
+        a, _ = self.adapter(h)
+        with self.assertRaises(ValueError):
+            a.pull_file('h-1', '/sdcard/Download/a.bin', max_bytes=10)
+
+    def test_push_writes_temp_then_pushes_to_openbridge_dir(self):
+        seen = {}
+        def h(args, kw):
+            if args[3] == 'push':
+                seen['local'] = args[4]
+                with open(args[4], 'rb') as f:
+                    seen['data'] = f.read()
+                return subprocess.CompletedProcess(args, 0, '1 file pushed', '')
+            return subprocess.CompletedProcess(args, 1, '', 'nope')
+        a, calls = self.adapter(h)
+        remote = a.push_file('h-1', b'\x89PNG', 'cap-1.png')
+        self.assertEqual(remote, '/sdcard/OpenBridge/cap-1.png')
+        self.assertEqual(seen['data'], b'\x89PNG')
+        import os
+        self.assertFalse(os.path.exists(seen['local']))
+        self.assertEqual(calls[-1][3:], ['push', seen['local'], '/sdcard/OpenBridge/cap-1.png'])
+
+    def test_push_rejects_bad_names_and_handles(self):
+        a, calls = self.adapter(lambda args, kw: subprocess.CompletedProcess(args, 0, '', ''))
+        for bad in ('../x.png', 'a/b.png', '', 'x' * 200, 'a;b.png'):
+            with self.assertRaises(ValueError, msg=bad):
+                a.push_file('h-1', b'data', bad)
+        with self.assertRaises(ValueError):
+            a.push_file('h-ghost', b'data', 'a.png')
+        self.assertEqual(calls, [])
+
+    def test_file_sha256_parses_hash(self):
+        digest = 'a' * 64
+        def h(args, kw):
+            if args[4:6] == ['sha256sum', '/sdcard/OpenBridge/cap-1.png']:
+                return subprocess.CompletedProcess(args, 0, f'{digest}  /sdcard/OpenBridge/cap-1.png\n', '')
+            return subprocess.CompletedProcess(args, 1, '', 'nope')
+        a, _ = self.adapter(h)
+        self.assertEqual(a.file_sha256('h-1', '/sdcard/OpenBridge/cap-1.png'), digest)
+
+    def test_file_sha256_rejects_unparsable(self):
+        a, _ = self.adapter(lambda args, kw: subprocess.CompletedProcess(args, 0, 'garbage\n', ''))
+        with self.assertRaises(ValueError):
+            a.file_sha256('h-1', '/sdcard/OpenBridge/cap-1.png')

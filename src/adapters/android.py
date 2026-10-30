@@ -1,9 +1,11 @@
 """Opt-in, read-only ADB inventory. Serial numbers never leave this adapter."""
 from datetime import datetime, timezone
+import os
 import re
 import secrets
 import shutil
 import subprocess
+import tempfile
 import threading
 
 
@@ -66,6 +68,64 @@ class AndroidAdapter:
         if result.returncode or start < 0 or start > 4096 or len(result.stdout) > max_bytes:
             raise ValueError('Screen capture unavailable')
         return result.stdout[start:]
+
+    def _serial_for_handle(self, handle):
+        with self._lock:
+            serial = next((k for k, v in self._handles.items() if v == handle), None)
+        if serial is None:
+            raise ValueError('Unknown device')
+        return serial
+
+    @staticmethod
+    def _check_pull_path(remote):
+        if not isinstance(remote, str) or not remote.startswith('/sdcard/') or len(remote) > 256 \
+                or '..' in remote or not re.fullmatch(r'[A-Za-z0-9_./-]+', remote):
+            raise ValueError('remote path must stay under /sdcard/ (no traversal, no shell metacharacters)')
+        return remote
+
+    def pull_file(self, handle, remote, max_bytes=8 * 1024 * 1024):
+        """Read one file under /sdcard/ as bytes (`exec-out cat`, binary-safe). Consent-gated by callers."""
+        serial = self._serial_for_handle(handle)
+        self._check_pull_path(remote)
+        result = self.runner([self.executable, '-s', serial, 'exec-out', 'cat', remote], capture_output=True,
+                             timeout=30, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        if result.returncode or not isinstance(result.stdout, (bytes, bytearray)) \
+                or len(result.stdout) > max_bytes:
+            raise ValueError('File pull unavailable')
+        return bytes(result.stdout)
+
+    def push_file(self, handle, data, name):
+        """Push bytes to /sdcard/OpenBridge/<name>. Name is strict (no slashes, no traversal); temp file removed."""
+        serial = self._serial_for_handle(handle)
+        if not isinstance(name, str) or '..' in name or not re.fullmatch(r'[A-Za-z0-9_.-]{1,64}', name):
+            raise ValueError('bad file name')
+        if not isinstance(data, (bytes, bytearray)) or not data or len(data) > 32 * 1024 * 1024:
+            raise ValueError('bad file data')
+        remote = '/sdcard/OpenBridge/' + name
+        tmp = tempfile.NamedTemporaryFile(prefix='ob-push-', suffix='.bin', delete=False)
+        try:
+            tmp.write(bytes(data))
+            tmp.close()
+            result = self.runner([self.executable, '-s', serial, 'push', tmp.name, remote], capture_output=True,
+                                 text=True, encoding='utf-8', errors='replace', timeout=60,
+                                 creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        finally:
+            try:
+                os.unlink(tmp.name)
+            except OSError:
+                pass
+        if result.returncode:
+            raise ValueError('File push failed')
+        return remote
+
+    def file_sha256(self, handle, remote):
+        """`sha256sum` of a file under /sdcard/ (push verification). Returns 64 hex chars."""
+        serial = self._serial_for_handle(handle)
+        self._check_pull_path(remote)
+        out = self._run(['-s', serial, 'shell', 'sha256sum', remote]).strip().split()
+        if not out or not re.fullmatch(r'[0-9a-f]{64}', out[0]):
+            raise ValueError('unreadable sha256sum output')
+        return out[0]
 
     def discover(self):
         if not self.executable:
