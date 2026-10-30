@@ -89,6 +89,9 @@ def candidates(snapshot, registry, companion_ready=False):
             kind, evidence = ('watch' if cat == 'watch' else 'tv' if cat == 'tv' else 'phone'), ['ADB link (model read from the device)']
         elif svcs & {'_adb-tls-pairing._tcp', '_adb-tls-connect._tcp'}:
             kind, evidence = 'phone', ['Android wireless debugging is on (mDNS)']
+        elif svcs & {'_openbridge-relay._tcp'}:
+            kind = cat if cat in ('phone', 'watch', 'tv') else 'phone'
+            evidence = ['OpenBridge Companion on the LAN (mDNS, no adb needed)']
         elif cat == 'apple' or svcs & {'_apple-mobdev2._tcp', '_companion-link._tcp'}:
             m = str(model or '')
             kind, apple = next((k for p, k in APPLE_PREFIX if m.startswith(p)), 'apple'), True
@@ -108,6 +111,14 @@ def candidates(snapshot, registry, companion_ready=False):
             methods = _methods_apple(model)
         elif kind in ('phone', 'watch', 'tv'):
             methods = _methods_android(dev, linked, pairing, companion_ready, kind)
+            relay_ep = ep.get('_openbridge-relay._tcp')
+            if relay_ep:
+                methods.insert(0, {'id': 'companion_lan', 'title': 'Companion app over Wi-Fi', 'status': 'READY',
+                    'relay_address': f'{relay_ep[0]}:{relay_ep[1]}',
+                    'steps': ['Open the OpenBridge Companion app on the device',
+                              'In OpenBridge on this PC, pick this device and start pairing',
+                              'Type the 6-digit code shown on the device screen'],
+                    'detail': 'Direct Wi-Fi pairing with the Companion relay. No cable, no adb address, no wireless-debugging setup.'})
         elif kind == 'computer':
             methods = _methods_computer(key, dev, registry)
         elif kind == 'phone_maybe':

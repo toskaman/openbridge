@@ -52,7 +52,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private static final int STYLE_NORMAL = 0, STYLE_PRIMARY = 1, STYLE_TOGGLE = 2, STYLE_DANGER = 3;
 
     private RelayServer relay;
-    private boolean tv;
+    private boolean tv, watch;
 
     // Voice presence
     private VoiceOrbView orb;
@@ -100,6 +100,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
         tv = getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        watch = getPackageManager().hasSystemFeature("android.hardware.type.watch");
         relay = RelayServer.get(this, this);
         getWindow().setStatusBarColor(BG_TOP);
         getWindow().setNavigationBarColor(BG_BOTTOM);
@@ -109,10 +110,22 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         LinearLayout titles = new LinearLayout(this); titles.setOrientation(LinearLayout.VERTICAL);
         TextView brand = text("OPENBRIDGE", 11, true, CYAN); brand.setLetterSpacing(0.35f);
         titles.addView(brand);
-        titles.addView(text("Companion", tv ? 26 : 22, false, TEXT, "sans-serif-light"));
-        header.addView(titles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        titles.addView(text("Companion", tv ? 26 : watch ? 20 : 22, false, TEXT, "sans-serif-light"));
         chip = text("", 12, true, MUTED); chip.setPadding(dp(12), dp(6), dp(14), dp(6)); chip.setLetterSpacing(0.08f);
-        header.addView(chip);
+        if (watch) {
+            // 240dp round screen: titles and status chip stacked and centered, never side by side.
+            header.setOrientation(LinearLayout.VERTICAL); header.setGravity(Gravity.CENTER_HORIZONTAL);
+            brand.setGravity(Gravity.CENTER);
+            TextView comp = (TextView) titles.getChildAt(1); comp.setGravity(Gravity.CENTER);
+            titles.setGravity(Gravity.CENTER_HORIZONTAL);
+            header.addView(titles);
+            LinearLayout.LayoutParams chipLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            chipLp.topMargin = dp(6); chipLp.gravity = Gravity.CENTER_HORIZONTAL;
+            header.addView(chip, chipLp);
+        } else {
+            header.addView(titles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+            header.addView(chip);
+        }
 
         orb = new VoiceOrbView(this);
         orb.setOnClickListener(v -> toggleRecord());          // tap the orb to talk
@@ -124,10 +137,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
         // ---- input bar -------------------------------------------------------------------------------
         LinearLayout bar = new LinearLayout(this); bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setPadding(dp(18), dp(6), dp(6), dp(6)); bar.setBackground(round(GLASS_HI, GLASS_LINE, 32));
-        commandInput = new EditText(this); commandInput.setHint("Ask OpenBridge…  e.g. Start my vacuum");
+        bar.setPadding(dp(watch ? 12 : 18), dp(6), dp(watch ? 4 : 6), dp(6)); bar.setBackground(round(GLASS_HI, GLASS_LINE, 32));
+        commandInput = new EditText(this); commandInput.setHint(watch ? "Ask OpenBridge…" : "Ask OpenBridge…  e.g. Start my vacuum");
         commandInput.setTextColor(TEXT); commandInput.setHintTextColor(FAINT); commandInput.setBackground(null);
-        commandInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, tv ? 19 : 16); commandInput.setSingleLine(true);
+        commandInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, tv ? 19 : watch ? 14 : 16); commandInput.setSingleLine(true);
         commandInput.setImeOptions(EditorInfo.IME_ACTION_SEND);
         commandInput.setOnEditorActionListener((v, id, e) -> {
             if (id == EditorInfo.IME_ACTION_SEND || (e != null && e.getKeyCode() == KeyEvent.KEYCODE_ENTER && e.getAction() == KeyEvent.ACTION_DOWN)) { sendCommand(); return true; }
@@ -139,7 +152,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             @Override public void afterTextChanged(Editable s) { send.setActive(s.toString().trim().length() > 0); }
         });
         bar.addView(commandInput, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-        int gs = dp(tv ? 56 : 48);
+        int gs = dp(tv ? 56 : watch ? 40 : 48);
         mic = new GlyphButton(this, GlyphButton.MIC, MAGENTA);
         mic.setOnClickListener(v -> toggleRecord());
         LinearLayout.LayoutParams micLp = new LinearLayout.LayoutParams(gs, gs); micLp.leftMargin = dp(6);
@@ -152,13 +165,14 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
         // ---- live flows: legend + toggle ---------------------------------------------------------------
         LinearLayout legend = new LinearLayout(this); legend.setGravity(Gravity.CENTER);
+        if (watch) legend.setOrientation(LinearLayout.VERTICAL);
         flowOut = text("", 12, true, FlowOverlayView.C_OUT); flowIn = text("", 12, true, FlowOverlayView.C_IN);
         for (TextView tv0 : new TextView[]{flowOut, flowIn}) {
             int col = tv0 == flowOut ? FlowOverlayView.C_OUT : FlowOverlayView.C_IN;
             tv0.setPadding(dp(12), dp(5), dp(12), dp(5));
             tv0.setBackground(round(Color.argb(22, Color.red(col), Color.green(col), Color.blue(col)), Color.argb(110, Color.red(col), Color.green(col), Color.blue(col)), 14));
             LinearLayout.LayoutParams lp0 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (tv0 == flowIn) lp0.leftMargin = dp(8);
+            if (tv0 == flowIn) { if (watch) lp0.topMargin = dp(6); else lp0.leftMargin = dp(8); }
             legend.addView(tv0, lp0);
         }
         flowsBtn = button("View flows", PillIcon.FLOWS, FlowOverlayView.C_OUT, STYLE_TOGGLE);
@@ -196,13 +210,23 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         // ---- live info -------------------------------------------------------------------------------
         LinearLayout live = card();
         live.addView(sectionTitle("LIVE", null));
-        LinearLayout r1 = new LinearLayout(this), r2 = new LinearLayout(this);
         TextView[] t;
-        t = tile(r1, "LINK"); linkValue = t[0]; linkDot = t[1];
-        t = tile(r1, "BLUETOOTH"); btValue = t[0]; btDot = t[1];
-        t = tile(r2, "SCANS"); scanValue = t[0]; scanDot = t[1];
-        t = tile(r2, "CONTROLS"); ctrlValue = t[0]; ctrlDot = t[1];
-        live.addView(r1); live.addView(spacer(8)); live.addView(r2);
+        if (watch) {
+            // Round 240dp screens: one full-width tile per row, no hyphenated values.
+            LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
+            t = tile(col, "LINK"); linkValue = t[0]; linkDot = t[1];
+            t = tile(col, "BLUETOOTH"); btValue = t[0]; btDot = t[1];
+            t = tile(col, "SCANS"); scanValue = t[0]; scanDot = t[1];
+            t = tile(col, "CONTROLS"); ctrlValue = t[0]; ctrlDot = t[1];
+            live.addView(col);
+        } else {
+            LinearLayout r1 = new LinearLayout(this), r2 = new LinearLayout(this);
+            t = tile(r1, "LINK"); linkValue = t[0]; linkDot = t[1];
+            t = tile(r1, "BLUETOOTH"); btValue = t[0]; btDot = t[1];
+            t = tile(r2, "SCANS"); scanValue = t[0]; scanDot = t[1];
+            t = tile(r2, "CONTROLS"); ctrlValue = t[0]; ctrlDot = t[1];
+            live.addView(r1); live.addView(spacer(8)); live.addView(r2);
+        }
         deviceLine = text("", 12, false, FAINT); deviceLine.setPadding(dp(2), dp(12), 0, 0); live.addView(deviceLine);
 
         LinearLayout activity = card();
@@ -238,7 +262,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         footer.setPadding(dp(4), dp(4), dp(4), 0);
 
         // ---- assemble --------------------------------------------------------------------------------
-        int pad = dp(tv ? 40 : 18);
+        int pad = dp(tv ? 40 : watch ? 26 : 18);
         LinearLayout info = new LinearLayout(this); info.setOrientation(LinearLayout.VERTICAL);
         if (tv) {
             LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.HORIZONTAL);
@@ -573,7 +597,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             int n = relay.controls().length();
             setTile(ctrlValue, ctrlDot, n == 0 ? "None" : n + (n == 1 ? " control" : " controls"), n > 0 ? CYAN : MUTED);
             String id = relay.relayId();
-            deviceLine.setText((tv ? "Android TV" : "Phone") + " · Android " + Build.VERSION.RELEASE + " · " + id.substring(0, Math.min(14, id.length())) + " · port " + RelayServer.PORT);
+            deviceLine.setText((tv ? "Android TV" : watch ? "Watch" : "Phone") + " · Android " + Build.VERSION.RELEASE + " · " + id.substring(0, Math.min(14, id.length())) + " · port " + RelayServer.PORT);
 
             // Checklist
             checklist.removeAllViews();
@@ -766,6 +790,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         });
     }
 
+    @Override public void nsd(boolean ok, int err) {
+        log(ok ? "mDNS: this relay is advertised on the LAN" : "mDNS: advertisement failed (err " + err + ")");
+    }
+
     @Override public void code(String c) {
         runOnUiThread(() -> {
             codeShown = c != null;
@@ -793,8 +821,14 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         TextView l = text(label, 10, true, FAINT); l.setLetterSpacing(0.2f);
         top.addView(dot); top.addView(l); t.addView(top);
         TextView v = text("—", tv ? 18 : 16, false, TEXT, "sans-serif-medium"); v.setPadding(0, dp(4), 0, 0); t.addView(v);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
-        if (rowParent.getChildCount() > 0) lp.leftMargin = dp(8);
+        LinearLayout.LayoutParams lp;
+        if (rowParent.getOrientation() == LinearLayout.VERTICAL) {
+            lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            if (rowParent.getChildCount() > 0) lp.topMargin = dp(8);
+        } else {
+            lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+            if (rowParent.getChildCount() > 0) lp.leftMargin = dp(8);
+        }
         rowParent.addView(t, lp);
         return new TextView[]{v, dot};
     }
@@ -817,11 +851,11 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     /** Pill button: vector icon, role colour, pressed/focused states (TV remote gets a glowing ring). */
     private Button button(String s, int icon, int accent, int style) {
-        Button b = new Button(this); b.setText(s); b.setAllCaps(false); b.setTextSize(tv ? 18 : 15);
+        Button b = new Button(this); b.setText(s); b.setAllCaps(false); b.setTextSize(tv ? 18 : watch ? 14 : 15);
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        b.setMinHeight(dp(tv ? 60 : 52)); b.setFocusable(true); b.setStateListAnimator(null);
+        b.setMinHeight(dp(tv ? 60 : watch ? 48 : 52)); b.setFocusable(true); b.setStateListAnimator(null);
         b.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
-        b.setPadding(dp(18), 0, dp(16), 0); b.setCompoundDrawablePadding(dp(12));
+        b.setPadding(dp(watch ? 14 : 18), 0, dp(watch ? 12 : 16), 0); b.setCompoundDrawablePadding(dp(watch ? 10 : 12));
         b.setTag(R_ROLE, new int[]{icon, accent, style});
         styleButton(b, false);
         return b;

@@ -47,6 +47,7 @@ Every public claim, its status and where to check it. A claim without evidence i
 | Phone+AVD orchestration via CLI, sha-verified montage | REAL_HARDWARE_VERIFIED (phone) + EMULATOR_VERIFIED (AVD) | docs/evidence/p30-cli-orchestration-30oct.md (registry row 21) |
 | Native controls on real Watch7 + long-press loop; TV 0.11.0 PAIRED | REAL_HARDWARE_VERIFIED (SM-L310 + Android TV) | docs/evidence/g04-watch-30oct.md (registry rows 22-23, G04 PASS) |
 | Phone 0.11.0 PAIRED READY + relay probe | REAL_HARDWARE_VERIFIED (BV9300) | docs/evidence/g04-watch-30oct.md (registry row 24) |
+| Companion found over Wi-Fi with no adb address (QU-bit browse + NSD) | REAL_HARDWARE_VERIFIED (SM-L310, adb disconnected) | docs/evidence/companion-lan-discovery-30oct.md (registry row 25) |
 | Paid Meta cloud end-to-end | BLOCKED (no key, no spend order) | preflight + budget guard unit-tested; $0 spent |
 
 ## Never claimed

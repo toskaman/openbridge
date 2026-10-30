@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, reconciled against main `73cfef5` on 30 October 2026 (PR145-149 merged; suite 1145 green on Windows + Linux CI; registry 24 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
+Authoritative checklist, reconciled against main `994cdc9` on 30 October 2026 (PR145-152 merged; suite 1150 green on Windows + Linux CI; registry 25 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
 
 ## Integrated work
 
@@ -28,6 +28,7 @@ Authoritative checklist, reconciled against main `73cfef5` on 30 October 2026 (P
 | CLI + jury release (30 Oct) | `openbridge` CLI + tiers + budget + doctor + parity + pack (PR149) | [Matrix](P30_MODEL_MATRIX.md), [gates](release/P30_GATES_AND_REPORT.md). 2 Glimmer candidates validated+revoked (row 20); phone+AVD orchestration sha-verified (row 21). Paid cloud BLOCKED (no key). |
 | Watch native UI + TV shot (30 Oct) | G04 closed: QUICK CONTROLS on real Watch7 + long-press loop acked; TV 0.11.0 PAIRED shot | [Proof](evidence/g04-watch-30oct.md) (registry rows 22-23). Watch re-paired to evidence driver; live link restorable via standard flow. |
 | Phone 0.11.0 shot (30 Oct) | PAIRED READY + relay probe on owner phone | [Proof](evidence/g04-watch-30oct.md) (registry row 24). Live link untouched. |
+| Companion LAN discovery (30 Oct) | 0.12.0 NSD advert + QU-bit browse + companion_lan onboarding, no adb | [Proof](evidence/companion-lan-discovery-30oct.md) (registry row 25). 3/3 (phone+TV+watch) advertise ver 12 when awake; final-build watch UI shots pending watch wake. |
 
 ## Remaining gates
 

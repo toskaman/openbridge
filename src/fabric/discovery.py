@@ -1,5 +1,6 @@
 """Discovery manager: runs bounded providers and feeds one registry. Discovery never implies permission to control."""
 import os
+import re
 import secrets
 import time
 from pathlib import Path
@@ -8,6 +9,8 @@ from src.fabric.registry import Registry
 from src.fabric import mdns
 
 MDNS_LABEL_KEYS = ('fn', 'md', 'box_model_name', 'manufacturer', 'model', 'name')
+COMPANION_SERVICE = '_openbridge-relay._tcp'
+COMPANION_RELAY_ID = re.compile(r'relay-[0-9a-f]{12}')
 
 
 def install_salt(root=None):
@@ -34,12 +37,22 @@ def ingest_mdns(registry, result, salt):
             ids.append(Identifier('mac_global', opaque('mac_global', mac.lower(), salt), True))
         if inst['service'] == '_fbx-api._tcp' and txt.get('api_domain'):
             ids.append(Identifier('freebox_uid', opaque('freebox_uid', txt['api_domain'].lower(), salt), True))
+        companion = inst['service'] == COMPANION_SERVICE
+        if companion and COMPANION_RELAY_ID.fullmatch(txt.get('relay') or ''):
+            ids.append(Identifier('companion_relay', opaque('companion_relay', txt['relay'].lower(), salt), True))
         label = next((txt[k] for k in MDNS_LABEL_KEYS if txt.get(k)), inst['instance'])[:60]
+        if companion and txt.get('label'):
+            label = txt['label'][:60]
         obs = []
         for k in ('md', 'box_model_name', 'manufacturer', 'api_version', 'model'):
             if txt.get(k) and not (k == 'model' and inst['service'] not in ('_device-info._tcp', '_airplay._tcp', '_companion-link._tcp')):
                 obs.append(DeviceObservation({'md': 'model', 'box_model_name': 'model'}.get(k, k), txt[k][:80], 'MDNS', 'LAN', t, False, 0.8))
-        key = registry.upsert(ids, category=inst['category'], label=label, observations=obs,
+        if companion and txt.get('label'):
+            obs.append(DeviceObservation('model', txt['label'][:80], 'MDNS', 'LAN', t, False, 0.8))
+        category = inst['category']
+        if companion:
+            category = txt.get('form') if txt.get('form') in ('phone', 'watch', 'tv') else 'phone'
+        key = registry.upsert(ids, category=category, label=label, observations=obs,
                               weak=[('ip', a) for a in inst.get('addresses', [])])
         services = registry.devices[key].setdefault('mdns_services', set()); services.add(inst['service'])
         if inst.get('port') and any('.' in a for a in inst.get('addresses', [])):
@@ -51,7 +64,8 @@ def ingest_mdns(registry, result, salt):
                '_androidtvremote2._tcp': ('tv_remote_protocol', 'observe', 'NOT_SUPPORTED'),
                '_adb-tls-connect._tcp': ('wireless_adb', 'observe', 'IMPLEMENTED_UNVERIFIED'),
                '_esphomelib._tcp': ('esphome_api', 'observe', 'NOT_SUPPORTED'),
-               '_home-assistant._tcp': ('home_assistant_api', 'observe', 'NOT_SUPPORTED')}.get(inst['service'])
+               '_home-assistant._tcp': ('home_assistant_api', 'observe', 'NOT_SUPPORTED'),
+               COMPANION_SERVICE: ('companion_relay', 'observe', 'IMPLEMENTED_UNVERIFIED')}.get(inst['service'])
         if cap:
             registry.capability(key, Capability(cap[0], cap[1], cap[2], 'MDNS', inst['service']))
 

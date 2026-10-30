@@ -18,7 +18,7 @@ Three things you can do with it today:
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
 3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
 
-Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (24 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
+Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (25 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
 
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
 ## About the developer
@@ -33,17 +33,21 @@ I'm an autistic independent developer who has been passionate about computers, p
 
 *Ask OpenBridge: type a request in English or French; tiered Meta-only routing (free local Llama/Glimmer, cloud Spark only with explicit consent) resolves it to a registered skill, shows a fingerprint-bound preview, and executes only after owner approval. Local tiers verified live; cloud path unit-tested, broker unconfigured in this capture.*
 
-![Companion 0.10.0 on a real phone](docs/jury/screens/companion-0-10-phone-main.png)
+![Companion 0.12.0 on a real phone, PAIRED](docs/jury/screens/phone-companion-0-11-paired.png)
 
-*Companion 0.10.0 on a real phone (29 Oct 2026): voice orb, typed commands, live link/Bluetooth/scan tiles, and owner controls — all over the signed, encrypted relay channel.*
+*Companion on a real phone, PAIRED (30 Oct 2026, 0.11.0 shot — 0.12.0 keeps the same layout and adds LAN self-advertisement): voice orb, typed commands, live tiles, and owner controls — all over the signed, encrypted relay channel.*
 
 ![Allow full control warning popup](docs/jury/screens/companion-0-10-full-control-popup.png)
 
-*Standing consent, on-device: "Allow full control" shows this warning — the PC may then send any command without asking each time. Revoking is one tap, and unpairing clears it. Proof of the full cycle (popup → allow → revoke → cancel) in the [0.10.0 release notes](docs/release/COMPANION_0_10_0.md).*
+*Standing consent, on-device: "Allow full control" shows this warning — the PC may then send any command without asking each time. Revoking is one tap, and unpairing clears it. Proof of the full cycle (popup → allow → revoke → cancel) in the [0.10.0 release notes](docs/release/COMPANION_0_10_0.md); UI unchanged since.*
 
-![Companion 0.10.0 on Galaxy Watch7](docs/jury/screens/companion-watch-0-10.png)
+![Native QUICK CONTROLS on Galaxy Watch7](docs/jury/screens/g04-watch-quick-controls.png)
 
-*Companion 0.10.0 on a Galaxy Watch7 (29 Oct 2026): install verified on-device, relay paired over the signed channel ([device:watch-sm-l310-01]).*
+*Owner-approved controls published from the PC render natively on the Galaxy Watch7 (30 Oct 2026): "Scan room" and "Watch facts" installed over the sealed channel, long-press loop acknowledged on screen ([device:watch-sm-l310-01], [G04 proof](docs/evidence/g04-watch-30oct.md)).*
+
+![Companion on Android TV, PAIRED](docs/jury/screens/tv-companion-0-11-paired.png)
+
+*Companion on Android TV, PAIRED (30 Oct 2026): orb, LIVE tiles, and the activity feed showing the relay listening on port 47800 ([device:tv-companion-01]).*
 
 ## Built for the Meta Global AI Developer Hackathon (October 26–November 4, 2026)
 
@@ -82,9 +86,9 @@ To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVI
 
 The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
 
-### Event-built evidence (30 Oct, main `73cfef5`)
+### Event-built evidence (30 Oct, main `994cdc9`)
 
-Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (24 VERIFIED rows).
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.12.0 with LAN self-advertisement on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (found over Wi-Fi with no adb address); native QUICK CONTROLS + long-press loop on the real Watch7 ([G04 proof](docs/evidence/g04-watch-30oct.md)); `openbridge` CLI with GUI parity + jury pack; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (25 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem
@@ -145,8 +149,11 @@ Current release status and remaining acceptance gates: [release index](docs/RELE
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
 ## What's new (30 Oct 2026)
-- **Companion 0.11.0 everywhere**: live flow overlay + pill-icon buttons; installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7 (signed watch pair `relay-39f86439fbae`). Homepage screenshots still show 0.10.0 (29 Oct captures) — the 0.11.0 flows are verified, not yet reshot.
-- **Legacy Windows proven, then cleaned**: legacy C agent (subsystem 5.01, software SHA-256/HMAC) ran mutual-auth + RPC exec on real XP SP3 + Win7 SP1 QEMU guests with screenshots; VMs deleted after proofs, trace kept in [legacy evidence](docs/evidence/vm-legacy-xp-win7-30oct.md) and the [registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
+- **Companion 0.12.0 everywhere**: LAN self-advertisement (mDNS NSD + QU-bit browse + `companion_lan` onboarding) — phone, TV and Watch7 found over Wi-Fi with no adb address (registry row 25); watch UI rescaled (stacked header, single-column LIVE tiles, roomier input).
+- **G04 closed**: native QUICK CONTROLS on the real Watch7 + signed long-press loop acknowledged on screen ([proof](docs/evidence/g04-watch-30oct.md), rows 22-23); TV + phone 0.11.0 PAIRED shots (row 24).
+- **CLI + jury release**: `openbridge` CLI (tiers, budget, doctor, parity, jury pack VERIFY OK), 2 Glimmer candidates validated+revoked, phone+AVD orchestration sha-verified.
+- **Companion 0.11.0 everywhere**: live flow overlay + pill-icon buttons; installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7 (signed watch pair `relay-39f86439fbae`).
+- **Legacy Windows proven, then cleaned**: legacy C agent (subsystem 5.01, software SHA-256/HMAC) ran mutual-auth + RPC exec on real XP SP3 + Win7 SP1 QEMU guests with screenshots; VMs deleted after proofs, trace kept in [legacy evidence](docs/evidence/vm-legacy-xp-win7-30oct.md).
 - **P0 hardening batch (PR126–PR130, PR135)**: point-of-dispatch full-control recheck, pairing attempt limits, crash-safe invocation journal with honest UNCERTAIN, supervised STT worker, HTTP-level relay-scan verification, idempotency keys + journal claims on HTTP execute and direct intents.
 - **Device connect (PR133)**: hardware agent matrix (correct agent per hardware), auto connection planner, per-device connect tutorials and guided agent pick.
 - **ESP32 P1**: native IDF agent VERIFIED on QEMU-ESP32 (registry row 16: AUTH + ping + execs + cross-device CROSS_OK via serial gateway); Arduino build keeps the physical WiFi/TFT path.
@@ -156,7 +163,7 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 - **Eval-kit baseline (§11)**: 1,000 French turns replayed (200/200 convs, 0 crashes/sends); rules cover 1.4%, model tiers pending.
 - **Multi-device orchestration (§7)**: DAG workflows (parallel, approvals, partial failure, durable receipts) + 9 media/file/action skills; live USB capture/send/montage (registry row 17).
 - **Official Android emulator (§12)**: Pixel 6 AVD on WHPX driven via adb — capture/probe/hash-verified send + cleanup (registry row 18).
-- Full suite 1064 green on Windows + Linux CI.
+- Full suite 1150 green on Windows + Linux CI.
 
 ## What's new (29 Oct 2026)
 - **Sealed held-out skill synthesis (G3)**: commit-reveal spec, Muse Spark 1.3 composes a TV skill the system never had — compile → grant → act → independent verify → owner restore → revoke, loop `300000 → 60000 → 300000` on live hardware, $0.0203 over 3 calls, 2 KILLs honestly retained ([SUCCESS reveal](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md)).
@@ -173,7 +180,7 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 
 ## What's new (27 Oct 2026)
 - **Runtime contract v1 and `/api/v2`**: a versioned read model and one execute endpoint over named safe primitives (schema, consent, identity re-check, per-device locking, honest timeouts). See `docs/api/HTTP.md`.
-- **More devices, all owner-authorized**: Galaxy Watch7 (wireless-debugging pairing with an in-app tutorial), a second Windows PC through the owner's agent (read-only), Android phone and TV Companion relays feeding Capability Forge.
+- **More devices, all owner-authorized**: Galaxy Watch7 (direct Wi-Fi discovery with no adb address since 0.12.0; wireless-debugging pairing with an in-app tutorial remains), a second Windows PC through the owner's agent (read-only), Android phone and TV Companion relays feeding Capability Forge.
 - **Crash-recoverable writes**: five process-kill points during a real change on the phone, each recovered from the journal with exact read-back (5/5).
 - **Live Meta Model API**: `muse-spark-1.3` advisory verified live on synthetic facts within free credits; local Llama 3.2 3B and Muse Glimmer remain the default.
 - **Read-only watchers and a redacted multi-device report.**
@@ -224,12 +231,8 @@ Architecture [UNIVERSAL_DEVICE_ARCHITECTURE](docs/UNIVERSAL_DEVICE_ARCHITECTURE.
 
 All code was written during the event; see [CONTRIBUTIONS](CONTRIBUTIONS.md) and [THIRD_PARTY](THIRD_PARTY.md).
 
-## Website redesign with Meta Muse Wonder 1.0
+## Website design history (honest attribution)
 
-The current visual foundation was authored by **Meta Muse Wonder 1.0** through the official Meta API on 27 October 2026: design tokens, workspace shell, and component CSS. Codex adapted the markup, wrote the integration layer, preserved existing controls, and performed verification. The original Meta-authored modules are in `src/ui/theme/`; compile them with `python -m dev.build_web_theme`.
+The **current main-site shell and theme** (`src/ui/theme/app.css`) were authored by **Claude** (development-time assistant, 28 October 2026, owner decision) and integrated/tested by Codex. No new Meta design call was made for this integration, and no assistant is a runtime model provider.
 
-The [generation receipt](docs/forge/meta-web-design-receipt.json) records 798 input and 3,500 output tokens, an estimated $0.073192 promotional-credit cost, and `finish_reason: length`. The final explanatory field was truncated; only the five fully decoded fields were extracted. The three complete CSS fields were retained verbatim. This is a real build-time Meta contribution, not a claim that Meta authored all application code or a new runtime model integration. No second provider request was made.
-
-## Current application theme — owner decision, 28 October 2026
-
-The owner selected Claude's latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. Codex integrated and tested the combined changes. No new Meta design call was made for this integration.
+Separately, **Meta Muse Wonder 1.0** authored an earlier main-site theme through the official Meta API on 27 October 2026 (design tokens, workspace shell, component CSS in `src/ui/theme/`; compile with `python -m dev.build_web_theme`). The [generation receipt](docs/forge/meta-web-design-receipt.json) records 798 input and 3,500 output tokens, ~$0.073192 promotional-credit cost, and `finish_reason: length` (only the five fully decoded fields were extracted; the three complete CSS fields were retained verbatim). That Meta theme has since been **replaced as the main shell** by the Claude theme above; the Forge theme and the retained Spark/Wonder receipts describe their actual, separate contributions. This section is a real build-time record, not a claim that Meta authored all application code or a new runtime integration.
