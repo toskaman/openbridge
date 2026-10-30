@@ -35,6 +35,8 @@ def main():
     for a in ('--base', '--out', '--task-spec', '--task-sha256'):
         ap.add_argument(a, required=True)
     ap.add_argument('--tier', choices=['glimmer', 'llama'], default='glimmer')
+    ap.add_argument('--replay-from', default=None,
+                    help='reuse the validated Meta candidate recorded in an extended-budget synthesis record (no new model call); re-validated against live evidence')
     args = ap.parse_args()
     sys.path.insert(0, str(ROOT))
     from dev.run_g3_smoke import Http, act_restore_sequence, resolve_scope, strip_fences
@@ -121,7 +123,21 @@ def main():
 
     client = MetaClient({args.tier: local})
     cand, rejects = None, []
-    for _ in range(MAX_CALLS):
+    if args.replay_from:
+        prior = json.loads(Path(args.replay_from).read_text(encoding='utf-8'))
+        pc = prior.get('candidate')
+        if not isinstance(pc, dict):
+            return stop('KILL', reason='replay record has no validated candidate')
+        doc = {k: v for k, v in pc.items() if k != 'digest'}
+        try:
+            v4_synthesize.validate_candidate(dict(doc), offer, bundle=bundle, schemas=schemas, required=required)
+        except v4_synthesize.SynthError as e:
+            return stop('KILL', reason='replayed candidate no longer binds to live evidence: %s' % e)
+        cand = {'candidate': pc, 'prompt_sha256': prior.get('prompt_sha256')}
+        T['replayed_from'] = {'path': Path(args.replay_from).name, 'candidate_digest': pc.get('digest'),
+                              'model': prior.get('model'), 'synthesis': prior.get('synthesis'),
+                              'note': 'no new model call; candidate from the extended-budget synthesis record'}
+    for _ in range(0 if cand else MAX_CALLS):
         try:
             ok, body = v4_synthesize.synthesize(client, args.tier, bundle, INTENT_T, offer, CAT,
                                                 schemas=schemas, required=required)

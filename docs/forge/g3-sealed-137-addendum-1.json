@@ -1,0 +1,23 @@
+{
+ "kind": "G3_SEALED_ADDENDUM",
+ "addendum": 1,
+ "task_id": "sealed-phone-brightness-137",
+ "recorded_at": "2026-10-30T15:48:42+00:00",
+ "reason": "frozen 120s/call budget cannot run Glimmer-30B on the lab GPU: 3 attempts, 3 TimeoutErrors (transcripts glimmer, glimmer2, glimmer3 kept). The model answers (PONG in 17s) but a ~1K-token synthesis prompt needs >120s at local speed.",
+ "change": "dev/run_g3_local.py gains --replay-from (same re-validation as run_g3_smoke.py); new dev/g3_manual_synth.py performs ONLY synthesis with a 600s budget, reusing frozen build_prompt (v4-synth-4), transport_from_broker, validate_candidate. --replay-from re-validates against FRESH live evidence, then the frozen bind/compile/grant/invoke/oracle/restore/revoke pipeline runs.",
+ "frozen_still": [
+  "spec sha 0c42bb0c (unchanged)",
+  "v4_synthesize.py",
+  "v4_evidence.py",
+  "v4_substrate.py",
+  "v4_metaclient.py",
+  "src/substrate/registry.py",
+  "dev/g3_task.py",
+  "dev/run_g3_smoke.py"
+ ],
+ "file_sha256": {
+  "dev/run_g3_local.py": "a046c34fec03227553e584a0b55fefb963b142b3b7133ef3130ac6e8586c7adc",
+  "dev/g3_manual_synth.py": "cfaf763482387e83eecf435ebfd650b77d3d73a6b9d6221fa92067d19d5f94ca"
+ },
+ "results_at_addendum": "none: all 4 prior attempts are KILLs with no candidate (glimmer x3 timeout, llama 0/3 schema). No cherry-picking possible."
+}
