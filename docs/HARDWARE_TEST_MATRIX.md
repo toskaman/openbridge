@@ -71,7 +71,7 @@ Historical (26 Oct), all since completed — see EVIDENCE_LEDGER. Former pending
 | Device replaced on the same link/IP | SIMULATED_VERIFIED | `test_device_replaced_under_same_link` → IDENTITY_CHANGED |
 | Relay disappears / revoked, TV off, timeout, concurrent requests, inconsistent read-back, server restart | SIMULATED_VERIFIED | `tests/runtime/test_primitives.py` |
 | Relay staleness, rotating addresses, anti-spoofing flags | SIMULATED_VERIFIED | `tests/runtime/test_relay_health.py` |
-| Windows PC through the owner's BridgeWindows agent (read-only allowlist: sys.diag, proc.list count, 4 registry values) | REAL_HARDWARE_VERIFIED (second PC, Windows 10 build 17763 x64, agent 3.7.1 x86) | `python -m dev.windows_bridge_smoke` + `tests/runtime/test_windows_bridge.py` |
+| Windows PC through the owner's BridgeWindows agent (read-only allowlist: sys.diag, proc.list count, 4 registry values) | REAL_HARDWARE_VERIFIED (second PC, Windows 10 build 17763 x64, agent x86) | `python -m dev.windows_bridge_smoke` + `tests/runtime/test_windows_bridge.py` |
 
 ## 27 Oct additions
 | Scenario | Status | Evidence |
@@ -90,6 +90,6 @@ The original rows above describe their recorded revisions. Newer [device capabil
 - Blackview BV9300 Pro: keys, touch, YouTube launch, exact volume and brightness change/restore.
 - Galaxy Watch7: direct PC-to-watch ADB actions and exact volume restore while awake; dozing can time out. This is not proof of Watch-to-TV control.
 - Xiaomi: input/settings writes remained denied; readable facts and permitted app launch are separate results.
-- BridgeWindows v4: mutual authentication and message MACs, without payload encryption; historical v3 rows do not describe the current protocol. OpenBridge multi-PC integration remains unimplemented.
+- BridgeWindows v4: mutual authentication and message MACs, without payload encryption; superseded rows do not describe the current protocol. OpenBridge multi-PC integration remains unimplemented.
 
 These are existing contributor-recorded hardware results, not newly repeated hardware experiments during this audit. See [remaining work](RELEASE_STATUS.md) for open integration gates.

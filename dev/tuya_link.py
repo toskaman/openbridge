@@ -3,7 +3,7 @@
 Reads the owner's project credentials (api_key/api_secret/region) and device id from a file the owner points to,
 asks Tuya's cloud API for the device's local key (the same call `python -m tinytuya wizard` makes), and stores
 {device_id, ip, local_key, version} in %LOCALAPPDATA%/OpenBridge/tuya.json. Nothing is printed except a masked check.
-    python -m dev.tuya_link --config "E:\\PROJECT PET RIFT\\Tuya\\config.json"
+    python -m dev.tuya_link --config "<your-tuya-iot-project-config>.json"
 """
 import argparse
 import json
