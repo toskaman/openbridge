@@ -1,0 +1,49 @@
+{
+ "kind": "G3_EXTENDED_SYNTHESIS",
+ "task_id": "sealed-phone-brightness-137",
+ "task_sha256": "0c42bb0cd9a2f4913ad26b2fceb888962cbbccc27254adf877d1a07ad07328d5",
+ "started": "2026-10-30T15:48:47.830335+00:00",
+ "tier": "glimmer",
+ "max_s": 600,
+ "deviation": "model-call budget 600s instead of the frozen 120s; everything else identical (prompt v4-synth-4, transport, validator). Recorded in the freeze addendum before this script ran.",
+ "calls": [
+  {
+   "attempt": 0,
+   "prompt_sha256": "ff5f1ae0e5c2f5be67556aeb86e89b473daf234395be064060e2802e4a55f5e8",
+   "status": "TRANSPORT_FAILED",
+   "failure_class": "TransportFailed",
+   "elapsed_ms": 219747
+  },
+  {
+   "attempt": 1,
+   "prompt_sha256": "ff5f1ae0e5c2f5be67556aeb86e89b473daf234395be064060e2802e4a55f5e8",
+   "status": "TRANSPORT_FAILED",
+   "failure_class": "TransportFailed",
+   "elapsed_ms": 2125
+  },
+  {
+   "attempt": 2,
+   "prompt_sha256": "ff5f1ae0e5c2f5be67556aeb86e89b473daf234395be064060e2802e4a55f5e8",
+   "status": "TRANSPORT_FAILED",
+   "failure_class": "TransportFailed",
+   "elapsed_ms": 2045
+  }
+ ],
+ "prompt_sha256": "ff5f1ae0e5c2f5be67556aeb86e89b473daf234395be064060e2802e4a55f5e8",
+ "prompt_version": "v4-synth-4",
+ "target": {
+  "device_fingerprint": "fp-b39a94438009937d",
+  "fact_count": 14,
+  "scope": [
+   "control",
+   "read"
+  ]
+ },
+ "model": {
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "endpoint": "http://127.0.0.1:11438",
+  "provisioning": "broker-pinned"
+ },
+ "finished": "2026-10-30T15:52:33.014958+00:00",
+ "status": "NO_CANDIDATE"
+}
