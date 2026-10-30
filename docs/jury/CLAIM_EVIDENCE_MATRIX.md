@@ -33,6 +33,12 @@ Every public claim, its status and where to check it. A claim without evidence i
 | PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | jobs REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER); inference worker SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
 | Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/moves/dock) | tests/fabric/test_tuya_local.py; owner link `python -m dev.tuya_link` + real run (pending) |
 | Meta-only runtime | VERIFIED (static + network trace) | src/ai/registry.py, tests/unit/test_meta_only_network_trace.py |
+| Capability explorer: UI schemas matched to live device capabilities | SIMULATED_VERIFIED + live discovery smoke (2 cards/118 widgets) | tests/fabric/test_capability_explorer.py, tests/runtime/test_explorer_api.py (§6 `5224d99`) |
+| Hardware intelligence: PC facts + task rankers + micro-benchmarks | REAL_HARDWARE_VERIFIED (PC1 + BV9300 live) | tests/fabric/test_hardware_intel.py, tests/runtime/test_hardware_api.py (§9 `2ad4688`) |
+| Permissions center: 13-entry catalog, measured states, grant flow | REAL_HARDWARE_VERIFIED (BV9300 live re-verify) | tests/fabric/test_permissions.py, tests/runtime/test_permissions_api.py (§10 `f1c460c`) |
+| 1,000-turn eval kit: rules baseline, 200/200 convs, 0 crashes/sends | MEASURED (rules 1.4%; model tiers pending, oracles sealed) | docs/benchmark/EVAL_1000_RULES_BASELINE.md (§11 `070392a`) |
+| Multi-device orchestration: DAG workflows, 9 scenarios, 9 new skills | SIMULATED_VERIFIED + live USB capture/send/montage | tests/runtime/test_workflows.py, docs/evidence/s7-live-usb-30oct.md (§7 `1e8066a`) |
+| Official Android emulator driven via adb (level 4, no companion) | EMULATOR_VERIFIED (capture/probe/send + cleanup) | docs/evidence/avd-ob-pixel-30oct.md (registry row 18) |
 
 ## Never claimed
 ACID transactions; zero-knowledge or anonymous cloud calls; 2D or person location from BLE RSSI; that BLE presence proves interference; fabricated scores; organizer acceptance or bonus eligibility.

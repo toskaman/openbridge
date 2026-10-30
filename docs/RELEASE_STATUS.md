@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, reconciled against main `99e6db5` on 30 October 2026 (PR135 merged, 0 open PRs, suite 894 green on Windows + Linux CI; live :18765 still on `ea2a102`, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
+Authoritative checklist, reconciled against main `1e8066a` on 30 October 2026 (PR144 merged; PR145/146/147 in CI; suite 1064 green on Windows + Linux CI; registry 18 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
 
 ## Integrated work
 
@@ -15,6 +15,12 @@ Authoritative checklist, reconciled against main `99e6db5` on 30 October 2026 (P
 | Routing evaluation | Preregistered synthetic inputs/gold and full result archive; router and policy-aware heuristic both32/32 | [Results and actual Meta design review](evaluation/routing-v1/RESULTS.md). Eight correlated families; no unseen-protocol or model-superiority claim. |
 | Command Center | PR60 and prompt correction PR63 merged; registered-skill parsing, bound preview, consent and receipts | [Current overview](../README.md), [command service](../src/runtime/command.py), [UI regression](../tests/e2e/command_center_smoke.py). Earlier PR60 findings describe its earlier head; merge alone is not new physical proof. |
 | Explanation evaluation preparation | PR62 merged the draft prompt/sample/rubric/budget | [Freeze guide](evaluation/routing-v1/explain/FREEZE_GUIDE.md). Preparation is not an approved freeze, completed calls or measured explanation quality. |
+| Capability explorer (30 Oct) | UI schemas matched to live capabilities + layouts + render API (PR140) | [Explorer tests](../tests/fabric/test_capability_explorer.py). Live discovery smoke (2 cards/118 widgets); TV/watch offline at proof time. |
+| Hardware intelligence (30 Oct) | PC facts + task rankers + micro-benchmarks + API (PR141) | Live on PC1 + BV9300 (facts/rank/bench). Some collectors degrade per-metric; never invented. |
+| Permissions center (30 Oct) | 13-entry catalog, measured states, grant flow + API (PR142) | Live re-verified on BV9300 (grants flip to granted). |
+| Eval-kit baseline (30 Oct) | 1,000-turn replay harness, anti-leak oracles, rules baseline (PR143) | [Report](benchmark/EVAL_1000_RULES_BASELINE.md). Rules 1.4%; model tiers + judging pending (models down, no hosted authz). |
+| Multi-device orchestration (30 Oct) | DAG workflows + 9 skills + stdlib montage + API + fixtures (PR144) | [Live USB proof](evidence/s7-live-usb-30oct.md) (registry row 17). Multi-target live runs pending TV/watch return. |
+| Official emulator (30 Oct) | Pixel 6 AVD on WHPX driven via adb (PR144) | [AVD proof](evidence/avd-ob-pixel-30oct.md) (registry row 18, level 4, no companion). |
 
 ## Remaining gates
 
