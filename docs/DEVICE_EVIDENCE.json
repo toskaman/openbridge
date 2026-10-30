@@ -692,5 +692,36 @@
   "status": "VERIFIED",
   "test_id": "companion-0.11.0-tv-launch-shot",
   "test_utc": "2026-10-30T21:10:00Z"
+ },
+ {
+  "commit_sha": "633bcb69f3aadd338d617a4812dfd9b12f8a7025",
+  "companion_version": "0.11.0 (code 11)",
+  "device_alias": "Owner phone (rugged model, Android 13)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/g04-watch-30oct.md",
+   "docs/jury/screens/phone-companion-0-11-paired.png"
+  ],
+  "independent_oracle": "adb screencap PNG pulled from device (PAIRED chip, READY orb) plus dumpsys package versionName plus TCP relay probe",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "Pairing predates this run (live server); no re-pair performed, live link untouched",
+   "Relay server runs only while the app is open"
+  ],
+  "operations": [
+   "companion 0.11.0 launch via adb shows PAIRED READY",
+   "version verified on device",
+   "relay port 47800 accepts TCP",
+   "clean screenshot captured for jury video"
+  ],
+  "os_version": "Android 13 (SDK 33)",
+  "permissions": [
+   "USB debugging authorized by owner"
+  ],
+  "platform": "Android phone",
+  "public_device_id": "phone-companion-01",
+  "status": "VERIFIED",
+  "test_id": "companion-0.11.0-phone-launch-shot",
+  "test_utc": "2026-10-30T21:20:00Z"
  }
 ]
