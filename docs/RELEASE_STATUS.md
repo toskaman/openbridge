@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, reconciled against main `73cfef5` on 30 October 2026 (PR145-149 merged; suite 1145 green on Windows + Linux CI; registry 21 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
+Authoritative checklist, reconciled against main `73cfef5` on 30 October 2026 (PR145-149 merged; suite 1145 green on Windows + Linux CI; registry 23 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
 
 ## Integrated work
 
@@ -21,11 +21,12 @@ Authoritative checklist, reconciled against main `73cfef5` on 30 October 2026 (P
 | Eval-kit baseline (30 Oct) | 1,000-turn replay harness, anti-leak oracles, rules baseline (PR143) | [Report](benchmark/EVAL_1000_RULES_BASELINE.md). Rules 1.4%; model tiers + judging pending (models down, no hosted authz). |
 | Multi-device orchestration (30 Oct) | DAG workflows + 9 skills + stdlib montage + API + fixtures (PR144) | [Live USB proof](evidence/s7-live-usb-30oct.md) (registry row 17). Multi-target live runs pending TV/watch return. |
 | Official emulator (30 Oct) | Pixel 6 AVD on WHPX driven via adb (PR144) | [AVD proof](evidence/avd-ob-pixel-30oct.md) (registry row 18, level 4, no companion). |
-| Relay dashboards (30 Oct) | Generated/patched/saved/restored control UIs + reconnect repush (PR145) | Simulated relay proven; live watch run owner-gated. |
+| Relay dashboards (30 Oct) | Generated/patched/saved/restored control UIs + reconnect repush (PR145) | Simulated relay proven; live watch run done 30 Oct ([proof](evidence/g04-watch-30oct.md), rows 22-23). |
 | RetroArch + P2 gaps (30 Oct) | Loopback control + gap analysis (PR146) | [Loopback proof](evidence/retroarch-loopback-30oct.md) (registry row 19). VOLUME_UP sent-unverified (honest). |
 | Stress hardening (30 Oct) | Workflow locks, store locks, byte cap, typed IO (PR147) | [Report](STRESS_14_REPORT.md). Crash drill 5/5. |
 | Docs + gates (30 Oct) | Matrix sync, 180s storyboard, bonus, 10 audits, A-G verdicts, start-date audit (PR148) | D/G OPEN, B/F conditional; zero files predate the start ref. |
 | CLI + jury release (30 Oct) | `openbridge` CLI + tiers + budget + doctor + parity + pack (PR149) | [Matrix](P30_MODEL_MATRIX.md), [gates](release/P30_GATES_AND_REPORT.md). 2 Glimmer candidates validated+revoked (row 20); phone+AVD orchestration sha-verified (row 21). Paid cloud BLOCKED (no key). |
+| Watch native UI + TV shot (30 Oct) | G04 closed: QUICK CONTROLS on real Watch7 + long-press loop acked; TV 0.11.0 PAIRED shot | [Proof](evidence/g04-watch-30oct.md) (registry rows 22-23). Watch re-paired to evidence driver; live link restorable via standard flow. |
 
 ## Remaining gates
 
