@@ -70,6 +70,10 @@ Protocol-lab targets (same pipeline): 32-bit Linux guest (i386), Android/TV/Wear
 
 Final objective: start OpenBridge on the PC, connect an ESP32, a Playdate, a Commodore 64 or a gateway-fitted Game Boy, and use each as a real control point of the OpenBridge network.
 
+## Port status 30 Oct (planned-targets pipeline)
+
+- Playdate (P1): steps 1, 2 and 4 DONE in PlaydateSimulator 3.1.2 against the real bridge — genuine .pdx (orb UI, selftest-on-boot OK on screen), mutual-auth handshake first-try, sys.ping pong, exec.run screen.text displayed and acknowledged (exit 0), TCP consent dialog captured, screenshots in the video manifest. Step 3 via the bridge→sim direction; sim→bridge button notify is host-tested (same code) but never fired from the sim (no unattended input available). Step 5 partial: pdex.elf links for ARMv7E-M Cortex-M7 (ARM GCC 15.2, nosys), sideload recipe not yet written, no physical device run. NO registry row: emulation only, hardware run pending.
+
 ## Corrected 29 Oct (supersedes stale rows above, history preserved)
 
 - Multi-PC: the OpenBridge server now accepts up to 8 agents (rewritten accept loop); second PC verified with binary swap + hash match. The "one agent at a time" row above is stale.
