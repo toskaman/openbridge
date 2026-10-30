@@ -18,7 +18,7 @@ Three things you can do with it today:
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
 3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
 
-Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (25 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
+Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (26 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
 
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
 ## About the developer
@@ -88,7 +88,7 @@ The runtime language-model intelligence uses **Meta models only**. Development-t
 
 ### Event-built evidence (30 Oct, main `994cdc9`)
 
-Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.12.0 with LAN self-advertisement on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (found over Wi-Fi with no adb address); native QUICK CONTROLS + long-press loop on the real Watch7 ([G04 proof](docs/evidence/g04-watch-30oct.md)); `openbridge` CLI with GUI parity + jury pack; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (25 VERIFIED rows).
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.12.0 with LAN self-advertisement on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (found over Wi-Fi with no adb address); native QUICK CONTROLS + long-press loop on the real Watch7 ([G04 proof](docs/evidence/g04-watch-30oct.md)); `openbridge` CLI with GUI parity + jury pack; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (26 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem

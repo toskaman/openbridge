@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, reconciled against main `994cdc9` on 30 October 2026 (PR145-152 merged; suite 1150 green on Windows + Linux CI; registry 25 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
+Authoritative checklist, reconciled against main `ffdbaff` on 30 October 2026 (PR145-153 merged; suite 1150 green on Windows + Linux CI; registry 26 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
 
 ## Integrated work
 

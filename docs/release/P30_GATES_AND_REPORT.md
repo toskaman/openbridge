@@ -46,8 +46,8 @@ Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 12. Orchestration: wf-p30-phone-avd2 + fault run wf-p30-fault, receipts on file.
 13. Screenshots/logs: montage PNG + manifest in E:/shots; attempt logs local-only.
 14. Security/concurrency: consent-bound approvals, atomic claims, no-replay, revocation.
-15. Unresolved: G10 paid, G16 clean machine, ESP32/Wii/vacuum offline. G04 closed 30 Oct (watch native UI + press loop); TV 0.11.0 PAIRED screenshot captured.
-16. ZIP: E:/OpenBridge-Jury-Release.zip, sha256 0f1d1836bfc2051c… (see sha256sums.txt).
+15. Unresolved: G10 paid, G16 clean machine, ESP32/Wii offline. G04 closed 30 Oct (watch native UI + press loop); vacuum re-verified live 30 Oct (facts + seek accepted, row 26).
+16. ZIP: E:/OpenBridge-Jury-Release.zip, sha256 353202c1b0e35a60… (rebuilt 30 Oct late incl. G04 + 0.12.0 + row 26, VERIFY OK; P30-run sha was 0f1d1836bfc2051c…). See sha256sums.txt.
 17. Install: QUICKSTART.md in the pack (Python + pip + CLI).
 18. Jury verify: tools/verify-package + `openbridge test jury`.
 19. Submission checklist: code/evidence done; video + portal + receipt owner-owned.
