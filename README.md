@@ -6,6 +6,20 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 [Documentation](docs/README.md) · [Release status and next tasks](docs/RELEASE_STATUS.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Hackathon entry](#built-for-the-meta-global-ai-developer-hackathon-october-26november-4-2026) · [About the developer](#about-the-developer) · [Device matrix](docs/HARDWARE_TEST_MATRIX.md)
 
+![OpenBridge tour: real captures only — phone Companion, Command Center graph, Watch, Ask panel, XP agent, ESP32 proof](docs/jury/screens/openbridge-tour.gif)
+
+*Every frame above is a real capture from this repository's evidence set — nothing staged. Full frames with context follow below.*
+
+**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, exact undo) fences every AI proposal so nothing changes without proof it can be undone.
+
+Three things you can do with it today:
+
+1. **Ask, preview, approve.** Type a request in English or French; OpenBridge resolves it to a registered skill, shows exactly what will change, and executes only after your approval — every run ends with a receipt and an undo path.
+2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
+3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
+
+Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (16 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
+
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
 ## About the developer
 
