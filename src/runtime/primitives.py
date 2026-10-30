@@ -181,6 +181,14 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('file bytes copied to the server transfer store; device untouched',),
                      'sha256 of the stored bytes reported', '',
                      R.NONE.value, ('DEVICE_UNAVAILABLE', 'PULL_FAILED'), 60, 'single-per-device', True),
+    ActionDescriptor('retro_command', 'Send one allowlisted command to the local RetroArch over loopback UDP',
+                     {'type': 'object', 'properties': {'command': _s('string', enum=['VERSION', 'GET_STATUS', 'PAUSE_TOGGLE', 'VOLUME_UP', 'VOLUME_DOWN'])},
+                      'required': ['command'], 'additionalProperties': False},
+                     ('owner consent for this command',),
+                     ('local RetroArch running with network_cmd enabled',),
+                     ('queries return a reply; actions are delivered without reply',),
+                     'queries: reply text read back; actions: EXECUTED_UNVERIFIED (delivery only)', '',
+                     R.IRREVERSIBLE.value, ('RETRO_UNAVAILABLE',), 15, 'single-global', True),
     ActionDescriptor('file_push', 'Push stored transfer bytes to /sdcard/OpenBridge/<name>, hash-verified',
                      {'type': 'object', 'properties': {'transfer_id': _s('string', maxLength=32), 'name': _s('string', maxLength=64)},
                       'required': ['transfer_id', 'name'], 'additionalProperties': False},
@@ -765,6 +773,17 @@ class Executor:
         return 'EXECUTED', None, f'{w}x{h} montage of {len(frames)}', True, \
             {'capture_id': cid, 'sha256': store.sha256(cid), 'width': w, 'height': h, 'inputs': len(frames)}
 
+    def _retro_command(self, key, params):
+        from src.adapters.retroarch import RetroArch, RetroArchError, QUERIES
+        port = getattr(self.ctx, 'retro_port', 55355)
+        try:
+            out = RetroArch(port=port).command(params['command'])
+        except RetroArchError as e:
+            raise ValueError(f'RETRO_UNAVAILABLE: {e}') from None
+        if params['command'] in QUERIES:
+            return 'EXECUTED', None, out[:120], True, {'reply': out}
+        return 'EXECUTED_UNVERIFIED', None, 'delivered, effect unverified', False, {'sent': out}
+
     def _file_pull(self, key, params):
         handle = self._adb_handle(key)
         try:
@@ -797,7 +816,8 @@ class Executor:
     RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
-               'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push}
+               'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,
+               'retro_command': _retro_command}
 
     # ---------- recovery backlog ----------
     MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first

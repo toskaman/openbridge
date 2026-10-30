@@ -59,6 +59,9 @@ SKILLS = {
     'vacuum_command': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                        'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'enum': ['start', 'pause', 'mode', 'dock', 'move', 'seek', 'empty_dust', 'reset_side_brush', 'reset_main_brush', 'reset_filter', 'water_level', 'work_mode']}, 'value': {'type': 'string', 'maxLength': 16}, 'move_s': {'type': 'number'}}, 'required': ['command'], 'additionalProperties': False},
                        'plain': 'Send one typed command to the Tuya robot. Momentary commands report verified=null.'},
+    'retro_command': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': False,
+                      'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'enum': ['VERSION', 'GET_STATUS', 'PAUSE_TOGGLE', 'VOLUME_UP', 'VOLUME_DOWN']}}, 'required': ['command'], 'additionalProperties': False},
+                      'plain': 'Send one allowlisted command to the RetroArch running on this PC (loopback only).'},
     'pc_run': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'maxLength': 2000}, 'shell': {'type': 'string', 'enum': ['cmd', 'powershell']}, 'timeout_s': {'type': 'integer', 'minimum': 1, 'maximum': 600}}, 'required': ['command'], 'additionalProperties': False},
                'plain': 'Run one owner-confirmed command on this Windows PC via its agent. Use inside an approval-gated workflow.'},
@@ -268,6 +271,13 @@ class Router:
             r = self._route(skill_id, snap, 'fabric', hops, 'op:capture_montage', 'capture_montage',
                             self.clock(), LEASE_S['LAN'], 'server-local compute', None, None)
             r['_params'] = lambda p: {'capture_ids': list(p['capture_ids']), 'layout': p.get('layout', 'row')}
+            return [r]
+        if skill_id == 'retro_command':
+            hops = [{'device_key': 'fabric', 'transport': 'LAN', 'primitive_id': 'retro_command',
+                     'grant': 'read', 'required_grant': 'read'}]
+            r = self._route(skill_id, snap, 'fabric', hops, 'op:retro_command', 'retro_command',
+                            self.clock(), LEASE_S['LAN'], 'localhost RetroArch', None, None)
+            r['_params'] = lambda p: {'command': p['command']}
             return [r]
         if target not in devs:
             return out
