@@ -4,7 +4,7 @@ import secrets
 
 from src.forge import v4_schemas as S
 
-PROMPT_VERSION = 'v4-synth-4'
+PROMPT_VERSION = 'v4-synth-5'
 CANDIDATE_KEYS = {'schema_version', 'candidate_id', 'origin', 'intent', 'target_opaque_id',
                   'primitive_chain', 'preconditions', 'postconditions', 'required_grants',
                   'evidence_refs', 'model_run_id'}
@@ -60,7 +60,9 @@ def build_prompt(bundle, intent_text, primitive_ids, target_category):
             'primitive_chain (non-empty list), required_grants (list, unique, minimal '
             'subset: each one of control, observe, read, and only from the target '
             'device scope= list), schema_version '
-            '(must be 1), target_opaque_id (copy one device id above exactly)')
+            '(must be 1), target_opaque_id (copy one device id above '
+            'character-for-character exactly as listed, it starts with "opaque:"; never '
+            'shorten, reformat, or invent)')
     example = ('{"schema_version":1,"candidate_id":"<id>","origin":"meta_generated",'
                '"intent":"<intent>","target_opaque_id":"<device-opaque-id>",'
                '"primitive_chain":[{"primitive_id":"<allowed-primitive>",'

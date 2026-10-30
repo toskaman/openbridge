@@ -26,12 +26,16 @@ SUBSTRATE_HEAD='8a73b8f395ecf13a979f88fd93649cd3975b3f23'
 # v4-synth-4 true input schemas + required/type enforcement in v4_schemas.py
 # and v4_synthesize.py (sealed run2 KILL: prompt said setting.set_exact takes
 # no inputs, validator accepted {}, kernel refused after the paid call).
+# Pins refreshed 2026-10-30 (P30 CLI lane): v4-synth-5 clarifies the
+# target_opaque_id copy rule (8/8 Glimmer misses without the opaque: prefix
+# replicated the evidence_refs wording); validator unchanged, live-proven
+# 2/2 first-attempt passes after the fix.
 AGENT_SOURCE_SHA256={'src/forge/v4_evidence.py': '80a483548b4aeddfdd1c9a13b68d2ccfe12f80bc415a7d2b3b477d0823ce5f4f',
  'src/forge/v4_gap.py': '42502734c7dd3b601634237959718251f9a4127a1417868666eceddd180edbfe',
  'src/forge/v4_metaclient.py': 'b01cd36724ea4cb34f1924647476ee8ab5d069f45c0868576b0f18a3987ef848',
  'src/forge/v4_provenance.py': 'cc7a43fb5a3f2c4f3ae71f09b0a6c5945c0d5bfc50e519a694bc48f72e69cf6d',
  'src/forge/v4_schemas.py': 'e62482d4cd8f563234ad17679be9b1c51e464e3c106087f3153d25f89973a5bd',
- 'src/forge/v4_synthesize.py': '6fc576d3a1e5edd6157b7b99d93ca0d8e3f71a2da5e3d4a2bf39017dcfef5190',
+ 'src/forge/v4_synthesize.py': '0062b163c998dd58122e989e73907ddcf91be9f23107e80832d83a06156017a6',
  'src/forge/v4_ui.py': '0f78184d14e427757b03effc14b6ff626bbfd3c325487e1695978e0ca7fe5b7c',
  'src/forge/v4_workflow.py': 'b06c3b533629b91b1690ff0470421fb1332070641e7a869cefbd8c7207464cf2'}
 SCHEMA_HELPER_SHA256='8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9'
