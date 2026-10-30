@@ -263,25 +263,23 @@ class FakeSTTProcessor:
 @unittest.skipUnless(__import__('importlib').util.find_spec('torch') is not None,
                        'torch required: exercises transcribe_pcm tensor path with a fake backend')
 class STTSwitchTracking(unittest.TestCase):
-    """FR-after-EN must re-switch the adapter: _backend tracks the loaded language (no model)."""
+    """FR-after-EN must re-switch the adapter: the worker-side inference path tracks the loaded language (no model)."""
 
     def test_language_tracking_across_calls(self):
-        old = stt_local._backend
-        try:
-            model = FakeSTTModel()
-            procs = {'fr': FakeSTTProcessor(), 'en': FakeSTTProcessor()}
-            stt_local._backend = (model, procs, 'fr')
-            pcm = b'\x00\x01' * 800
-            self.assertEqual(stt_local.transcribe_pcm(pcm, 'fr')['transcript'], 'x')
-            self.assertEqual(model.switches, [])
-            self.assertEqual(stt_local.transcribe_pcm(pcm, 'en')['transcript'], 'x')
-            self.assertEqual(model.switches, ['eng'])
-            self.assertEqual(stt_local._backend[2], 'en')
-            self.assertEqual(stt_local.transcribe_pcm(pcm, 'fr')['transcript'], 'x')
-            self.assertEqual(model.switches, ['eng', 'fra'])
-            self.assertEqual(stt_local._backend[2], 'fr')
-        finally:
-            stt_local._backend = old
+        model = FakeSTTModel()
+        backend = (model, {'fr': FakeSTTProcessor(), 'en': FakeSTTProcessor()}, 'fr')
+        pcm = b'\x00\x01' * 800
+        backend, doc = stt_local._run_inference(backend, 'fr', pcm)
+        self.assertEqual(doc['transcript'], 'x')
+        self.assertEqual(model.switches, [])
+        backend, doc = stt_local._run_inference(backend, 'en', pcm)
+        self.assertEqual(doc['transcript'], 'x')
+        self.assertEqual(model.switches, ['eng'])
+        self.assertEqual(backend[2], 'en')
+        backend, doc = stt_local._run_inference(backend, 'fr', pcm)
+        self.assertEqual(doc['transcript'], 'x')
+        self.assertEqual(model.switches, ['eng', 'fra'])
+        self.assertEqual(backend[2], 'fr')
 
 
 class TranscribeRouting(unittest.TestCase):
