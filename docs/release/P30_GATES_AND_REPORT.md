@@ -10,7 +10,7 @@ Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 | G01 | Source and running release match | PASS | All live runs from this tree (`python -m src.cli`); live :18765 is an older commit, disclosed, never used as proof |
 | G02 | Automated tests pass | PASS | 1145 passed 0 failed locally; CI on the PR |
 | G03 | Dynamic capability generation on hardware | PASS | 2 Glimmer candidates from the live phone bundle, forge-validated |
-| G04 | Native target UI publication, visually proven | BLOCKED | obv4.1 manifests staged (pending-kernel); no on-device rendered UI proof |
+| G04 | Native target UI publication, visually proven | PASS | QUICK CONTROLS renders Scan room + Watch facts on the real Watch7; long-press loop acked (docs/evidence/g04-watch-30oct.md) |
 | G05 | Physical outcome independently verified | PASS | Montage sha256 recomputed match; capture receipts with bytes + dims |
 | G06 | Multiple cross-device tests + evidence | PASS | phone+AVD montage, fabric.status via ask, fault injection |
 | G07 | One multi-device orchestration passes | PASS | wf-p30-phone-avd2: 2 captures + montage, all EXECUTED |
@@ -46,9 +46,9 @@ Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 12. Orchestration: wf-p30-phone-avd2 + fault run wf-p30-fault, receipts on file.
 13. Screenshots/logs: montage PNG + manifest in E:/shots; attempt logs local-only.
 14. Security/concurrency: consent-bound approvals, atomic claims, no-replay, revocation.
-15. Unresolved: G04 native UI, G10 paid, G16 clean machine, watch/TV/ESP32/Wii/vacuum offline.
+15. Unresolved: G10 paid, G16 clean machine, ESP32/Wii/vacuum offline. G04 closed 30 Oct (watch native UI + press loop); TV 0.11.0 PAIRED screenshot captured.
 16. ZIP: E:/OpenBridge-Jury-Release.zip, sha256 0f1d1836bfc2051c… (see sha256sums.txt).
 17. Install: QUICKSTART.md in the pack (Python + pip + CLI).
 18. Jury verify: tools/verify-package + `openbridge test jury`.
 19. Submission checklist: code/evidence done; video + portal + receipt owner-owned.
-20. Verdict: CONDITIONAL GO — EXPLICIT LIMITATIONS (G04, G10, G16, G22).
+20. Verdict: CONDITIONAL GO — EXPLICIT LIMITATIONS (G10, G16, G22).

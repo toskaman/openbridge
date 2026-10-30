@@ -627,5 +627,70 @@
   "status": "VERIFIED",
   "test_id": "p30-cli-orchestration",
   "test_utc": "2026-10-30T19:32:55Z"
+ },
+ {
+  "commit_sha": "33ec5e4fd324be5d2884f44e0913eecc90c25a98",
+  "companion_version": "0.11.0 (code 11)",
+  "device_alias": "Galaxy Watch7 44 mm (Wear OS)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/g04-watch-30oct.md",
+   "docs/jury/screens/g04-watch-quick-controls.png",
+   "docs/jury/screens/g04-watch-press-ack.png"
+  ],
+  "independent_oracle": "adb screencap PNGs pulled from device (rendered QUICK CONTROLS buttons, ack text) plus uiautomator dumps (pairing code card)",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "Relay sleeps with the screen; app must stay in the foreground",
+   "Evidence run re-paired the watch; live-server pairing restorable via standard flow",
+   "Press injected via adb long-press, gesture recorded as long_press"
+  ],
+  "operations": [
+   "pair_request, owner-code read from uiautomator dump, signed discover_capabilities PAIRED",
+   "RemoteControls.set_controls installs Scan room + Watch facts over sealed aead1",
+   "QUICK CONTROLS renders both native buttons",
+   "long-press sends signed long_press request (seq 6)",
+   "report_result ack displayed on watch"
+  ],
+  "os_version": "Wear OS / Android 16 (SDK 36)",
+  "permissions": [
+   "wireless debugging authorized by owner",
+   "owner present on LAN for the session"
+  ],
+  "platform": "Wear OS watch",
+  "public_device_id": "watch-sm-l310-01",
+  "status": "VERIFIED",
+  "test_id": "g04-watch-native-controls-press-loop",
+  "test_utc": "2026-10-30T21:15:00Z"
+ },
+ {
+  "commit_sha": "33ec5e4fd324be5d2884f44e0913eecc90c25a98",
+  "companion_version": "0.11.0 (code 11)",
+  "device_alias": "Owner Android TV (Android 11)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/g04-watch-30oct.md",
+   "docs/jury/screens/tv-companion-0-11-paired.png"
+  ],
+  "independent_oracle": "adb screencap PNG pulled from device (PAIRED chip, LINK Paired, relay-dabd2a79) plus dumpsys package versionName",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "Pairing predates this run (live server); no re-pair performed, live link untouched",
+   "Relay server runs only while the app is open"
+  ],
+  "operations": [
+   "companion 0.11.0 launch via adb shows PAIRED READY",
+   "version verified on device",
+   "clean screenshot captured for jury video"
+  ],
+  "os_version": "Android 11 (SDK 30)",
+  "permissions": [
+   "ADB authorized after on-screen prompt accepted by owner"
+  ],
+  "platform": "Android TV",
+  "public_device_id": "tv-companion-01",
+  "status": "VERIFIED",
+  "test_id": "companion-0.11.0-tv-launch-shot",
+  "test_utc": "2026-10-30T21:10:00Z"
  }
 ]
