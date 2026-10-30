@@ -2,7 +2,7 @@
 
 Track: Indie Developer. Theme: Push the Frontier (secondary: Build for Your World).
 Deadline: 4 Nov 2026, 9:00 PM ET (verify on the official portal before filing).
-Pack state: 29 Oct 2026 evening, main `13e56ab` (PR117 merged, 0 open PRs, suite 841 green).
+Pack state: 30 Oct 2026 morning, main `6043409` (PR121 merged, 0 open PRs, suite 841 green).
 
 ## One line
 OpenBridge is a local-first device fabric: ask in plain language from PC or
@@ -13,10 +13,13 @@ owner approves every action.
 - Ask OpenBridge P0: EN/FR natural language → registered skill → fingerprint-bound
   preview → approve → exactly-once execute. Live-verified with real local Llama
   (`docs/jury/screens/ask-openbridge-*.png`).
-- Companion 0.10.0 with Allow-full-control: on-device master switch, warning
-  popup, instant revoke; popup→allow→revoke→cancel cycle proven on a real phone
-  via uiautomator dumps; flag reported on the signed wire channel
+- Companion 0.11.0 with Allow-full-control + live data flows: on-device master
+  switch, warning popup, instant revoke; popup→allow→revoke→cancel cycle proven
+  on a real phone via uiautomator dumps; flag reported on the signed wire
+  channel; OUT/IN flow overlay with per-message telemetry
   (`docs/release/COMPANION_0_10_0.md`, `docs/jury/screens/companion-0-10-*.png`).
+  0.11.0 installed and PAIRED/READY-verified on phone, Android TV and
+  Galaxy Watch7 (signed watch pair relay-39f86439fbae, PR119).
 - Voice: companion push-to-talk (AudioRecord PCM16) → paired PC only → local
   MMS-1B STT (no cloud); STT→parse 16/16 no wrong-skill on the frozen corpus;
   owner human voice 2/2 (`docs/evidence/v4/overnight/N2_N3_RESULTS.md`).
@@ -39,7 +42,11 @@ owner approves every action.
   hardware, Freebox static leases + 127-host inventory (PR111).
 - Multi-PC + multi-OS: second PC binary swap hash-verified; agent wire protocol
   proven on Debian 13 (x2), Debian 12, Ubuntu 22.04, Debian 13 ARM64
-  (`docs/evidence/vm-fleet-29oct.md`).
+  (`docs/evidence/vm-fleet-29oct.md`); legacy C agent (subsystem 5.01,
+  software SHA-256/HMAC) proven on real XP SP3 + Win7 SP1 QEMU guests with
+  mutual-auth HIT + RPC exec exit 0 + guest screenshots
+  (`docs/evidence/vm-legacy-xp-win7-30oct.md`,
+  `docs/jury/screens/legacy-*.png`). VMs deleted after proofs, trace kept.
 - Frozen evaluations with honest negatives: routing 32/32; explanations v1 0/8
   content (reasoning exhaustion at 800 tokens), v2 3/8 content, 26 SUPPORTED / 0
   UNSUPPORTED sentences (`docs/evaluation/routing-v1/`).
@@ -62,15 +69,16 @@ owner approves every action.
 ## Honest limits (state on the form)
 - Sealed G3 seal was same-party (Spark substituted for unavailable Sol);
   mechanics + honesty proven, held-out novelty weakened — disclosed in REVEAL.
-- Watch Companion 0.9.0 installed, PAIRED/READY verified; signed wire probe
-  UNVERIFIED (transport dropped at 4% battery); 0.10.0 not yet on watch.
+- Watch wireless adb transport drops when the watch dozes (re-pair needs the
+  owner to read a fresh IP:port); relay pairing itself persists.
 - Android Companion NOT tested in any VM (VM proofs are agent-protocol only).
-- XP blocked (no product key), Win7 blocked (no media), x86 guest unstaged.
+- XP/Win7 proofs used test installs (owner-provided VLK / generic KMS grace);
+  ephemeral lab VMs, deleted after proofs.
 - Small eval samples; no victory claims.
 
 ## Demo script (live-first, ~5 min)
 1. Ask panel: "How many devices are online" → preview → approve → READ.
-2. Phone Companion 0.10.0: show Allow-full-control popup → Allow → revoke.
+2. Phone Companion 0.11.0: show Allow-full-control popup → Allow → revoke; show live flow overlay during a relay exchange.
 3. Voice: push-to-talk on phone → local STT → parse → report (needs ≥6 GB free RAM).
 4. G3 sealed: show REVEAL + TV loop on demand (supervised).
 5. Screenshots + receipts as fallback if any hardware sleeps. No video
@@ -80,6 +88,7 @@ owner approves every action.
 - [ ] Title, one-liner, track/theme above.
 - [ ] Repo URL + commit hash of the filed tree (fill at filing time).
 - [ ] Screenshots: `docs/jury/screens/` PNGs (ask-openbridge-*, companion-0-10-*,
-      fabric-tv-relay-redacted-1440).
+      companion-watch-0-10, legacy-xp-*, legacy-win7-*, fabric-tv-relay-redacted-1440).
+      Full video set (phone/TV/watch/VMs/flows) in `E:/VMs/logs/` + SHOTS_MANIFEST.md.
 - [ ] Video: only if owner requests it (live demo is primary).
 - [ ] Confirm deadline/timezone on the official page day-of.
