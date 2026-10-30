@@ -7,6 +7,7 @@
 <title>OpenBridge · Your devices, working together</title>
 <link href="/style.css" rel="stylesheet"/>
 <script defer src="/app.js"></script>
+<script defer src="/explorer.js"></script>
 <script defer src="/shell.js"></script>
 <script defer src="/command_center.js"></script>
 </head>
@@ -43,6 +44,7 @@
     <button class="connect-cta" type="button" data-action="connect"><svg aria-hidden="true"><use href="#i-plus"/></svg>Connect device</button>
     <nav class="nav" aria-label="Workspaces">
       <a href="#/home" data-nav="home"><svg aria-hidden="true"><use href="#i-home"/></svg><span>Home</span></a>
+      <a href="#/explore" data-nav="explore"><svg aria-hidden="true"><use href="#i-search"/></svg><span>Explore</span></a>
       <a href="#/devices" data-nav="devices"><svg aria-hidden="true"><use href="#i-devices"/></svg><span>My Devices</span><b class="nav-count" id="nav-count-devices"></b></a>
       <a href="#/skills" data-nav="skills"><svg aria-hidden="true"><use href="#i-skills"/></svg><span>Learned Skills</span></a>
       <a href="#/fabric" data-nav="fabric"><svg aria-hidden="true"><use href="#i-fabric"/></svg><span>Device Fabric</span></a>
@@ -108,6 +110,12 @@
       </section>
 
       <!-- MY DEVICES -->
+      <section class="view" data-view="explore" aria-labelledby="explore-title" hidden>
+        <div class="view-head">
+          <div><h1 id="explore-title">Explore</h1><p class="sub">Every capability of every device, live: what works now, what needs a permission, what is still unknown.</p></div>
+        </div>
+        <div class="explore-body"></div>
+      </section>
       <section class="view" data-view="devices" aria-labelledby="devices-title">
         <div class="view-head">
           <div><h1 id="devices-title">My Devices</h1><p class="sub">Everything OpenBridge has found, what each device can do, and how it is connected.</p></div>

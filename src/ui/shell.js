@@ -113,7 +113,7 @@
   }
 
   // ---------------- router ----------------
-  const VIEWS = { home: 'Home', devices: 'My Devices', skills: 'Learned Skills', fabric: 'Device Fabric', automations: 'Automations', activity: 'Activity & Recovery', advanced: 'Advanced diagnostics' };
+  const VIEWS = { home: 'Home', explore: 'Explore', devices: 'My Devices', skills: 'Learned Skills', fabric: 'Device Fabric', automations: 'Automations', activity: 'Activity & Recovery', advanced: 'Advanced diagnostics' };
   let current = null;
   function route() {
     const m = location.hash.match(/^#\/([a-z]+)(?:\/(.+))?/);
@@ -134,6 +134,7 @@
   }
   function render(view, arg) {
     if (view === 'home') renderHome();
+    if (view === 'explore' && typeof renderExplore === 'function') renderExplore();
     if (view === 'devices') { renderDevices(); if (arg) selectDevice(decodeURIComponent(arg)); }
     if (view === 'skills') renderSkills();
     if (view === 'fabric') renderGraph();
