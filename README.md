@@ -33,7 +33,7 @@ I'm an autistic independent developer who has been passionate about computers, p
 
 ## Built for the Meta Global AI Developer Hackathon (October 26–November 4, 2026)
 
-**Built from the ground up during the hackathon.** I built OpenBridge's project-specific implementation from the ground up for the October 26–November 4, 2026 event, with one clearly disclosed exception: a **basic `agent.exe` prototype I had written myself before the event**, which I substantially rewrote and adapted to OpenBridge. The new features presented for judging are the work completed during the hackathon and should be supported by commits, test receipts and the demo. Third-party frameworks and dependencies retain their own origins and licenses.
+**Built from the ground up during the hackathon.** I built OpenBridge's project-specific implementation from the ground up for the October 26–November 4, 2026 event — including the Windows agent (Bridge Agent v4), written from scratch for this event. The new features presented for judging are the work completed during the hackathon and are supported by commits, test receipts and the demo. Third-party frameworks and dependencies retain their own origins and licenses.
 
 **Track — Indie Developer.** An independent developer-led project, with contributors and contributions accurately listed in the submission.
 

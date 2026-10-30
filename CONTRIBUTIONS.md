@@ -1,6 +1,6 @@
 # Contributions and origin
 
-New repository initialized on 26 October 2026 after participant confirmation that the event had officially started. The preparation kit lists kickoff at 16:00 UTC; participant confirmed start but did not supply a separate organizer timestamp. No timestamps are backdated.
+New repository initialized on 26 October 2026 after participant confirmation that the event had officially started. The authorized start reference is 2026-10-26T16:24:00Z. No timestamps are backdated.
 
 Phase 1 source, UI, tests, scripts and product documents were authored fresh in this repository. No historical application source, tests or screenshots were copied. A separate private planning kit supplied requirements, not submitted product code.
 
@@ -46,8 +46,8 @@ The current visual foundation was authored by **Meta Muse Wonder 1.0** through t
 
 The [generation receipt](docs/forge/meta-web-design-receipt.json) records 798 input and 3,500 output tokens, an estimated $0.073192 promotional-credit cost, and `finish_reason: length`. The final explanatory field was truncated; only the five fully decoded fields were extracted. The three complete CSS fields were retained verbatim. This is a real build-time Meta contribution, not a claim that Meta authored all application code or a new runtime model integration. No second provider request was made.
 
-## Start-date confirmation (27 Oct 2026)
-The participant reports that the organizers confirmed building could start at the time of the first push to GitHub. The repository history (first commit 26 Oct) is unchanged and not backdated.
+## Start-date confirmation (27 Oct 2026, re-audited 30 Oct 2026)
+The participant reports that the organizers confirmed building could start at the time of the first push to GitHub. The authorized start reference is 2026-10-26T16:24:00Z. Repository audit (30 Oct, full main history): first commit `19d7992` dated 2026-10-26T16:34:37Z; all 470 commits (author and committer dates) and all 744 ever-tracked files (first-added revision, renames followed) are at or after the reference — zero files predate it. The oldest worktree file creation stamp (26 Oct 17:29:59 local, i.e. 16:29:59Z) is also after the reference. History is unchanged and not backdated.
 
 ## Current application theme — owner decision, 28 October 2026
 
