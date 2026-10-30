@@ -39,7 +39,9 @@ final class RelayServer {
     static final int MAX_OBSERVATIONS = 200;
     private static final int MAX_BODY = 16384;
 
-    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); } }
+    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); }
+        /** Live data flow for the UI: out = this device -> PC. label = operation, bytes = payload size. */
+        default void flow(boolean out, String label, int bytes) { } }
     static final int MAX_CONTROLS = 12, MAX_QUEUE = 16;
     static final int MAX_COMMANDS = 8, MAX_COMMAND_TEXT = 500;
     /** Owner-typed NL commands queued on this device; the PC drains them and reports parse outcomes. Never auto-executed. */
@@ -238,7 +240,9 @@ final class RelayServer {
         }
         byte[] head = ("HTTP/1.0 200 X\r\nContent-Type: application/octet-stream\r\n" + enc + "Content-Length: " + pcm.length + "\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
         OutputStream out = c.getOutputStream();
+        ui.flow(false, "voice fetch", request.length());
         out.write(head); out.write(pcm); out.flush();
+        ui.flow(true, "voice clip", pcm.length);
     }
 
     void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } prefs.edit().remove("controls").apply();
@@ -313,13 +317,24 @@ final class RelayServer {
             if (!prefs.getBoolean("require_aead", false)) prefs.edit().putBoolean("require_aead", true).apply();
         }
         JSONObject reply;
-        try { reply = dispatch(msg, sealed); } catch (SecurityException e) { respond(c, 403, new JSONObject().put("error", e.getMessage()).toString()); return; }
-        if (sealed) {
-            respond(c, 200, Aead.seal(k, Aead.aad(rid, "relay>pc"), reply.toString().getBytes(StandardCharsets.UTF_8), null).toString());
+        lastOp = msg.optString("op", sealed ? "sealed" : "request");
+        try { reply = dispatch(msg, sealed); }
+        catch (SecurityException e) {
+            ui.flow(false, lastOp, read);
+            String err = new JSONObject().put("error", e.getMessage()).toString();
+            respond(c, 403, err);
+            ui.flow(true, "denied", err.length());
             return;
         }
-        respond(c, 200, reply.toString());
+        ui.flow(false, lastOp, read);
+        String body = sealed ? Aead.seal(k, Aead.aad(rid, "relay>pc"), reply.toString().getBytes(StandardCharsets.UTF_8), null).toString()
+                             : reply.toString();
+        respond(c, 200, body);
+        ui.flow(true, lastOp, body.length());
     }
+
+    /** Operation of the request being handled (relay thread only), shown as the flow label. */
+    private String lastOp = "request";
 
     private void respond(Socket c, int code, String body) throws Exception {
         byte[] b = body.getBytes(StandardCharsets.UTF_8);
@@ -352,6 +367,7 @@ final class RelayServer {
             }
         }
         String op = cmd.getString("op");
+        lastOp = op;
         JSONObject params = new JSONObject();
         switch (op) {
             case "discover_capabilities": case "get_status": case "get_permissions":

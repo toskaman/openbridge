@@ -47,7 +47,9 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             GLASS = Color.argb(20, 255, 255, 255), GLASS_HI = Color.argb(34, 255, 255, 255), GLASS_LINE = Color.argb(36, 255, 255, 255),
             TEXT = Color.rgb(236, 240, 255), MUTED = Color.rgb(138, 148, 182), FAINT = Color.rgb(92, 100, 132),
             CYAN = Color.rgb(0, 229, 255), VIOLET = Color.rgb(140, 100, 255), MAGENTA = Color.rgb(255, 79, 216),
-            OK = Color.rgb(105, 240, 174), WARN = Color.rgb(255, 183, 77), INK = Color.rgb(6, 8, 18);
+            OK = Color.rgb(105, 240, 174), WARN = Color.rgb(255, 183, 77), INK = Color.rgb(6, 8, 18),
+            ERR = Color.rgb(255, 82, 82);
+    private static final int STYLE_NORMAL = 0, STYLE_PRIMARY = 1, STYLE_TOGGLE = 2, STYLE_DANGER = 3;
 
     private RelayServer relay;
     private boolean tv;
@@ -76,6 +78,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private Button setup, bluetooth, location, permission, enable, unpair, fullctl;
     private boolean setupRunning;
     private ScrollView scroll;
+    // Live data flows
+    private FlowOverlayView flows;
+    private TextView flowOut, flowIn;
+    private Button flowsBtn;
 
     // Live state that drives the orb
     private volatile boolean speaking;
@@ -144,6 +150,36 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         bar.addView(send, sendLp);
         commandResult = text("", 13, false, MUTED); commandResult.setGravity(Gravity.CENTER); commandResult.setPadding(0, dp(8), 0, 0);
 
+        // ---- live flows: legend + toggle ---------------------------------------------------------------
+        LinearLayout legend = new LinearLayout(this); legend.setGravity(Gravity.CENTER);
+        flowOut = text("", 12, true, FlowOverlayView.C_OUT); flowIn = text("", 12, true, FlowOverlayView.C_IN);
+        for (TextView tv0 : new TextView[]{flowOut, flowIn}) {
+            int col = tv0 == flowOut ? FlowOverlayView.C_OUT : FlowOverlayView.C_IN;
+            tv0.setPadding(dp(12), dp(5), dp(12), dp(5));
+            tv0.setBackground(round(Color.argb(22, Color.red(col), Color.green(col), Color.blue(col)), Color.argb(110, Color.red(col), Color.green(col), Color.blue(col)), 14));
+            LinearLayout.LayoutParams lp0 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            if (tv0 == flowIn) lp0.leftMargin = dp(8);
+            legend.addView(tv0, lp0);
+        }
+        flowsBtn = button("View flows", PillIcon.FLOWS, FlowOverlayView.C_OUT, STYLE_TOGGLE);
+        flowsBtn.setOnClickListener(v -> {
+            boolean on = !flows.showFlows();
+            flows.setShowFlows(on);
+            getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("show_flows", on).apply();
+            setToggle(flowsBtn, on);
+            log(on ? "Flow view on" : "Flow view off");
+        });
+        LinearLayout flowRow = new LinearLayout(this); flowRow.setOrientation(LinearLayout.VERTICAL); flowRow.setGravity(Gravity.CENTER_HORIZONTAL);
+        flowRow.setPadding(0, dp(12), 0, 0);
+        flowRow.addView(legend);
+        LinearLayout.LayoutParams fbl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        fbl.topMargin = dp(10);
+        flowRow.addView(flowsBtn, fbl);
+        flows = new FlowOverlayView(this);
+        flows.setAnchor(orb);
+        flows.setShowFlows(getSharedPreferences("ui", MODE_PRIVATE).getBoolean("show_flows", true));
+        setToggle(flowsBtn, flows.showFlows());
+
         // ---- pairing code ----------------------------------------------------------------------------
         codeCard = card(); codeCard.setGravity(Gravity.CENTER_HORIZONTAL); codeCard.setVisibility(View.GONE);
         codeCard.setBackground(round(Color.argb(30, 255, 183, 77), Color.argb(120, 255, 183, 77), 22));
@@ -186,13 +222,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         systemBody = new LinearLayout(this); systemBody.setOrientation(LinearLayout.VERTICAL);
         checklist = new LinearLayout(this); checklist.setOrientation(LinearLayout.VERTICAL); systemBody.addView(checklist);
         systemBody.addView(spacer(8));
-        setup = button("Set up everything", true);
-        bluetooth = button("Turn on Bluetooth", false);
-        location = button("Turn on location (needed by Android " + Build.VERSION.RELEASE + ")", false);
-        permission = button("Allow Bluetooth scanning", false);
-        enable = button("Pause scans", false);
-        unpair = button("Remove pairing", false);
-        fullctl = button("Allow full control", false);
+        setup = button("Set up everything", PillIcon.SPARK, CYAN, STYLE_PRIMARY);
+        bluetooth = button("Turn on Bluetooth", PillIcon.BLUETOOTH, CYAN, STYLE_NORMAL);
+        location = button("Turn on location (needed by Android " + Build.VERSION.RELEASE + ")", PillIcon.PIN, CYAN, STYLE_NORMAL);
+        permission = button("Allow Bluetooth scanning", PillIcon.SHIELD, CYAN, STYLE_NORMAL);
+        enable = button("Bluetooth scans", PillIcon.PAUSE, OK, STYLE_TOGGLE);
+        unpair = button("Remove pairing", PillIcon.UNLINK, ERR, STYLE_DANGER);
+        fullctl = button("Full control", PillIcon.BOLT, WARN, STYLE_TOGGLE);
         for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
         statusLine = text("Starting…", 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
@@ -211,13 +247,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             left.addView(header);
             left.addView(orb, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
             left.addView(stateLabel); left.addView(caption); left.addView(spacer(18));
-            left.addView(bar); left.addView(commandResult);
+            left.addView(bar); left.addView(commandResult); left.addView(flowRow);
             root.addView(left, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.15f));
             for (View v : new View[]{codeCard, controlsCard, live, activity, system, footer}) { info.addView(v); info.addView(spacer(14)); }
             scroll = new ScrollView(this); scroll.setVerticalScrollBarEnabled(false); scroll.addView(info);
             LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1); rl.leftMargin = dp(32);
             root.addView(scroll, rl);
-            setContentView(root);
+            setContentView(withFlows(root));
         } else {
             info.setPadding(pad, dp(20), pad, dp(28));
             info.addView(header);
@@ -226,10 +262,11 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             orbBox.addView(orb, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, orbH));
             info.addView(orbBox, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, orbH));
             info.addView(stateLabel); info.addView(caption); info.addView(spacer(20));
-            info.addView(bar); info.addView(commandResult); info.addView(spacer(18));
+            info.addView(bar); info.addView(commandResult); info.addView(flowRow); info.addView(spacer(18));
             for (View v : new View[]{codeCard, controlsCard, live, activity, system, footer}) { info.addView(v); info.addView(spacer(14)); }
             scroll = new ScrollView(this); scroll.setBackground(bg()); scroll.setVerticalScrollBarEnabled(false); scroll.addView(info);
-            setContentView(scroll);
+            setContentView(withFlows(scroll));
+            scroll.getViewTreeObserver().addOnScrollChangedListener(() -> flows.invalidate());   // comets follow the orb
         }
 
         setup.setOnClickListener(v -> { setupRunning = true; nextSetupStep(); });
@@ -258,6 +295,12 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             });
         } catch (Exception e) { tts = null; }   // no TTS engine: results still show as text
         h.postDelayed(new Runnable() {
+            @Override public void run() {
+                renderFlows();
+                if (!isFinishing()) h.postDelayed(this, 300);
+            }
+        }, 300);
+        h.postDelayed(new Runnable() {
             int tick;
             @Override public void run() {
                 if (++tick % 5 == 0) { String s = relay.expirePending(); if (s != null) { resultText.setText(s); log(s); orb.pulse(); } renderBusy(); }
@@ -282,6 +325,12 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         else if (thinking || scanning) { s = VoiceOrbView.THINKING; label = scanning && !thinking ? "SCANNING NEARBY" : "THINKING"; color = VIOLET; }
         else if (codeShown) { s = VoiceOrbView.ALERT; label = "PAIRING"; color = WARN; }
         else if (relayFailed) { s = VoiceOrbView.OFFLINE; label = "OFFLINE"; color = MUTED; }
+        else if (flows != null && relay.paired() && (flows.activity(FlowOverlayView.OUT) > 0.22f || flows.activity(FlowOverlayView.IN) > 0.22f)) {
+            boolean o = flows.activity(FlowOverlayView.OUT) > 0.22f, i = flows.activity(FlowOverlayView.IN) > 0.22f;
+            s = o ? VoiceOrbView.SPEAKING : VoiceOrbView.LISTENING;
+            label = o && i ? "EXCHANGING" : o ? "SENDING" : "RECEIVING";
+            color = o && i ? Color.rgb(255, 210, 122) : o ? FlowOverlayView.C_OUT : FlowOverlayView.C_IN;
+        }
         else { s = VoiceOrbView.IDLE; label = relay.paired() ? "READY" : "WAITING FOR YOUR PC"; color = relay.paired() ? CYAN : MUTED; }
         orb.setState(s);
         stateLabel.setText(label); stateLabel.setTextColor(color);
@@ -541,9 +590,11 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             bluetooth.setVisibility(ble && !on ? View.VISIBLE : View.GONE);
             location.setVisibility(ble && !loc ? View.VISIBLE : View.GONE);
             permission.setVisibility(ble && !perm ? View.VISIBLE : View.GONE);
-            enable.setText(enabled ? "Pause scans" : "Resume scans");
+            enable.setText("Bluetooth scans"); setToggle(enable, enabled);
+            enable.setCompoundDrawablesRelativeWithIntrinsicBounds(new PillIcon(enabled ? PillIcon.PAUSE : PillIcon.PLAY, enabled ? OK : TEXT, dp(1)),
+                    null, PillIcon.toggle(enabled, OK, dp(1)), null);
             enable.setVisibility(paired ? View.VISIBLE : View.GONE);
-            fullctl.setText(relay.fullControl() ? "Revoke full control" : "Allow full control");
+            fullctl.setText("Full control"); setToggle(fullctl, relay.fullControl());
             fullctl.setVisibility(paired ? View.VISIBLE : View.GONE);
             unpair.setVisibility(paired ? View.VISIBLE : View.GONE);
             if (!systemTouched) systemOpen = !ready || !paired;
@@ -598,7 +649,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                 }
                 actions++;
                 final boolean confirm = "confirm".equals(kind);
-                Button b = button(label, false);
+                Button b = button(label, PillIcon.HOLD, CYAN, STYLE_NORMAL);
                 b.setTag(new String[]{id, label});
                 // Hold to send: a tap does nothing, so stray or phantom touches (watch off the wrist) never send a command.
                 final org.json.JSONObject[] down = new org.json.JSONObject[1];
@@ -679,6 +730,30 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         }
     }
 
+    /** Relay thread: one message crossed the link. */
+    @Override public void flow(boolean out, String label, int bytes) {
+        FlowOverlayView f = flows;
+        if (f != null) f.flow(out ? FlowOverlayView.OUT : FlowOverlayView.IN, label, bytes);
+    }
+
+    private void renderFlows() {
+        if (flows == null) return;
+        flowOut.setText("↑ OUT  " + flows.messages(FlowOverlayView.OUT) + " msgs  ·  " + FlowOverlayView.human(Math.round(flows.bytesPerSecond(FlowOverlayView.OUT))) + "/s");
+        flowIn.setText("↓ IN  " + flows.messages(FlowOverlayView.IN) + " msgs  ·  " + FlowOverlayView.human(Math.round(flows.bytesPerSecond(FlowOverlayView.IN))) + "/s");
+        float ao = flows.activity(FlowOverlayView.OUT), ai = flows.activity(FlowOverlayView.IN);
+        flowOut.setAlpha(0.55f + 0.45f * Math.min(1f, ao)); flowIn.setAlpha(0.55f + 0.45f * Math.min(1f, ai));
+        if (ao > 0.02f || ai > 0.02f || "SENDING".contentEquals(stateLabel.getText()) || "RECEIVING".contentEquals(stateLabel.getText())
+                || "EXCHANGING".contentEquals(stateLabel.getText())) updateOrb();
+    }
+
+    /** Content + touch-transparent flow layer on top (comets may cross the whole screen). */
+    private View withFlows(View content) {
+        FrameLayout frame = new FrameLayout(this);
+        frame.addView(content, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        frame.addView(flows, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        return frame;
+    }
+
     @Override public void status(String text) {
         runOnUiThread(() -> {
             statusLine.setText(text);
@@ -738,19 +813,55 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         c.setBackground(round(GLASS, GLASS_LINE, 22)); return c;
     }
 
-    private Button button(String s, boolean primary) {
+    private Button button(String s, boolean primary) { return button(s, -1, CYAN, primary ? STYLE_PRIMARY : STYLE_NORMAL); }
+
+    /** Pill button: vector icon, role colour, pressed/focused states (TV remote gets a glowing ring). */
+    private Button button(String s, int icon, int accent, int style) {
         Button b = new Button(this); b.setText(s); b.setAllCaps(false); b.setTextSize(tv ? 18 : 15);
         b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        b.setTextColor(primary ? INK : TEXT); b.setMinHeight(dp(tv ? 60 : 52)); b.setFocusable(true); b.setStateListAnimator(null);
-        b.setPadding(dp(18), 0, dp(18), 0);
+        b.setMinHeight(dp(tv ? 60 : 52)); b.setFocusable(true); b.setStateListAnimator(null);
+        b.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        b.setPadding(dp(18), 0, dp(16), 0); b.setCompoundDrawablePadding(dp(12));
+        b.setTag(R_ROLE, new int[]{icon, accent, style});
+        styleButton(b, false);
+        return b;
+    }
+    private static final int R_ROLE = 0x7f0b0001;
+
+    private void setToggle(Button b, boolean on) { styleButton(b, on); }
+
+    private void styleButton(Button b, boolean on) {
+        int[] role = (int[]) b.getTag(R_ROLE);
+        int icon = role[0], acc = role[1], style = role[2];
+        boolean primary = style == STYLE_PRIMARY, danger = style == STYLE_DANGER, toggle = style == STYLE_TOGGLE;
+        int ink = primary ? INK : danger ? Color.rgb(255, 179, 179) : on ? Color.WHITE : TEXT;
+        b.setTextColor(ink);
+        PillIcon left = icon >= 0 ? new PillIcon(icon, primary ? INK : danger ? ERR : on ? acc : Color.rgb(216, 222, 245), dp(1)) : null;
+        PillIcon right = toggle ? PillIcon.toggle(on, acc, dp(1)) : null;
+        b.setCompoundDrawablesRelativeWithIntrinsicBounds(left, null, right, null);
+        int a = (acc & 0x00FFFFFF);
+        GradientDrawable idle = primary ? gradient(CYAN, VIOLET, 26)
+                : glass(on ? (0x2A000000 | a) : Color.argb(16, 255, 255, 255), danger ? (0x66000000 | a) : on ? (0xCC000000 | a) : GLASS_LINE);
+        GradientDrawable pressed = primary ? gradient(GlyphButton.lighten(CYAN, 0.3f), VIOLET, 26) : glass(0x4D000000 | a, 0xFF000000 | a);
+        android.graphics.drawable.LayerDrawable focused = new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[]{
+                round(Color.TRANSPARENT, 0x55000000 | (primary ? (CYAN & 0x00FFFFFF) : a), 30),
+                primary ? gradient(CYAN, VIOLET, 26) : glass(0x33000000 | a, Color.WHITE)});
+        ((GradientDrawable) focused.getDrawable(0)).setStroke(dp(4), 0x55000000 | (primary ? (CYAN & 0x00FFFFFF) : a));
+        if (!primary) ((GradientDrawable) focused.getDrawable(1)).setStroke(dp(2), Color.WHITE);
+        focused.setLayerInset(1, dp(3), dp(3), dp(3), dp(3));
         StateListDrawable states = new StateListDrawable();
-        GradientDrawable focused = primary ? gradient(CYAN, VIOLET, 26) : round(Color.argb(46, 255, 255, 255), Color.WHITE, 26);
-        focused.setStroke(dp(3), Color.WHITE);
+        states.addState(new int[]{android.R.attr.state_pressed}, pressed);
         states.addState(new int[]{android.R.attr.state_focused}, focused);
-        states.addState(new int[]{android.R.attr.state_pressed}, primary ? gradient(GlyphButton.lighten(CYAN, 0.3f), VIOLET, 26) : round(Color.argb(50, 0, 229, 255), CYAN, 26));
-        states.addState(new int[]{-android.R.attr.state_enabled}, round(Color.argb(10, 255, 255, 255), GLASS_LINE, 26));
-        states.addState(new int[]{}, primary ? gradient(CYAN, VIOLET, 26) : round(Color.argb(16, 255, 255, 255), GLASS_LINE, 26));
-        b.setBackground(states); return b;
+        states.addState(new int[]{-android.R.attr.state_enabled}, glass(Color.argb(8, 255, 255, 255), GLASS_LINE));
+        states.addState(new int[]{}, idle);
+        b.setBackground(states);
+    }
+
+    /** Glassy pill: soft top highlight over the fill, 1dp edge. */
+    private GradientDrawable glass(int fill, int stroke) {
+        int top = Color.argb(Math.min(255, Color.alpha(fill) + 22), Math.min(255, Color.red(fill) + 18), Math.min(255, Color.green(fill) + 18), Math.min(255, Color.blue(fill) + 18));
+        GradientDrawable d = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{top, fill});
+        d.setCornerRadius(dp(26)); d.setStroke(dp(1), stroke); return d;
     }
 
     private StateListDrawable focusOnly(int radius) {
