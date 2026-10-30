@@ -287,10 +287,10 @@ class Router:
             r['_params'] = lambda p: {}
             return [r]
         if skill_id in ('screen_capture', 'file_pull', 'capture_send', 'file_push', 'app_launch', 'capability_probe'):
-            # §7 media/file/action skills: ADB link; reads need 'read', writes need 'control'.
+            # §7 media/file/action skills: ADB link (USB, Wi-Fi or emulator); reads need 'read', writes need 'control'.
             if d.get('category') not in ANDROID:
                 return out
-            adb = link is not None and link['transport'] in ('USB', 'WIFI') and bool(d.get('handles'))
+            adb = link is not None and link['transport'] in ('USB', 'WIFI', 'EMULATOR') and bool(d.get('handles'))
             prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities'}.get(skill_id, skill_id)
             need = 'read' if skill_id in ('screen_capture', 'file_pull', 'capability_probe') else 'control'
             hops = [{'device_key': target, 'transport': tr, 'primitive_id': prim, 'grant': g, 'required_grant': need}]

@@ -75,6 +75,14 @@ class MediaSkills(Base):
         pushed = self.arm_invoke('file_push', self.keys['phone'], {'transfer_id': 'xfer-1', 'name': 'relay.bin'})
         self.assertEqual(pushed['result']['remote'], '/sdcard/OpenBridge/relay.bin')
 
+    def test_emulator_transport_routes_ready(self):
+        snap = self.server.fabric_snapshot
+        snap['links'] = [dict(l, transport='EMULATOR') if l['child'] == self.keys['phone'] else l
+                         for l in snap['links']]
+        doc = self.routes('screen_capture', self.keys['phone'])
+        self.assertEqual(doc['routes'][0]['state'], 'READY')
+        self.assertIsNotNone(doc['selected_route_id'])
+
     def test_link_down_is_honest_unavailable(self):
         self.server.fabric_snapshot['links'] = [l for l in self.server.fabric_snapshot['links']
                                                 if l['child'] != self.keys['phone']]
