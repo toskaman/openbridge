@@ -336,3 +336,97 @@ class RelayLivenessTests(unittest.TestCase):
         except R.RelayError:
             pass                                          # no graph in this test; the status read-back already ran
         self.assertTrue(s.relays.relays['tv']['online'])
+
+
+class RelayScanHttp(unittest.TestCase):
+    """§3.7 (issue #68): the relay-scan HTTP endpoint propagates truthful errors (never a masked
+    generic 400 for a well-formed body), recovers OFFLINE relays via the signed status read-back,
+    and preserves the pairing across failures."""
+
+    def setUp(self):
+        import threading
+        import tempfile
+        from src.fabric.session import SessionJournal
+        from src.server import create_server
+        self.server = create_server(0, fabric_salt=b's', session_journal=SessionJournal(tempfile.mkdtemp() + '/s.json'))
+        reg = Registry()
+        phone = reg.upsert([], category='phone', label='Phone')
+        reg.devices[phone]['handles'] = {'USB': 'android-h1'}
+        self.server.fabric_registry = reg
+        self.server.fabric_snapshot = reg.snapshot()
+        self.key = R.derive_key('314159', 'cd' * 8, 'pc' * 8)
+        self.alive = {'up': True}
+        self.server.relays.enroll('phone', self.key, 'android-h1',
+                                  {'capabilities': ['ble_scan'],
+                                   'permissions': {'BLUETOOTH_SCAN': True, 'owner_enabled': True}})
+        self.server.relays.relays['phone']['send'] = self.fake_send
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.base = f'http://127.0.0.1:{self.server.server_port}'
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)   # LIFO: shutdown stops serve_forever before the socket closes
+        import json as _json
+        import urllib.request as _url
+        with _url.urlopen(self.base + '/api/session') as r:
+            self.csrf = _json.loads(r.read())['csrf_token']
+
+    def fake_send(self, relay, message):
+        msg = R.verify(self.key, message, {})
+        if not self.alive['up']:
+            raise ConnectionRefusedError('companion closed')
+        if msg['op'] == 'get_status':
+            params = {'permissions': {'BLUETOOTH_SCAN': True, 'owner_enabled': True}}
+        elif msg['op'] == 'start_discovery':
+            params = {'observations': [{'address': 'C1:00:00:00:00:01', 'name': 'Sensor', 'rssi': -80}]}
+        elif msg['op'] == 'stop_discovery':
+            params = {}
+        else:
+            raise AssertionError('unexpected op ' + msg['op'])
+        now = int(time.time())
+        reply = {'protocol': R.PROTOCOL, 'relay_id': 'phone', 'op': 'reply', 'params': params,
+                 'nonce': 'r' + msg['nonce'], 'issued_at': now, 'expires_at': now + 30}
+        return {**reply, 'mac': R.sign(self.key, reply)}
+
+    def post(self, path, body):
+        import json
+        import urllib.request
+        req = urllib.request.Request(self.base + path, json.dumps(body).encode(),
+                                     {'Content-Type': 'application/json', 'Origin': self.base,
+                                      'X-CSRF-Token': self.csrf})
+        try:
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read())
+
+    def test_scan_discovers_advertisers_through_http(self):
+        code, snap = self.post('/api/relay-scan', {'device_id': 'android-h1', 'relay_id': 'phone', 'seconds': 5})
+        self.assertEqual(code, 200)
+        self.assertEqual(snap['providers']['relay']['status'], 'OK')
+        child = [d for d in snap['devices'] if d['label'] == 'Sensor'][0]
+        link = [l for l in snap['links'] if l['child'] == child['key']][0]
+        self.assertEqual(link['grants'], ['observe'])
+
+    def test_relay_id_only_body_is_rejected_as_malformed_shape(self):
+        # Uniform POST contract: every body carries device_id (the UI always sends it); relay_id alone is a 400.
+        code, doc = self.post('/api/relay-scan', {'relay_id': 'phone'})
+        self.assertEqual(code, 400)
+        self.assertIn('Invalid request', doc['error'])
+
+    def test_unreachable_relay_gives_truthful_409_and_recovers(self):
+        self.alive['up'] = False
+        code, doc = self.post('/api/relay-scan', {'device_id': 'android-h1', 'relay_id': 'phone'})
+        self.assertEqual(code, 409)                       # truthful relay error, never a masked generic 400
+        self.assertIn('unreachable', doc['error'].lower())
+        self.assertIn('guide', doc)
+        relay = self.server.relays.relays['phone']
+        self.assertFalse(relay['online'])
+        self.assertEqual((relay['key'], relay['device_key']), (self.key, 'android-h1'))  # pairing continuity
+        self.alive['up'] = True
+        code, _ = self.post('/api/relay-scan', {'device_id': 'android-h1', 'relay_id': 'phone'})
+        self.assertEqual(code, 200)                       # the signed status read-back brings it back
+        self.assertTrue(self.server.relays.relays['phone']['online'])
+
+    def test_unknown_relay_gives_truthful_409(self):
+        code, doc = self.post('/api/relay-scan', {'device_id': 'android-h1', 'relay_id': 'nope'})
+        self.assertEqual(code, 409)
+        self.assertIn('Unknown relay', doc['error'])
