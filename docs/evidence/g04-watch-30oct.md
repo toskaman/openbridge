@@ -38,6 +38,8 @@ Verdict: **VERIFIED** — plus a full bidirectional press loop on the same targe
   `docs/jury/screens/tv-companion-0-11-paired.png`. Install/pairing predates this run (live server);
   this run only launched the app via adb and captured the screenshot. No re-pair was performed,
   so the live-server link was left untouched.
+- Owner phone (Android 13), Companion 0.11.0, PAIRED, READY orb, relay port accepts TCP after ~10 s:
+  `docs/jury/screens/phone-companion-0-11-paired.png`. Same launch-and-shoot protocol, live link untouched.
 
 ## Limitations
 
