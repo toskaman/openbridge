@@ -33,6 +33,35 @@ SKILLS = {
     'tv_volume_step': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                        'input': {'type': 'object', 'properties': {'direction': {'type': 'string', 'enum': ['up', 'down']}}, 'required': ['direction'], 'additionalProperties': False},
                        'plain': 'Press volume up or down once (one press per invocation).'},
+    'screen_capture': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                       'input': {'type': 'object', 'properties': {'label': {'type': 'string', 'maxLength': 64}}, 'additionalProperties': False},
+                       'plain': 'Capture one screenshot PNG now and store it on this PC under a capture id.'},
+    # Skill-level IRREVERSIBLE is the conservative B2-contract label (it has no MANUAL yet);
+    # the primitives stay MANUAL: deleting the pushed file on the device undoes the change.
+    'capture_send': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
+                     'input': {'type': 'object', 'properties': {'capture_id': {'type': 'string', 'maxLength': 32}, 'name': {'type': 'string', 'maxLength': 64}}, 'required': ['capture_id'], 'additionalProperties': False},
+                     'plain': 'Push a stored capture to /sdcard/OpenBridge/ on this device, hash-verified. Undo: delete the file on the device.'},
+    'capture_montage': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'none', 'targeted': False,
+                        'input': {'type': 'object', 'properties': {'capture_ids': {'type': 'array', 'maxItems': 16, 'items': {'type': 'string', 'maxLength': 32}}, 'layout': {'type': 'string', 'enum': ['row', 'grid']}}, 'required': ['capture_ids'], 'additionalProperties': False},
+                        'plain': 'Combine stored captures into one PNG on this PC (row or grid). No new device capture is made.'},
+    'file_pull': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                  'input': {'type': 'object', 'properties': {'remote': {'type': 'string', 'maxLength': 256}}, 'required': ['remote'], 'additionalProperties': False},
+                  'plain': 'Copy one file from under /sdcard/ to this PC. The device is not modified.'},
+    'file_push': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
+                  'input': {'type': 'object', 'properties': {'transfer_id': {'type': 'string', 'maxLength': 32}, 'name': {'type': 'string', 'maxLength': 64}}, 'required': ['transfer_id', 'name'], 'additionalProperties': False},
+                  'plain': 'Push stored bytes to /sdcard/OpenBridge/<name> on this device, hash-verified. Undo: delete the file on the device.'},
+    'app_launch': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
+                   'input': {'type': 'object', 'properties': {'package': {'type': 'string', 'maxLength': 120}}, 'required': ['package'], 'additionalProperties': False},
+                   'plain': 'Launch one app package on this Android device.'},
+    'capability_probe': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'none', 'targeted': True,
+                         'input': {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                         'plain': 'Measure which typed actions this Android device supports (read-only probe).'},
+    'vacuum_command': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
+                       'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'enum': ['start', 'pause', 'mode', 'dock', 'move', 'seek', 'empty_dust', 'reset_side_brush', 'reset_main_brush', 'reset_filter', 'water_level', 'work_mode']}, 'value': {'type': 'string', 'maxLength': 16}, 'move_s': {'type': 'number'}}, 'required': ['command'], 'additionalProperties': False},
+                       'plain': 'Send one typed command to the Tuya robot. Momentary commands report verified=null.'},
+    'pc_run': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
+               'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'maxLength': 2000}, 'shell': {'type': 'string', 'enum': ['cmd', 'powershell']}, 'timeout_s': {'type': 'integer', 'minimum': 1, 'maximum': 600}}, 'required': ['command'], 'additionalProperties': False},
+               'plain': 'Run one owner-confirmed command on this Windows PC via its agent. Use inside an approval-gated workflow.'},
 }
 ANDROID = ('phone', 'tv', 'android', 'watch')
 
@@ -232,6 +261,14 @@ class Router:
                 route['_params'] = lambda p, rid=rid: {'relay_id': rid, 'seconds': p.get('seconds', 8)}
                 out.append(route)
             return out
+        if skill_id == 'capture_montage':
+            # Server-local compute: the 'fabric' hop runs on this PC, no device link needed.
+            hops = [{'device_key': 'fabric', 'transport': 'LAN', 'primitive_id': 'capture_montage',
+                     'grant': 'read', 'required_grant': 'read'}]
+            r = self._route(skill_id, snap, 'fabric', hops, 'op:capture_montage', 'capture_montage',
+                            self.clock(), LEASE_S['LAN'], 'server-local compute', None, None)
+            r['_params'] = lambda p: {'capture_ids': list(p['capture_ids']), 'layout': p.get('layout', 'row')}
+            return [r]
         if target not in devs:
             return out
         d = devs[target]
@@ -248,6 +285,60 @@ class Router:
                 reason, detail = 'grant_insufficient', {'missing_grant': 'read', 'hop_index': 0, 'blocking_device_key': None}
             r = self._route(skill_id, snap, target, hops, 'op:read_facts', 'read_facts', observed, LEASE_S.get(tr, 300), 'registry last_seen', reason, detail)
             r['_params'] = lambda p: {}
+            return [r]
+        if skill_id in ('screen_capture', 'file_pull', 'capture_send', 'file_push', 'app_launch', 'capability_probe'):
+            # §7 media/file/action skills: ADB link (USB, Wi-Fi or emulator); reads need 'read', writes need 'control'.
+            if d.get('category') not in ANDROID:
+                return out
+            adb = link is not None and link['transport'] in ('USB', 'WIFI', 'EMULATOR') and bool(d.get('handles'))
+            prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities'}.get(skill_id, skill_id)
+            need = 'read' if skill_id in ('screen_capture', 'file_pull', 'capability_probe') else 'control'
+            hops = [{'device_key': target, 'transport': tr, 'primitive_id': prim, 'grant': g, 'required_grant': need}]
+            reason = detail = None
+            if not adb:
+                reason = 'link_down'
+            elif GRANT_RANK.get(g, -1) < GRANT_RANK[need]:
+                reason, detail = 'grant_insufficient', {'missing_grant': need, 'hop_index': 0, 'blocking_device_key': None}
+            op = {'app_launch': 'op:device_action:launch_app', 'capability_probe': 'op:device_capabilities'}.get(skill_id, 'op:' + skill_id)
+            r = self._route(skill_id, snap, target, hops, op, prim, observed,
+                            LEASE_S.get(tr, 60), 'adb discovery', reason, detail)
+            r['_params'] = {'screen_capture': lambda p: {'label': p['label']} if 'label' in p else {},
+                            'file_pull': lambda p: {'remote': p['remote']},
+                            'capture_send': lambda p: dict(p, name=p.get('name') or (p['capture_id'] + '.png')),
+                            'file_push': lambda p: {'transfer_id': p['transfer_id'], 'name': p['name']},
+                            'app_launch': lambda p: {'action': 'launch_app', 'args': {'package': p['package']}},
+                            'capability_probe': lambda p: {}}[skill_id]
+            return [r]
+        if skill_id == 'vacuum_command':
+            if d.get('category') != 'vacuum':
+                return out
+            hops = [{'device_key': target, 'transport': tr, 'primitive_id': 'tuya_command', 'grant': g, 'required_grant': 'control'}]
+            reason = detail = None
+            if link is None:
+                reason = 'link_down'
+            elif GRANT_RANK.get(g, -1) < GRANT_RANK['control']:
+                reason, detail = 'grant_insufficient', {'missing_grant': 'control', 'hop_index': 0, 'blocking_device_key': None}
+            r = self._route(skill_id, snap, target, hops, 'op:tuya_command', 'tuya_command', observed,
+                            LEASE_S.get(tr, 300), 'tuya discovery', reason, detail)
+            r['_params'] = lambda p: {'command': p['command'], **({'value': p['value']} if 'value' in p else {}),
+                                      **({'move_s': p['move_s']} if 'move_s' in p else {})}
+            return [r]
+        if skill_id == 'pc_run':
+            # The graph grants computers at most 'read' (ingest design: run_command is
+            # BLOCKED for autonomous use). Routing over the read link is honest here
+            # because the write itself is gated by per-invocation consent at the Router
+            # AND an approval step in §7 workflows, plus the primitive's own consent gate.
+            agent = link is not None and bool((d.get('handles') or {}).get('WINDOWS_AGENT'))
+            hops = [{'device_key': target, 'transport': tr, 'primitive_id': 'pc_job', 'grant': g, 'required_grant': 'read'}]
+            reason = detail = None
+            if d.get('category') != 'computer' or not agent:
+                reason = 'link_down'
+            elif GRANT_RANK.get(g, -1) < GRANT_RANK['read']:
+                reason, detail = 'grant_insufficient', {'missing_grant': 'read', 'hop_index': 0, 'blocking_device_key': None}
+            r = self._route(skill_id, snap, target, hops, 'op:pc_job', 'pc_job', observed,
+                            LEASE_S.get(tr, 300), 'windows agent discovery', reason, detail)
+            r['_params'] = lambda p: {'command': p['command'], 'shell': p.get('shell', 'powershell'),
+                                      'timeout_s': p.get('timeout_s', 120)}
             return [r]
         # Android volume skills: ADB link with control grant.
         if d.get('category') not in ANDROID:

@@ -26,9 +26,10 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/companion/commands',
               '/api/v2/capabilities/explore',
               '/api/v2/capabilities/layouts',
-              '/api/v2/capabilities/render')
+              '/api/v2/capabilities/render',
+              '/api/v2/orchestration/status')
 POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel',)
 
 
 import threading
@@ -260,6 +261,16 @@ def get(server, path, query):
         if (q.get('poll') or [''])[0] == '1':
             cc.poll_once()
         return 200, {'pending': cc.list()}
+    if path == '/api/v2/orchestration/status':
+        from src.runtime import workflows as W
+        from src.runtime.state_store import StateStore
+        store = StateStore.for_server(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        rec = W.StateStoreJournal(store).get((q.get('workflow_id') or [''])[0])
+        if rec is None:
+            return 404, {'error': 'unknown workflow id'}
+        return 200, rec
     if path == '/api/v2/skills':
         from src.runtime.routing import SKILLS
         return 200, {'skills': [{'skill_id': k, 'plain': v['plain'], 'targeted': v['targeted'], 'reversibility': v['reversibility'],
@@ -690,6 +701,26 @@ def post(server, path, body):
         try:
             return 200, H.microbench(kind, consent=True, **kw)
         except H.HardwareError as e:
+            return 400, {'error': str(e)}
+    if path in ('/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel') and isinstance(body, dict):
+        import secrets as _secrets
+        from src.runtime import workflows as W
+        from src.runtime.state_store import StateStore
+        store = StateStore.for_server(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        journal = W.StateStoreJournal(store)
+        try:
+            if path == '/api/v2/orchestration/run':
+                wid = body.get('workflow_id') or ('wf-' + _secrets.token_hex(6))
+                return 200, W.run(body, router(server), journal, wid)
+            if path == '/api/v2/orchestration/approve':
+                if not isinstance(body.get('consent'), bool):
+                    return 400, {'error': 'consent must be an explicit boolean (true approves, false denies)'}
+                return 200, W.approve(str(body.get('workflow_id', '')), str(body.get('step_id', '')),
+                                      body['consent'], router(server), journal)
+            return 200, W.cancel(str(body.get('workflow_id', '')), journal)
+        except W.WorkflowError as e:
             return 400, {'error': str(e)}
     if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError

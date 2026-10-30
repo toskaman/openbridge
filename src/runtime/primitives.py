@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from src.runtime.contract import ActionDescriptor, ReversibilityClass, TransactionReceipt, RecoveryState, to_json
 from src.runtime import diagnostics
+import hashlib
 
 R = ReversibilityClass
 
@@ -150,6 +151,44 @@ PRIMITIVES = {p.primitive_id: p for p in (
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
+    ActionDescriptor('screen_capture', 'Capture one screenshot PNG and store it server-side under a capture id',
+                     {'type': 'object', 'properties': {'label': _s('string', maxLength=64)}, 'additionalProperties': False},
+                     ('owner consent (screenshots are sensitive)', 'read grant on a current ADB link'),
+                     ('identity re-verified',),
+                     ('frame stored server-side under a capture id; nothing leaves the PC',),
+                     'PNG signature validated; width/height/sha256 read back from stored bytes', '',
+                     R.NONE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'CAPTURE_FAILED'), 30, 'single-per-device', True),
+    ActionDescriptor('capture_send', 'Push a stored capture PNG to /sdcard/OpenBridge/ on an Android target, hash-verified',
+                     {'type': 'object', 'properties': {'capture_id': _s('string', maxLength=32), 'name': _s('string', maxLength=64)},
+                      'required': ['capture_id'], 'additionalProperties': False},
+                     ('owner consent for this exact transfer',),
+                     ('capture id exists in the server store', 'identity re-verified'),
+                     ('PNG pushed to /sdcard/OpenBridge/ on the target',),
+                     'sha256sum on the device equals the stored hash', '',
+                     R.MANUAL.value, ('UNKNOWN_CAPTURE', 'DEVICE_UNAVAILABLE', 'PUSH_FAILED', 'HASH_MISMATCH'), 90, 'single-per-device', True),
+    ActionDescriptor('capture_montage', 'Combine stored captures into one PNG (row or grid), server-side, stdlib only',
+                     {'type': 'object', 'properties': {'capture_ids': _s('array', maxItems=16, items=_s('string', maxLength=32)),
+                                                       'layout': _s('string', enum=['row', 'grid'])},
+                      'required': ['capture_ids'], 'additionalProperties': False},
+                     (), ('every capture id exists in the server store', 'no new device capture is made'),
+                     ('combined PNG stored server-side under a new capture id',),
+                     'output PNG decodes; dimensions equal the tile math', '',
+                     R.NONE.value, ('UNKNOWN_CAPTURE', 'MONTAGE_FAILED'), 60, 'single-global', False),
+    ActionDescriptor('file_pull', 'Copy one file from under /sdcard/ into the server transfer store',
+                     {'type': 'object', 'properties': {'remote': _s('string', maxLength=256)}, 'required': ['remote'], 'additionalProperties': False},
+                     ('owner consent (file contents are sensitive)', 'read grant on a current ADB link'),
+                     ('remote path stays under /sdcard/',),
+                     ('file bytes copied to the server transfer store; device untouched',),
+                     'sha256 of the stored bytes reported', '',
+                     R.NONE.value, ('DEVICE_UNAVAILABLE', 'PULL_FAILED'), 60, 'single-per-device', True),
+    ActionDescriptor('file_push', 'Push stored transfer bytes to /sdcard/OpenBridge/<name>, hash-verified',
+                     {'type': 'object', 'properties': {'transfer_id': _s('string', maxLength=32), 'name': _s('string', maxLength=64)},
+                      'required': ['transfer_id', 'name'], 'additionalProperties': False},
+                     ('owner consent for this exact transfer',),
+                     ('transfer id exists in the server store', 'name is a bare file name'),
+                     ('bytes pushed to /sdcard/OpenBridge/<name> on the target',),
+                     'sha256sum on the device equals the stored hash', '',
+                     R.MANUAL.value, ('UNKNOWN_TRANSFER', 'DEVICE_UNAVAILABLE', 'PUSH_FAILED', 'HASH_MISMATCH'), 90, 'single-per-device', True),
 )}
 
 GLOBAL_KEY = 'fabric'
@@ -658,9 +697,107 @@ class Executor:
             done.append({'step': i + 1, 'action': st['action'], **r})
         return 'EXECUTED', None, f'{len(done)} steps', True, {'steps': done}
 
+    def _captures(self):
+        from pathlib import Path
+        from src.runtime.capture_store import CaptureStore
+        explicit = getattr(self.ctx, 'captures_dir', None)
+        if explicit is not None:
+            return CaptureStore(explicit)
+        sj = getattr(getattr(self.ctx, 'session_journal', None), 'path', None)
+        if sj is None:
+            raise PrimitiveError('NO_STORE', 'no server store for captures')
+        return CaptureStore(Path(sj).with_name('captures'))
+
+    def _serial(self, handle):
+        try:
+            return next(s for s, h in self.ctx.android._handles.items() if h == handle)
+        except StopIteration:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', 'no live ADB link to this device') from None
+
+    def _screen_capture(self, key, params):
+        from src.runtime import montage as _m
+        handle = self._adb_handle(key)
+        png = bytes(self.ctx.android.screencap(self._serial(handle)))
+        try:
+            w, h = _m.png_size(png)
+        except ValueError as e:
+            raise ValueError(f'CAPTURE_FAILED: {e}') from None
+        store = self._captures()
+        cid = store.put(png, kind='cap')
+        return 'EXECUTED', None, f'{w}x{h} frame stored', True, \
+            {'capture_id': cid, 'sha256': store.sha256(cid), 'bytes': len(png), 'width': w, 'height': h}
+
+    def _capture_send(self, key, params):
+        from src.runtime.capture_store import StoreError
+        store = self._captures()
+        try:
+            data = store.get(params['capture_id'])
+        except StoreError as e:
+            raise PrimitiveError('UNKNOWN_CAPTURE', str(e)[:160]) from None
+        handle = self._adb_handle(key)
+        name = params.get('name') or (params['capture_id'] + '.png')
+        try:
+            remote = self.ctx.android.push_file(handle, data, name)
+            digest = self.ctx.android.file_sha256(handle, remote)
+        except ValueError as e:
+            raise PrimitiveError('PUSH_FAILED', str(e)[:160]) from None
+        want = hashlib.sha256(data).hexdigest()
+        if digest != want:
+            raise ValueError(f'HASH_MISMATCH: device has {digest[:16]}.., expected {want[:16]}..')
+        return 'EXECUTED', None, remote, True, {'remote': remote, 'sha256': want, 'bytes': len(data)}
+
+    def _capture_montage(self, key, params):
+        from src.runtime import montage as _m
+        from src.runtime.capture_store import StoreError
+        store = self._captures()
+        frames = []
+        for cid in params['capture_ids']:
+            try:
+                frames.append(store.get(cid))
+            except StoreError as e:
+                raise PrimitiveError('UNKNOWN_CAPTURE', str(e)[:160]) from None
+        try:
+            out = _m.combine(frames, layout=params.get('layout', 'row'))
+        except ValueError as e:
+            raise ValueError(f'MONTAGE_FAILED: {e}') from None
+        w, h = _m.png_size(out)
+        cid = store.put(out, kind='cap')
+        return 'EXECUTED', None, f'{w}x{h} montage of {len(frames)}', True, \
+            {'capture_id': cid, 'sha256': store.sha256(cid), 'width': w, 'height': h, 'inputs': len(frames)}
+
+    def _file_pull(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            data = bytes(self.ctx.android.pull_file(handle, params['remote']))
+        except ValueError as e:
+            raise PrimitiveError('PULL_FAILED', str(e)[:160]) from None
+        store = self._captures()
+        tid = store.put(data, kind='xfer')
+        return 'EXECUTED', None, params['remote'], True, \
+            {'transfer_id': tid, 'sha256': store.sha256(tid), 'bytes': len(data), 'remote': params['remote']}
+
+    def _file_push(self, key, params):
+        from src.runtime.capture_store import StoreError
+        store = self._captures()
+        try:
+            data = store.get(params['transfer_id'])
+        except StoreError as e:
+            raise PrimitiveError('UNKNOWN_TRANSFER', str(e)[:160]) from None
+        handle = self._adb_handle(key)
+        try:
+            remote = self.ctx.android.push_file(handle, data, params['name'])
+            digest = self.ctx.android.file_sha256(handle, remote)
+        except ValueError as e:
+            raise PrimitiveError('PUSH_FAILED', str(e)[:160]) from None
+        want = hashlib.sha256(data).hexdigest()
+        if digest != want:
+            raise ValueError(f'HASH_MISMATCH: device has {digest[:16]}.., expected {want[:16]}..')
+        return 'EXECUTED', None, remote, True, {'remote': remote, 'sha256': want, 'bytes': len(data)}
+
     RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
-               'session_cleanup': _session_cleanup}
+               'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
+               'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push}
 
     # ---------- recovery backlog ----------
     MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first
