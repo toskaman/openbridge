@@ -34,18 +34,34 @@ Promotion to the registry requires the SAME validation pipeline for every target
 
 Only after all five steps does the entry earn a registry row, a matrix render, and a claim link in [the claim matrix](jury/CLAIM_EVIDENCE_MATRIX.md).
 
-| Target | Environment class | Step-1 program |
-|---|---|---|
-| 32-bit Linux guest (i386) | Full guest OS, protocol endpoint | Reference agent handshake + RPC |
-| Android phone/tablet official emulator + real Companion | Official platform emulator | Companion APK, pair, relay op |
-| Android TV official emulator + real Companion | Official platform emulator | Companion APK, pair, relay op |
-| Wear OS official emulator + real Companion | Official platform emulator | Companion APK, pair, small-screen UI check |
-| MQTT broker + Matter test fabric | Protocol simulator | Adapter against simulator, facts verified |
-| Home Assistant test instance | Protocol simulator | Inventory via official API, read-only first |
-| ESPHome / Thread / Zigbee adapters | Not implemented | Adapter + lab hardware or simulator first |
-| RetroArch emulator-host integration | Emulator controlled through host adapter | Host-process control proof (no ROM claims) |
-| Console emulators (Game Boy / PlayStation class) | Emulator controlled through host adapter | Host-process control only; no ROM/BIOS without rights |
-| IoT protocol simulators (generic) | Protocol simulator | Per-simulator facts verified, labeled as simulated |
+| # | Target | Priority | Step-1 program |
+|---|---|---|---|
+| 1 | ESP32 + TFT screen | P1 | Native agent firmware + on-screen UI |
+| 2 | Playdate | P1 | Native app (official SDK) |
+| 3 | Samsung Tizen + LG webOS (TV) | P1 | Native TV app per vendor SDK |
+| 4 | Minitel + ESP32 serial gateway | P1 | Videotex UI on terminal, network agent on gateway |
+| 5 | Commodore 64 + WiC64 | P1 | Native C64 program + WiC64 network cartridge |
+| 6 | Game Boy / Game Boy Color | P2 | Native ROM (open toolchain) + gateway as documented |
+| 7 | Game Boy Advance | P2 | Native ROM (open toolchain) + gateway as documented |
+| 8 | Palm OS | P2 | Native app on emulator, serial gateway as documented |
+| 9 | Pebble + Garmin | P2 | Native watchapp per vendor SDK/emulator |
+| 10 | TI-84 Plus CE | P2 | Native program + USB/serial gateway as documented |
+
+Existing platforms (not in this table): Windows, Linux, Android, Wear OS, Android TV. P1 ships only when working end to end; P2 stays extensions until device communication and physical deployment are demonstrated.
+
+Common requirements for every port:
+
+- Genuine native program or interface: no mere visual simulation. Split designs (e.g. Minitel) run UI on the terminal and the network agent on the gateway.
+- Same OpenBridge identity: current design, colors, navigation, states and controls, rendered within hardware limits.
+- Same communication logic: pairing, identification, capability declaration, commands, responses, revocation. Gateways translate protocols without bypassing permissions.
+- Bidirectional interop: every device sends and receives relevant data via the master PC.
+- Physical compatibility: every emulator has a documented procedure reproducing the result on real compatible hardware.
+- Validation: compile, launch, screenshots, network tests, cross-device commands, disconnect/reconnect, verified results.
+- Compliance: no unauthorized BIOS, firmware or proprietary software in GitHub or distributed archives.
+
+Protocol-lab targets (same pipeline): 32-bit Linux guest (i386), Android/TV/Wear official emulators with the real Companion, MQTT broker + Matter test fabric, Home Assistant test instance, ESPHome/Thread/Zigbee adapters, RetroArch host integration, generic IoT protocol simulators.
+
+Final objective: start OpenBridge on the PC, connect an ESP32, a Playdate, a Commodore 64 or a gateway-fitted Game Boy, and use each as a real control point of the OpenBridge network.
 
 ## Corrected 29 Oct (supersedes stale rows above, history preserved)
 
