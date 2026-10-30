@@ -18,7 +18,7 @@ Three things you can do with it today:
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
 3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
 
-Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (16 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
+Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (18 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
 
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
 ## About the developer
@@ -82,9 +82,9 @@ To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVI
 
 The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
 
-### Event-built evidence (30 Oct, main `99e6db5`)
+### Event-built evidence (30 Oct, main `1e8066a`)
 
-Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept). Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (18 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem
@@ -115,6 +115,10 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 | Watch hold → single TV action with independent read-back and revocation | [Watch acceptance](docs/release/WATCH_CONTROL_ACCEPTANCE.md) (2-tap/16-action root cause unproven; dup/expiry hardware proof pending) |
 | Frozen synthetic routing evaluation: router 32/32, full baselines, Spark pre-run design review | [Results](docs/evaluation/routing-v1/RESULTS.md) (no model-advantage claim) |
 | Ask OpenBridge NL → skill resolution (local Llama parse, tiered routing, fingerprint-bound approve/execute) | Live-verified on 18765 (real parse/approve/execute, incl. fabric.status READ of 3 devices) + phone→PC→phone signed loop + fixtures e2e; cloud path unit-tested only |
+| Phone hardware facts + task ranking + micro-benchmarks, measured live | §9 merged `2ad4688`; PC1 + BV9300 live runs |
+| Android permission states measured + grant flow re-verified live | §10 merged `f1c460c`; 13-entry catalog on BV9300 |
+| Multi-device screenshots routed + combined via DAG workflows | [Live USB proof](docs/evidence/s7-live-usb-30oct.md) (1080×2388 capture, hash-identical send, 2160×2388 montage) |
+| Official Android emulator driven via adb (capture/probe/send + cleanup) | [AVD proof](docs/evidence/avd-ob-pixel-30oct.md) (level 4, no companion installed) |
 
 Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDWARE_TEST_MATRIX.md), [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md).
 
@@ -145,7 +149,13 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 - **P0 hardening batch (PR126–PR130, PR135)**: point-of-dispatch full-control recheck, pairing attempt limits, crash-safe invocation journal with honest UNCERTAIN, supervised STT worker, HTTP-level relay-scan verification, idempotency keys + journal claims on HTTP execute and direct intents.
 - **Device connect (PR133)**: hardware agent matrix (correct agent per hardware), auto connection planner, per-device connect tutorials and guided agent pick.
 - **ESP32 P1**: native IDF agent VERIFIED on QEMU-ESP32 (registry row 16: AUTH + ping + execs + cross-device CROSS_OK via serial gateway); Arduino build keeps the physical WiFi/TFT path.
-- Full suite 894 green on Windows + Linux CI.
+- **Capability explorer (§6)**: UI schemas matched to live device capabilities (2 cards/118 widgets smoke).
+- **Hardware intelligence (§9)**: PC facts + task rankers + micro-benchmarks, live on PC1 + phone.
+- **Permissions center (§10)**: 13-entry catalog with measured states + grant flow, live re-verified.
+- **Eval-kit baseline (§11)**: 1,000 French turns replayed (200/200 convs, 0 crashes/sends); rules cover 1.4%, model tiers pending.
+- **Multi-device orchestration (§7)**: DAG workflows (parallel, approvals, partial failure, durable receipts) + 9 media/file/action skills; live USB capture/send/montage (registry row 17).
+- **Official Android emulator (§12)**: Pixel 6 AVD on WHPX driven via adb — capture/probe/hash-verified send + cleanup (registry row 18).
+- Full suite 1064 green on Windows + Linux CI.
 
 ## What's new (29 Oct 2026)
 - **Sealed held-out skill synthesis (G3)**: commit-reveal spec, Muse Spark 1.3 composes a TV skill the system never had — compile → grant → act → independent verify → owner restore → revoke, loop `300000 → 60000 → 300000` on live hardware, $0.0203 over 3 calls, 2 KILLs honestly retained ([SUCCESS reveal](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md)).
