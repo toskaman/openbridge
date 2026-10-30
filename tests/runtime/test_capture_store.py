@@ -44,7 +44,18 @@ class CaptureStoreTest(unittest.TestCase):
             ids = [s.put(bytes([i]) * 8, kind='cap') for i in range(4)]
             with self.assertRaises(C.StoreError):
                 s.get(ids[0])
+            self.assertEqual(s.get(ids[1]), b'\x01' * 8)
             self.assertEqual(s.get(ids[3]), b'\x03' * 8)
+
+    def test_eviction_order_survives_reopen(self):
+        with tempfile.TemporaryDirectory() as d:
+            s = C.CaptureStore(d, max_files=3)
+            ids = [s.put(bytes([i]) * 8, kind='cap') for i in range(3)]
+            s2 = C.CaptureStore(d, max_files=3)
+            s2.put(b'\x09' * 8, kind='cap')
+            with self.assertRaises(C.StoreError):
+                s2.get(ids[0])
+            self.assertEqual(s2.get(ids[2]), b'\x02' * 8)
 
     def test_transfer_kind_uses_xfer_prefix(self):
         with tempfile.TemporaryDirectory() as d:
