@@ -1,0 +1,47 @@
+{
+ "kind": "G3_SEALED_TASK",
+ "task_id": "sealed-phone-brightness-137",
+ "task_sha256": "0c42bb0cd9a2f4913ad26b2fceb888962cbbccc27254adf877d1a07ad07328d5",
+ "started": "2026-10-30T15:41:36.681684+00:00",
+ "intent": "Set the phone screen brightness to 137, then read the brightness setting back to confirm.",
+ "tier": "glimmer",
+ "spend_usd": 0,
+ "authorization": "standing owner autonomy orders for reversible lab tests (chat); oracle pre-read + deterministic restore + revoke; no fresh per-run authz file for $0 local runs",
+ "calls": [
+  {
+   "prompt_sha256": "3944bc4458b9f03e627150500b00bd73f94c400f7c9364b06b263e9277f5da1b"
+  }
+ ],
+ "steps": [],
+ "target": {
+  "device_fingerprint": "fp-b39a94438009937d",
+  "fact_count": 14
+ },
+ "scope": {
+  "grants": [
+   "control",
+   "read"
+  ],
+  "source": "live-snapshot-links"
+ },
+ "bundle_id": "b-44cc547b199d89be",
+ "baseline": {
+  "rules_planner": {
+   "status": "ABSTAIN_UNSUPPORTED",
+   "reason": "rules planner: no prebuilt template for 'Set the phone screen brightness to 137, then read the brightness setting back to'"
+  },
+  "stocked_path": "no prebuilt skill covers sealed-phone-brightness-137; the generic Executor primitive exists (the model must compose it)"
+ },
+ "model": {
+  "model_id": "muse-glimmer:30b-q4_K_M",
+  "endpoint": "http://127.0.0.1:11438",
+  "provisioning": "broker-pinned"
+ },
+ "status": "KILL",
+ "reason": "model call failed or transport refused (no retry)",
+ "detail": {
+  "status": "MODEL_UNAVAILABLE",
+  "failure_class": "TimeoutError"
+ },
+ "finished": "2026-10-30T15:43:37.915568+00:00"
+}
