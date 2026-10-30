@@ -5,7 +5,6 @@
 
 | Device | Environment | Integration | Platform | Result | Validity | Tested operations | Date (UTC) | Evidence |
 |---|---|---|---|---|---|---|---|---|
-| 32-bit Linux guest | FULL_GUEST_OS | NONE | QEMU i386 guest | UNVERIFIED | CURRENT | guest install | 2026-10-29T19:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
 | Debian 12 VM (bookworm) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T18:25:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
 | Debian 13 VM (ARM64) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU aarch64 guest (TCG) | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T19:53:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
 | Debian 13 VM (first guest) | FULL_GUEST_OS | PROTOCOL_ENDPOINT | QEMU x86_64 guest | VERIFIED | CURRENT | agent handshake mutual PSK, agent sys.ping, agent sys.diag, agent exec.run uname | 2026-10-29T17:00:00Z | [vm-fleet-29oct.md](evidence/vm-fleet-29oct.md) |
