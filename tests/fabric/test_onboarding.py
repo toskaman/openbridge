@@ -76,6 +76,30 @@ class Candidates(unittest.TestCase):
     def test_no_snapshot(self):
         self.assertEqual(onboarding.candidates(None, None), [])
 
+    def test_companion_lan_without_adb(self):
+        reg = Registry()
+        ingest_mdns(reg, mdns({'service': '_openbridge-relay._tcp', 'instance': 'OpenBridge-39f86439fbae', 'port': 47800,
+                               'host': 'SM-L310.local', 'addresses': ['192.168.1.14'], 'category': 'companion',
+                               'txt': {'relay': 'relay-39f86439fbae', 'proto': 'openbridge-relay/1', 'ver': '12',
+                                       'form': 'watch', 'label': 'SM-L310'}}), b's')
+        cands = onboarding.candidates(reg.snapshot(), reg)
+        w = next(x for x in cands if x['kind'] == 'watch')
+        m = next(m for m in w['methods'] if m['id'] == 'companion_lan')
+        self.assertEqual((m['status'], m['relay_address']), ('READY', '192.168.1.14:47800'))
+        self.assertEqual(w['state'], 'READY')
+        self.assertTrue(any('no adb' in e.lower() for e in w['evidence']))
+        self.assertFalse(any('ADB' in e for e in w['evidence']))
+        snap = reg.snapshot()
+        self.assertNotIn(':47800', repr(snap))
+        self.assertNotIn('relay_address', repr(snap))
+
+    def test_companion_form_fallback_is_phone(self):
+        reg = Registry()
+        ingest_mdns(reg, mdns({'service': '_openbridge-relay._tcp', 'instance': 'OpenBridge-x', 'port': 47800,
+                               'host': 'h.local', 'category': 'companion', 'txt': {}}), b's')
+        kinds = {x['kind'] for x in onboarding.candidates(reg.snapshot(), reg)}
+        self.assertIn('phone', kinds)
+
 
 class ComputerCandidates(unittest.TestCase):
     def pc(self, handles=None, observations=()):

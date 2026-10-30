@@ -723,5 +723,39 @@
   "status": "VERIFIED",
   "test_id": "companion-0.11.0-phone-launch-shot",
   "test_utc": "2026-10-30T21:20:00Z"
+ },
+ {
+  "commit_sha": "994cdc96d7797eb3dc862fad82633e8e247f0a91",
+  "companion_version": "0.12.0 (code 12)",
+  "device_alias": "Galaxy Watch7 44 mm (Wear OS)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/companion-lan-discovery-30oct.md",
+   "docs/release/COMPANION_0_12_0.md",
+   "docs/jury/screens/watch-0-12-mdns-feed.png",
+   "docs/jury/screens/tv-0-12-mdns-feed.png"
+  ],
+  "independent_oracle": "PC-side unicast mDNS reply decoded live (TXT ver/form/label/relay) plus watch activity-feed screenshot plus system logcat MdnsAdvertiser lines; adb disconnected for the whole run",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "Relay/NSD need the app open; sleeping devices stop advertising",
+   "Link-local only, no cross-subnet discovery by design"
+  ],
+  "operations": [
+   "companion 0.12.0 install on watch, pairing and controls preserved",
+   "NSD advertises _openbridge-relay._tcp with full TXT",
+   "targeted browse returns the watch, full browse 8 instances",
+   "onboarding offers companion_lan READY with relay address, no adb",
+   "0.12.0 on phone+TV too; one browse finds all 3 relays (ver 12)"
+  ],
+  "os_version": "Wear OS / Android 16 (SDK 36)",
+  "permissions": [
+   "wireless debugging authorized by owner (install + screenshots only; proof run itself used no adb)"
+  ],
+  "platform": "Wear OS watch",
+  "public_device_id": "watch-sm-l310-01",
+  "status": "VERIFIED",
+  "test_id": "companion-0.12.0-lan-discovery-noadb",
+  "test_utc": "2026-10-30T21:50:00Z"
  }
 ]

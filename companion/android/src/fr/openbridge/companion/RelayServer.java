@@ -10,6 +10,8 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.SparseArray;
@@ -39,7 +41,7 @@ final class RelayServer {
     static final int MAX_OBSERVATIONS = 200;
     private static final int MAX_BODY = 16384;
 
-    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); }
+    interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void nsd(boolean ok, int err) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); }
         /** Live data flow for the UI: out = this device -> PC. label = operation, bytes = payload size. */
         default void flow(boolean out, String label, int bytes) { } }
     static final int MAX_CONTROLS = 12, MAX_QUEUE = 16;
@@ -101,6 +103,8 @@ final class RelayServer {
         return instance;
     }
     private ServerSocket server;
+    private NsdManager.RegistrationListener nsdListener;
+    private android.net.wifi.WifiManager.MulticastLock multicastLock;
     private String pendingCode, pendingRelayNonce, pendingPcNonce;
     private long pendingUntil;
     private int failedPairing;
@@ -278,6 +282,8 @@ final class RelayServer {
         new Thread(() -> {
             try (ServerSocket s = new ServerSocket(PORT, 8, InetAddress.getByName("0.0.0.0"))) {
                 server = s;
+                try { new android.os.Handler(ctx.getMainLooper()).post(this::registerNsd); }
+                catch (Exception ignored) { registerNsd(); }
                 ui.status("Listening for OpenBridge on port " + PORT + (paired() ? " · paired" : " · not paired"));
                 while (running) {
                     try (Socket c = s.accept()) { c.setSoTimeout(5000); handle(c); } catch (Exception ignored) { }
@@ -286,7 +292,63 @@ final class RelayServer {
         }, "openbridge-relay").start();
     }
 
-    void stop() { running = false; try { if (server != null) server.close(); } catch (Exception ignored) { } }
+    void stop() { running = false;
+        try { new android.os.Handler(ctx.getMainLooper()).post(this::unregisterNsd); }
+        catch (Exception ignored) { unregisterNsd(); }
+        try { if (server != null) server.close(); } catch (Exception ignored) { } }
+
+    /** mDNS advertisement so the PC finds this relay on the LAN with no adb address and no setup.
+     *  The broadcast carries the relay id (useless without the on-screen pairing code), the protocol,
+     *  the app version, the form factor and the model. Registration needs no permission; it lives and
+     *  dies with the relay socket. Failures are silent: pairing via a typed address still works. */
+    static final String NSD_TYPE = "_openbridge-relay._tcp.";
+    private void registerNsd() {
+        try {
+            NsdManager nsd = (NsdManager) ctx.getSystemService(Context.NSD_SERVICE);
+            if (nsd == null) { ui.nsd(false, -2); return; }
+            unregisterNsd();
+            try {
+                android.net.wifi.WifiManager wm = (android.net.wifi.WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
+                multicastLock = wm.createMulticastLock("openbridge-nsd");
+                multicastLock.setReferenceCounted(true);
+                multicastLock.acquire();
+            } catch (Exception ignored) { multicastLock = null; }
+            String id = relayId();
+            NsdServiceInfo info = new NsdServiceInfo();
+            info.setServiceName("OpenBridge-" + id.substring(Math.max(0, id.length() - 12)));
+            info.setServiceType(NSD_TYPE);
+            info.setPort(PORT);
+            info.setAttribute("relay", id);
+            info.setAttribute("proto", PROTOCOL);
+            try {
+                info.setAttribute("ver", String.valueOf(ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0).versionCode));
+            } catch (Exception ignored) { info.setAttribute("ver", "0"); }
+            PackageManager pm = ctx.getPackageManager();
+            info.setAttribute("form", pm.hasSystemFeature("android.hardware.type.watch") ? "watch"
+                    : pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK) ? "tv" : "phone");
+            info.setAttribute("label", Build.MODEL == null ? "Android" : Build.MODEL);
+            nsdListener = new NsdManager.RegistrationListener() {
+                @Override public void onServiceRegistered(NsdServiceInfo s) { ui.nsd(true, 0); }
+                @Override public void onRegistrationFailed(NsdServiceInfo s, int e) { nsdListener = null; ui.nsd(false, e); }
+                @Override public void onServiceUnregistered(NsdServiceInfo s) { }
+                @Override public void onUnregistrationFailed(NsdServiceInfo s, int e) { nsdListener = null; }
+            };
+            nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, nsdListener);
+        } catch (Exception e) { nsdListener = null; ui.nsd(false, -1); }
+    }
+    private void unregisterNsd() {
+        NsdManager.RegistrationListener l = nsdListener; nsdListener = null;
+        if (l != null) {
+            try {
+                NsdManager nsd = (NsdManager) ctx.getSystemService(Context.NSD_SERVICE);
+                if (nsd != null) nsd.unregisterService(l);
+            } catch (Exception ignored) { }
+        }
+        if (multicastLock != null) {
+            try { while (multicastLock.isHeld()) multicastLock.release(); } catch (Exception ignored) { }
+            multicastLock = null;
+        }
+    }
 
     private void handle(Socket c) throws Exception {
         BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8));
