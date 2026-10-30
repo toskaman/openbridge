@@ -23,6 +23,27 @@ TERMINAL = ('done', 'partial', 'failed', 'cancelled')
 
 _ID = re.compile(r'[A-Za-z0-9_-]{1,64}')
 
+# §14: one in-process lock per workflow id. Concurrent run/approve/cancel for
+# the same id serialize; the store stays the source of truth (terminal records
+# short-circuit inside the lock), so lock churn can never double-dispatch.
+_RUN_LOCKS = {}
+_RUN_LOCKS_GUARD = threading.Lock()
+
+
+def _lock_for(workflow_id):
+    with _RUN_LOCKS_GUARD:
+        return _RUN_LOCKS.setdefault(workflow_id, threading.Lock())
+
+
+def _release_lock(workflow_id, store):
+    with _RUN_LOCKS_GUARD:
+        try:
+            terminal = (store.get(workflow_id) or {}).get('status') in TERMINAL
+        except Exception:
+            terminal = False
+        if terminal:
+            _RUN_LOCKS.pop(workflow_id, None)
+
 
 class WorkflowError(ValueError):
     pass
@@ -315,53 +336,64 @@ def run(body, router, store, workflow_id, actor='owner'):
     if not isinstance(workflow_id, str) or not _ID.fullmatch(workflow_id):
         raise WorkflowError('invalid workflow id')
     spec = validate_workflow(body)
-    existing = store.get(workflow_id)
-    if existing is not None:
-        return existing  # terminal or waiting: never dispatch twice
-    record = {'workflow_id': workflow_id, 'status': 'running',
-              'name': body.get('name', '')[:120],
-              'steps': [{'id': s['id'], 'state': 'QUEUED'} for lvl in spec['levels'] for s in lvl],
-              'spec': spec, 'created_at': _iso()}
-    store.save(record)
-    return _drive(record, spec, router, store, actor)
+    lock = _lock_for(workflow_id)
+    with lock:
+        existing = store.get(workflow_id)
+        if existing is not None:
+            return existing  # terminal or waiting: never dispatch twice
+        record = {'workflow_id': workflow_id, 'status': 'running',
+                  'name': body.get('name', '')[:120],
+                  'steps': [{'id': s['id'], 'state': 'QUEUED'} for lvl in spec['levels'] for s in lvl],
+                  'spec': spec, 'created_at': _iso()}
+        store.save(record)
+        try:
+            return _drive(record, spec, router, store, actor)
+        finally:
+            _release_lock(workflow_id, store)
 
 
 def approve(workflow_id, step_id, allow, router, store, actor='owner'):
-    record = store.get(workflow_id)
-    if record is None or record['status'] != 'waiting_approval':
-        raise WorkflowError('workflow is not waiting for approval')
-    if record.get('cancel_requested'):
-        raise WorkflowError('workflow was cancelled')
-    states = {s['id']: s for s in record['steps']}
-    if step_id not in states or states[step_id]['state'] != 'WAITING':
-        raise WorkflowError('step is not waiting for approval')
-    if allow is not True:
-        states[step_id]['state'] = 'DENIED'
-        record['status'] = 'failed'
-        record['finished_at'] = _iso()
-        # Dependents of a denied step are SKIPPED, never silently dropped.
-        spec = record['spec']
-        for lvl in spec['levels']:
-            for s in lvl:
-                if states[s['id']]['state'] == 'QUEUED' and \
-                        any(states[n]['state'] in ('FAILED', 'TIMEOUT', 'DENIED', 'SKIPPED') for n in s['needs']):
-                    states[s['id']]['state'] = 'SKIPPED'
-                    states[s['id']]['note'] = 'a prerequisite did not execute'
+    with _lock_for(workflow_id):
+        record = store.get(workflow_id)
+        if record is None or record['status'] != 'waiting_approval':
+            raise WorkflowError('workflow is not waiting for approval')
+        if record.get('cancel_requested'):
+            raise WorkflowError('workflow was cancelled')
+        states = {s['id']: s for s in record['steps']}
+        if step_id not in states or states[step_id]['state'] != 'WAITING':
+            raise WorkflowError('step is not waiting for approval')
+        if allow is not True:
+            states[step_id]['state'] = 'DENIED'
+            record['status'] = 'failed'
+            record['finished_at'] = _iso()
+            # Dependents of a denied step are SKIPPED, never silently dropped.
+            spec = record['spec']
+            for lvl in spec['levels']:
+                for s in lvl:
+                    if states[s['id']]['state'] == 'QUEUED' and \
+                            any(states[n]['state'] in ('FAILED', 'TIMEOUT', 'DENIED', 'SKIPPED') for n in s['needs']):
+                        states[s['id']]['state'] = 'SKIPPED'
+                        states[s['id']]['note'] = 'a prerequisite did not execute'
+            store.save(record)
+            _release_lock(workflow_id, store)
+            return record
+        states[step_id]['approved'] = True
+        states[step_id]['state'] = 'QUEUED'
+        record['status'] = 'running'
         store.save(record)
-        return record
-    states[step_id]['approved'] = True
-    states[step_id]['state'] = 'QUEUED'
-    record['status'] = 'running'
-    store.save(record)
-    return _drive(record, record['spec'], router, store, actor)
+        try:
+            return _drive(record, record['spec'], router, store, actor)
+        finally:
+            _release_lock(workflow_id, store)
 
 
 def cancel(workflow_id, store):
-    record = store.get(workflow_id)
-    if record is None or record['status'] in TERMINAL:
-        raise WorkflowError('workflow is not active')
-    record['cancel_requested'] = True
-    record['status'] = 'cancelled'
-    record['finished_at'] = _iso()
-    store.save(record)
-    return record
+    with _lock_for(workflow_id):
+        record = store.get(workflow_id)
+        if record is None or record['status'] in TERMINAL:
+            raise WorkflowError('workflow is not active')
+        record['cancel_requested'] = True
+        record['status'] = 'cancelled'
+        record['finished_at'] = _iso()
+        store.save(record)
+        return record

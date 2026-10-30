@@ -16,8 +16,14 @@ from pathlib import Path
 
 MAX_FILE = 32 * 1024 * 1024
 MAX_FILES = 64
+MAX_BYTES = 256 * 1024 * 1024
 KINDS = ('cap', 'xfer')
 _ID = re.compile(r'(cap|xfer)-[0-9a-f]{16}')
+
+# §14: locks are process-wide per root because runners build short-lived
+# store instances; a per-instance lock cannot serialize parallel workflow steps.
+_LOCKS = {}
+_LOCKS_GUARD = threading.Lock()
 
 
 class StoreError(ValueError):
@@ -25,11 +31,17 @@ class StoreError(ValueError):
 
 
 class CaptureStore:
-    def __init__(self, root, max_files=MAX_FILES):
+    def __init__(self, root, max_files=MAX_FILES, max_bytes=MAX_BYTES):
         self.root = Path(root)
-        self.root.mkdir(parents=True, exist_ok=True)
+        try:
+            self.root.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise StoreError(f'store root unavailable: {e}') from None
         self.max_files = max_files
-        self._lock = threading.Lock()
+        self.max_bytes = max_bytes
+        key = str(self.root.absolute())
+        with _LOCKS_GUARD:
+            self._lock = _LOCKS.setdefault(key, threading.Lock())
 
     def _path(self, cid):
         if not isinstance(cid, str) or not _ID.fullmatch(cid):
@@ -53,6 +65,8 @@ class CaptureStore:
             raise StoreError(f'bad kind {kind!r}')
         if not isinstance(data, (bytes, bytearray)) or not data or len(data) > MAX_FILE:
             raise StoreError('bad data')
+        if len(data) > self.max_bytes:
+            raise StoreError('single file exceeds the store byte cap')
         with self._lock:
             idx = self._read_index()
             cid = f'{kind}-{secrets.token_hex(8)}'
@@ -60,9 +74,12 @@ class CaptureStore:
             while p.exists() or cid in idx:  # paranoia: never overwrite
                 cid = f'{kind}-{secrets.token_hex(8)}'
                 p = self._path(cid)
-            tmp = p.with_suffix('.tmp')
-            tmp.write_bytes(bytes(data))
-            os.replace(tmp, p)
+            try:
+                tmp = p.with_suffix('.tmp')
+                tmp.write_bytes(bytes(data))
+                os.replace(tmp, p)
+            except OSError as e:
+                raise StoreError(f'store write failed: {e}') from None
             idx[cid] = max([0] + [v for v in idx.values() if isinstance(v, int)]) + 1
             self._write_index(idx)
             self._evict(idx)
@@ -70,10 +87,12 @@ class CaptureStore:
 
     def get(self, cid):
         p = self._path(cid)
+        if not p.is_file():
+            raise StoreError(f'unknown id {cid!r}')
         try:
             return p.read_bytes()
-        except OSError:
-            raise StoreError(f'unknown id {cid!r}') from None
+        except OSError as e:
+            raise StoreError(f'store read failed: {e}') from None
 
     def sha256(self, cid):
         return hashlib.sha256(self.get(cid)).hexdigest()
@@ -84,7 +103,19 @@ class CaptureStore:
                        key=lambda p: (idx.get(p.stem, 0)
                                       if isinstance(idx.get(p.stem), int) else 0,
                                       p.name))
-        victims = files[:max(0, len(files) - self.max_files)]
+        sizes = {}
+        for p in files:
+            try:
+                sizes[p] = p.stat().st_size
+            except OSError:
+                sizes[p] = 0
+        total = sum(sizes.values())
+        victims = []
+        for p in files:
+            if len(files) - len(victims) <= self.max_files and total <= self.max_bytes:
+                break
+            victims.append(p)
+            total -= sizes[p]
         for victim in victims:
             try:
                 victim.unlink()
