@@ -68,9 +68,9 @@ To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVI
 
 The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
 
-### Event-built evidence (29 Oct, this commit)
+### Event-built evidence (30 Oct, main `50406d3`)
 
-Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.10.0 full-control cycle on [device:phone-companion-01]; [device:tv-companion-01] paired; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]. Full list in the [device registry](docs/DEVICE_EVIDENCE.json).
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept). Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem
@@ -125,6 +125,13 @@ Current release status and remaining acceptance gates: [release index](docs/RELE
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
+## What's new (30 Oct 2026)
+- **Companion 0.11.0 everywhere**: live flow overlay + pill-icon buttons; installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7 (signed watch pair `relay-39f86439fbae`). Homepage screenshots still show 0.10.0 (29 Oct captures) — the 0.11.0 flows are verified, not yet reshot.
+- **Legacy Windows proven, then cleaned**: legacy C agent (subsystem 5.01, software SHA-256/HMAC) ran mutual-auth + RPC exec on real XP SP3 + Win7 SP1 QEMU guests with screenshots; VMs deleted after proofs, trace kept in [legacy evidence](docs/evidence/vm-legacy-xp-win7-30oct.md) and the [registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
+- **P0 hardening batch (PR126–PR130)**: point-of-dispatch full-control recheck, pairing attempt limits, crash-safe invocation journal with honest UNCERTAIN, supervised STT worker, HTTP-level relay-scan verification.
+- **ESP32 P1**: native agent firmware compiles (941 KB) + host protocol proof 3/3; QEMU boot blocked, documented as blocked.
+- Full suite 864 green on Windows + Linux CI.
+
 ## What's new (29 Oct 2026)
 - **Sealed held-out skill synthesis (G3)**: commit-reveal spec, Muse Spark 1.3 composes a TV skill the system never had — compile → grant → act → independent verify → owner restore → revoke, loop `300000 → 60000 → 300000` on live hardware, $0.0203 over 3 calls, 2 KILLs honestly retained ([SUCCESS reveal](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md)).
 - **v4-synth-4**: true per-primitive input schemas in the prompt, required-input/integer enforcement in the validator, contract tests pinning both against the kernel registry.
@@ -155,7 +162,7 @@ Evidence for every item: `EVIDENCE_LEDGER.md` and `docs/HARDWARE_TEST_MATRIX.md`
 | Generic UPnP-IGD (router) | Allowlisted read-only queries; port-mapping and every write refused before sending; external IP masked | SIMULATED_VERIFIED (fake IGD); real gateway pending |
 | BLE zones (V4-11) | Calibrated zones from two relays, "unknown" when unsure; precision/recall per zone; never coordinates | SIMULATED_VERIFIED; owner calibration run pending |
 | Visual read-back (V4-07) | Screenshot (status bar cropped) judged by local Muse Glimmer vs structured screen state; disagreement = INCONCLUSIVE | SIMULATED_VERIFIED; real TV run pending |
-| Voice (V4-10) | Push-to-talk → `muse-voice-transcribe-1.0` → typed FR/EN intent proposal; owner reviews and presses Run | IMPLEMENTED_UNVERIFIED (no live STT receipt yet) |
+| Voice (V4-10) | Push-to-talk → local MMS-1B STT in a supervised worker (cloud `muse-voice-transcribe-1.0` path kept, consent-gated) → typed FR/EN intent proposal; owner reviews and presses Run | REAL_HARDWARE_VERIFIED: frozen corpus 16/16 no wrong-skill, owner voice 2/2 ([N2/N3](docs/evidence/v4/overnight/N2_N3_RESULTS.md)); worker isolation unit-verified |
 | Wear OS manifest (V4-08) | Watch capabilities derived from reported features on every read; control BLOCKED | SIMULATED_VERIFIED; Watch7 run pending |
 | PC 2 as a client (V4-12) | Runs owner-typed jobs (consent per command, exit code + output returned) and serves pinned Meta models for the scheduler; raw device data never leaves this PC | jobs REAL_HARDWARE_VERIFIED; inference benchmark pending |
 | Tuya robot vacuum | Owner-linked via the owner's Tuya IoT project; status reads; suction/volume with exact Undo; full robot control (start, pause, dock, moves with auto-stop, seek, dust, resets) with consent per command | REAL_HARDWARE_VERIFIED: reads, suction change + exact Undo, start/pause, manual moves and return to dock (EVIDENCE_LEDGER) |

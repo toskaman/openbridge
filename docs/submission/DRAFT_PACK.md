@@ -2,7 +2,7 @@
 
 Track: Indie Developer. Theme: Push the Frontier (secondary: Build for Your World).
 Deadline: 4 Nov 2026, 9:00 PM ET (verify on the official portal before filing).
-Pack state: 30 Oct 2026 morning, main `6043409` (PR121 merged, 0 open PRs, suite 841 green).
+Pack state: 30 Oct 2026 afternoon, main `50406d3` (PR130 merged, 0 open PRs, suite 864 green on Windows + Linux CI).
 
 ## One line
 OpenBridge is a local-first device fabric: ask in plain language from PC or
@@ -52,6 +52,12 @@ owner approves every action.
   UNSUPPORTED sentences (`docs/evaluation/routing-v1/`).
 - Machine-readable device registry + generated matrix, CI-gated
   (`docs/DEVICE_EVIDENCE.json`, `docs/HARDWARE_TEST_MATRIX.md`).
+- P0 hardening batch (30 Oct, PR126–PR130 + BridgeWindows PR4):
+  point-of-dispatch full-control recheck, pairing attempt limits,
+  crash-safe invocation journal with honest UNCERTAIN, supervised STT
+  worker, HTTP-level relay-scan verification, bridge plaintext/PSK
+  warnings + sealed-transport design (BridgeWindows
+  `docs/SEALED_TRANSPORT_DESIGN.md`, design-only).
 
 ## Meta AI use (substantive, exclusive in production inference)
 - Llama 3.2 3B (local, Ollama): NL parsing + candidate drafting; every live
@@ -79,7 +85,7 @@ owner approves every action.
 ## Demo script (live-first, ~5 min)
 1. Ask panel: "How many devices are online" → preview → approve → READ.
 2. Phone Companion 0.11.0: show Allow-full-control popup → Allow → revoke; show live flow overlay during a relay exchange.
-3. Voice: push-to-talk on phone → local STT → parse → report (needs ≥6 GB free RAM).
+3. Voice: push-to-talk on phone → local STT (supervised worker, ≥6 GB free-RAM admission enforced) → parse → report.
 4. G3 sealed: show REVEAL + TV loop on demand (supervised).
 5. Screenshots + receipts as fallback if any hardware sleeps. No video
    substitution without an explicit owner request.
