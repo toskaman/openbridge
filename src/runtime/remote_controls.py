@@ -200,6 +200,39 @@ class RemoteControls:
         self._ensure_thread()
         return self.state()
 
+    def repush(self, rid):
+        """§8: re-send the current controls with the SAME ids after a reconnect.
+
+        A Companion restart wipes its UI while the server still holds the
+        grants; re-sending restores the screen. Ids are NOT bumped (unlike a
+        re-grant), so presses queued before the blip still validate.
+        Returns True when anything was pushed."""
+        with self._lock:
+            if self.closed:
+                raise RemoteControlError(503, 'Remote controls are shut down')
+            self._relay(rid)
+            out = dict(self.grants.get(rid) or {})
+            lay = self.layouts.get(rid) or {}
+            shown = dict(lay.get('display') or {})
+            if not out and not shown:
+                return False
+            items = []
+            for k, v in out.items():
+                c = {'control_id': k, 'label': v['label']}
+                if v.get('ui_kind', 'button') != 'button':
+                    c['kind'] = v['ui_kind']
+                items.append(c)
+            for k, v in shown.items():
+                c = {'control_id': k, 'label': v['label'], 'kind': v['kind']}
+                if v['value'] is not None:
+                    c['value'] = v['value']
+                items.append(c)
+            params = {'controls': items}
+            if lay.get('revision') is not None:
+                params['revision'] = lay['revision']
+        self._send(rid, 'set_controls', params)
+        return True
+
     def invoke_now(self, rid, control_id):
         """Server-initiated invocation under the device's standing full-control consent.
 
@@ -324,6 +357,15 @@ class RemoteControls:
             for rid, l in self.layouts.items():          # display-only layouts are polled until the device acknowledges them
                 if rid not in relays and l['revision'] is not None and l['acked'] != l['revision']:
                     relays[rid] = set()
+        try:  # §8: grantless relays with a saved dashboard are probed too, so a
+            from src.runtime import dashboards as _D  # fresh boot restores them on reconnect
+            from src.runtime.state_store import StateStore as _S
+            _store = _S.for_server(self.server)
+            if _store is not None:
+                for rid in _D.pending(_D.DashStore(_store)):
+                    relays.setdefault(rid, set())
+        except Exception:
+            pass
         done = 0
         for rid, known in relays.items():
             r = self.server.relays.relays.get(rid)
@@ -355,6 +397,14 @@ class RemoteControls:
                 if ledger is not None:
                     ledger.proved(rid)
                 self._ex().emit('relay_reconnected', relay_id=rid)
+                try:  # §8: a Companion restart wipes its UI; re-push or restore ours
+                    from src.runtime import dashboards as _D
+                    from src.runtime.state_store import StateStore as _S
+                    _store = _S.for_server(self.server)
+                    if _store is not None:
+                        _D.ensure_controls(self, _D.DashStore(_store), rid)
+                except Exception:
+                    pass
             ack = fabric_relay.applied_revision(reply)
             if ack is not None:
                 with self._lock:
