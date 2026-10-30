@@ -227,6 +227,20 @@ class RemoteControls:
                'pressed_at': int(self.clock() * 1000), 'gesture': 'full_control'}
         return self.process(rid, req, origin='full_control')
 
+    def _fc_fresh(self, rid):
+        """Re-read the on-device full-control flag just before a server-initiated
+        dispatch (get_status never drains the press queue). Fail closed: an
+        unreachable, off or PC-blocked flag refuses the dispatch."""
+        try:
+            flag = fabric_relay.reported_full_control(self._send(rid, 'get_status'))
+        except fabric_relay.RelayError:
+            flag = False
+        with self._lock:
+            self.full_control[rid] = flag
+            if not flag or rid in self._fc_blocked:
+                return False
+        return True
+
     def set_full_control_block(self, rid, blocked):
         """PC-side emergency brake (and release) for a relay's full control.
 
@@ -367,24 +381,32 @@ class RemoteControls:
         else:
             entry['skill_id'] = grant['skill_id']
             pressed = req.get('pressed_at')
-            recent = [x for x in self._recent.get(key, []) if now - x < BURST_WINDOW_S] + [now]
-            self._recent[key] = recent
-            if key not in self.suspended and len(recent) > BURST:
-                self.suspended.add(key)
+            with self._lock:                       # burst/interval accounting is shared: decide atomically
+                recent = [x for x in self._recent.get(key, []) if now - x < BURST_WINDOW_S] + [now]
+                self._recent[key] = recent
+                suspend_now = key not in self.suspended and len(recent) > BURST
+                if suspend_now:
+                    self.suspended.add(key)
+                suspended = key in self.suspended
+                last = self._last.get(key, 0)
+            if suspend_now:
                 self._ex().emit('remote_control_suspended', relay_id=rid, control_id=req['control_id'], presses=len(recent))
-            if not isinstance(pressed, int) or abs(now - pressed / 1000) > REQUEST_TTL_S:
+            if origin == 'full_control' and not self._fc_fresh(rid):
+                outcome, text = 'REVOKED', 'Full control is off or blocked'
+            elif not isinstance(pressed, int) or abs(now - pressed / 1000) > REQUEST_TTL_S:
                 outcome, text = 'EXPIRED', f"{grant['label']}: request too old; press again"
-            elif key in self.suspended:
+            elif suspended:
                 outcome, text = 'SUSPENDED', f"{grant['label']}: paused (unusual repeated presses); re-enable on the PC"
             elif (actor, 'inv-' + req['request_id']) in router(self.server).completed:
                 outcome, text = 'DUPLICATE', f"{grant['label']}: already done"     # a re-sent press: never dispatched twice
-            elif now - self._last.get(key, 0) < MIN_INTERVAL_S:
+            elif now - last < MIN_INTERVAL_S:
                 outcome, text = 'BLOCKED', 'Too fast; press again'
             elif grant.get('ui_kind') == 'confirm' and req.get('gesture') != 'confirm':
                 outcome, text = 'BLOCKED', f"{grant['label']}: confirm on the device first"
             else:
+                with self._lock:                   # claim the interval slot before touching the device
+                    self._last[key] = now
                 outcome, text = self._dispatch(rid, req, grant, actor, entry)
-                self._last[key] = now
         entry['state'] = outcome
         with self._lock:
             self.history.append(entry)
