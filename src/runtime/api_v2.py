@@ -31,6 +31,7 @@ POST_ROUTES = ('/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/work
 import threading
 _ROUTER_INIT_LOCK = threading.Lock()
 _REMOTE_CONTROL_INIT_LOCK = threading.Lock()
+_HTTP_IDEM_INIT_LOCK = threading.Lock()
 
 
 def router(server):
@@ -366,6 +367,73 @@ def workflows(server):
     return server.v4_workflows
 
 
+def _idem_seen(server):
+    seen = getattr(server, 'http_idem_keys', None)
+    if seen is None:
+        with _HTTP_IDEM_INIT_LOCK:
+            seen = getattr(server, 'http_idem_keys', None)
+            if seen is None:
+                seen = server.http_idem_keys = {}
+                server.http_idem_lock = threading.Lock()
+    return seen
+
+
+def _idem_begin(server, key):
+    """Claim an idempotency key: None when this call owns it, else (status, body)."""
+    import time as _t
+    from src.runtime.state_store import StateStore, StateError
+    store = StateStore.for_server(server)
+    if store is not None:
+        try:
+            claimed, row = store.claim_invocation('http-v2', key, _t.time())
+        except StateError as e:
+            return {'status': 503, 'body': {'error': '%s: %s' % (e.code, e)}}
+        if claimed:
+            return None
+        if row['state'] == 'DONE':
+            return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
+        return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running elsewhere or was interrupted; use a fresh key'}}
+    seen = _idem_seen(server)
+    with server.http_idem_lock:
+        now = _t.monotonic()
+        for k in [k for k, v in seen.items() if v[0] == 'DONE' and now - v[1] > 600]:
+            del seen[k]
+        state = seen.get(key, (None, 0))[0]
+        if state == 'DONE':
+            return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
+        if state == 'EXECUTING':
+            return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running; use a fresh key'}}
+        if len(seen) >= 4096:
+            victim = next((k for k, v in seen.items() if v[0] == 'DONE'), None)
+            if victim is None:
+                return {'status': 503, 'body': {'error': 'STATE_JOURNAL_FULL: idempotency cache is full of running keys'}}
+            del seen[victim]
+        seen[key] = ('EXECUTING', now)
+        return None
+
+
+def _idem_fingerprint(primitive_id, device_key, params):
+    import hashlib
+    import json as _json
+    canon = _json.dumps({'primitive': primitive_id, 'device': device_key, 'params': params},
+                        sort_keys=True, default=str, separators=(',', ':'))
+    return hashlib.sha256(canon.encode()).hexdigest()
+
+
+def _idem_finish(server, key, fingerprint):
+    from src.runtime.state_store import StateStore, StateError
+    import time as _t
+    store = StateStore.for_server(server)
+    if store is not None:
+        try:
+            store.finish_invocation('http-v2', key, fingerprint, _t.time())
+        except StateError:
+            pass   # leftover EXECUTING fails closed: retries refuse as uncertain, never re-dispatch
+        return
+    with server.http_idem_lock:
+        _idem_seen(server)[key] = ('DONE', _t.monotonic())
+
+
 def post(server, path, body):
     if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError
@@ -460,10 +528,19 @@ def post(server, path, body):
         return 200, to_json(executor(server).recovery())
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
-    allowed = {'primitive_id', 'device_key', 'params', 'consent'}
+    allowed = {'primitive_id', 'device_key', 'params', 'consent', 'idempotency_key'}
     if set(body) - allowed:
         return 400, {'error': 'Unexpected fields'}
+    key = body.get('idempotency_key')
+    if key is not None and (not isinstance(key, str) or not key or len(key) > 96):
+        return 400, {'error': 'idempotency_key must be a non-empty string of at most 96 characters'}
+    if key is not None:
+        refused = _idem_begin(server, key)
+        if refused is not None:
+            return refused['status'], refused['body']
     r = executor(server).execute(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}, body.get('consent') is True)
+    if key is not None:
+        _idem_finish(server, key, _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}))
     status = 200 if r['state'] not in ('BLOCKED',) else 409
     return status, r
 

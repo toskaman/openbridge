@@ -483,6 +483,7 @@ function diagnosisPanel(device) {
 }
 async function postJson(path, body) {
   if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
+  if (path === '/api/v2/execute' && body && !body.idempotency_key) body.idempotency_key = crypto.randomUUID();
   return request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(body) });
 }
 const relayIds = {};
