@@ -1,5 +1,5 @@
-"""Connect-a-device view: which phones, tablets, watches and other hardware are visible, what model they appear to
-be, and the simplest honest way to bring each one into OpenBridge.
+"""Connect-a-device view: which phones, tablets, watches, computers and other hardware are visible, what model
+they appear to be, and the simplest honest way to bring each one into OpenBridge.
 
 Inputs are only what bounded discovery already produced (mDNS/DNS-SD, ADB, Freebox inventory, BLE via relays).
 Nothing here probes the network. Each candidate lists ordered onboarding methods with a status:
@@ -8,7 +8,8 @@ Nothing here probes the network. Each candidate lists ordered onboarding methods
   CONNECTED    already linked; nothing to do
   UNAVAILABLE  honestly not possible here (reason included), e.g. there is no iOS Companion app
 Model names come from the device itself (ADB getprop, mDNS TXT) or the gateway inventory; vendor-only guesses
-from Bluetooth company identifiers are marked weak.
+from Bluetooth company identifiers are marked weak. Computers never guess their OS: an unlinked PC offers a
+guided OS/CPU pick and OpenBridge serves the matching agent build from the hardware matrix.
 """
 import re
 
@@ -48,6 +49,22 @@ def _methods_apple(model):
              'detail': f'{model or "Apple device"} stays observe-only: OpenBridge can show it is on the network, not control it.'}]
 
 
+def _methods_computer(key, dev, registry):
+    if 'WINDOWS_AGENT' in dev.get('handles', {}):
+        arch = _val(registry, key, 'architecture')
+        return [{'id': 'agent_link', 'title': 'OpenBridge agent link', 'status': 'CONNECTED', 'steps': [],
+                 'detail': 'This computer already runs the OpenBridge agent and reports to this PC.'
+                           + (f' Architecture: {arch}.' if arch else '')
+                           + ' Every command still needs your approval.'}]
+    return [{'id': 'agent_lan', 'title': 'OpenBridge agent over the LAN', 'status': 'NEEDS_STEP', 'needs_pick': True,
+             'steps': ['Pick the operating system and CPU below: OpenBridge serves the matching agent build',
+                       'On that computer, open the time-limited link and save the file',
+                       'Run it as administrator with your pre-shared key',
+                       'It appears here as connected; every command needs your approval'],
+             'detail': 'The agent connects back to this PC. OpenBridge picks the build that matches the hardware '
+                       '(Windows 64/32-bit, ARM64, Linux, ESP32). Nothing is installed silently.'}]
+
+
 def candidates(snapshot, registry, companion_ready=False):
     if not snapshot or registry is None:
         return []
@@ -66,7 +83,9 @@ def candidates(snapshot, registry, companion_ready=False):
         ep = dev.get('endpoints') or {}
         pairing = ep.get('_adb-tls-pairing._tcp')
         kind, confidence, evidence, apple = None, 'strong', [], False
-        if cat in ('phone', 'watch', 'android', 'tv') and (linked['USB'] or linked['WIFI']):
+        if cat == 'computer' and 'WINDOWS_AGENT' in handles:
+            kind, evidence = 'computer', ['agent link (facts read from the device)']
+        elif cat in ('phone', 'watch', 'android', 'tv') and (linked['USB'] or linked['WIFI']):
             kind, evidence = ('watch' if cat == 'watch' else 'tv' if cat == 'tv' else 'phone'), ['ADB link (model read from the device)']
         elif svcs & {'_adb-tls-pairing._tcp', '_adb-tls-connect._tcp'}:
             kind, evidence = 'phone', ['Android wireless debugging is on (mDNS)']
@@ -76,6 +95,8 @@ def candidates(snapshot, registry, companion_ready=False):
             evidence = ['Apple device services on the LAN (mDNS)'] + ([f'model identifier {m}'] if m else [])
         elif cat == 'phone':
             kind, evidence = 'phone', ['reported as a phone/tablet by the gateway inventory']
+        elif cat == 'computer':
+            kind, confidence, evidence = 'computer', 'weak', ['listed as a computer by the router inventory']
         elif cat == 'ble':
             cids = _val(registry, key, 'ble_company_ids') or []
             v = next((PHONE_BLE[c] for c in cids if c in PHONE_BLE), None)
@@ -87,13 +108,23 @@ def candidates(snapshot, registry, companion_ready=False):
             methods = _methods_apple(model)
         elif kind in ('phone', 'watch', 'tv'):
             methods = _methods_android(dev, linked, pairing, companion_ready, kind)
+        elif kind == 'computer':
+            methods = _methods_computer(key, dev, registry)
         elif kind == 'phone_maybe':
             methods = [{'id': 'identify', 'title': 'Identify it', 'status': 'NEEDS_STEP', 'steps': ['If it is your Android phone, turn on Wireless debugging and run discovery again'],
                         'detail': 'Bluetooth advertisements alone cannot prove what this device is.'}]
         else:
             methods = _methods_apple(model)
         state = 'CONNECTED' if any(m['status'] == 'CONNECTED' for m in methods) else 'READY' if any(m['status'] == 'READY' for m in methods) else 'ACTION_NEEDED' if kind != 'phone_maybe' else 'IDENTIFY'
+        if apple:
+            platform = 'ios/apple'
+        elif kind in ('phone', 'watch', 'tv'):
+            platform = 'android'
+        elif kind == 'computer' and 'WINDOWS_AGENT' in handles:
+            platform = 'windows'
+        else:
+            platform = 'unknown'
         out.append({'device_key': key, 'label': d['label'], 'kind': kind, 'category': cat, 'model': model, 'vendor': vendor,
-                    'platform': 'ios/apple' if apple else 'android' if kind in ('phone', 'watch', 'tv') else 'unknown', 'confidence': confidence, 'evidence': evidence, 'state': state, 'methods': methods})
+                    'platform': platform, 'confidence': confidence, 'evidence': evidence, 'state': state, 'methods': methods})
     order = {'READY': 0, 'ACTION_NEEDED': 1, 'IDENTIFY': 2, 'CONNECTED': 3}
     return sorted(out, key=lambda c: (order.get(c['state'], 9), c['kind'], c['label']))

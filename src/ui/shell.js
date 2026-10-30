@@ -54,30 +54,31 @@
         add('diag', 'Health & diagnostics', 'activity', 'available', 'Battery, storage, Wi-Fi, temperature and power state, each with its source.', 'read_facts (allowlisted ADB reads)');
         if (['tv', 'phone'].includes(d.category)) add('visual', 'Screen check with Meta', 'meta', 'available', 'Takes one screenshot and asks local Muse Glimmer what is on screen, compared with what Android reports.', 'visual_readback · local only · consent');
       } else if (linked) add('remote', 'Remote control', 'media', 'permission', 'Connected, but this PC is only allowed to read. Approve control to use it.', 'link grant: ' + g);
-      else if (d.category === 'tv' && !(d.handles || {}).WIFI) add('remote', 'TV remote control', 'media', 'permission', 'Seen on the network. Turn on network debugging on the TV to control it.', 'mDNS only; use “Connect over ADB Wi-Fi”', { action: 'connect' });
-      else add('remote', 'Remote control', 'media', 'permission', 'Seen on the network. Pair it once (USB or Wi-Fi code) to control it.', 'no ADB link yet', { action: 'connect' });
+      else if (d.category === 'tv' && !(d.handles || {}).WIFI) add('remote', 'TV remote control', 'media', 'permission', 'Seen on the network. Turn on network debugging on the TV to control it.', 'mDNS only; use “Connect over ADB Wi-Fi”', { action: 'connect', connectType: 'tv' });
+      else add('remote', 'Remote control', 'media', 'permission', 'Seen on the network. Pair it once (USB or Wi-Fi code) to control it.', 'no ADB link yet', { action: 'connect', connectType: d.category === 'watch' ? 'watch' : 'phone' });
       const relay = capOf(d, 'ble_relay');
       if (relay) add('ble', 'Bluetooth for this PC', 'ble', relay.status === 'REAL_HARDWARE_VERIFIED' ? 'available' : relay.status === 'NOT_SUPPORTED' ? 'permission' : 'permission', relay.status === 'REAL_HARDWARE_VERIFIED' ? 'Finds nearby Bluetooth devices for this PC (scan only: it cannot connect to or control them).' : 'Can find nearby Bluetooth devices for this PC once the OpenBridge Companion app is installed and paired.', `ble_relay · ${relay.status} · ${relay.evidence || ''}`);
       if (d.category === 'phone') add('sms', 'Calls & SMS', 'phone', 'unsupported', 'The phone can do it, but Android does not let another computer send SMS or place calls silently. OpenBridge does not.', 'no adapter by design');
     } else if (d.category === 'vacuum') {
-      add('vac-status', 'Robot status', 'activity', g === 'none' ? 'detected' : 'available', 'Battery, cleaning state, brush and filter wear.', 'Tuya local protocol 3.4, owner-linked key');
+      add('vac-status', 'Robot status', 'activity', g === 'none' ? 'detected' : 'available', 'Battery, cleaning state, brush and filter wear.', 'Tuya local protocol 3.4, owner-linked key', g === 'none' ? { action: 'connect', connectType: 'vacuum' } : null);
       add('vac-settings', 'Suction & voice volume with Undo', 'gear', g === 'control' ? 'available' : 'permission', 'Change suction or volume; the robot reports the value back and OpenBridge can restore it exactly.', 'tuya_setting (EXACT)');
       add('vac-drive', 'Start, pause, dock & drive', 'vacuum', g === 'control' ? 'available' : 'permission', 'Start or pause cleaning, send it home, or drive it a short step (it stops by itself).', 'tuya_command · irreversible · consent per command');
     } else if (d.category === 'computer') {
       const diag = capOf(d, 'windows_diagnostics');
       add('pc-diag', 'PC health', 'activity', diag ? 'available' : 'detected', 'CPU, memory, disks and uptime from the OpenBridge agent on that PC.', 'allowlisted agent reads');
-      add('pc-job', 'Run a command', 'pc', diag ? 'available' : 'permission', 'Run one command you type on that PC and see its output. It cannot be undone, so you approve each one.', 'pc_job via BridgeWindows exec.run · clear TCP on your LAN');
+      add('pc-job', 'Run a command', 'pc', diag ? 'available' : 'permission', diag ? 'Run one command you type on that PC and see its output. It cannot be undone, so you approve each one.' : 'Seen on the network. Install the matching OpenBridge agent build to connect it.', diag ? 'pc_job via BridgeWindows exec.run · clear TCP on your LAN' : 'no agent link yet', diag ? null : { action: 'connect', connectType: 'pc' });
     } else if (d.category === 'router') {
       const r = capOf(d, 'lan_inventory') || capOf(d, 'igd_status') || capOf(d, 'freebox_api');
-      add('router-diag', 'Internet & network diagnostics', 'router', g !== 'observe' && g !== 'none' ? 'available' : 'permission', 'Internet status, connected devices and Wi-Fi radios, read-only.', r ? `${r.name} · ${r.status}` : 'router API');
+      const avail = g !== 'observe' && g !== 'none';
+      add('router-diag', 'Internet & network diagnostics', 'router', avail ? 'available' : 'permission', 'Internet status, connected devices and Wi-Fi radios, read-only.', r ? `${r.name} · ${r.status}` : 'router API', avail ? null : { action: 'connect', connectType: 'router' });
       add('router-config', 'Change router settings', 'gear', 'unsupported', 'OpenBridge never changes router settings: there is no independent way to recover if something breaks.', 'BLOCKED by policy');
     } else if (d.category === 'ble') {
       const p = relayParent(d.key);
       add('ble-seen', 'Seen over Bluetooth', 'ble', 'detected', `Detected through ${p ? label(p) : 'a relay'}. OpenBridge can see it is nearby, not connect to it.`, 'BLE advertisement via relay · GATT/Classic not supported');
     } else if (d.category === 'apple') {
-      add('ios', 'iPhone / Apple control', 'apple', 'planned', 'Seen on the network. There is no iOS Companion app yet, and iOS has no debugging bridge like Android.', 'mDNS only · iOS Companion planned');
+      add('ios', 'iPhone / Apple control', 'apple', 'planned', 'Seen on the network. There is no iOS Companion app yet, and iOS has no debugging bridge like Android.', 'mDNS only · iOS Companion planned', { action: 'connect', connectType: 'iphone' });
     } else {
-      add('seen', 'On the network', 'unknown', 'detected', 'OpenBridge can see this device but has no adapter for it yet.', 'observe only · ' + linksOf(d.key).map(l => l.source).join(', '));
+      add('seen', 'On the network', 'unknown', 'detected', 'OpenBridge can see this device but has no adapter for it yet.', 'observe only · ' + linksOf(d.key).map(l => l.source).join(', '), { action: 'connect' });
     }
     return out;
   }
@@ -298,7 +299,7 @@
     for (const c of caps) {
       const card = h('div', { class: 'cap ' + c.state }, h('div', { class: 'cap-top' }, icon(c.icon), h('strong', { text: c.name }), h('span', { class: 'pill ' + c.state, text: STATE_TXT[c.state] })), h('p', { text: c.plain }), h('details', {}, h('summary', { text: 'Technical details' }), h('code', { text: c.tech })));
       if (c.state === 'available' && ['remote', 'touch', 'apps', 'settings', 'diag', 'visual', 'vac-status', 'vac-settings', 'vac-drive', 'pc-diag', 'pc-job', 'router-diag', 'ble'].includes(c.id)) card.append(h('button', { class: 'ghost small', type: 'button', onclick: () => setTab('controls') }, 'Use'));
-      if (c.action === 'connect') card.append(h('button', { class: 'ghost small', type: 'button', onclick: () => openConnect() }, 'Connect'));
+      if (c.action === 'connect') card.append(h('button', { class: 'ghost small', type: 'button', onclick: () => openConnect(c.connectType) }, 'How to connect'));
       grid.append(card);
     }
     ov.append(grid);
@@ -575,7 +576,7 @@
   }
 
   // ---------------- connect wizard ----------------
-  const TYPES = [['phone', 'Phone or tablet', 'phone'], ['watch', 'Smartwatch', 'watch'], ['tv', 'TV', 'tv'], ['pc', 'Windows PC', 'pc'], ['router', 'Internet box / router', 'router'], ['vacuum', 'Robot vacuum', 'vacuum'], ['iphone', 'iPhone / iPad', 'apple'], ['unknown', 'Something else', 'unknown']];
+  const TYPES = [['phone', 'Phone or tablet', 'phone'], ['watch', 'Smartwatch', 'watch'], ['tv', 'TV', 'tv'], ['pc', 'Windows / Linux PC', 'pc'], ['router', 'Internet box / router', 'router'], ['vacuum', 'Robot vacuum', 'vacuum'], ['iphone', 'iPhone / iPad', 'apple'], ['unknown', 'Something else', 'unknown']];
   async function openConnect(type) {
     const dlg = $('#connect');
     if (!dlg.open) dlg.showModal();
@@ -586,18 +587,18 @@
     guideFor(type, main);
   }
   async function renderCandidates(main) {
-    main.append(h('h3', { text: 'Devices OpenBridge can see' }), h('p', { class: 'sub', text: 'From your last discovery: phones on Wi-Fi (Android wireless debugging, Apple services), Bluetooth seen by relays, and your router’s device list. Nothing new is probed until you press Scan.' }));
+    main.append(h('h3', { text: 'Devices OpenBridge can see' }), h('p', { class: 'sub', text: 'From your last discovery: phones on Wi-Fi (Android wireless debugging, Apple services), PCs from your router’s device list, Bluetooth seen by relays. Nothing new is probed until you press Scan.' }));
     const scan = h('button', { class: 'primary small', type: 'button', onclick: async () => { scan.disabled = true; scan.textContent = 'Scanning (read-only)…'; try { await post('/api/fabric-discover', { device_id: 'fabric', providers: ['mdns', 'ssdp', 'android', 'freebox'] }).then(s2 => { renderFabric(s2); }); } catch (e) { toast('Scan blocked: ' + e.message, 'bad'); } openConnect(); } }, 'Scan again');
     main.append(scan);
     let data;
     try { data = await api('/api/v2/onboarding'); } catch (e) { main.append(h('p', { class: 'bad', text: 'Onboarding view unavailable: ' + e.message })); return; }
-    if (!data.candidates.length) { main.append(empty(data.discovered ? 'No phone or watch found' : 'No discovery yet', data.discovered ? 'Turn on Wireless debugging on an Android phone or watch, or pick a device type on the left.' : 'Press Scan again, or pick the device type on the left.', null)); return; }
+    if (!data.candidates.length) { main.append(empty(data.discovered ? 'No phone, watch or PC found' : 'No discovery yet', data.discovered ? 'Turn on Wireless debugging on an Android phone or watch, or pick a device type on the left.' : 'Press Scan again, or pick the device type on the left.', null)); return; }
     const list = h('div', { class: 'cand-list' });
-    for (const c of data.candidates) list.append(candidateCard(c, data.apk_portal));
+    for (const c of data.candidates) list.append(candidateCard(c, data.apk_portal, data.agent_matrix));
     main.append(list);
   }
   const MSTATE = { READY: ['Ready', 'available'], NEEDS_STEP: ['One step on the device', 'permission'], CONNECTED: ['Connected', 'available'], UNAVAILABLE: ['Not available', 'unsupported'] };
-  function candidateCard(c, portal) {
+  function candidateCard(c, portal, matrix) {
     const ic = c.platform === 'ios/apple' ? 'apple' : ICON[c.kind] || (c.kind === 'phone_maybe' ? 'ble' : 'phone');
     const card = h('article', { class: 'cand' }, h('div', { class: 'cand-head' }, h('span', { class: 'dicon' }, icon(ic)), h('div', {}, h('strong', { text: c.model && c.model !== c.label ? `${c.label} · ${c.model}` : c.label }), h('small', { text: `${c.vendor ? c.vendor + ' · ' : ''}${c.evidence.join(' · ')}${c.confidence === 'weak' ? ' (weak signal)' : ''}` })), h('span', { class: 'pill ' + (c.state === 'CONNECTED' ? 'available' : c.state === 'READY' ? 'available' : 'permission'), text: { CONNECTED: 'Connected', READY: 'Ready to pair', ACTION_NEEDED: 'Needs a step', IDENTIFY: 'Identify' }[c.state] || c.state })));
     const ms = h('div', { class: 'methods' });
@@ -607,6 +608,7 @@
       if (m.id === 'adb_wifi' && m.status !== 'CONNECTED') box.append(pairForm(c.kind === 'watch' ? 'watch' : 'android', m.pairing_address));
       if (m.id === 'companion_apk' && m.status === 'READY') box.append(h('button', { class: 'ghost small', type: 'button', onclick: async e => { e.currentTarget.disabled = true; try { const r = await post('/api/companion-install', { device_id: (st.snap.devices.find(d => d.key === c.device_key).handles || {}).USB || (st.snap.devices.find(d => d.key === c.device_key).handles || {}).WIFI }); toast(`Companion install: ${r.state || 'started'} — accept the prompt on the phone`); } catch (err) { toast('Install blocked: ' + err.message, 'bad'); } } }, 'Install from this PC'));
       if (m.id === 'companion_apk' && m.status !== 'UNAVAILABLE') box.append(apkPortal(portal));
+      if (m.id === 'agent_lan' && m.needs_pick) box.append(agentPicker((matrix || []).filter(e => e.id !== 'android-apk')));
       ms.append(box);
     }
     card.append(ms);
@@ -633,7 +635,34 @@
     if (state && state.running) show(state);
     return h('div', { class: 'portal' }, h('button', { class: 'ghost small', type: 'button', onclick: async () => { try { show(await post('/api/v2/onboarding/apk-portal', { minutes: 10 })); } catch (e) { out.textContent = e.message; } } }, 'Open a 10-minute LAN download link'), out);
   }
-  const KIND_OF = { phone: c => (c.kind === 'phone' || c.kind === 'tablet' || c.kind === 'phone_maybe') && c.platform !== 'ios/apple', watch: c => c.kind === 'watch' && c.platform !== 'ios/apple', iphone: c => c.platform === 'ios/apple', tv: c => c.kind === 'tv' };
+  function agentPicker(entries) {
+    const wrap = h('div', { class: 'agent-picker' });
+    if (!entries.length) { wrap.append(h('p', { class: 'bad', text: 'No agent builds known.' })); return wrap; }
+    for (const e of entries) {
+      const [t, cls] = MSTATE[e.status] || [e.status, ''];
+      const row = h('div', { class: 'agent-row' }, h('strong', { text: e.label }), h('span', { class: 'pill ' + cls, text: t }));
+      if (e.reason) row.append(h('p', { class: e.sha256 ? 'sub' : 'bad', text: e.reason }));
+      if (!e.run && e.install && e.install.length) row.append(h('ol', {}, ...e.install.map(x => h('li', { text: x }))));
+      if (e.status === 'READY' || e.sha256) row.append(artifactPortal(e));
+      wrap.append(row);
+    }
+    return wrap;
+  }
+  function artifactPortal(e) {
+    const out = h('p', { role: 'status' });
+    const btn = h('button', { class: 'ghost small', type: 'button', onclick: async () => {
+      btn.disabled = true;
+      try {
+        const r = await post('/api/v2/onboarding/apk-portal', { minutes: 10, artifact: e.id });
+        const host = new URL(r.url).hostname;
+        out.replaceChildren(h('span', {}, 'On that computer, open ', h('code', { text: r.url }), ` (open for ${Math.round(r.expires_in_s / 60)} min, SHA-256 ${String(r.sha256).slice(0, 12)}…).`,
+          e.run ? h('span', {}, ' Then run: ', h('code', { text: e.run.replace('{HOST}', host) })) : null,
+          e.status !== 'READY' && e.reason ? h('span', { class: 'bad', text: ' ' + e.reason }) : null));
+      } catch (err) { out.textContent = 'Download blocked: ' + err.message; } finally { btn.disabled = false; }
+    } }, `Download ${e.filename}`);
+    return h('div', { class: 'portal' }, btn, out);
+  }
+  const KIND_OF = { phone: c => (c.kind === 'phone' || c.kind === 'tablet' || c.kind === 'phone_maybe') && c.platform !== 'ios/apple', watch: c => c.kind === 'watch' && c.platform !== 'ios/apple', iphone: c => c.platform === 'ios/apple', tv: c => c.kind === 'tv', pc: c => c.kind === 'computer' };
   function methodCard(title, status, detail, steps, extra) {
     const [t, cls] = MSTATE[status] || [status, ''];
     return h('details', { class: 'method ' + cls, open: true }, h('summary', {}, h('strong', { text: title }), h('span', { class: 'pill ' + cls, text: t })), detail ? h('p', { class: 'sub', text: detail }) : null, steps ? h('ol', {}, ...steps.map(x => h('li', { text: x }))) : null, ...(extra || []));
@@ -643,7 +672,7 @@
       phone: ['Android phone or tablet', 'Pick the simplest way. Wi-Fi needs no cable; USB gives the most complete control; the Companion app adds Bluetooth reach.'],
       watch: ['Wear OS watch (e.g. Galaxy Watch7)', 'Watches connect over Wi-Fi debugging. Control actions stay consent-gated.'],
       tv: ['Android TV / Google TV', null, ['On the TV: Settings → Device preferences → About → press “Build” 7 times.', 'Developer options → Network debugging (or USB debugging): on.', 'Run discovery, open the TV in My Devices and press “Connect over ADB Wi-Fi”; accept the prompt on the TV.']],
-      pc: ['Windows PC', null, ['Download the OpenBridge agent from the LAN portal on this PC (python -m dev.agent_portal).', 'Start it on the other PC; it connects back to this PC with your pre-shared key.', 'Start OpenBridge with --windows-bridge. Commands on that PC always need your approval.']],
+      pc: ['Windows or Linux PC', 'Pick the build below that matches the other computer. The agent connects back to this PC with your pre-shared key; every command needs your approval.', ['Start OpenBridge with --windows-bridge so the agent can link.', 'Pick the matching build below, open the time-limited link on that computer, and run the agent as administrator.', 'It appears in My Devices as connected.']],
       router: ['Internet box / router (Freebox OS, UPnP-IGD)', null, ['Run discovery. A Freebox appears automatically; press “Authorize read-only Freebox inventory” and confirm on the box’s screen.', 'Other gateways: UPnP-IGD status is read automatically when the router allows it.', 'OpenBridge never changes router settings.']],
       vacuum: ['Tuya robot vacuum', null, ['Link it once with your own Tuya IoT project: python -m dev.tuya_link --config <your config.json>.', 'Run discovery: the robot appears with its status and controls.']],
       iphone: ['iPhone / iPad', 'OpenBridge can see Apple devices on your network and read the model identifier they publish.'],
@@ -652,7 +681,7 @@
     main.append(h('h3', { text: G[0] }));
     if (G[1]) main.append(h('p', { class: 'sub', text: G[1] }));
     const found = h('div', { class: 'cand-list' });
-    if (KIND_OF[type]) { main.append(found); api('/api/v2/onboarding').then(data => { const m = data.candidates.filter(KIND_OF[type]); if (m.length) found.replaceChildren(h('h4', { text: 'Found on your network' }), ...m.map(c => candidateCard(c, data.apk_portal))); }).catch(() => {}); }
+    if (KIND_OF[type]) { main.append(found); api('/api/v2/onboarding').then(data => { const m = data.candidates.filter(KIND_OF[type]); if (m.length) found.replaceChildren(h('h4', { text: 'Found on your network' }), ...m.map(c => candidateCard(c, data.apk_portal, data.agent_matrix))); }).catch(() => {}); }
     const ms = h('div', { class: 'methods' });
     if (type === 'phone' || type === 'watch') {
       if (type === 'phone') ms.append(methodCard('USB cable (ADB debugging)', 'NEEDS_STEP', 'Most complete control. Some vendors (e.g. Xiaomi MIUI) also need “USB debugging (Security settings)” for taps and settings.', ['Settings → About phone → tap “Build number” 7 times', 'Settings → Developer options → USB debugging: on', 'Plug the cable into this PC, accept “Allow USB debugging” on the phone, then run discovery'], [h('button', { class: 'ghost small', type: 'button', onclick: () => { $('#connect').close(); discoverAndOpen(); } }, 'Run discovery')]));
@@ -660,6 +689,9 @@
       if (type === 'phone') ms.append(methodCard('OpenBridge Companion app (APK)', 'NEEDS_STEP', 'Adds Bluetooth relay for this PC. Android always asks before installing; OpenBridge cannot install silently.', ['Open the time-limited link below on the phone (same Wi-Fi)', 'Allow the install when Android asks, then open the app and pair'], [apkPortal(null)]));
     } else if (type === 'iphone') {
       ms.append(methodCard('OpenBridge Companion for iOS', 'UNAVAILABLE', 'No iOS Companion app exists yet, and iOS has no debugging bridge like Android ADB, so OpenBridge cannot control an iPhone today. It stays visible as a detected device.', null));
+    } else if (type === 'pc') {
+      ms.append(h('ol', { class: 'guide-steps' }, ...G[2].map(x => h('li', { text: x }))));
+      api('/api/v2/onboarding').then(data => { ms.append(methodCard('Agent build for that computer', 'NEEDS_STEP', 'One row per hardware. Open the time-limited link on that computer and run the agent as administrator with your pre-shared key.', null, [agentPicker((data.agent_matrix || []).filter(e => e.id !== 'android-apk'))])); }).catch(() => { ms.append(methodCard('Agent build for that computer', 'UNAVAILABLE', 'Onboarding data unavailable.', null)); });
     } else ms.append(h('ol', { class: 'guide-steps' }, ...G[2].map(x => h('li', { text: x }))));
     main.append(ms);
     if (type === 'router' || type === 'tv' || type === 'unknown') main.append(h('button', { class: 'ghost small', type: 'button', onclick: () => { $('#connect').close(); discoverAndOpen(); } }, 'Run discovery'));

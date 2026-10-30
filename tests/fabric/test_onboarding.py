@@ -77,6 +77,36 @@ class Candidates(unittest.TestCase):
         self.assertEqual(onboarding.candidates(None, None), [])
 
 
+class ComputerCandidates(unittest.TestCase):
+    def pc(self, handles=None, observations=()):
+        reg = Registry()
+        k = reg.upsert([], category='computer', label='DESKTOP-ABC')
+        if handles:
+            reg.devices[k]['handles'] = handles
+        for name, value in observations:
+            reg.observe(k, DeviceObservation(name, value, 'WINDOWS_AGENT', 'LAN', now(), True))
+        return reg
+
+    def test_agent_linked_is_connected(self):
+        reg = self.pc({'WINDOWS_AGENT': 'windows-agent'}, [('architecture', 'x64 (64-bit)')])
+        c = next(x for x in onboarding.candidates(reg.snapshot(), reg) if x['kind'] == 'computer')
+        self.assertEqual(c['state'], 'CONNECTED')
+        self.assertEqual(c['platform'], 'windows')
+        m = next(m for m in c['methods'] if m['id'] == 'agent_link')
+        self.assertEqual(m['status'], 'CONNECTED')
+
+    def test_bare_pc_offers_guided_agent_pick(self):
+        reg = self.pc()
+        c = next(x for x in onboarding.candidates(reg.snapshot(), reg)
+                 if x['kind'] == 'computer')
+        self.assertEqual(c['state'], 'ACTION_NEEDED')
+        self.assertEqual(c['confidence'], 'weak')
+        m = next(m for m in c['methods'] if m['id'] == 'agent_lan')
+        self.assertEqual(m['status'], 'NEEDS_STEP')
+        self.assertTrue(m['needs_pick'])
+        self.assertTrue(m['steps'])
+
+
 class Portal(unittest.TestCase):
     def test_lan_only_single_file(self):
         with tempfile.TemporaryDirectory() as d:
