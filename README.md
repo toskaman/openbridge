@@ -18,7 +18,7 @@ Three things you can do with it today:
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
 3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
 
-Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (18 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
+Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (21 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
 
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
 ## About the developer
@@ -82,9 +82,9 @@ To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVI
 
 The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
 
-### Event-built evidence (30 Oct, main `1e8066a`)
+### Event-built evidence (30 Oct, main `73cfef5`)
 
-Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (18 VERIFIED rows).
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (21 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem
@@ -98,6 +98,7 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 5. **Changes only what it can undo.** Consent → snapshot → execute → independent read-back → exact Undo, with crash recovery. A session journal asks before finishing whether to restore every setting changed during the session.
 6. **Routes skills across relays (B2).** Typed skill contracts with READY/ACTIVE/STANDBY states, freshness leases, AUTO/PREFERRED/PINNED policies, consent-bound invocation leases and exact-once dedup. A TV-to-phone BLE failover is demonstrated on hardware ([handover](docs/release/COMPLETE_HANDOVER.md)); a frozen synthetic routing evaluation scores 32/32 with full baselines ([results](docs/evaluation/routing-v1/RESULTS.md)).
 7. **Asks in natural language (Ask OpenBridge).** English or French requests resolve to registered skills through tiered Meta-only inference; every step (parse → preview → approval → receipt) is shown with model, cost and evidence, and the model can never authorize its own privileged actions.
+8. **Runs headless from a terminal.** The `openbridge` CLI drives the same core as the GUI (devices, ask, capabilities, workflows, approvals, evidence, doctor) with identical contracts and consent, over SSH or on machines with no display. See [CLI reference](docs/CLI_REFERENCE.md) and [headless deployment](docs/HEADLESS_DEPLOYMENT.md).
 
 ## Verified on real hardware
 | Capability | Evidence |
