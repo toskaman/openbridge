@@ -23,9 +23,12 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primiti
               '/api/v2/catalog',
               '/api/v2/onboarding',
               '/api/v2/command/tiers',
-              '/api/v2/companion/commands')
+              '/api/v2/companion/commands',
+              '/api/v2/capabilities/explore',
+              '/api/v2/capabilities/layouts',
+              '/api/v2/capabilities/render')
 POST_ROUTES = ('/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup',)
 
 
 import threading
@@ -96,6 +99,53 @@ def routes(server):
 def route_rows(server):
     led = getattr(server, 'relay_ledger', None)
     return [dict(to_json(r), status=led.route_status(r.relay_id, r.online) if led else 'UNKNOWN') for r in routes(server)]
+
+
+def _explorer_data(server):
+    """§6: assemble live exploration inputs. Auxiliary sources degrade to
+    empty (exploration never 500s because fingerprints or probes are missing);
+    statuses then conservatively downgrade (e.g. unprobed -> DISCOVERABLE)."""
+    from src.fabric import capability_explorer as X
+    from src.substrate import registry as R
+    snap = server.fabric_snapshot
+    try:
+        sub = substrate(server)
+    except Exception:
+        sub = None
+    fps = {}
+    for d in snap['devices']:
+        try:
+            fps[d['key']] = sub.fingerprint(d['key']) if sub else None
+        except Exception:
+            fps[d['key']] = None
+    try:
+        probes = getattr(executor(server), 'probes', {}) or {}
+    except Exception:
+        probes = {}
+    reg = getattr(server, 'fabric_registry', None)
+    reg_devs = []
+    for k, dv in (getattr(reg, 'devices', None) or {}).items():
+        if isinstance(dv, dict):
+            reg_devs.append({'key': k, 'category': dv.get('category'), 'label': dv.get('label', k)})
+    try:
+        perms = _relay_permissions(server)
+    except Exception:
+        perms = {}
+    try:
+        descs = capabilities.describe(snap, perms)
+    except Exception:
+        descs = []
+    blocked = {}
+    for x in descs:
+        if getattr(x, 'verified', '') == 'BLOCKED':
+            blocked.setdefault(x.device_key, []).extend(list(x.limitations or ()))
+    return X.explore(snap['devices'], snap.get('links', []), R.catalog(), probes=probes,
+                     fingerprints=fps, registry=reg_devs, blocked=blocked)
+
+
+def _explorer_store(server):
+    from src.runtime.state_store import StateStore
+    return StateStore.for_server(server)
 
 
 def get(server, path, query):
@@ -221,6 +271,35 @@ def get(server, path, query):
         descs = capabilities.describe(snap, _relay_permissions(server))
         dev = (q.get('device') or [None])[0]
         return 200, {'capabilities': [to_json(d) for d in descs if dev in (None, d.device_key)]}
+    if path == '/api/v2/capabilities/explore':
+        out = _explorer_data(server)
+        dev = (q.get('device') or [None])[0]
+        if dev is not None:
+            out = {'devices': [d for d in out['devices'] if d['key'] == dev]}
+        return 200, out
+    if path == '/api/v2/capabilities/layouts':
+        store = _explorer_store(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        layouts = store.load().get('explorer_layouts', {})
+        return 200, {'layouts': [{'layout_id': lid, 'name': l.get('name', lid),
+                                  'version': l.get('version', 1),
+                                  'widgets': len(l.get('widgets', []))} for lid, l in layouts.items()]}
+    if path == '/api/v2/capabilities/render':
+        from src.fabric import capability_explorer as X
+        lid = (q.get('layout') or [''])[0]
+        if not lid:
+            return 400, {'error': 'layout query param is required'}
+        store = _explorer_store(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        layout = store.load().get('explorer_layouts', {}).get(lid)
+        if layout is None:
+            return 404, {'error': 'unknown layout'}
+        try:
+            return 200, X.render_layout(layout, _explorer_data(server))
+        except X.ExplorerError as e:
+            return 409, {'error': 'saved layout failed validation: %s' % e}
     if path == '/api/v2/facts':
         dev = (q.get('device') or [''])[0]
         d = next((x for x in snap['devices'] if x['key'] == dev), None)
@@ -511,6 +590,43 @@ def post(server, path, body):
         except RouteError as e:
             return e.status, {'error': str(e), 'code': e.code}
         return (409 if isinstance(out, dict) and out.get('state') == 'BLOCKED' else 200), out
+    if path in ('/api/v2/capabilities/layouts', '/api/v2/capabilities/followup') and isinstance(body, dict):
+        import secrets
+        from src.fabric import capability_explorer as X
+        store = _explorer_store(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        if path == '/api/v2/capabilities/layouts':
+            try:
+                if body.get('draft'):
+                    layout = X.draft_layout(_explorer_data(server), (body.get('name') or 'Untitled layout')[:80])
+                else:
+                    layout = X.validate_layout({'schema_version': 1, 'name': (body.get('name') or 'Untitled layout')[:80],
+                                                'version': 1, 'origin': 'user', 'widgets': body.get('widgets', [])})
+            except X.ExplorerError as e:
+                return 400, {'error': str(e)}
+            lid = 'lay-' + secrets.token_hex(4)
+            layout = dict(layout, layout_id=lid)
+            store.update_layouts(lambda m: m.__setitem__(lid, layout))
+            return 200, {'layout_id': lid, 'version': 1, 'widgets': len(layout['widgets'])}
+        lid = body.get('layout_id', '')
+        saved = store.load().get('explorer_layouts', {}).get(lid)
+        if saved is None:
+            return 404, {'error': 'unknown layout'}
+        if body.get('expected_version') is None:
+            return 400, {'error': 'expected_version is required'}
+        try:
+            op, args = ((body.get('op'), body.get('args', {})) if body.get('op')
+                        else X.parse_followup(body.get('text', '')))
+            layout = X.followup(saved, op, args or {}, body.get('expected_version'),
+                                explored=_explorer_data(server))
+        except X.ExplorerError as e:
+            if str(e) == 'VERSION_CONFLICT':
+                return 409, {'error': 'layout changed; reload and retry'}
+            return 400, {'error': str(e)}
+        layout = dict(layout, layout_id=lid)
+        store.update_layouts(lambda m: m.__setitem__(lid, layout))
+        return 200, layout
     if path == '/api/v2/onboarding/apk-portal' and isinstance(body, dict):
         return apk_portal(server, body)
     if path.startswith('/api/v2/voice/') and isinstance(body, dict):

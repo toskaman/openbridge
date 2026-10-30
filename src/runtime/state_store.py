@@ -190,6 +190,11 @@ class StateStore:
     def set_policy(self, skill_id, policy):
         self._mutate(lambda d: d.setdefault('policies', {}).__setitem__(skill_id, policy))
 
+    def update_layouts(self, fn):
+        def change(d):
+            fn(d.setdefault('explorer_layouts', {}))
+        self._mutate(change)
+
     def save_unresolved(self, rows, acknowledged=()):
         def change(d):
             ack = set(d.get('acknowledged', [])) | set(acknowledged)
