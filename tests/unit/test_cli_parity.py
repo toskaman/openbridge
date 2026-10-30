@@ -51,8 +51,9 @@ class ParityTests(unittest.TestCase):
         # Discovery-dependent: both succeed or both fail identically, never diverge.
         self.assertEqual(code1, code2)
         if code1 == 0:
-            self.assertEqual(json.loads(out1)['data']['request_id'],
-                             json.loads(out2)['data']['request_id'])
+            data1, data2 = json.loads(out1)['data'], json.loads(out2)['data']
+            self.assertEqual(data1.get('request_id'), data2.get('request_id'))
+            self.assertEqual(data1.get('resolved', True), data2.get('resolved', True))
 
     def test_concurrent_claim_executes_once(self):
         # Atomicity at the store level: redirect_stdout is process-global,

@@ -17,7 +17,8 @@ PASS / CONDITIONAL / OPEN. An OPEN gate is stated, never hidden.
 - CI: main `1e8066a`/`070392a` success; `972b545` queued at review time
   (squash-identical to a 6/6-green PR tree); PR146 re-run in flight after
   the UDP race fix `7ad47ce`; PR147 queued.
-- Zero skipped tests in `tests/` (no `skip`/`skipIf`/`skipUnless`).
+- Zero skipped locally; CI reports 3 pre-existing conditional skips
+  (optional voice/torch/substrate deps absent on runners, none added here).
 - Closes when the queued runs report green.
 
 ## Gate C — Security: PASS
