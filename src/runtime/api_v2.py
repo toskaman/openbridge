@@ -6,7 +6,7 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
-GET_ROUTES = ('/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
+GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -27,7 +27,7 @@ GET_ROUTES = ('/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primiti
               '/api/v2/capabilities/explore',
               '/api/v2/capabilities/layouts',
               '/api/v2/capabilities/render')
-POST_ROUTES = ('/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
+POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
               '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup',)
 
 
@@ -146,6 +146,92 @@ def _explorer_data(server):
 def _explorer_store(server):
     from src.runtime.state_store import StateStore
     return StateStore.for_server(server)
+
+
+def _hardware_inspect(server, device):
+    android = getattr(server, 'android', None)
+    if android is None:
+        return []
+    handle = next(iter((device.get('handles') or {}).values()), None)
+    if handle is None:
+        return []
+    try:
+        rep = android.inspect(handle)
+    except Exception:
+        return []
+    units = {'battery_percent': '%', 'storage_free_gb': 'GB', 'ram_total_gb': 'GB',
+             'screen_timeout_seconds': 's'}
+    out = []
+    for e in rep.get('evidence', []):
+        v = e.get('value')
+        unit = units.get(e.get('key'), 'str' if isinstance(v, str) else 'bool' if isinstance(v, bool) else 'x')
+        out.append({'name': e.get('key'), 'value': v, 'unit': unit, 'source': e.get('source', 'ADB'),
+                    'observed_at': e.get('observed_at'), 'confidence': 'measured', 'availability': 'available'})
+    return out
+
+
+def _hardware_runner(server, key):
+    try:
+        actions = executor(server)._actions(key)
+    except Exception:
+        return None
+    shell = getattr(actions, 'shell', None)
+    return shell if callable(shell) else None
+
+
+def _nvidia_runner():
+    import subprocess
+
+    def run(*argv):
+        r = subprocess.run(list(argv), capture_output=True, text=True, timeout=15)
+        if r.returncode != 0:
+            raise OSError('nvidia-smi failed')
+        return r.stdout
+    return run
+
+
+def _hardware_facts(server, only=None):
+    from src.fabric import hardware_intel as H
+    snap = server.fabric_snapshot
+    devices = []
+    for d in snap['devices']:
+        if only is not None and d['key'] != only:
+            continue
+        metrics = {}
+        if d.get('category') in ('phone', 'tv', 'watch', 'android', 'tablet'):
+            for m in _hardware_inspect(server, d):
+                metrics[m['name']] = m
+            runner = _hardware_runner(server, d['key'])
+            if runner is not None:
+                for m in H.android_facts(runner):
+                    metrics[m['name']] = m
+        devices.append({'key': d['key'], 'category': d.get('category'), 'label': d.get('label', d['key']),
+                        'metrics': list(metrics.values())})
+    if only is None or only == 'pc':
+        devices.append({'key': 'pc', 'category': 'pc', 'label': 'This PC',
+                        'metrics': H.pc_facts(run=_nvidia_runner())})
+    return {'devices': devices}
+
+
+def _hardware_relays(server):
+    import time as _time
+    try:
+        rows = route_rows(server)
+    except Exception:
+        return {}
+    out = {}
+    for r in rows:
+        key = r.get('device_key') or r.get('key') or ''
+        if not key:
+            continue
+        last = r.get('last_success_at')
+        fresh = None
+        if isinstance(last, (int, float)) and not isinstance(last, bool):
+            fresh = max(0, int(_time.time() - last))
+        prev = out.get(key, {})
+        if prev.get('fresh_s') is None or (fresh is not None and fresh < prev['fresh_s']):
+            out[key] = {'paired': True, 'fresh_s': fresh}
+    return out
 
 
 def get(server, path, query):
@@ -318,6 +404,9 @@ def get(server, path, query):
             facts = [EvidenceFact(dev, name, o.value, (o.source,), o.observed_at, bool(o.verified))
                      for name, by_src in sorted(reg.devices[dev]['observations'].items()) for o in [by_src.get(source)] if o is not None]
         return 200, {'device': dev, 'facts': [to_json(f) for f in facts]}
+    if path == '/api/v2/hardware/facts':
+        dev = (q.get('device') or [None])[0]
+        return 200, _hardware_facts(server, only=dev)
     return 404, {'error': 'Not found'}
 
 
@@ -514,6 +603,38 @@ def _idem_finish(server, key, fingerprint):
 
 
 def post(server, path, body):
+    if path in ('/api/v2/hardware/rank', '/api/v2/hardware/bench') and isinstance(body, dict):
+        from src.fabric import hardware_intel as H
+        if server.fabric_snapshot is None:
+            return 409, {'error': 'No graph yet; execute bounded_discovery first'}
+        if path == '/api/v2/hardware/rank':
+            try:
+                devs = _hardware_facts(server)['devices']
+                if isinstance(body.get('devices'), list):
+                    want = set(body['devices'])
+                    devs = [d for d in devs if d['key'] in want]
+                return 200, H.rank(body.get('task', ''), devs, relays=_hardware_relays(server))
+            except H.HardwareError as e:
+                return 400, {'error': str(e)}
+        if body.get('consent') is not True:
+            return 400, {'error': 'consent: true is required (benchmarks consume resources)'}
+        kind = body.get('kind', '')
+        kw = {}
+        if kind == 'cpu_loop' and body.get('iterations') is not None:
+            kw['iterations'] = body.get('iterations')
+        if kind == 'disk_write' and body.get('megabytes') is not None:
+            kw['megabytes'] = body.get('megabytes')
+        if kind == 'device_rtt':
+            if body.get('attempts') is not None:
+                kw['attempts'] = body.get('attempts')
+            runner = _hardware_runner(server, body.get('device', ''))
+            if runner is None:
+                return 409, {'error': 'no shell runner for that device'}
+            kw['runner'] = runner
+        try:
+            return 200, H.microbench(kind, consent=True, **kw)
+        except H.HardwareError as e:
+            return 400, {'error': str(e)}
     if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError
         w = workflows(server)
