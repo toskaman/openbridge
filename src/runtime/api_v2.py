@@ -27,9 +27,10 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/capabilities/explore',
               '/api/v2/capabilities/layouts',
               '/api/v2/capabilities/render',
-              '/api/v2/orchestration/status')
+              '/api/v2/orchestration/status',
+              '/api/v2/dashboards/list')
 POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore',)
 
 
 import threading
@@ -271,6 +272,13 @@ def get(server, path, query):
         if rec is None:
             return 404, {'error': 'unknown workflow id'}
         return 200, rec
+    if path == '/api/v2/dashboards/list':
+        from src.runtime import dashboards as D
+        from src.runtime.state_store import StateStore
+        store = StateStore.for_server(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        return 200, {'dashboards': D.DashStore(store).list()}
     if path == '/api/v2/skills':
         from src.runtime.routing import SKILLS
         return 200, {'skills': [{'skill_id': k, 'plain': v['plain'], 'targeted': v['targeted'], 'reversibility': v['reversibility'],
@@ -722,6 +730,40 @@ def post(server, path, body):
             return 200, W.cancel(str(body.get('workflow_id', '')), journal)
         except W.WorkflowError as e:
             return 400, {'error': str(e)}
+    if path.startswith('/api/v2/dashboards/') and isinstance(body, dict):
+        from src.runtime import dashboards as D
+        from src.runtime.remote_controls import RemoteControlError
+        from src.runtime.state_store import StateStore
+        store = StateStore.for_server(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        journal = D.DashStore(store)
+        rc = remote_controls(server)
+        try:
+            if path == '/api/v2/dashboards/create':
+                return 200, D.create(rc, str(body.get('relay_id', '')), str(body.get('area', '')),
+                                     str(body.get('target', '')), body.get('consent'))
+            if path == '/api/v2/dashboards/patch':
+                return 200, D.patch(rc, str(body.get('relay_id', '')), body.get('add') or (),
+                                    body.get('remove') or (), body.get('consent'))
+            if path == '/api/v2/dashboards/save':
+                journal.save(str(body.get('relay_id', '')), str(body.get('name', '')),
+                             D.defs(rc, str(body.get('relay_id', ''))))
+                return 200, {'saved': body.get('name')}
+            if path == '/api/v2/dashboards/load':
+                return 200, D.load(journal, rc, str(body.get('name', '')),
+                                   body.get('relay_id') or None, body.get('consent'))
+            if path == '/api/v2/dashboards/delete':
+                journal.delete(str(body.get('name', '')))
+                return 200, {'deleted': body.get('name')}
+            if path == '/api/v2/dashboards/restore':
+                return 200, {'restored': D.restore_on_reconnect(rc, journal,
+                                                                str(body.get('relay_id', '')))}
+            return 404, {'error': 'unknown dashboards route'}
+        except D.DashboardError as e:
+            return 400, {'error': str(e)}
+        except RemoteControlError as e:
+            return e.status, {'error': str(e)}
     if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError
         w = workflows(server)
