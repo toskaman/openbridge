@@ -13,6 +13,40 @@ BridgeWindows diagnostics use read-only allowlisted methods. A separate consent-
 
 The current v4 adapter uses mutual HMAC challenge-response and session-MAC envelopes; it does not transmit the pre-shared key. Payloads are authenticated, not encrypted. Keep the link on a trusted LAN. OpenBridge still accepts one agent at a time; the separate bridge's multi-PC support is not yet ported. The adapter is off unless the server is started with `--windows-bridge`.
 
+## Corrected 30 Oct (supersedes stale rows above, history preserved)
+
+- Companion is 0.11.0 (live flow overlay + pill-icon buttons), installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7.
+- Watch: signed relay pair PAIRED (relay-39f86439fbae) plus 0.10.0/0.11.0 installs verified; wireless adb still drops when the watch dozes.
+- XP SP3 + Win7 SP1: legacy C agent VERIFIED on real QEMU guests (mutual-auth HIT + RPC exec exit 0 + screenshots); VMs deleted after proofs.
+- Registry holds realized tests only (15 rows, all VERIFIED): the merely-planned i386 guest moved to the catalog below.
+
+## Planned test targets (catalog, 30 Oct)
+
+Targets below are NOT tested and MUST NOT appear in [the evidence registry](DEVICE_EVIDENCE.json) (realized tests only, rendered to [the matrix](HARDWARE_TEST_MATRIX.md)). No new separate compatibility document: this section is the catalog.
+
+Promotion to the registry requires the SAME validation pipeline for every target — this is what turns an emulator catalog into a credible technical demonstration:
+
+1. A program actually executes inside the emulated environment (agent or real Companion, not a host-side stub).
+2. Bidirectional communication with the PC is proven (handshake + round-trip, both directions observed).
+3. A command flows from the emulated environment toward another device (or vice versa through it).
+4. The result is independently verified (oracle outside the channel under test: read-back, screenshot, hash, second observer).
+5. The physical deployment procedure is documented (how the same program reaches real hardware).
+
+Only after all five steps does the entry earn a registry row, a matrix render, and a claim link in [the claim matrix](jury/CLAIM_EVIDENCE_MATRIX.md).
+
+| Target | Environment class | Step-1 program |
+|---|---|---|
+| 32-bit Linux guest (i386) | Full guest OS, protocol endpoint | Reference agent handshake + RPC |
+| Android phone/tablet official emulator + real Companion | Official platform emulator | Companion APK, pair, relay op |
+| Android TV official emulator + real Companion | Official platform emulator | Companion APK, pair, relay op |
+| Wear OS official emulator + real Companion | Official platform emulator | Companion APK, pair, small-screen UI check |
+| MQTT broker + Matter test fabric | Protocol simulator | Adapter against simulator, facts verified |
+| Home Assistant test instance | Protocol simulator | Inventory via official API, read-only first |
+| ESPHome / Thread / Zigbee adapters | Not implemented | Adapter + lab hardware or simulator first |
+| RetroArch emulator-host integration | Emulator controlled through host adapter | Host-process control proof (no ROM claims) |
+| Console emulators (Game Boy / PlayStation class) | Emulator controlled through host adapter | Host-process control only; no ROM/BIOS without rights |
+| IoT protocol simulators (generic) | Protocol simulator | Per-simulator facts verified, labeled as simulated |
+
 ## Corrected 29 Oct (supersedes stale rows above, history preserved)
 
 - Multi-PC: the OpenBridge server now accepts up to 8 agents (rewritten accept loop); second PC verified with binary swap + hash match. The "one agent at a time" row above is stale.
