@@ -46,7 +46,7 @@ I'm an autistic independent developer who has been passionate about computers, p
 | Bonus award | Project fit | Proof or requirement to verify |
 |---|---|---|
 | Best Agentic Use-Case | Meta-led multi-step discovery, capability synthesis, verification, and cross-device orchestration | Run a genuine autonomous task with independent real-world result receipts and an honest baseline comparison |
-| Best Build on Meta Open Weight Models | Meta open-weight inference can contribute to local planning or capability discovery | Verify a substantial completed workflow actually uses eligible Muse Glimmer or Muse Spark Open weights; record model provenance and inference environment |
+| Best Build on Meta Open Weight Models | Local Muse Glimmer 30B-Q4 plans, advises and reads screens: TV Forge proposal end-to-end, 56/60 usable advisor explanations, TV visual read-back, live agent plan() | [TV Glimmer journey](docs/forge/TV_GLIMMER_JOURNEY.md) · [benchmark status](docs/benchmark/STATUS.md) · digest-pinned provenance in [src/ai/glimmer.py](src/ai/glimmer.py), models on local Ollama |
 | Best Creative Build | Potential creative, user-facing UI or media experience with Muse Image or Muse Wonder | Demonstrate an original **working** integration with an eligible model, rather than static AI-generated decoration |
 | Most Viral Project | A clear and surprising real-device demonstration is understandable to a wide audience | Publish and submit an authentic post on X and follow the official measured engagement window |
 | Community Vote | A usable product and reproducible public demonstration can appeal to other participants | Submit a working accessible gallery entry; follow the verified-account voting rules |
@@ -68,7 +68,7 @@ To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVI
 
 The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
 
-### Event-built evidence (30 Oct, main `50406d3`)
+### Event-built evidence (30 Oct, main `99e6db5`)
 
 Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.11.0 full-control cycle + PAIRED/READY on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (signed watch pair); [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept). Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
@@ -128,9 +128,10 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 ## What's new (30 Oct 2026)
 - **Companion 0.11.0 everywhere**: live flow overlay + pill-icon buttons; installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7 (signed watch pair `relay-39f86439fbae`). Homepage screenshots still show 0.10.0 (29 Oct captures) — the 0.11.0 flows are verified, not yet reshot.
 - **Legacy Windows proven, then cleaned**: legacy C agent (subsystem 5.01, software SHA-256/HMAC) ran mutual-auth + RPC exec on real XP SP3 + Win7 SP1 QEMU guests with screenshots; VMs deleted after proofs, trace kept in [legacy evidence](docs/evidence/vm-legacy-xp-win7-30oct.md) and the [registry](docs/DEVICE_EVIDENCE.json) (15 VERIFIED rows).
-- **P0 hardening batch (PR126–PR130)**: point-of-dispatch full-control recheck, pairing attempt limits, crash-safe invocation journal with honest UNCERTAIN, supervised STT worker, HTTP-level relay-scan verification.
+- **P0 hardening batch (PR126–PR130, PR135)**: point-of-dispatch full-control recheck, pairing attempt limits, crash-safe invocation journal with honest UNCERTAIN, supervised STT worker, HTTP-level relay-scan verification, idempotency keys + journal claims on HTTP execute and direct intents.
+- **Device connect (PR133)**: hardware agent matrix (correct agent per hardware), auto connection planner, per-device connect tutorials and guided agent pick.
 - **ESP32 P1**: native agent firmware compiles (941 KB) + host protocol proof 3/3; QEMU boot blocked, documented as blocked.
-- Full suite 864 green on Windows + Linux CI.
+- Full suite 894 green on Windows + Linux CI.
 
 ## What's new (29 Oct 2026)
 - **Sealed held-out skill synthesis (G3)**: commit-reveal spec, Muse Spark 1.3 composes a TV skill the system never had — compile → grant → act → independent verify → owner restore → revoke, loop `300000 → 60000 → 300000` on live hardware, $0.0203 over 3 calls, 2 KILLs honestly retained ([SUCCESS reveal](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md)).
