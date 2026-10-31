@@ -10,10 +10,33 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-REQUIRED = ('START_HERE.md', 'QUICKSTART.md', 'README.md', 'REQUIREMENTS.md', 'CLAIM_MATRIX.md',
-            'HARDWARE_COMPATIBILITY.md', 'MODELS_AND_PROVIDERS.md', 'CLOUD_API_SETUP.md',
-            'LOCAL_MODEL_SETUP.md', 'CLI_REFERENCE.md', 'HEADLESS_DEPLOYMENT.md',
-            'KNOWN_LIMITATIONS.md', 'TEST_RESULTS.md', 'RELEASE_MANIFEST.json', 'sha256sums.txt')
+REQUIRED_EVIDENCE = ('START_HERE.md', 'QUICKSTART.md', 'README.md', 'REQUIREMENTS.md', 'CLAIM_MATRIX.md',
+                     'HARDWARE_COMPATIBILITY.md', 'MODELS_AND_PROVIDERS.md', 'CLOUD_API_SETUP.md',
+                     'LOCAL_MODEL_SETUP.md', 'CLI_REFERENCE.md', 'HEADLESS_DEPLOYMENT.md',
+                     'KNOWN_LIMITATIONS.md', 'TEST_RESULTS.md', 'CONTRIBUTIONS.md', 'LICENSE',
+                     'RELEASE_MANIFEST.json', 'sha256sums.txt')
+REQUIRED_APP = ('src/server.py', 'src/cli.py', 'requirements.txt', 'docs/QUICKSTART.md',
+                'README.md', 'LICENSE', 'CONTRIBUTIONS.md', 'BUILD.json',
+                'RELEASE_MANIFEST.json', 'sha256sums.txt')
+REQUIRED_MEDIA = ('MEDIA_MANIFEST.json', 'RELEASE_MANIFEST.json', 'sha256sums.txt')
+REQUIRED = REQUIRED_EVIDENCE
+
+
+def required_for(base):
+    for name in ('BUILD.json', 'source-and-build-info/BUILD.json', 'MEDIA_MANIFEST.json'):
+        candidate = base / name
+        if candidate.exists():
+            try:
+                kind = json.loads(candidate.read_text(encoding='utf-8')).get('artifact')
+            except ValueError:
+                continue
+            if kind == 'app':
+                return REQUIRED_APP
+            if kind == 'media':
+                return REQUIRED_MEDIA
+            if kind == 'evidence':
+                return REQUIRED_EVIDENCE
+    return REQUIRED
 import re as _re
 
 SECRET_PATTERNS = (_re.compile(rb'OPENBRIDGE_META_' + rb'KEY=\S+'),
@@ -46,7 +69,7 @@ def main():
         tops = [p for p in root.iterdir() if p.is_dir()]
         base = tops[0] if len(tops) == 1 else root
         names = {p.relative_to(base).as_posix() for p in base.rglob('*') if p.is_file()}
-        for required in REQUIRED:
+        for required in required_for(base):
             if required not in names:
                 failures.append('missing required file: %s' % required)
         sums_path = base / 'sha256sums.txt'
