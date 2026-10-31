@@ -140,8 +140,7 @@ def local_chat(model_id, endpoint, timeout=180, chat=None, format=None, options=
 
     def run(prompt):
         payload = {'model': model_id, 'stream': False, 'format': format or PLAN_JSON_SCHEMA,
-                   'options': run_options,
-                   'keep_alive': '10m', 'options': {'temperature': 0, 'num_ctx': 4096},
+                   'options': run_options, 'keep_alive': '10m',
                    'messages': [{'role': 'system', 'content':
                                  'Reply in English only as compact JSON matching the schema.'},
                                 {'role': 'user', 'content': prompt}]}

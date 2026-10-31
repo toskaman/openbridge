@@ -361,9 +361,10 @@ class DashboardsPatchCliTests(unittest.TestCase):
         self.assertEqual(len(out['offered_opaque_ids']), 1)
         self.assertIn('model_run', out)
 
-    def test_propose_medium_tier_uses_cpu_admission(self):
-        # 30B Q4 (~18GB) cannot load on the 16GB card: medium tier runs CPU,
-        # mirroring LocalMetaBroker's proven num_gpu=0 precedent.
+    def test_propose_medium_tier_keeps_server_default_offload(self):
+        # The :11438 service is GPU-offload by design with host spill; forcing
+        # num_gpu=0 would push ~18GB into host RAM and worsen pinned-buffer
+        # pressure (01:34 500 root cause). Only temp-0 default + ctx pinning.
         import json as _json
         devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
@@ -376,7 +377,9 @@ class DashboardsPatchCliTests(unittest.TestCase):
              mock.patch('src.runtime.nl_plan.local_chat',
                         return_value=transport) as chat:
             cli.cmd_dashboards_propose(args)
-        self.assertEqual(chat.call_args[1]['options']['num_gpu'], 0)
+        self.assertNotIn('num_gpu', chat.call_args[1]['options'])
+        self.assertEqual(chat.call_args[1]['options']['num_ctx'], 4096)
+        self.assertEqual(chat.call_args[1]['options']['num_predict'], 1024)
 
     def test_propose_garbage_reply_rejected(self):
         devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
