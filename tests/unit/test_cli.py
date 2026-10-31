@@ -3,7 +3,9 @@ import io
 import json
 import sys
 import unittest
+from argparse import Namespace
 from contextlib import redirect_stdout, redirect_stderr
+from unittest import mock
 
 from src import cli
 
@@ -110,3 +112,112 @@ class CliTests(unittest.TestCase):
             for fact in device['facts']:
                 self.assertNotIn('value', fact)
         self.assertIn('opaque:', blob)
+
+
+class ResolveTargetsTests(unittest.TestCase):
+    SNAP = {'devices': [
+        {'key': 'dev-new-tv', 'label': 'android tv', 'category': 'tv',
+         'handles': {'WIFI': 'h'}},
+        {'key': 'dev-ghost', 'label': 'Android TV', 'category': 'media', 'handles': {}},
+        {'key': 'dev-new-vac', 'label': 'Robot vacuum (Tuya)', 'category': 'vacuum',
+         'handles': {'LAN': 'v'}},
+    ]}
+
+    def spec(self, target):
+        return {'consent': True, 'steps': [
+            {'id': 'step1', 'skill_id': 'tv_volume_step', 'target': target,
+             'params': {'direction': 'down'}}]}
+
+    def test_label_validated_but_kept_for_dispatch_resolution(self):
+        # Labels are the stable ref: kept in the spec (stable consent hash),
+        # resolved to the live key at dispatch, even across processes.
+        out = cli._resolve_workflow_targets(self.spec('android tv'), self.SNAP)
+        step = out['steps'][0]
+        self.assertEqual(step['target'], 'android tv')
+        self.assertTrue(step['disambiguated'])
+
+    def test_unknown_label_rejected(self):
+        with self.assertRaises(cli.CliError):
+            cli._resolve_workflow_targets(self.spec('mars tv'), self.SNAP)
+
+    def test_stale_key_is_rejected_not_guessed(self):
+        with self.assertRaises(cli.CliError):
+            cli._resolve_workflow_targets(self.spec('dev-stale-key'), self.SNAP)
+
+
+class WorkflowApproveTests(unittest.TestCase):
+    RECORD = {
+        'workflow_id': 'wf-abc', 'status': 'waiting_approval',
+        'spec': {'levels': [[{'id': 'step1', 'skill_id': 'tv_volume_step',
+                               'target': 'android tv',
+                               'params': {'direction': 'down'},
+                               'needs': [], 'when': None, 'approval': True,
+                               'timeout_s': 120, 'on_fail': 'fail'}]],
+                 'steps': {'step1': {'id': 'step1', 'skill_id': 'tv_volume_step',
+                                      'target': 'android tv',
+                                      'params': {'direction': 'down'}}}},
+        'steps': [{'id': 'step1', 'state': 'WAITING'}],
+    }
+
+    def args(self, **kw):
+        base = {'workflow_id': 'wf-abc', 'step_id': 'step1', 'deny': False,
+                'consent': None, 'yes': False}
+        base.update(kw)
+        return Namespace(**base)
+
+    def preview_token(self):
+        step = self.RECORD['spec']['steps']['step1']
+        return cli.preview_hash({'workflow_id': 'wf-abc', 'step_id': 'step1',
+                                 'skill_id': step['skill_id'],
+                                 'target': step['target'],
+                                 'params': step['params']})
+
+    def test_unknown_workflow_is_not_found(self):
+        store = mock.Mock()
+        store.get.return_value = None
+        with mock.patch.object(cli, 'workflow_store', return_value=store):
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_workflows_approve(self.args(consent='x'))
+        self.assertEqual(e.exception.code, 'NOT_FOUND')
+
+    def test_consent_mismatch_discloses_expected_token(self):
+        import copy
+        store = mock.Mock()
+        store.get.return_value = copy.deepcopy(self.RECORD)
+        with mock.patch.object(cli, 'workflow_store', return_value=store):
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_workflows_approve(self.args(consent='wrong-token'))
+        self.assertEqual(e.exception.code, 'CONSENT_REQUIRED')
+        self.assertIn(self.preview_token(), str(e.exception))
+
+    def test_matching_consent_drives_approval(self):
+        import copy
+        store = mock.Mock()
+        store.get.return_value = copy.deepcopy(self.RECORD)
+        core = mock.MagicMock()
+        core.__enter__.return_value = mock.sentinel.server
+        with mock.patch.object(cli, 'workflow_store', return_value=store), \
+             mock.patch.object(cli, 'Core', return_value=core), \
+             mock.patch.object(cli, 'ensure_discovery', return_value={}), \
+             mock.patch('src.runtime.api_v2.router', return_value=mock.sentinel.router) as router, \
+             mock.patch('src.runtime.workflows.approve', return_value={'status': 'done'}) as approve:
+            out = cli.cmd_workflows_approve(self.args(consent=self.preview_token()))
+        approve.assert_called_once_with('wf-abc', 'step1', True, mock.sentinel.router,
+                                        store, actor='cli')
+        router.assert_called_once_with(mock.sentinel.server)
+        self.assertEqual(out['record']['status'], 'done')
+
+    def test_deny_path_denies_step(self):
+        import copy
+        store = mock.Mock()
+        store.get.return_value = copy.deepcopy(self.RECORD)
+        core = mock.MagicMock()
+        core.__enter__.return_value = mock.sentinel.server
+        with mock.patch.object(cli, 'workflow_store', return_value=store), \
+             mock.patch.object(cli, 'Core', return_value=core), \
+             mock.patch.object(cli, 'ensure_discovery', return_value={}), \
+             mock.patch('src.runtime.api_v2.router', return_value=mock.sentinel.router), \
+             mock.patch('src.runtime.workflows.approve', return_value={'status': 'failed'}) as approve:
+            cli.cmd_workflows_approve(self.args(consent=self.preview_token(), deny=True))
+        approve.assert_called_once_with('wf-abc', 'step1', False, mock.sentinel.router,
+                                        store, actor='cli')

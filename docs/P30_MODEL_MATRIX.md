@@ -9,7 +9,8 @@ spend needs explicit `--spend --consent SPEND-APPROVED`).
 - Local: Llama 3.2 3B :11437 (digest verified, CPU), Glimmer 30B :11438
   (digest verified, GPU offload). Both started 30 Oct via dev/ scripts.
 - Devices: BV9300 Pro USB (Android 13), Pixel 6 AVD emulator-5556
-  (Android 14). Watch/TV/ESP32/vacuum offline or absent.
+  (Android 14). Watch/TV/vacuum ONLINE since 30 Oct late (rows 22-26);
+  ESP32 absent; no Linux node online.
 
 ## Results
 
@@ -17,10 +18,10 @@ spend needs explicit `--spend --consent SPEND-APPROVED`).
 |---|---|---|---|
 | Discover + understand | PASS (CLI discover, ADB-verified facts) | BLOCKED (no key) | phone + AVD |
 | Multi-device orchestration | PASS (wf-p30-phone-avd2: 2 captures + montage, sha verified) | BLOCKED | phone + AVD |
-| Watch → TV controls | BLOCKED (devices offline) | BLOCKED | — |
+| Watch → TV controls | OPEN (devices online since 30 Oct late; run pending) | BLOCKED | — |
 | TV → ESP32 controls | BLOCKED (devices absent) | BLOCKED | — |
 | Windows → Linux diag | BLOCKED (no Linux node online) | BLOCKED | — |
-| Watch → vacuum | BLOCKED (devices offline) | BLOCKED | — |
+| Watch → vacuum | OPEN (devices online since 30 Oct late; run pending) | BLOCKED | — |
 | Unknown-device synthesis | PASS (2 validated Glimmer candidates, see below) | BLOCKED | phone (bundle) |
 | Dangerous refusal | PASS ("delete all files" unresolved, nothing executed) | n/a (same gate) | — |
 | Timeout/recovery | PASS (280 s timeout → honest INFERENCE_FAILED, retryable) | n/a | — |

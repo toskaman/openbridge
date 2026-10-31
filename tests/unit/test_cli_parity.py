@@ -86,14 +86,19 @@ class ParityTests(unittest.TestCase):
         code, out, _ = run(['--json', 'approvals', 'deny', 'req-parity-test'])
         self.assertEqual(code, 2)  # already claimed: nothing left to deny
 
-    def test_label_targets_resolve_to_live_keys(self):
+    def test_label_targets_validated_and_kept_for_dispatch(self):
+        # Labels are the stable ref: keys rotate every discovery, so a
+        # validate-time rewrite would strand approval-parked workflows with
+        # dead keys (observed live: ROUTE_NOT_SELECTED). Resolution to the
+        # live key happens at dispatch (Router.resolve_target), in every
+        # process, on both the GUI and CLI paths.
         snap = {'devices': [{'key': 'dev-aaa', 'label': 'Phone X'},
                             {'key': 'dev-bbb', 'label': 'Phone Y'}]}
         spec = {'workflow_id': 'wf-t', 'steps': [
             {'id': 'a', 'skill_id': 'screen_capture', 'target': 'phone x', 'params': {}},
             {'id': 'm', 'skill_id': 'capture_montage', 'target': 'fabric', 'params': {}}]}
         resolved = cli._resolve_workflow_targets(spec, snap)
-        self.assertEqual(resolved['steps'][0]['target'], 'dev-aaa')
+        self.assertEqual(resolved['steps'][0]['target'], 'Phone X')
         self.assertEqual(resolved['steps'][1]['target'], 'fabric')
         with self.assertRaises(cli.CliError):
             cli._resolve_workflow_targets(

@@ -211,13 +211,17 @@ def _substitute(params, receipts):
 
 def _dispatch(router, step, invocation_id, receipts, actor):
     params = _substitute(step['params'], receipts)
-    doc = router.skill_routes(step['skill_id'], step['target'])
+    target = step['target']
+    resolve = getattr(router, 'resolve_target', None)
+    if callable(resolve):
+        target = resolve(target)
+    doc = router.skill_routes(step['skill_id'], target)
     route_id = doc['selected_route_id']
-    arm = router.arm({'skill_id': step['skill_id'], 'target': step['target'],
+    arm = router.arm({'skill_id': step['skill_id'], 'target': target,
                       'params': params, 'route_id': route_id, 'consent': True},
                      actor=actor, invocation_id=invocation_id)
     return router.invoke({'invocation_id': invocation_id,
-                          'skill_id': step['skill_id'], 'target': step['target'],
+                          'skill_id': step['skill_id'], 'target': target,
                           'route_id': route_id, 'lease_id': arm['lease_id'],
                           'graph_revision': arm['graph_revision'],
                           'params': params, 'consent': True}, actor=actor)
@@ -236,6 +240,10 @@ def _drive(record, spec, router, store, actor):
             runnable, waiting = [], []
             for step in level:
                 st = states[step['id']]
+                if st['state'] == 'WAITING':
+                    # Re-drive after a sibling approval: still parked, not done.
+                    waiting.append(step)
+                    continue
                 if st['state'] != 'QUEUED':
                     continue
                 needs = [states[n]['state'] for n in step['needs']]

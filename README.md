@@ -33,9 +33,9 @@ I'm an autistic independent developer who has been passionate about computers, p
 
 *Ask OpenBridge: type a request in English or French; tiered Meta-only routing (free local Llama/Glimmer, cloud Spark only with explicit consent) resolves it to a registered skill, shows a fingerprint-bound preview, and executes only after owner approval. Local tiers verified live; cloud path unit-tested, broker unconfigured in this capture.*
 
-![Companion 0.12.0 on a real phone, PAIRED](docs/jury/screens/phone-companion-0-11-paired.png)
+![Companion 0.12.0 on a real phone, PAIRED](docs/jury/screens/phone-companion-0-12-paired.png)
 
-*Companion on a real phone, PAIRED (30 Oct 2026, 0.11.0 shot — 0.12.0 keeps the same layout and adds LAN self-advertisement): voice orb, typed commands, live tiles, and owner controls — all over the signed, encrypted relay channel.*
+*Companion 0.12.0 on a real phone, PAIRED (30 Oct 2026): voice orb, typed commands, live tiles, and owner controls — all over the signed, encrypted relay channel.*
 
 ![Allow full control warning popup](docs/jury/screens/companion-0-10-full-control-popup.png)
 
@@ -86,7 +86,7 @@ To reproduce the latest results, consult the [release evidence](docs/RELEASE_EVI
 
 The runtime language-model intelligence uses **Meta models only**. Development-time assistants, if used for review or code support, are not included as runtime model providers.
 
-### Event-built evidence (30 Oct, main `994cdc9`)
+### Event-built evidence (30 Oct, main `4299343`)
 
 Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.12.0 with LAN self-advertisement on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (found over Wi-Fi with no adb address); native QUICK CONTROLS + long-press loop on the real Watch7 ([G04 proof](docs/evidence/g04-watch-30oct.md)); `openbridge` CLI with GUI parity + jury pack; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (26 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
@@ -150,7 +150,7 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 
 ## What's new (30 Oct 2026)
 - **Companion 0.12.0 everywhere**: LAN self-advertisement (mDNS NSD + QU-bit browse + `companion_lan` onboarding) — phone, TV and Watch7 found over Wi-Fi with no adb address (registry row 25); watch UI rescaled (stacked header, single-column LIVE tiles, roomier input).
-- **G04 closed**: native QUICK CONTROLS on the real Watch7 + signed long-press loop acknowledged on screen ([proof](docs/evidence/g04-watch-30oct.md), rows 22-23); TV + phone 0.11.0 PAIRED shots (row 24).
+- **G04 closed**: native QUICK CONTROLS on the real Watch7 + signed long-press loop acknowledged on screen ([proof](docs/evidence/g04-watch-30oct.md), row 22); TV + phone 0.11.0 PAIRED shots (rows 23-24).
 - **CLI + jury release**: `openbridge` CLI (tiers, budget, doctor, parity, jury pack VERIFY OK), 2 Glimmer candidates validated+revoked, phone+AVD orchestration sha-verified.
 - **Companion 0.11.0 everywhere**: live flow overlay + pill-icon buttons; installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7 (signed watch pair `relay-39f86439fbae`).
 - **Legacy Windows proven, then cleaned**: legacy C agent (subsystem 5.01, software SHA-256/HMAC) ran mutual-auth + RPC exec on real XP SP3 + Win7 SP1 QEMU guests with screenshots; VMs deleted after proofs, trace kept in [legacy evidence](docs/evidence/vm-legacy-xp-win7-30oct.md).

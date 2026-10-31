@@ -40,8 +40,7 @@
   "device_alias": "Owner Android TV (Android 10)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "docs/release/COMPANION_0_10_0.md",
-   "docs/evidence/vm-fleet-29oct.md"
+   "docs/release/COMPANION_0_10_0.md"
   ],
   "independent_oracle": "adb uiautomator dump (PAIRED/READY) plus signed relay-pair-confirm declared payload",
   "integration": "NATIVE_COMPANION",
@@ -72,13 +71,15 @@
   "device_alias": "Galaxy Watch7 44 mm (Wear OS)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "docs/evidence/vm-fleet-29oct.md"
+   "https://github.com/toskaman/openbridge/pull/103",
+   "docs/KNOWN_LIMITATIONS.md"
   ],
   "independent_oracle": "adb uiautomator dump (OPENBRIDGE header, PAIRED chip, READY state) plus relay LISTEN check",
   "integration": "NATIVE_COMPANION",
   "limitations": [
    "Watch adb transport died mid-session; needs physical wake to re-pair",
-   "0.10.0 not yet installed on watch"
+   "0.10.0 not yet installed on watch",
+   "No committed uiautomator transcript for this run; first-party record (oracle+ops+utc+sha) only"
   ],
   "operations": [
    "companion install 0.9.0 on watch",
@@ -101,8 +102,8 @@
   "device_alias": "Galaxy Watch7 44 mm (Wear OS)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "docs/evidence/vm-fleet-29oct.md",
-   "docs/jury/screens/companion-watch-0-10.png"
+   "docs/jury/screens/companion-watch-0-10.png",
+   "https://github.com/toskaman/openbridge/pull/119"
   ],
   "independent_oracle": "server-side signed pair-confirm PAIRED with declared capabilities (aead1) on relay-39f86439fbae",
   "integration": "NATIVE_COMPANION",
@@ -159,13 +160,14 @@
   "device_alias": "Second PC (Windows 11, Intel i5-12600H)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "docs/evidence/vm-fleet-29oct.md"
+   "EVIDENCE_LEDGER.md"
   ],
   "independent_oracle": "certutil SHA256 of remote agent.exe equals fresh build hash; pid changed; single CONNECTED after mutual auth",
   "integration": "HOST_APP_ADAPTER",
   "limitations": [
    "First build could not self-update (CreateProcessW win32 2); swapped via staged upload plus detached script",
-   "Trust LAN only: v4 link authenticates, payloads not encrypted"
+   "Trust LAN only: v4 link authenticates, payloads not encrypted",
+   "29-Oct certutil/CONNECTED lines first-party only; closest committed transcript is the 27-Oct hot-swap plus 2-PC LAN proof in EVIDENCE_LEDGER.md"
   ],
   "operations": [
    "agent remote exec whoami",
@@ -190,7 +192,8 @@
   "device_alias": "Tuya robot vacuum (owner-linked)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "docs/evidence/vm-fleet-29oct.md"
+   "https://github.com/toskaman/openbridge/pull/111",
+   "EVIDENCE_LEDGER.md"
   ],
   "independent_oracle": "facts read back from device DPs (status charge_done, battery 100); seek acknowledged with status echo",
   "integration": "HOST_APP_ADAPTER",
@@ -217,7 +220,9 @@
   "device_alias": "Freebox Delta S (owner router)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "docs/evidence/vm-fleet-29oct.md"
+   "https://github.com/toskaman/openbridge/pull/111",
+   "docs/HARDWARE_TEST_HISTORY.md",
+   "EVIDENCE_LEDGER.md"
   ],
   "independent_oracle": "live API responses (1 static lease, 127 hosts) under authorized session",
   "integration": "HOST_APP_ADAPTER",
@@ -786,5 +791,39 @@
   "status": "VERIFIED",
   "test_id": "vacuum-30oct-liveness-facts-seek",
   "test_utc": "2026-10-30T22:20:00Z"
+ },
+ {
+  "public_device_id": "tv-vacuum-s4-01",
+  "device_alias": "Android TV + Tuya robot vacuum (quiet-mode pair)",
+  "environment": "REAL_HARDWARE",
+  "integration": "HOST_APP_ADAPTER",
+  "platform": "Android TV 11 + Tuya local robot",
+  "status": "VERIFIED",
+  "test_id": "s4-quiet-mode-31oct",
+  "test_utc": "2026-10-31T00:06:16Z",
+  "commit_sha": "3f3d907a51521920676270892192882dd79ab7eb",
+  "operations": [
+   "Llama 3.2 3B local plan accepted by strict validator (2 steps, consent-gated)",
+   "per-step preview-bound approvals executed via workflows approve CLI",
+   "TV volume 22->21, exactly one step, read back via independent adb dumpsys",
+   "vacuum dock dispatched + acknowledged, read-back stable charge_done 100pct",
+   "device keys rotated across processes; label resolution held every dispatch",
+   "live-found finalize bug (sibling stranded WAITING) fixed + regression-tested"
+  ],
+  "evidence": [
+   "docs/evidence/s4-quiet-mode-31oct.md"
+  ],
+  "independent_oracle": "adb dumpsys audio pre/post read plus tinytuya LAN status re-read after the dock command",
+  "limitations": [
+   "Vacuum already docked: dock motion neither occurred nor observed; read-back only",
+   "Single end-to-end scenario (n=1); no generalization claimed",
+   "TV route needs ADB Wi-Fi plus control grant; vacuum needs owner-linked local key"
+  ],
+  "permissions": [
+   "owner-linked Tuya local key (existing config, never logged)",
+   "blanket owner test authorization for benign commands"
+  ],
+  "companion_version": "n/a (ADB + Tuya LAN)",
+  "os_version": "Android TV 11 (SDK 30) / Tuya firmware 3.4"
  }
 ]

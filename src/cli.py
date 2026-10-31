@@ -566,9 +566,9 @@ def snapshot_save(doc):
 
 
 def default_providers(args):
-    raw = getattr(args, 'providers', None) or 'mdns,ssdp,android'
+    raw = getattr(args, 'providers', None) or 'mdns,ssdp,android,tuya'
     providers = [p.strip() for p in raw.split(',') if p.strip()]
-    allowed = {'mdns', 'ssdp', 'android', 'freebox', 'ble'}
+    allowed = {'mdns', 'ssdp', 'android', 'freebox', 'ble', 'tuya'}
     unknown = [p for p in providers if p not in allowed]
     if unknown:
         raise CliError('args', 'BAD_PROVIDERS', 'Unknown providers: %s' % ', '.join(unknown))
@@ -923,22 +923,45 @@ def cmd_workflows_plan(args):
     from src.runtime.workflows import validate_workflow, WorkflowError
     text = getattr(args, 'text', '') or ''
     spec_file = getattr(args, 'file', None)
+    model_run = None
     if spec_file:
         try:
             spec = json.loads(Path(spec_file).read_text(encoding='utf-8'))
         except (OSError, ValueError) as e:
             raise CliError('args', 'SPEC_UNREADABLE', 'Cannot read spec: %s' % e)
     elif text.strip():
-        spec = {'workflow_id': 'wf-%s' % hashlib.sha256(text.encode()).hexdigest()[:12],
-                'steps': [{'step_id': 'note', 'note': text[:200]}]}
+        spec, model_run = _plan_from_text(args, text)
     else:
         raise CliError('args', 'MISSING_INPUT', 'plan needs request text or --file spec.json.')
     try:
         validate_workflow(spec)
     except WorkflowError as e:
         raise CliError('args', 'SPEC_INVALID', str(e)[:200])
-    return {'workflow_id': spec.get('workflow_id'), 'steps': len(spec.get('steps', [])),
-            'valid': True, 'spec': spec}
+    out = {'workflow_id': spec.get('workflow_id'), 'steps': len(spec.get('steps', [])),
+           'valid': True, 'spec': spec}
+    if model_run is not None:
+        out['model_run'] = model_run
+        out['consent'] = preview_hash(spec)
+    return out
+
+
+def _plan_from_text(args, text):
+    from src.runtime import nl_plan, nl_router
+    model_id = getattr(args, 'model', None) or nl_router.TIERS['low'][0]
+    endpoint = next((ep for mid, ep in nl_router.TIERS.values() if mid == model_id), None)
+    if endpoint is None or endpoint.startswith('https://'):
+        raise CliError('args', 'MODEL_NOT_PINNED',
+                       'plan-text needs a pinned local Meta model (low/medium tier)')
+    with Core() as server:
+        snap = ensure_discovery(server, default_providers(args))
+    devices = snap.get('devices', []) if isinstance(snap, dict) else []
+    transport = nl_plan.local_chat(model_id, endpoint, timeout=getattr(args, 'timeout', None) or 180)
+    try:
+        res = nl_plan.plan(text, devices, transport)
+    except nl_plan.PlanError as e:
+        raise CliError('plan', 'PLAN_REJECTED', str(e)[:300])
+    res['spec']['workflow_id'] = 'wf-%s' % hashlib.sha256(text.encode()).hexdigest()[:12]
+    return res['spec'], dict(res['model_run'], reply_sha256=res['reply_sha256'])
 
 
 def cmd_workflows_run(args):
@@ -985,24 +1008,28 @@ def cmd_workflows_run(args):
 
 
 def _resolve_workflow_targets(spec, snap):
-    """Rewrite label targets to live device keys (keys rotate per boot)."""
+    """Validate targets against the live snapshot; labels stay labels.
+
+    Keys rotate every discovery, so the spec keeps the stable label (and the
+    consent hash stays valid across processes); dispatch resolves to the live
+    key via Router.resolve_target. Stale keys are rejected, never guessed."""
     import copy
+    from src.runtime import nl_plan
     devices = snap.get('devices', []) if isinstance(snap, dict) else []
-    by_key = {d.get('key'): d for d in devices}
-    by_label = {}
-    for device in devices:
-        by_label.setdefault((device.get('label') or '').strip().lower(), []).append(device.get('key'))
+    by_key = {d.get('key') for d in devices}
     spec = copy.deepcopy(spec)
     for step in spec.get('steps', []):
         target = step.get('target', '')
         if target in by_key or target == 'fabric':
             continue
-        hits = by_label.get(target.strip().lower(), [])
-        if len(hits) != 1:
+        try:
+            label, _, disambiguated = nl_plan.resolve_target(target, devices)
+        except nl_plan.PlanError as e:
             raise CliError('device', 'TARGET_UNRESOLVED',
-                           'Target %r matches %d live devices; use the exact label from '
-                           '`devices discover`.' % (target, len(hits)))
-        step['target'] = hits[0]
+                           '%s; use the exact label from `devices discover`.' % e)
+        step['target'] = label
+        if disambiguated:
+            step['disambiguated'] = True
     return spec
 
 
@@ -1012,6 +1039,46 @@ def cmd_workflows_status(args):
     if record is None:
         raise CliError('args', 'NOT_FOUND', 'Unknown workflow %r.' % wid)
     return {'workflow': record}
+
+
+def _workflow_step_preview(wid, sid, step):
+    return {'workflow_id': wid, 'step_id': sid, 'skill_id': step['skill_id'],
+            'target': step['target'], 'params': step['params']}
+
+
+def cmd_workflows_approve(args):
+    from src.runtime.workflows import approve, WorkflowError
+    from src.runtime import api_v2
+    wid = getattr(args, 'workflow_id', '') or ''
+    sid = getattr(args, 'step_id', '') or ''
+    allow = not bool(getattr(args, 'deny', False))
+    store = workflow_store()
+    record = store.get(wid)
+    if record is None:
+        raise CliError('args', 'NOT_FOUND', 'Unknown workflow %r.' % wid)
+    if record.get('status') != 'waiting_approval':
+        raise CliError('args', 'NOT_WAITING',
+                       'Workflow %r is %s, not waiting_approval.' % (wid, record.get('status')))
+    states = {s['id']: s for s in record.get('steps', [])}
+    if states.get(sid, {}).get('state') != 'WAITING':
+        raise CliError('args', 'STEP_NOT_WAITING',
+                       'Step %r of workflow %r is not waiting for approval.' % (sid, wid))
+    step = ((record.get('spec') or {}).get('steps') or {}).get(sid)
+    if step is None:
+        raise CliError('args', 'STEP_NOT_WAITING',
+                       'Step %r of workflow %r is not waiting for approval.' % (sid, wid))
+    preview = _workflow_step_preview(wid, sid, step)
+    require_consent(args, preview_hash(preview),
+                    'workflows approve %s %s (%s %s %s)' % (
+                        wid, sid, step['skill_id'], step['target'], step['params']))
+    with Core() as server:
+        ensure_discovery(server, default_providers(args))
+        try:
+            record = approve(wid, sid, allow, api_v2.router(server), store, actor='cli')
+        except WorkflowError as e:
+            raise CliError('permission', 'WORKFLOW_BLOCKED', str(e)[:200])
+    return {'workflow_id': wid, 'step_id': sid, 'allowed': allow,
+            'preview': preview, 'record': record}
 
 
 # ---------------- approvals ----------------
@@ -1419,6 +1486,10 @@ def build_parser():
     run_parser.add_argument('--file', default=None)
     status_parser = leaf(flow_subs, 'status', cmd_workflows_status, 'workflows status')
     status_parser.add_argument('workflow_id')
+    flow_approve = leaf(flow_subs, 'approve', cmd_workflows_approve, 'workflows approve')
+    flow_approve.add_argument('workflow_id')
+    flow_approve.add_argument('step_id')
+    flow_approve.add_argument('--deny', action='store_true')
 
     approvals = subs.add_parser('approvals')
     approval_subs = approvals.add_subparsers(dest='approvals_command')

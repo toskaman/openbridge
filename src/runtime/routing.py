@@ -444,6 +444,23 @@ class Router:
     def public(doc):
         return dict(doc, routes=[{k: v for k, v in r.items() if not k.startswith('_')} for r in doc['routes']])
 
+    def resolve_target(self, target):
+        """Map a label (or live key) to the current live device key.
+
+        Keys rotate every discovery, so labels are the stable reference stored
+        in specs; resolution happens here, at dispatch, against the live
+        snapshot. Ghost rows collapse by the shared nl_plan rule, openly."""
+        snap = self._snap()
+        devices = snap.get('devices', []) if isinstance(snap, dict) else []
+        if target == 'fabric' or any(d.get('key') == target for d in devices):
+            return target
+        from src.runtime import nl_plan
+        try:
+            _, key, _ = nl_plan.resolve_target(target, devices)
+        except nl_plan.PlanError as e:
+            raise RouteError(404, 'TARGET_UNRESOLVED', str(e))
+        return key
+
     def skill_routes(self, skill_id, target=None):
         with self._lock:
             doc = self._evaluate(skill_id, target)

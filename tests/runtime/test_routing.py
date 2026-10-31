@@ -284,6 +284,21 @@ class Stability(Base):
         self.assertEqual([e for e in ex.events_since(0) if e['kind'] == 'route_changed'], [])
 
 
+class ResolveTarget(Base):
+    def test_key_passthrough_and_fabric(self):
+        tv = self.keys['tv']
+        self.assertEqual(self.router.resolve_target(tv), tv)
+        self.assertEqual(self.router.resolve_target('fabric'), 'fabric')
+
+    def test_label_resolves_to_live_key(self):
+        self.assertEqual(self.router.resolve_target('android tv'), self.keys['tv'])
+
+    def test_unknown_target_is_route_error(self):
+        with self.assertRaises(RouteError) as e:
+            self.router.resolve_target('mars tv')
+        self.assertEqual(e.exception.code, 'TARGET_UNRESOLVED')
+
+
 class UncertainOutcome(Base):
     def test_timeout_makes_route_unknown_until_a_later_success(self):
         from src.runtime.contract import TransactionReceipt
