@@ -204,3 +204,54 @@ jobs:
             wear-logcat.txt
           retention-days: 21
           if-no-files-found: warn
+
+  e2e:
+    needs: build-apk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.4'
+      - uses: actions/download-artifact@v4
+        with:
+          name: companion-apk
+          path: apk
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Use preinstalled Android SDK
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          test -x "$SDK/cmdline-tools/16.0/bin/sdkmanager" || test -d "$SDK/cmdline-tools/latest" || { echo "no preinstalled SDK"; exit 1; }
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          for d in "$SDK/cmdline-tools/16.0/bin" "$SDK/cmdline-tools/latest/bin"; do
+            if [ -x "$d/sdkmanager" ]; then echo "$d" >> $GITHUB_PATH; break; fi
+          done
+          echo "$SDK/platform-tools" >> $GITHUB_PATH
+      - name: Cloud end-to-end
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: android-tv
+          arch: x86
+          profile: tv_1080p
+          emulator-boot-timeout: 600
+          script: |
+            set -e
+            python scripts/verify/cloud_e2e.py --apk apk/openbridge-companion.apk --out e2e-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-e2e-evidence
+          path: e2e-evidence
+          retention-days: 21
+          if-no-files-found: warn
