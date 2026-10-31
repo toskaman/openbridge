@@ -18,7 +18,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Use preinstalled Android SDK
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          test -x "$SDK/cmdline-tools/16.0/bin/sdkmanager" || test -d "$SDK/cmdline-tools/latest" || { echo "no preinstalled SDK"; exit 1; }
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          for d in "$SDK/cmdline-tools/16.0/bin" "$SDK/cmdline-tools/latest/bin"; do
+            if [ -x "$d/sdkmanager" ]; then echo "$d" >> $GITHUB_PATH; break; fi
+          done
+          echo "$SDK/platform-tools" >> $GITHUB_PATH
       - run: yes | sdkmanager --licenses > /dev/null
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
       - run: python -m dev.build_companion
@@ -46,7 +55,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Use preinstalled Android SDK
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          test -x "$SDK/cmdline-tools/16.0/bin/sdkmanager" || test -d "$SDK/cmdline-tools/latest" || { echo "no preinstalled SDK"; exit 1; }
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          for d in "$SDK/cmdline-tools/16.0/bin" "$SDK/cmdline-tools/latest/bin"; do
+            if [ -x "$d/sdkmanager" ]; then echo "$d" >> $GITHUB_PATH; break; fi
+          done
+          echo "$SDK/platform-tools" >> $GITHUB_PATH
       - name: Phone acceptance
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -97,7 +115,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Use preinstalled Android SDK
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          test -x "$SDK/cmdline-tools/16.0/bin/sdkmanager" || test -d "$SDK/cmdline-tools/latest" || { echo "no preinstalled SDK"; exit 1; }
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          for d in "$SDK/cmdline-tools/16.0/bin" "$SDK/cmdline-tools/latest/bin"; do
+            if [ -x "$d/sdkmanager" ]; then echo "$d" >> $GITHUB_PATH; break; fi
+          done
+          echo "$SDK/platform-tools" >> $GITHUB_PATH
       - name: TV acceptance
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -144,7 +171,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Use preinstalled Android SDK
+        run: |
+          SDK=/usr/local/lib/android/sdk
+          test -x "$SDK/cmdline-tools/16.0/bin/sdkmanager" || test -d "$SDK/cmdline-tools/latest" || { echo "no preinstalled SDK"; exit 1; }
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          for d in "$SDK/cmdline-tools/16.0/bin" "$SDK/cmdline-tools/latest/bin"; do
+            if [ -x "$d/sdkmanager" ]; then echo "$d" >> $GITHUB_PATH; break; fi
+          done
+          echo "$SDK/platform-tools" >> $GITHUB_PATH
       - name: Wear acceptance
         uses: reactivecircus/android-emulator-runner@v2
         with:
