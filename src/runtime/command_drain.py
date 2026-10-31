@@ -64,6 +64,8 @@ def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, st
     parse_fn = parse_fn or CMD.parse_request
     if cmd['kind'] == 'voice':
         fetch = fetch_voice_fn or R.fetch_voice_urls
+        # Identity check on the default multi-URL fetch: wrappers/partials of
+        # it are not recognized and fail loudly (RelayError), never silently.
         if fetch is R.fetch_voice_urls:
             pcm = fetch(relay.get('urls') or [relay['url']], relay['key'], cmd['clip_id'],
                         cmd['bytes'], cmd['sha256'], relay_id=rid, aead_version=relay.get('aead'))

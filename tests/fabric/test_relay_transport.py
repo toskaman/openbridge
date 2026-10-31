@@ -100,7 +100,7 @@ class FetchVoiceUrls(unittest.TestCase):
     def test_validation_errors_raise_without_network(self):
         with self.assertRaises(R.RelayError):
             R.fetch_voice_urls(['http://127.0.0.1:1'], b'k' * 32, 'c' * 16, -5, 'z' * 64)
-    def test_falls_over_on_oserror(self):
+    def test_fails_over_on_oserror(self):
         calls = []
         def fake(url, *a, **k):
             calls.append(url)
@@ -117,5 +117,24 @@ class FetchVoiceUrls(unittest.TestCase):
         with mock.patch.object(R, 'fetch_voice', side_effect=fake):
             with self.assertRaises(R.RelayError):
                 R.fetch_voice_urls(['http://127.0.0.1:1', 'http://127.0.0.1:2'], b'k' * 32, 'c' * 16, 3, 'a' * 64)
+    def test_lan_gets_short_timeout_loopback_gets_full(self):
+        seen = {}
+        def fake(url, *a, timeout=25, **k):
+            seen[url] = timeout
+            if url.startswith('http://192.168.1.14'):
+                raise OSError('down')
+            return b'pcm'
+        urls = ['http://192.168.1.14:47800', 'http://127.0.0.1:50111']
+        with mock.patch.object(R, 'fetch_voice', side_effect=fake):
+            out = R.fetch_voice_urls(urls, b'k' * 32, 'c' * 16, 3, 'a' * 64, timeout=25, lan_timeout=3)
+        self.assertEqual(out, b'pcm')
+        self.assertEqual(seen, {'http://192.168.1.14:47800': 3, 'http://127.0.0.1:50111': 25})
+        seen.clear()
+        def fake2(url, *a, timeout=25, **k):
+            seen[url] = timeout
+            return b'pcm'
+        with mock.patch.object(R, 'fetch_voice', side_effect=fake2):
+            R.fetch_voice_urls(urls, b'k' * 32, 'c' * 16, 3, 'a' * 64, timeout=2)
+        self.assertEqual(seen['http://192.168.1.14:47800'], 2)
 if __name__ == '__main__':
     unittest.main()
