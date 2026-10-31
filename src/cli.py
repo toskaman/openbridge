@@ -928,7 +928,10 @@ def cmd_dashboards_propose(args):
     prompt_devices = [{'label': row.get('label', '?'), 'category': bdev['category'],
                        'opaque_id': bdev['opaque_id']}
                       for row, bdev in zip(devices, bundle['devices'])]
-    prompt = v4_uidraft.build_ui_prompt(text, prompt_devices, bindable)
+    from src.runtime.routing import SKILLS
+    hints = {sid: nl_plan.param_hint(SKILLS[sid].get('input'))
+             for sid in bindable if sid in SKILLS}
+    prompt = v4_uidraft.build_ui_prompt(text, prompt_devices, bindable, hints=hints)
     transport = nl_plan.local_chat(model_id, endpoint,
                                    timeout=getattr(args, 'timeout', None) or 180,
                                    format=v4_ui.UI_PATCH_JSON_SCHEMA)

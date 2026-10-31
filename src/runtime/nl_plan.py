@@ -40,6 +40,11 @@ def _param_hint(schema):
     return '{%s}' % ', '.join(bits)
 
 
+def param_hint(schema):
+    """Public param-shape hint for prompt builders (S4 + S5 share it)."""
+    return _param_hint(schema)
+
+
 def build_prompt(text, devices):
     """Strict planning prompt: labels + categories only, never device keys."""
     from src.runtime.routing import SKILLS

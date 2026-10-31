@@ -44,6 +44,17 @@ class Draft(unittest.TestCase):
         self.assertIn('add a dock button', p)
         self.assertIn('text|button|status', p)
 
+    def test_prompt_builder_shows_hints_and_copy_rules(self):
+        p = U.build_ui_prompt('vacuum panel',
+                              [{'label': 'Vacuum', 'category': 'vacuum',
+                                'opaque_id': 'opaque:abc'}],
+                              ('vacuum_command',),
+                              hints={'vacuum_command': '{command=start|dock}'})
+        self.assertIn('opaque:abc', p)
+        self.assertIn('{command=start|dock}', p)
+        self.assertIn('opaque:', p)
+        self.assertIn('Example', p)
+
 
 if __name__ == '__main__':
     unittest.main()

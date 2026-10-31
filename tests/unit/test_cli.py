@@ -354,6 +354,7 @@ class DashboardsPatchCliTests(unittest.TestCase):
         prompt = transport.call_args[0][0]
         self.assertIn('vacuum panel', prompt)
         self.assertIn('vacuum_command', prompt)
+        self.assertIn('command=', prompt)
         self.assertEqual(out['patch']['patch_id'], 'p-9')
         self.assertEqual(len(out['offered_opaque_ids']), 1)
         self.assertIn('model_run', out)
