@@ -189,6 +189,25 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(rec['status'], 'done')
         self.assertEqual(len(r.dispatches), 1)
 
+    def test_approval_sibling_stays_waiting_until_approved(self):
+        # Two approval steps in one level: approving the first must NOT
+        # finalize the workflow while the second is still WAITING.
+        r = FakeRouter()
+        store = W.MemoryStore()
+        rec = W.run(wf(step('device_facts', id='a', approval=True),
+                       step('device_facts', id='b', approval=True)), r, store,
+                    workflow_id='wf-1')
+        self.assertEqual(rec['status'], 'waiting_approval')
+        rec = W.approve('wf-1', 'a', True, r, store)
+        states = {s['id']: s['state'] for s in rec['steps']}
+        self.assertEqual(states, {'a': 'EXECUTED', 'b': 'WAITING'})
+        self.assertEqual(rec['status'], 'waiting_approval')
+        rec = W.approve('wf-1', 'b', True, r, store)
+        states = {s['id']: s['state'] for s in rec['steps']}
+        self.assertEqual(states, {'a': 'EXECUTED', 'b': 'EXECUTED'})
+        self.assertEqual(rec['status'], 'done')
+        self.assertEqual(len(r.dispatches), 2)
+
     def test_approval_denied_fails_workflow(self):
         r = FakeRouter()
         store = W.MemoryStore()
@@ -197,6 +216,44 @@ class RunnerTest(unittest.TestCase):
         rec = W.approve('wf-1', 'a', False, r, store)
         self.assertEqual(rec['status'], 'failed')
         self.assertEqual(len(r.dispatches), 0)
+
+    def test_dispatch_resolves_label_to_live_key(self):
+        # Keys rotate every discovery: the label is the stable ref, resolved at dispatch.
+        class LabelRouter(FakeRouter):
+            def resolve_target(self, target):
+                return {'android tv': 'dev-live-tv'}.get(target, target)
+
+        r = LabelRouter()
+        rec, _ = self.run_wf(wf(step('device_facts', id='a', target='android tv')), r)
+        self.assertEqual(rec['status'], 'done')
+        self.assertEqual(r.dispatches[0][2], 'dev-live-tv')
+
+    def test_conflicting_second_decision_rejected_first_stands(self):
+        # §12: a conflicting late decision must not flip a recorded verdict.
+        r = FakeRouter()
+        store = W.MemoryStore()
+        W.run(wf(step('device_facts', id='a', approval=True)), r, store,
+              workflow_id='wf-1')
+        rec = W.approve('wf-1', 'a', True, r, store)
+        self.assertEqual(rec['status'], 'done')
+        with self.assertRaises(W.WorkflowError):
+            W.approve('wf-1', 'a', False, r, store)
+        rec = store.get('wf-1')
+        self.assertEqual(rec['status'], 'done')
+        self.assertEqual(len(r.dispatches), 1)
+        r2 = FakeRouter()
+        store2 = W.MemoryStore()
+        W.run(wf(step('device_facts', id='a', approval=True)), r2, store2,
+              workflow_id='wf-2')
+        rec2 = W.approve('wf-2', 'a', False, r2, store2)
+        self.assertEqual(rec2['status'], 'failed')
+        with self.assertRaises(W.WorkflowError):
+            W.approve('wf-2', 'a', True, r2, store2)
+        rec2 = store2.get('wf-2')
+        self.assertEqual(rec2['status'], 'failed')
+        states = {s['id']: s['state'] for s in rec2['steps']}
+        self.assertEqual(states, {'a': 'DENIED'})
+        self.assertEqual(len(r2.dispatches), 0)
 
     def test_partial_failure_continues_independents(self):
         r = FakeRouter(results={'device_facts': RuntimeError('boom')})

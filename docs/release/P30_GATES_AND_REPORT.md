@@ -1,6 +1,6 @@
 # Prompt30 gates G01–G22 + final report (30 Oct 2026)
 
-Revision: `feat/p30-cli-release` (merge SHA recorded at PR merge).
+Revision: `feat/p30-cli-release` (merged as PR149 `73cfef5`).
 Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 
 ## Gates
@@ -8,7 +8,7 @@ Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 | Gate | Requirement | Verdict | Evidence |
 |---|---|---|---|
 | G01 | Source and running release match | PASS | All live runs from this tree (`python -m src.cli`); live :18765 is an older commit, disclosed, never used as proof |
-| G02 | Automated tests pass | PASS | 1145 passed 0 failed locally; CI on the PR |
+| G02 | Automated tests pass | PASS | 1145 passed 0 failed locally at PR149 (1150 on main `4299343`); CI on the PR |
 | G03 | Dynamic capability generation on hardware | PASS | 2 Glimmer candidates from the live phone bundle, forge-validated |
 | G04 | Native target UI publication, visually proven | PASS | QUICK CONTROLS renders Scan room + Watch facts on the real Watch7; long-press loop acked (docs/evidence/g04-watch-30oct.md) |
 | G05 | Physical outcome independently verified | PASS | Montage sha256 recomputed match; capture receipts with bytes + dims |
@@ -33,7 +33,7 @@ Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 ## Final report (§21)
 
 1. Source revision: P30 branch (merge SHA at PR); runtime: same tree.
-2. Tests: 1145 passed, 0 failed; CLI adds 40 (router/budget/readiness/cli/parity).
+2. Tests: 1145 passed, 0 failed (P30-run measurement at PR149; suite is 1150 on main `4299343`); CLI adds 40 (router/budget/readiness/cli/parity).
 3. Physical devices tested: 1 phone USB + 1 AVD (labeled emulator).
 4. Verified device-to-device ops: capture×2 + montage (sha-verified).
 5. Meta-generated capabilities: 2 (Glimmer 30B, validated, then revoked).

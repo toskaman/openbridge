@@ -18,4 +18,15 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - [VM fleet proof](evidence/vm-fleet-29oct.md): agent handshakes on Debian 13 x2, Debian 12, Ubuntu 22.04, ARM64; XP/Win7/x86 honest blockers.
 - [Machine-readable device registry](DEVICE_EVIDENCE.json) + generated [hardware matrix](HARDWARE_TEST_MATRIX.md), CI-gated (`tests/unit/test_device_registry.py`).
 - Peripheral depth (PR111): full tuya surface, vacuum seek beep + facts on hardware, Freebox leases + 127 hosts.
-- Suite: 835 tests green; live server on current main with phone + TV paired.
+
+## Latest integrated evidence — 30 October (PR127–PR154, main `4299343`)
+
+- [P0 hardening](KNOWN_LIMITATIONS.md): pairing attempt limits, supervised STT worker, relay-scan HTTP verification, BridgeWindows plaintext warnings, HTTP/direct idempotency journal claims.
+- [Device connect](RELEASE_STATUS.md): hardware agent matrix + auto planner + per-device tutorials (PR133); multi-PC bridge + legacy XP/Win7 QEMU proofs ([legacy](evidence/vm-legacy-xp-win7-30oct.md)); capability explorer, hardware intel, permissions center (PR140–142).
+- [Eval-kit baseline](benchmark/EVAL_1000_RULES_BASELINE.md): 1,000-turn replay harness, rules 1.4%.
+- [DAG orchestration](evidence/s7-live-usb-30oct.md) + [official AVD](evidence/avd-ob-pixel-30oct.md) (rows 17–18); [relay dashboards](evidence/g04-watch-30oct.md); [RetroArch loopback](evidence/retroarch-loopback-30oct.md) (row 19); [stress report](STRESS_14_REPORT.md) (crash drill 5/5).
+- [`openbridge` CLI + jury release](release/P30_GATES_AND_REPORT.md) (PR149 `73cfef5`): tiers, budget, doctor, parity, pack VERIFY OK; 2 Glimmer candidates validated+revoked (row 20); phone+AVD orchestration sha-verified (row 21).
+- [G04 watch native UI](evidence/g04-watch-30oct.md): QUICK CONTROLS + long-press loop on Watch7 (row 22); TV/phone 0.11.0 PAIRED shots (rows 23–24).
+- [Companion 0.12.0 LAN discovery](evidence/companion-lan-discovery-30oct.md): NSD advert + QU-bit browse + `companion_lan` onboarding, 3/3 devices (row 25); watch UI rescale.
+- Vacuum liveness re-verify: facts + seek accepted, docked (row 26).
+- Suite: 1150 green (1138 `def test` + 5 assigned + 7 inherited, collection-diff verified); Windows + Ubuntu + browser CI green on main. Live :18765 still on an older commit (reload owner-gated).

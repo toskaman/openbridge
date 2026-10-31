@@ -130,6 +130,20 @@ class Compiler(Base):
     def test_undeclared_permission(self):
         self.rejects('UNDECLARED_PERMISSION', self.s.compile, self.manifest(permissions_requested=['read']), self.facts)
 
+    def test_forged_effect_label_rejected_registry_label_authoritative(self):
+        # §12: an irreversible op relabeled reversible by the model must not slip through.
+        # Step schema is closed: a smuggled label is not even schema-legal ...
+        bad = [{'step_id': 'k', 'primitive_id': 'input.key', 'args': {'key': 'mute'}, 'side_effect_class': 'READ',
+                'on_uncertain': 'ABORT'}]
+        self.rejects('SCHEMA', self.s.compile, self.manifest(steps=bad), self.facts)
+        bad2 = [{'step_id': 'k', 'primitive_id': 'input.key', 'args': {'key': 'mute'}, 'reversibility': 'EXACT',
+                 'on_uncertain': 'ABORT'}]
+        self.rejects('SCHEMA', self.s.compile, self.manifest(steps=bad2), self.facts)
+        # ... and the compiled plan always carries the registry label, never a manifest claim.
+        c = self.s.compile(self.manifest(), self.facts)
+        self.assertEqual(c['plan'][0]['side_effect_class'], 'IRREVERSIBLE')
+        self.assertIn('IRREVERSIBLE', c['effects'])
+
     def test_static_bounds(self):
         many = [{'step_id': f's{i}', 'primitive_id': 'state.screen', 'args': {}, 'on_uncertain': 'ABORT'} for i in range(13)]
         self.rejects('SCHEMA', self.s.compile, self.manifest(steps=many), self.facts)

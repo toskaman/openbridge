@@ -31,7 +31,7 @@ Every public claim, its status and where to check it. A claim without evidence i
 | Voice command via Muse Voice Transcribe | LIVE VERIFIED (synthetic speech clip, exact transcript) | tests/unit/test_voice.py (fake WebSocket) |
 | Wear OS dynamic manifest | REAL_HARDWARE_VERIFIED (Galaxy Watch7) | tests/fabric/test_wear_manifest.py |
 | PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | jobs REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER); inference worker SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
-| Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/moves/dock) | tests/fabric/test_tuya_local.py; live re-verify 30 Oct (facts + seek accepted, row 26) |
+| Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/dock; manual moves EXECUTED_UNVERIFIED) | tests/fabric/test_tuya_local.py; EVIDENCE_LEDGER.md (27-Oct movement run); docs/DEVICE_CAPABILITIES.md; live re-verify 30 Oct (facts + seek accepted, row 26) |
 | Meta-only runtime | VERIFIED (static + network trace) | src/ai/registry.py, tests/unit/test_meta_only_network_trace.py |
 | Capability explorer: UI schemas matched to live device capabilities | SIMULATED_VERIFIED + live discovery smoke (2 cards/118 widgets) | tests/fabric/test_capability_explorer.py, tests/runtime/test_explorer_api.py (§6 `5224d99`) |
 | Hardware intelligence: PC facts + task rankers + micro-benchmarks | REAL_HARDWARE_VERIFIED (PC1 + BV9300 live) | tests/fabric/test_hardware_intel.py, tests/runtime/test_hardware_api.py (§9 `2ad4688`) |
