@@ -454,11 +454,13 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             if handle is None:
                 continue
             try:
-                url = server.android.forward_companion(handle)
-                send = transport_factory(url)
+                urls = server.android.relay_urls(handle)
+                url = urls[0]
+                send = fabric_relay.failover_transport(urls) if transport_factory is fabric_relay.http_transport else transport_factory(url)
                 server.relays.enroll(rid, key, handle, declared)
                 relay = server.relays.relays[rid]
                 relay['url'] = url
+                relay['urls'] = urls
                 if aead_v:
                     from src.fabric import aead
                     relay['send'], relay['aead'] = aead.encrypting_send(send, rid), aead_v
@@ -481,8 +483,9 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             handle = body.get('device_id')
             if not isinstance(handle, str) or not handle:
                 raise fabric_relay.RelayError('Unknown device handle')
-            url = server.android.forward_companion(handle)
-            send = transport_factory(url)
+            urls = server.android.relay_urls(handle)
+            url = urls[0]
+            send = fabric_relay.failover_transport(urls) if transport_factory is fabric_relay.http_transport else transport_factory(url)
             pc_nonce = secrets.token_hex(16)
             hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
             if hello.get('protocol') != fabric_relay.PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
@@ -491,7 +494,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 now = time.monotonic()
                 for h in [h for h, p in server.relay_pending.items() if now - p['started_at'] > PAIRING_TTL]:
                     del server.relay_pending[h]
-                server.relay_pending[handle] = {'send': send, 'url': url, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
+                server.relay_pending[handle] = {'send': send, 'url': url, 'urls': urls, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
             return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': hello['relay_id'], 'declared': hello.get('declared', {})}
         if path == '/api/relay-pair-confirm':
             handle = body.get('device_id')
@@ -524,6 +527,16 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 # From here on every message to this relay is sealed and every reply must be sealed.
                 server.relays.relays[rid]['send'] = aead.encrypting_send(pending['send'], rid)
                 server.relays.relays[rid]['aead'] = aead.VERSION
+            urls = list(pending.get('urls') or [pending.get('url')])
+            if len(urls) == 1:  # USB serial: no direct URL pre-pair; match mDNS by relay id now
+                direct = server.android.lan_url_for_relay(rid)
+                if direct and direct not in urls:
+                    urls.insert(0, direct)
+                    server.relays.relays[rid]['send'] = pending['send'] = fabric_relay.failover_transport(urls)
+                    if server.relays.relays[rid].get('aead'):
+                        from src.fabric import aead as _aead
+                        server.relays.relays[rid]['send'] = _aead.encrypting_send(pending['send'], rid)
+            server.relays.relays[rid]['urls'] = urls
             server.relays.relays[rid]['url'] = pending.get('url')
             server.relay_ledger.proved(rid)
             if server.relay_store is not None:

@@ -109,7 +109,7 @@ class ServerRelayFlowTests(unittest.TestCase):
                 return {**rep,'mac':R.sign(k,rep)}
             reg=Registry();phone=reg.upsert([],category='phone',label='Phone');reg.devices[phone]['handles']={'USB':'android-h'}
             server.fabric_registry=reg;server.fabric_snapshot=reg.snapshot()
-            with patch.object(server.android,'forward_companion',return_value='http://127.0.0.1:47800'):
+            with patch.object(server.android,'relay_urls',return_value=['http://127.0.0.1:47800']):
                 start=server.relay_action('/api/relay-pair-start',{'device_id':'android-h'},transport_factory=lambda u:send)
             self.assertEqual(start['state'],'CODE_SHOWN_ON_DEVICE')
             with self.assertRaises(R.RelayError):server.relay_action('/api/relay-pair-confirm',{'code':'000000'},transport_factory=None)
@@ -137,7 +137,7 @@ class PairingIsolationTests(unittest.TestCase):
         reg.devices[reg.upsert([], category='phone', label='Phone')]['handles'] = {'USB': 'android-h1'}
         reg.devices[reg.upsert([], category='tv', label='TV')]['handles'] = {'WIFI': 'android-h2'}
         self.server.fabric_registry = reg; self.server.fabric_snapshot = reg.snapshot()
-        self._patch = patch.object(self.server.android, 'forward_companion', return_value='http://127.0.0.1:47800')
+        self._patch = patch.object(self.server.android, 'relay_urls', return_value=['http://127.0.0.1:47800'])
         self._patch.start(); self.addCleanup(self._patch.stop); self.addCleanup(self.server.server_close)
 
     def companion(self, relay_id, code, relay_nonce):
