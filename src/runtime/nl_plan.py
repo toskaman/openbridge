@@ -139,7 +139,12 @@ def local_chat(model_id, endpoint, timeout=180, chat=None, format=None, options=
     run_options.update(options or {})
 
     def run(prompt):
-        payload = {'model': model_id, 'stream': False, 'format': format or PLAN_JSON_SCHEMA,
+        # think=False: thinking models (Glimmer) would otherwise burn the
+        # whole token budget on an unconstrained thinking trace and return
+        # empty content (done_reason=length, eval=cap). Ignored by
+        # non-thinking models. Same precedent as the tier probe payload.
+        payload = {'model': model_id, 'stream': False, 'think': False,
+                   'format': format or PLAN_JSON_SCHEMA,
                    'options': run_options, 'keep_alive': '10m',
                    'messages': [{'role': 'system', 'content':
                                  'Reply in English only as compact JSON matching the schema.'},

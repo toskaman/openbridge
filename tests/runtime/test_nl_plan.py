@@ -169,6 +169,19 @@ class TransportTest(unittest.TestCase):
         self.assertEqual(seen['options']['num_predict'], 512)
         self.assertEqual(seen['options']['temperature'], 0)
 
+    def test_local_chat_disables_thinking_traces(self):
+        seen = {}
+
+        def fake_chat(payload):
+            seen.update(payload)
+            return {'model': 'muse-glimmer:30b-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': REPLY}}
+
+        t = nl_plan.local_chat('muse-glimmer:30b-q4_K_M', 'http://127.0.0.1:11438',
+                               chat=fake_chat)
+        t('prompt')
+        self.assertIs(seen.get('think'), False)
+
     def test_local_chat_rejects_wrong_model_identity(self):
         def fake_chat(payload):
             return {'model': 'evil:99b', 'done': True, 'done_reason': 'stop',
