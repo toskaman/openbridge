@@ -5,6 +5,9 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Background relay: foreground service keeps the socket alive while the app is closed (owner toggle). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <!-- mDNS self-advertisement so the PC finds this relay with no setup (normal permission, auto-granted). -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <!-- Android 12+: scan only, never used to derive location. -->
@@ -34,5 +37,7 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".RelayService" android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
     </application>
 </manifest>
