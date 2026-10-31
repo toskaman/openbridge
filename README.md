@@ -10,11 +10,11 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 *Every frame above is a real capture from this repository's evidence set — nothing staged. Full frames with context follow below.*
 
-**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, exact undo) fences every AI proposal so nothing changes without proof it can be undone.
+**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, per-change undo verdicts) fences every AI proposal: journaled setting changes get a restore path, physical acts are labeled non-undoable before you approve.
 
 Three things you can do with it today:
 
-1. **Ask, preview, approve.** Type a request in English or French; OpenBridge resolves it to a registered skill, shows exactly what will change, and executes only after your approval — every run ends with a receipt and an undo path.
+1. **Ask, preview, approve.** Type a request in English or French; OpenBridge resolves it to a registered skill, shows exactly what will change, and executes only after your approval — every run ends with a receipt, and every journaled setting change gets a restore path with an honest verdict.
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
 3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
 
@@ -99,7 +99,7 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 2. **Builds one graph.** Observations merge only on strong identifiers (for example the TV's Bluetooth address seen both over mDNS and ADB); weak signals become "possible duplicate" hints. Every link states what it grants: *observe*, *read* or *control*.
 3. **Extends reach through relays.** The OpenBridge Companion app (Android phone or Android TV) performs short signed BLE scans for the PC, after on-screen pairing. Devices it hears appear under it as observe-only.
 4. **Uses Meta models where they help.** Muse Glimmer and Llama 3.2 run locally; they explain device state, propose at most one reversible step, and suggest the next discovery step. They never see identifiers and cannot bypass the deterministic gate.
-5. **Changes only what it can undo.** Consent → snapshot → execute → independent read-back → exact Undo, with crash recovery. A session journal asks before finishing whether to restore every setting changed during the session.
+5. **Restores what it changed, honestly labeled.** Consent → snapshot → execute → independent read-back → `sessions undo` replays each journaled setting change (companion install, ADB-network link, system package state, Freebox auth, Bluetooth) with a per-change verdict: RESTORED, FAILED, or MANUAL when only you can do it. Vacuum docking and other physical acts are not session changes and have no Undo.
 6. **Routes skills across relays (B2).** Typed skill contracts with READY/ACTIVE/STANDBY states, freshness leases, AUTO/PREFERRED/PINNED policies, consent-bound invocation leases and exact-once dedup. A TV-to-phone BLE failover is demonstrated on hardware ([handover](docs/release/COMPLETE_HANDOVER.md)); a frozen synthetic routing evaluation scores 32/32 with full baselines ([results](docs/evaluation/routing-v1/RESULTS.md)).
 7. **Asks in natural language (Ask OpenBridge).** English or French requests resolve to registered skills through tiered Meta-only inference; every step (parse → preview → approval → receipt) is shown with model, cost and evidence, and the model can never authorize its own privileged actions.
 8. **Runs headless from a terminal.** The `openbridge` CLI drives the same core as the GUI (devices, ask, capabilities, workflows, approvals, evidence, doctor) with identical contracts and consent, over SSH or on machines with no display. See [CLI reference](docs/CLI_REFERENCE.md) and [headless deployment](docs/HEADLESS_DEPLOYMENT.md).
@@ -111,7 +111,7 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 | Freebox official app authorization + read-only LAN inventory (127 known / 12 active hosts) | [Freebox doc](docs/FREEBOX_INTEGRATION.md) |
 | Android phone (USB) and Android TV (ADB Wi-Fi) inspection, tolerant per-fact reads | [Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) |
 | Bluetooth relay through a phone (9–13 advertisers) and through a TV over the LAN (6) | [Relay security](docs/RELAY_SECURITY.md) |
-| Consent-gated agent: Meta plan → gate → act → verify → exact Undo | [agent-loop-receipt](docs/agent-loop-receipt.json) |
+| Consent-gated agent: Meta plan → gate → act → verify → per-change undo verdict | [agent-loop-receipt](docs/agent-loop-receipt.json) |
 | Server crash after a change → planning blocked → exact journal recovery | [crash-recovery-receipt](docs/crash-recovery-receipt.json) |
 | Muse Glimmer 30B local inference, digest = official registry manifest | [glimmer receipt](docs/glimmer-smoke-receipt.json) |
 | Real TV relay → local Muse Glimmer proposal → verified API publication/read → access denial and removal | [TV/Meta journey and limits](docs/forge/TV_GLIMMER_JOURNEY.md) |

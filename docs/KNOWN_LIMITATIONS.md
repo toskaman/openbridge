@@ -100,6 +100,8 @@ Final objective: start OpenBridge on the PC, connect an ESP32, a Playdate, a Com
 - Voice: the evidence ledger records a live synthetic speech/transcription run. Audio leaves the PC when this optional service is used; a transcript is a proposal, never authorization. No new transcription was made for this documentation update.
 - LAN inference worker must be declared by the owner; it is not in the default runtime manifest.
 - PC jobs (`pc_job`) run arbitrary owner-typed commands and cannot be undone. The BridgeWindows v4 link authenticates messages but does not encrypt payloads; use it only on a trusted LAN.
+- Undo scope (31 Oct correction): `sessions undo` replays only journaled setting changes (companion install, ADB-network link, system package state, Freebox auth, Bluetooth) with per-change RESTORED/FAILED/MANUAL verdicts; physical acts (vacuum dock, volume steps) are not session changes and have no Undo. Earlier "exact Undo" wording was overstated and has been corrected in the README.
+- Companion background relay (unreleased source): the foreground service keeps pairing/controls/polls alive with the screen off; Bluetooth scans stay foreground-only by design (opening the app is the consent to scan). Not yet packaged or run on hardware.
 
 ## Physical routing and remote-control follow-up
 
