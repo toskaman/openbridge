@@ -14,7 +14,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth}
-body{margin:0;min-height:100vh;background:radial-gradient(1200px 700px at 85% -10%,rgba(99,102,241,.16),transparent 60%),radial-gradient(900px 600px at -10% 110%,rgba(20,184,166,.10),transparent 60%),var(--bg);color:var(--text);font:14px/1.55 var(--font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{margin:0;min-height:100vh;min-height:100dvh;background:radial-gradient(1200px 700px at 85% -10%,rgba(99,102,241,.16),transparent 60%),radial-gradient(900px 600px at -10% 110%,rgba(20,184,166,.10),transparent 60%),var(--bg);color:var(--text);font:14px/1.55 var(--font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
 .sprite{position:absolute;width:0;height:0;overflow:hidden}
 :where(svg[aria-hidden=true]:not(.sprite)){width:18px;height:18px;flex:none}
