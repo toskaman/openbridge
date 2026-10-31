@@ -122,7 +122,10 @@ def build_ui_prompt(intent_text, devices, primitive_ids):
              'Primitives: %s.' % ','.join(sorted(primitive_ids)),
              'Devices:']
     for d in devices or []:
-        lines.append('- %s (%s)' % (d.get('label', '?'), d.get('category', '?')))
+        line = '- %s (%s)' % (d.get('label', '?'), d.get('category', '?'))
+        if d.get('opaque_id'):
+            line += ' id %s' % (d['opaque_id'],)
+        lines.append(line)
     lines.append('Copy every id character-for-character. Refuse (no JSON) when the request '
                  'needs a widget kind, primitive or device not listed above.')
     return '\n'.join(lines)

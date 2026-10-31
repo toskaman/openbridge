@@ -221,3 +221,142 @@ class WorkflowApproveTests(unittest.TestCase):
             cli.cmd_workflows_approve(self.args(consent=self.preview_token(), deny=True))
         approve.assert_called_once_with('wf-abc', 'step1', False, mock.sentinel.router,
                                         store, actor='cli')
+
+
+class DashboardsPatchCliTests(unittest.TestCase):
+    PATCH = {'schema_version': 1, 'patch_id': 'p-9', 'target_opaque_id': 'opaque:vac1',
+             'origin': 'meta_generated', 'model_run_id': 'mr-9',
+             'widgets': [{'widget_id': 'w-1', 'kind': 'button', 'label': 'Return to dock',
+                          'binding_primitive': 'vacuum_command',
+                          'params': {'command': 'dock'}}]}
+    OFFERED = ['opaque:vac1', 'opaque:tv1']
+
+    def patch_file(self, tmp, patch=None, offered=None):
+        import json as _json
+        from pathlib import Path as _Path
+        p = _Path(tmp) / 'panel.json'
+        p.write_text(_json.dumps({'patch': patch or self.PATCH,
+                                  'offered_opaque_ids': offered if offered is not None else self.OFFERED,
+                                  'model_run': {'model_id': 'llama3.2:3b-test'}}),
+                     encoding='utf-8')
+        return str(p)
+
+    def install_args(self, **kw):
+        base = {'patch': None, 'relay': 'r-tv', 'target': 'Robot vacuum (Tuya)',
+                'consent': None, 'yes': False}
+        base.update(kw)
+        return Namespace(**base)
+
+    def install_token(self):
+        preview = {'relay_id': 'r-tv', 'target': 'Robot vacuum (Tuya)',
+                   'controls': [{'label': 'Return to dock', 'skill_id': 'vacuum_command',
+                                 'params': {'command': 'dock'}}]}
+        return cli.preview_hash(preview)
+
+    def core_ctx(self):
+        core = mock.MagicMock()
+        core.__enter__.return_value = mock.sentinel.server
+        return core
+
+    def test_install_consent_mismatch_discloses_token(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            args = self.install_args(patch=self.patch_file(tmp), consent='nope')
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_dashboards_install(args)
+        self.assertEqual(e.exception.code, 'CONSENT_REQUIRED')
+        self.assertIn(self.install_token(), str(e.exception))
+
+    def test_install_hallucinated_opaque_target_refused_before_any_core_use(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            args = self.install_args(patch=self.patch_file(tmp, offered=['opaque:other']),
+                                      consent=self.install_token())
+            with mock.patch.object(cli, 'Core') as core:
+                with self.assertRaises(cli.CliError) as e:
+                    cli.cmd_dashboards_install(args)
+        self.assertEqual(e.exception.code, 'PATCH_TARGET_UNKNOWN')
+        core.assert_not_called()
+
+    def test_install_bad_schema_refused(self):
+        import copy
+        import tempfile
+        bad = copy.deepcopy(self.PATCH)
+        bad['widgets'][0]['binding_primitive'] = 'shell_exec'
+        with tempfile.TemporaryDirectory() as tmp:
+            args = self.install_args(patch=self.patch_file(tmp, patch=bad),
+                                      consent=self.install_token())
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_dashboards_install(args)
+        self.assertEqual(e.exception.code, 'PATCH_REJECTED')
+
+    def test_install_valid_calls_bridge_with_resolved_target(self):
+        import tempfile
+        router = mock.Mock()
+        router.resolve_target.return_value = 'dev-live-vac'
+        with tempfile.TemporaryDirectory() as tmp:
+            args = self.install_args(patch=self.patch_file(tmp),
+                                      consent=self.install_token())
+            with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+                 mock.patch.object(cli, 'ensure_discovery', return_value={}), \
+                 mock.patch('src.runtime.api_v2.remote_controls',
+                            return_value=mock.sentinel.controls), \
+                 mock.patch('src.runtime.api_v2.router', return_value=router), \
+                 mock.patch('src.runtime.dashboards.install_patch',
+                            return_value={'ok': True}) as bridge:
+                out = cli.cmd_dashboards_install(args)
+        bridge.assert_called_once_with(
+            mock.sentinel.controls, 'r-tv', self.PATCH, 'Robot vacuum (Tuya)',
+            mock.ANY, consent=True, resolve_target=router.resolve_target)
+        self.assertEqual(out['controls'][0]['skill_id'], 'vacuum_command')
+
+    def test_revoke_needs_consent_then_clears(self):
+        preview = {'relay_id': 'r-tv', 'action': 'revoke-all'}
+        token = cli.preview_hash(preview)
+        args = Namespace(relay='r-tv', consent='wrong', yes=False)
+        with self.assertRaises(cli.CliError) as e:
+            cli.cmd_dashboards_revoke(args)
+        self.assertEqual(e.exception.code, 'CONSENT_REQUIRED')
+        self.assertIn(token, str(e.exception))
+        controls = mock.Mock()
+        args = Namespace(relay='r-tv', consent=token, yes=False)
+        with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+             mock.patch('src.runtime.api_v2.remote_controls', return_value=controls):
+            cli.cmd_dashboards_revoke(args)
+        controls.set_controls.assert_called_once_with(
+            {'relay_id': 'r-tv', 'controls': [], 'consent': True})
+
+    def test_propose_builds_patch_from_model_reply(self):
+        import json as _json
+        reply = _json.dumps(self.PATCH)
+        devices = [{'key': 'dev-v', 'label': 'Robot vacuum (Tuya)', 'category': 'vacuum',
+                    'capabilities': [], 'facts': {}}]
+        transport = mock.Mock(return_value=reply)
+        args = Namespace(text='vacuum panel', model=None, timeout=None)
+        with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+             mock.patch.object(cli, 'ensure_discovery',
+                               return_value={'devices': devices}), \
+             mock.patch('src.runtime.nl_plan.local_chat',
+                        return_value=transport) as chat:
+            out = cli.cmd_dashboards_propose(args)
+        chat.assert_called_once()
+        transport.assert_called_once()
+        prompt = transport.call_args[0][0]
+        self.assertIn('vacuum panel', prompt)
+        self.assertIn('vacuum_command', prompt)
+        self.assertEqual(out['patch']['patch_id'], 'p-9')
+        self.assertEqual(len(out['offered_opaque_ids']), 1)
+        self.assertIn('model_run', out)
+
+    def test_propose_garbage_reply_rejected(self):
+        devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
+                    'capabilities': [], 'facts': {}}]
+        transport = mock.Mock(return_value='no json here')
+        args = Namespace(text='vacuum panel', model=None, timeout=None)
+        with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+             mock.patch.object(cli, 'ensure_discovery',
+                               return_value={'devices': devices}), \
+             mock.patch('src.runtime.nl_plan.local_chat', return_value=transport):
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_dashboards_propose(args)
+        self.assertEqual(e.exception.code, 'PATCH_REJECTED')
