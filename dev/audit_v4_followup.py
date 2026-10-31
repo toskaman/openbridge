@@ -30,13 +30,18 @@ SUBSTRATE_HEAD='8a73b8f395ecf13a979f88fd93649cd3975b3f23'
 # target_opaque_id copy rule (8/8 Glimmer misses without the opaque: prefix
 # replicated the evidence_refs wording); validator unchanged, live-proven
 # 2/2 first-attempt passes after the fix.
+# Pins refreshed 2026-10-31 (S12 refusal lane): v4_ui.py gains the structured
+# model response envelope (proposal/refusal/needs_clarification/unsupported via
+# parse_response) so a refused request can no longer smuggle an installable
+# substitute patch (S5-T3: 'Run shell command' bound to retro_command).
+# validate_patch semantics unchanged; covered by tests/forge/test_model_refusal.py.
 AGENT_SOURCE_SHA256={'src/forge/v4_evidence.py': '80a483548b4aeddfdd1c9a13b68d2ccfe12f80bc415a7d2b3b477d0823ce5f4f',
  'src/forge/v4_gap.py': '42502734c7dd3b601634237959718251f9a4127a1417868666eceddd180edbfe',
  'src/forge/v4_metaclient.py': 'b01cd36724ea4cb34f1924647476ee8ab5d069f45c0868576b0f18a3987ef848',
  'src/forge/v4_provenance.py': 'cc7a43fb5a3f2c4f3ae71f09b0a6c5945c0d5bfc50e519a694bc48f72e69cf6d',
  'src/forge/v4_schemas.py': 'e62482d4cd8f563234ad17679be9b1c51e464e3c106087f3153d25f89973a5bd',
  'src/forge/v4_synthesize.py': '0062b163c998dd58122e989e73907ddcf91be9f23107e80832d83a06156017a6',
- 'src/forge/v4_ui.py': '0c0aad50b65135749fd5712dcb1a45bd9408c7d79cdbb4942dbb1bb02689d798',
+ 'src/forge/v4_ui.py': 'c5fe545847b50bd7b219cada4ab7b06a2fc1105b07317601c7b3d540e7014497',
  'src/forge/v4_workflow.py': 'b06c3b533629b91b1690ff0470421fb1332070641e7a869cefbd8c7207464cf2'}
 SCHEMA_HELPER_SHA256='8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9'
 
