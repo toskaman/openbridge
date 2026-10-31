@@ -1,10 +1,15 @@
 name: Clean-room install lab
 # §4/§5/§6: build ARTIFACT A once, then install+run+capture it on fresh hosted
 # OSs. Manual dispatch only (heavy); PR CI stays in verify.yml.
+# Paths go through runner.temp (Git-bash /tmp != Windows C:\tmp).
 on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  DIST_DIR: ${{ runner.temp }}/dist
+  APP_DIR: ${{ runner.temp }}/approot
+  EV_DIR: ${{ runner.temp }}/evidence
 jobs:
   build-pack:
     runs-on: ubuntu-24.04
@@ -14,12 +19,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14.4'
-      - run: python scripts/release_pack.py app --out /tmp/OpenBridge-App.zip
-      - run: python scripts/verify_jury_pack.py /tmp/OpenBridge-App.zip
+      - run: python scripts/release_pack.py app --out ${{ runner.temp }}/OpenBridge-App.zip
+      - run: python scripts/verify_jury_pack.py ${{ runner.temp }}/OpenBridge-App.zip
       - uses: actions/upload-artifact@v4
         with:
           name: app-dist
-          path: /tmp/OpenBridge-App.zip
+          path: ${{ runner.temp }}/OpenBridge-App.zip
           retention-days: 7
   install:
     needs: build-pack
@@ -37,17 +42,19 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: app-dist
-          path: /tmp/dist
-      - run: python scripts/verify_jury_pack.py /tmp/dist/OpenBridge-App.zip
-      - run: python -c "import zipfile; zipfile.ZipFile('/tmp/dist/OpenBridge-App.zip').extractall('/tmp/approot')"
+          path: ${{ env.DIST_DIR }}
+      - run: python scripts/verify_jury_pack.py "$DIST_DIR/OpenBridge-App.zip"
+        shell: bash
+      - run: python -c "import zipfile,os; zipfile.ZipFile(os.environ['DIST_DIR']+'/OpenBridge-App.zip').extractall(os.environ['APP_DIR'])"
+        shell: bash
       - name: Environment manifest
         shell: bash
         run: |
-          mkdir -p /tmp/evidence
-          python -c "import json,platform,sys,os; json.dump({'provider':'github-hosted','os':'${{ matrix.os }}','system':platform.system(),'release':platform.release(),'arch':platform.machine(),'python':sys.version.split()[0],'runner':os.environ.get('RUNNER_NAME'),'sha':'${{ github.sha }}'}, open('/tmp/evidence/env.json','w'), indent=1)"
-      - run: python /tmp/approot/OpenBridge-App/scripts/verify/clean_install_check.py --venv /tmp/approot-venv --port 18791 2>&1 | tee /tmp/evidence/install.log
+          python -c "import json,platform,sys,os; os.makedirs(os.environ['EV_DIR'], exist_ok=True); json.dump({'provider':'github-hosted','os':'${{ matrix.os }}','system':platform.system(),'release':platform.release(),'arch':platform.machine(),'python':sys.version.split()[0],'runner':os.environ.get('RUNNER_NAME'),'sha':'${{ github.sha }}'}, open(os.environ['EV_DIR']+'/env.json','w'), indent=1)"
+      - shell: bash
+        run: python "$APP_DIR/OpenBridge-App/scripts/verify/clean_install_check.py" --venv "$APP_DIR-venv" --port 18791 2>&1 | tee "$EV_DIR/install.log"
+      - run: python -m pip install -r "$APP_DIR/OpenBridge-App/requirements-dev.txt"
         shell: bash
-      - run: python -m pip install -r /tmp/approot/OpenBridge-App/requirements-dev.txt
       - name: Use primary Ubuntu package mirror
         if: runner.os == 'Linux'
         run: |
@@ -58,12 +65,13 @@ jobs:
         if: runner.os == 'Linux'
       - run: python -m playwright install chromium
         if: runner.os != 'Linux'
-      - run: python /tmp/approot/OpenBridge-App/scripts/verify/cleanroom_capture.py --root /tmp/approot/OpenBridge-App --out /tmp/evidence/capture --port 18792
+      - run: python "$APP_DIR/OpenBridge-App/scripts/verify/cleanroom_capture.py" --root "$APP_DIR/OpenBridge-App" --out "$EV_DIR/capture" --port 18792
+        shell: bash
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: install-evidence-${{ matrix.os }}
-          path: /tmp/evidence
+          path: ${{ env.EV_DIR }}
           retention-days: 21
   debian-container:
     needs: build-pack
