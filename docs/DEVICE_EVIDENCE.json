@@ -1057,5 +1057,79 @@
    "run vehicle .xbuild/wd7b_direct_drain.py is uncommitted session tooling; protocol code and steps committed",
    "single end-to-end scenario (n=1); no generalization claimed"
   ]
+ },
+ {
+  "test_id": "s6-watch-tv-volume-01nov",
+  "test_utc": "2026-10-31T23:10:29Z",
+  "commit_sha": "45c53fb4bc710fcd6e23844809b32cfa8dd19be6",
+  "platform": "Wear OS watch + Android TV",
+  "device_alias": "Galaxy Watch7 + Owner Android TV (volume pair)",
+  "public_device_id": "watch-tv-s6-01",
+  "os_version": "Wear OS / Android 16 + Android TV 11 (SDK 30)",
+  "companion_version": "0.12.0 (code 12)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "watch paired over direct LAN with owner-read code, no watch adb (relay-39f86439fbae, aead1 sealed)",
+   "tv dashboard installed (Volume +, Volume -, YouTube), rendered on the watch screen",
+   "owner press Volume + on watch: exactly one tv_volume_step EXECUTED (tx-5b326915aef0f777)",
+   "TV STREAM_MUSIC 23->24 read back via independent adb dumpsys snapshots",
+   "TV-side volume-event log shows the matching ADJUST_RAISE, only such event in hours",
+   "revoke set_controls([]): controls vanished from the watch (owner-confirmed)"
+  ],
+  "evidence": [
+   "docs/evidence/s6-watch-tv-volume-01nov.md"
+  ],
+  "independent_oracle": "adb dumpsys audio before/after (MUSIC 23->24) plus TV volume-event log (ADJUST_RAISE 00:10:29 local, sole event in hours) plus single EXECUTED receipt in controls history; independent repeat R1 gave 22->23 with its own log event at 00:01:45",
+  "permissions": [
+   "owner-read pairing codes",
+   "owner physical press on the watch",
+   "ADB Wi-Fi authorized (TV read-back only)",
+   "blanket owner test authorization for benign commands"
+  ],
+  "limitations": [
+   "no watch screenshots (no watch adb in this setup; Wi-Fi relay only; rendering owner-confirmed)",
+   "post-revoke re-press not exercised as a denied event (no controls left to press); denial-by-absence owner-confirmed",
+   "two failed harness rounds first: R2 press BLOCKED lease-stale (slow press), R3 BLOCKED no-route (mid-window rediscovery voided the grant); fixed with 55 s windows plus paired rediscover/reinstall",
+   "run vehicle .xbuild/s6b_watch_tv_direct.py is uncommitted session tooling",
+   "single passing round (n=1) plus one independent physical repeat (R1)"
+  ]
+ },
+ {
+  "test_id": "watch-voice-direct-loop-01nov",
+  "test_utc": "2026-10-31T23:16:36Z",
+  "commit_sha": "45c53fb4bc710fcd6e23844809b32cfa8dd19be6",
+  "platform": "Wear OS watch",
+  "device_alias": "Galaxy Watch7 44 mm (Wear OS)",
+  "public_device_id": "watch-sm-l310-01",
+  "os_version": "Wear OS / Android 16 (SDK 36)",
+  "companion_version": "0.12.0 (code 12)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "watch paired over direct LAN with owner-read code (relay-39f86439fbae, aead1 sealed)",
+   "3 owner-spoken French orders announced and fetched as PCM16 clips over the direct URL",
+   "clips transcribed locally on the PC (verbatim Heard lines in the drain log)",
+   "all 3 parsed to needs_clarification; signed reports delivered (HMAC-verified replies)",
+   "tail polls timed out when the watch slept (URLError 10060); drain degraded gracefully, exit 0"
+  ],
+  "evidence": [
+   "docs/evidence/voice-watch-direct-01nov.md"
+  ],
+  "independent_oracle": "PC-side drain log: 3 reported receipts with verbatim transcripts plus signed report_command round-trips verified by HMAC; sleep timeouts logged as WinError 10060",
+  "permissions": [
+   "owner-read pairing code",
+   "owner-spoken orders",
+   "blanket owner test authorization for benign commands"
+  ],
+  "limitations": [
+   "STT misheard “mets” as “mas”/“mais” and “télé” as “tellée” (local model, watch mic); clarification outcomes only, no wrong-skill action",
+   "no watch screenshots (no watch adb); on-watch captions delivered but not visually confirmed",
+   "watch slept near the end of the 6-minute window; 3 tail polls timed out (known relay-sleeps limitation)",
+   "run vehicle .xbuild/v_watch_voice.py is uncommitted session tooling",
+   "n=3 orders, single session"
+  ]
  }
 ]
