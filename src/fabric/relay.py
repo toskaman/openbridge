@@ -321,7 +321,8 @@ def failover_transport(urls, lan_timeout=3, timeout=25):
     propagate at once: a wrong key or a stale forward answering from another
     device must never silently reroute. LAN URLs fail fast (`lan_timeout`)
     so blackholed subnets (client isolation) fall back quickly; loopback
-    (adb forward) keeps the full `timeout`."""
+    (adb forward) keeps the full `timeout`. Malformed replies (HTTPException,
+    bad JSON) propagate like RelayError: fail-closed, never rerouted."""
     from urllib.parse import urlsplit
     import ipaddress
     urls = list(urls or [])
