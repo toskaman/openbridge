@@ -57,8 +57,9 @@ def main():
 
     # NET-01: server starts (isolated store, nothing shared with any other server).
     env = dict(os.environ, LOCALAPPDATA=tmp, XDG_DATA_HOME=tmp)
+    srvlog = open(os.path.join(outdir, 'server.log'), 'w', encoding='utf-8')
     srv = subprocess.Popen([sys.executable, '-m', 'src.cli', 'serve', '--port', str(args.port)],
-                           env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                           env=env, stdout=srvlog, stderr=subprocess.STDOUT, text=True)
     try:
         ok = False
         for _ in range(60):
@@ -127,7 +128,7 @@ def main():
             raise SystemExit(1)
         rc, svcs = sh('adb', 'shell', 'dumpsys', 'activity', 'services')
         rc2, fwd = sh('adb', 'forward', '--list')
-        oracle = ('RelayService' in svcs) and ('47800' in fwd or 'tcp:' in fwd)
+        oracle = ('RelayService' in svcs) and ('tcp:47800' in fwd.replace(' ', ''))
         if not record('oracle: service + adb-forward agree', oracle, fwd.strip()[:160]):
             raise SystemExit(1)
         # NET-12/13: relay-side revoke (pm clear wipes the pairing key) -> denied.
