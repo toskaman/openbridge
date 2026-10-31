@@ -81,11 +81,11 @@ jobs:
             adb shell pm grant fr.openbridge.companion android.permission.RECORD_AUDIO || true
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
-            adb shell screencap -p /sdcard/phone-launch.png && adb pull /sdcard/phone-launch.png
-            adb shell dumpsys activity activities | grep -m1 -i openbridge > phone-foreground.txt || true
-            (adb shell screenrecord --bit-rate 2000000 --time-limit 12 /sdcard/demo.mp4 &)
-            sleep 15
-            adb pull /sdcard/demo.mp4 phone-demo.mp4 || true
+            adb shell pidof fr.openbridge.companion | tee phone-pid.txt
+            test -s phone-pid.txt
+            adb shell dumpsys activity activities | grep -m1 -i openbridge | tee phone-foreground.txt
+            test -s phone-foreground.txt
+            adb shell dumpsys package fr.openbridge.companion | grep -m1 versionName | tee phone-version.txt
             adb logcat -d -t 300 > phone-logcat.txt
             ls -la *.png *.mp4 *.txt || true
       - uses: actions/upload-artifact@v4
@@ -93,9 +93,9 @@ jobs:
         with:
           name: android-phone-evidence
           path: |
-            phone-launch.png
-            phone-demo.mp4
+            phone-pid.txt
             phone-foreground.txt
+            phone-version.txt
             phone-logcat.txt
           retention-days: 21
           if-no-files-found: warn

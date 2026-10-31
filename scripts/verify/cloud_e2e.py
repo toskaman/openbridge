@@ -96,26 +96,48 @@ def main():
                       'st=%s %s' % (st, json.dumps(hello)[:200])):
             raise SystemExit(1)
         rid = hello['relay_id']
-        code = None
-        pat = re.compile(r'\b(\d{3})\s?(\d{3})\b')
+        # Contextual candidates (S5b-proven): a bare 6-digit regex catches
+        # keyboard digits and other noise; context words disambiguate. Try
+        # best-first, max 4 attempts (the relay locks at 5).
+        pats = [r'(?i)(?:pair\w*|code|enter)\W{0,40}(\d{3})\s*(\d{3})',
+                r'\b(\d{3})\s{1,3}(\d{3})\b',
+                r'(?i)(?:pair\w*|code|enter)\W{0,40}(\d{6})',
+                r'\b(\d{6})\b']
+        import re as _re
+        seen, tried, conf, st = set(), [], None, None
         for _ in range(6):
+            if conf is not None and st == 200 and (conf.get('state') == 'PAIRED'):
+                break
+            texts = []
             sh('adb', 'shell', 'uiautomator', 'dump', '/sdcard/ob-e2e.xml', timeout=60)
             rc, dump = sh('adb', 'shell', 'cat', '/sdcard/ob-e2e.xml', timeout=60)
-            m = pat.search(dump) if rc == 0 else None
-            if m:
-                code = m.group(1) + m.group(2)
-                break
+            if rc == 0:
+                texts.append(dump)
             rc, top = sh('adb', 'shell', 'dumpsys', 'activity', 'top', timeout=60)
-            m = pat.search(top) if rc == 0 else None
-            if m:
-                code = m.group(1) + m.group(2)
+            if rc == 0:
+                texts.append(top)
+            for text in texts:
+                for pt in pats:
+                    for m in _re.finditer(pt, text):
+                        code = ''.join(g for g in m.groups() if g)
+                        if code in seen or len(tried) >= 4:
+                            continue
+                        seen.add(code)
+                        tried.append(code)
+                        st, conf = post('/api/relay-pair-confirm', {'device_id': handle, 'code': code})
+                        if st == 200 and (conf.get('state') == 'PAIRED'):
+                            break
+                    if conf is not None and st == 200 and conf.get('state') == 'PAIRED':
+                        break
+                if conf is not None and st == 200 and conf.get('state') == 'PAIRED':
+                    break
+            if len(tried) >= 4:
                 break
             time.sleep(5)
-        if not record('code read from screen', bool(code)):
+        if not record('code read from screen', bool(tried), 'tried=%s' % tried):
             raise SystemExit(1)
-        st, conf = post('/api/relay-pair-confirm', {'device_id': handle, 'code': code})
-        if not record('NET-05..08 PAIRED', st == 200 and conf.get('state') == 'PAIRED',
-                      'st=%s %s' % (st, json.dumps(conf)[:200])):
+        if not record('NET-05..08 PAIRED', st == 200 and (conf or {}).get('state') == 'PAIRED',
+                      'st=%s tried=%s %s' % (st, tried, json.dumps(conf)[:200])):
             raise SystemExit(1)
         # NET-09..11: signed command reaches the target; independent adb oracle agrees.
         st, res = post('/api/relay-scan', {'device_id': handle, 'relay_id': rid, 'seconds': 4}, timeout=120)
