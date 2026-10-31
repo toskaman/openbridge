@@ -76,6 +76,9 @@ jobs:
           script: |
             set -e
             adb install --no-incremental apk/openbridge-companion.apk
+            adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_SCAN || true
+            adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_CONNECT || true
+            adb shell pm grant fr.openbridge.companion android.permission.RECORD_AUDIO || true
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
             adb shell screencap -p /sdcard/phone-launch.png && adb pull /sdcard/phone-launch.png
@@ -135,6 +138,9 @@ jobs:
           script: |
             set -e
             adb install --no-incremental apk/openbridge-companion.apk
+            adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_SCAN || true
+            adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_CONNECT || true
+            adb shell pm grant fr.openbridge.companion android.permission.RECORD_AUDIO || true
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
             adb shell screencap -p /sdcard/tv-launch.png && adb pull /sdcard/tv-launch.png
@@ -191,6 +197,9 @@ jobs:
           script: |
             set -e
             adb install --no-incremental apk/openbridge-companion.apk
+            adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_SCAN || true
+            adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_CONNECT || true
+            adb shell pm grant fr.openbridge.companion android.permission.RECORD_AUDIO || true
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
             adb exec-out screencap -p > wear-launch.png

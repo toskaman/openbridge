@@ -84,6 +84,9 @@ def main():
         rc, outp = sh('adb', 'install', '--no-incremental', args.apk, timeout=180)
         if not record('APK installed', rc == 0 and 'Success' in outp, outp[-200:]):
             raise SystemExit(1)
+        for perm in ('android.permission.BLUETOOTH_SCAN', 'android.permission.BLUETOOTH_CONNECT',
+                     'android.permission.RECORD_AUDIO'):
+            sh('adb', 'shell', 'pm', 'grant', 'fr.openbridge.companion', perm)
         sh('adb', 'shell', 'am', 'start', '-n', 'fr.openbridge.companion/.MainActivity')
         time.sleep(8)
         # NET-04/07/08: pairing handshake (code shown on the emulator screen).
