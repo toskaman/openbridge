@@ -60,6 +60,7 @@ is preserved in git history, not deleted.
 | Companion background relay on a real phone (screen off, toggle 8/8) | REAL_HARDWARE_VERIFIED | docs/DEVICE_EVIDENCE.json (registry row 29 `companion-0.12.0-background-relay-hardware`) |
 | S5b safe seek: T2 panel → hold-press FIND → tx-4a96f8f626a1adc5 → 15-poll oracle → revoke + deny | REAL_HARDWARE_VERIFIED (adb-injected press, labeled; beep not machine-proven) | docs/evidence/s5b-safe-seek-31oct.md (registry row 30) |
 | Structured model refusal channel (proposal/refusal/needs_clarification/unsupported) | IMPLEMENTED + unit-verified (TDD 3/3); jury shot staged from live UI | docs/jury/OVERNIGHT_REPORT_31OCT.md §B |
+| Wi-Fi-direct relay: pair + command drain + signed report over direct LAN with adb disconnected | REAL_HARDWARE_VERIFIED (TV 0.12.0, adb down throughout the drain, caption on screen) | docs/jury/screens/tv-wd7-direct-drain-caption.png (registry row 33 `wd7-direct-drain-tv-adb-down`) |
 
 ## Never claimed
 ACID transactions; zero-knowledge or anonymous cloud calls; 2D or person location from BLE RSSI; that BLE presence proves interference; fabricated scores; organizer acceptance or bonus eligibility.
