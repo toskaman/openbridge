@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, reconciled against main `4299343` on 31 October 2026 (PR145-154 merged; suite 1150 green locally + Windows/Ubuntu/browser CI (1138 `def test` + 5 monkey-assigned in tests/runtime/test_remote_controls.py:383-451 + 7 inherited in tests/forge/test_http.py:90; verified by collection diff); registry 26 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
+Authoritative checklist, reconciled against main `6974251` on 31 October 2026 (PR145-156 merged; suite 1203 green locally + Windows/Ubuntu/browser CI (1191 `def test` + 5 monkey-assigned in tests/runtime/test_remote_controls.py:383-451 + 7 inherited in tests/forge/test_http.py:90; verified by collection diff); registry 28 VERIFIED rows; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts and pending flags in archived notes are historical.
 
 ## Integrated work
 
