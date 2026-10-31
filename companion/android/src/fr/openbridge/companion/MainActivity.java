@@ -637,13 +637,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             location.setVisibility(ble && !loc ? View.VISIBLE : View.GONE);
             permission.setVisibility(ble && !perm ? View.VISIBLE : View.GONE);
             enable.setText("Bluetooth scans"); setToggle(enable, enabled);
-            enable.setVisibility(ready ? View.VISIBLE : View.GONE);
+            enable.setVisibility((ready || paired) ? View.VISIBLE : View.GONE);
             fullctl.setText("Full control"); setToggle(fullctl, relay.fullControl());
-            fullctl.setVisibility(ready ? View.VISIBLE : View.GONE);
+            fullctl.setVisibility((ready || paired) ? View.VISIBLE : View.GONE);
             boolean bg = RelayService.running(this);
             background.setText("Background relay"); setToggle(background, bg);
             background.setContentDescription("Background relay, " + (bg ? "on" : "off"));
-            unpair.setVisibility(ready ? View.VISIBLE : View.GONE);
+            unpair.setVisibility((ready || paired) ? View.VISIBLE : View.GONE);
             unpair.setEnabled(paired);
             if (!systemTouched) systemOpen = !ready || !paired;
             renderSystem();
