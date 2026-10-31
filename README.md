@@ -16,9 +16,9 @@ Three things you can do with it today:
 
 1. **Ask, preview, approve.** Type a request in English or French; OpenBridge resolves it to a registered skill, shows exactly what will change, and executes only after your approval — every run ends with a receipt, and every journaled setting change gets a restore path with an honest verdict.
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
-3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
+3. **Control from any screen.** Phone, watch, TV, a second PC, or the verified ESP32 P1 port all act as real control points over the same fabric: pair once, then command any device from any device (further P1 ports planned, not claimed).
 
-Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (28 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
+Don't take our word for it — check the proof: [evidence registry](docs/DEVICE_EVIDENCE.json) (29 verified rows) · [device matrix](docs/HARDWARE_TEST_MATRIX.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [evidence ledger](EVIDENCE_LEDGER.md).
 
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_START -->
 ## About the developer
@@ -88,7 +88,7 @@ The runtime language-model intelligence uses **Meta models only**. Development-t
 
 ### Event-built evidence (30 Oct, main `4299343`)
 
-Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.12.0 with LAN self-advertisement on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (found over Wi-Fi with no adb address); native QUICK CONTROLS + long-press loop on the real Watch7 ([G04 proof](docs/evidence/g04-watch-30oct.md)); `openbridge` CLI with GUI parity + jury pack; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Meta-planned quiet-mode pair on real TV + vacuum ([S4 proof](docs/evidence/s4-quiet-mode-31oct.md)); Meta-generated vacuum panel on real TV with hold-press + revoke proof ([S5 proof](docs/evidence/s5-tv-panel-31oct.md)). Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (28 VERIFIED rows).
+Sealed held-out skill synthesis on a real TV ([REVEAL](docs/evidence/v4/g3-sealed/attempt3_SUCCESS/REVEAL.md), 2 KILLs retained); Companion 0.12.0 with LAN self-advertisement on [device:phone-companion-01], [device:tv-companion-01] and [device:watch-sm-l310-01] (found over Wi-Fi with no adb address); native QUICK CONTROLS + long-press loop on the real Watch7 ([G04 proof](docs/evidence/g04-watch-30oct.md)); `openbridge` CLI with GUI parity + jury pack; [device:pc2-windows-agent] binary swap hash-verified; [device:vacuum-tuya-01] facts + seek beep; [device:freebox-delta-01] leases + inventory; agent protocol on [device:vm-deb12-01], [device:vm-ub22-01], [device:vm-arm64-01]; legacy agent on XP SP3 + Win7 SP1 QEMU guests (VMs deleted, trace kept); [device:phone-s7-media-01] live capture/send/montage; [device:avd-ob-pixel-01] official emulator adb proof. Meta-planned quiet-mode pair on real TV + vacuum ([S4 proof](docs/evidence/s4-quiet-mode-31oct.md)); Meta-generated vacuum panel on real TV with hold-press + revoke proof ([S5 proof](docs/evidence/s5-tv-panel-31oct.md)); background relay alive on a real phone with the screen off + toggle regression 8/8 (row 29). Full list in the [device registry](docs/DEVICE_EVIDENCE.json) (29 VERIFIED rows).
 <!-- OPENBRIDGE_HACKATHON_PRESENTATION_END -->
 
 ## The problem
@@ -124,6 +124,8 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 | Android permission states measured + grant flow re-verified live | §10 merged `f1c460c`; 13-entry catalog on BV9300 |
 | Multi-device screenshots routed + combined via DAG workflows | [Live USB proof](docs/evidence/s7-live-usb-30oct.md) (1080×2388 capture, hash-identical send, 2160×2388 montage) |
 | Official Android emulator driven via adb (capture/probe/send + cleanup) | [AVD proof](docs/evidence/avd-ob-pixel-30oct.md) (level 4, no companion installed) |
+| Companion background relay on a real phone: signed channel alive with activity closed + screen off, toggle stop/start, regression 8/8 | [Registry row 29](docs/DEVICE_EVIDENCE.json) (`companion-0.12.0-background-relay-hardware`; `scripts/verify/companion_toggle_check.py`) |
+| Clean-room install from the release ZIP on hosted Windows/Linux/macOS incl. ARM64 + Debian container | 8/8 checks on all 7 targets ([run 41210900996](https://github.com/toskaman/openbridge/actions/runs/41210900996); env manifests + install logs + browser captures per OS) |
 
 Status vocabulary and everything not verified: [HARDWARE_TEST_MATRIX](docs/HARDWARE_TEST_MATRIX.md), [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md).
 
@@ -150,10 +152,10 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 
 ## What's new (31 Oct 2026)
 - **Structured refusal channel (§9)**: every refused press lands in history with a server-composed reason, served by `/api/v2/remote_controls` + events and rendered red in the Activity timeline (TDD 3/3, no device free text — see the [overnight report](docs/jury/OVERNIGHT_REPORT_31OCT.md) §B).
-- **Companion background relay (source)**: foreground service keeps pairing/controls/polls alive with the screen off (owner toggle, persistent notification); javac-verified against android-34 — APK + on-device run pending.
+- **Companion background relay, proven on real hardware**: foreground service keeps the signed relay alive with the activity closed and the screen off (owner toggle, persistent notification); pairing AEAD + live BLE scans + toggle regression 8/8 on a physical phone (registry row 29).
 - **Frozen 50-turn local eval**: identical inputs, same rubric — rules 0/50, Llama 3.2 3B 4/50 + 44 clarifications, Glimmer arm OOM-blocked on the host (diagnosed, $0) ([scorecard](docs/benchmark/EVAL_SUBSET_50_LOCAL.md)).
 - **QUICKSTART + clean-install 8/8** in an isolated third-party-free venv ([guide](docs/QUICKSTART.md)); S5/S6 physical runbooks + read-only preflight gate (PARTIAL: TV + vacuum live, watch asleep); final 180 s one-story board; source-backed compliance checklist.
-- Full suite 1223 green locally + CI green (Windows/Ubuntu/macOS unit + browser incl. WebKit); jury pack rebuilt + VERIFY OK.
+- Full suite 1245 green locally + CI green (Windows/Ubuntu/macOS unit + browser incl. WebKit); clean-room install 8/8 on hosted Windows/Linux/macOS incl. ARM64 + Debian container (run 41210900996); jury pack rebuilt + VERIFY OK.
 
 ## What's new (30 Oct 2026)
 - **Companion 0.12.0 everywhere**: LAN self-advertisement (mDNS NSD + QU-bit browse + `companion_lan` onboarding) — phone, TV and Watch7 found over Wi-Fi with no adb address (registry row 25); watch UI rescaled (stacked header, single-column LIVE tiles, roomier input).
@@ -210,7 +212,7 @@ Evidence for every item: `EVIDENCE_LEDGER.md` and `docs/HARDWARE_TEST_MATRIX.md`
 Claim-by-claim evidence: [docs/jury/CLAIM_EVIDENCE_MATRIX.md](docs/jury/CLAIM_EVIDENCE_MATRIX.md).
 
 ## Run it
-Requirements: Windows or Linux, Python 3.14 (no third-party runtime packages), Android platform-tools for ADB. Optional: Ollama for local Meta models, `bleak` for PC Bluetooth.
+Requirements: Windows, Linux or macOS (x64 + ARM64 both installed clean-room 8/8), Python 3.14 (no third-party runtime packages), Android platform-tools for ADB. Optional: Ollama for local Meta models, `bleak` for PC Bluetooth.
 
 ```powershell
 git clone https://github.com/toskaman/openbridge.git
