@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 DOCS = [('README.md', 'README.md'),
+        ('docs/QUICKSTART.md', 'QUICKSTART.md'),
         ('docs/jury/CLAIM_EVIDENCE_MATRIX.md', 'CLAIM_MATRIX.md'),
         ('docs/HARDWARE_TEST_MATRIX.md', 'HARDWARE_COMPATIBILITY.md'),
         ('docs/CLI_REFERENCE.md', 'CLI_REFERENCE.md'),
