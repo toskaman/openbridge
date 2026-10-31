@@ -111,18 +111,31 @@ def emit_install_plan(patch, manifests, target_device_fp, profile_id,
     return plan, needed
 
 
-def build_ui_prompt(intent_text, devices, primitive_ids):
+def build_ui_prompt(intent_text, devices, primitive_ids, hints=None):
     """Prompt offered to the Meta model at runtime (offline-built, deterministic)."""
     lines = ['UI_DRAFT v1. Intent: %s.' % (intent_text.strip()[:200]),
              'Widgets allowed: text|button|status. Reply with exactly one JSON patch:',
              '{"schema_version": %d, "patch_id": "<id>", "target_opaque_id": "<opaque device id>", '
              '"origin": "meta_generated", "model_run_id": "<run>", "widgets": '
-             '[{"widget_id": "<id>", "kind": "text|button|status", "label": "<=80 chars>", '
-             '"binding_primitive": "<one of the Primitives>", "params": {scalars only}}]}.' % S.SCHEMA_VERSION,
-             'Primitives: %s.' % ','.join(sorted(primitive_ids)),
-             'Devices:']
+             '[{"widget_id": "<id>", "kind": "button", "label": "<=80 chars>", '
+             '"binding_primitive": "<one of the Primitives>", "params": {match its hint}}]}.' % S.SCHEMA_VERSION,
+             'Primitives (binding_primitive must be one of these; params must match its hint exactly, no extra keys):']
+    for pid in sorted(primitive_ids or ()):
+        hint = (hints or {}).get(pid, '')
+        lines.append('- %s %s' % (pid, hint))
+    lines.append('Devices:')
     for d in devices or []:
-        lines.append('- %s (%s)' % (d.get('label', '?'), d.get('category', '?')))
-    lines.append('Copy every id character-for-character. Refuse (no JSON) when the request '
-                 'needs a widget kind, primitive or device not listed above.')
+        line = '- %s (%s)' % (d.get('label', '?'), d.get('category', '?'))
+        if d.get('opaque_id'):
+            line += ' id %s' % (d['opaque_id'],)
+        lines.append(line)
+    lines.append('Copy every id character-for-character, including the opaque: prefix. '
+                 'Compose 2 to 4 buttons covering the request. '
+                 'Example (shape only, not the answer): {"schema_version": 1, "patch_id": "p-ex", '
+                 '"target_opaque_id": "opaque:<copy-from-Devices-list>", '
+                 '"origin": "meta_generated", "model_run_id": "mr-ex", "widgets": '
+                 '[{"widget_id": "w-1", "kind": "button", "label": "Volume down", '
+                 '"binding_primitive": "tv_volume_step", "params": {"direction": "down"}}]}. '
+                 'Refuse (no JSON) when the request needs a widget kind, primitive or '
+                 'device not listed above.')
     return '\n'.join(lines)

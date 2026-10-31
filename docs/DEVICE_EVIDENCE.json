@@ -825,5 +825,42 @@
   ],
   "companion_version": "n/a (ADB + Tuya LAN)",
   "os_version": "Android TV 11 (SDK 30) / Tuya firmware 3.4"
+ },
+ {
+  "commit_sha": "ec68aa1a9b63d0f20b0cad9f7f331b8b836663d9",
+  "companion_version": "0.12.0 (TV)",
+  "device_alias": "Android TV + Tuya robot vacuum (generated-panel pair)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/s5-tv-panel-31oct.md",
+   "artifacts/s5-tv-panel-31oct/chain-transcript.json"
+  ],
+  "independent_oracle": "TV screenshot OCR of the rendered panel plus press-history receipt plus tinytuya LAN status re-read after the dock command",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "Press injected via adb long-press at the OCR-located button, not a manual tap (identical pipeline otherwise)",
+   "Vacuum already docked: dock motion neither occurred nor observed; dispatch VERIFIED, read-back only",
+   "Device full-control flag off, so the server-initiated invoke path stayed unexercised by design",
+   "Single end-to-end scenario (n=1); frozen T2/T3 scored offline from the same build"
+  ],
+  "operations": [
+   "Muse Glimmer 30B local panel accepted by strict UI validator (4 buttons incl dock, consent-adjacent install)",
+   "fresh Companion pairing on the TV relay (code via on-device OCR, aead1, remote_controls declared)",
+   "4/4 model-generated controls installed via set_controls round-trip and rendered on the TV (OCR-verified)",
+   "hold-press on Dock vacuum executed the full last mile, VERIFIED receipt tx-ab731d7b885b5e1a",
+   "vacuum dock dispatched over Tuya LAN, pre/post re-read stable charge_done 100pct",
+   "revoke cleared all grants; next press denied with the exact no-longer-authorized error",
+   "temporary pairing forgotten via relay_revoke VERIFIED; low-tier FAIL and T3 substitution FAIL preserved"
+  ],
+  "os_version": "Android TV 11 (SDK 30) / Tuya firmware 3.4",
+  "permissions": [
+   "owner-linked Tuya local key (existing config, never logged)",
+   "blanket owner test authorization for benign commands"
+  ],
+  "platform": "Android TV 11 + Tuya local robot",
+  "public_device_id": "tv-vacuum-s5-01",
+  "status": "VERIFIED",
+  "test_id": "s5-tv-panel-31oct",
+  "test_utc": "2026-10-31T01:15:39Z"
  }
 ]

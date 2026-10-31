@@ -898,6 +898,149 @@ def cmd_capabilities_revoke(args):
     return {'id': path.stem, 'state': 'revoked'}
 
 
+# ---------------- dashboards (model-generated panels) ----------------
+
+def _ui_bindable():
+    from src.runtime.dashboards import BINDABLE_PATCH_SKILLS
+    return BINDABLE_PATCH_SKILLS
+
+
+def cmd_dashboards_propose(args):
+    """Ask a pinned local Meta model to draft a control-panel patch.
+
+    Read-only: discovery + inference + strict validation. Nothing is
+    installed; install takes the saved patch file with explicit consent."""
+    from src.forge import v4_uidraft, v4_ui
+    from src.runtime import nl_plan, nl_router
+    text = getattr(args, 'text', '') or ''
+    if not text.strip():
+        raise CliError('args', 'MISSING_INPUT', 'propose needs intent text.')
+    model_id = getattr(args, 'model', None) or nl_router.TIERS['low'][0]
+    endpoint = next((ep for mid, ep in nl_router.TIERS.values() if mid == model_id), None)
+    if endpoint is None or endpoint.startswith('https://'):
+        raise CliError('args', 'MODEL_NOT_PINNED',
+                       'propose needs a pinned local Meta model (low/medium tier)')
+    bindable = _ui_bindable()
+    with Core() as server:
+        snap = ensure_discovery(server, default_providers(args))
+    devices = snap.get('devices', []) if isinstance(snap, dict) else []
+    bundle = build_bundle(devices, list(bindable))
+    prompt_devices = [{'label': row.get('label', '?'), 'category': bdev['category'],
+                       'opaque_id': bdev['opaque_id']}
+                      for row, bdev in zip(devices, bundle['devices'])]
+    from src.runtime.routing import SKILLS
+    hints = {sid: nl_plan.param_hint(SKILLS[sid].get('input'))
+             for sid in bindable if sid in SKILLS}
+    prompt = v4_uidraft.build_ui_prompt(text, prompt_devices, bindable, hints=hints)
+    ui_options = {'num_ctx': 4096, 'num_predict': 1024}
+    if model_id == nl_router.TIERS['medium'][0]:
+        # Pinned partial offload: full offload dies allocating a 3.7GB
+        # pinned CUDA_Host buffer (01:34 + 01:40 500s); num_gpu=28 loads in
+        # 21s on this host (14.9GB VRAM free, no lock-memory privilege).
+        ui_options['num_gpu'] = 28
+    transport = nl_plan.local_chat(model_id, endpoint,
+                                   timeout=getattr(args, 'timeout', None) or 600,
+                                   format=v4_ui.UI_PATCH_JSON_SCHEMA,
+                                   options=ui_options)
+    try:
+        res = transport(prompt)
+    except nl_plan.TransportError as e:
+        raise CliError('inference', 'MODEL_UNAVAILABLE', str(e)[:200]) from None
+    reply = res.get('content', '') if isinstance(res, dict) else res
+    try:
+        doc, _ = extract_json(reply)
+        patch = v4_ui.validate_patch(doc, bindable)
+    except (ValueError, v4_ui.UIError) as e:
+        raise CliError('inference', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
+    offered = [d['opaque_id'] for d in bundle['devices']]
+    # Prompt-time label map: opaque ids salt rotating discovery keys, so the
+    # patch-target label is unrecoverable later without this record.
+    return {'patch': patch, 'offered_opaque_ids': offered,
+            'devices': prompt_devices,
+            'primitives': sorted(bindable),
+            'model_run': {'model_id': model_id, 'endpoint': endpoint,
+                          'reply_sha256': hashlib.sha256(reply.encode()).hexdigest()},
+            'prompt_chars': len(prompt)}
+
+
+def _load_ui_patch_file(spec_file):
+    if not spec_file:
+        raise CliError('args', 'MISSING_INPUT', 'install needs --patch panel.json.')
+    try:
+        doc = json.loads(Path(spec_file).read_text(encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'SPEC_UNREADABLE', 'Cannot read patch: %s' % e)
+    if not isinstance(doc, dict) or not isinstance(doc.get('patch'), dict):
+        raise CliError('args', 'SPEC_INVALID', 'Patch file must hold a {patch, offered_opaque_ids} object.')
+    return doc
+
+
+def cmd_dashboards_install(args):
+    """Install a proposed panel on a Companion relay (consent-bound).
+
+    Re-validates the patch, checks the patch target was an id actually
+    offered at propose time (anti-hallucination), then installs through
+    the trusted set_controls path with the owner-supplied target label
+    resolved to the live device key at dispatch time."""
+    from src.forge import v4_ui
+    from src.runtime import api_v2
+    from src.runtime import dashboards as D
+    from src.runtime.remote_controls import RemoteControlError
+    doc = _load_ui_patch_file(getattr(args, 'patch', None))
+    bindable = _ui_bindable()
+    try:
+        patch = v4_ui.validate_patch(doc['patch'], bindable)
+    except v4_ui.UIError as e:
+        raise CliError('inference', 'PATCH_REJECTED', 'Panel failed validation: %s' % (e,)) from None
+    offered = doc.get('offered_opaque_ids') or []
+    if patch.get('target_opaque_id') not in offered:
+        raise CliError('verify', 'PATCH_TARGET_UNKNOWN',
+                       'Patch target %r was not an id offered at propose time.' % (patch.get('target_opaque_id'),))
+    rid = getattr(args, 'relay', '') or ''
+    target = getattr(args, 'target', '') or ''
+    if not rid or not target:
+        raise CliError('args', 'MISSING_INPUT', 'install needs --relay RID and --target label.')
+    preview_controls = [{'label': w['label'], 'skill_id': w['binding_primitive'],
+                         'params': w['params']} for w in patch['widgets']]
+    preview = {'relay_id': rid, 'target': target, 'controls': preview_controls}
+    require_consent(args, preview_hash(preview), 'dashboards install on %s' % rid)
+    with Core() as server:
+        ensure_discovery(server, default_providers(args))
+        controls = api_v2.remote_controls(server)
+        router = api_v2.router(server)
+        try:
+            state = D.install_patch(controls, rid, patch, target, bindable,
+                                    consent=True, resolve_target=router.resolve_target)
+        except D.DashboardError as e:
+            raise CliError('inference', 'PATCH_REJECTED', str(e)[:200]) from None
+        except RemoteControlError as e:
+            raise CliError('device', 'INSTALL_FAILED', str(e)[:200]) from None
+    return {'relay_id': rid, 'target': target, 'controls': preview_controls, 'state': state}
+
+
+def cmd_dashboards_revoke(args):
+    """Revoke every control on a relay (consent-bound); later presses are denied."""
+    from src.runtime import api_v2
+    from src.runtime.remote_controls import RemoteControlError
+    rid = getattr(args, 'relay', '') or ''
+    if not rid:
+        raise CliError('args', 'MISSING_INPUT', 'revoke needs --relay RID.')
+    preview = {'relay_id': rid, 'action': 'revoke-all'}
+    require_consent(args, preview_hash(preview), 'dashboards revoke %s' % rid)
+    with Core() as server:
+        if hasattr(server, 'restore_relays'):
+            try:
+                server.restore_relays()
+            except Exception:
+                pass
+        controls = api_v2.remote_controls(server)
+        try:
+            state = controls.set_controls({'relay_id': rid, 'controls': [], 'consent': True})
+        except RemoteControlError as e:
+            raise CliError('device', 'REVOKE_FAILED', str(e)[:200]) from None
+    return {'relay_id': rid, 'revoked': True, 'state': state}
+
+
 # ---------------- workflows ----------------
 
 def workflow_store():
@@ -959,7 +1102,7 @@ def _plan_from_text(args, text):
     try:
         res = nl_plan.plan(text, devices, transport)
     except nl_plan.PlanError as e:
-        raise CliError('plan', 'PLAN_REJECTED', str(e)[:300])
+        raise CliError('inference', 'PLAN_REJECTED', str(e)[:300])
     res['spec']['workflow_id'] = 'wf-%s' % hashlib.sha256(text.encode()).hexdigest()[:12]
     return res['spec'], dict(res['model_run'], reply_sha256=res['reply_sha256'])
 
@@ -1474,6 +1617,17 @@ def build_parser():
     cap_publish.add_argument('capability_id')
     cap_revoke = leaf(cap_subs, 'revoke', cmd_capabilities_revoke, 'capabilities revoke')
     cap_revoke.add_argument('capability_id')
+
+    dash = subs.add_parser('dashboards')
+    dash_subs = dash.add_subparsers(dest='dashboards_command')
+    dash_propose = leaf(dash_subs, 'propose', cmd_dashboards_propose, 'dashboards propose')
+    dash_propose.add_argument('text', nargs='?')
+    dash_install = leaf(dash_subs, 'install', cmd_dashboards_install, 'dashboards install')
+    dash_install.add_argument('--patch', default=None)
+    dash_install.add_argument('--relay', default=None)
+    dash_install.add_argument('--target', default=None)
+    dash_revoke = leaf(dash_subs, 'revoke', cmd_dashboards_revoke, 'dashboards revoke')
+    dash_revoke.add_argument('--relay', default=None)
 
     flows = subs.add_parser('workflows')
     flow_subs = flows.add_subparsers(dest='workflows_command')

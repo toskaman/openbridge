@@ -5,6 +5,22 @@ WIDGET_KINDS = {'text', 'button', 'status'}
 WIDGET_KEYS = {'widget_id', 'kind', 'label', 'binding_primitive', 'params'}
 PATCH_KEYS = {'schema_version', 'patch_id', 'target_opaque_id', 'origin', 'model_run_id', 'widgets'}
 
+# Ollama structured-output constraint (shape only; validate_patch re-checks
+# every value deterministically).
+UI_PATCH_JSON_SCHEMA = {'type': 'object',
+    'required': ['schema_version', 'patch_id', 'target_opaque_id', 'origin',
+                 'model_run_id', 'widgets'],
+    'properties': {'schema_version': {'type': 'integer'}, 'patch_id': {'type': 'string'},
+                   'target_opaque_id': {'type': 'string'}, 'origin': {'type': 'string'},
+                   'model_run_id': {'type': 'string'},
+                   'widgets': {'type': 'array', 'minItems': 1,
+                       'items': {'type': 'object',
+                           'required': ['widget_id', 'kind', 'label', 'binding_primitive', 'params'],
+                           'properties': {'widget_id': {'type': 'string'}, 'kind': {'type': 'string'},
+                                          'label': {'type': 'string'},
+                                          'binding_primitive': {'type': 'string'},
+                                          'params': {'type': 'object'}}}}}}
+
 
 class UIError(ValueError):
     pass

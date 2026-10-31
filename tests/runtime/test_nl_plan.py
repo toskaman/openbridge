@@ -127,6 +127,61 @@ class TransportTest(unittest.TestCase):
         self.assertIn('format', seen)
         self.assertEqual(seen['format']['type'], 'object')
 
+    def test_local_chat_forwards_custom_format(self):
+        seen = {}
+
+        def fake_chat(payload):
+            seen.update(payload)
+            return {'model': 'llama3.2:3b-instruct-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': REPLY}}
+
+        custom = {'type': 'object', 'required': ['widgets']}
+        t = nl_plan.local_chat('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437',
+                               chat=fake_chat, format=custom)
+        t('prompt')
+        self.assertEqual(seen['format'], custom)
+
+    def test_local_chat_merges_options_over_temp_zero_default(self):
+        seen = {}
+
+        def fake_chat(payload):
+            seen.update(payload)
+            return {'model': 'llama3.2:3b-instruct-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': REPLY}}
+
+        t = nl_plan.local_chat('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437',
+                               chat=fake_chat, options={'num_ctx': 4096})
+        t('prompt')
+        self.assertEqual(seen['options']['temperature'], 0)
+        self.assertEqual(seen['options']['num_ctx'], 4096)
+
+    def test_local_chat_forwards_every_caller_option_to_payload(self):
+        seen = {}
+
+        def fake_chat(payload):
+            seen.update(payload)
+            return {'model': 'llama3.2:3b-instruct-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': REPLY}}
+
+        t = nl_plan.local_chat('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437',
+                               chat=fake_chat, options={'num_predict': 512})
+        t('prompt')
+        self.assertEqual(seen['options']['num_predict'], 512)
+        self.assertEqual(seen['options']['temperature'], 0)
+
+    def test_local_chat_disables_thinking_traces(self):
+        seen = {}
+
+        def fake_chat(payload):
+            seen.update(payload)
+            return {'model': 'muse-glimmer:30b-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': REPLY}}
+
+        t = nl_plan.local_chat('muse-glimmer:30b-q4_K_M', 'http://127.0.0.1:11438',
+                               chat=fake_chat)
+        t('prompt')
+        self.assertIs(seen.get('think'), False)
+
     def test_local_chat_rejects_wrong_model_identity(self):
         def fake_chat(payload):
             return {'model': 'evil:99b', 'done': True, 'done_reason': 'stop',

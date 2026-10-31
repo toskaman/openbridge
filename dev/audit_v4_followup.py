@@ -36,7 +36,7 @@ AGENT_SOURCE_SHA256={'src/forge/v4_evidence.py': '80a483548b4aeddfdd1c9a13b68d2c
  'src/forge/v4_provenance.py': 'cc7a43fb5a3f2c4f3ae71f09b0a6c5945c0d5bfc50e519a694bc48f72e69cf6d',
  'src/forge/v4_schemas.py': 'e62482d4cd8f563234ad17679be9b1c51e464e3c106087f3153d25f89973a5bd',
  'src/forge/v4_synthesize.py': '0062b163c998dd58122e989e73907ddcf91be9f23107e80832d83a06156017a6',
- 'src/forge/v4_ui.py': '0f78184d14e427757b03effc14b6ff626bbfd3c325487e1695978e0ca7fe5b7c',
+ 'src/forge/v4_ui.py': '0c0aad50b65135749fd5712dcb1a45bd9408c7d79cdbb4942dbb1bb02689d798',
  'src/forge/v4_workflow.py': 'b06c3b533629b91b1690ff0470421fb1332070641e7a869cefbd8c7207464cf2'}
 SCHEMA_HELPER_SHA256='8d6c122f32e2c0bcc0961345147dbe5c186747f4786c83c34876a81dc60718f9'
 

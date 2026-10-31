@@ -97,6 +97,74 @@ class Dashboards(unittest.TestCase):
         with self.assertRaises(D.DashboardError):
             D.load(self.store, self.rc, 'ghost')
 
+    def _patch(self, widgets, opaque='opaque:abc123'):
+        return {'schema_version': 1, 'patch_id': 'p-1', 'target_opaque_id': opaque,
+                'origin': 'meta_generated', 'model_run_id': 'mr-1', 'widgets': widgets}
+
+    def _button(self, label='Return to dock', binding='vacuum_command', params=None, wid='w-1'):
+        return {'widget_id': wid, 'kind': 'button', 'label': label,
+                'binding_primitive': binding, 'params': dict(params or {'command': 'dock'})}
+
+    def test_valid_patch_installs_buttons(self):
+        D.install_patch(self.rc, 'r-watch', self._patch([self._button()]),
+                        'vacuum-key', D.BINDABLE_PATCH_SKILLS)
+        self.assertEqual(self.labels(), ['Return to dock'])
+        (grant,) = self.rc.grants['r-watch'].values()
+        self.assertEqual((grant['skill_id'], grant['target'], grant['params']),
+                         ('vacuum_command', 'vacuum-key', {'command': 'dock'}))
+
+    def test_text_widget_refused(self):
+        w = self._button()
+        w['kind'] = 'text'
+        with self.assertRaises(D.DashboardError):
+            D.install_patch(self.rc, 'r-watch', self._patch([w]),
+                            'vacuum-key', D.BINDABLE_PATCH_SKILLS)
+        self.assertEqual(self.labels(), [])
+
+    def test_unknown_binding_refused(self):
+        with self.assertRaises(D.DashboardError):
+            D.install_patch(self.rc, 'r-watch',
+                            self._patch([self._button(binding='shell_exec')]),
+                            'vacuum-key', D.BINDABLE_PATCH_SKILLS)
+
+    def test_exec_skill_never_bindable_even_if_offered(self):
+        offered = tuple(D.BINDABLE_PATCH_SKILLS) + ('pc_run',)
+        with self.assertRaises(D.DashboardError):
+            D.install_patch(self.rc, 'r-watch',
+                            self._patch([self._button(label='Run it', binding='pc_run',
+                                                    params={'command': 'x'})]),
+                            'pc-key', offered)
+
+    def test_bindable_set_excludes_exec_skills(self):
+        self.assertIn('vacuum_command', D.BINDABLE_PATCH_SKILLS)
+        self.assertIn('tv_volume_step', D.BINDABLE_PATCH_SKILLS)
+        self.assertNotIn('pc_run', D.BINDABLE_PATCH_SKILLS)
+
+    def test_long_label_refused(self):
+        with self.assertRaises(D.DashboardError):
+            D.install_patch(self.rc, 'r-watch',
+                            self._patch([self._button(label='x' * 41)]),
+                            'vacuum-key', D.BINDABLE_PATCH_SKILLS)
+
+    def test_consent_required(self):
+        with self.assertRaises(D.DashboardError):
+            D.install_patch(self.rc, 'r-watch', self._patch([self._button()]),
+                            'vacuum-key', D.BINDABLE_PATCH_SKILLS, consent=False)
+        self.assertEqual(self.labels(), [])
+
+    def test_target_resolved_before_install(self):
+        D.install_patch(self.rc, 'r-watch', self._patch([self._button()]),
+                        'Robot vacuum (Tuya)', D.BINDABLE_PATCH_SKILLS,
+                        resolve_target=lambda t: 'dev-live-vac')
+        (grant,) = self.rc.grants['r-watch'].values()
+        self.assertEqual(grant['target'], 'dev-live-vac')
+
+    def test_bad_params_fail_loudly_at_set_controls(self):
+        with self.assertRaises(RemoteControlError):
+            D.install_patch(self.rc, 'r-watch',
+                            self._patch([self._button(params={'command': 'fly'})]),
+                            'vacuum-key', D.BINDABLE_PATCH_SKILLS)
+
     def test_restore_on_reconnect_reinstalls_last(self):
         D.create(self.rc, 'r-watch', 'vacuum', 'vacuum-key')
         self.store.save('r-watch', 'evening', D.defs(self.rc, 'r-watch'))

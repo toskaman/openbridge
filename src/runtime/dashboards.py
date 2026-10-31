@@ -12,9 +12,67 @@ import re
 _NAME = re.compile(r'[A-Za-z0-9_-]{1,32}')
 MAX_SAVED = 32
 
+# Exec-class skills are never one-tap panel buttons: they need the
+# interactive approval path every time. Generated panels bind typed
+# skills only; the forge validator + set_controls schema checks still apply.
+NEVER_BIND = frozenset({'pc_run'})
+
+
+def _bindable():
+    from src.runtime.routing import SKILLS
+    return tuple(s for s in SKILLS if s not in NEVER_BIND)
+
+
+BINDABLE_PATCH_SKILLS = _bindable()
+
 
 class DashboardError(ValueError):
     pass
+
+
+def install_patch(controls, relay_id, patch, target, bindable_skills,
+                  consent=True, resolve_target=None):
+    """Install a model-generated UI patch as the relay's control set.
+
+    patch must already have passed v4_ui.validate_patch (the CLI enforces
+    it); this layer re-checks the install-relevant subset: buttons only,
+    bindings in the offered allowlist AND the bindable set, labels within
+    Companion limits, scalar params. skill params are schema-checked again
+    by set_controls. target is resolved to the live device key when a
+    resolver is given (keys rotate every discovery).
+    """
+    if consent is not True:
+        raise DashboardError('consent: true is required')
+    widgets = patch.get('widgets') if isinstance(patch, dict) else None
+    if not isinstance(widgets, list) or not widgets:
+        raise DashboardError('patch carries no widgets')
+    if not isinstance(target, str) or not target:
+        raise DashboardError('a target device label or key is required')
+    allowed = set(bindable_skills or ()) - set(NEVER_BIND)
+    defs = []
+    for w in widgets:
+        if not isinstance(w, dict):
+            raise DashboardError('bad widget (not an object)')
+        if w.get('kind') != 'button':
+            raise DashboardError(
+                'only button widgets install on the skill-bound path: %r' % (w.get('widget_id'),))
+        binding = w.get('binding_primitive')
+        if binding not in allowed:
+            raise DashboardError('binding %r is not an offered bindable skill' % (binding,))
+        label = w.get('label')
+        if not isinstance(label, str) or not 0 < len(label) <= 40:
+            raise DashboardError('label must be 1-40 characters: %r' % (w.get('widget_id'),))
+        params = w.get('params')
+        if not isinstance(params, dict) or \
+                any(not isinstance(v, (str, int, float, bool)) for v in params.values()):
+            raise DashboardError('params must be scalar-only: %r' % (w.get('widget_id'),))
+        defs.append({'label': label, 'skill_id': binding, 'target': target,
+                     'params': dict(params)})
+    if callable(resolve_target):
+        live = resolve_target(target)
+        for c in defs:
+            c['target'] = live
+    return controls.set_controls({'relay_id': relay_id, 'controls': defs, 'consent': True})
 
 
 def _vacuum(target):

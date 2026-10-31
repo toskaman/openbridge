@@ -40,6 +40,11 @@ def _param_hint(schema):
     return '{%s}' % ', '.join(bits)
 
 
+def param_hint(schema):
+    """Public param-shape hint for prompt builders (S4 + S5 share it)."""
+    return _param_hint(schema)
+
+
 def build_prompt(text, devices):
     """Strict planning prompt: labels + categories only, never device keys."""
     from src.runtime.routing import SKILLS
@@ -126,14 +131,21 @@ def plan_from_reply(reply, devices):
     return {'consent': True, 'steps': out}
 
 
-def local_chat(model_id, endpoint, timeout=180, chat=None):
+def local_chat(model_id, endpoint, timeout=180, chat=None, format=None, options=None):
     """Pinned local Meta chat transport, mirroring nl_router's identity/shape checks."""
     from src.ai.local_meta import local_request
     send = chat or (lambda payload: local_request('/api/chat', payload, endpoint=endpoint, timeout=timeout))
+    run_options = {'temperature': 0}
+    run_options.update(options or {})
 
     def run(prompt):
-        payload = {'model': model_id, 'stream': False, 'format': PLAN_JSON_SCHEMA,
-                   'keep_alive': '10m', 'options': {'temperature': 0, 'num_ctx': 4096},
+        # think=False: thinking models (Glimmer) would otherwise burn the
+        # whole token budget on an unconstrained thinking trace and return
+        # empty content (done_reason=length, eval=cap). Ignored by
+        # non-thinking models. Same precedent as the tier probe payload.
+        payload = {'model': model_id, 'stream': False, 'think': False,
+                   'format': format or PLAN_JSON_SCHEMA,
+                   'options': run_options, 'keep_alive': '10m',
                    'messages': [{'role': 'system', 'content':
                                  'Reply in English only as compact JSON matching the schema.'},
                                 {'role': 'user', 'content': prompt}]}

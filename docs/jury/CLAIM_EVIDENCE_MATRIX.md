@@ -48,6 +48,8 @@ Every public claim, its status and where to check it. A claim without evidence i
 | Native controls on real Watch7 + long-press loop; TV 0.11.0 PAIRED | REAL_HARDWARE_VERIFIED (SM-L310 + Android TV) | docs/evidence/g04-watch-30oct.md (registry rows 22-23, G04 PASS) |
 | Phone 0.11.0 PAIRED READY + relay probe | REAL_HARDWARE_VERIFIED (BV9300) | docs/evidence/g04-watch-30oct.md (registry row 24) |
 | Companion found over Wi-Fi with no adb address (QU-bit browse + NSD) | REAL_HARDWARE_VERIFIED (SM-L310, adb disconnected) | docs/evidence/companion-lan-discovery-30oct.md (registry row 25) |
+| Meta-planned quiet-mode pair: Llama 3.2 3B plan validated + consented, TV volume 22→21 adb read-back, vacuum dock dispatched + acked | REAL_HARDWARE_VERIFIED (vacuum EXECUTED with stable read-back, motion not observed) | docs/evidence/s4-quiet-mode-31oct.md (registry row 27) |
+| Meta-generated vacuum panel on TV: Glimmer 30B proposal, 4/4 buttons bound + OCR-render-verified, hold-press executed from panel, revoke→deny | REAL_HARDWARE_VERIFIED (dock already charge_done 100pct so motion unobservable; tap adb-injected, pipeline identical) | docs/evidence/s5-tv-panel-31oct.md (registry row 28, S5 T1 FULL PASS) |
 | Paid Meta cloud end-to-end | BLOCKED (no key, no spend order) | preflight + budget guard unit-tested; $0 spent |
 
 ## Never claimed
