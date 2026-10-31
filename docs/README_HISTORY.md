@@ -66,6 +66,17 @@ The digest is verified before every call; unknown or retagged models fail closed
 
 Llama 3.2 is licensed under the Llama 3.2 Community License, Copyright © Meta Platforms, Inc. Model weights are not included in this repository.
 
+## README as of 31 Oct 2026 (pre-redesign snapshot)
+
+The full 35 KB README (detailed capability table, What's-new changelog 27–31 Oct,
+V4 status table, bonus-award table) is preserved byte-identical in
+[archive/README_2026-10-31.md](archive/README_2026-10-31.md) — note its inner
+links are root-relative and resolve at repo root, not in-place. It was superseded
+by the focused jury presentation rewrite on branch
+`feat/jury-presentation-redesign`. Counts and statuses in the snapshot are
+historical; current truth lives in [RELEASE_STATUS.md](RELEASE_STATUS.md) and
+[DEVICE_EVIDENCE.json](DEVICE_EVIDENCE.json).
+
 ## Physical change and Undo — verified
 
 The isolated verifier `python -m dev.physical_package_smoke --confirm-owned-device --package org.nixgame.ruler` disables one allowlisted optional app for Android user 0, verifies it, then restores the exact original enabled-state code. One real run on an owned phone passed: default -> disabled-user -> default, independently confirmed with dumpsys. See [receipt](../docs/physical-package-receipt.json). The browser remains physically read-only for now.

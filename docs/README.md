@@ -5,7 +5,10 @@ Start with [project overview and setup](../README.md). Current instructions and 
 | Need | Read |
 |---|---|
 | Delivery and next tasks | [Release status and remaining work](RELEASE_STATUS.md) |
-| Proof | [Evidence index](RELEASE_EVIDENCE.md), [chronological ledger](../EVIDENCE_LEDGER.md), [hardware matrix](HARDWARE_TEST_MATRIX.md) |
+| First run | [Quickstart](QUICKSTART.md) |
+| Demo for judges | [Jury start here](jury/JURY_START_HERE.md), [showcase page](showcase/index.html), [final storyboard](jury/DEMO_STORYBOARD_FINAL.md), [physical runbook](jury/DEMO_PHYSICAL_RUNBOOK.md) |
+| Architecture | [Universal device architecture](UNIVERSAL_DEVICE_ARCHITECTURE.md) |
+| Proof | [Evidence index](RELEASE_EVIDENCE.md), [chronological ledger](../EVIDENCE_LEDGER.md), [hardware matrix](HARDWARE_TEST_MATRIX.md), [claim ↔ evidence matrix](jury/CLAIM_EVIDENCE_MATRIX.md) |
 | Scope and risks | [Known limitations](KNOWN_LIMITATIONS.md), [device scope](../DEVICE_SCOPE.md), [risk register](../RISK_REGISTER.md) |
 | API and contracts | [HTTP API](api/HTTP.md), [runtime contract](coordination/DEVICE_CAPABILITY_CONTRACT_V1.md), [routing contract](contracts/B2_SKILL_ROUTING_CONTRACT.md) |
 | Forge | [Guide](forge/README.md), [publication contract](forge/VERIFIED_PUBLICATION.md), [architecture](forge/CAPABILITY_FORGE_ARCHITECTURE.md) |
