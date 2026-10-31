@@ -315,6 +315,37 @@ def http_transport(base_url, timeout=25):
     return send
 
 
+def failover_transport(urls, lan_timeout=3, timeout=25):
+    """POST JSON trying each relay URL in order. Transport errors (refused,
+    reset, timeout) move to the next URL; protocol refusals (RelayError)
+    propagate at once: a wrong key or a stale forward answering from another
+    device must never silently reroute. LAN URLs fail fast (`lan_timeout`)
+    so blackholed subnets (client isolation) fall back quickly; loopback
+    (adb forward) keeps the full `timeout`."""
+    from urllib.parse import urlsplit
+    import ipaddress
+    urls = list(urls or [])
+    if not urls:
+        raise RelayError('No relay URL')
+    for u in urls:
+        _check_scope(u)
+    sends = []
+    for u in urls:
+        ip = ipaddress.ip_address(urlsplit(u).hostname)
+        sends.append(http_transport(u, timeout=timeout if ip.is_loopback else lan_timeout))
+    def send(_relay, message):
+        last = None
+        for s in sends:
+            try:
+                return s(_relay, message)
+            except RelayError:
+                raise
+            except (OSError, TimeoutError) as e:
+                last = e
+        raise last
+    return send
+
+
 def voice_sig(key, clip_id, ts, nonce):
     """HMAC for a one-shot voice download URL. Mirrors the Companion's /voice check byte for byte."""
     return hmac.new(key, f'voice-v1|{clip_id}|{ts}|{nonce}'.encode(), hashlib.sha256).hexdigest()

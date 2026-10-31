@@ -1,7 +1,9 @@
 """Ordered relay transports: direct Wi-Fi/LAN first, adb forward last. No device."""
 import unittest
 from types import SimpleNamespace
+from unittest import mock
 from src.adapters.android import AndroidAdapter
+from src.fabric import relay as R
 def _adapter():
     def run(args, **kw):
         a = args[1:]
@@ -45,5 +47,54 @@ class RelayUrls(unittest.TestCase):
         with self.assertRaises(ValueError):
             ad.relay_urls('h-nope')
         self.assertEqual(calls, [])
+class Failover(unittest.TestCase):
+    def test_tries_in_order_first_success_wins(self):
+        seen = []
+        def fake(url, timeout=25):
+            seen.append((url, timeout))
+            def send(_r, m):
+                if url.startswith('http://127.0.0.1'):
+                    raise OSError('refused')
+                return {'ok': True}
+            return send
+        with mock.patch.object(R, 'http_transport', side_effect=fake):
+            send = R.failover_transport(['http://127.0.0.1:50111', 'http://192.168.1.14:47800'])
+            self.assertEqual(send(None, {'op': 'x'}), {'ok': True})
+        self.assertEqual([u for u, _ in seen], ['http://127.0.0.1:50111', 'http://192.168.1.14:47800'])
+    def test_lan_gets_short_timeout_loopback_gets_full(self):
+        seen = {}
+        def fake(url, timeout=25):
+            seen[url] = timeout
+            return lambda _r, m: {'ok': True}
+        with mock.patch.object(R, 'http_transport', side_effect=fake):
+            R.failover_transport(['http://192.168.1.14:47800', 'http://127.0.0.1:50111'], lan_timeout=3, timeout=25)
+        self.assertEqual(seen, {'http://192.168.1.14:47800': 3, 'http://127.0.0.1:50111': 25})
+    def test_protocol_refusal_propagates_without_failover(self):
+        calls = []
+        def fake(url, timeout=25):
+            def send(_r, m):
+                calls.append(url)
+                raise R.RelayError('Relay refused: bad envelope')
+            return send
+        with mock.patch.object(R, 'http_transport', side_effect=fake):
+            send = R.failover_transport(['http://127.0.0.1:1', 'http://127.0.0.1:2'])
+            with self.assertRaises(R.RelayError):
+                send(None, {'op': 'x'})
+        self.assertEqual(calls, ['http://127.0.0.1:1'])
+    def test_all_down_reraises_last_oserror(self):
+        def fake(url, timeout=25):
+            def send(_r, m):
+                raise OSError('down ' + url)
+            return send
+        with mock.patch.object(R, 'http_transport', side_effect=fake):
+            send = R.failover_transport(['http://127.0.0.1:1', 'http://127.0.0.1:2'])
+            with self.assertRaises(OSError):
+                send(None, {'op': 'x'})
+    def test_empty_urls_rejected(self):
+        with self.assertRaises(R.RelayError):
+            R.failover_transport([])
+    def test_out_of_scope_rejected_at_construction(self):
+        with self.assertRaises(R.RelayError):
+            R.failover_transport(['http://8.8.8.8:47800'])
 if __name__ == '__main__':
     unittest.main()
