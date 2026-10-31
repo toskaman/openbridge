@@ -67,7 +67,7 @@ jobs:
         if: always()
         with:
           name: install-evidence-${{ matrix.os }}
-          path: ${{ env.EV_DIR }}
+          path: ${{ runner.temp }}
           retention-days: 21
   debian-container:
     needs: build-pack
