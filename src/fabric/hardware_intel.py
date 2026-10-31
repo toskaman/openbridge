@@ -177,6 +177,12 @@ def pc_facts(run=None):
             with open('/proc/meminfo', encoding='utf-8') as f:
                 return parse_mem_total_gb(f.read())
         except OSError:
+            pass
+        try:
+            raw = subprocess.run(['sysctl', '-n', 'hw.memsize'], capture_output=True,
+                                 text=True, timeout=5)       # macOS has no /proc/meminfo
+            return round(int(raw.stdout.strip()) / 1024 ** 3, 1)
+        except (OSError, ValueError, subprocess.SubprocessError):
             return None
 
     ram = ram_gb()

@@ -1,4 +1,5 @@
 """Hermetic local browser checks: synthetic state, mocked missing hardware, zero model calls."""
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import threading
@@ -17,7 +18,8 @@ def main():
         url=f'http://127.0.0.1:{server.server_port}'
         try:
             with sync_playwright() as p:
-                browser=p.chromium.launch(headless=True)
+                engine=os.environ.get('OB_PLAYWRIGHT_ENGINE','chromium')
+                browser=getattr(p,engine).launch(headless=True)
                 for width in (390,768,1440,3440):
                     page=browser.new_page(viewport={'width':width,'height':1000})
                     errors=[]
