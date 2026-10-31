@@ -54,6 +54,53 @@ class Tuya(unittest.TestCase):
         with self.assertRaises(t.TuyaBlocked):
             v.undo('suction')
 
+    def test_second_change_refused_while_restore_pending(self):
+        v = vac()
+        v.set_reversible('suction', 'gentle')
+        with self.assertRaises(t.TuyaBlocked) as e:
+            v.set_reversible('suction', 'strong')
+        self.assertIn('pending restore', str(e.exception))
+        v.undo('suction')   # undo-first discipline: change works again after
+        v.set_reversible('suction', 'gentle')
+        self.assertEqual(FakeDev.dps['14'], 'gentle')
+
+    def test_restart_loses_pending_restore(self):
+        v = vac()
+        v.set_reversible('suction', 'gentle')
+        fresh = t.TuyaVacuum(LINK, device_factory=FakeDev)  # new process, same robot
+        with self.assertRaises(t.TuyaBlocked) as e:
+            fresh.undo('suction')
+        self.assertIn('nothing to undo', str(e.exception))
+
+    def test_inexact_restore_is_not_reverted(self):
+        v = vac()
+        v.set_reversible('suction', 'gentle')
+        real_status = FakeDev.status
+        FakeDev.status = lambda self: {'dps': dict(FakeDev.dps, **{'14': 'wrong'})}
+        try:
+            u = v.undo('suction')
+        finally:
+            FakeDev.status = real_status
+        self.assertFalse(u['exact'])
+        # Pending restore kept for retry; primitive level reports RESTORE_NOT_EXACT.
+        self.assertIn('suction', v._before)
+
+    def test_primitive_inexact_restore_blocked_with_code(self):
+        v = vac(); reg = Registry()
+        ingest_tuya(reg, v, b's')
+        key = next(iter(reg.devices))
+        c = SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(), fabric_adapters=lambda p=None: {'tuya': v})
+        ex = Executor(c)
+        ex.execute('tuya_setting', key, {'setting': 'volume', 'value': 'vol_mute'}, consent=True)
+        real_status = FakeDev.status
+        FakeDev.status = lambda self: {'dps': dict(FakeDev.dps, **{'104': 'vol_high'})}
+        try:
+            r = ex.execute('tuya_undo', key, {'setting': 'volume'}, consent=True)
+        finally:
+            FakeDev.status = real_status
+        self.assertEqual(r['state'], 'BLOCKED')
+        self.assertIn('RESTORE_NOT_EXACT', r['errors'][0])
+
     def test_full_control_commands(self):
         v = vac()
         r = t.command(v, 'move', 'forward', move_s=10)
