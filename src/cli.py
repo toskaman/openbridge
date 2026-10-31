@@ -932,10 +932,12 @@ def cmd_dashboards_propose(args):
     hints = {sid: nl_plan.param_hint(SKILLS[sid].get('input'))
              for sid in bindable if sid in SKILLS}
     prompt = v4_uidraft.build_ui_prompt(text, prompt_devices, bindable, hints=hints)
-    # No num_gpu override: the medium service (:11438) is GPU-offload by
-    # design with host spill; forcing num_gpu=0 would push ~18GB into host
-    # RAM and worsen the pinned-buffer pressure that caused the 01:34 500.
     ui_options = {'num_ctx': 4096, 'num_predict': 1024}
+    if model_id == nl_router.TIERS['medium'][0]:
+        # Pinned partial offload: full offload dies allocating a 3.7GB
+        # pinned CUDA_Host buffer (01:34 + 01:40 500s); num_gpu=28 loads in
+        # 21s on this host (14.9GB VRAM free, no lock-memory privilege).
+        ui_options['num_gpu'] = 28
     transport = nl_plan.local_chat(model_id, endpoint,
                                    timeout=getattr(args, 'timeout', None) or 600,
                                    format=v4_ui.UI_PATCH_JSON_SCHEMA,

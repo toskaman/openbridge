@@ -361,10 +361,9 @@ class DashboardsPatchCliTests(unittest.TestCase):
         self.assertEqual(len(out['offered_opaque_ids']), 1)
         self.assertIn('model_run', out)
 
-    def test_propose_medium_tier_keeps_server_default_offload(self):
-        # The :11438 service is GPU-offload by design with host spill; forcing
-        # num_gpu=0 would push ~18GB into host RAM and worsen pinned-buffer
-        # pressure (01:34 500 root cause). Only temp-0 default + ctx pinning.
+    def test_propose_medium_tier_uses_pinned_partial_offload(self):
+        # Full offload dies on a 3.7GB pinned CUDA_Host alloc (01:34/01:40
+        # 500s); num_gpu=28 is the proven split (21s load, 14.9GB VRAM).
         import json as _json
         devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
@@ -377,7 +376,7 @@ class DashboardsPatchCliTests(unittest.TestCase):
              mock.patch('src.runtime.nl_plan.local_chat',
                         return_value=transport) as chat:
             cli.cmd_dashboards_propose(args)
-        self.assertNotIn('num_gpu', chat.call_args[1]['options'])
+        self.assertEqual(chat.call_args[1]['options']['num_gpu'], 28)
         self.assertEqual(chat.call_args[1]['options']['num_ctx'], 4096)
         self.assertEqual(chat.call_args[1]['options']['num_predict'], 1024)
 
