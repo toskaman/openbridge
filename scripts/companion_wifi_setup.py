@@ -61,6 +61,20 @@ def main():
             return 1
         urls = server.android.relay_urls(handle)
         print('URLS', urls)
+        # The pairing code only renders while MainActivity is foreground
+        # (TVs fall back to ambient mode within a minute), so raise it now.
+        # A keypress first: a fullscreen Dream ignores plain `am start`.
+        run('-s', args.serial, 'shell', 'input', 'keyevent',
+            'KEYCODE_DPAD_CENTER')
+        run('-s', args.serial, 'shell', 'am', 'start', '-n',
+            'fr.openbridge.companion/.MainActivity')
+        for _ in range(10):
+            time.sleep(3)
+            _rc, acts = run('-s', args.serial, 'shell', 'dumpsys',
+                            'activity', 'activities')
+            if 'fr.openbridge.companion/.MainActivity' in acts and (
+                    'topResumedActivity' in acts or 'mResumedActivity' in acts):
+                break
         send = R.failover_transport(urls)
         pc_nonce = secrets.token_hex(16)
         try:
