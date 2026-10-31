@@ -253,10 +253,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         bluetooth = button("Turn on Bluetooth", PillIcon.BLUETOOTH, CYAN, STYLE_NORMAL);
         location = button("Turn on location (needed by Android " + Build.VERSION.RELEASE + ")", PillIcon.PIN, CYAN, STYLE_NORMAL);
         permission = button("Allow Bluetooth scanning", PillIcon.SHIELD, CYAN, STYLE_NORMAL);
-        enable = button("Bluetooth scans", PillIcon.PAUSE, OK, STYLE_TOGGLE);
+        enable = button("Bluetooth scans", PillIcon.HOLD, OK, STYLE_TOGGLE);
         unpair = button("Remove pairing", PillIcon.UNLINK, ERR, STYLE_DANGER);
-        fullctl = button("Full control", PillIcon.BOLT, WARN, STYLE_TOGGLE);
-        background = button("Background relay", PillIcon.SWITCH, CYAN, STYLE_TOGGLE);
+        fullctl = button("Full control", PillIcon.FLOWS, WARN, STYLE_TOGGLE);
+        background = button("Background relay", PillIcon.BOLT, CYAN, STYLE_TOGGLE);
         for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, background, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
         statusLine = text("Starting…", 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
@@ -547,6 +547,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     /** Standing consent for PC-initiated control. Turning it on shows a warning first; turning it off is instant. */
     private void toggleFullControl() {
+        if (!relay.paired()) { commandResult.setText("Pair with your PC first."); orb.pulse(); return; }
         if (relay.fullControl()) { relay.setFullControl(false); log("Full control revoked on this device"); refresh(); return; }
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Allow full control?")
@@ -630,15 +631,14 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             location.setVisibility(ble && !loc ? View.VISIBLE : View.GONE);
             permission.setVisibility(ble && !perm ? View.VISIBLE : View.GONE);
             enable.setText("Bluetooth scans"); setToggle(enable, enabled);
-            enable.setCompoundDrawablesRelativeWithIntrinsicBounds(new PillIcon(enabled ? PillIcon.PAUSE : PillIcon.PLAY, enabled ? OK : TEXT, dp(1)),
-                    null, PillIcon.toggle(enabled, OK, dp(1)), null);
-            enable.setVisibility(paired ? View.VISIBLE : View.GONE);
+            enable.setVisibility(ready ? View.VISIBLE : View.GONE);
             fullctl.setText("Full control"); setToggle(fullctl, relay.fullControl());
-            fullctl.setVisibility(paired ? View.VISIBLE : View.GONE);
+            fullctl.setVisibility(ready ? View.VISIBLE : View.GONE);
             boolean bg = RelayService.running(this);
             background.setText("Background relay"); setToggle(background, bg);
             background.setContentDescription("Background relay, " + (bg ? "on" : "off"));
-            unpair.setVisibility(paired ? View.VISIBLE : View.GONE);
+            unpair.setVisibility(ready ? View.VISIBLE : View.GONE);
+            unpair.setEnabled(paired);
             if (!systemTouched) systemOpen = !ready || !paired;
             renderSystem();
             updateOrb();
