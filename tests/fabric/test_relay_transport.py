@@ -136,5 +136,32 @@ class FetchVoiceUrls(unittest.TestCase):
         with mock.patch.object(R, 'fetch_voice', side_effect=fake2):
             R.fetch_voice_urls(urls, b'k' * 32, 'c' * 16, 3, 'a' * 64, timeout=2)
         self.assertEqual(seen['http://192.168.1.14:47800'], 2)
+class LanUrlForRelay(unittest.TestCase):
+    INST = {'service': '_openbridge-relay._tcp', 'instance': 'OpenBridge-abc', 'host': 'watch.local', 'port': 47800, 'addresses': ['192.168.1.14'], 'txt': {'relay': 'relay-39f86439fbae'}, 'category': 'companion'}
+    def test_match_returns_direct_url(self):
+        ad = _adapter()
+        with mock.patch('src.fabric.mdns.discover', return_value={'instances': [self.INST]}):
+            self.assertEqual(ad.lan_url_for_relay('relay-39f86439fbae'), 'http://192.168.1.14:47800')
+    def test_bad_relay_id_returns_none_without_scan(self):
+        with mock.patch('src.fabric.mdns.discover', side_effect=AssertionError('must not scan')):
+            self.assertIsNone(_adapter().lan_url_for_relay('nope'))
+    def test_no_match_returns_none(self):
+        ad = _adapter()
+        with mock.patch('src.fabric.mdns.discover', return_value={'instances': []}):
+            self.assertIsNone(ad.lan_url_for_relay('relay-39f86439fbae'))
+    def test_browse_error_returns_none(self):
+        ad = _adapter()
+        with mock.patch('src.fabric.mdns.discover', side_effect=OSError('no net')):
+            self.assertIsNone(ad.lan_url_for_relay('relay-39f86439fbae'))
+    def test_out_of_scope_address_skipped(self):
+        ad = _adapter()
+        inst = dict(self.INST, addresses=['8.8.8.8'])
+        with mock.patch('src.fabric.mdns.discover', return_value={'instances': [inst]}):
+            self.assertIsNone(ad.lan_url_for_relay('relay-39f86439fbae'))
+    def test_bad_port_skipped(self):
+        ad = _adapter()
+        inst = dict(self.INST, port=80)
+        with mock.patch('src.fabric.mdns.discover', return_value={'instances': [inst]}):
+            self.assertIsNone(ad.lan_url_for_relay('relay-39f86439fbae'))
 if __name__ == '__main__':
     unittest.main()
