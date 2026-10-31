@@ -127,6 +127,20 @@ class TransportTest(unittest.TestCase):
         self.assertIn('format', seen)
         self.assertEqual(seen['format']['type'], 'object')
 
+    def test_local_chat_forwards_custom_format(self):
+        seen = {}
+
+        def fake_chat(payload):
+            seen.update(payload)
+            return {'model': 'llama3.2:3b-instruct-q4_K_M', 'done': True, 'done_reason': 'stop',
+                    'message': {'content': REPLY}}
+
+        custom = {'type': 'object', 'required': ['widgets']}
+        t = nl_plan.local_chat('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437',
+                               chat=fake_chat, format=custom)
+        t('prompt')
+        self.assertEqual(seen['format'], custom)
+
     def test_local_chat_rejects_wrong_model_identity(self):
         def fake_chat(payload):
             return {'model': 'evil:99b', 'done': True, 'done_reason': 'stop',

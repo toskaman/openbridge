@@ -41,6 +41,15 @@ class CliTests(unittest.TestCase):
         doc = json.loads(out)  # raises if polluted
         self.assertIn('muse-spark-1.3', doc['data']['pinned'])
 
+    def test_cli_error_exit_names_are_valid(self):
+        # fail() indexes EXIT[exc.exit_name] with no fallback: an unknown
+        # name turns any handler error into a KeyError crash.
+        import re
+        from pathlib import Path
+        src = Path(cli.__file__).read_text(encoding='utf-8')
+        names = set(re.findall(r"CliError\('([a-z_]+)'", src))
+        self.assertTrue(names <= set(cli.EXIT), names - set(cli.EXIT))
+
     def test_doctor_json_statuses(self):
         code, out, _ = run(['--json', 'doctor'])
         self.assertEqual(code, 0)
@@ -331,7 +340,8 @@ class DashboardsPatchCliTests(unittest.TestCase):
         reply = _json.dumps(self.PATCH)
         devices = [{'key': 'dev-v', 'label': 'Robot vacuum (Tuya)', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
-        transport = mock.Mock(return_value=reply)
+        transport = mock.Mock(return_value={'model_id': 'm', 'endpoint': 'e',
+                                             'content': reply})
         args = Namespace(text='vacuum panel', model=None, timeout=None)
         with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
              mock.patch.object(cli, 'ensure_discovery',
@@ -351,7 +361,8 @@ class DashboardsPatchCliTests(unittest.TestCase):
     def test_propose_garbage_reply_rejected(self):
         devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
-        transport = mock.Mock(return_value='no json here')
+        transport = mock.Mock(return_value={'model_id': 'm', 'endpoint': 'e',
+                                             'content': 'no json here'})
         args = Namespace(text='vacuum panel', model=None, timeout=None)
         with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
              mock.patch.object(cli, 'ensure_discovery',

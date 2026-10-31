@@ -929,13 +929,19 @@ def cmd_dashboards_propose(args):
                        'opaque_id': bdev['opaque_id']}
                       for row, bdev in zip(devices, bundle['devices'])]
     prompt = v4_uidraft.build_ui_prompt(text, prompt_devices, bindable)
-    transport = nl_plan.local_chat(model_id, endpoint, timeout=getattr(args, 'timeout', None) or 180)
-    reply = transport(prompt)
+    transport = nl_plan.local_chat(model_id, endpoint,
+                                   timeout=getattr(args, 'timeout', None) or 180,
+                                   format=v4_ui.UI_PATCH_JSON_SCHEMA)
+    try:
+        res = transport(prompt)
+    except nl_plan.TransportError as e:
+        raise CliError('inference', 'MODEL_UNAVAILABLE', str(e)[:200]) from None
+    reply = res.get('content', '') if isinstance(res, dict) else res
     try:
         doc, _ = extract_json(reply)
         patch = v4_ui.validate_patch(doc, bindable)
     except (ValueError, v4_ui.UIError) as e:
-        raise CliError('plan', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
+        raise CliError('inference', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
     offered = [d['opaque_id'] for d in bundle['devices']]
     return {'patch': patch, 'offered_opaque_ids': offered,
             'primitives': sorted(bindable),
@@ -972,10 +978,10 @@ def cmd_dashboards_install(args):
     try:
         patch = v4_ui.validate_patch(doc['patch'], bindable)
     except v4_ui.UIError as e:
-        raise CliError('plan', 'PATCH_REJECTED', 'Panel failed validation: %s' % (e,)) from None
+        raise CliError('inference', 'PATCH_REJECTED', 'Panel failed validation: %s' % (e,)) from None
     offered = doc.get('offered_opaque_ids') or []
     if patch.get('target_opaque_id') not in offered:
-        raise CliError('plan', 'PATCH_TARGET_UNKNOWN',
+        raise CliError('verify', 'PATCH_TARGET_UNKNOWN',
                        'Patch target %r was not an id offered at propose time.' % (patch.get('target_opaque_id'),))
     rid = getattr(args, 'relay', '') or ''
     target = getattr(args, 'target', '') or ''
@@ -993,9 +999,9 @@ def cmd_dashboards_install(args):
             state = D.install_patch(controls, rid, patch, target, bindable,
                                     consent=True, resolve_target=router.resolve_target)
         except D.DashboardError as e:
-            raise CliError('plan', 'PATCH_REJECTED', str(e)[:200]) from None
+            raise CliError('inference', 'PATCH_REJECTED', str(e)[:200]) from None
         except RemoteControlError as e:
-            raise CliError('relay', 'INSTALL_FAILED', str(e)[:200]) from None
+            raise CliError('device', 'INSTALL_FAILED', str(e)[:200]) from None
     return {'relay_id': rid, 'target': target, 'controls': preview_controls, 'state': state}
 
 
@@ -1018,7 +1024,7 @@ def cmd_dashboards_revoke(args):
         try:
             state = controls.set_controls({'relay_id': rid, 'controls': [], 'consent': True})
         except RemoteControlError as e:
-            raise CliError('relay', 'REVOKE_FAILED', str(e)[:200]) from None
+            raise CliError('device', 'REVOKE_FAILED', str(e)[:200]) from None
     return {'relay_id': rid, 'revoked': True, 'state': state}
 
 
@@ -1083,7 +1089,7 @@ def _plan_from_text(args, text):
     try:
         res = nl_plan.plan(text, devices, transport)
     except nl_plan.PlanError as e:
-        raise CliError('plan', 'PLAN_REJECTED', str(e)[:300])
+        raise CliError('inference', 'PLAN_REJECTED', str(e)[:300])
     res['spec']['workflow_id'] = 'wf-%s' % hashlib.sha256(text.encode()).hexdigest()[:12]
     return res['spec'], dict(res['model_run'], reply_sha256=res['reply_sha256'])
 

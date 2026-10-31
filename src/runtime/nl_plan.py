@@ -126,13 +126,13 @@ def plan_from_reply(reply, devices):
     return {'consent': True, 'steps': out}
 
 
-def local_chat(model_id, endpoint, timeout=180, chat=None):
+def local_chat(model_id, endpoint, timeout=180, chat=None, format=None):
     """Pinned local Meta chat transport, mirroring nl_router's identity/shape checks."""
     from src.ai.local_meta import local_request
     send = chat or (lambda payload: local_request('/api/chat', payload, endpoint=endpoint, timeout=timeout))
 
     def run(prompt):
-        payload = {'model': model_id, 'stream': False, 'format': PLAN_JSON_SCHEMA,
+        payload = {'model': model_id, 'stream': False, 'format': format or PLAN_JSON_SCHEMA,
                    'keep_alive': '10m', 'options': {'temperature': 0, 'num_ctx': 4096},
                    'messages': [{'role': 'system', 'content':
                                  'Reply in English only as compact JSON matching the schema.'},
