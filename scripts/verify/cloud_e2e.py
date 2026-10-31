@@ -90,6 +90,17 @@ def main():
             sh('adb', 'shell', 'pm', 'grant', 'fr.openbridge.companion', perm)
         sh('adb', 'shell', 'am', 'start', '-n', 'fr.openbridge.companion/.MainActivity')
         time.sleep(8)
+        # First launch runs the setup flow, which may push Settings over the
+        # Companion; the pairing code is only on screen while OUR activity is
+        # in front. Re-raise it deterministically before pair-start.
+        for _ in range(3):
+            rc, win = sh('adb', 'shell', 'dumpsys', 'window', timeout=60)
+            if 'fr.openbridge.companion' in win and 'mCurrentFocus' in win:
+                focus = [ln for ln in win.splitlines() if 'mCurrentFocus' in ln]
+                if focus and 'fr.openbridge.companion' in focus[0]:
+                    break
+            sh('adb', 'shell', 'am', 'start', '-n', 'fr.openbridge.companion/.MainActivity')
+            time.sleep(4)
         # NET-04/07/08: pairing handshake (code shown on the emulator screen).
         st, hello = post('/api/relay-pair-start', {'device_id': handle})
         if not record('NET-04 pair-start', st == 200 and hello.get('state') == 'CODE_SHOWN_ON_DEVICE',
@@ -105,7 +116,7 @@ def main():
                 r'\b(\d{6})\b']
         import re as _re
         seen, tried, conf, st = set(), [], None, None
-        for _ in range(6):
+        for rnd in range(6):
             if conf is not None and st == 200 and (conf.get('state') == 'PAIRED'):
                 break
             texts = []
@@ -113,9 +124,14 @@ def main():
             rc, dump = sh('adb', 'shell', 'cat', '/sdcard/ob-e2e.xml', timeout=60)
             if rc == 0:
                 texts.append(dump)
+                with open(os.path.join(outdir, 'e2e-ui-round%d.xml' % rnd), 'w', encoding='utf-8') as f:
+                    f.write(dump[:200000])
             rc, top = sh('adb', 'shell', 'dumpsys', 'activity', 'top', timeout=60)
             if rc == 0:
                 texts.append(top)
+            sh('adb', 'shell', 'screencap', '-p', '/sdcard/ob-e2e-r%d.png' % rnd, timeout=60)
+            sh('adb', 'pull', '/sdcard/ob-e2e-r%d.png' % rnd,
+               os.path.join(outdir, 'e2e-ui-round%d.png' % rnd), timeout=60)
             for text in texts:
                 for pt in pats:
                     for m in _re.finditer(pt, text):
