@@ -532,12 +532,13 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                 direct = server.android.lan_url_for_relay(rid)
                 if direct and direct not in urls:
                     urls.insert(0, direct)
+                    server.relays.relays[rid]['url'] = urls[0]
                     server.relays.relays[rid]['send'] = pending['send'] = fabric_relay.failover_transport(urls)
                     if server.relays.relays[rid].get('aead'):
                         from src.fabric import aead as _aead
                         server.relays.relays[rid]['send'] = _aead.encrypting_send(pending['send'], rid)
             server.relays.relays[rid]['urls'] = urls
-            server.relays.relays[rid]['url'] = pending.get('url')
+            server.relays.relays[rid]['url'] = urls[0]
             server.relay_ledger.proved(rid)
             if server.relay_store is not None:
                 server.relay_store.save(rid, server.android.serial_for(pending['handle']), key, declared,

@@ -113,7 +113,7 @@ class ServerRelayFlowTests(unittest.TestCase):
                 start=server.relay_action('/api/relay-pair-start',{'device_id':'android-h'},transport_factory=lambda u:send)
             self.assertEqual(start['state'],'CODE_SHOWN_ON_DEVICE')
             with self.assertRaises(R.RelayError):server.relay_action('/api/relay-pair-confirm',{'code':'000000'},transport_factory=None)
-            server.relay_pending={'android-h':{'send':send,'hello':{'protocol':R.PROTOCOL,'relay_id':'phone','relay_nonce':'cd'*8},'pc_nonce':state['pc'],'handle':'android-h','started_at':time.monotonic()}}
+            server.relay_pending={'android-h':{'send':send,'url':'http://127.0.0.1:47800','urls':['http://127.0.0.1:47800'],'hello':{'protocol':R.PROTOCOL,'relay_id':'phone','relay_nonce':'cd'*8},'pc_nonce':state['pc'],'handle':'android-h','started_at':time.monotonic()}}
             conf=server.relay_action('/api/relay-pair-confirm',{'device_id':'android-h','code':'314159'})
             self.assertEqual((conf['state'],conf['eligible_for_ble']),('PAIRED',True))
             snap=server.relay_action('/api/relay-scan',{'relay_id':'phone','seconds':5})

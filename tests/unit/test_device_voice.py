@@ -204,7 +204,7 @@ class VoiceText(unittest.TestCase):
         self.assertEqual(sent[0][1]['status'], 'escalation_required')
 
     def test_happy_path_parses_transcript(self):
-        relay = {'key': KEY, 'url': 'http://127.0.0.1:9', 'seen': {}}
+        relay = {'key': KEY, 'url': 'http://10.0.0.5:47800', 'urls': ['http://10.0.0.5:47800', 'http://127.0.0.1:9'], 'seen': {}}
         cc = CC.CompanionCommands(FakeServer({'r1': relay}))
         item = {'request_id': RID, 'kind': 'voice', 'clip_id': 'c', 'bytes': len(PCM),
                 'sha256': hashlib.sha256(PCM).hexdigest(), 'lang': 'fr', 'quality': 'auto'}
@@ -212,7 +212,7 @@ class VoiceText(unittest.TestCase):
                 mock.patch.object(stt_local, 'available', return_value=True), \
                 mock.patch.object(stt_local, 'transcribe_pcm', return_value={'transcript': '  start vacuum '}) as t:
             self.assertEqual(cc._voice_text('r1', relay, item), 'start vacuum')
-            f.assert_called_once_with(['http://127.0.0.1:9'], KEY, 'c', len(PCM), mock.ANY, relay_id=mock.ANY, aead_version=None)
+            f.assert_called_once_with(['http://10.0.0.5:47800', 'http://127.0.0.1:9'], KEY, 'c', len(PCM), mock.ANY, relay_id=mock.ANY, aead_version=None)
             t.assert_called_once_with(PCM, 'fr')
 
     def test_download_failure_reports_and_skips(self):

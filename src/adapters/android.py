@@ -280,7 +280,7 @@ class AndroidAdapter:
         None (the caller keeps the adb forward)."""
         import ipaddress as _ip
         from src.fabric import mdns
-        if not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id or ''):
+        if not isinstance(relay_id, str) or not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id):
             return None
         try:
             res = mdns.discover(timeout=timeout, services=('_openbridge-relay._tcp',))
