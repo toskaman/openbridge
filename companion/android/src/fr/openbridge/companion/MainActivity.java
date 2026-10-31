@@ -375,7 +375,12 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         orb.setState(s);
         stateLabel.setText(label); stateLabel.setTextColor(color);
         mic.setGlyph(recording ? GlyphButton.STOP : GlyphButton.MIC); mic.setActive(recording);
-        if (!thinking) thinkingUntil = 0;
+        if (!thinking && thinkingUntil != 0) {
+            // The PC never answered: stop showing a stale "working on it" once we are READY again.
+            thinkingUntil = 0;
+            setCaption(relay.paired() ? "Hi. Ask me anything — type, or tap the orb to talk." : "Open OpenBridge on your PC to pair this device.");
+            log("No answer from the PC — timed out.");
+        }
     }
 
     private void setCaption(String s) {

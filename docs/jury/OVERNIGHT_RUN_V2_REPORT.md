@@ -9,12 +9,12 @@ observed values only, with run IDs and SHAs.
 
 ## A. Repository state
 
-- `main` HEAD: `e1ac13929fd50aa9c3bd82d19199d4ab45f5d013` (PR #159 merged, CI 11/11).
-- Release branch: `feat/p30-jury-release`, HEAD `4c82e9e` at draft time.
+- `main` HEAD: `872c89a4a675de41f3a488e402fe3925abac6e7e` (PR #160 + #161 merged).
+- Work branch: `feat/jury-presentation-redesign`, HEAD `bfe3dd2` + uncommitted command-drain work at draft time.
 - Open PRs at draft time: none (PR for this branch to be opened at the end).
 - Branch delta vs `main`: 15 commits, 11 files, +903/−45.
-- Local suite: 1245/1245 OK (`python -m unittest discover -s tests`, 99 s).
-- Evidence registry: 30 VERIFIED rows (`docs/DEVICE_EVIDENCE.json`).
+- Local suite: 1254/1254 OK (`python -m unittest discover -s tests`, ~95 s).
+- Evidence registry: 31 VERIFIED rows (`docs/DEVICE_EVIDENCE.json`, matrix in sync).
 
 ## B. Cloud infrastructure
 
@@ -32,7 +32,7 @@ All runs on GitHub-hosted runners (public repository, $0 spent, $0 billed).
 | 41213691030 | android.yml | cancelled at 15 min (phone hung again, same screencap symptom) |
 | 41214555252 | android.yml | build-apk+wear+tv success; e2e failed (pair-confirm on OCR false positive, fixed); phone failed (same hang, contingency C) |
 | 41215098799 | android.yml | build-apk+phone(C)+tv+wear success; e2e failed (code unreadable, setup overlay suspected, fixed) |
-| 41215688399 | android.yml | in progress (e2e v2: front-raise + diag) |
+| 41215688399 | android.yml | build-apk+phone(C)+tv+wear success; e2e failed (pair-confirm 409: code read OK but the relay never displayed it — `get()` UI-detach race, fixed in `bfe3dd2`) |
 
 No paid runners, no secrets, no persistent public servers. Firebase Test Lab,
 Kaggle and Colab were assessed and marked NEEDS-ACCOUNT (owner-gated, §K).
@@ -64,8 +64,13 @@ via exception path; no orphan process — flagged in §26 for the jury, not hidd
 ## D. Android emulator results
 
 Real Companion APK built from source with SDK tools only (no Gradle):
-`openbridge-companion.apk`, 123283 bytes, `apksigner verify` OK, cross-platform
-build script (Windows + Linux).
+`openbridge-companion.apk`, 345638 bytes at draft (`apksigner verify` OK, cross-platform
+build script on Windows + Linux). One APK drives phone, TV and watch (form
+auto-detected). Since the first draft: sphere launcher icon + round icon + TV
+leanback banner (procedural `dev/make_companion_icon.py`, aapt2 res pipeline),
+system buttons kept visible while unpaired, `unpair()` a single durable commit,
+visible Toast when Full control is tapped unpaired, stale-caption timeout, and
+the `get()` UI-detach race fixed (service start no longer drops pairing codes).
 
 | Guest | API | Result at draft |
 |---|---|---|
@@ -122,8 +127,10 @@ Real hardware (owner-authorized phone + TV; watch asleep, S6 owner-gated):
   adb-forward path was used instead (documented limitation, real finding).
 
 Cloud end-to-end (`android.yml` `e2e` job + `scripts/verify/cloud_e2e.py`):
-server → emulator pairing → signed scan → adb oracle → relay-side revoke.
-Verdict pending at draft time.
+server → pairing → signed scan → adb oracle → relay-side revoke. The full
+flow passes 9/9 on the physical phone (row 31: paired first try, 3 live BLE
+advertisers, oracle agrees, revoke → 409). The cloud-emulator twin is pending
+(run 41218148973 attempt 2 after a runner-infra flake).
 
 ## G. Video evidence inventory (draft)
 
@@ -153,6 +160,13 @@ events are combined; no private data (keys, LAN IPs, serials) is shown.
 | 10 | Emulator captures show permission dialog | first-launch setup requests runtime permission | `pm grant` pre-grant | next captures show UI |
 | 11 | README Playdate claim | zero registry evidence | claim narrowed to verified ESP32 | registry-consistent |
 | 12 | `clean-shutdown exit=1` | server stops via exception path | none (no orphan); disclosed | install.log |
+| 13 | e2e pair-confirm 409 (code read OK) | `RelayServer.get(ctx,null)` overwrote the live Ui with NOOP; async service start after onResume dropped the on-screen code; script read dumpsys noise | `get()` never replaces a live Ui + `release()` in onDestroy | physical e2e 9/9, paired 1st try |
+| 14 | system buttons "deleted" when unpaired | scans/full-control/unpair were GONE unless paired (only Background relay left) | visible whenever ready; unpair disabled + full-control pair-hint when unpaired | phone dump + TV screenshot, 4 buttons |
+| 15 | Full control tap "does nothing" unpaired | feedback was an off-screen text only | system Toast + activity log entry | on-device screenshot of the Toast |
+| 16 | default Android launcher icon | manifest pointed at `sym_def_app_icon` | procedural sphere icon + round + TV banner, aapt2 res pipeline | badging + App-Info screenshot |
+| 17 | aapt2 link failed on res.zip | `-R` archives get overlay treatment in build-tools 34 | `--auto-add-overlay` | APK 345638 B, badging icon+banner |
+| 18 | companion orders never answered ("Got it" forever) | server never called `get_commands`; no drain existed | `src/runtime/command_drain.py`: 5 s poll → low-tier parse / local MMS STT → `report_command`; worker threads; caption timeout on-device | 9 unit tests + live phone test (pending at draft) |
+| 19 | live-test chaos between runs | zombie test server kept port 18795 (HTTPServer reuses the address; requests split across two servers) | zombie killed; scripts refuse a busy port | netstat clean + guard committed |
 
 ## I. Release package
 
@@ -174,15 +188,16 @@ Strongest three actual achievements:
 3. Clean-room install 8/8 on 7 hosted targets (Windows/Linux/macOS × x64/ARM64 +
    Debian) from the release ZIP, plus a real APK on three emulator form factors.
 
-Remaining weaknesses: emulator-phone capture instability (hardware phone covers
-the behavior); Glimmer overnight OOM (AM results stand); S6 watch owner-gated;
+Remaining weaknesses: runner emulator-infra flakes (attempt-2 rerun; hardware
+phone covers the behavior instead); Glimmer overnight OOM (AM results stand);
 manual-press last mile owner-optional (adb-injected, labeled); Firebase/Kaggle
 need accounts.
 
 ## K. Owner-only action list
 
-- Re-pair the phone + TV companions with the live server if desired (test pairings
-  used an isolated server; 30 s each, on-screen code).
+- Re-pair the phone + TV companions with the live server (tests unpaired them;
+  30 s each, on-screen code), re-enable Background relay, and restart the live
+  server from the new HEAD so the command drain runs (typed/spoken orders).
 - Optional S6: open the companion on the Watch7, connect it to the PC; manual
   press → second device, then revoke (runbook ready).
 - Optional S5-manual: press the installed panel button by hand (adb-injected run
@@ -190,6 +205,10 @@ need accounts.
 - Approve + publish: release artifacts, final 3-minute video, hackathon submission.
 - Accounts (only if wanted): Firebase/GCP for Test Lab, Kaggle/Colab for hosted
   Glimmer reruns.
+- Phone notifications for the companion are currently OFF (owner setting); the
+  background-relay notification only shows if re-enabled in App Info.
+- Watch: send the current wireless-debugging `IP:port` so the updated APK (same
+  file, background option included) can be pushed; then test one spoken order.
 - Restore note: phone `stay_on_while_plugged_in` was set to 7 during testing and
   restored to 0 at the end of the run (verified below).
 
@@ -201,11 +220,11 @@ need accounts.
 | G02 PR integrated | PASS (PR #159 merged; this branch PR pending) |
 | G03–G08 clean-room | PASS (8/8, run 41210900996) |
 | G09 consumer Win11 | PARTIAL (Server runner, explicitly labeled) |
-| G10 APK | PASS (123283 bytes, apksigner OK) |
+| G10 APK | PASS (345638 bytes at draft, icon+banner, apksigner OK) |
 | G11 phone emulator | PASS (contingency C, run 41215098799) |
 | G12 TV emulator | PASS |
 | G13 Wear emulator | PASS |
-| G14–G16 cloud e2e | PENDING (job committed, dispatch after phone verdict) |
+| G14–G16 cloud e2e | PARTIAL (9/9 PASS on physical phone; cloud twin rerun pending after infra flake) |
 | G17 Meta inference | PARTIAL (Llama 4/50 + S5 Glimmer T1/T2; overnight Glimmer OOM) |
 | G18 secrets/cost | PASS ($0, guards intact) |
 | G19 model refusal | PASS (mechanism 81/81; T3 pathology preserved) |

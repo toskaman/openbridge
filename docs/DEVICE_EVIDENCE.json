@@ -946,5 +946,42 @@
    "first pairing round failed on TTL-expired OCR code (vehicle fixed round-by-round)",
    "commit_sha is the branch HEAD at run time (26f8d54); vehicle script committed after"
   ]
+ },
+ {
+  "test_id": "cloud-e2e-flow-physical-phone",
+  "test_utc": "2026-10-31T16:07:00Z",
+  "commit_sha": "bfe3dd2a72046f2360e7081e842056533a5961ff",
+  "platform": "Android phone",
+  "device_alias": "Owner phone (rugged model, Android 13)",
+  "public_device_id": "phone-companion-01",
+  "os_version": "Android 13 (SDK 33)",
+  "companion_version": "0.12.0 (code 12)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "Isolated test server started (port 18795, private store); live server untouched",
+   "Phone discovered over adb; APK rebuilt from source and installed",
+   "pair-start -> CODE_SHOWN_ON_DEVICE; on-screen code read from the dump",
+   "pair-confirm PAIRED first try (relay-c388ba6dafcd, AEAD aead1)",
+   "Signed relay-scan round-trip: 3 live BLE advertisers ingested",
+   "Independent oracle: RelayService in dumpsys + adb forward tcp:47800 agree",
+   "Relay-side revoke (pm clear wipes pairing key) -> next scan denied (409)",
+   "Full cloud_e2e.py flow 9/9 PASS on physical hardware"
+  ],
+  "evidence": [
+   "scripts/verify/cloud_e2e.py",
+   "E:/shots/e2e-physical/verdict.json"
+  ],
+  "independent_oracle": "uiautomator dumps (code, pairing state), dumpsys services, adb forward list, signed replies verified by HMAC+AEAD, post-revoke 409",
+  "limitations": [
+   "Phone ended unpaired with wiped prefs (pm clear); owner re-pairs + re-toggles background relay",
+   "Screen kept awake via extended timeout during the run, restored to 30000 ms after"
+  ],
+  "permissions": [
+   "owner authorized phone use for the night session",
+   "on-device pairing code read from the screen the owner would see",
+   "isolated test server (port 18795, private LOCALAPPDATA); live server untouched"
+  ]
  }
 ]

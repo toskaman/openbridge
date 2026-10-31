@@ -679,6 +679,8 @@ def main():
     with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir,relay_store=relay_store) as server:
         if args.windows_bridge:
             server.windows_bridge=start_windows_bridge()
+        from src.runtime import command_drain
+        command_drain.start(server)   # Companion typed/spoken orders -> parse -> report back
         print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
         try:
             server.serve_forever()

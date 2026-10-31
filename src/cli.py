@@ -1521,6 +1521,8 @@ def cmd_serve(args):
         except (OSError, ValueError):
             pass
     with server_mod.create_server(port) as server:
+        from src.runtime import command_drain
+        command_drain.start(server)   # Companion typed/spoken orders -> parse -> report back
         sys.stderr.write('OpenBridge serving http://127.0.0.1:%s (headless=%s)\n'
                          % (server.server_port, bool(getattr(args, 'headless', False))))
         thread = threading.Thread(target=server.serve_forever, kwargs={'poll_interval': 0.2},
