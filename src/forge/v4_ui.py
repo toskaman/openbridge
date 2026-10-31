@@ -26,6 +26,43 @@ class UIError(ValueError):
     pass
 
 
+# §12 structured model response: refusal is a first-class outcome, not an
+# accident. A non-proposal outcome must NOT carry a patch: a refusal smuggling
+# an installable substitute is rejected as a whole.
+RESPONSE_OUTCOMES = ('proposal', 'refusal', 'needs_clarification', 'unsupported')
+RESPONSE_KEYS = {'outcome', 'patch', 'reason', 'clarifying_question'}
+
+UI_RESPONSE_SCHEMA = {'type': 'object',
+    'required': ['outcome'],
+    'properties': {'outcome': {'type': 'string'},
+                   'patch': {'type': 'object'},
+                   'reason': {'type': 'string'},
+                   'clarifying_question': {'type': 'string'}}}
+
+
+def parse_response(value, primitive_ids):
+    """Split a model reply into (outcome, patch|None, detail).
+
+    Raises UIError on any shape violation. Only outcome == 'proposal' yields
+    a validated patch; every other outcome yields None (nothing installable).
+    """
+    if not isinstance(value, dict) or set(value) - RESPONSE_KEYS or 'outcome' not in value:
+        raise UIError('RESPONSE_SHAPE')
+    outcome = value['outcome']
+    if outcome not in RESPONSE_OUTCOMES:
+        raise UIError('RESPONSE_OUTCOME: %r' % (outcome,))
+    if outcome == 'proposal':
+        if 'patch' not in value:
+            raise UIError('RESPONSE_PATCH_MISSING')
+        return outcome, validate_patch(value['patch'], primitive_ids), ''
+    if 'patch' in value:
+        raise UIError('RESPONSE_PATCH_WITH_%s' % outcome.upper())
+    detail = value.get('reason') or value.get('clarifying_question') or ''
+    if not isinstance(detail, str) or len(detail) > 500:
+        raise UIError('RESPONSE_DETAIL')
+    return outcome, None, detail.strip()
+
+
 def validate_patch(value, primitive_ids):
     if not isinstance(value, dict) or set(value) != PATCH_KEYS:
         raise UIError('PATCH_SHAPE')

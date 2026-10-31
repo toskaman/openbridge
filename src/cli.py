@@ -940,26 +940,42 @@ def cmd_dashboards_propose(args):
         ui_options['num_gpu'] = 28
     transport = nl_plan.local_chat(model_id, endpoint,
                                    timeout=getattr(args, 'timeout', None) or 600,
-                                   format=v4_ui.UI_PATCH_JSON_SCHEMA,
+                                   format=v4_ui.UI_RESPONSE_SCHEMA,
                                    options=ui_options)
     try:
         res = transport(prompt)
     except nl_plan.TransportError as e:
         raise CliError('inference', 'MODEL_UNAVAILABLE', str(e)[:200]) from None
     reply = res.get('content', '') if isinstance(res, dict) else res
+    run = {'model_id': model_id, 'endpoint': endpoint,
+           'reply_sha256': hashlib.sha256(reply.encode()).hexdigest()}
     try:
         doc, _ = extract_json(reply)
-        patch = v4_ui.validate_patch(doc, bindable)
-    except (ValueError, v4_ui.UIError) as e:
+    except ValueError as e:
+        if str(e) != 'no JSON object':
+            raise CliError('inference', 'PATCH_REJECTED',
+                           'Model reply is not a valid panel: %s' % (e,)) from None
+        # No JSON at all reads as a refusal (§12): explicit, unrendered, uninstalled.
+        return {'outcome': 'refusal', 'reason': 'model returned no JSON response',
+                'offered_opaque_ids': [d['opaque_id'] for d in bundle['devices']],
+                'devices': prompt_devices, 'primitives': sorted(bindable),
+                'model_run': run, 'prompt_chars': len(prompt)}
+    try:
+        outcome, patch, detail = v4_ui.parse_response(doc, bindable)
+    except v4_ui.UIError as e:
         raise CliError('inference', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
     offered = [d['opaque_id'] for d in bundle['devices']]
     # Prompt-time label map: opaque ids salt rotating discovery keys, so the
     # patch-target label is unrecoverable later without this record.
-    return {'patch': patch, 'offered_opaque_ids': offered,
+    if outcome != 'proposal':
+        key = 'clarifying_question' if outcome == 'needs_clarification' else 'reason'
+        return {'outcome': outcome, key: detail, 'offered_opaque_ids': offered,
+                'devices': prompt_devices, 'primitives': sorted(bindable),
+                'model_run': run, 'prompt_chars': len(prompt)}
+    return {'outcome': 'proposal', 'patch': patch, 'offered_opaque_ids': offered,
             'devices': prompt_devices,
             'primitives': sorted(bindable),
-            'model_run': {'model_id': model_id, 'endpoint': endpoint,
-                          'reply_sha256': hashlib.sha256(reply.encode()).hexdigest()},
+            'model_run': run,
             'prompt_chars': len(prompt)}
 
 

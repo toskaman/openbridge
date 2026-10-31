@@ -337,7 +337,7 @@ class DashboardsPatchCliTests(unittest.TestCase):
 
     def test_propose_builds_patch_from_model_reply(self):
         import json as _json
-        reply = _json.dumps(self.PATCH)
+        reply = _json.dumps({'outcome': 'proposal', 'patch': self.PATCH})
         devices = [{'key': 'dev-v', 'label': 'Robot vacuum (Tuya)', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
         transport = mock.Mock(return_value={'model_id': 'm', 'endpoint': 'e',
@@ -370,7 +370,8 @@ class DashboardsPatchCliTests(unittest.TestCase):
         devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
         transport = mock.Mock(return_value={'model_id': 'm', 'endpoint': 'e',
-                                             'content': _json.dumps(self.PATCH)})
+                                             'content': _json.dumps({'outcome': 'proposal',
+                                                                     'patch': self.PATCH})})
         args = Namespace(text='vacuum panel', model='muse-glimmer:30b-q4_K_M', timeout=None)
         with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
              mock.patch.object(cli, 'ensure_discovery',
@@ -382,7 +383,9 @@ class DashboardsPatchCliTests(unittest.TestCase):
         self.assertEqual(chat.call_args[1]['options']['num_ctx'], 4096)
         self.assertEqual(chat.call_args[1]['options']['num_predict'], 1024)
 
-    def test_propose_garbage_reply_rejected(self):
+    def test_propose_garbage_reply_read_as_refusal(self):
+        # §12 behavior change: no JSON at all is an explicit refusal
+        # (returned, uninstalled), not PATCH_REJECTED.
         devices = [{'key': 'dev-v', 'label': 'V', 'category': 'vacuum',
                     'capabilities': [], 'facts': {}}]
         transport = mock.Mock(return_value={'model_id': 'm', 'endpoint': 'e',
@@ -392,6 +395,6 @@ class DashboardsPatchCliTests(unittest.TestCase):
              mock.patch.object(cli, 'ensure_discovery',
                                return_value={'devices': devices}), \
              mock.patch('src.runtime.nl_plan.local_chat', return_value=transport):
-            with self.assertRaises(cli.CliError) as e:
-                cli.cmd_dashboards_propose(args)
-        self.assertEqual(e.exception.code, 'PATCH_REJECTED')
+            out = cli.cmd_dashboards_propose(args)
+        self.assertEqual(out['outcome'], 'refusal')
+        self.assertNotIn('patch', out)
