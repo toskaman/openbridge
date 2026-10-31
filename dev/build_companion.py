@@ -25,7 +25,13 @@ def main():
     run('javac', '-encoding', 'UTF-8', '--release', '11', '-Xlint:-options', '-classpath', JAR, '-d', OUT / 'classes', *sources)
     classes = sorted(str(p) for p in (OUT / 'classes').rglob('*.class'))
     run(BT / ('d8' + BAT), '--release', '--min-api', '26', '--lib', JAR, '--output', OUT, *classes)
-    run(BT / ('aapt2' + EXE), 'link', '--manifest', SRC / 'AndroidManifest.xml', '-I', JAR, '-o', OUT / 'base.apk')
+    res = SRC / 'res'
+    link_args = ['link', '--manifest', SRC / 'AndroidManifest.xml', '-I', JAR, '-o', OUT / 'base.apk']
+    if res.is_dir():
+        run(BT / ('aapt2' + EXE), 'compile', '--dir', res, '-o', OUT / 'res.zip')
+        # -R archives get overlay treatment in build-tools 34: auto-add our base resources.
+        link_args += ['-R', OUT / 'res.zip', '--auto-add-overlay']
+    run(BT / ('aapt2' + EXE), *link_args)
     with zipfile.ZipFile(OUT / 'base.apk', 'a') as z:
         z.write(OUT / 'classes.dex', 'classes.dex')
     run(BT / ('zipalign' + EXE), '-f', '-p', '4', OUT / 'base.apk', OUT / 'aligned.apk')

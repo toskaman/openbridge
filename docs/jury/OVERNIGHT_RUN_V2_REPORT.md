@@ -116,7 +116,7 @@ Real hardware (owner-authorized phone + TV; watch asleep, S6 owner-gated):
   `EXECUTED_UNVERIFIED`); 15 × 2 s Tuya polls stable (`smart_clean`, fault 0 —
   the robot was already cleaning on its own); `set_controls([])` revoke (0 grants);
   post-revoke press denied; `relay_revoke` VERIFIED. Registry row 30,
-  [proof](docs/evidence/s5b-safe-seek-31oct.md). Press is adb-injected (labeled),
+  [proof](../evidence/s5b-safe-seek-31oct.md). Press is adb-injected (labeled),
   not a manual tap; beep not machine-proven.
 - mDNS `_openbridge-relay._tcp` was unanswered (0 packets) from the phone; the
   adb-forward path was used instead (documented limitation, real finding).

@@ -37,7 +37,7 @@ explicit authorization.**
 | S5 TV panel + manual press | camera + adb screenshot | HEAD | — | REAL_HARDWARE |
 | S5 vacuum motion | camera, timestamped | HEAD | — | REAL_HARDWARE + oracle |
 | S6 watch press → effect | camera + screen capture | HEAD | — | REAL_HARDWARE |
-| Refusal timeline | `E:/shots/refusal_channel.png` or live | HEAD | — | DETERMINISTIC |
+| Refusal timeline | live UI, or `E:/shots/refusal_channel.png` (seeded-UI shot, payload is a real refusal) | HEAD | — | DETERMINISTIC |
 | Scorecard still | eval report | HEAD | — | MEASURED |
 | Close | screen capture | HEAD | — | — |
 

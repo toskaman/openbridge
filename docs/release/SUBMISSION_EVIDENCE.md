@@ -4,19 +4,19 @@ Draft preparation only; no submission, organizer acceptance, score, or final vid
 
 | Portal item | Evidence / proposed content | Remaining human input |
 |---|---|---|
-| Project title | OpenBridge Capability Forge | Confirm final public title. |
-| Purpose | Discover device capabilities and publish narrow read-only services through explicit consent and deterministic checks. | Confirm portal word limit. |
+| Project title | OpenBridge | Confirm final public title. |
+| Purpose | Meta AI helps different devices understand, connect, and control one another through verified capabilities, explicit authorization, and observable results. | Confirm portal word limit. |
 | Track / theme / team | Owner confirmed Indie Developer, Push the Frontier, solo entry credited **toskaman** on 27 October 2026 | Portal field verification, private contact and eligibility attestations remain participant-owned. |
-| Official start / deadline | `CONTRIBUTIONS.md` start ref 2026-10-26T16:24:00Z, zero files predate it (root commit 19d7992 is 16:34:37Z; 519 main commits / 833 tracked files at `4299343`, re-verified 31 Oct); public rules page re-checked 30 Oct, no updates beyond the participant brief (Nov 4 9 PM ET) | Organizer portal fields, timezone confirmation and final attestation remain participant-owned. |
+| Official start / deadline | `CONTRIBUTIONS.md` start ref 2026-10-26T16:24:00Z, zero files predate it (root commit 19d7992 is 16:34:37Z; full-history audit 30 Oct: 542 commits / 802 files at or after the ref — counts grow as work continues); public rules page re-checked 30 Oct, no updates beyond the participant brief (Nov 4 9 PM ET) | Organizer portal fields, timezone confirmation and final attestation remain participant-owned. |
 | Source URL / revision | https://github.com/toskaman/openbridge | Select final public commit; verify anonymous availability at that revision. |
 | Meta runtime use | `docs/glimmer-smoke-receipt.json`, `docs/local-meta-smoke-receipt.json`, `docs/runtime-meta-receipt.json` | Distinguish local runtime from development theme generation. |
 | Routing / Watch demonstrations | [Complete handover](COMPLETE_HANDOVER.md), [Watch acceptance](WATCH_CONTROL_ACCEPTANCE.md) | Contributor-recorded hardware evidence; retain original amplification and cleanup limitations. Not a scored evaluation. |
-| Integrated verification | Main `4299343` (PR145-154 merged); 1150 tests green Windows+Linux/browser CI; registry 26 VERIFIED rows | Final submission commit still needs owner selection/verification. |
+| Integrated verification | origin/main `e1ac139` (PR158–159 merged); 1245 tests green Windows/Ubuntu/macOS/browser CI; registry 30 VERIFIED rows (21 real hardware + 7 full-guest + 2 emulator) | Final submission commit still needs owner selection/verification. |
 | Real device journey | `docs/forge/tv-glimmer-live-receipt.json`, `docs/forge/TV_GLIMMER_JOURNEY.md` | Review redaction; retain failed attempts and stated permission-dialog limits. |
 | Synthetic benchmark | `docs/benchmark/STATUS.md`, `docs/benchmark/advisor-benchmark-glimmer.json` | Preserve rules baseline and unfavorable goal-fit/planning findings; no general-superiority claim. |
 | Software verification | `docs/forge/tv-glimmer-software-checks.json`; release replay record in this folder | State historical revision/overlays separately from final revision verification. |
 | Attribution / origin | `THIRD_PARTY.md`, `CONTRIBUTIONS.md` | Review exact packaged artifacts, model/service terms, public notices and participant disclosures. |
-| Demo / assets | Receipts + stills + 180 s storyboard (`docs/jury/DEMO_STORYBOARD_180S.md`) | Video BLOCKED: no recording/render without the owner's new explicit authorization. |
+| Demo / assets | Receipts + stills + final one-story board (`docs/jury/DEMO_STORYBOARD_FINAL.md`) + physical runbook (`docs/jury/DEMO_PHYSICAL_RUNBOOK.md`) | Video BLOCKED: no recording/render without the owner's new explicit authorization. |
 | Declaration / acceptance | Unknown | Participant reviews terms and submits personally when ready. |
 
 Final review fields: reviewer name: **UNKNOWN**; review date: **UNKNOWN**; final commit: **UNKNOWN**; portal URL: **UNKNOWN**; final required fields: **UNKNOWN**; submission ID: **NOT SUBMITTED**; organizer acceptance: **UNKNOWN**. No credential, private device identifier or account-specific API URL belongs in this worksheet.

@@ -105,8 +105,12 @@ final class RelayServer {
     static synchronized RelayServer get(Context ctx, Ui ui) {
         Ui sink = (ui != null) ? ui : NOOP;
         if (instance == null) instance = new RelayServer(ctx.getApplicationContext(), sink);
-        instance.ui = sink;
+        else if (ui != null) instance.ui = ui;   // a live screen re-attach wins; a headless (service) lookup never detaches it
         return instance;
+    }
+    /** A screen going away drops its own sink so relay callbacks stop and it can be GC'd. */
+    static synchronized void release(Ui ui) {
+        if (instance != null && instance.ui == ui) instance.ui = NOOP;
     }
     private ServerSocket server;
     private NsdManager.RegistrationListener nsdListener;
@@ -255,8 +259,8 @@ final class RelayServer {
         ui.flow(true, "voice clip", pcm.length);
     }
 
-    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } prefs.edit().remove("controls").apply();
-        prefs.edit().remove("key").remove("require_aead").putBoolean("owner_enabled", false).putBoolean("full_control", false).apply(); ui.status("Pairing removed. This device no longer accepts commands."); }
+    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); }
+        prefs.edit().remove("controls").remove("key").remove("require_aead").putBoolean("owner_enabled", false).putBoolean("full_control", false).commit(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
     boolean scanPermission() {

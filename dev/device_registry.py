@@ -104,7 +104,14 @@ def render(records):
     for r in sorted(records, key=lambda x: (x['device_alias'].lower(), x['test_id'])):
         ops = ', '.join(safe(o) for o in r['operations'])
         def link(x):
-            rel = x[5:] if x.startswith('docs/') else x  # matrix lives in docs/
+            # Matrix lives in docs/: docs/ paths drop the prefix, repo-root
+            # paths need ../, absolute/anchor URLs stay untouched.
+            if x.startswith('docs/'):
+                rel = x[5:]
+            elif x.startswith(('http://', 'https://', '#', '../', '/')):
+                rel = x
+            else:
+                rel = '../' + x
             return '[%s](%s)' % (safe(x.rsplit('/', 1)[-1]), safe(rel)) if '/' in x else safe(x)
         proof = ', '.join(link(x) for x in r.get('evidence', [])[:3]) or 'None published'
         current = all(most_recent[(r['public_device_id'], r['environment'], op)] == r['test_utc'] for op in r['operations'])
