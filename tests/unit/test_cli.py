@@ -360,6 +360,8 @@ class DashboardsPatchCliTests(unittest.TestCase):
         self.assertEqual(out['patch']['patch_id'], 'p-9')
         self.assertEqual(len(out['offered_opaque_ids']), 1)
         self.assertIn('model_run', out)
+        self.assertEqual(out['devices'][0]['label'], 'Robot vacuum (Tuya)')
+        self.assertEqual(out['devices'][0]['opaque_id'], out['offered_opaque_ids'][0])
 
     def test_propose_medium_tier_uses_pinned_partial_offload(self):
         # Full offload dies on a 3.7GB pinned CUDA_Host alloc (01:34/01:40

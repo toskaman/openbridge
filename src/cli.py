@@ -953,7 +953,10 @@ def cmd_dashboards_propose(args):
     except (ValueError, v4_ui.UIError) as e:
         raise CliError('inference', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
     offered = [d['opaque_id'] for d in bundle['devices']]
+    # Prompt-time label map: opaque ids salt rotating discovery keys, so the
+    # patch-target label is unrecoverable later without this record.
     return {'patch': patch, 'offered_opaque_ids': offered,
+            'devices': prompt_devices,
             'primitives': sorted(bindable),
             'model_run': {'model_id': model_id, 'endpoint': endpoint,
                           'reply_sha256': hashlib.sha256(reply.encode()).hexdigest()},
