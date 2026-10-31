@@ -33,6 +33,7 @@ All runs on GitHub-hosted runners (public repository, $0 spent, $0 billed).
 | 41214555252 | android.yml | build-apk+wear+tv success; e2e failed (pair-confirm on OCR false positive, fixed); phone failed (same hang, contingency C) |
 | 41215098799 | android.yml | build-apk+phone(C)+tv+wear success; e2e failed (code unreadable, setup overlay suspected, fixed) |
 | 41215688399 | android.yml | build-apk+phone(C)+tv+wear success; e2e failed (pair-confirm 409: code read OK but the relay never displayed it — `get()` UI-detach race, fixed in `bfe3dd2`) |
+| 41218148973 | android.yml | attempt 1: runner infra flake (emulator never booted). Attempt 2: build-apk+e2e+tv+wear SUCCESS (fix proven on cloud emulator); phone failed on the same runner adb flake (already covered by contingency C in 41215098799; not re-run) |
 
 No paid runners, no secrets, no persistent public servers. Firebase Test Lab,
 Kaggle and Colab were assessed and marked NEEDS-ACCOUNT (owner-gated, §K).
@@ -130,7 +131,7 @@ Cloud end-to-end (`android.yml` `e2e` job + `scripts/verify/cloud_e2e.py`):
 server → pairing → signed scan → adb oracle → relay-side revoke. The full
 flow passes 9/9 on the physical phone (row 31: paired first try, 3 live BLE
 advertisers, oracle agrees, revoke → 409). The cloud-emulator twin is pending
-(run 41218148973 attempt 2 after a runner-infra flake).
+(run 41218148973 attempt 2: build-apk+e2e+tv+wear green).
 
 ## G. Video evidence inventory (draft)
 
@@ -224,7 +225,7 @@ need accounts.
 | G11 phone emulator | PASS (contingency C, run 41215098799) |
 | G12 TV emulator | PASS |
 | G13 Wear emulator | PASS |
-| G14–G16 cloud e2e | PARTIAL (9/9 PASS on physical phone; cloud twin rerun pending after infra flake) |
+| G14–G16 cloud e2e | PASS (9/9 physical phone + cloud emulator twin green on attempt 2) |
 | G17 Meta inference | PARTIAL (Llama 4/50 + S5 Glimmer T1/T2; overnight Glimmer OOM) |
 | G18 secrets/cost | PASS ($0, guards intact) |
 | G19 model refusal | PASS (mechanism 81/81; T3 pathology preserved) |
