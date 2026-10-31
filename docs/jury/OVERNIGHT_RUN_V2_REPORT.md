@@ -96,7 +96,7 @@ No mocked model output is presented as genuine inference anywhere in this report
 
 Real hardware (owner-authorized phone + TV; watch asleep, S6 owner-gated):
 
-- Phone (BV9300 Pro, Android 13, WLAN 192.168.1.40): APK rebuilt from source and
+- Phone (BV9300 Pro, Android 13, WLAN (redacted)): APK rebuilt from source and
   installed over adb; relay `relay-c388ba6dafcd` paired with the on-screen code
   (AEAD `aead1` negotiated); signed `get_status`; bounded 8 s BLE scans returning
   4–6 live advertisers ingested as `REAL_HARDWARE_VERIFIED ble_relay`; scan refused
@@ -105,7 +105,7 @@ Real hardware (owner-authorized phone + TV; watch asleep, S6 owner-gated):
   off; owner toggle stops (TCP 47800 closed, `Relay unreachable`) and restarts the
   service; toggle regression `scripts/verify/companion_toggle_check.py` 8/8
   on-device. Registry row 29.
-- TV (Android TV 11, ADB Wi-Fi 192.168.1.15:5555) + Tuya vacuum (S5b): relay
+- TV (Android TV 11, ADB Wi-Fi <tv>:5555) + Tuya vacuum (S5b): relay
   `relay-dabd2a796665` paired first-try via OCR code; Meta-generated T2 panel
   installed (Find vacuum + Volume up/down); OCR-located hold-press on Find vacuum
   dispatched `vacuum_command seek` (receipt `tx-4a96f8f626a1adc5`,
