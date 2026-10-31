@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenBridge — One AI. Many devices. New possibilities.</title>
+<meta name="description" content="Meta AI helps different devices understand, connect, and control one another through verified capabilities, explicit authorization, and observable results.">
+<style>
+:root{
+  --navy:#0B1020; --panel:#111A33; --ink:#F5F8FF; --muted:#A9B4D0;
+  --blue:#2C7BE5; --teal:#19C5B5; --line:#26314F; --warn:#E5A32C;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Helvetica,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--navy);color:var(--ink);font-family:var(--sans);
+  font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:#7FA9F5}
+a:hover{color:#A9C6FF}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+.topbar{border-bottom:1px solid var(--line);padding:14px 0;position:sticky;top:0;
+  background:rgba(11,16,32,.96);z-index:10}
+.topbar .wrap{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.wordmark{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);
+  text-decoration:none}
+.wordmark b{color:var(--teal);font-weight:700}
+.event{font-size:13px;color:var(--muted)}
+nav.main{margin-left:auto;display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+nav.main a{color:var(--muted);text-decoration:none}
+nav.main a:hover{color:var(--ink)}
+.hero{padding:72px 0 40px}
+.kicker{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(40px,6vw,68px);
+  line-height:1.08;margin:.35em 0 .3em;max-width:16em}
+.lede{font-size:21px;max-width:38em;color:var(--ink)}
+.lede em{color:var(--teal);font-style:normal}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}
+.btn{display:inline-block;padding:12px 22px;border-radius:6px;text-decoration:none;
+  font-weight:600;font-size:16px}
+.btn.primary{background:var(--teal);color:#06231F}
+.btn.ghost{border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--teal)}
+figure{margin:0}
+.media{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.media img,.media video{display:block;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--muted);padding:12px 4px 0;line-height:1.55}
+figcaption code{font-family:var(--mono);font-size:13px;color:var(--ink)}
+.ledger{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);
+  border-radius:8px;margin:36px 0 8px;overflow:hidden}
+.ledger div{padding:18px 20px;border-left:1px solid var(--line)}
+.ledger div:first-child{border-left:0}
+.ledger strong{display:block;font-family:var(--serif);font-size:30px;color:var(--teal)}
+.ledger span{font-size:14px;color:var(--muted)}
+section{padding:56px 0;border-top:1px solid var(--line);scroll-margin-top:84px}
+.secnum{font-family:var(--serif);font-size:15px;color:var(--teal)}
+h2{font-family:var(--serif);font-size:clamp(28px,4vw,40px);margin:.25em 0 .6em;
+  line-height:1.15}
+h3{font-size:20px;margin:1.6em 0 .5em}
+p{max-width:44em}
+.narrow{max-width:44em}
+.steps{list-style:none;margin:28px 0;padding:0;counter-reset:step;
+  display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.steps li{counter-increment:step;border-top:1px solid var(--line);padding:14px 0 14px 56px;
+  position:relative}
+.steps li::before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:14px;
+  font-family:var(--serif);color:var(--teal);font-size:18px}
+.steps li b{display:block;font-size:16px}
+.steps li span{font-size:14.5px;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-top:28px}
+.grid2.flip>figure{order:-1}
+.pipe{display:flex;gap:0;margin:28px 0;overflow-x:auto;border:1px solid var(--line);
+  border-radius:8px;background:var(--panel)}
+.pipe span{padding:14px 18px;font-size:13.5px;white-space:nowrap;border-left:1px solid var(--line)}
+.pipe span:first-child{border-left:0}
+.pipe span.meta{background:rgba(25,197,181,.12);color:var(--teal);font-weight:600}
+.pipe span.gate{background:rgba(229,163,44,.10);color:var(--warn);font-weight:600}
+table{width:100%;border-collapse:collapse;margin:24px 0;font-size:15.5px}
+th,td{text-align:left;padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
+th{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+  padding:2px 10px;border-radius:20px;margin-right:6px}
+.pill.real{background:rgba(25,197,181,.15);color:var(--teal)}
+.pill.emu{background:rgba(44,123,229,.15);color:#7FA9F5}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:28px 0}
+.stats div{border-top:2px solid var(--teal);padding-top:12px}
+.stats strong{display:block;font-family:var(--serif);font-size:38px;line-height:1.1}
+.stats span{font-size:14px;color:var(--muted)}
+ul.tight{padding-left:22px}
+ul.tight li{margin:8px 0;max-width:46em}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.cols h3{margin-top:0}
+.caveat{border:1px solid var(--warn);border-radius:8px;padding:20px 24px;background:rgba(229,163,44,.06)}
+.caveat h3{color:var(--warn)}
+pre{background:#070B18;border:1px solid var(--line);border-radius:8px;padding:20px 24px;
+  overflow-x:auto;font-family:var(--mono);font-size:14.5px;line-height:1.7}
+pre .c{color:var(--muted)}
+.links{columns:2;column-gap:40px;font-size:16px}
+.links li{margin:10px 0;break-inside:avoid}
+footer{border-top:1px solid var(--line);padding:36px 0 60px;color:var(--muted);font-size:14.5px}
+footer .wrap{display:grid;gap:8px}
+.still-fallback{display:none}
+@media (max-width:900px){
+  .ledger,.stats{grid-template-columns:1fr 1fr}
+  .ledger div:nth-child(3){border-left:0}
+  .steps,.grid2,.cols{grid-template-columns:1fr}
+  .grid2.flip>figure{order:0}
+  nav.main{display:none}
+  .links{columns:1}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .motion{display:none}
+  .still-fallback{display:block}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="#">Open<b>Bridge</b></a>
+    <span class="event">Meta Global AI Developer Hackathon 2026 · Indie Developer · Push the Frontier</span>
+    <nav class="main" aria-label="Sections">
+      <a href="#demo">Demo</a><a href="#do">Capabilities</a><a href="#how">How it works</a>
+      <a href="#hardware">Hardware</a><a href="#meta">Meta AI</a><a href="#security">Security</a>
+      <a href="#try">Try it</a><a href="#proof">Proof</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="kicker">One AI. Many devices. New possibilities.</div>
+    <h1>Disconnected hardware, turned into one intelligent system.</h1>
+    <p class="lede">OpenBridge uses <em>Meta AI</em> to help different devices understand,
+      connect, and control one another — through verified capabilities, explicit
+      authorization, and observable results.</p>
+    <div class="cta">
+      <a class="btn primary" href="#demo">See the real-device demo</a>
+      <a class="btn ghost" href="#try">Run it yourself</a>
+      <a class="btn ghost" href="#proof">Inspect the evidence</a>
+    </div>
+    <figure>
+      <div class="media motion"><img src="../jury/screens/openbridge-tour.gif" width="960" height="540" alt="Eleven-second tour of six real OpenBridge captures: device graph, Ask panel, phone, TV, watch, Meta-built panel"></div>
+      <div class="media still-fallback"><img src="../jury/screens/fabric-tv-relay-redacted-1440.png" width="1440" height="900" alt="Live OpenBridge device graph on a real home network, names redacted" loading="lazy"></div>
+      <figcaption>Eleven seconds, six real captures, zero mock-ups. A static frame is shown when reduced motion is preferred.</figcaption>
+    </figure>
+    <div class="ledger" role="list">
+      <div role="listitem"><strong>30</strong><span>verified evidence rows, 21 on real hardware</span></div>
+      <div role="listitem"><strong>1,245</strong><span>tests green on Windows, macOS, Linux</span></div>
+      <div role="listitem"><strong>Meta-only</strong><span>runtime models, enforced in code</span></div>
+      <div role="listitem"><strong>$0</strong><span>local inference cost; cloud consent-gated</span></div>
+    </div>
+  </div>
+
+  <section id="why">
+    <div class="secnum">01 — The 30-second explanation</div>
+    <h2>Your devices were never designed to work together.</h2>
+    <p>OpenBridge discovers everything on your network, learns what each device can
+      <em>verifiably</em> do, and lets Meta AI compose <em>new</em> cross-device
+      controls — a TV panel that operates your robot vacuum, a watch button that
+      quiets the living room.</p>
+    <p>Meta models do the understanding. Deterministic safety gates do the enforcing:
+      every AI proposal passes strict validation, owner approval, and independent
+      read-back before anything happens. Every run ends with a receipt.</p>
+  </section>
+
+  <section id="demo">
+    <div class="secnum">02 — See it in action</div>
+    <h2>“Create a control panel on my TV so I can operate my robot vacuum.”</h2>
+    <p class="narrow">Local Muse Glimmer proposes the panel. OpenBridge validates every control
+      against authorized capabilities, installs it on the real Android TV, and dispatches
+      the press to the vacuum over the approved Tuya interface — then revokes it, with
+      denial verified. Receipt <code>tx-4a96f8f6</code>, 15-poll oracle stable.</p>
+    <ol class="steps">
+      <li><b>Plain-language request</b><span>typed in Ask OpenBridge, English or French</span></li>
+      <li><b>Meta inference, receipted</b><span>model id, digest, tokens, cost logged</span></li>
+      <li><b>Strict validation</b><span>targets, commands, params — VALID or refused</span></li>
+      <li><b>Owner approval</b><span>fingerprint-bound preview, explicit consent</span></li>
+      <li><b>Install on the real TV</b><span>4/4 controls bound, render OCR-verified</span></li>
+      <li><b>Press dispatched</b><span>signed relay channel to the Tuya interface</span></li>
+      <li><b>Receipt + oracle</b><span>execution receipt, 15 × 2 s stability polls</span></li>
+      <li><b>Revoke + deny</b><span>grants cleared, re-press verifiably denied</span></li>
+    </ol>
+    <div class="grid2">
+      <figure>
+        <div class="media"><img src="../jury/screens/s5b_pressed.png" width="1920" height="1080" alt="Meta-generated T2 control panel on a real TV after the hold-press dispatch" loading="lazy"></div>
+        <figcaption>T2 panel mid-run on the real TV, 31 Oct 2026. Press ADB-injected — labeled on the record, never presented as a manual tap.</figcaption>
+      </figure>
+      <figure>
+        <div class="media"><img src="../jury/screens/ask-openbridge-1440.png" width="1440" height="1000" alt="Ask OpenBridge panel with tiered Meta routing and consent controls" loading="lazy"></div>
+        <figcaption>Ask → fingerprint-bound preview → approve → receipt. Local tiers verified live.</figcaption>
+      </figure>
+    </div>
+    <p class="narrow">Honest limits: panel installation, dispatch, receipts, and revocation are
+      verified on real hardware; the vacuum was already docked/cleaning so motion was not
+      observed. Owner-gated manual-press runs are scripted in the
+      <a href="../jury/DEMO_PHYSICAL_RUNBOOK.md">physical runbook</a>.
+      Full arc: <a href="../jury/DEMO_STORYBOARD_FINAL.md">storyboard</a> ·
+      <a href="../evidence/s5-tv-panel-31oct.md">S5 proof</a> ·
+      <a href="../evidence/s5b-safe-seek-31oct.md">S5b proof</a>.</p>
+  </section>
+
+  <section id="do">
+    <div class="secnum">03 — What you can actually do</div>
+    <h2>Four things, all proven.</h2>
+    <div class="grid2">
+      <div>
+        <h3>Ask in plain language</h3>
+        <p><i>Scan for bluetooth devices</i> → preview exactly what will change → approve →
+          read the receipt. French accepted too. No fixed command grammar: tiered Meta-only
+          routing resolves requests to registered skills.</p>
+      </div>
+      <figure>
+        <div class="media"><img src="../jury/screens/fabric-tv-relay-redacted-1440.png" width="1440" height="900" alt="One live graph of 24 real home devices, names redacted" loading="lazy"></div>
+        <figcaption>One graph, 24 real devices — relays, router, vacuum merged on strong identifiers only.</figcaption>
+      </figure>
+    </div>
+    <div class="grid2 flip">
+      <div>
+        <h3>Reach devices your PC can’t see</h3>
+        <p>Bluetooth via phone/TV relays (with a proven
+          <a href="../release/COMPLETE_HANDOVER.md">TV-to-phone handover</a>), Freebox LAN
+          inventory (127 known / 12 active hosts), a second PC, a Tuya vacuum. This PC has
+          no Bluetooth radio — reach comes through relays.</p>
+      </div>
+      <figure>
+        <div class="media"><img src="../jury/screens/tv-companion-0-11-paired.png" width="1920" height="1080" alt="Android TV Companion paired, showing live tiles and activity feed" loading="lazy"></div>
+        <figcaption>The real Android TV Companion, PAIRED — orb, LIVE tiles, relay feed.</figcaption>
+      </figure>
+    </div>
+    <div class="grid2">
+      <div>
+        <h3>Control from any screen</h3>
+        <p>Phone, Android TV, and Galaxy Watch7 Companions are paired and operational on real
+          hardware; a second Windows PC runs owner jobs. ESP32 runs natively under QEMU
+          (physical deployment pending); more ports are planned, not claimed.</p>
+      </div>
+      <figure>
+        <div class="media"><img src="../jury/screens/g04-watch-quick-controls.png" width="480" height="480" alt="Native quick controls rendered on a Galaxy Watch7" loading="lazy"></div>
+        <figcaption>Owner-approved controls rendered natively on the Galaxy Watch7.</figcaption>
+      </figure>
+    </div>
+    <div class="grid2 flip">
+      <div>
+        <h3>Revoke anything</h3>
+        <p>One tap revokes standing consent; every refused press lands in the Activity timeline
+          with a server-composed reason. Journaled setting changes get per-change
+          RESTORED / FAILED / MANUAL verdicts; physical acts are labeled non-undoable
+          <em>before</em> you approve.</p>
+      </div>
+      <figure>
+        <div class="media"><img src="../jury/screens/s5b_revoked.png" width="1920" height="1080" alt="TV panel after revocation, controls cleared" loading="lazy"></div>
+        <figcaption>After <code>set_controls([])</code>: zero grants left, re-press denied.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="secnum">04 — How it works</div>
+    <h2>Meta proposes. Deterministic gates dispose.</h2>
+    <div class="pipe" aria-label="Execution pipeline">
+      <span>User intent</span><span class="meta">Meta AI reasoning</span><span>Capability discovery</span><span class="gate">Safety gate</span><span>Owner approval</span><span>Cross-device execution</span><span>Independent verification</span><span>Receipt / revoke / eligible undo</span>
+    </div>
+    <p class="narrow">Local-first: Llama 3.2 3B (CPU) triages, Muse Glimmer 30B (GPU/CPU) plans and
+      explains — both digest-pinned, no cloud fallback. Hosted Muse Spark 1.3 answers only
+      synthetic facts, only with explicit consent, inside a hard budget. The runtime is
+      Meta-models-only, enforced in code. Full design in the
+      <a href="../UNIVERSAL_DEVICE_ARCHITECTURE.md">architecture document</a>.</p>
+  </section>
+
+  <section id="hardware">
+    <div class="secnum">05 — Tested hardware</div>
+    <h2>Real means real. Emulated means emulated.</h2>
+    <table>
+      <thead><tr><th>Surface</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Android phone, Android TV, Galaxy Watch7 Companions</td><td><span class="pill real">REAL HARDWARE</span> installed, paired, controls rendered, commands dispatched</td></tr>
+        <tr><td>Freebox Delta router, Tuya robot vacuum, 2nd Windows PC</td><td><span class="pill real">REAL HARDWARE</span> reads + consented commands with read-back</td></tr>
+        <tr><td>7 Linux / legacy-Windows guests (QEMU)</td><td><span class="pill emu">FULL GUEST OS</span> agent protocol proven, labeled as VMs</td></tr>
+        <tr><td>Pixel 6 AVD, ESP32 native IDF agent</td><td><span class="pill emu">OFFICIAL EMULATOR</span> proven, never counted as physical</td></tr>
+      </tbody>
+    </table>
+    <p class="narrow"><a href="../HARDWARE_TEST_MATRIX.md">Hardware matrix</a> ·
+      <a href="../DEVICE_EVIDENCE.json">evidence registry</a> (30 VERIFIED rows) ·
+      <a href="../jury/CLAIM_EVIDENCE_MATRIX.md">claim ↔ evidence</a> ·
+      <a href="../KNOWN_LIMITATIONS.md">known limitations</a></p>
+    <div class="grid2">
+      <figure>
+        <div class="media"><img src="../jury/screens/phone-companion-0-12-paired.png" width="1080" height="2388" alt="Phone Companion 0.12 paired and ready" loading="lazy"></div>
+        <figcaption>Companion 0.12.0 on a real phone, PAIRED — voice orb, tiles, owner controls.</figcaption>
+      </figure>
+      <figure>
+        <div class="media"><img src="../jury/screens/companion-0-10-full-control-popup.png" width="1080" height="2388" alt="Allow full control warning dialog on the phone" loading="lazy"></div>
+        <figcaption>Standing consent, on-device: the “Allow full control” warning. Revoking is one tap.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="meta">
+    <div class="secnum">06 — Meta AI, measured</div>
+    <h2>Without Meta inference, this would be static plumbing.</h2>
+    <p class="narrow">Discovery would still list devices — but nothing would understand a request,
+      compose a control panel, propose a plan, or explain a device in usable words.
+      Favorable and unfavorable results are both published:</p>
+    <div class="stats">
+      <div><strong>56/60</strong><span>usable device explanations, Glimmer (Llama 3B: 0/60)</span></div>
+      <div><strong>86.7%</strong><span>narrow planning accuracy, Glimmer (rules: 90%, Llama: 53.3%)</span></div>
+      <div><strong>0.833</strong><span>registered ablation: no model arm beat the rules</span></div>
+      <div><strong>100%</strong><span>unsafe proposals refused by the deterministic gate</span></div>
+    </div>
+    <ul class="tight">
+      <li><b>Composing controls:</b> Glimmer generated the real TV vacuum panel (4/4 bound, OCR-verified); Llama planned the quiet-mode pair (TV vol 22→21 + vacuum dock).</li>
+      <li><b>Honest failures kept:</b> Forge Llama arm 0.0%, Forge Glimmer arm resource-blocked (0/64, nulls not zero-filled), 1,000-turn rules baseline 1.4%.</li>
+      <li><b>Not Meta-implemented:</b> transport probing, orchestration DAG, runtime dashboards — deterministic by design. Meta <em>guides</em> discovery today; Meta-<em>driven</em> discovery loops are the labeled roadmap.</li>
+    </ul>
+    <p class="narrow"><a href="../benchmark/STATUS.md">Benchmark status</a> ·
+      <a href="../MODEL_USAGE_AND_EVALUATION.md">model usage</a> ·
+      <a href="../forge/TV_GLIMMER_JOURNEY.md">TV Glimmer journey</a></p>
+  </section>
+
+  <section id="security">
+    <div class="secnum">07 — Security and trust</div>
+    <h2>Show the refusals, not just the successes.</h2>
+    <div class="cols">
+      <div>
+        <h3>Guarantees</h3>
+        <ul class="tight">
+          <li>Owner consent per privileged act; typed skills, never free-form shell</li>
+          <li>Strict validation before dispatch; idempotency keys + crash-safe journal (honest UNCERTAIN, never blind re-execution)</li>
+          <li>Independent read-back oracles; signed, expiring, replay-protected relay commands</li>
+          <li>Pairing attempt limits; revocation stops new admissions; refusal timeline</li>
+        </ul>
+      </div>
+      <div class="caveat">
+        <h3>Caveats, not footnotes</h3>
+        <ul class="tight">
+          <li>BridgeWindows v4 frames are authenticated but plaintext — trusted LAN only (sealed v5 is design-only)</li>
+          <li>Pairing codes fall to offline brute force if a transcript is captured — USB enrollment recommended</li>
+          <li>BLE scans are foreground-only by design; Android <code>e2e</code> CI job failing while unit/browser suites are green</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="try">
+    <div class="secnum">08 — Try OpenBridge</div>
+    <h2>From clone to live graph in four commands.</h2>
+    <p class="narrow">Windows, Linux, or macOS · Python 3.14 · zero third-party runtime packages.</p>
+    <pre><span class="c"># 1,245 controlled tests — no hardware needed</span>
+git clone https://github.com/toskaman/openbridge.git
+cd openbridge
+python -m unittest discover -s tests
+python -m src.cli judge demo   <span class="c"># offline demo → DEMO_COMPLETE</span>
+python -m src.server           <span class="c"># → http://127.0.0.1:18765</span></pre>
+    <p class="narrow">Local Meta models: <code>dev.start_local_meta</code> (Llama 3.2 3B) and
+      <code>dev.start_glimmer</code> (Glimmer 30B, ~18 GB). Full guide:
+      <a href="../QUICKSTART.md">QUICKSTART</a> ·
+      <a href="../CLI_REFERENCE.md">CLI reference</a> ·
+      <a href="../jury/JURY_START_HERE.md">jury fast-track</a>.</p>
+  </section>
+
+  <section id="proof">
+    <div class="secnum">09 — Proof, tests, reproducibility</div>
+    <h2>Don’t take our word for it.</h2>
+    <ul class="links">
+      <li><a href="https://github.com/toskaman/openbridge/actions">CI runs</a> — unit, browser, clean-room</li>
+      <li><a href="../RELEASE_EVIDENCE.md">Release evidence index</a></li>
+      <li><a href="../RELEASE_STATUS.md">Release status &amp; gates</a></li>
+      <li><a href="../DEVICE_EVIDENCE.json">Machine-readable evidence registry</a></li>
+      <li><a href="../HARDWARE_TEST_MATRIX.md">Hardware compatibility matrix</a></li>
+      <li><a href="../jury/CLAIM_EVIDENCE_MATRIX.md">Claim ↔ evidence matrix</a></li>
+      <li><a href="../benchmark/STATUS.md">Benchmark methodology &amp; results</a></li>
+      <li><a href="../KNOWN_LIMITATIONS.md">Known limitations</a></li>
+      <li><a href="../jury/COMPLIANCE_CHECKLIST.md">Hackathon compliance checklist</a></li>
+      <li><a href="../README.md">Full documentation index</a></li>
+    </ul>
+  </section>
+
+  <section id="hackathon">
+    <div class="secnum">10 — Built for the hackathon</div>
+    <h2>Push the Frontier, solo.</h2>
+    <p class="narrow"><b>Push the Frontier:</b> Meta models inspect unfamiliar physical devices,
+      identify verified interfaces, synthesize missing authorized capabilities, and coordinate
+      heterogeneous hardware — beyond generic chatbots. <b>Build for Your World:</b> useful
+      devices that couldn’t cooperate now can.</p>
+    <p class="narrow">Built from the ground up during the event (start ref 2026-10-26T16:24:00Z;
+      zero files predate it; an earlier private prototype was rewritten from scratch).
+      Track: Indie Developer, solo. Scoring and bonus details marked T-P ONLY or OPEN in the
+      <a href="../jury/COMPLIANCE_CHECKLIST.md">compliance checklist</a> must be verified in
+      the portal; no award is claimed.</p>
+  </section>
+
+  <section id="about">
+    <div class="secnum">11 — About the developer</div>
+    <h2>Built by curiosity.</h2>
+    <p class="narrow">OpenBridge was built by an autistic independent developer, passionate about
+      hardware, AI, and interoperability since childhood — finding out how systems work,
+      and making them work together.</p>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>MIT licence · Llama 3.2 Community License for local Llama use ·
+      <a href="../../THIRD_PARTY.md">third-party notices</a> ·
+      <a href="../../CONTRIBUTIONS.md">contributions &amp; provenance</a> (runtime inference is Meta-only)</span>
+    <span>OpenBridge · Meta Global AI Developer Hackathon 2026 ·
+      <a href="https://github.com/toskaman/openbridge">github.com/toskaman/openbridge</a></span>
+  </div>
+</footer>
+</body>
+</html>

@@ -42,9 +42,12 @@ disclosed) — out of my scope, listed here for the merger.
 - `python -m unittest discover -s tests`: **1245 tests OK** (110 s).
 - `python -m dev.device_registry --check`: registry OK (30 rows), matrix in sync.
 - `compileall` on new/changed dev scripts: clean.
-- `python dev/build_jury_presentation.py`: 291 files, ZIP sha256
-  `ded49878df1e1ca35c53817d198e13ca4e109453f99b01ec53f0dd7a90670f97`
+- `python dev/build_jury_presentation.py`: 292 files, ZIP sha256
+  `8332face85719e0f5493a5eb28ed34f4b7b301bbd32de0c33af6461919cc8a07`
   (`--without-extras` portable mode also verified: 290 files, exit 0).
+- Showcase page (`docs/showcase/index.html`): Playwright smoke on file:// —
+  10/10 images loaded, 0 console/page/network errors, desktop 1440 + mobile
+  390 verified by screenshot; in-pack HTML links validated by the builder.
 - Not executed: browser smokes locally (CI covers), clean-room rebuild,
   Android e2e (CI failing, disclosed), macOS hand-run.
 

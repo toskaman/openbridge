@@ -23,6 +23,7 @@ STAGE = Path(os.environ.get("JURY_PACK_STAGE", "E:/jury-pack/OpenBridge-Jury-Pre
 ZIP = Path(os.environ.get("JURY_PACK_ZIP", str(STAGE.parent / "OpenBridge-Jury-Presentation.zip")))
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)#]+)(?:#[^)]*)?\)")
+HTML_LINK = re.compile(r"""(?:href|src)=["']([^"'#]+)(?:#[^"']*)?["']""")
 
 # (repo glob, keep in stage) — globs relative to ROOT.
 INCLUDE = [
@@ -38,6 +39,7 @@ INCLUDE = [
     "docs/jury/*.md",
     "docs/jury/*.json",
     "docs/jury/screens/*",
+    "docs/showcase/*",
     "docs/evidence/*.md",
     "docs/release/*.md",
     "docs/release/*.json",
@@ -159,10 +161,12 @@ def main():
     (STAGE / "ZIP_INDEX.md").write_text(index, encoding="utf8")
 
     broken = []
-    for md in STAGE.rglob("*.md"):
+    docs = [(md, LINK) for md in STAGE.rglob("*.md")]
+    docs += [(md, HTML_LINK) for md in STAGE.rglob("*.html")]
+    for md, pattern in docs:
         if md.relative_to(STAGE).as_posix() in VALIDATE_SKIP:
             continue
-        for target in LINK.findall(md.read_text(encoding="utf8")):
+        for target in pattern.findall(md.read_text(encoding="utf8")):
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
             if not (md.parent / target).exists():

@@ -7,7 +7,7 @@
 
 Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier*
 
-[Demo for judges](docs/jury/JURY_START_HERE.md) · [Quickstart](docs/QUICKSTART.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)
+[Demo for judges](docs/jury/JURY_START_HERE.md) · [Showcase](docs/showcase/index.html) · [Quickstart](docs/QUICKSTART.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)
 
 ![Real Device Fabric run, household names redacted](docs/jury/screens/fabric-tv-relay-redacted-1440.png)
 
