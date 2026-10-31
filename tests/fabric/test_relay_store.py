@@ -80,7 +80,7 @@ class Restore(unittest.TestCase):
         from src.server import create_server
         srv = create_server(0, fabric_salt=b't', session_journal=SessionJournal(_t.mkdtemp() + '/s.json'), relay_store=s)
         srv.android.handle_for = lambda serial: 'android-h1' if serial_present and serial == 'SER1' else None
-        srv.android.forward_companion = lambda handle: 'http://127.0.0.1:9'
+        srv.android.relay_urls = lambda handle: ['http://127.0.0.1:9']
         self.addCleanup(srv.server_close)
         return srv, srv.restore_relays(transport_factory=lambda url: companion)
 

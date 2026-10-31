@@ -315,6 +315,38 @@ def http_transport(base_url, timeout=25):
     return send
 
 
+def failover_transport(urls, lan_timeout=3, timeout=25):
+    """POST JSON trying each relay URL in order. Transport errors (refused,
+    reset, timeout) move to the next URL; protocol refusals (RelayError)
+    propagate at once: a wrong key or a stale forward answering from another
+    device must never silently reroute. LAN URLs fail fast (`lan_timeout`)
+    so blackholed subnets (client isolation) fall back quickly; loopback
+    (adb forward) keeps the full `timeout`. Malformed replies (HTTPException,
+    bad JSON) propagate like RelayError: fail-closed, never rerouted."""
+    from urllib.parse import urlsplit
+    import ipaddress
+    urls = list(urls or [])
+    if not urls:
+        raise RelayError('No relay URL')
+    for u in urls:
+        _check_scope(u)
+    sends = []
+    for u in urls:
+        ip = ipaddress.ip_address(urlsplit(u).hostname)
+        sends.append(http_transport(u, timeout=timeout if ip.is_loopback else lan_timeout))
+    def send(_relay, message):
+        last = None
+        for s in sends:
+            try:
+                return s(_relay, message)
+            except RelayError:
+                raise
+            except (OSError, TimeoutError) as e:
+                last = e
+        raise last
+    return send
+
+
 def voice_sig(key, clip_id, ts, nonce):
     """HMAC for a one-shot voice download URL. Mirrors the Companion's /voice check byte for byte."""
     return hmac.new(key, f'voice-v1|{clip_id}|{ts}|{nonce}'.encode(), hashlib.sha256).hexdigest()
@@ -364,6 +396,30 @@ def fetch_voice(base_url, key, clip_id, expected_bytes, expected_sha256, timeout
     if hashlib.sha256(raw).hexdigest() != expected_sha256:
         raise RelayError('Voice clip hash mismatch')
     return raw
+
+
+def fetch_voice_urls(urls, key, clip_id, expected_bytes, expected_sha256, timeout=25, relay_id=None, aead_version=None, lan_timeout=3):
+    """`fetch_voice` over ordered candidates: same failover rule as
+    `failover_transport` (transport errors move on, refusals propagate)."""
+    from urllib.parse import urlsplit
+    import ipaddress
+    urls = list(urls or [])
+    if not urls:
+        raise RelayError('No relay URL')
+    last = None
+    for u in urls:
+        try:
+            ip = ipaddress.ip_address(urlsplit(u).hostname or '')
+            t = timeout if ip.is_loopback else min(timeout, lan_timeout)
+        except ValueError:
+            t = timeout  # fetch_voice reports the scope violation as RelayError
+        try:
+            return fetch_voice(u, key, clip_id, expected_bytes, expected_sha256, timeout=t, relay_id=relay_id, aead_version=aead_version)
+        except RelayError:
+            raise
+        except (OSError, TimeoutError) as e:
+            last = e
+    raise last
 
 
 def pair(send, code_reader):

@@ -92,6 +92,10 @@ final class RelayServer {
     /** nonce -> expires_at (s). A nonce is forgotten only after its command expired; never evicted while live. */
     private final Map<String, Long> seen = new LinkedHashMap<>();
     private static final int MAX_NONCES = 512;
+    /** nonce -> last reply. A retried request (lost response, transport failover) gets the original
+        reply instead of re-executing: exactly-once execution with at-least-once delivery. Swept with
+        `seen`; cleared on (re)pairing and unpair. Guarded by the `seen` monitor. */
+    private final Map<String, JSONObject> replies = new LinkedHashMap<>();
     private volatile boolean running;
     private static RelayServer instance;
     volatile boolean foreground;
@@ -229,16 +233,8 @@ final class RelayServer {
         try { t = Long.parseLong(ts == null ? "" : ts); } catch (NumberFormatException ignored) { }
         boolean ok = key != null && clip != null && clip.matches("[a-z0-9-]{1,32}")
                 && t > 0 && Math.abs(now - t) <= 120 && nonce != null && nonce.matches("[0-9a-f]{16}") && sig != null;
-        if (ok) {
-            synchronized (seen) {
-                if (seen.containsKey("v" + nonce)) ok = false;
-                else {
-                    seen.values().removeIf(exp -> exp < now);
-                    if (seen.size() >= MAX_NONCES) ok = false;
-                    else { seen.put("v" + nonce, t + 120); }
-                }
-            }
-        }
+        // Voice fetch is an idempotent read: the same signed URL may be retried (transport
+        // failover) within its 120 s HMAC window. No one-shot marking; clips drop on report.
         if (ok) {
             try {
                 if (!MessageDigest.isEqual(hex(hmac(key, "voice-v1|" + clip + "|" + t + "|" + nonce)).getBytes(), sig.getBytes())) ok = false;
@@ -259,7 +255,7 @@ final class RelayServer {
         ui.flow(true, "voice clip", pcm.length);
     }
 
-    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); }
+    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } synchronized (seen) { seen.clear(); replies.clear(); }
         prefs.edit().remove("controls").remove("key").remove("require_aead").putBoolean("owner_enabled", false).putBoolean("full_control", false).commit(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
@@ -390,8 +386,29 @@ final class RelayServer {
         }
         JSONObject reply;
         lastOp = msg.optString("op", sealed ? "sealed" : "request");
-        try { reply = dispatch(msg, sealed); }
+        try {
+            reply = dispatch(msg, sealed);
+            String rn = msg.optString("nonce");
+            if (!rn.isEmpty()) {
+                synchronized (seen) {
+                    replies.put(rn, reply);
+                    replies.keySet().retainAll(seen.keySet());
+                }
+            }
+        }
         catch (SecurityException e) {
+            if ("replay".equals(e.getMessage())) {
+                JSONObject cached;
+                synchronized (seen) { cached = replies.get(msg.optString("nonce")); }
+                if (cached != null) {
+                    String body = sealed ? Aead.seal(k, Aead.aad(rid, "relay>pc"), cached.toString().getBytes(StandardCharsets.UTF_8), null).toString()
+                                             : cached.toString();
+                    respond(c, 200, body);
+                    ui.flow(false, lastOp, read);
+                    ui.flow(true, "replay-cached", body.length());
+                    return;
+                }
+            }
             ui.flow(false, lastOp, read);
             String err = new JSONObject().put("error", e.getMessage()).toString();
             respond(c, 403, err);
@@ -592,6 +609,7 @@ final class RelayServer {
         try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
         // Pairing with the on-screen code is the owner's consent: scans are enabled right away (pausable in the app).
         prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).apply(); pendingCode = null; ui.code(null);
+        synchronized (seen) { seen.clear(); replies.clear(); }   // fresh pairing = fresh message space
         ui.status("Paired with OpenBridge. Bluetooth scans are available while this app is open.");
         return body;
     }

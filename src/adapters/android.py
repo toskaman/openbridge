@@ -238,6 +238,72 @@ class AndroidAdapter:
             ports[serial] = port
         return f'http://127.0.0.1:{port}'
 
+    def direct_url(self, handle):
+        """Direct-LAN relay URL for a Wi-Fi adb serial (`ip:port` -> `http://ip:47800`).
+
+        USB serials have no IP: None (post-pairing, `lan_url_for_relay`
+        matches the companion mDNS record by relay id instead). Private
+        IPv4 only; never loopback (that tier is the adb forward)."""
+        import ipaddress
+        with self._lock:
+            serial = next((k for k, v in self._handles.items() if v == handle), None)
+        if serial is None:
+            raise ValueError('Unknown device')
+        ip, _, _ = serial.rpartition(':')
+        try:
+            address = ipaddress.ip_address(ip)
+        except ValueError:
+            return None
+        if address.version != 4 or not address.is_private or address.is_loopback:
+            return None
+        return f'http://{ip}:47800'
+
+    def relay_urls(self, handle):
+        """Ordered relay candidates: direct Wi-Fi/LAN first, adb forward last.
+
+        Owner priority wifi -> lan -> adb-wifi -> adb maps to: the serial IP
+        is tried first (whatever medium carries it), then the adb forward for
+        that serial (which itself rides adb-over-wifi or adb-over-USB)."""
+        urls = []
+        direct = self.direct_url(handle)
+        if direct:
+            urls.append(direct)
+        urls.append(self.forward_companion(handle))
+        return urls
+
+    @staticmethod
+    def lan_url_for_relay(relay_id, timeout=1.0):
+        """Direct-LAN URL by mDNS match on the companion TXT relay id.
+
+        Gives USB-paired devices a direct URL after pairing (their serial
+        carries no IP). Bounded single browse; any failure or mismatch is
+        None (the caller keeps the adb forward)."""
+        import ipaddress as _ip
+        from src.fabric import mdns
+        if not isinstance(relay_id, str) or not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id):
+            return None
+        try:
+            res = mdns.discover(timeout=timeout, services=('_openbridge-relay._tcp',))
+        except OSError:
+            return None
+        scope = mdns.default_scope()
+        for inst in res.get('instances', []):
+            if inst.get('service') != '_openbridge-relay._tcp':
+                continue
+            if (inst.get('txt') or {}).get('relay') != relay_id:
+                continue
+            port = inst.get('port')
+            if not isinstance(port, int) or isinstance(port, bool) or not 1024 < port < 65536:
+                continue
+            for ip in inst.get('addresses', []):
+                try:
+                    a = _ip.ip_address(ip)
+                except ValueError:
+                    continue
+                if a.version == 4 and a.is_private and not a.is_loopback and mdns.in_scope(ip, scope):
+                    return f'http://{ip}:{port}'
+        return None
+
     def pair_wireless(self, ip, pair_port, code):
         """Owner-typed Wear OS / Android 11+ wireless-debugging pairing: `adb pair` with the code shown on the device,
         then connect to the port the device advertises over mDNS. Private IPv4 only; no scanning."""

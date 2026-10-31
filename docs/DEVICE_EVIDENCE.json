@@ -1018,5 +1018,44 @@
    "owner authorized phone use for the night session",
    "isolated test server (port 18793, private store); live server untouched"
   ]
+ },
+ {
+  "test_id": "wd7-direct-drain-tv-adb-down",
+  "test_utc": "2026-10-31T22:26:42Z",
+  "commit_sha": "267aa74b7291ffc1c40f4835ab7dd4865f33fc6f",
+  "platform": "Android TV",
+  "device_alias": "Owner Android TV (Android 11)",
+  "public_device_id": "tv-companion-01",
+  "os_version": "Android 11 (SDK 30)",
+  "companion_version": "0.12.0 (code 12), rebuilt with DUMP/READ_LOGS manifest permissions (same version)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "fresh pair over the direct-LAN relay URL (TV LAN address, port 47800, no adb forward)",
+   "6-digit on-screen code auto-read from uiautomator with change detection (stale card rejected)",
+   "signed discover_capabilities PAIRED relay-dabd2a796665, command_submit declared",
+   "text order typed into the TV ask field via adb input (test tooling only)",
+   "TV adb disconnected; adb devices asserted free of the TV",
+   "command drained over the direct URL only with adb down, signed report delivered",
+   "report caption rendered on the TV screen and activity feed"
+  ],
+  "evidence": [
+   "docs/jury/screens/tv-wd7-direct-drain-caption.png",
+   "docs/superpowers/specs/2026-10-31-wifi-direct-design.md",
+   "docs/superpowers/plans/2026-10-31-wifi-direct-phase-a.md"
+  ],
+  "independent_oracle": "adb devices output asserted without the TV during the drain; TV screencap pulled after reconnect shows the report caption plus the activity feed (paired 23:26:14, order 23:26:32, report 23:26:41 local); result file drained=1 adb_down=true; code-change timeline log",
+  "permissions": [
+   "ADB Wi-Fi authorized after on-screen prompt",
+   "owner present for pairing",
+   "blanket owner test authorization for benign commands"
+  ],
+  "limitations": [
+   "typed order read back as atestwifi (stray leading a from field focus); drain plus report path unaffected",
+   "TV companion is an unversioned rebuild (manifest permissions added, still 0.12.0 code 12)",
+   "run vehicle .xbuild/wd7b_direct_drain.py is uncommitted session tooling; protocol code and steps committed",
+   "single end-to-end scenario (n=1); no generalization claimed"
+  ]
  }
 ]
