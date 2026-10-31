@@ -69,6 +69,13 @@ with the hardware-phone coverage cited. Residual: if still red, the emulator gap
 is documented and the behavior stays proven on hardware + two emulator shapes.
 **Finding (low):** first-launch captures showed the permission dialog, not the UI.
 Fixed with `pm grant` pre-grants (committed, next runs show the UI).
+**Finding (fixed during the run, was high):** `RelayServer.get(ctx, null)`
+unconditionally replaced the live screen sink with NOOP; the auto-started
+foreground service detached the UI whenever its start landed after `onResume`,
+silently dropping pairing codes (cloud e2e read dumpsys noise and failed
+pair-confirm 409). Fixed: a null lookup never replaces a live Ui, the activity
+releases its sink in `onDestroy`. Proven by physical e2e 9/9 (paired 1st try)
+plus three further on-device pairings. Residual: none observed.
 
 ## 8. Security Engineer — consent, replay, revocation, keys
 
