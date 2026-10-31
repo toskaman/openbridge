@@ -31,7 +31,8 @@ All runs on GitHub-hosted runners (public repository, $0 spent, $0 billed).
 | 41210547807/41210549911 | cleanroom/android | failed (workflow authoring bugs, fixed and re-run) |
 | 41213691030 | android.yml | cancelled at 15 min (phone hung again, same screencap symptom) |
 | 41214555252 | android.yml | build-apk+wear+tv success; e2e failed (pair-confirm on OCR false positive, fixed); phone failed (same hang, contingency C) |
-| 41215098799 | android.yml | in progress (contingency C phone + fixed e2e) |
+| 41215098799 | android.yml | build-apk+phone(C)+tv+wear success; e2e failed (code unreadable, setup overlay suspected, fixed) |
+| 41215688399 | android.yml | in progress (e2e v2: front-raise + diag) |
 
 No paid runners, no secrets, no persistent public servers. Firebase Test Lab,
 Kaggle and Colab were assessed and marked NEEDS-ACCOUNT (owner-gated, §K).
@@ -68,7 +69,7 @@ build script (Windows + Linux).
 
 | Guest | API | Result at draft |
 |---|---|---|
-| phone (pixel_6, x86_64, google_apis) | 33 | install+launch OK every run; screencap hung 4× (emulator pipe, not product) -> contingency C: capture-free job (pid+foreground+version+logcat); visuals covered by real-phone hardware |
+| phone (pixel_6, x86_64, google_apis) | 33 | PASS via contingency C (pid 3416, fullscreen foreground, 0.12.0, logcat; run 41215098799): screencap hung 4× on this emulator image (root cause not isolated, emulator-side); visuals covered by real-phone hardware |
 | TV (tv_1080p, x86, android-tv) | 33 | PASS: install, launch, D-pad, 2 captures, logcat (run 41212969695) |
 | Wear (wearos_large_round, x86_64) | 33 | PASS: install, launch, capture, logcat (runs 41211778338+) |
 
@@ -201,7 +202,7 @@ need accounts.
 | G03–G08 clean-room | PASS (8/8, run 41210900996) |
 | G09 consumer Win11 | PARTIAL (Server runner, explicitly labeled) |
 | G10 APK | PASS (123283 bytes, apksigner OK) |
-| G11 phone emulator | PENDING (verdict on run 41213691030) |
+| G11 phone emulator | PASS (contingency C, run 41215098799) |
 | G12 TV emulator | PASS |
 | G13 Wear emulator | PASS |
 | G14–G16 cloud e2e | PENDING (job committed, dispatch after phone verdict) |
