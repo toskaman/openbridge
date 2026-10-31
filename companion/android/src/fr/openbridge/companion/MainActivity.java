@@ -31,6 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
@@ -547,7 +548,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     /** Standing consent for PC-initiated control. Turning it on shows a warning first; turning it off is instant. */
     private void toggleFullControl() {
-        if (!relay.paired()) { commandResult.setText("Pair with your PC first."); orb.pulse(); return; }
+        if (!relay.paired()) { commandResult.setText("Pair with your PC first."); Toast.makeText(this, "Pair with your PC first.", Toast.LENGTH_LONG).show(); log("Full control needs pairing first"); orb.pulse(); return; }
         if (relay.fullControl()) { relay.setFullControl(false); log("Full control revoked on this device"); refresh(); return; }
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Allow full control?")
