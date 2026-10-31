@@ -588,7 +588,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     @Override protected void onResume() { super.onResume(); relay = RelayServer.get(this, this); relay.foreground = true; relay.start(); refresh(); }
     @Override protected void onPause() { if (recording) stopRecord(true); relay.foreground = false; super.onPause(); }
-    @Override protected void onDestroy() { h.removeCallbacksAndMessages(null); releaseRecorder(); if (tts != null) { try { tts.shutdown(); } catch (Exception ignored) { } } super.onDestroy(); }
+    @Override protected void onDestroy() { h.removeCallbacksAndMessages(null); releaseRecorder(); RelayServer.release(this); if (tts != null) { try { tts.shutdown(); } catch (Exception ignored) { } } super.onDestroy(); }
 
     // =================================================================================================
     // Live state
