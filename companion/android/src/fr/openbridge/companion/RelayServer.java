@@ -97,9 +97,15 @@ final class RelayServer {
     volatile boolean foreground;
 
     /** One relay per process: survives the activity being destroyed while a settings screen is open (low-RAM TVs). */
+    /** Headless sink so the relay keeps serving when no screen is attached (foreground service). */
+    static final Ui NOOP = new Ui() {
+        @Override public void status(String text) { }
+        @Override public void code(String code) { }
+    };
     static synchronized RelayServer get(Context ctx, Ui ui) {
-        if (instance == null) instance = new RelayServer(ctx.getApplicationContext(), ui);
-        instance.ui = ui;
+        Ui sink = (ui != null) ? ui : NOOP;
+        if (instance == null) instance = new RelayServer(ctx.getApplicationContext(), sink);
+        instance.ui = sink;
         return instance;
     }
     private ServerSocket server;

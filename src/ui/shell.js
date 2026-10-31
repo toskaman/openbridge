@@ -211,14 +211,14 @@
   const PRIM = { read_facts: 'Read device facts', bounded_discovery: 'Discovery', relay_ble_scan: 'Bluetooth scan via relay', relay_revoke: 'Revoke relay', android_optional_app_state: 'Disable optional app', undo_transaction: 'Undo', session_cleanup: 'Session restore', watch_start: 'Start watch', watch_stop: 'Stop watch', diagnostic_report: 'Diagnostic report', diagnostic_probe: 'Re-measure', visual_readback: 'Screen check', tuya_setting: 'Vacuum setting', tuya_undo: 'Vacuum Undo', tuya_command: 'Vacuum command', device_capabilities: 'Capability check', device_action: 'Device action', device_macro: 'Sequence', pc_job: 'PC command' };
   function timelineItem(e) {
     const ok = e.verified || ['VERIFIED', 'REVERTED', 'EXECUTED'].includes(e.state);
-    const bad = ['FAILED', 'UNKNOWN_TIMEOUT', 'PARTIAL'].includes(e.state);
-    const title = e.kind === 'receipt' ? (PRIM[e.primitive_id] || e.primitive_id) : e.kind.replace(/_/g, ' ');
-    const sub = e.kind === 'receipt' ? `${e.state}${e.verified ? ' · read back' : ''}` : (e.finding ? `${e.finding} = ${e.value}` : '');
+    const bad = ['FAILED', 'UNKNOWN_TIMEOUT', 'PARTIAL'].includes(e.state) || (e.kind === 'remote_request' && ['REVOKED', 'EXPIRED', 'BLOCKED', 'SUSPENDED'].includes(e.state));
+    const title = e.kind === 'receipt' ? (PRIM[e.primitive_id] || e.primitive_id) : e.kind === 'remote_request' ? 'Remote press' : e.kind.replace(/_/g, ' ');
+    const sub = e.kind === 'receipt' ? `${e.state}${e.verified ? ' · read back' : ''}` : e.kind === 'remote_request' ? `${e.state}${e.reason ? ' — ' + e.reason : ''}` : (e.finding ? `${e.finding} = ${e.value}` : '');
     return h('li', { class: 'tl ' + (bad ? 'bad' : ok ? 'ok' : '') }, h('span', { class: 'tl-dot', 'aria-hidden': 'true' }), h('div', {}, h('strong', { text: title }), h('small', { text: `${sub}${sub ? ' · ' : ''}${(e.at || '').replace('T', ' ').slice(0, 19)}` })), e.transaction_id ? h('code', { text: e.transaction_id.slice(0, 11) }) : null);
   }
   function renderHomeActivity() {
     const ol = $('#home-activity'); if (!ol) return; ol.replaceChildren();
-    const ev = st.events.filter(e => e.kind === 'receipt' || e.kind.startsWith('watch_') || e.kind === 'reattached').slice(-6).reverse();
+    const ev = st.events.filter(e => e.kind === 'receipt' || e.kind.startsWith('watch_') || e.kind === 'reattached' || e.kind === 'remote_request').slice(-6).reverse();
     if (!ev.length) ol.append(h('li', { class: 'muted', text: 'No operation yet in this session.' }));
     for (const e of ev) ol.append(timelineItem(e));
   }

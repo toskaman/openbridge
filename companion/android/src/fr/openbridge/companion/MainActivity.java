@@ -39,7 +39,9 @@ import java.util.Locale;
 
 /**
  * Voice-first companion screen: a living 3D orb reacts to the mic, to speech and to every relay event;
- * typing, live state, controls and setup sit underneath. The relay runs only while this app is open.
+ * typing, live state, controls and setup sit underneath. The relay runs while this app is open and keeps
+serving in the background once started (foreground service, notification shown). Bluetooth scans stay
+foreground-only by design: opening the app is the owner's consent to scan.
  */
 public class MainActivity extends Activity implements RelayServer.Ui {
     // ---- palette -------------------------------------------------------------------------------------
@@ -75,7 +77,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private LinearLayout systemBody, checklist;
     private TextView systemToggle, statusLine;
     private boolean systemOpen, systemTouched;
-    private Button setup, bluetooth, location, permission, enable, unpair, fullctl;
+    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background;
     private boolean setupRunning;
     private ScrollView scroll;
     // Live data flows
@@ -253,12 +255,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         enable = button("Bluetooth scans", PillIcon.PAUSE, OK, STYLE_TOGGLE);
         unpair = button("Remove pairing", PillIcon.UNLINK, ERR, STYLE_DANGER);
         fullctl = button("Full control", PillIcon.BOLT, WARN, STYLE_TOGGLE);
-        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
+        background = button("Background relay", PillIcon.SWITCH, CYAN, STYLE_TOGGLE);
+        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, background, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
         statusLine = text("Starting…", 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
 
         TextView footer = text("Scans run only while this app is open, only on a signed request from your paired PC, and never use location data. "
-                + "Voice is sent only to your paired PC.", 12, false, FAINT);
+                + "The relay itself can run in the background (notification shown). Voice is sent only to your paired PC.", 12, false, FAINT);
         footer.setPadding(dp(4), dp(4), dp(4), 0);
 
         // ---- assemble --------------------------------------------------------------------------------
@@ -300,8 +303,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); log(relay.ownerEnabled() ? "Scans resumed" : "Scans paused by you"); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
         fullctl.setOnClickListener(v -> toggleFullControl());
+        background.setOnClickListener(v -> {
+            if (RelayService.running(this)) { RelayService.stop(this); relay.start(); log("Background relay stopped"); }
+            else { RelayService.start(this); log("Background relay started"); }
+            refresh();
+        });
 
-        relay.start(); refresh(); controls(relay.controls());
+        relay.start(); RelayService.start(this); refresh(); controls(relay.controls());
         setCaption(relay.paired() ? "Hi. Ask me anything — type, or tap the orb to talk." : "Open OpenBridge on your PC to pair this device.");
         log("Companion started");
         try {
@@ -569,7 +577,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         refresh(); nextSetupStep();
     }
 
-    @Override protected void onResume() { super.onResume(); relay.foreground = true; relay.start(); refresh(); }
+    @Override protected void onResume() { super.onResume(); relay = RelayServer.get(this, this); relay.foreground = true; relay.start(); refresh(); }
     @Override protected void onPause() { if (recording) stopRecord(true); relay.foreground = false; super.onPause(); }
     @Override protected void onDestroy() { h.removeCallbacksAndMessages(null); releaseRecorder(); if (tts != null) { try { tts.shutdown(); } catch (Exception ignored) { } } super.onDestroy(); }
 

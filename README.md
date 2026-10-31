@@ -10,11 +10,11 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 *Every frame above is a real capture from this repository's evidence set — nothing staged. Full frames with context follow below.*
 
-**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, exact undo) fences every AI proposal so nothing changes without proof it can be undone.
+**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, per-change undo verdicts) fences every AI proposal: journaled setting changes get a restore path, physical acts are labeled non-undoable before you approve.
 
 Three things you can do with it today:
 
-1. **Ask, preview, approve.** Type a request in English or French; OpenBridge resolves it to a registered skill, shows exactly what will change, and executes only after your approval — every run ends with a receipt and an undo path.
+1. **Ask, preview, approve.** Type a request in English or French; OpenBridge resolves it to a registered skill, shows exactly what will change, and executes only after your approval — every run ends with a receipt, and every journaled setting change gets a restore path with an honest verdict.
 2. **See everything, reach further.** One graph holds your whole home network — including devices your PC cannot see alone (Bluetooth via phone/TV relays, Freebox LAN hosts, a second PC, a Tuya vacuum) — with strong-identity merge so nothing is double-counted.
 3. **Control from any screen.** Phone, watch, TV, a second PC, or a P1 port (ESP32, Playdate) all act as real control points over the same fabric: pair once, then command any device from any device.
 
@@ -99,7 +99,7 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 2. **Builds one graph.** Observations merge only on strong identifiers (for example the TV's Bluetooth address seen both over mDNS and ADB); weak signals become "possible duplicate" hints. Every link states what it grants: *observe*, *read* or *control*.
 3. **Extends reach through relays.** The OpenBridge Companion app (Android phone or Android TV) performs short signed BLE scans for the PC, after on-screen pairing. Devices it hears appear under it as observe-only.
 4. **Uses Meta models where they help.** Muse Glimmer and Llama 3.2 run locally; they explain device state, propose at most one reversible step, and suggest the next discovery step. They never see identifiers and cannot bypass the deterministic gate.
-5. **Changes only what it can undo.** Consent → snapshot → execute → independent read-back → exact Undo, with crash recovery. A session journal asks before finishing whether to restore every setting changed during the session.
+5. **Restores what it changed, honestly labeled.** Consent → snapshot → execute → independent read-back → `sessions undo` replays each journaled setting change (companion install, ADB-network link, system package state, Freebox auth, Bluetooth) with a per-change verdict: RESTORED, FAILED, or MANUAL when only you can do it. Vacuum docking and other physical acts are not session changes and have no Undo.
 6. **Routes skills across relays (B2).** Typed skill contracts with READY/ACTIVE/STANDBY states, freshness leases, AUTO/PREFERRED/PINNED policies, consent-bound invocation leases and exact-once dedup. A TV-to-phone BLE failover is demonstrated on hardware ([handover](docs/release/COMPLETE_HANDOVER.md)); a frozen synthetic routing evaluation scores 32/32 with full baselines ([results](docs/evaluation/routing-v1/RESULTS.md)).
 7. **Asks in natural language (Ask OpenBridge).** English or French requests resolve to registered skills through tiered Meta-only inference; every step (parse → preview → approval → receipt) is shown with model, cost and evidence, and the model can never authorize its own privileged actions.
 8. **Runs headless from a terminal.** The `openbridge` CLI drives the same core as the GUI (devices, ask, capabilities, workflows, approvals, evidence, doctor) with identical contracts and consent, over SSH or on machines with no display. See [CLI reference](docs/CLI_REFERENCE.md) and [headless deployment](docs/HEADLESS_DEPLOYMENT.md).
@@ -111,7 +111,7 @@ Homes are full of devices on different transports (USB, Wi-Fi, LAN, Bluetooth) b
 | Freebox official app authorization + read-only LAN inventory (127 known / 12 active hosts) | [Freebox doc](docs/FREEBOX_INTEGRATION.md) |
 | Android phone (USB) and Android TV (ADB Wi-Fi) inspection, tolerant per-fact reads | [Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) |
 | Bluetooth relay through a phone (9–13 advertisers) and through a TV over the LAN (6) | [Relay security](docs/RELAY_SECURITY.md) |
-| Consent-gated agent: Meta plan → gate → act → verify → exact Undo | [agent-loop-receipt](docs/agent-loop-receipt.json) |
+| Consent-gated agent: Meta plan → gate → act → verify → per-change undo verdict | [agent-loop-receipt](docs/agent-loop-receipt.json) |
 | Server crash after a change → planning blocked → exact journal recovery | [crash-recovery-receipt](docs/crash-recovery-receipt.json) |
 | Muse Glimmer 30B local inference, digest = official registry manifest | [glimmer receipt](docs/glimmer-smoke-receipt.json) |
 | Real TV relay → local Muse Glimmer proposal → verified API publication/read → access denial and removal | [TV/Meta journey and limits](docs/forge/TV_GLIMMER_JOURNEY.md) |
@@ -148,6 +148,13 @@ Current release status and remaining acceptance gates: [release index](docs/RELE
 
 Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.py): Llama 3.2 3B (local, CPU), Muse Glimmer 30B (local, GPU/CPU), Muse Spark 1.3 (cloud, synthetic facts only, recorded call). Built with Llama; Llama 3.2 Community License. Development assistants (Codex, Muse Spark design) are never called at runtime — see [CONTRIBUTIONS](CONTRIBUTIONS.md).
 
+## What's new (31 Oct 2026)
+- **Structured refusal channel (§9)**: every refused press lands in history with a server-composed reason, served by `/api/v2/remote_controls` + events and rendered red in the Activity timeline (TDD 3/3, no device free text — see the [overnight report](docs/jury/OVERNIGHT_REPORT_31OCT.md) §B).
+- **Companion background relay (source)**: foreground service keeps pairing/controls/polls alive with the screen off (owner toggle, persistent notification); javac-verified against android-34 — APK + on-device run pending.
+- **Frozen 50-turn local eval**: identical inputs, same rubric — rules 0/50, Llama 3.2 3B 4/50 + 44 clarifications, Glimmer arm OOM-blocked on the host (diagnosed, $0) ([scorecard](docs/benchmark/EVAL_SUBSET_50_LOCAL.md)).
+- **QUICKSTART + clean-install 8/8** in an isolated third-party-free venv ([guide](docs/QUICKSTART.md)); S5/S6 physical runbooks + read-only preflight gate (PARTIAL: TV + vacuum live, watch asleep); final 180 s one-story board; source-backed compliance checklist.
+- Full suite 1223 green locally + CI green (Windows/Ubuntu/macOS unit + browser incl. WebKit); jury pack rebuilt + VERIFY OK.
+
 ## What's new (30 Oct 2026)
 - **Companion 0.12.0 everywhere**: LAN self-advertisement (mDNS NSD + QU-bit browse + `companion_lan` onboarding) — phone, TV and Watch7 found over Wi-Fi with no adb address (registry row 25); watch UI rescaled (stacked header, single-column LIVE tiles, roomier input).
 - **G04 closed**: native QUICK CONTROLS on the real Watch7 + signed long-press loop acknowledged on screen ([proof](docs/evidence/g04-watch-30oct.md), row 22); TV + phone 0.11.0 PAIRED shots (rows 23-24).
@@ -160,7 +167,7 @@ Runtime models are Meta only, enforced by [src/ai/registry.py](src/ai/registry.p
 - **Capability explorer (§6)**: UI schemas matched to live device capabilities (2 cards/118 widgets smoke).
 - **Hardware intelligence (§9)**: PC facts + task rankers + micro-benchmarks, live on PC1 + phone.
 - **Permissions center (§10)**: 13-entry catalog with measured states + grant flow, live re-verified.
-- **Eval-kit baseline (§11)**: 1,000 French turns replayed (200/200 convs, 0 crashes/sends); rules cover 1.4%, model tiers pending.
+- **Eval-kit baseline (§11)**: 1,000 French turns replayed (200/200 convs, 0 crashes/sends); rules cover 1.4%, Llama arm measured on a frozen 50-prefix 31 Oct ([scorecard](docs/benchmark/EVAL_SUBSET_50_LOCAL.md)).
 - **Multi-device orchestration (§7)**: DAG workflows (parallel, approvals, partial failure, durable receipts) + 9 media/file/action skills; live USB capture/send/montage (registry row 17).
 - **Official Android emulator (§12)**: Pixel 6 AVD on WHPX driven via adb — capture/probe/hash-verified send + cleanup (registry row 18).
 - Full suite 1150 green on Windows + Linux CI.
@@ -221,13 +228,13 @@ The default launcher starts no discovery, model call or publication. Open **Capa
 
 Companion app: `python -m dev.build_companion` (official Android SDK tools), then **Install the OpenBridge Companion** from a phone or TV sheet in the UI.
 
-**Jury walkthrough:** Ask OpenBridge a request (*Scan for bluetooth devices*) → review the fingerprint-bound preview → approve → read the receipt → Discover my environment → open a device sheet (sources, capabilities, statuses) → TV sheet: *Connect over ADB Wi-Fi* → *Use as Bluetooth relay* → *Scan nearby Bluetooth* → *Ask Meta what to do next* → Device agent (Declutter) for a consent-gated change and exact Undo → *Finish session…*. Without hardware: `python -m tests.e2e.command_center_smoke`, `python -m tests.e2e.fabric_smoke` and `python -m tests.e2e.offline_smoke` (all in CI).
+**Jury walkthrough:** Ask OpenBridge a request (*Scan for bluetooth devices*) → review the fingerprint-bound preview → approve → read the receipt → Discover my environment → open a device sheet (sources, capabilities, statuses) → TV sheet: *Connect over ADB Wi-Fi* → *Use as Bluetooth relay* → *Scan nearby Bluetooth* → *Ask Meta what to do next* → Device agent (Declutter) for a consent-gated change with per-change undo verdicts → *Finish session…*. Without hardware: `python -m tests.e2e.command_center_smoke`, `python -m tests.e2e.fabric_smoke` and `python -m tests.e2e.offline_smoke` (all in CI).
 
 ## Safety boundaries
-Loopback-only server with Host/Origin/CSRF checks; no port scanning; discovery limited to private networks; one owner-triggered connection per device; router/box configuration read-only by policy; Freebox token protected by Windows DPAPI; raw serials/MACs pseudonymized; signed, expiring, replay-protected relay commands; scans only after on-screen pairing and only while the Companion is open; Android permissions only through Android's own dialogs; writes limited to an allowlist with exact restoration or blocked before writing.
+Loopback-only server with Host/Origin/CSRF checks; no port scanning; discovery limited to private networks; one owner-triggered connection per device; router/box configuration read-only by policy; Freebox token protected by Windows DPAPI; raw serials/MACs pseudonymized; signed, expiring, replay-protected relay commands; scans only after on-screen pairing and only while the Companion is open; Android permissions only through Android's own dialogs; writes limited to an allowlist with per-change restore verdicts or blocked before writing.
 
 ## Documentation
-Architecture [UNIVERSAL_DEVICE_ARCHITECTURE](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md) · Discovery [DISCOVERY_PROTOCOLS](docs/DISCOVERY_PROTOCOLS.md) · Identity [DEVICE_IDENTITY_AND_DEDUPLICATION](docs/DEVICE_IDENTITY_AND_DEDUPLICATION.md) · UX [DEVICE_FABRIC_UX](docs/DEVICE_FABRIC_UX.md) · Schema [DEVICE_CAPABILITY_SCHEMA](docs/DEVICE_CAPABILITY_SCHEMA.md) · Android TV [ANDROID_TV_ADAPTER](docs/ANDROID_TV_ADAPTER.md) · Companion [ANDROID_COMPANION](docs/ANDROID_COMPANION.md) · Bluetooth [BLUETOOTH_LOCAL_AND_REMOTE](docs/BLUETOOTH_LOCAL_AND_REMOTE.md) · Routers [ROUTER_ADAPTERS](docs/ROUTER_ADAPTERS.md) · Jury [JURY_ACCEPTANCE_DEVICE_FABRIC](docs/JURY_ACCEPTANCE_DEVICE_FABRIC.md) · Evidence [EVIDENCE_LEDGER](EVIDENCE_LEDGER.md), [RELEASE_EVIDENCE](docs/RELEASE_EVIDENCE.md) · Baseline [DEVICE_FABRIC_BASELINE](docs/DEVICE_FABRIC_BASELINE.md) · Earlier README [README_HISTORY](docs/README_HISTORY.md).
+First install: [QUICKSTART](docs/QUICKSTART.md) · Architecture [UNIVERSAL_DEVICE_ARCHITECTURE](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md) · Discovery [DISCOVERY_PROTOCOLS](docs/DISCOVERY_PROTOCOLS.md) · Identity [DEVICE_IDENTITY_AND_DEDUPLICATION](docs/DEVICE_IDENTITY_AND_DEDUPLICATION.md) · UX [DEVICE_FABRIC_UX](docs/DEVICE_FABRIC_UX.md) · Schema [DEVICE_CAPABILITY_SCHEMA](docs/DEVICE_CAPABILITY_SCHEMA.md) · Android TV [ANDROID_TV_ADAPTER](docs/ANDROID_TV_ADAPTER.md) · Companion [ANDROID_COMPANION](docs/ANDROID_COMPANION.md) · Bluetooth [BLUETOOTH_LOCAL_AND_REMOTE](docs/BLUETOOTH_LOCAL_AND_REMOTE.md) · Routers [ROUTER_ADAPTERS](docs/ROUTER_ADAPTERS.md) · Jury [JURY_ACCEPTANCE_DEVICE_FABRIC](docs/JURY_ACCEPTANCE_DEVICE_FABRIC.md) · Evidence [EVIDENCE_LEDGER](EVIDENCE_LEDGER.md), [RELEASE_EVIDENCE](docs/RELEASE_EVIDENCE.md) · Baseline [DEVICE_FABRIC_BASELINE](docs/DEVICE_FABRIC_BASELINE.md) · Earlier README [README_HISTORY](docs/README_HISTORY.md).
 
 All code was written during the event; see [CONTRIBUTIONS](CONTRIBUTIONS.md) and [THIRD_PARTY](THIRD_PARTY.md).
 

@@ -465,6 +465,7 @@ class RemoteControls:
                         self._last[key] = now
                     outcome, text = self._dispatch(rid, req, grant, actor, entry)
         entry['state'] = outcome
+        entry['reason'] = text[:80]    # §9: server-composed refusal/success reason, no device free text
         with self._lock:
             self.history.append(entry)
             del self.history[:-100]

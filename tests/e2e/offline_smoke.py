@@ -49,7 +49,8 @@ def main():
                     assert page.locator('#demo-change').is_disabled()   # sandbox button sits in Activity & Recovery (hidden view)
                     page.get_by_role('radio',name='Freebox gateway').check()
                     page.get_by_role('button',name='Identify local Freebox').click()
-                    expect(page.locator('#device')).to_contain_text('No compatible Freebox responded.')
+                    # WebKit on macOS runners answers slowly: 15 s budget (flake 31 Oct, run 41199556267)
+                    expect(page.locator('#device')).to_contain_text('No compatible Freebox responded.', timeout=15000)
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                     assert not errors,errors
                     page.close()
