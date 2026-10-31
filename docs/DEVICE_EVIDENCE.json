@@ -906,5 +906,45 @@
    "battery-restriction / Doze long-soak behavior not tested",
    "BLE advertisers vary with the real radio neighborhood (4-6 observed); count is not asserted"
   ]
+ },
+ {
+  "test_id": "s5b-safe-seek-tv-vacuum",
+  "test_utc": "2026-10-31T16:05:00Z",
+  "commit_sha": "26f8d54191342a3c8e56026e778cd87828986bb0",
+  "platform": "Android TV 11 + Tuya local robot",
+  "device_alias": "Owner TV + robot vacuum (seek, no motion)",
+  "public_device_id": "tv-vacuum-s5b-01",
+  "os_version": "Android TV 11 (companion 0.12.0)",
+  "companion_version": "0.12.0 (code 12)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "TV relay relay-dabd2a796665 paired first-try via on-screen OCR code",
+   "Meta-generated T2 panel installed (Find vacuum + Volume up/down)",
+   "OCR-located hold-press on Find vacuum (adb-injected, labeled)",
+   "vacuum_command seek dispatched, receipt tx-4a96f8f626a1adc5 EXECUTED_UNVERIFIED",
+   "15x2s Tuya polls: smart_clean stable, fault 0 (robot kept cleaning)",
+   "set_controls([]) revoke: 0 grants left",
+   "post-revoke press denied (RemoteControlError)",
+   "relay_revoke VERIFIED; TV relay unpaired clean"
+  ],
+  "evidence": [
+   "docs/evidence/s5b-safe-seek-31oct.md",
+   "dev/s5b_safe_seek_chain.py",
+   "artifacts/s5-tv-panel-31oct/t2-propose-medium.json"
+  ],
+  "independent_oracle": "tinytuya direct re-reads (not via relay): pre/post facts + 15 polls; RemoteControls history entry (long_press, down_ms 486); Windows OCR word boxes for button location; post-revoke denial",
+  "permissions": [
+   "owner authorized TV use for this run",
+   "seek only (beep, zero motion); no start/pause/dock/move sent",
+   "robot was already cleaning on its own; test did not interfere"
+  ],
+  "limitations": [
+   "press is adb-injected, not an owner manual tap",
+   "receipt EXECUTED_UNVERIFIED: beep not machine-proven (cleaning noise)",
+   "first pairing round failed on TTL-expired OCR code (vehicle fixed round-by-round)",
+   "commit_sha is the branch HEAD at run time (26f8d54); vehicle script committed after"
+  ]
  }
 ]
