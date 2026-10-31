@@ -567,33 +567,52 @@ class Router:
                             invocation_id=req['invocation_id'], route_id=req['route_id'], skill_id=req['skill_id'])
             except rc.InvocationIdReused:
                 raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different binding') from None
+        # Check-and-claim is one atomic section: a concurrent same-id invoke that
+        # completed between the earlier probe and here must replay its original
+        # outcome, never see a spurious refusal; and once this lock observes a
+        # live lease, no completion can pop it before the claim below lands.
         with self._lock:
             inv = self.invocations.get(key)
             if not inv or inv['invocation_id'] != req['invocation_id'] or inv.get('actor', ACTOR) != actor:
-                raise RouteError(409, 'CONSENT_VOID', 'route changed: review again')
-            doc = self._evaluate(req['skill_id'], target)
-            route = next((r for r in doc['routes'] if r['route_id'] == req['route_id']), None)
-            void = None
-            if inv['status'] == 'armed' and inv['expires'] < self.clock():
-                void = 'lease expired'
-            elif route is None or doc['selected_route_id'] != req['route_id'] or inv['route_id'] != req['route_id']:
-                void = 'route changed'
-            elif inv['lease_id'] != req['lease_id'] or inv['graph_revision'] != req['graph_revision']:
-                void = 'lease or graph revision mismatch'
-            elif route['authority']['authority_rev'] != inv['authority_rev'] or self._target_identity(route['_key']) != inv['target_identity']:
-                void = 'authority or target changed'
-            elif json.dumps(inv['params'], sort_keys=True) != json.dumps(req['params'], sort_keys=True):
-                void = 'params edited after consent'
-            if void:
-                if inv['status'] == 'armed':
-                    self.invocations.pop(key, None)
-                raise RouteError(409, 'CONSENT_VOID', f'{void}: review again')
-            binding = rc.binding_hash(actor, req, inv['target_identity'], inv['authority_rev'])
-            inv['status'] = 'executing'
-            ikey = (actor, req['invocation_id'])
-            join = ikey in self._inflight
-            if not join:
-                self._inflight.add(ikey)
+                done = self.completed.get((actor, req['invocation_id']))
+                if done is None:
+                    raise RouteError(409, 'CONSENT_VOID', 'route changed: review again')
+                if done[1] is None:
+                    raise RouteError(409, 'UNCERTAIN_OUTCOME', 'A previous invocation with this id was interrupted; use a fresh invocation id')
+                if done[1] != _fp(dict(req, target=target)):
+                    raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different skill, route, lease or params')
+                replay, doc, route, binding, join, ikey = done[0], None, None, None, True, (actor, req['invocation_id'])
+            else:
+                replay = None
+                doc = self._evaluate(req['skill_id'], target)
+                route = next((r for r in doc['routes'] if r['route_id'] == req['route_id']), None)
+                void = None
+                if inv['status'] == 'armed' and inv['expires'] < self.clock():
+                    void = 'lease expired'
+                elif route is None or doc['selected_route_id'] != req['route_id'] or inv['route_id'] != req['route_id']:
+                    void = 'route changed'
+                elif inv['lease_id'] != req['lease_id'] or inv['graph_revision'] != req['graph_revision']:
+                    void = 'lease or graph revision mismatch'
+                elif route['authority']['authority_rev'] != inv['authority_rev'] or self._target_identity(route['_key']) != inv['target_identity']:
+                    void = 'authority or target changed'
+                elif json.dumps(inv['params'], sort_keys=True) != json.dumps(req['params'], sort_keys=True):
+                    void = 'params edited after consent'
+                if void:
+                    if inv['status'] == 'armed':
+                        self.invocations.pop(key, None)
+                    raise RouteError(409, 'CONSENT_VOID', f'{void}: review again')
+                binding = rc.binding_hash(actor, req, inv['target_identity'], inv['authority_rev'])
+                inv['status'] = 'executing'
+                ikey = (actor, req['invocation_id'])
+                join = ikey in self._inflight
+                if not join:
+                    self._inflight.add(ikey)
+        if replay is not None:
+            try:
+                return dict(self.ledger.run(actor, req['invocation_id'], replay, lambda: {'state': 'BLOCKED', 'errors': ['ledger entry expired']}),
+                            invocation_id=req['invocation_id'], route_id=req['route_id'], skill_id=req['skill_id'])
+            except rc.InvocationIdReused:
+                raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different binding') from None
         def dispatch():
             ex = self._ex()
             return ex.execute(route['_primitive'], route['_key'], route['_params'](req['params']), consent=True)
