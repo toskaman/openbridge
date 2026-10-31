@@ -1,6 +1,6 @@
 # OpenBridge — Device Fabric
 
-**Local Meta AI that understands the devices around you, reaches the ones your PC can't, and only changes what it can prove it can undo.**
+**Local Meta AI that understands the devices around you, reaches the ones your PC can't, and proves every change it makes.**
 
 Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier* · MIT licence
 
@@ -10,7 +10,7 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 *Every frame above is a real capture from this repository's evidence set — nothing staged. Full frames with context follow below.*
 
-**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, per-change undo verdicts) fences every AI proposal: journaled setting changes get a restore path, physical acts are labeled non-undoable before you approve.
+**What Meta accomplishes here:** local Meta models do the understanding — Llama triages requests on CPU, Muse Glimmer plans multi-step actions, explains devices and reads screens on GPU, and hosted Muse Spark answers only with explicit consent — while deterministic safety (typed skills, fingerprint-bound previews, execution receipts, per-change undo verdicts) fences every AI proposal: journaled setting changes get a restore path, physical acts are labeled non-undoable before you approve. Undo coverage, stated exactly: exact restore demonstrated for Tuya vacuum suction/volume only; per-change RESTORED/FAILED/MANUAL verdicts for journaled session changes; physical acts are never claimed undoable.
 
 Three things you can do with it today:
 

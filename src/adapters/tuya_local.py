@@ -76,6 +76,8 @@ class TuyaVacuum:
         dp, allowed = WRITABLE[setting]
         if value not in allowed:
             raise TuyaBlocked('value not allowed')
+        if setting in self._before:
+            raise TuyaBlocked('setting already has a pending restore; undo it before changing again')
         before = self.dps()
         if before.get('5') in BUSY:
             raise TuyaBlocked('robot is working; settings are changed only when idle or docked')

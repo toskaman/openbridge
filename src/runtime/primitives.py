@@ -619,7 +619,12 @@ class Executor:
             r = self._tuya().undo(params['setting'])
         except TuyaBlocked as e:
             raise PrimitiveError('NOTHING_TO_UNDO', str(e)) from None
-        return 'REVERTED', None, r['restored'], r['exact'], r
+        if not r['exact']:
+            # The pending restore is kept (adapter pops only on exact), so a
+            # retry is possible; the receipt must not claim REVERTED.
+            raise PrimitiveError('RESTORE_NOT_EXACT',
+                                 'restored %r, expected the recorded before value' % (r['restored'],))
+        return 'REVERTED', None, r['restored'], True, r
 
     def _pc_job(self, key, params):
         import base64, hashlib, time as _t

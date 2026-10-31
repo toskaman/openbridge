@@ -54,7 +54,14 @@ def main():
     try:
         pkgs = sorted(p['name'] for p in json.loads(out) if p['name'] not in ('pip', 'setuptools', 'wheel'))
     except Exception:
-        pkgs = ['<unparseable>']
+        # Fallback for venvs without working pip (Debian): stdlib metadata.
+        code2, out2 = run(py, ['-c', 'import importlib.metadata as m, json; '
+                                     'print(json.dumps(sorted({(d.metadata.get(\"Name\") or \"?\") for d in m.distributions()})))'])
+        try:
+            pkgs = sorted(n for n in json.loads(out2) if n not in ('pip', 'setuptools', 'wheel'))
+            code = code2
+        except Exception:
+            pkgs = ['<unparseable:%s>' % out.strip().splitlines()[:1]]
     check('venv-isolated', pkgs == [], f'third-party: {pkgs}')
 
     code, out = run(py, ['-m', 'src.cli', 'doctor'])

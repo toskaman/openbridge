@@ -76,8 +76,8 @@ th{color:var(--muted);font-weight:500;font-size:12px}
 .tag{font-weight:500}
 
 /* ---------- application shell ---------- */
-.app{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100vh;min-height:100dvh}
-.sidebar{position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:14px;padding:18px 14px;padding-bottom:calc(18px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(15,22,40,.92),rgba(9,14,28,.96));border-right:1px solid var(--line);z-index:30}
+.app{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:14px;padding:18px 14px;background:linear-gradient(180deg,rgba(15,22,40,.92),rgba(9,14,28,.96));border-right:1px solid var(--line);z-index:30}
 .brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:700;font-size:17px;letter-spacing:-.02em;padding:4px 8px}
 .brand-mark{width:28px;height:28px;border-radius:9px;background:var(--grad-accent);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 6px 18px rgba(34,211,238,.25);position:relative}
 .brand-mark::after{content:"";position:absolute;inset:8px;border-radius:50%;border:2px solid #04101f}
@@ -196,7 +196,7 @@ th{color:var(--muted);font-weight:500;font-size:12px}
 .dstatus i{width:7px;height:7px;border-radius:50%;background:currentColor}
 .dstatus.ok{color:var(--ok)}.dstatus.info{color:var(--info)}.dstatus.off{color:var(--bad)}
 .dmeta{grid-area:meta;display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:8px;margin-top:6px}
-.inspector{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:16px;position:sticky;top:calc(var(--top) + 16px);max-height:calc(100vh - var(--top) - 32px);max-height:calc(100dvh - var(--top) - 32px);overflow:auto;box-shadow:var(--sh)}
+.inspector{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:16px;position:sticky;top:calc(var(--top) + 16px);max-height:calc(100vh - var(--top) - 32px);overflow:auto;box-shadow:var(--sh)}
 .ihead .dicon,.cand-head .dicon,.node-row .dicon{grid-area:auto}
 .ihead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;margin-bottom:12px}
 .ihead .back{display:none}

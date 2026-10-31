@@ -48,6 +48,19 @@ class HttpIdempotency(unittest.TestCase):
         self.assertIn('DUPLICATE', r2.get('error', ''))
         self.assertEqual(len(srv.runtime_executor.calls), 1)
 
+    def test_same_key_changed_body_still_duplicate_no_redispatch(self):
+        # Gate D variant: key reuse with a different body must not execute
+        # again. Current contract: 409 DUPLICATE either way (safe direction).
+        for srv in (keyed_server(tempfile.mkdtemp()), keyed_server()):
+            st1, _ = post(srv, '/api/v2/execute', body('k-reuse'))
+            other = body('k-reuse', params={'command': 'dock'})
+            st2, r2 = post(srv, '/api/v2/execute', other)
+            self.assertEqual(st1, 200)
+            self.assertEqual(st2, 409)
+            self.assertIn('DUPLICATE', r2.get('error', ''))
+            self.assertEqual(len(srv.runtime_executor.calls), 1)
+            self.assertEqual(srv.runtime_executor.calls[0][2], {'command': 'start'})
+
     def test_different_keys_dispatch_twice(self):
         srv = keyed_server(tempfile.mkdtemp())
         post(srv, '/api/v2/execute', body('k-a'))
