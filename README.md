@@ -120,7 +120,7 @@ Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) 
 
 **Push the Frontier:** Meta models inspect unfamiliar physical devices, identify verified interfaces, synthesize missing authorized capabilities, and coordinate heterogeneous hardware — beyond generic chatbots. **Build for Your World:** useful devices that couldn't cooperate now can, through safe operations across existing hardware.
 
-Built from the ground up during the event (start ref 2026-10-26T16:24:00Z; zero files predate it; an earlier private prototype was rewritten from scratch as Bridge Agent v4 — see [CONTRIBUTIONS](CONTRIBUTIONS.md)). Track: Indie Developer, solo. Scoring/bonus details marked T-P ONLY or OPEN in the [compliance checklist](docs/jury/COMPLIANCE_CHECKLIST.md) must be verified in the portal; no award is claimed.
+Built from the ground up during the event (start ref 2026-10-26T16:24:00Z; zero files predate it; an earlier private prototype was rewritten from scratch as Bridge Agent v4 — see [CONTRIBUTIONS](CONTRIBUTIONS.md)). Track: Indie Developer, solo. Scoring/bonus details marked T-P ONLY or OPEN in the [compliance checklist](docs/jury/COMPLIANCE_CHECKLIST.md) must be verified in the portal; no award is claimed. Per-award fit, each tied to its evidence: [bonus strategy](docs/jury/BONUS_STRATEGY.md).
 
 ## About the developer
 

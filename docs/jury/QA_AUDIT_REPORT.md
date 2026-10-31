@@ -43,7 +43,7 @@ disclosed) — out of my scope, listed here for the merger.
 - `python -m dev.device_registry --check`: registry OK (30 rows), matrix in sync.
 - `compileall` on new/changed dev scripts: clean.
 - `python dev/build_jury_presentation.py`: 292 files, ZIP sha256
-  `8332face85719e0f5493a5eb28ed34f4b7b301bbd32de0c33af6461919cc8a07`
+  `bce5686cc565dde4e31ceb603fab90729e6a8b0857ac7ce4e431f09cd69e5f69`
   (`--without-extras` portable mode also verified: 290 files, exit 0).
 - Showcase page (`docs/showcase/index.html`): Playwright smoke on file:// —
   10/10 images loaded, 0 console/page/network errors, desktop 1440 + mobile
