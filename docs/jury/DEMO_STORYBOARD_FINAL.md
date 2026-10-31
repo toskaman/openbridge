@@ -59,4 +59,7 @@ explicit authorization.**
   DROPPED, neighbors keep their timing, never replaced with mock-ups.
 - If S5 motion is unavailable on the day: keep a verified-dispatch beat
   (labeled DISPATCH ONLY) or drop to the refusal/safety beat.
+  S5b (31 Oct PM: T2 panel → hold-press FIND → receipt tx-4a96f8f6 →
+  15-poll oracle → revoke/deny VERIFIED, `E:/shots/s5b/`) is the
+  ready-made DISPATCH ONLY fallback: same chain, zero motion, fully receipted.
 - Final pass: duration, codec, dimensions, redaction sweep, frame inspection.
