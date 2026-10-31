@@ -114,6 +114,30 @@ class Collectors(unittest.TestCase):
         self.assertTrue(by_name['os']['value'])
         self.assertNotIn('gpu_name', by_name)
 
+    def test_pc_facts_ram_via_sysctl_when_no_win32_or_proc(self):
+        import builtins
+        import subprocess
+        from types import SimpleNamespace
+        from unittest import mock
+        real_open = builtins.open
+
+        def no_proc(path, *args, **kwargs):
+            if str(path) == '/proc/meminfo':
+                raise OSError('no proc (macOS)')
+            return real_open(path, *args, **kwargs)
+
+        def fake_sysctl(*args, **kwargs):
+            assert args[0] == ['sysctl', '-n', 'hw.memsize']
+            return SimpleNamespace(stdout='17179869184\n')
+
+        with mock.patch('ctypes.windll', create=True) as windll, \
+                mock.patch.object(builtins, 'open', no_proc), \
+                mock.patch.object(subprocess, 'run', fake_sysctl):
+            windll.kernel32.GlobalMemoryStatusEx.side_effect = AttributeError('no win32')
+            facts = H.pc_facts(run=lambda *a: (_ for _ in ()).throw(OSError('no gpu tool')))
+        by_name = {m['name']: m for m in facts}
+        self.assertEqual(by_name['ram_gb']['value'], 16.0)
+
 
 class Rankers(unittest.TestCase):
     def test_rank_minecraft_orders_and_explains(self):
