@@ -68,7 +68,7 @@ jobs:
       - name: Phone acceptance
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 33
           target: google_apis
           arch: x86_64
           profile: pixel_6
@@ -78,7 +78,7 @@ jobs:
             adb install apk/openbridge-companion.apk
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
-            adb exec-out screencap -p > phone-launch.png
+            adb shell screencap -p /sdcard/phone-launch.png && adb pull /sdcard/phone-launch.png
             adb shell dumpsys activity activities | grep -m1 -i openbridge > phone-foreground.txt || true
             (adb shell screenrecord --bit-rate 2000000 --time-limit 12 /sdcard/demo.mp4 &)
             sleep 15
@@ -129,7 +129,7 @@ jobs:
         with:
           api-level: 33
           target: android-tv
-          arch: x86_64
+          arch: x86
           profile: tv_1080p
           emulator-boot-timeout: 600
           script: |
@@ -137,10 +137,10 @@ jobs:
             adb install apk/openbridge-companion.apk
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
-            adb exec-out screencap -p > tv-launch.png
+            adb shell screencap -p /sdcard/tv-launch.png && adb pull /sdcard/tv-launch.png
             adb shell input keyevent KEYCODE_DPAD_DOWN || true
             sleep 2
-            adb exec-out screencap -p > tv-focus.png
+            adb shell screencap -p /sdcard/tv-focus.png && adb pull /sdcard/tv-focus.png
             adb logcat -d -t 300 > tv-logcat.txt
       - uses: actions/upload-artifact@v4
         if: always()
