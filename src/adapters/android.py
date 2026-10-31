@@ -278,14 +278,15 @@ class AndroidAdapter:
         Gives USB-paired devices a direct URL after pairing (their serial
         carries no IP). Bounded single browse; any failure or mismatch is
         None (the caller keeps the adb forward)."""
-        import re as _re
+        import ipaddress as _ip
         from src.fabric import mdns
-        if not _re.fullmatch(r'relay-[0-9a-f]{12}', relay_id or ''):
+        if not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id or ''):
             return None
         try:
             res = mdns.discover(timeout=timeout, services=('_openbridge-relay._tcp',))
         except OSError:
             return None
+        scope = mdns.default_scope()
         for inst in res.get('instances', []):
             if inst.get('service') != '_openbridge-relay._tcp':
                 continue
@@ -295,12 +296,11 @@ class AndroidAdapter:
             if not isinstance(port, int) or isinstance(port, bool) or not 1024 < port < 65536:
                 continue
             for ip in inst.get('addresses', []):
-                import ipaddress as _ip
                 try:
                     a = _ip.ip_address(ip)
                 except ValueError:
                     continue
-                if a.version == 4 and a.is_private and not a.is_loopback and mdns.in_scope(ip, mdns.default_scope()):
+                if a.version == 4 and a.is_private and not a.is_loopback and mdns.in_scope(ip, scope):
                     return f'http://{ip}:{port}'
         return None
 
