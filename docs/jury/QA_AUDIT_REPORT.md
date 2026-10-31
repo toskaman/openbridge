@@ -37,8 +37,8 @@ pack tooling only — no business-logic change except the matrix link renderer
 - `python -m unittest discover -s tests`: **1245 tests OK** (110 s).
 - `python -m dev.device_registry --check`: registry OK (30 rows), matrix in sync.
 - `compileall` on new/changed dev scripts: clean.
-- `python dev/build_jury_presentation.py`: 290 files, ZIP sha256
-  `fbd6bd8ae10563778dbc6f116d7dfdb217411c3ce4ac9bb8759eb592fefd7cfd`.
+- `python dev/build_jury_presentation.py`: 291 files, ZIP sha256
+  `eaa200a6a5c3cb460d0c5bc392692e8ce19a8d433ac4f6eabf1ea29a03a8a63c`.
 - Not executed: browser smokes locally (CI covers), clean-room rebuild,
   Android e2e (CI failing, disclosed), macOS hand-run.
 
