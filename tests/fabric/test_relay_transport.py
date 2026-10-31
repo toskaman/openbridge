@@ -96,5 +96,26 @@ class Failover(unittest.TestCase):
     def test_out_of_scope_rejected_at_construction(self):
         with self.assertRaises(R.RelayError):
             R.failover_transport(['http://8.8.8.8:47800'])
+class FetchVoiceUrls(unittest.TestCase):
+    def test_validation_errors_raise_without_network(self):
+        with self.assertRaises(R.RelayError):
+            R.fetch_voice_urls(['http://127.0.0.1:1'], b'k' * 32, 'c' * 16, -5, 'z' * 64)
+    def test_falls_over_on_oserror(self):
+        calls = []
+        def fake(url, *a, **k):
+            calls.append(url)
+            if url.endswith(':1'):
+                raise OSError('down')
+            return b'pcm'
+        with mock.patch.object(R, 'fetch_voice', side_effect=fake):
+            out = R.fetch_voice_urls(['http://127.0.0.1:1', 'http://127.0.0.1:2'], b'k' * 32, 'c' * 16, 3, 'a' * 64)
+        self.assertEqual(out, b'pcm')
+        self.assertEqual(calls, ['http://127.0.0.1:1', 'http://127.0.0.1:2'])
+    def test_refusal_propagates_without_failover(self):
+        def fake(url, *a, **k):
+            raise R.RelayError('Relay refused: forbidden')
+        with mock.patch.object(R, 'fetch_voice', side_effect=fake):
+            with self.assertRaises(R.RelayError):
+                R.fetch_voice_urls(['http://127.0.0.1:1', 'http://127.0.0.1:2'], b'k' * 32, 'c' * 16, 3, 'a' * 64)
 if __name__ == '__main__':
     unittest.main()

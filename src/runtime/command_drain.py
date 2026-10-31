@@ -63,9 +63,13 @@ def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, st
     """Return (report_status, report_text) for one validated command."""
     parse_fn = parse_fn or CMD.parse_request
     if cmd['kind'] == 'voice':
-        fetch = fetch_voice_fn or R.fetch_voice
-        pcm = fetch(relay['url'], relay['key'], cmd['clip_id'], cmd['bytes'], cmd['sha256'],
-                    relay_id=rid, aead_version=relay.get('aead'))
+        fetch = fetch_voice_fn or R.fetch_voice_urls
+        if fetch is R.fetch_voice_urls:
+            pcm = fetch(relay.get('urls') or [relay['url']], relay['key'], cmd['clip_id'],
+                        cmd['bytes'], cmd['sha256'], relay_id=rid, aead_version=relay.get('aead'))
+        else:  # injected doubles keep the single-URL call shape
+            pcm = fetch(relay['url'], relay['key'], cmd['clip_id'], cmd['bytes'], cmd['sha256'],
+                        relay_id=rid, aead_version=relay.get('aead'))
         secs = len(pcm) / 2 / 16000
         heard = _transcribe(pcm, cmd['lang'], transcribe_fn, stt_available)
         if heard is None:
