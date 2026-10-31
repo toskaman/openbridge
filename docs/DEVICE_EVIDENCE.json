@@ -862,5 +862,49 @@
   "status": "VERIFIED",
   "test_id": "s5-tv-panel-31oct",
   "test_utc": "2026-10-31T01:15:39Z"
+ },
+ {
+  "test_id": "companion-0.12.0-background-relay-hardware",
+  "test_utc": "2026-10-31T15:55:00Z",
+  "commit_sha": "affaf0a4337f287a8b7291fc07da3ee6e436329a",
+  "platform": "Android phone",
+  "device_alias": "Owner phone (rugged model, Android 13)",
+  "public_device_id": "phone-companion-01",
+  "os_version": "Android 13 (SDK 33)",
+  "companion_version": "0.12.0 (code 12)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "companion 0.12.0 rebuilt from source (no-Gradle SDK script) and installed over adb",
+   "relay paired over adb-forward with 6-digit on-screen code (relay-c388ba6dafcd, AEAD aead1 negotiated)",
+   "signed get_status round-trip verified through the paired channel",
+   "bounded 8 s BLE scan returned 4-6 live advertisers, ingested as REAL_HARDWARE_VERIFIED ble_relay",
+   "scan refused with screen off before wake (foreground-only consent policy holds)",
+   "foreground service notification shown (openbridge-relay channel, mFgServiceShown=true)",
+   "relay answers with activity closed (signed refusal, process alive)",
+   "relay answers with screen off / device asleep (signed refusal, process alive)",
+   "owner toggle stops the service: relay unreachable, TCP 47800 closed",
+   "owner toggle restarts the service: signed scans resume",
+   "toggle regression check 8/8 on-device (state exposed, 1 tap = 1 toggle, double-tap debounce)"
+  ],
+  "evidence": [
+   "scripts/verify/companion_toggle_check.py",
+   "companion/android/src/fr/openbridge/companion/MainActivity.java",
+   "companion/android/src/fr/openbridge/companion/RelayService.java"
+  ],
+  "independent_oracle": "dumpsys activity services/window/power/notification, TCP 47800 probes, adb uiautomator dumps (pairing code, activity feed, toggle bounds, content-desc), signed relay replies verified by the PC (HMAC+AEAD), 20 s screen recording of a live scan",
+  "permissions": [
+   "owner authorized phone use for the night session",
+   "on-device pairing code read from the screen the owner would see",
+   "isolated test server (port 18795, private LOCALAPPDATA); live server untouched"
+  ],
+  "limitations": [
+   "pairing/background proofs ran on build 56742c4, toggle proofs on affaf0a (delta is MainActivity UI only; relay and service code identical)",
+   "mDNS _openbridge-relay._tcp unanswered (0 packets); adb-forward path used instead",
+   "full_control flag survives re-pairing without a fresh consent tap (flagged for security review)",
+   "battery-restriction / Doze long-soak behavior not tested",
+   "BLE advertisers vary with the real radio neighborhood (4-6 observed); count is not asserted"
+  ]
  }
 ]
