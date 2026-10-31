@@ -431,35 +431,39 @@ class RemoteControls:
         else:
             entry['skill_id'] = grant['skill_id']
             pressed = req.get('pressed_at')
-            with self._lock:                       # burst/interval accounting is shared: decide atomically
-                recent = [x for x in self._recent.get(key, []) if now - x < BURST_WINDOW_S] + [now]
-                self._recent[key] = recent
-                suspend_now = key not in self.suspended and len(recent) > BURST
-                if suspend_now:
-                    self.suspended.add(key)
-                suspended = key in self.suspended
-                last = self._last.get(key, 0)
-            if suspend_now:
-                self._ex().emit('remote_control_suspended', relay_id=rid, control_id=req['control_id'], presses=len(recent))
             done = router(self.server).completed.get((actor, 'inv-' + req['request_id']))
             if origin == 'full_control' and not self._fc_fresh(rid):
                 outcome, text = 'REVOKED', 'Full control is off or blocked'
             elif not isinstance(pressed, int) or abs(now - pressed / 1000) > REQUEST_TTL_S:
                 outcome, text = 'EXPIRED', f"{grant['label']}: request too old; press again"
-            elif suspended:
-                outcome, text = 'SUSPENDED', f"{grant['label']}: paused (unusual repeated presses); re-enable on the PC"
             elif done is not None and done[1] is None:
                 outcome, text = 'UNCERTAIN', f"{grant['label']}: interrupted; press again for a fresh request"
             elif done is not None:
                 outcome, text = 'DUPLICATE', f"{grant['label']}: already done"     # a re-sent press: never dispatched twice
-            elif now - last < MIN_INTERVAL_S:
-                outcome, text = 'BLOCKED', 'Too fast; press again'
-            elif grant.get('ui_kind') == 'confirm' and req.get('gesture') != 'confirm':
-                outcome, text = 'BLOCKED', f"{grant['label']}: confirm on the device first"
             else:
-                with self._lock:                   # claim the interval slot before touching the device
-                    self._last[key] = now
-                outcome, text = self._dispatch(rid, req, grant, actor, entry)
+                # Burst accounting counts live presses only: stale, duplicate and
+                # interrupted replays return above without polluting the window,
+                # so a replay storm cannot DoS-suspend a healthy control.
+                with self._lock:                   # burst/interval accounting is shared: decide atomically
+                    recent = [x for x in self._recent.get(key, []) if now - x < BURST_WINDOW_S] + [now]
+                    self._recent[key] = recent
+                    suspend_now = key not in self.suspended and len(recent) > BURST
+                    if suspend_now:
+                        self.suspended.add(key)
+                    suspended = key in self.suspended
+                    last = self._last.get(key, 0)
+                if suspend_now:
+                    self._ex().emit('remote_control_suspended', relay_id=rid, control_id=req['control_id'], presses=len(recent))
+                if suspended:
+                    outcome, text = 'SUSPENDED', f"{grant['label']}: paused (unusual repeated presses); re-enable on the PC"
+                elif now - last < MIN_INTERVAL_S:
+                    outcome, text = 'BLOCKED', 'Too fast; press again'
+                elif grant.get('ui_kind') == 'confirm' and req.get('gesture') != 'confirm':
+                    outcome, text = 'BLOCKED', f"{grant['label']}: confirm on the device first"
+                else:
+                    with self._lock:               # claim the interval slot before touching the device
+                        self._last[key] = now
+                    outcome, text = self._dispatch(rid, req, grant, actor, entry)
         entry['state'] = outcome
         with self._lock:
             self.history.append(entry)
