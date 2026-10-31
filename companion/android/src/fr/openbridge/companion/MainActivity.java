@@ -79,6 +79,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private boolean systemOpen, systemTouched;
     private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background;
     private boolean setupRunning;
+    private long backgroundLastTap;
     private ScrollView scroll;
     // Live data flows
     private FlowOverlayView flows;
@@ -304,9 +305,15 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
         fullctl.setOnClickListener(v -> toggleFullControl());
         background.setOnClickListener(v -> {
-            if (RelayService.running(this)) { RelayService.stop(this); relay.start(); log("Background relay stopped"); }
-            else { RelayService.start(this); log("Background relay started"); }
-            refresh();
+            long now = System.currentTimeMillis();
+            if (now - backgroundLastTap < 1000) return;   // one tap = one toggle; extra taps while the service converges are dropped
+            backgroundLastTap = now;
+            boolean willRun;
+            if (RelayService.running(this)) { RelayService.stop(this); relay.start(); log("Background relay stopped"); willRun = false; }
+            else { RelayService.start(this); log("Background relay started"); willRun = true; }
+            setToggle(background, willRun);
+            background.setContentDescription("Background relay, " + (willRun ? "on" : "off"));
+            h.postDelayed(this::refresh, 600);            // re-render once the service state has converged
         });
 
         relay.start(); RelayService.start(this); refresh(); controls(relay.controls());
@@ -628,6 +635,9 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             enable.setVisibility(paired ? View.VISIBLE : View.GONE);
             fullctl.setText("Full control"); setToggle(fullctl, relay.fullControl());
             fullctl.setVisibility(paired ? View.VISIBLE : View.GONE);
+            boolean bg = RelayService.running(this);
+            background.setText("Background relay"); setToggle(background, bg);
+            background.setContentDescription("Background relay, " + (bg ? "on" : "off"));
             unpair.setVisibility(paired ? View.VISIBLE : View.GONE);
             if (!systemTouched) systemOpen = !ready || !paired;
             renderSystem();
