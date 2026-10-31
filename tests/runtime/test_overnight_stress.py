@@ -161,5 +161,54 @@ class ReconnectStorm(unittest.TestCase):
         self.assertTrue(relay['online'])
 
 
+class RestartRegrant(PressBurst):
+    """Matrix C: same press after a RemoteControls + Router restart replays as
+    DUPLICATE from the durable journal (grants are re-pushed, memory is fresh)."""
+
+    def test_same_request_after_restart_is_duplicate_no_redispatch(self):
+        st = self.rc.set_controls({'relay_id': 'r-burst', 'controls': [
+            {'label': 'TV volume +', 'skill_id': 'tv_volume_step',
+             'target': self.keys['tv'], 'params': {'direction': 'up'}}], 'consent': True})
+        cid = st['controls'][0]['control_id']
+        rid = self.companion.press(cid)
+        self.assertEqual(self.rc.poll_once(), 1)
+        self.assertEqual(len(self.calls), 1)
+        self.server.remote_controls.close()
+        self.server.remote_controls = None
+        self.server.skill_router = None                      # fresh Router: memory gone
+        rc2 = remote_controls(self.server)
+        rc2.clock = self.clock
+        rc2._ensure_thread = lambda: None
+        st2 = rc2.set_controls({'relay_id': 'r-burst', 'controls': [
+            {'label': 'TV volume +', 'skill_id': 'tv_volume_step',
+             'target': self.keys['tv'], 'params': {'direction': 'up'}}], 'consent': True})
+        cid2 = st2['controls'][0]['control_id']
+        self.companion.queue.append({'request_id': rid, 'control_id': cid2,
+                                     'pressed_at': int(self.clock() * 1000)})
+        self.assertEqual(rc2.poll_once(), 1)
+        self.assertEqual(len(self.calls), 1)                 # journal refused redispatch
+        self.assertEqual(rc2.history[-1]['state'], 'DUPLICATE')
+
+
+class SameSlotSerialization(RoutingBase):
+    """Matrix M: arming the same (skill, target) slot twice voids the first
+    lease; only the latest arms dispatches."""
+
+    def test_second_arm_voids_first_lease(self):
+        route_id = self.routes()['selected_route_id']
+        first = self.router.arm({'skill_id': 'ble_scan_room', 'route_id': route_id,
+                                 'params': {'seconds': 8}, 'consent': True},
+                                invocation_id='inv-' + 'a' * 32)
+        second = self.router.arm({'skill_id': 'ble_scan_room', 'route_id': route_id,
+                                  'params': {'seconds': 8}, 'consent': True},
+                                 invocation_id='inv-' + 'b' * 32)
+        with self.assertRaises(RouteError) as e:
+            self.invoke(first)
+        self.assertEqual(e.exception.code, 'CONSENT_VOID')
+        out = self.invoke(second)
+        self.assertEqual(out['state'], 'VERIFIED')
+        self.assertEqual(len(self.calls), 1)                 # only the latest lease dispatched
+
+
 if __name__ == '__main__':
     unittest.main()
