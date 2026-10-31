@@ -38,7 +38,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: app-dist
-          path: ${{ runner.temp }}
+          path: ${{ runner.temp }}/dist
       - run: python scripts/verify_jury_pack.py "${{ runner.temp }}/dist/OpenBridge-App.zip"
         shell: bash
       - run: python -c "import zipfile,os; zipfile.ZipFile(r'${{ runner.temp }}/dist'+'/OpenBridge-App.zip').extractall(r'${{ runner.temp }}/approot')"
@@ -67,7 +67,7 @@ jobs:
         if: always()
         with:
           name: install-evidence-${{ matrix.os }}
-          path: ${{ runner.temp }}
+          path: ${{ runner.temp }}/evidence
           retention-days: 21
   debian-container:
     needs: build-pack
@@ -76,7 +76,7 @@ jobs:
     container: debian:12
     steps:
       - uses: actions/checkout@v4
-      - run: apt-get update && apt-get install -y python3 python3-venv && rm -rf /var/lib/apt/lists/*
+      - run: apt-get update && apt-get install -y python3 python3-venv bash && rm -rf /var/lib/apt/lists/*
       - uses: actions/download-artifact@v4
         with:
           name: app-dist
@@ -84,7 +84,8 @@ jobs:
       - run: python3 scripts/verify_jury_pack.py /tmp/dist/OpenBridge-App.zip
       - run: python3 -c "import zipfile; zipfile.ZipFile('/tmp/dist/OpenBridge-App.zip').extractall('/tmp/approot')"
       - run: mkdir -p /tmp/evidence && python3 -c "import json,platform,sys; json.dump({'provider':'github-hosted','os':'debian:12-container','system':platform.system(),'arch':platform.machine(),'python':sys.version.split()[0],'sha':'${{ github.sha }}','note':'container, not a full VM'}, open('/tmp/evidence/env.json','w'), indent=1)"
-      - run: set -o pipefail; python3 /tmp/approot/OpenBridge-App/scripts/verify/clean_install_check.py --venv /tmp/approot-venv --port 18791 2>&1 | tee /tmp/evidence/install.log
+      - shell: bash
+        run: set -o pipefail; python3 /tmp/approot/OpenBridge-App/scripts/verify/clean_install_check.py --venv /tmp/approot-venv --port 18791 2>&1 | tee /tmp/evidence/install.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
