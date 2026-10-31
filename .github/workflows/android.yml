@@ -76,13 +76,12 @@ jobs:
           script: |
             set -e
             adb install apk/openbridge-companion.apk
-            (adb shell screenrecord --bit-rate 2000000 --time-limit 25 /sdcard/demo.mp4 &)
-            sleep 2
             adb shell am start -n fr.openbridge.companion/.MainActivity
             sleep 10
             adb exec-out screencap -p > phone-launch.png
             adb shell dumpsys activity activities | grep -m1 -i openbridge > phone-foreground.txt || true
-            sleep 12
+            (adb shell screenrecord --bit-rate 2000000 --time-limit 12 /sdcard/demo.mp4 &)
+            sleep 15
             adb pull /sdcard/demo.mp4 phone-demo.mp4 || true
             adb logcat -d -t 300 > phone-logcat.txt
             ls -la *.png *.mp4 *.txt || true
@@ -128,7 +127,7 @@ jobs:
       - name: TV acceptance
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 33
           target: android-tv
           arch: x86_64
           profile: tv_1080p
