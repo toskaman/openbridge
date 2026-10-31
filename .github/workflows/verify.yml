@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +29,23 @@ jobs:
             sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt
           fi
       - run: python -m playwright install --with-deps chromium
+      - run: python -m tests.e2e.command_center_smoke
+      - run: python -m tests.e2e.route_inspector_smoke
+      - run: python -m tests.e2e.control_consent_smoke
+      - run: python -m tests.e2e.agent_portal_smoke
+      - run: python -m tests.e2e.offline_smoke
+      - run: python -m tests.e2e.guided_smoke
+      - run: python -m tests.e2e.fabric_smoke
+  browser-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.4'
+      - run: python -m pip install -r requirements-dev.txt
+      # NOTE: no --with-deps and no apt step: both are Linux-only.
+      - run: python -m playwright install chromium
       - run: python -m tests.e2e.command_center_smoke
       - run: python -m tests.e2e.route_inspector_smoke
       - run: python -m tests.e2e.control_consent_smoke
