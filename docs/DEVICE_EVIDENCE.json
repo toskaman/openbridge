@@ -983,5 +983,40 @@
    "on-device pairing code read from the screen the owner would see",
    "isolated test server (port 18795, private LOCALAPPDATA); live server untouched"
   ]
+ },
+ {
+  "test_id": "companion-voice-loop-transcribe-report-tts",
+  "test_utc": "2026-10-31T17:07:00Z",
+  "commit_sha": "1fa6299b1e60e6a1d482a82551e443add0672657",
+  "platform": "Android phone",
+  "device_alias": "Owner phone (rugged model, Android 13)",
+  "public_device_id": "phone-companion-01",
+  "os_version": "Android 13 (SDK 33)",
+  "companion_version": "0.12.0 (code 12)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "Typed FR order via the real UI parsed by local Llama 3.2 3B, report shown in the caption",
+   "6 voice clips recorded on-device mic (15 s cap each), queued, drained by the PC",
+   "Clips fetched over the signed one-shot URL (size+sha256 verified each time)",
+   "Local Meta MMS STT transcribed every clip; low-tier parse produced needs_clarification",
+   "Each report displayed in the caption and spoken aloud (TTS, SPEAKING state)",
+   "Stale Got-it caption resets to idle when the 25 s answer window expires"
+  ],
+  "evidence": [
+   "src/runtime/command_drain.py",
+   "E:/shots/drain-live/fg.log"
+  ],
+  "independent_oracle": "dumpsys record sessions (MIC, fr.openbridge.companion), uiautomator caption dumps, server-side sha256 match per clip, TTS SPEAKING state + screenshot",
+  "limitations": [
+   "MMS hallucinates plausible phrases on near-silence (documented STT behavior); an energy/VAD gate is post-submission work",
+   "Watch microphone not yet proven (watch unreachable over adb; same APK/code path)",
+   "Gboard autocorrect rewrote one typed test command; the drain handled the resulting text honestly"
+  ],
+  "permissions": [
+   "owner authorized phone use for the night session",
+   "isolated test server (port 18793, private store); live server untouched"
+  ]
  }
 ]
