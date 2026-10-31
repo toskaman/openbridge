@@ -1,0 +1,89 @@
+name: Clean-room install lab
+# §4/§5/§6: build ARTIFACT A once, then install+run+capture it on fresh hosted
+# OSs. Manual dispatch only (heavy); PR CI stays in verify.yml.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-pack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.4'
+      - run: python scripts/release_pack.py app --out /tmp/OpenBridge-App.zip
+      - run: python scripts/verify_jury_pack.py /tmp/OpenBridge-App.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-dist
+          path: /tmp/OpenBridge-App.zip
+          retention-days: 7
+  install:
+    needs: build-pack
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, ubuntu-24.04, macos-15-intel, macos-26, ubuntu-24.04-arm, windows-11-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.4'
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-dist
+          path: /tmp/dist
+      - run: python scripts/verify_jury_pack.py /tmp/dist/OpenBridge-App.zip
+      - run: python -c "import zipfile; zipfile.ZipFile('/tmp/dist/OpenBridge-App.zip').extractall('/tmp/approot')"
+      - name: Environment manifest
+        shell: bash
+        run: |
+          mkdir -p /tmp/evidence
+          python -c "import json,platform,sys,os; json.dump({'provider':'github-hosted','os':'${{ matrix.os }}','system':platform.system(),'release':platform.release(),'arch':platform.machine(),'python':sys.version.split()[0],'runner':os.environ.get('RUNNER_NAME'),'sha':'${{ github.sha }}'}, open('/tmp/evidence/env.json','w'), indent=1)"
+      - run: python /tmp/approot/OpenBridge-App/scripts/verify/clean_install_check.py --venv /tmp/approot-venv --port 18791 2>&1 | tee /tmp/evidence/install.log
+        shell: bash
+      - run: python -m pip install -r /tmp/approot/OpenBridge-App/requirements-dev.txt
+      - name: Use primary Ubuntu package mirror
+        if: runner.os == 'Linux'
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/apt-mirrors.txt
+          fi
+      - run: python -m playwright install --with-deps chromium
+        if: runner.os == 'Linux'
+      - run: python -m playwright install chromium
+        if: runner.os != 'Linux'
+      - run: python /tmp/approot/OpenBridge-App/scripts/verify/cleanroom_capture.py --root /tmp/approot/OpenBridge-App --out /tmp/evidence/capture --port 18792
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: install-evidence-${{ matrix.os }}
+          path: /tmp/evidence
+          retention-days: 21
+  debian-container:
+    needs: build-pack
+    timeout-minutes: 25
+    runs-on: ubuntu-24.04
+    container: debian:12
+    steps:
+      - uses: actions/checkout@v4
+      - run: apt-get update && apt-get install -y python3 python3-venv && rm -rf /var/lib/apt/lists/*
+      - uses: actions/download-artifact@v4
+        with:
+          name: app-dist
+          path: /tmp/dist
+      - run: python3 scripts/verify_jury_pack.py /tmp/dist/OpenBridge-App.zip
+      - run: python3 -c "import zipfile; zipfile.ZipFile('/tmp/dist/OpenBridge-App.zip').extractall('/tmp/approot')"
+      - run: mkdir -p /tmp/evidence && python3 -c "import json,platform,sys; json.dump({'provider':'github-hosted','os':'debian:12-container','system':platform.system(),'arch':platform.machine(),'python':sys.version.split()[0],'sha':'${{ github.sha }}','note':'container, not a full VM'}, open('/tmp/evidence/env.json','w'), indent=1)"
+      - run: python3 /tmp/approot/OpenBridge-App/scripts/verify/clean_install_check.py --venv /tmp/approot-venv --port 18791 2>&1 | tee /tmp/evidence/install.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: install-evidence-debian-12-container
+          path: /tmp/evidence
+          retention-days: 21
