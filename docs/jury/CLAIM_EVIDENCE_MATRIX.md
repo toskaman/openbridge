@@ -13,23 +13,29 @@ Every public claim, its status and where to check it. A claim without evidence i
 | BLOCKED | — | refused by policy |
 
 ## Claims
+
+Reconciled 31 Oct 2026: where this matrix previously said REAL/LIVE for a V4
+row but the shipped V4 table said SIMULATED + pending, the conservative
+SIMULATED status now governs until a re-verified run lands. Original wording
+is preserved in git history, not deleted.
+
 | Claim | Status | Evidence |
 |---|---|---|
 | Discovers mDNS, SSDP, ADB USB/Wi-Fi, Freebox OS (authorized), BLE via relays | REAL_HARDWARE_VERIFIED | EVIDENCE_LEDGER.md, README screenshot |
 | One graph, strong-ID merge only, grants per link | REAL_HARDWARE_VERIFIED | TV mDNS+ADB merge in EVIDENCE_LEDGER.md |
 | ISP Router API (e.g., Freebox OS / UPnP-IGD): Freebox inventory | REAL_HARDWARE_VERIFIED | docs/FREEBOX_INTEGRATION.md |
-| ISP Router API: generic UPnP-IGD read-only | REAL_HARDWARE_VERIFIED (status fields; IGD bit-rate defaults flagged) | tests/fabric/test_upnp_igd.py; real read: `python -m dev.igd_read` (pending) |
+| ISP Router API: generic UPnP-IGD read-only | SIMULATED_VERIFIED (fake IGD) | tests/fabric/test_upnp_igd.py; real read: `python -m dev.igd_read` (pending) |
 | BLE relay through phone and TV, signed protocol, revoke | REAL_HARDWARE_VERIFIED | docs/RELAY_SECURITY.md |
 | Reversible write with exact Undo and read-back | REAL_HARDWARE_VERIFIED | docs/physical-package-receipt.json |
 | Crash-recoverable physical workflows (not ACID): 5 kill points | REAL_HARDWARE_VERIFIED | crash drill 5/5, EVIDENCE_LEDGER.md |
-| Cross-transport timeline + competing hypotheses + read-only probe | REAL_HARDWARE_VERIFIED (10-min capture, induced link drop) + CI drills | tests/runtime/test_timeline.py, drills + independent labels |
-| Privacy-preserving cloud escalation (never "zero-knowledge") | LIVE VERIFIED (one consented muse-spark-1.3 call, EVIDENCE_LEDGER) + golden corpus | tests/runtime/test_redact.py (golden corpus), tests/runtime/test_cloud_escalation.py |
+| Cross-transport timeline + competing hypotheses + read-only probe | SIMULATED_VERIFIED (CI drills + independent labels) | tests/runtime/test_timeline.py; real TV+router capture pending (prior live-capture wording needs re-verification) |
+| Privacy-preserving cloud escalation (never "zero-knowledge") | SIMULATED_VERIFIED (golden corpus + unit) | tests/runtime/test_redact.py, tests/runtime/test_cloud_escalation.py; no ACCEPTED live escalation receipt yet (the recorded Spark call is the 27-Oct synthetic advisory, not a V4-05 run) |
 | Meta Model API live call (muse-spark-1.3) | REAL (synthetic facts) | docs/runtime-meta-receipt.json, EVIDENCE_LEDGER 27 Oct |
 | Registered ablation, rules vs Llama vs Glimmer vs Spark | MEASURED: rules 0.833, Llama 0.833, Glimmer 0.722; Spark not run (budget) | docs/benchmark/v4/REGISTRATION.md |
-| Visual read-back with local Glimmer | REAL_HARDWARE_VERIFIED (TV run: INCONCLUSIVE, Glimmer misread a screensaver) | tests/unit/test_visual_readback.py; `python -m dev.visual_readback_tv` (pending) |
+| Visual read-back with local Glimmer | REAL_HARDWARE run, verdict INCONCLUSIVE — not a VERIFIED pass (Glimmer misread a screensaver) | tests/unit/test_visual_readback.py; `python -m dev.visual_readback_tv` re-run pending |
 | BLE zone proximity (zones, not positions) | SIMULATED_VERIFIED | tests/runtime/test_ble_zones.py; `python -m dev.ble_zone_calibrate` (pending) |
-| Voice command via Muse Voice Transcribe | LIVE VERIFIED (synthetic speech clip, exact transcript) | tests/unit/test_voice.py (fake WebSocket) |
-| Wear OS dynamic manifest | REAL_HARDWARE_VERIFIED (Galaxy Watch7) | tests/fabric/test_wear_manifest.py |
+| Voice command (local STT worker; cloud Muse Voice path kept, consent-gated) | REAL_HARDWARE_VERIFIED: frozen corpus 16/16 no wrong-skill, owner voice 2/2 | docs/evidence/v4/overnight/N2_N3_RESULTS.md; worker isolation unit-verified |
+| Wear OS dynamic manifest | SIMULATED_VERIFIED | tests/fabric/test_wear_manifest.py; Watch7 run pending (prior REAL wording needs re-verification) |
 | PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | jobs REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER); inference worker SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
 | Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/dock; manual moves EXECUTED_UNVERIFIED) | tests/fabric/test_tuya_local.py; EVIDENCE_LEDGER.md (27-Oct movement run); docs/DEVICE_CAPABILITIES.md; live re-verify 30 Oct (facts + seek accepted, row 26) |
 | Meta-only runtime | VERIFIED (static + network trace) | src/ai/registry.py, tests/unit/test_meta_only_network_trace.py |
@@ -51,6 +57,9 @@ Every public claim, its status and where to check it. A claim without evidence i
 | Meta-planned quiet-mode pair: Llama 3.2 3B plan validated + consented, TV volume 22→21 adb read-back, vacuum dock dispatched + acked | REAL_HARDWARE_VERIFIED (vacuum EXECUTED with stable read-back, motion not observed) | docs/evidence/s4-quiet-mode-31oct.md (registry row 27) |
 | Meta-generated vacuum panel on TV: Glimmer 30B proposal, 4/4 buttons bound + OCR-render-verified, hold-press executed from panel, revoke→deny | REAL_HARDWARE_VERIFIED (dock already charge_done 100pct so motion unobservable; tap adb-injected, pipeline identical) | docs/evidence/s5-tv-panel-31oct.md (registry row 28, S5 T1 FULL PASS) |
 | Paid Meta cloud end-to-end | BLOCKED (no key, no spend order) | preflight + budget guard unit-tested; $0 spent |
+| Companion background relay on a real phone (screen off, toggle 8/8) | REAL_HARDWARE_VERIFIED | docs/DEVICE_EVIDENCE.json (registry row 29 `companion-0.12.0-background-relay-hardware`) |
+| S5b safe seek: T2 panel → hold-press FIND → tx-4a96f8f626a1adc5 → 15-poll oracle → revoke + deny | REAL_HARDWARE_VERIFIED (adb-injected press, labeled; beep not machine-proven) | docs/evidence/s5b-safe-seek-31oct.md (registry row 30) |
+| Structured model refusal channel (proposal/refusal/needs_clarification/unsupported) | IMPLEMENTED + unit-verified (TDD 3/3); jury shot staged from live UI | docs/jury/OVERNIGHT_REPORT_31OCT.md §B |
 
 ## Never claimed
 ACID transactions; zero-knowledge or anonymous cloud calls; 2D or person location from BLE RSSI; that BLE presence proves interference; fabricated scores; organizer acceptance or bonus eligibility.

@@ -30,3 +30,12 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - [Companion 0.12.0 LAN discovery](evidence/companion-lan-discovery-30oct.md): NSD advert + QU-bit browse + `companion_lan` onboarding, 3/3 devices (row 25); watch UI rescale.
 - Vacuum liveness re-verify: facts + seek accepted, docked (row 26).
 - Suite: 1150 green (1138 `def test` + 5 assigned + 7 inherited, collection-diff verified); Windows + Ubuntu + browser CI green on main. Live :18765 still on an older commit (reload owner-gated).
+
+## Latest integrated evidence — 31 October (PR158–159, origin/main `e1ac139`)
+
+- [S4 quiet-mode pair](evidence/s4-quiet-mode-31oct.md) (registry row 27): Llama 3.2 3B plan validated + consented, TV volume 22→21 with adb read-back, vacuum dock dispatched + acked.
+- [S5 generated TV panel](evidence/s5-tv-panel-31oct.md) (row 28): Glimmer 30B 4-button panel installed on the real TV, hold-press executed (tx-ab731d7b885b5e1a), revoke→deny VERIFIED.
+- [S5b safe seek](evidence/s5b-safe-seek-31oct.md) (row 30): T2 panel → hold-press FIND → tx-4a96f8f626a1adc5 → 15-poll oracle → revoke + deny + relay_revoke VERIFIED. Honest limits: adb-injected presses, vacuum already docked/cleaning, motion never observed.
+- [Background relay](DEVICE_EVIDENCE.json) (row 29): foreground service alive with activity closed + screen off, toggle regression 8/8 on a physical phone.
+- [Structured refusal channel](jury/OVERNIGHT_REPORT_31OCT.md) §B (TDD 3/3); [S5/S6 physical runbooks](jury/DEMO_PHYSICAL_RUNBOOK.md) + [final storyboard](jury/DEMO_STORYBOARD_FINAL.md); [compliance checklist](jury/COMPLIANCE_CHECKLIST.md).
+- Suite: 1245 green locally + Windows/Ubuntu/macOS/browser CI green; clean-room install 8/8 on 7 hosted targets ([run 41210900996](https://github.com/toskaman/openbridge/actions/runs/41210900996)). Android `e2e` job failing (builds green) — disclosed, not hidden.
