@@ -1,8 +1,13 @@
 # OpenBridge — QA / audit report (presentation redesign, 31 Oct 2026)
 
-Branch: `feat/jury-presentation-redesign`. Scope: presentation, docs, media,
-pack tooling only — no business-logic change except the matrix link renderer
-(`dev/device_registry.py`, covered by the registry gate test).
+Branch: `feat/jury-presentation-redesign`. Scope of my commits (`8c00a1d`
++ follow-ups): presentation, docs, media, pack tooling only — no app
+behavior change except the matrix link renderer (`dev/device_registry.py`,
+covered by the registry gate test). The branch concurrently carries
+another author's companion commits (`ffba663`, `9664eca`, `ec46fe5`,
+`bfe3dd2`: consent-gate UX, relay unpair/singleton, launcher icons), which
+DO change app behavior and ship without Android `e2e` cover (job failing,
+disclosed) — out of my scope, listed here for the merger.
 
 ## Hostile review (10 lenses)
 
@@ -24,12 +29,12 @@ pack tooling only — no business-logic change except the matrix link renderer
 - README renders (GitHub markdown, no HTML): yes; 6 images + 2 badges, all targets present.
 - Internal links: repo sweep clean (7 fixed); jury ZIP validator: 290 files, 0 missing, 0 broken.
 - Badges truthful: MIT (LICENSE exists) + live verify.yml badge (reflects CI, whatever it is).
-- No staged-as-real media: GIF frames are committed stills; emulator shots labeled; PII shots excluded.
+- No staged-as-real media: GIF frames are committed stills; emulator shots labeled; PII shots excluded; the one seeded-UI shot (`refusal_channel.png`, demo server, real refusal payload) is labeled at every display point.
 - No universal-Undo / exactly-once-physical / encrypted-transport claims: scoped to journaled settings; v4 plaintext disclosed.
 - No invented benchmarks: unfavorable arms published (ablation, Forge 0%, EVAL 1.4%).
 - No hidden contributions: CONTRIBUTIONS/THIRD_PARTY untouched and linked.
 - No secrets: pack is docs + code proof + public shots; vault/keys never included.
-- App behavior unchanged: full suite green (see below); only renderer + docs + new dev tools.
+- App behavior unchanged by my commits: full suite green (see below); only renderer + docs + new dev tools. Companion behavior changes on this branch belong to the concurrent commits listed above.
 - Assets reasonable: README images ~1.7 MB total; ZIP 16.4 MB (incl. 10 MB mp4, E:-only source).
 
 ## Test outcomes (this branch, 31 Oct)
@@ -38,7 +43,8 @@ pack tooling only — no business-logic change except the matrix link renderer
 - `python -m dev.device_registry --check`: registry OK (30 rows), matrix in sync.
 - `compileall` on new/changed dev scripts: clean.
 - `python dev/build_jury_presentation.py`: 291 files, ZIP sha256
-  `eaa200a6a5c3cb460d0c5bc392692e8ce19a8d433ac4f6eabf1ea29a03a8a63c`.
+  `ded49878df1e1ca35c53817d198e13ca4e109453f99b01ec53f0dd7a90670f97`
+  (`--without-extras` portable mode also verified: 290 files, exit 0).
 - Not executed: browser smokes locally (CI covers), clean-room rebuild,
   Android e2e (CI failing, disclosed), macOS hand-run.
 

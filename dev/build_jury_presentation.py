@@ -1,12 +1,17 @@
 """Build the jury presentation ZIP reproducibly.
 
-Usage: python dev/build_jury_presentation.py
-Stages a trimmed repo subtree on E:/jury-pack (repo-relative layout preserved
-so every relative link keeps working), validates link targets, zips it, and
-writes a SHA-256 manifest. Never published automatically (owner-gated).
+Usage: python dev/build_jury_presentation.py [--without-extras]
+Stages a trimmed repo subtree (repo-relative layout preserved so every
+relative link keeps working), validates link targets, zips it, and writes a
+SHA-256 manifest. Never published automatically (owner-gated).
+
+STAGE/ZIP default to E:/jury-pack (author PC, where the 10 MB mp4 lives);
+override with JURY_PACK_STAGE / JURY_PACK_ZIP. --without-extras skips
+outside-repo extras (warns, still exits 0) for machines without E:.
 """
 
 import hashlib
+import os
 import re
 import shutil
 import sys
@@ -14,8 +19,8 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-STAGE = Path("E:/jury-pack/OpenBridge-Jury-Presentation")
-ZIP = Path("E:/jury-pack/OpenBridge-Jury-Presentation.zip")
+STAGE = Path(os.environ.get("JURY_PACK_STAGE", "E:/jury-pack/OpenBridge-Jury-Presentation"))
+ZIP = Path(os.environ.get("JURY_PACK_ZIP", str(STAGE.parent / "OpenBridge-Jury-Presentation.zip")))
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)#]+)(?:#[^)]*)?\)")
 
@@ -120,6 +125,7 @@ SHA-256 per file: SHA256SUMS.txt.
 
 
 def main():
+    skip_extras = "--without-extras" in sys.argv[1:]
     if STAGE.exists():
         shutil.rmtree(STAGE)
     copied, missing = 0, []
@@ -134,8 +140,12 @@ def main():
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dest)
             copied += 1
+    skipped = []
     for src, rel in EXTRAS:
         src = Path(src)
+        if skip_extras:
+            skipped.append(str(src))
+            continue
         if not src.is_file():
             missing.append(str(src))
             continue
@@ -143,7 +153,10 @@ def main():
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dest)
         copied += 1
-    (STAGE / "ZIP_INDEX.md").write_text(INDEX, encoding="utf8")
+    index = INDEX
+    if skipped:
+        index += "\nSkipped extras (--without-extras):\n" + "".join("- %s\n" % s for s in skipped)
+    (STAGE / "ZIP_INDEX.md").write_text(index, encoding="utf8")
 
     broken = []
     for md in STAGE.rglob("*.md"):
@@ -170,6 +183,8 @@ def main():
                 archive.write(path, "OpenBridge-Jury-Presentation/" + path.relative_to(STAGE).as_posix())
     print("staged %d files, zip %d bytes" % (copied, ZIP.stat().st_size))
     print("zip sha256 %s" % hashlib.sha256(ZIP.read_bytes()).hexdigest())
+    for item in skipped:
+        print("SKIP-EXTRA " + item)
     for item in missing:
         print("MISSING " + item)
     for item in broken:

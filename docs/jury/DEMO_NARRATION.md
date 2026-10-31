@@ -3,8 +3,8 @@
 Companion to [DEMO_STORYBOARD_FINAL.md](DEMO_STORYBOARD_FINAL.md) (timings,
 shots, cut rules) and [DEMO_PHYSICAL_RUNBOOK.md](DEMO_PHYSICAL_RUNBOOK.md)
 (device actions). **No recording without the owner's new explicit
-authorization.** Total narration ≈ 120 words — slow, calm delivery; let the
-screens breathe.
+authorization.** Total narration ≈ 80 words over 180 s — sparse by design;
+slow, calm delivery; let the screens breathe.
 
 ## Script (English, with timecodes)
 
@@ -20,7 +20,7 @@ screens breathe.
 
 ## Delivery notes
 
-- One narrator, neutral pace (~130 words/min); pause 1–2 s between beats.
+- One narrator, neutral pace (~27 words/min); pause 1–2 s between beats.
 - Beats 3–4 carry the story: if S5 motion or the S6 watch chain is
   unavailable on the day, apply the storyboard cut list (DISPATCH ONLY label
   or drop the beat) — never voice over a claim the footage doesn't show.

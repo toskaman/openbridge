@@ -2,9 +2,9 @@
 
 Human-readable index. Machine labels live in
 [MEDIA_MANIFEST_V2.json](MEDIA_MANIFEST_V2.json). All files below ship in
-`docs/jury/screens/`; every frame is a real capture, nothing staged, nothing
-AI-generated. Corrupt/missing items are listed at the bottom — never silently
-dropped.
+`docs/jury/screens/`; every frame is a real capture of live product UI
+except the one seeded-UI shot labeled below; nothing AI-generated.
+Corrupt/missing items are listed at the bottom — never silently dropped.
 
 ## Hero + tour
 
@@ -32,8 +32,13 @@ dropped.
 | s5b_installed.png | 219 KB, 1920×1080 | Meta T2 panel on TV (Find + Volume) | 31 Oct | test relay id |
 | s5b_pressed.png | 232 KB, 1920×1080 | After hold-press FIND (tx-4a96f8f6) | 31 Oct | test relay id |
 | s5b_revoked.png | 253 KB, 1920×1080 | After revoke (controls gone) | 31 Oct | test relay id |
-| refusal_channel.png | 256 KB, 1440×1000 | Refused press in Activity timeline | 31 Oct | none |
 | agent-glimmer-1440-undone.png | 41 KB, 1080×421 | Agent loop plan→act→verify→UNDO | 26 Oct | battery/storage facts |
+
+## Staged-from-live-UI (labeled, not a hardware capture)
+
+| File | Size | Depicts | Date | PII |
+|---|---|---|---|---|
+| refusal_channel.png | 256 KB, 1440×1000 | Refused press in Activity timeline — seeded-UI shot from a demo server; payload is a real `process()` refusal ([report](OVERNIGHT_REPORT_31OCT.md) §D) | 31 Oct | none |
 | companion-0-10-full-control-popup.png | 214 KB, 1080×2388 | "Allow full control" warning | 29 Oct | status bar only |
 
 ## Emulator + legacy (labeled, never as physical)

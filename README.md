@@ -96,7 +96,7 @@ Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext 
 
 ![Refused press shown in the Activity timeline](docs/jury/screens/refusal_channel.png)
 
-*Every refused press lands in the Activity timeline with a server-composed reason — shown, not hidden.*
+*Every refused press lands in the Activity timeline with a server-composed reason — shown, not hidden. (Seeded-UI shot from a demo server; payload is a real `process()` refusal.)*
 
 ## Try OpenBridge
 

@@ -70,7 +70,8 @@ Llama 3.2 is licensed under the Llama 3.2 Community License, Copyright © Meta P
 
 The full 35 KB README (detailed capability table, What's-new changelog 27–31 Oct,
 V4 status table, bonus-award table) is preserved byte-identical in
-[archive/README_2026-10-31.md](archive/README_2026-10-31.md). It was superseded
+[archive/README_2026-10-31.md](archive/README_2026-10-31.md) — note its inner
+links are root-relative and resolve at repo root, not in-place. It was superseded
 by the focused jury presentation rewrite on branch
 `feat/jury-presentation-redesign`. Counts and statuses in the snapshot are
 historical; current truth lives in [RELEASE_STATUS.md](RELEASE_STATUS.md) and
