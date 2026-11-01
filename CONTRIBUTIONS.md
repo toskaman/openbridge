@@ -54,7 +54,7 @@ Before the event the owner had written a basic private `agent.exe` prototype (ne
 
 ## Current application theme — owner decision, 28 October 2026
 
-The owner selected Claude's latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. Codex integrated and tested the combined changes. No new Meta design call was made for this integration.
+The owner selected the latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. The combined changes were integrated and tested during the event. No new Meta design call was made for this integration.
 
 ## Frontier 90 campaign additions (31 Oct – 1 Nov 2026)
 

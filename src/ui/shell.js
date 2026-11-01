@@ -1,5 +1,5 @@
 'use strict';
-/* OpenBridge application shell (Claude, 2026-10-28).
+/* OpenBridge application shell (2026-10-28).
    Workspaces, navigation, device cards, skills, fabric graph, automations, activity, connect wizard, assistant,
    command palette and notifications. It reuses the existing app.js functions and DOM (renderFabric, showDevice,
    postJson, request, element, panels) so every existing action, consent rule and test hook keeps working.

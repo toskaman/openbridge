@@ -121,4 +121,4 @@ I'm an autistic independent developer, passionate about hardware, AI, and intero
 
 ## License and contributions
 
-MIT ([LICENSE](LICENSE)) · Llama 3.2 Community License for local Llama use · [third-party notices](THIRD_PARTY.md). Build-time assistance (Codex, Claude theme, Spark/Wonder design receipts) is disclosed in [CONTRIBUTIONS](CONTRIBUTIONS.md); runtime inference is Meta-only. Earlier README versions: [history](docs/README_HISTORY.md).
+MIT ([LICENSE](LICENSE)) · Llama 3.2 Community License for local Llama use · [third-party notices](THIRD_PARTY.md). Build-time assistance is disclosed in [CONTRIBUTIONS](CONTRIBUTIONS.md); runtime inference is Meta-only. Earlier README versions: [history](docs/README_HISTORY.md).
