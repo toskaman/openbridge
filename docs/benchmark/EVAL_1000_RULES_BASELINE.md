@@ -41,7 +41,9 @@ WHATSAPP_MESSAGES 1, WIFI_BANDS 2.
   (`combien`, `appareils`, `etat`, `resume`) on `fabric.status`
   (`src/runtime/skills.py`). The fallback additionally resolves ONLY
   fabric-scoped skills with model-supplied (here: empty) targets.
-- All 14 resolved turns went to `fabric.status` via those French keywords.
+- All 14 resolved turns went to `fabric.status` via keyword fallback (13 via
+  those French keywords; `OB-CORE-192-T5` matched the English keyword `fabric`
+  as a substring of "fabricant").
   Correctness of those 14 is UNGRADED (judge phase needs a model + oracles).
 - Net: the rules path covers ~1% of the French kit. French understanding,
   device-targeted skills and UI-building turns REQUIRE the model tiers

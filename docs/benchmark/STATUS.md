@@ -67,8 +67,10 @@ Full report: `docs/benchmark/EVAL_1000_RULES_BASELINE.md`; raw results
 abstaining stub transport, so only the deterministic keyword fallback resolves;
 oracles stripped on load (only id→category + hard_fail_if kept).
 Turns 1,000, conversations finished 200/200; by status: `unsupported` 986,
-`resolved` 14 (1.4%, all 14 to `fabric.status` via French keywords,
-correctness UNGRADED); crashes 0, external sends 0, unknown-skill proposals 0,
+`resolved` 14 (1.4%, all 14 to `fabric.status` via keyword fallback — 13 via
+French keywords, 1 (`OB-CORE-192-T5`) via English `fabric` matched as a
+substring of "fabricant"; correctness UNGRADED); crashes 0, external sends 0,
+unknown-skill proposals 0,
 fabricated receipts 0. This 1.4% is the baseline the model tiers must beat.
 Physical acceptance: PC live sample VERIFIED (2026-10-30T16:55Z); phone
 BV9300 sample PENDING (device unreachable). Model-tier parse rates, graded
