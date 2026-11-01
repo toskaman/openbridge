@@ -29,7 +29,11 @@
     micReady: 'Record a voice command (local Meta STT)', micStop: 'Stop and transcribe',
     micBusy: 'Transcribing…', micDenied: 'Microphone unavailable in this browser',
     partial: 'Partial success', failed: 'Failed',
+    modelSettings: 'Model settings', modelReady: 'Local · model ready', modelOff: 'Meta model unavailable',
+    modelChecking: 'Checking model…', modelHint: 'Devices stay usable without a model; start OpenBridge with --local-meta to enable requests.',
+    cloudNeeded: 'This request may send the approved request text to Meta cloud. Review the cost estimate before continuing.',
   };
+  const motion = (type, extra) => document.dispatchEvent(new CustomEvent('ob:motion', { detail: Object.assign({ type }, extra || {}) }));
   let reqLang = (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
   const t = (k) => STRINGS[k] || k;
 
@@ -58,7 +62,7 @@
     'Start my vacuum',
     'Set living room TV volume to 10',
   ];
-  let tiers = null, quality = 'auto', cloudConsent = false, running = false;
+  let tiers = null, quality = 'auto', cloudConsent = false, running = false, advancedOpen = false;
 
   function el(tag, text, cls) {
     const n = document.createElement(tag);
@@ -68,55 +72,37 @@
   }
   function fmtUsd(v) { return v === 0 ? '$0.00' : `~$${Number(v).toFixed(2)}`; }
 
+  function cloudPossible() {
+    if (quality === 'high') return true;
+    const hi = tiers && tiers.high;
+    return quality === 'auto' && !!(hi && hi.configured && hi.enabled);
+  }
+  function modelLine() {
+    const line = el('p', undefined, 'ask-model');
+    const dot = el('span', undefined, 'dot');
+    let text = t('modelChecking'), ok = false;
+    if (tiers) {
+      ok = ['low', 'medium'].some(q => (tiers[q] || {}).ready) || !!((tiers.high || {}).configured && (tiers.high || {}).enabled);
+      text = ok ? t('modelReady') : t('modelOff');
+    }
+    dot.className = 'dot ' + (ok ? 'ok' : tiers ? 'warn' : '');
+    line.append(dot, el('span', text));
+    if (tiers && !ok) line.append(el('small', t('modelHint'), 'muted'));
+    return line;
+  }
   function render() {
     root.replaceChildren();
     const head = el('div', undefined, 'panel-head');
     const h = el('div'); h.append(el('h2', t('title')), el('p', t('tagline'), 'sub'));
     h.firstChild.id = 'ask-title';
-    const langBox = el('div', undefined, 'ask-lang');
-    langBox.append(el('span', t('requestLang'), 'ask-label'));
-    for (const l of ['en', 'fr']) {
-      const b = el('button', l.toUpperCase(), 'ghost small' + (reqLang === l ? ' active' : ''));
-      b.type = 'button'; b.onclick = () => { reqLang = l; render(); };
-      langBox.append(b);
-    }
-    head.append(h, langBox);
+    head.append(h, modelLine());
     root.append(head);
-
-    const qbox = el('div', undefined, 'ask-quality');
-    qbox.append(el('span', t('quality'), 'ask-label'));
-    for (const q of ['low', 'medium', 'high', 'auto']) {
-      const b = el('button', t(q), 'ask-pill' + (quality === q ? ' active' : ''));
-      b.type = 'button'; b.onclick = () => { quality = q; render(); };
-      qbox.append(b);
-    }
-    root.append(qbox);
-    const tierBox = el('div', undefined, 'ask-tiers');
-    if (!tiers) tierBox.append(el('span', '…', 'muted'));
-    else {
-      for (const q of ['low', 'medium', 'high']) {
-        const info = tiers[q] || {};
-        const pill = el('span', undefined, 'tag');
-        const ok = q === 'high' ? (info.configured && info.enabled) : info.ready;
-        const infer = info.last_inference === 'failed' ? ' · infer failed'
-          : (info.last_inference === 'ok' ? ' · infer ok' : '');
-        pill.textContent = `${q}: ${(info.model || '?').split(':')[0]} · ${ok ? t('ready') : t('notReady')} · ${q === 'high' ? t('cloud') : t('local')} · ${t('estimate')} ${fmtUsd(info.estimate_usd)}${infer}`;
-        tierBox.append(pill);
-      }
-    }
-    root.append(tierBox);
-
-    const consentRow = el('label', undefined, 'ask-consent');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = cloudConsent;
-    cb.onchange = () => { cloudConsent = cb.checked; };
-    consentRow.append(cb, el('span', t('consent')));
-    root.append(consentRow);
 
     const form = el('div', undefined, 'ask-composer');
     const input = document.createElement('input');
     input.id = 'ask-input'; input.maxLength = 2000; input.placeholder = t('placeholder');
     input.setAttribute('aria-label', t('title'));
+    input.autocomplete = 'off';
     const ask = el('button', t('ask'), 'primary');
     ask.type = 'button'; ask.onclick = () => run(input.value);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(input.value); });
@@ -130,6 +116,55 @@
     mic.onclick = () => toggleMic(input, mic);
     form.append(input, ask, mic);
     root.append(form);
+
+    const adv = document.createElement('details');
+    adv.className = 'ask-advanced';
+    adv.open = advancedOpen;
+    adv.addEventListener('toggle', () => { advancedOpen = adv.open; });
+    adv.append(el('summary', t('modelSettings')));
+    const langBox = el('div', undefined, 'ask-lang');
+    langBox.append(el('span', t('requestLang'), 'ask-label'));
+    for (const l of ['en', 'fr']) {
+      const b = el('button', l.toUpperCase(), 'ghost small' + (reqLang === l ? ' active' : ''));
+      b.type = 'button'; b.onclick = () => { reqLang = l; render(); };
+      langBox.append(b);
+    }
+    adv.append(langBox);
+    const qbox = el('div', undefined, 'ask-quality');
+    qbox.append(el('span', t('quality'), 'ask-label'));
+    for (const q of ['low', 'medium', 'high', 'auto']) {
+      const b = el('button', t(q), 'ask-pill' + (quality === q ? ' active' : ''));
+      b.type = 'button'; b.onclick = () => { quality = q; render(); };
+      qbox.append(b);
+    }
+    adv.append(qbox);
+    const tierBox = el('div', undefined, 'ask-tiers');
+    if (!tiers) tierBox.append(el('span', '…', 'muted'));
+    else {
+      for (const q of ['low', 'medium', 'high']) {
+        const info = tiers[q] || {};
+        const pill = el('span', undefined, 'tag');
+        const ok = q === 'high' ? (info.configured && info.enabled) : info.ready;
+        const infer = info.last_inference === 'failed' ? ' · infer failed'
+          : (info.last_inference === 'ok' ? ' · infer ok' : '');
+        pill.textContent = `${q}: ${(info.model || '?').split(':')[0]} · ${ok ? t('ready') : t('notReady')} · ${q === 'high' ? t('cloud') : t('local')} · ${t('estimate')} ${fmtUsd(info.estimate_usd)}${infer}`;
+        tierBox.append(pill);
+      }
+    }
+    adv.append(tierBox);
+    root.append(adv);
+
+    // Cloud approval only when this request could actually use the cloud tier; never assumed.
+    if (cloudPossible()) {
+      const consentRow = el('label', undefined, 'ask-consent');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = cloudConsent;
+      cb.onchange = () => { cloudConsent = cb.checked; };
+      const txt = el('span');
+      txt.append(el('strong', t('cloudNeeded')), document.createElement('br'), document.createTextNode(t('consent')));
+      consentRow.append(cb, txt);
+      root.append(consentRow);
+    } else cloudConsent = false;
 
     const sug = el('div', undefined, 'ask-suggest');
     sug.append(el('span', t('suggestions'), 'ask-label'));
@@ -257,11 +292,23 @@
       const src = ctx.createMediaStreamSource(stream);
       const node = new AudioWorkletNode(ctx, 'ob-cap');
       const chunks = [];
-      node.port.onmessage = (e) => chunks.push(e.data);
+      let lastLevelAt = 0;
+      node.port.onmessage = (e) => {
+        chunks.push(e.data);
+        const now = performance.now();
+        if (now - lastLevelAt > 50) {   // live mic level for the orb, only while really recording
+          lastLevelAt = now;
+          let sum = 0; const c = e.data;
+          for (let i = 0; i < c.length; i++) sum += c[i] * c[i];
+          motion('voice_level', { level: Math.min(1, Math.sqrt(sum / Math.max(1, c.length)) * 4) });
+        }
+      };
       src.connect(node);
       rec = { ctx, stream, node, chunks, timer: setTimeout(() => stopMic(input, mic), 15000) };
       micState(mic, 'recording', 'micStop');
+      motion('voice_capture_started');
     } catch (e) {
+      motion('voice_denied');
       resultBox().append(el('p', `${t('error')}: ${e.message || e}`, 'ask-error'));
     }
   }
@@ -269,6 +316,7 @@
     const r = rec; rec = null;
     if (!r) return;
     clearTimeout(r.timer);
+    motion('voice_capture_stopped');
     micState(mic, 'busy', 'micBusy');
     try {
       r.node.disconnect();
@@ -294,6 +342,8 @@
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(String(text).slice(0, 200));
       u.lang = reqLang === 'fr' ? 'fr-FR' : 'en-US';
+      u.onstart = () => motion('speech_started');
+      u.onend = u.onerror = () => motion('speech_ended');
       speechSynthesis.speak(u);
     } catch { /* silent: speech is a courtesy, never load-bearing */ }
   }
@@ -343,6 +393,8 @@
         ? `$${Number(parsed.usage.estimated_cost_usd).toFixed(4)} (${parsed.usage.usage.prompt_tokens}+${parsed.usage.usage.completion_tokens} tok)`
         : '$0.00 · ' + t('local'));
       stage('stApproval');
+      motion('proposal_ready', { text: 'Preview ready · nothing has run yet' });
+      motion('permission_requested', { text: 'Waiting for your approval · nothing has run yet' });
       const btn = el('button', t('approve'), 'primary');
       btn.type = 'button';
       btn.onclick = async () => {

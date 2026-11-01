@@ -27,7 +27,7 @@ def main():
                 page.route('**/api/fabric-discover',lambda r:r.fulfill(json=SNAP))
                 page.goto(f'http://127.0.0.1:{server.server_port}/#/devices',wait_until='networkidle')
                 page.get_by_role('button',name='Discover my environment').click()
-                page.get_by_role('button',name='Topology list').click()   # same tree as before, behind the Cards/Topology switch
+                page.get_by_role('button',name='List',exact=True).click()   # same tree as before, behind the Cards/List/Network switch
                 def back():   # below 960 px the inspector is a full-screen sheet with a Back button
                     b2=page.locator('#device-inspector.open .ihead .back')
                     if b2.count() and b2.is_visible(): b2.click()

@@ -36,6 +36,7 @@ jobs:
       - run: python -m tests.e2e.offline_smoke
       - run: python -m tests.e2e.guided_smoke
       - run: python -m tests.e2e.fabric_smoke
+      - run: python -m tests.e2e.ui_v2_smoke
   browser-macos:
     runs-on: macos-latest
     steps:
@@ -53,6 +54,7 @@ jobs:
       - run: python -m tests.e2e.offline_smoke
       - run: python -m tests.e2e.guided_smoke
       - run: python -m tests.e2e.fabric_smoke
+      - run: python -m tests.e2e.ui_v2_smoke
       - run: python -m tests.e2e.offline_smoke
         env:
           OB_PLAYWRIGHT_ENGINE: webkit

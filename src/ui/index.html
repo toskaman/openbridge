@@ -6,13 +6,20 @@
 <meta name="color-scheme" content="dark"/>
 <title>OpenBridge · Your devices, working together</title>
 <link href="/style.css" rel="stylesheet"/>
+<script defer src="/motion/orb_canvas.js"></script>
+<script defer src="/motion/flow_canvas.js"></script>
+<script defer src="/motion/motion_controller.js"></script>
+<script defer src="/motion/motion_state.js"></script>
 <script defer src="/app.js"></script>
 <script defer src="/explorer.js"></script>
 <script defer src="/replay.js"></script>
+<script defer src="/views/studio_view.js"></script>
+<script defer src="/views/settings_view.js"></script>
+<script defer src="/views/workflows_view.js"></script>
 <script defer src="/shell.js"></script>
 <script defer src="/command_center.js"></script>
 </head>
-<body class="ob-app">
+<body class="ob-app ui-v2">
 <svg aria-hidden="true" class="sprite" width="0" height="0">
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 9.8V20h13V9.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-devices" viewBox="0 0 24 24"><rect x="3" y="4" width="13" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="15" y="9" width="6" height="11" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 18h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
@@ -43,7 +50,14 @@
   <aside class="sidebar" id="sidebar" aria-label="Main navigation">
     <a class="brand" href="#/home" aria-label="OpenBridge home"><span class="brand-mark" aria-hidden="true"></span><span>OpenBridge</span></a>
     <button class="connect-cta" type="button" data-action="connect"><svg aria-hidden="true"><use href="#i-plus"/></svg>Connect device</button>
-    <nav class="nav" aria-label="Workspaces">
+    <nav class="nav nav-v2" aria-label="Workspaces">
+      <a href="#/home" data-nav="home" data-section="home"><svg aria-hidden="true"><use href="#i-home"/></svg><span>Home</span></a>
+      <a href="#/devices" data-nav="devices" data-section="devices"><svg aria-hidden="true"><use href="#i-devices"/></svg><span>Devices</span><b class="nav-count" id="nav-count-devices-v2"></b></a>
+      <a href="#/capabilities" data-nav="skills" data-section="capabilities"><svg aria-hidden="true"><use href="#i-skills"/></svg><span>Capabilities</span></a>
+      <a href="#/workflows" data-nav="automations" data-section="workflows"><svg aria-hidden="true"><use href="#i-auto"/></svg><span>Workflows</span></a>
+      <a href="#/activity" data-nav="activity" data-section="activity"><svg aria-hidden="true"><use href="#i-activity"/></svg><span>Activity</span></a>
+    </nav>
+    <nav class="nav nav-classic" aria-label="Workspaces (classic)">
       <a href="#/home" data-nav="home"><svg aria-hidden="true"><use href="#i-home"/></svg><span>Home</span></a>
       <a href="#/explore" data-nav="explore"><svg aria-hidden="true"><use href="#i-search"/></svg><span>Explore</span></a>
       <a href="#/devices" data-nav="devices"><svg aria-hidden="true"><use href="#i-devices"/></svg><span>My Devices</span><b class="nav-count" id="nav-count-devices"></b></a>
@@ -54,9 +68,10 @@
     </nav>
     <div class="nav-secondary">
       <button type="button" id="ask-nav"><svg aria-hidden="true"><use href="#i-meta"/></svg>Ask OpenBridge</button>
-      <button type="button" data-action="assistant"><svg aria-hidden="true"><use href="#i-meta"/></svg>Meta AI Assistant</button>
-      <a href="#/replay" data-nav="replay"><svg aria-hidden="true"><use href="#i-media"/></svg><span>Demo replay</span></a>
-      <a href="#/advanced" data-nav="advanced"><svg aria-hidden="true"><use href="#i-gear"/></svg><span>Advanced diagnostics</span></a>
+      <button type="button" class="classic-only" data-action="assistant"><svg aria-hidden="true"><use href="#i-meta"/></svg>Meta AI Assistant</button>
+      <a href="#/replay" data-nav="replay" data-section="replay"><svg aria-hidden="true"><use href="#i-media"/></svg><span>Demo replay</span><span class="tag sim nav-tag">SIMULATED</span></a>
+      <a href="#/settings" data-nav="settings" data-section="settings"><svg aria-hidden="true"><use href="#i-gear"/></svg><span>Settings</span></a>
+      <a href="#/advanced" data-nav="advanced" data-section="advanced"><svg aria-hidden="true"><use href="#i-search"/></svg><span>Diagnostics</span></a>
     </div>
     <div class="sidebar-foot">
       <p class="runtime"><span class="dot" id="runtime-dot"></span><span id="model-state">Runtime model: checking…</span></p>
@@ -69,44 +84,56 @@
       <nav class="crumbs" aria-label="Breadcrumb"><span id="crumb-root">OpenBridge</span><span aria-hidden="true">/</span><strong id="crumb">Home</strong></nav>
       <button class="search" type="button" data-action="palette" aria-label="Search devices, skills and actions (Ctrl+K)"><svg aria-hidden="true"><use href="#i-search"/></svg><span>Search devices, skills, actions…</span><kbd>Ctrl K</kbd></button>
       <div class="topbar-right">
+        <span class="orb-chip" data-orb-status title="OpenBridge activity"><i aria-hidden="true"></i><span class="orb-state">Ready</span></span>
         <span class="mode-pill" id="mode-pill" title="Where processing happens">Local</span>
         <button class="icon-btn" type="button" data-action="notifications" aria-label="Notifications" aria-haspopup="dialog"><svg aria-hidden="true"><use href="#i-bell"/></svg><b class="badge" id="notif-badge" hidden></b></button>
         <button class="primary small" type="button" data-action="connect"><svg aria-hidden="true"><use href="#i-plus"/></svg><span>Connect device</span></button>
       </div>
     </header>
     <main id="view" tabindex="-1">
+      <p class="mode-banner test" id="motion-test-banner" hidden role="status"><strong>TEST HARNESS</strong> Comets on screen come from the motion test harness, not from real traffic.</p>
+      <nav class="subnav" id="subnav" aria-label="Section pages" hidden></nav>
 
       <!-- HOME -->
       <section class="view" data-view="home" aria-labelledby="home-title">
-        <div class="hero">
-          <div>
-            <p class="eyebrow">Meta AI universal device fabric</p>
-            <h1 id="home-title">Your devices. One intelligent network.</h1>
-            <p class="lede">Discover what your devices can do, teach them new skills, and make them work together. A PC without Bluetooth can still reach Bluetooth devices through compatible, authorized relays.</p>
-            <div class="hero-actions"><button class="primary" type="button" data-action="discover-home">Discover devices</button><button class="ghost" type="button" data-action="connect">Connect a new device</button></div>
+        <div class="workspace-hero">
+          <div class="hero-main">
+            <p class="eyebrow">One intelligent workspace</p>
+            <h1 id="home-title">What would you like your devices to do?</h1>
+            <p class="lede">Ask OpenBridge to connect, control or extend your devices — safely. Meta proposes, OpenBridge checks it, and nothing runs until you approve.</p>
+            <section class="panel ask-panel" id="ask-openbridge" aria-labelledby="ask-title">
+              <div id="ask-root"></div>
+            </section>
+            <div class="first-run" id="home-first-run" hidden>
+              <p>No devices yet. Discover what's nearby or try a safe offline demo.</p>
+              <div class="hero-actions"><button class="primary" type="button" data-action="discover-home">Discover devices</button><a class="button ghost" href="#/replay">Try the offline demo <span class="tag sim">SIMULATED</span></a><button class="ghost" type="button" data-action="connect">Connect a new device</button></div>
+            </div>
           </div>
-          <div class="hero-graph" id="home-mini-graph" aria-hidden="true"></div>
+          <aside class="orb-stage hero-orb" id="home-orb" aria-label="OpenBridge activity">
+            <div class="orb-canvas-host"></div>
+            <div class="orb-status" data-orb-status><strong class="orb-state">Ready · waiting for your request</strong><span class="orb-note"></span></div>
+            <p class="orb-legend"><span class="lg-out" title="Amber comets leave the orb when a real message is sent">↑ sent</span><span class="flow-counts" data-flow-counts>↑ 0 out · ↓ 0 in</span><span class="lg-in" title="Emerald comets dive into the orb when a real reply arrives">↓ received</span></p>
+            <p class="orb-foot"><a href="#/settings">Motion &amp; visual effects</a></p>
+          </aside>
         </div>
-        <section class="panel ask-panel" id="ask-openbridge" aria-labelledby="ask-title">
-          <div id="ask-root"></div>
-        </section>
+        <div class="hero-graph" id="home-mini-graph" hidden aria-hidden="true"></div>
         <div class="stats" id="home-stats" aria-live="polite"></div>
         <div class="home-grid">
           <section class="panel" aria-labelledby="home-devices-title">
-            <div class="panel-head"><h2 id="home-devices-title">Your devices</h2><a class="link" href="#/devices">All devices →</a></div>
+            <div class="panel-head"><h2 id="home-devices-title">Your devices</h2><a class="link" href="#/devices">View all →</a></div>
             <div class="card-row" id="home-devices"></div>
           </section>
           <section class="panel" aria-labelledby="home-actions-title">
-            <div class="panel-head"><h2 id="home-actions-title">Suggested actions</h2></div>
+            <div class="panel-head"><h2 id="home-actions-title">Suggested next step</h2></div>
             <div class="action-list" id="home-actions"></div>
           </section>
-          <section class="panel meta-panel" aria-labelledby="home-insights-title">
-            <div class="panel-head"><h2 id="home-insights-title"><svg aria-hidden="true"><use href="#i-meta"/></svg>Insights</h2><span class="tag">rules + Meta · facts vs inferences labelled</span></div>
-            <div id="home-insights"></div>
-          </section>
           <section class="panel" aria-labelledby="home-activity-title">
-            <div class="panel-head"><h2 id="home-activity-title">Recent activity</h2><a class="link" href="#/activity">Activity &amp; Recovery →</a></div>
+            <div class="panel-head"><h2 id="home-activity-title">Recent activity</h2><a class="link" href="#/activity">Activity →</a></div>
             <ol class="timeline compact" id="home-activity"></ol>
+          </section>
+          <section class="panel meta-panel" aria-labelledby="home-insights-title">
+            <div class="panel-head"><h2 id="home-insights-title"><svg aria-hidden="true"><use href="#i-meta"/></svg>Insights</h2><span class="tag">facts vs inferences labelled</span></div>
+            <div id="home-insights"></div>
           </section>
         </div>
       </section>
@@ -114,14 +141,14 @@
       <!-- MY DEVICES -->
       <section class="view" data-view="explore" aria-labelledby="explore-title" hidden>
         <div class="view-head">
-          <div><h1 id="explore-title">Explore</h1><p class="sub">Every capability of every device, live: what works now, what needs a permission, what is still unknown.</p></div>
+          <div><h1 id="explore-title">Explore capabilities</h1><p class="sub">Every capability of every device, live: what works now, what needs a permission, what is still unknown.</p></div>
         </div>
         <div class="explore-body"></div>
       </section>
       <section class="view" data-view="devices" aria-labelledby="devices-title">
         <div class="view-head">
-          <div><h1 id="devices-title">My Devices</h1><p class="sub">Everything OpenBridge has found, what each device can do, and how it is connected.</p></div>
-          <div class="view-actions"><button class="ghost" type="button" data-action="connect">Connect device</button></div>
+          <div><h1 id="devices-title">Devices</h1><p class="sub">What OpenBridge has found, what each device can do now, and what it needs before it can be controlled.</p></div>
+          <div class="view-actions"><button class="ghost" type="button" data-action="discover-home">Discover</button><button class="primary" type="button" data-action="connect">+ Connect</button></div>
         </div>
         <section aria-label="Device Fabric" class="report fabric" id="fabric">
           <div class="discover-bar">
@@ -132,8 +159,9 @@
           </div>
           <div class="filter-bar" role="toolbar" aria-label="Device filters">
             <label class="search-field"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="device-filter" type="search" placeholder="Filter by name, type or capability" autocomplete="off"/></label>
+            <div class="seg" id="device-status" role="group" aria-label="Status"></div>
             <div class="seg" id="device-groups" role="group" aria-label="Show"></div>
-            <div class="seg" role="group" aria-label="Layout"><button type="button" class="seg-btn active" data-layout="grid" aria-pressed="true">Cards</button><button type="button" class="seg-btn" data-layout="tree" aria-pressed="false">Topology list</button></div>
+            <div class="seg" role="group" aria-label="Layout"><button type="button" class="seg-btn active" data-layout="grid" aria-pressed="true">Cards</button><button type="button" class="seg-btn" data-layout="tree" aria-pressed="false">List</button><a class="seg-btn" href="#/network">Network</a></div>
           </div>
           <div class="devices-layout">
             <div class="devices-main">
@@ -159,8 +187,8 @@
       <!-- LEARNED SKILLS -->
       <section class="view" data-view="skills" aria-labelledby="skills-title">
         <div class="view-head">
-          <div><h1 id="skills-title">Learned Skills</h1><p class="sub">One device learns. Every compatible device benefits. Each skill shows who provides it, who can use it, and what was actually verified.</p></div>
-          <div class="view-actions"><button class="primary" type="button" data-action="teach">Teach a new skill</button></div>
+          <div><h1 id="skills-title">Capabilities</h1><p class="sub">What your devices can do together. Each capability shows who provides it, who can use it, and what was actually verified.</p></div>
+          <div class="view-actions"><button class="ghost" type="button" data-action="teach">Teach a skill</button><a class="button primary" href="#/studio">+ New capability</a></div>
         </div>
         <div class="legend-row" id="skill-legend"></div>
         <section class="panel" aria-labelledby="route-snapshot-title">
@@ -177,7 +205,7 @@
       <!-- DEVICE FABRIC -->
       <section class="view" data-view="fabric" aria-labelledby="fabric-title">
         <div class="view-head">
-          <div><h1 id="fabric-title">Device Fabric</h1><p class="sub">How your devices cooperate: who provides each capability, through which route, and what happens when a route drops.</p></div>
+          <div><h1 id="fabric-title">Network</h1><p class="sub">The same devices as a map: who provides each capability, through which route, and what happens when a route drops.</p></div>
           <div class="view-actions">
             <label class="select"><span>Skill</span><select id="graph-skill"><option value="all">All connections</option></select></label>
             <div class="seg" role="group" aria-label="View"><button type="button" class="seg-btn active" data-graph-view="graph" aria-pressed="true">Graph</button><button type="button" class="seg-btn" data-graph-view="list" aria-pressed="false">List</button></div>
@@ -196,10 +224,11 @@
 
       <!-- AUTOMATIONS -->
       <section class="view" data-view="automations" aria-labelledby="auto-title">
-        <div class="view-head"><div><h1 id="auto-title">Automations</h1><p class="sub">Build short, consented sequences from verified actions, and see which machines can take work.</p></div></div>
+        <div class="view-head"><div><h1 id="auto-title">Workflows</h1><p class="sub">Short, consented sequences built from verified actions. Each step keeps its own permission and result; nothing is rolled back that was not proven restorable.</p></div></div>
+        <div id="wf-v2"></div>
         <div class="auto-grid">
           <section class="panel" aria-labelledby="macro-title"><div class="panel-head"><h2 id="macro-title">Sequence builder</h2><span class="tag ok">runs today · device_macro</span></div><div id="macro-builder"></div></section>
-          <section class="panel" aria-labelledby="flows-title"><div class="panel-head"><h2 id="flows-title">Cross-device workflows</h2><span class="tag">planned</span></div><div id="flows"></div></section>
+          <section class="panel" aria-labelledby="flows-title"><div class="panel-head"><h2 id="flows-title">Cross-device ideas</h2><span class="tag">status per idea</span></div><div id="flows"></div></section>
           <section class="panel" aria-labelledby="compute-title"><div class="panel-head"><h2 id="compute-title">Compute nodes</h2></div><div id="compute"></div></section>
         </div>
       </section>
@@ -207,11 +236,11 @@
       <!-- ACTIVITY & RECOVERY -->
       <section class="view" data-view="activity" aria-labelledby="activity-title">
         <div class="view-head">
-          <div><h1 id="activity-title">Activity &amp; Recovery</h1><p class="sub">Every operation with its permission, result, verification and Undo — real and simulated records kept apart.</p></div>
+          <div><h1 id="activity-title">Activity</h1><p class="sub">What was asked, approved, run, confirmed or refused — with Undo only where the previous state was really captured. Real and simulated records stay apart.</p></div>
           <div class="view-actions"><button class="secondary" id="session-finish">Finish session…</button></div>
         </div>
         <div class="activity-grid">
-          <section class="panel" aria-labelledby="tl-title"><div class="panel-head"><h2 id="tl-title">Timeline</h2><span class="tag" id="recovery-tag"></span></div><ol class="timeline" id="activity-timeline"></ol></section>
+          <section class="panel" aria-labelledby="tl-title"><div class="panel-head"><h2 id="tl-title">Timeline</h2><span class="tag" id="recovery-tag"></span></div><div class="seg" id="activity-filter" role="group" aria-label="Show"></div><ol class="timeline" id="activity-timeline"></ol></section>
           <div class="stack">
             <section aria-label="Device agent" class="report panel" id="agent">
               <h2>Device agent · plan → gate → act → verify → Undo</h2>
@@ -235,15 +264,30 @@
         </div>
       </section>
 
+      <!-- CAPABILITY CREATION STUDIO -->
+      <section class="view" data-view="studio" aria-labelledby="studio-title" hidden>
+        <div class="view-head">
+          <div><p class="eyebrow">Capabilities / Create</p><h1 id="studio-title">Create a capability</h1><p class="sub">Put a control on another device. Meta can propose; OpenBridge validates; you preview and approve; the device confirms. Nothing is installed before your approval.</p></div>
+          <div class="view-actions"><a class="button ghost" href="#/capabilities">Close</a></div>
+        </div>
+        <div class="studio" id="studio-root"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" data-view="settings" aria-labelledby="settings-title" hidden>
+        <div class="view-head"><div><h1 id="settings-title">Settings</h1><p class="sub">Visual effects, motion and layout. Model and cloud choices stay in Ask → Model settings, shown when a request needs them.</p></div></div>
+        <div id="settings-root"></div>
+      </section>
+
       <!-- DEMO REPLAY (§5.6 offline fallback: recorded S5/S5b receipts, SIMULATED playback) -->
       <section class="view" data-view="replay" aria-labelledby="replay-title">
-        <div class="view-head"><div><h1 id="replay-title">Demo replay</h1><p class="sub">Scripted playback of the recorded S5/S5b receipts — the offline fallback when owner hardware is unavailable.</p></div></div>
+        <div class="view-head"><div><h1 id="replay-title">Demo replay <span class="tag sim">SIMULATED</span></h1><p class="sub">Scripted playback of the recorded S5/S5b receipts — the offline fallback when owner hardware is unavailable.</p></div></div>
         <div class="replay-body"><p class="muted">Loading the recorded receipts…</p></div>
       </section>
 
       <!-- ADVANCED DIAGNOSTICS -->
       <section class="view" data-view="advanced" aria-labelledby="adv-title">
-        <div class="view-head"><div><h1 id="adv-title">Advanced diagnostics</h1><p class="sub">Inspect one source directly, review evidence and the trust boundaries OpenBridge enforces.</p></div></div>
+        <div class="view-head"><div><h1 id="adv-title">Diagnostics</h1><p class="sub">Inspect one source directly, review evidence and the trust boundaries OpenBridge enforces.</p></div></div>
         <section aria-label="Device inspector" class="inspector-section panel" id="inventory">
           <h2>Inspect a source</h2>
           <p class="page-section-note">Choose a source for detailed inspection. The simulated demo works without connected hardware.</p>
@@ -277,6 +321,7 @@
         </section>
       </section>
     </main>
+    <p class="sr-only" id="orb-live" aria-live="polite"></p>
     <p aria-live="polite" class="statusbar" id="status" role="status">Ready. No operation has run.</p>
   </div>
 </div>

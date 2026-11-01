@@ -30,6 +30,9 @@
   const post = (p, b) => postJson(p, b);
   const store = { get(k) { try { return localStorage.getItem('ob.' + k); } catch { return null; } }, set(k, v) { try { localStorage.setItem('ob.' + k, v); } catch { /* storage unavailable */ } } };
 
+  // V2 workspace is the default; the classic navigation stays one switch away (Settings → Layout, or ?ui=classic).
+  if (store.get('ui') === 'classic' || /[?&]ui=classic\b/.test(location.search)) document.body.classList.remove('ui-v2');
+
   // ---------------- state ----------------
   const st = { snap: null, routes: [], events: [], seq: 0, recovery: null, model: null, diagnosis: [], selected: null, filter: '', group: 'all', layout: 'grid', graphSkill: 'all', graphView: 'graph', seenNotif: Number(store.get('notifSeen') || 0) };
   const linksOf = key => (st.snap ? st.snap.links.filter(l => l.child === key) : []);
@@ -113,10 +116,17 @@
   }
 
   // ---------------- router ----------------
-  const VIEWS = { home: 'Home', explore: 'Explore', devices: 'My Devices', skills: 'Learned Skills', fabric: 'Device Fabric', automations: 'Automations', activity: 'Activity & Recovery', replay: 'Demo replay', advanced: 'Advanced diagnostics' };
+  const VIEWS = { home: 'Home', devices: 'Devices', fabric: 'Network', skills: 'Capabilities', explore: 'Explore capabilities', studio: 'Create a capability', automations: 'Workflows', activity: 'Activity', replay: 'Demo replay', settings: 'Settings', advanced: 'Diagnostics' };
+  // V2 information architecture: five primary sections; legacy routes stay valid (#/skills, #/fabric, #/automations…).
+  const ALIASES = { capabilities: 'skills', network: 'fabric', workflows: 'automations', create: 'studio', diagnostics: 'advanced', demo: 'replay' };
+  const SECTION = { home: 'home', devices: 'devices', fabric: 'devices', skills: 'capabilities', explore: 'capabilities', studio: 'capabilities', automations: 'workflows', activity: 'activity', replay: 'replay', settings: 'settings', advanced: 'advanced' };
+  const SUBNAV = { devices: [['devices', 'Devices'], ['fabric', 'Network']], capabilities: [['skills', 'Overview'], ['explore', 'Explore'], ['studio', 'Create']] };
+  const SECTION_HOME = { home: 'home', devices: 'devices', capabilities: 'skills', workflows: 'automations', activity: 'activity' };
+  const classic = () => !document.body.classList.contains('ui-v2');
   let current = null;
   function route() {
     const m = location.hash.match(/^#\/([a-z]+)(?:\/(.+))?/);
+    if (m && ALIASES[m[1]]) return show(ALIASES[m[1]], m[2]);
     if (m && VIEWS[m[1]]) return show(m[1], m[2]);
     const legacy = /^#[a-z][a-z0-9-]*$/i.test(location.hash) ? $(location.hash) : null;   // old section anchors (#fabric, #evidence…)
     if (legacy && legacy.closest('[data-view]')) return show(viewOf(legacy));
@@ -125,20 +135,36 @@
   function viewOf(el) { const v = el && el.closest('[data-view]'); return v ? v.dataset.view : 'home'; }
   function show(view, arg) {
     for (const v of $$('.view')) v.hidden = v.dataset.view !== view;
-    for (const a of $$('[data-nav]')) { const on = a.dataset.nav === view; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+    for (const a of $$('[data-nav]')) { const on = a.dataset.section && !a.closest('.nav-classic') ? a.dataset.section === SECTION[view] : a.dataset.nav === view; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
+    renderSubnav(view);
+    document.body.dataset.view = view;
     $('#crumb').textContent = VIEWS[view];
     document.title = `${VIEWS[view]} · OpenBridge`;
     closeMenu();
     if (current !== view) { current = view; $('#view').scrollTop = 0; window.scrollTo(0, 0); }
     render(view, arg);
   }
+  function renderSubnav(view) {
+    const nav = $('#subnav'), tabs = SUBNAV[SECTION[view]];
+    if (!tabs || classic()) { nav.hidden = true; nav.replaceChildren(); return; }
+    nav.hidden = false;
+    nav.replaceChildren(...tabs.map(([v, t]) => h('a', { href: '#/' + (v === 'skills' ? 'capabilities' : v === 'fabric' ? 'network' : v), class: 'subnav-tab' + (v === view ? ' active' : ''), 'aria-current': v === view ? 'page' : null }, t)));
+  }
+  function mountOrb(view) {
+    if (!window.OBMotion) return;
+    if (view === 'home') window.OBMotion.mount($('#home-orb'), { sector: [-Math.PI * 0.62, Math.PI * 0.62] });
+    else if (view !== 'studio' && view !== 'settings') window.OBMotion.unmount(window.OBMotion.stage);
+  }
   function render(view, arg) {
+    mountOrb(view);
     if (view === 'home') renderHome();
+    if (view === 'studio' && window.OBViews) window.OBViews.studio.render(arg, { snap: st.snap, events: st.events, go });
+    if (view === 'settings' && window.OBViews) window.OBViews.settings.render();
     if (view === 'explore' && typeof renderExplore === 'function') renderExplore();
     if (view === 'devices') { renderDevices(); if (arg) selectDevice(decodeURIComponent(arg)); }
     if (view === 'skills') renderSkills();
     if (view === 'fabric') renderGraph();
-    if (view === 'automations') renderAutomations();
+    if (view === 'automations') { renderAutomations(); if (window.OBViews) window.OBViews.workflows.render(); }
     if (view === 'activity') renderActivity();
     if (view === 'replay' && typeof renderReplay === 'function') renderReplay(arg);
   }
@@ -154,13 +180,16 @@
     if (document.hidden) return;
     try {
       const ev = (await api('/api/v2/events?since=' + st.seq)).events || [];
+      document.dispatchEvent(new CustomEvent('ob:runtime-reachable', { detail: { ok: true } }));
+      document.dispatchEvent(new CustomEvent('ob:runtime-events', { detail: { events: ev } }));
+      if (ev.length && current === 'studio' && window.OBViews) window.OBViews.studio.onEvents(ev);
       if (ev.length) { st.events = st.events.concat(ev).slice(-300); st.seq = ev[ev.length - 1].seq; updateBadge(); if (current === 'activity') renderActivity(); if (current === 'home') renderHomeActivity(); }
-    } catch { /* server unavailable: keep the last view */ }
+    } catch { document.dispatchEvent(new CustomEvent('ob:runtime-reachable', { detail: { ok: false } })); /* keep the last view */ }
   }
   function onSnapshot(snap) {
     st.snap = snap && snap.devices ? snap : null;
     const n = st.snap ? st.snap.devices.length : 0;
-    $('#nav-count-devices').textContent = n ? String(n) : '';
+    $('#nav-count-devices').textContent = n ? String(n) : ''; $('#nav-count-devices-v2').textContent = n ? String(n) : '';
     refreshSide().then(() => { if (current) render(current); });
     if (current) render(current);
   }
@@ -173,14 +202,22 @@
     const verified = sn ? sn.devices.reduce((a, d) => a + (d.capabilities || []).filter(c => c.status === 'REAL_HARDWARE_VERIFIED').length, 0) : null;
     const ready = sk.filter(k => k.availability === 'Ready').length;
     const fresh = st.routes.filter(r => r.status === 'FRESH').length;
+    const firstRun = !sn || !sn.devices.length;
+    $('#home-first-run').hidden = !firstRun;
+    $('#home-stats').hidden = firstRun;   // no empty statistics on first run
+    $('#home-devices').closest('.panel').hidden = firstRun;   // the first-run block already offers Discover / Demo
     $('#home-stats').replaceChildren(
       stat('Connected devices', sn ? devices.filter(d => grantOf(d.key) !== 'observe').length : '—', sn ? `${devices.length} seen on your network` : 'Run discovery to find them'),
       stat('Verified capabilities', sn ? verified : '—', 'proven on real hardware'),
       stat('Skills ready now', sn ? `${ready}/${sk.length}` : '—', 'providers online in this session'),
       stat('Live relay routes', st.routes.length ? `${fresh}/${st.routes.length}` : '—', st.routes.length ? 'fresh Bluetooth relays' : 'no relay paired this session'));
     const row = $('#home-devices'); row.replaceChildren();
-    if (!sn) row.append(empty('No devices yet', 'OpenBridge only looks when you ask. Discovery is read-only and stays on your local network.', h('button', { class: 'primary', type: 'button', onclick: discoverAndOpen }, 'Discover devices')));
-    else for (const d of sn.devices.filter(d => d.category !== 'ble').slice(0, 8)) row.append(deviceCard(d, true));
+    if (!sn) row.append(empty('No devices yet', 'OpenBridge only looks when you ask. Discovery is read-only and stays on your local network.', h('button', { class: 'ghost', type: 'button', onclick: discoverAndOpen }, 'Discover devices')));
+    else {   // 3–4 actionable cards: ready first, then read-only, then detected
+      const rank = { control: 0, read: 1, observe: 2, none: 3 };
+      const top = sn.devices.filter(d => d.category !== 'ble').sort((a, b) => rank[grantOf(a.key)] - rank[grantOf(b.key)] || label(a).localeCompare(label(b))).slice(0, 4);
+      for (const d of top) row.append(deviceCard(d, true));
+    }
     renderHomeActions(); renderInsights(); renderHomeActivity(); miniGraph();
   }
   function renderHomeActions() {
@@ -198,7 +235,7 @@
       if (tv) acts.push(['activity', 'Investigate a device problem', `Build a cross-device timeline for ${label(tv)}.`, () => { go('devices', tv.key); setTimeout(() => setTab('controls'), 60); }]);
     }
     acts.push(['skills', 'Teach a new skill', 'Describe what you want; OpenBridge checks what each device can really do.', openTeach]);
-    for (const [ic, t, sub, fn] of acts.slice(0, 5)) list.append(h('button', { class: 'action-item', type: 'button', onclick: fn }, icon(ic), h('span', {}, h('strong', { text: t }), h('small', { text: sub })), h('span', { class: 'chev', 'aria-hidden': 'true', text: '›' })));
+    for (const [ic, t, sub, fn] of acts.slice(0, 3)) list.append(h('button', { class: 'action-item', type: 'button', onclick: fn }, icon(ic), h('span', {}, h('strong', { text: t }), h('small', { text: sub })), h('span', { class: 'chev', 'aria-hidden': 'true', text: '›' })));
   }
   function renderInsights() {
     const box = $('#home-insights'); box.replaceChildren();
@@ -247,17 +284,25 @@
   // ---------------- devices ----------------
   function deviceCard(d, compact) {
     const g = grantOf(d.key), caps = deviceCaps(d), avail = caps.filter(c => c.state === 'available').length;
-    const status = g === 'control' ? ['Connected', 'ok'] : g === 'read' ? ['Read-only', 'info'] : g === 'observe' ? ['Detected', 'muted'] : ['Offline', 'off'];
+    const status = STATUS_OF[g];
+    const proven = (d.capabilities || []).some(c => c.status === 'REAL_HARDWARE_VERIFIED');
     const via = [...new Set(linksOf(d.key).map(l => l.transport))].join(' · ');
     const card = h('button', { class: 'dcard' + (st.selected === d.key ? ' selected' : ''), type: 'button', 'aria-pressed': st.selected === d.key ? 'true' : 'false', dataset: { key: d.key }, onclick: () => compact ? go('devices', d.key) : selectDevice(d.key) },
       h('span', { class: 'dicon cat-' + d.category }, icon(ICON[d.category] || 'unknown')),
       h('span', { class: 'dbody' }, h('strong', { text: label(d) }), h('small', { text: catLabel(d.category) })),
       h('span', { class: 'dstatus ' + status[1] }, h('i', { 'aria-hidden': 'true' }), status[0]),
+      proven && !compact ? h('span', { class: 'dproof', title: 'At least one capability was verified on real hardware. Proof is separate from current availability.' }, 'Hardware-verified') : null,
       compact ? null : h('span', { class: 'dmeta' }, h('span', { text: via || '—' }), h('span', { text: avail ? `${avail} capabilit${avail > 1 ? 'ies' : 'y'} ready` : (caps[0] ? STATE_TXT[caps[0].state] : '') })));
     return card;
   }
+  const STATUS_OF = { control: ['Ready', 'ok'], read: ['Read-only', 'info'], observe: ['Not connected yet', 'muted'], none: ['Not linked', 'off'] };
+  const STATUS_FILTER = { all: () => true, ready: g => g === 'control', setup: g => g === 'observe' || g === 'none', readonly: g => g === 'read' };
   function renderDevices() {
     const grid = $('#device-grid'); grid.replaceChildren();
+    st.status = st.status || 'all';
+    const sc = { all: 0, ready: 0, setup: 0, readonly: 0 };
+    for (const d of st.snap ? st.snap.devices : []) for (const k of Object.keys(sc)) if (STATUS_FILTER[k](grantOf(d.key))) sc[k]++;
+    $('#device-status').replaceChildren(...[['all', 'All'], ['ready', 'Ready'], ['setup', 'Needs setup'], ['readonly', 'Read-only']].map(([k, t]) => h('button', { type: 'button', class: 'seg-btn' + (st.status === k ? ' active' : ''), 'aria-pressed': st.status === k ? 'true' : 'false', onclick: () => { st.status = k; renderDevices(); } }, st.snap ? `${t} ${sc[k]}` : t)));
     const groups = $('#device-groups');
     const sn = st.snap;
     const counts = {};
@@ -265,12 +310,12 @@
     groups.replaceChildren(...[['all', 'All'], ['connected', 'Connected'], ['phones', 'Phones & watches'], ['screens', 'TVs & media'], ['home', 'Home & network'], ['bluetooth', 'Bluetooth'], ['other', 'Other']].filter(([k]) => k === 'all' || k === 'connected' || counts[k]).map(([k, t]) => h('button', { type: 'button', class: 'seg-btn' + (st.group === k ? ' active' : ''), 'aria-pressed': st.group === k ? 'true' : 'false', onclick: () => { st.group = k; renderDevices(); } }, t)));
     if (!sn) { grid.append(empty('Nothing discovered yet', 'Press “Discover my environment”. OpenBridge does a bounded, read-only look at your network and connected devices.', null)); return; }
     const q = st.filter.toLowerCase();
-    const shown = sn.devices.filter(d => (st.group === 'all' || (st.group === 'connected' ? grantOf(d.key) === 'control' || grantOf(d.key) === 'read' : groupOf(d) === st.group))
+    const shown = sn.devices.filter(d => STATUS_FILTER[st.status](grantOf(d.key)) && (st.group === 'all' || (st.group === 'connected' ? grantOf(d.key) === 'control' || grantOf(d.key) === 'read' : groupOf(d) === st.group))
       && (!q || [label(d), catLabel(d.category), ...deviceCaps(d).map(c => c.name)].join(' ').toLowerCase().includes(q)));
     const order = { control: 0, read: 1, observe: 2, none: 3 };
     shown.sort((a, b) => order[grantOf(a.key)] - order[grantOf(b.key)] || label(a).localeCompare(label(b)));
     for (const d of shown) grid.append(deviceCard(d, false));
-    if (!shown.length) grid.append(empty('No device matches', 'Clear the filter to see everything.', null));
+    if (!shown.length) grid.append(empty('No device matches', 'Clear the filter to see everything.', h('button', { class: 'ghost small', type: 'button', onclick: () => { st.status = 'all'; st.group = 'all'; st.filter = ''; $('#device-filter').value = ''; renderDevices(); filterTree(); } }, 'Reset filters')));
     if (st.selected && !sn.devices.some(d => d.key === st.selected)) st.selected = null;
     if (st.selected) renderInspectorHead(sn.devices.find(d => d.key === st.selected));
   }
@@ -293,6 +338,8 @@
       h('span', { class: 'dicon big cat-' + d.category }, icon(ICON[d.category] || 'unknown')),
       h('div', {}, h('h2', { text: label(d) }), h('p', { class: 'sub', text: `${catLabel(d.category)} · ${g === 'control' ? 'connected, consent-gated control' : g === 'read' ? 'connected, read-only' : 'detected only'}` })),
       h('div', { class: 'chips' }, ...[...new Set(linksOf(d.key).map(l => l.transport))].map(t => h('span', { class: 'chip', text: t }))));
+    // Studio entry only where a real route exists: a TV this PC may control (tv_volume_* skills). No implicit grant.
+    if (d.category === 'tv' && g === 'control') head.append(h('a', { class: 'button ghost small studio-link', href: '#/studio/' + encodeURIComponent(`Put ${label(d)} volume controls on my watch`) }, 'Create a control on another device'));
     $('#device-head').replaceChildren(head);
     $('#device-tabs').hidden = false;
     const ov = $('#device-overview'); ov.replaceChildren();
@@ -556,7 +603,7 @@
       sync();
     }
     const flows = $('#flows'); flows.replaceChildren();
-    for (const [t, steps, why] of [['Watch button → TV remote', ['Watch button pressed', 'This PC authorizes', 'TV receives the key', 'TV state read back'], 'Needs the Companion command path on the watch (B3).'], ['Diagnose the TV', ['Collect TV + router facts', 'Build the timeline', 'Meta ranks explanations (optional, consented)', 'Suggest one read-only check'], 'Available manually today from the TV page (“Why did it disconnect?”).'], ['Low battery → dock the vacuum', ['Watch battery level', 'Threshold crossed', 'Ask before sending “dock”'], 'Watchers exist; chaining a watcher to an action is deliberately not allowed yet.']])
+    for (const [t, steps, why] of [['Watch button → TV remote', ['Watch button pressed', 'This PC authorizes', 'TV receives the key', 'TV state read back'], 'Available now through Capabilities → Create (owner-granted remote controls on a paired Companion, B3). Volume steps are sent, not read back.'], ['Diagnose the TV', ['Collect TV + router facts', 'Build the timeline', 'Meta ranks explanations (optional, consented)', 'Suggest one read-only check'], 'Available manually today from the TV page (“Why did it disconnect?”).'], ['Low battery → dock the vacuum', ['Watch battery level', 'Threshold crossed', 'Ask before sending “dock”'], 'Watchers exist; chaining a watcher to an action is deliberately not allowed yet.']])
       flows.append(h('div', { class: 'flow' }, h('strong', { text: t }), h('ol', { class: 'flow-steps' }, ...steps.map(x => h('li', { text: x }))), h('small', { text: why })));
     const comp = $('#compute'); comp.replaceChildren();
     const m = st.model || {};
@@ -566,10 +613,20 @@
   }
 
   // ---------------- activity ----------------
+  const ACT_FILTER = {
+    all: () => true,
+    completed: e => e.verified || ['VERIFIED', 'REVERTED', 'EXECUTED'].includes(e.state),
+    attention: e => ['FAILED', 'UNKNOWN_TIMEOUT', 'PARTIAL', 'UNCERTAIN'].includes(e.state) || ['watch_triggered', 'watch_unavailable', 'state_error', 'remote_control_suspended'].includes(e.kind),
+    refused: e => ['REVOKED', 'EXPIRED', 'BLOCKED', 'SUSPENDED', 'DENIED', 'REFUSED'].includes(e.state),
+    simulated: e => /SIMULATED|demo/i.test(String(e.origin || e.source || e.primitive_id || '')),
+  };
   function renderActivity() {
     const ol = $('#activity-timeline'); ol.replaceChildren();
-    const ev = st.events.filter(e => e.kind !== 'started').slice(-80).reverse();
-    if (!ev.length) ol.append(h('li', { class: 'muted', text: 'No operation in this session yet. Real operations appear here with their receipt; the simulated sandbox is labelled separately.' }));
+    st.actFilter = st.actFilter || 'all';
+    $('#activity-filter').replaceChildren(...[['all', 'All'], ['completed', 'Completed'], ['attention', 'Needs attention'], ['refused', 'Refused'], ['simulated', 'Simulated']].map(([k, t]) => h('button', { type: 'button', class: 'seg-btn' + (st.actFilter === k ? ' active' : ''), 'aria-pressed': st.actFilter === k ? 'true' : 'false', onclick: () => { st.actFilter = k; renderActivity(); } }, t)));
+    const ev = st.events.filter(e => e.kind !== 'started' && ACT_FILTER[st.actFilter](e)).slice(-80).reverse();
+    if (!ev.length && st.actFilter !== 'all') ol.append(h('li', { class: 'muted', text: 'Nothing in this filter. The simulated sandbox below keeps its own journal, labelled SIMULATED.' }));
+    if (!ev.length && st.actFilter === 'all') ol.append(h('li', { class: 'muted', text: 'No operation in this session yet. Real operations appear here with their receipt; the simulated sandbox is labelled separately.' }));
     for (const e of ev) ol.append(timelineItem(e));
     const rec = st.recovery || {};
     const pend = (rec.pending_transactions || []).length, open = (rec.open_session_changes || []).length;
@@ -711,10 +768,17 @@
   function closeAssistant() { const d = $('#assistant'); d.classList.remove('open'); d.hidden = true; }
 
   // ---------------- palette & notifications ----------------
+  // Dialogs opened from a control give focus back to it when they close (Esc or action).
+  for (const id of ['palette', 'notifications', 'connect']) {
+    const dlg = document.getElementById(id);
+    if (dlg) dlg.addEventListener('close', () => { const back = dlg._opener; dlg._opener = null; if (back && back.isConnected && document.activeElement === document.body) back.focus(); });
+  }
   function openPalette() {
     const dlg = $('#palette'), inp = $('#palette-input'), list = $('#palette-list');
+    if (!dlg.open) dlg._opener = document.activeElement;
     const items = () => [
       ...Object.entries(VIEWS).map(([k, v]) => ({ t: v, sub: 'Go to', run: () => go(k) })),
+      { t: 'Create a capability', sub: 'Action · Studio', run: () => go('studio') }, { t: 'Motion & visual effects', sub: 'Settings', run: () => go('settings') }, { t: 'Try the offline demo (SIMULATED)', sub: 'Action', run: () => go('replay') },
       { t: 'Discover devices', sub: 'Action', run: discoverAndOpen }, { t: 'Connect a device', sub: 'Action', run: () => openConnect() }, { t: 'Teach a new skill', sub: 'Action', run: openTeach }, { t: 'Open Meta AI Assistant', sub: 'Action', run: openAssistant }, { t: 'Finish session (restore changes)', sub: 'Action', run: () => { go('activity'); setTimeout(() => $('#session-finish').click(), 50); } },
       ...(st.snap ? st.snap.devices.map(d => ({ t: label(d), sub: catLabel(d.category), run: () => go('devices', d.key) })) : []),
       ...skills().map(k => ({ t: k.name, sub: 'Skill · ' + k.availability, run: () => go('skills') }))];
@@ -761,7 +825,7 @@
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
     if (e.key === 'Escape') { closeAssistant(); closeMenu(); }
-    if (e.altKey && /^[1-6]$/.test(e.key)) { e.preventDefault(); go(Object.keys(VIEWS)[Number(e.key) - 1]); }
+    if (e.altKey && /^[1-5]$/.test(e.key)) { e.preventDefault(); go(Object.values(SECTION_HOME)[Number(e.key) - 1]); }
   });
   function filterTree() {
     // The topology list is rendered by app.js; apply the same text filter DOM-side
