@@ -49,7 +49,7 @@ async function inspect(device, button, selectedSource, version) {
     if (version !== generation) return;
     inspectedDevice = device.id; syncMetaControl();
     const report = document.querySelector('#report');
-    report.replaceChildren(element('strong', result.summary), element('p', `${result.simulated ? 'SIMULATED / SYNTHETIC' : `${result.source} / REAL READING`} · ${result.observed_at}`));
+    report.replaceChildren(element('strong', result.summary), element('p', `${result.simulated ? 'SIMULATED / SYNTHETIC' : `${result.source} / REAL READING`} · ${String(result.observed_at).slice(0, 19).replace('T', ' ')}`));
     const facts = element('div', undefined, 'evidence-facts');
     for (const evidence of result.evidence) facts.append(element('span', `${evidence.key}: ${evidence.value} · ${evidence.source}`));
     report.append(facts);
@@ -118,7 +118,8 @@ async function loadDemoState() {
     document.querySelector('#demo-setting-state').textContent = `SIMULATED · Screen timeout: ${demoState.current_value}s. ${demoState.active ? `Journal state: ${demoState.active.state}.` : 'No active transaction.'}`;
   } catch (error) {
     demoState = null;
-    document.querySelector('#demo-setting-state').textContent = `Simulated journal unavailable: ${error.message}`;
+    const msg = /journal/i.test(error.message) ? error.message : `Simulated journal unavailable: ${error.message}`;
+    document.querySelector('#demo-setting-state').textContent = msg;
   }
   syncTransactionControls();
 }
@@ -362,6 +363,7 @@ function displayLabel(device) {
   return redactNames.get(device.key);
 }
 const ROUTER_LABEL = 'ISP Router API (e.g., Freebox OS / UPnP-IGD)';
+const ROUTER_CHIP = 'Router';
 function categoryLabel(c) { return c === 'router' ? ROUTER_LABEL : c; }
 function chip(text, cls) { return element('span', text, cls); }
 function renderFabric(snap) {
@@ -372,7 +374,15 @@ function renderFabric(snap) {
   for (const [name, info] of Object.entries(snap.providers || {})) {
     const ok = ['OK', 'AUTHENTICATED'].includes(info.status);
     const extra = info.instances !== undefined ? ` · ${info.instances} services` : info.devices !== undefined ? ` · ${info.devices} devices` : info.lan_hosts !== undefined ? ` · ${info.lan_hosts} active LAN hosts${info.inactive_hidden ? ' (+' + info.inactive_hidden + ' inactive hidden)' : ''}` : '';
-    providers.append(element('li', `${name.toUpperCase()}: ${info.status}${info.authorization ? ' (' + info.authorization + ')' : ''}${extra}`, ok ? 'ok' : (info.status || '').match(/UNAVAILABLE|NOT_SUPPORTED|BLOCKED|ERROR/) ? 'blocked' : ''));
+    providers.append(element('li', `${name.toUpperCase()}: ${info.status}${info.authorization ? ' (' + info.authorization + ')' : ''}${extra}`, ok ? 'ok' : (info.status || '').match(/UNAVAILABLE|NOT_SUPPORTED|BLOCKED|ERROR|OFFLINE|STALE/) ? 'blocked' : ''));
+  }
+  document.querySelector('#fabric-degraded')?.remove();
+  const degraded = Object.entries(snap.providers || {}).filter(([, info]) => /OFFLINE|ERROR|STALE|DEGRADED/.test(info.status || ''));
+  if (degraded.length) {
+    const tag = element('span', `${degraded.map(([n]) => n.toUpperCase()).join(', ')} degraded`, 'tag warn');
+    tag.id = 'fabric-degraded';
+    tag.title = degraded.map(([n, info]) => `${n}: ${info.status}`).join('; ');
+    document.querySelector('#fabric-meta').after(tag);
   }
   const children = new Map();
   for (const link of snap.links) { if (!children.has(link.parent)) children.set(link.parent, []); children.get(link.parent).push(link); }
@@ -384,7 +394,9 @@ function renderFabric(snap) {
       const device = devices.get(child); if (!device || seen.has(child)) continue;
       const li = element('li');
       const node = element('button', undefined, 'fabric-node'); node.type = 'button'; node.setAttribute('aria-pressed', 'false');
-      node.append(chip(categoryLabel(device.category), 'cat'), element('span', displayLabel(device)));
+      const cat = chip(device.category === 'router' ? ROUTER_CHIP : device.category, 'cat');
+      if (device.category === 'router') cat.title = ROUTER_LABEL;
+      node.append(cat, element('span', displayLabel(device)));
       if (device.possibly_same_as && device.possibly_same_as.length) node.append(chip('possible duplicate', 'grant observe'));
       const rank = { observe: 0, read: 1, control: 2 }; const perTransport = new Map();
       for (const link of links) {

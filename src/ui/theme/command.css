@@ -8,6 +8,7 @@
   border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;}
 .ask-pill.active{border-color:var(--cyan);color:var(--text);box-shadow:0 0 0 1px var(--cyan) inset;}
 .ask-tiers{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;}
+.ask-tiers .tag{white-space:normal;text-align:left;max-width:100%;}
 .ask-consent{display:flex;gap:8px;align-items:flex-start;color:var(--text-2);
   font-size:13px;margin:8px 0;padding:8px 10px;border:1px dashed var(--line-2);border-radius:var(--r-s);}
 .ask-consent input{margin-top:3px;accent-color:var(--teal);}
