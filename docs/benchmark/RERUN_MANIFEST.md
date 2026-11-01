@@ -117,20 +117,22 @@ Requires the digest-pinned local model behind `LocalMetaBroker`/`GlimmerBroker`
 
 ## C. Cited-file existence check (all verified present, 2026-11-01)
 
+Sizes below are Windows-worktree bytes (CRLF), not git-blob sizes.
+
 | File | Exists | Bytes |
 |---|---|---|
 | `docs/benchmark/agent-benchmark-rules.json` | yes | 19404 |
-| `docs/benchmark/agent-benchmark-llama3b.json` | yes | 24998 |
-| `docs/benchmark/agent-benchmark-llama3b-v1.json` | yes | 24823 |
+| `docs/benchmark/agent-benchmark-llama3b.json` | yes | 26168 |
+| `docs/benchmark/agent-benchmark-llama3b-v1.json` | yes | 25975 |
 | `docs/benchmark/agent-benchmark-llama3b-2026-10-27-repeats1.json` | yes | 8579 |
-| `docs/benchmark/agent-benchmark-glimmer.json` | yes | 24933 |
-| `docs/benchmark/advisor-benchmark-llama3b.json` | yes | 13281 |
-| `docs/benchmark/advisor-benchmark-glimmer.json` | yes | 11927 |
+| `docs/benchmark/agent-benchmark-glimmer.json` | yes | 26184 |
+| `docs/benchmark/advisor-benchmark-llama3b.json` | yes | 13897 |
+| `docs/benchmark/advisor-benchmark-glimmer.json` | yes | 12543 |
 | `docs/benchmark/eval_1000_rules_baseline.json` | yes | 287870 |
 | `docs/benchmark/v4/heldout_cases.json` | yes | 13252 |
 | `docs/benchmark/v4/ablation-20261027T191220Z.json` | yes | 4606 |
 | `docs/benchmark/v4/ablation-20261027T210021Z.json` | yes | 31041 |
-| `docs/benchmark/STATUS.md` | yes | 3818 |
+| `docs/benchmark/STATUS.md` | yes | 9243 |
 | `docs/benchmark/v4/REGISTRATION.md` | yes | 3237 |
 | `docs/benchmark/EVAL_1000_RULES_BASELINE.md` | yes | 3526 |
 | `docs/benchmark/EVAL_SUBSET_50_LOCAL.md` | yes | 1945 |
