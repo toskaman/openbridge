@@ -16,7 +16,7 @@ def main():
    for width in (390,768,1440,3440):
     page=browser.new_page(viewport={'width':width,'height':1000});errors=[]
     page.on('pageerror',lambda e:errors.append(str(e)))
-    doc=json.loads((FIX/'skill_routes_ble_relays.json').read_text())
+    doc=json.loads((FIX/'skill_routes_ble_relays.json').read_text(encoding='utf-8'))
     result={'status':200,'body':doc};requests=[]
     def route(r):
      requests.append(r.request.method);r.fulfill(status=result['status'],json=result['body'])
@@ -39,9 +39,9 @@ def main():
     expect(page.locator('#route-truth .route-card')).to_have_count(0)
     result.update(status=404,body={'error':'not implemented'})
     button.click();expect(page.locator('#route-truth')).to_contain_text('Routing backend is not available')
-    result.update(status=200,body=json.loads((FIX/'skill_routes_empty.json').read_text()))
+    result.update(status=200,body=json.loads((FIX/'skill_routes_empty.json').read_text(encoding='utf-8')))
     button.click();expect(page.locator('#route-truth')).to_contain_text('No eligible routes')
-    facts=json.loads((FIX/'skill_routes_device_facts.json').read_text())
+    facts=json.loads((FIX/'skill_routes_device_facts.json').read_text(encoding='utf-8'))
     device=facts['routes'][0]['hops'][-1]['device_key']
     page.evaluate('(key) => { fabric = {devices:[{key, label:"Fixture device"}]}; }',device)
     page.locator('#route-skill').select_option('device_facts')

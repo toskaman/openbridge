@@ -31,7 +31,7 @@ class Store(unittest.TestCase):
     def test_roundtrip_key_only_in_vault(self):
         s = store()
         self.assertTrue(s.save('relay-abc123', 'SER1', KEY, {'capabilities': ['remote_controls', 'aead1']}, 'aead1'))
-        self.assertNotIn(KEY.hex(), s.path.read_text())                      # never on disk in clear
+        self.assertNotIn(KEY.hex(), s.path.read_text(encoding='utf-8'))                      # never on disk in clear
         self.assertEqual(s.load(), [('relay-abc123', 'SER1', KEY, {'capabilities': ['aead1', 'remote_controls'], 'battery_powered': False}, 'aead1')])
 
     def test_repair_replaces_and_remove_forgets(self):
@@ -46,11 +46,11 @@ class Store(unittest.TestCase):
 
     def test_corrupt_file_fails_closed_and_is_not_overwritten(self):
         s = store()
-        s.path.write_text('{not json')
+        s.path.write_text('{not json', encoding='utf-8')
         self.assertEqual(s.load(), [])
         self.assertIn('unreadable', s.error)
         self.assertFalse(s.save('relay-abc123', 'SER1', KEY, {}, None))
-        self.assertEqual(s.path.read_text(), '{not json')
+        self.assertEqual(s.path.read_text(encoding='utf-8'), '{not json')
 
     def test_disabled_without_vault_and_bad_ids(self):
         s = RelayStore(Path(tempfile.mkdtemp()) / 'r.json', None)

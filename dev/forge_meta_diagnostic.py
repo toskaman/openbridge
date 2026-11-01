@@ -13,5 +13,5 @@ def chat(payload):
 b.chat=chat
 try:trace['result']=MetaCapabilityPlanner(b).plan([manifest()],time.time())
 except Exception as e:trace['planner_error']=str(e)
-Path('docs/forge/meta-transport-diagnostic.json').write_text(json.dumps(trace,indent=2)+'\n')
+Path('docs/forge/meta-transport-diagnostic.json').write_text(json.dumps(trace,indent=2)+'\n',encoding='utf-8')
 print(json.dumps(trace,indent=2),flush=True)

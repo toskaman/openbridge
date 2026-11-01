@@ -11,4 +11,4 @@ try:
  if not b.ready():raise RuntimeError('Model identity changed')
  result={'evidence_kind':'ACTUAL_LOCAL_META_UX_REVIEW','model_id':b.model_id,'model_digest':b.model_digest,'elapsed_ms':round(1000*(time.perf_counter()-start)),'usage':{'prompt_tokens':response['prompt_eval_count'],'completion_tokens':response['eval_count']},'provider_cost_usd':0.0,'proposal':proposal,'execution':'advice only, no generated code executed'}
 except Exception as e:result={'evidence_kind':'FAILED_LOCAL_META_UX_REVIEW','error':str(e),'provider_cost_usd':0.0}
-Path('docs/forge/meta-ux-review-receipt.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2),flush=True)
+Path('docs/forge/meta-ux-review-receipt.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8');print(json.dumps(result,indent=2),flush=True)

@@ -97,7 +97,7 @@ class Resolve(unittest.TestCase):
 
 class HonestyGate(unittest.TestCase):
     def test_evidence_ids_are_verified_registry_rows(self):
-        rows = {r['test_id']: r for r in json.loads((REPO / 'docs' / 'DEVICE_EVIDENCE.json').read_text())}
+        rows = {r['test_id']: r for r in json.loads((REPO / 'docs' / 'DEVICE_EVIDENCE.json').read_text(encoding='utf-8'))}
         self.assertTrue(rows)
         for entry in mx.ARTIFACTS:
             for tid in entry['evidence']:

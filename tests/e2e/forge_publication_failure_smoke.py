@@ -53,7 +53,7 @@ def main():
             browser.close()
     finally:server.shutdown();server.server_close();worker.join()
     output=Path('artifacts/forge-publication');output.mkdir(parents=True,exist_ok=True)
-    (output/'failure-recovery.json').write_text(json.dumps(rows,indent=2)+'\n')
+    (output/'failure-recovery.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
     print('Publication failure cleanup and explicit recovery passed at four widths; no model/hardware calls.')
 
 

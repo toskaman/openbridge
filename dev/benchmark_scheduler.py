@@ -40,7 +40,7 @@ def main():
         except scheduler.SchedulerBlocked as e:
             out.setdefault('choice', {})[model] = str(e)
     p = Path('artifacts/scheduler'); p.mkdir(parents=True, exist_ok=True)
-    f = p / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '.json'); f.write_text(json.dumps(out, indent=1))
+    f = p / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '.json'); f.write_text(json.dumps(out, indent=1), encoding='utf-8')
     print(json.dumps(out, indent=1)); print('saved', f)
 
 
