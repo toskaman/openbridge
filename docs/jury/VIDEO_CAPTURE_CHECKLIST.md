@@ -23,14 +23,14 @@ recording by itself — owner media authorization first, always.
 | S5 TV panel + press | camera + adb screenshot | hands visible, no ADB overlay; timestamped |
 | S5 vacuum effect | camera | timestamped; motion OR honest DISPATCH ONLY label |
 | S6 watch press → effect | camera + screen capture | press visible, single receipt, read-back shown |
-| Refusal timeline | live UI (preferred) or `E:/shots/refusal_channel.png` (author-PC path; seeded-UI shot) | red refusal row legible |
+| Refusal timeline | live UI (preferred) or `docs/jury/screens/refusal_channel.png` (committed; seeded-UI shot) | red refusal row legible |
 | Scorecard still | eval report export | numbers match committed evidence |
 | Close | screen capture | finished app + repo URL, 5 s hold |
 
 ## Provenance + manifest (every take)
 
 - [ ] Lower-third overlay on beats 2–6: model id + digest, commit SHA, receipt id.
-- [ ] Log each file: `E:/shots/demo-s5-…` / `demo-s6-…` (author-PC paths) + take time + revision in the §22 report table.
+- [ ] Log each file: `shots/demo-s5-…` / `demo-s6-…` (staging folder; author PC uses `E:/shots/`) + take time + revision in the §22 report table.
 
 ## Privacy / redaction (before anything leaves the PC)
 

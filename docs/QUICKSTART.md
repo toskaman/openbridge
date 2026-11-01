@@ -25,8 +25,9 @@ Then open `http://127.0.0.1:18765` in a browser.
 3. Open a device sheet to see sources, capabilities, and statuses.
 4. To connect a real device, follow the on-screen pairing steps for that device
    kind (ADB Wi-Fi for Android, signed pairing for the Companion app).
-5. Ask OpenBridge a request (*Scan for bluetooth devices*), review the preview,
-   approve, and read the receipt.
+5. Ask OpenBridge a request (*How many devices are online* — needs no
+   paired hardware), review the preview, approve, and read the receipt.
+   Bluetooth scans need a paired relay first (step 4).
 
 ## Diagnostics
 

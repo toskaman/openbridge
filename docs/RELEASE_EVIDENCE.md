@@ -39,3 +39,10 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - [Background relay](DEVICE_EVIDENCE.json) (row 29): foreground service alive with activity closed + screen off, toggle regression 8/8 on a physical phone.
 - [Structured refusal channel](jury/OVERNIGHT_REPORT_31OCT.md) §B (TDD 3/3); [S5/S6 physical runbooks](jury/DEMO_PHYSICAL_RUNBOOK.md) + [final storyboard](jury/DEMO_STORYBOARD_FINAL.md); [compliance checklist](jury/COMPLIANCE_CHECKLIST.md).
 - Suite: 1245 green locally + Windows/Ubuntu/macOS/browser CI green; clean-room install 8/8 on 7 hosted targets ([run 41210900996](https://github.com/toskaman/openbridge/actions/runs/41210900996)). Android `e2e` job failing (builds green) — disclosed, not hidden.
+
+## Latest integrated evidence — 01 November (E1 UX fix-loop, `feat/f90-e1-fixux`)
+
+- Suite: 1835 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay) re-synced to this branch; dated entries above frozen as history.
+- Judge demo: readiness split into REQUIRED (core/os/evidence/storage) vs OPTIONAL (models/cloud/adb); every step carries a plain-language line; verdict is DEMO_COMPLETE only when required checks pass, else DEMO_BLOCKED.
+- Ask golden path: documented first example is now the unpaired-safe *How many devices are online* (fabric.status); zero-hardware approve/execute covered by new tests; `ask` semantics unchanged (`ble_scan_room` still needs a paired relay).
+- Jury paths: live `E:/shots` references replaced with committed `docs/jury/screens/…` paths, the git-ignored `shots/` staging folder, or author-PC capture notes; dated reports untouched.

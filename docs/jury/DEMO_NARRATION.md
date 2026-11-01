@@ -15,7 +15,7 @@ slow, calm delivery; let the screens breathe.
 | 0:32–1:25 | "Ask in plain language — Meta AI composes new controls, and the TV obeys." | `"Create a control panel on my TV…" → VALID → installed → receipt` |
 | 1:25–1:52 | "Even the watch on your wrist can drive another machine — with your consent." | `Watch QUICK CONTROLS → one press → one verified action` |
 | 1:52–2:20 | "Nothing runs without approval, and every refusal is shown, not hidden." | `approval → receipt → revoke → DENIED (shown, not hidden)` |
-| 2:20–2:40 | "Local Meta models, a crash-proof ledger, and labels you can trust." | `Meta-only runtime · 1245 tests · REAL vs SIMULATED, labeled` |
+| 2:20–2:40 | "Local Meta models, a crash-proof ledger, and labels you can trust." | `Meta-only runtime · 1835 tests · REAL vs SIMULATED, labeled` |
 | 2:40–3:00 | "OpenBridge — Meta AI that moves real hardware, provably." | `OpenBridge · github.com/toskaman/openbridge` |
 
 ## Delivery notes

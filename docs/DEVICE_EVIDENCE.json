@@ -971,7 +971,7 @@
   ],
   "evidence": [
    "scripts/verify/cloud_e2e.py",
-   "E:/shots/e2e-physical/verdict.json"
+   "e2e-physical verdict.json held on author PC (not in repo; rerun the cloud_e2e.py verifier to reproduce)"
   ],
   "independent_oracle": "uiautomator dumps (code, pairing state), dumpsys services, adb forward list, signed replies verified by HMAC+AEAD, post-revoke 409",
   "limitations": [
@@ -1006,7 +1006,7 @@
   ],
   "evidence": [
    "src/runtime/command_drain.py",
-   "E:/shots/drain-live/fg.log"
+   "drain-live fg.log held on author PC (not in repo; see command_drain.py for the drain path)"
   ],
   "independent_oracle": "dumpsys record sessions (MIC, fr.openbridge.companion), uiautomator caption dumps, server-side sha256 match per clip, TTS SPEAKING state + screenshot",
   "limitations": [

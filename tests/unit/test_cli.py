@@ -398,3 +398,83 @@ class DashboardsPatchCliTests(unittest.TestCase):
             out = cli.cmd_dashboards_propose(args)
         self.assertEqual(out['outcome'], 'refusal')
         self.assertNotIn('patch', out)
+
+
+def _doctor_report(features):
+    from src.runtime.readiness import collect
+    return collect(dict(features))
+
+
+class JudgeDemoTests(unittest.TestCase):
+    """Judge-C W2: no BLOCKED-yet-COMPLETE; every step says what happened."""
+
+    def demo(self, features):
+        args = Namespace(session_id=None)
+        with mock.patch.object(cli, 'cmd_doctor',
+                               return_value=_doctor_report(features)), \
+             mock.patch.object(cli, 'cmd_devices_discover',
+                               return_value={'devices': [], 'count': 0, 'providers': []}), \
+             mock.patch.object(cli, 'cmd_capabilities_list',
+                               return_value={'capabilities': [], 'primitives': ['a']}), \
+             mock.patch.object(cli, 'cmd_evidence_export',
+                               return_value={'session_id': 'judge-demo', 'exported': 'x',
+                                             'sha256': 'ab' * 32}), \
+             mock.patch.object(cli, 'cmd_evidence_verify',
+                               return_value={'session_id': 'judge-demo', 'verified': True}):
+            return cli.cmd_judge_demo(args)
+
+    def test_optional_missing_still_completes_with_plain_lines(self):
+        out = self.demo({'core': 'READY', 'os': 'READY', 'evidence': 'READY',
+                         'storage': 'READY', 'local_fast': 'MODEL_NOT_FOUND',
+                         'local_quality': 'MODEL_NOT_FOUND', 'cloud': 'MISSING',
+                         'devices': 'MISSING'})
+        self.assertEqual(out['verdict'], 'DEMO_COMPLETE')
+        doctor = out['steps'][0]
+        self.assertEqual(doctor['step'], 'doctor')
+        self.assertEqual(doctor['required'], 'READY')
+        for step in out['steps']:
+            self.assertTrue(step['say'], step['step'])
+        self.assertIn('4/4 required checks passed', doctor['say'])
+        self.assertIn('Meta cloud key: missing', doctor['say'])
+        self.assertIn('continues without them', doctor['say'])
+
+    def test_required_failure_blocks_verdict(self):
+        out = self.demo({'core': 'READY', 'os': 'READY', 'evidence': 'INVALID',
+                         'storage': 'READY', 'local_fast': 'READY',
+                         'local_quality': 'READY', 'cloud': 'READY', 'devices': 'READY'})
+        self.assertEqual(out['verdict'], 'DEMO_BLOCKED')
+        self.assertEqual(out['steps'][0]['required'], 'BLOCKED')
+        self.assertIn('Demo blocked', out['steps'][0]['say'])
+        self.assertIn('evidence folder: invalid', out['steps'][0]['say'])
+
+
+def _fabric_status_intent():
+    return {'intent_id': 'int-golden', 'version': 1, 'raw_text': 'How many devices are online',
+            'lang': 'en', 'outcome': 'count online devices',
+            'targets': [{'kind': 'category', 'ref': 'fabric'}], 'skill_id': 'fabric.status',
+            'params': {}, 'confidence': 0.9, 'ambiguities': [],
+            'clarifying_question': None, 'risk_level': 'low', 'status': 'resolved',
+            'provenance': {'parser': 'local', 'model_id': 'test'}}
+
+
+class AskGoldenPathTests(unittest.TestCase):
+    """Judge-C W1: the documented first ask needs no paired hardware."""
+
+    def test_ask_fabric_status_needs_no_paired_hardware(self):
+        from types import SimpleNamespace as NS
+        from src.runtime import command as cmdmod
+        srv = NS(fabric_registry=NS(devices={}), relays=NS(relays={}))
+        core = mock.MagicMock()
+        core.__enter__.return_value = srv
+        args = Namespace(text='How many devices are online', providers=None,
+                         dry_run=False, server_url=None)
+        with mock.patch.object(cli, 'Core', return_value=core), \
+             mock.patch.object(cli, 'ensure_discovery', return_value={'devices': []}), \
+             mock.patch.object(cmdmod, 'parse_request',
+                               return_value={'intent': _fabric_status_intent()}), \
+             mock.patch.object(cli, 'pending_mutate', return_value='req-golden') as pending:
+            out = cli.cmd_ask(args)
+        self.assertTrue(out['approval_required'])
+        self.assertEqual(out['preview']['skill_id'], 'fabric.status')
+        self.assertEqual(out['preview']['device_keys'], [])
+        pending.assert_called_once()
