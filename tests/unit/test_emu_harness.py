@@ -115,6 +115,29 @@ class TestWorkflowWiring(unittest.TestCase):
         self.assertIn("phone-verdict.txt", body)
         self.assertIn("wear-verdict.txt", body)
 
+    def test_harness_jobs_check_out_repo_first(self):
+        # Run 41275823636: tv had no checkout, so emu_harness.sh was missing
+        # (exit 127). Every job invoking the harness must check out first.
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest('pyyaml not installed (stdlib-only runtime)')
+        with open(WORKFLOW, encoding="utf-8") as fh:
+            doc = yaml.safe_load(fh)
+        for job in ("phone", "wear", "tv"):
+            steps = doc["jobs"][job]["steps"]
+            checkout_at = next(
+                (i for i, s in enumerate(steps)
+                 if str(s.get("uses", "")).startswith("actions/checkout@")),
+                None)
+            harness_at = next(
+                (i for i, s in enumerate(steps)
+                 if "emu_harness.sh" in str(s.get("script", s.get("run", "")))),
+                None)
+            self.assertIsNotNone(harness_at, job)
+            self.assertIsNotNone(checkout_at, job)
+            self.assertLess(checkout_at, harness_at, job)
+
     def test_tv_uses_harness_single_line(self):
         with open(WORKFLOW, encoding="utf-8") as fh:
             body = fh.read()
