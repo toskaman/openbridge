@@ -74,9 +74,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           emulator-boot-timeout: 600
-          script: |
-            EMU_DEVICE=phone EMU_APK=apk/openbridge-companion.apk \
-              bash "$GITHUB_WORKSPACE/scripts/verify/emu_harness.sh"
+          script: EMU_DEVICE=phone EMU_APK=apk/openbridge-companion.apk bash "$GITHUB_WORKSPACE/scripts/verify/emu_harness.sh"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -192,9 +190,7 @@ jobs:
           arch: x86_64
           profile: wearos_large_round
           emulator-boot-timeout: 600
-          script: |
-            EMU_DEVICE=wear EMU_APK=apk/openbridge-companion.apk \
-              bash "$GITHUB_WORKSPACE/scripts/verify/emu_harness.sh"
+          script: EMU_DEVICE=wear EMU_APK=apk/openbridge-companion.apk bash "$GITHUB_WORKSPACE/scripts/verify/emu_harness.sh"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
