@@ -648,10 +648,14 @@ def cmd_ask(args):
     text = getattr(args, 'text', '')
     if not text.strip():
         raise CliError('args', 'EMPTY_REQUEST', 'ask needs a natural-language request.')
+    prior = None
+    prior_file = getattr(args, 'prior', None)
+    if prior_file:
+        prior = _read_json_file(prior_file, 'prior intent')
     with Core() as server:
         ensure_discovery(server, default_providers(args))
         try:
-            parsed = cmdmod.parse_request(server, {'text': text, 'lang': 'en'})
+            parsed = cmdmod.parse_request(server, {'text': text, 'lang': 'en', 'prior': prior})
         except cmdmod.CommandError as e:
             raise CliError('args', 'PARSE_FAILED', str(e))
         intent = parsed.get('intent', parsed) if isinstance(parsed, dict) else parsed
@@ -1397,6 +1401,90 @@ def cmd_workflows_approve(args):
             'preview': preview, 'record': record}
 
 
+# ---------------- routes / diagnose / transplant (F90 wiring) ----------------
+
+def _read_json_file(spec_file, what):
+    try:
+        return json.loads(Path(spec_file).read_text(encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'SPEC_UNREADABLE', 'Cannot read %s: %s' % (what, e))
+
+
+def cmd_routes_list(args):
+    from urllib.parse import urlencode
+    from src.runtime import api_v2
+    target = getattr(args, 'target', '') or ''
+    if not target.strip():
+        raise CliError('args', 'MISSING_INPUT', 'routes list needs --target.')
+    with Core() as server:
+        status, body = api_v2.get(server, '/api/v2/route_intel', urlencode({'target': target}))
+    return check_status(status, body)
+
+
+def cmd_routes_dispatch(args):
+    from src.runtime import api_v2
+    target = getattr(args, 'target', '') or ''
+    if not target.strip():
+        raise CliError('args', 'MISSING_INPUT', 'routes dispatch needs --target.')
+    params = getattr(args, 'params', None)
+    if params:
+        try:
+            params = json.loads(params)
+        except ValueError as e:
+            raise CliError('args', 'PARAMS_INVALID', 'Cannot parse --params JSON: %s' % e)
+        if not isinstance(params, dict):
+            raise CliError('args', 'PARAMS_INVALID', '--params must be a JSON object.')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/route_intel/dispatch', {
+            'target': target, 'op': getattr(args, 'op', None) or 'get_status',
+            'params': params,
+            'capability': getattr(args, 'capability', None) or 'ble_scan',
+            'relay_id': getattr(args, 'relay', None)})
+    return check_status(status, body)
+
+
+def cmd_routes_simulate_loss(args):
+    from src.runtime import api_v2
+    target = getattr(args, 'target', '') or ''
+    lost = getattr(args, 'lost_relay', '') or ''
+    if not target.strip() or not lost.strip():
+        raise CliError('args', 'MISSING_INPUT',
+                       'routes simulate-loss needs --target and --lost-relay.')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/route_intel/simulate_loss',
+                                   {'target': target, 'lost_relay': lost})
+    return check_status(status, body)
+
+
+def cmd_diagnose(args):
+    from src.runtime import api_v2
+    question = getattr(args, 'question', '') or ''
+    bundle_file = getattr(args, 'bundle', None)
+    if not question.strip():
+        raise CliError('args', 'MISSING_INPUT', 'diagnose needs --question.')
+    if not bundle_file:
+        raise CliError('args', 'MISSING_INPUT', 'diagnose needs --bundle facts.json.')
+    bundle = _read_json_file(bundle_file, 'bundle')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/diagnose',
+                                   {'question': question, 'bundle': bundle,
+                                    'device': getattr(args, 'device', None)})
+    return check_status(status, body)
+
+
+def cmd_transplant_run(args):
+    from src.runtime import api_v2
+    request_file = getattr(args, 'request', None)
+    if not request_file:
+        raise CliError('args', 'MISSING_INPUT', 'transplant run needs --request plan.json.')
+    req = _read_json_file(request_file, 'transplant request')
+    if not isinstance(req, dict):
+        raise CliError('args', 'SPEC_INVALID', 'Transplant request must be a JSON object.')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/transplant/run', req)
+    return check_status(status, body)
+
+
 # ---------------- approvals ----------------
 
 def cmd_approvals_list(args):
@@ -1799,8 +1887,35 @@ def build_parser():
     pair_parser.add_argument('device_id')
     leaf(device_subs, 'status', cmd_devices_status, 'devices status')
 
+    routes = subs.add_parser('routes')
+    route_subs = routes.add_subparsers(dest='routes_command')
+    routes_list = leaf(route_subs, 'list', cmd_routes_list, 'routes list')
+    routes_list.add_argument('--target', default=None)
+    routes_dispatch = leaf(route_subs, 'dispatch', cmd_routes_dispatch, 'routes dispatch')
+    routes_dispatch.add_argument('--target', default=None)
+    routes_dispatch.add_argument('--op', default='get_status')
+    routes_dispatch.add_argument('--params', default=None)
+    routes_dispatch.add_argument('--capability', default='ble_scan')
+    routes_dispatch.add_argument('--relay', default=None)
+    routes_sim = leaf(route_subs, 'simulate-loss', cmd_routes_simulate_loss,
+                      'routes simulate-loss')
+    routes_sim.add_argument('--target', default=None)
+    routes_sim.add_argument('--lost-relay', default=None)
+
+    diagnose_parser = leaf(subs, 'diagnose', cmd_diagnose, 'diagnose')
+    diagnose_parser.add_argument('--question', default=None)
+    diagnose_parser.add_argument('--bundle', default=None)
+    diagnose_parser.add_argument('--device', default=None)
+
+    transplant = subs.add_parser('transplant')
+    transplant_subs = transplant.add_subparsers(dest='transplant_command')
+    transplant_run = leaf(transplant_subs, 'run', cmd_transplant_run, 'transplant run')
+    transplant_run.add_argument('--request', default=None)
+
     ask_parser = leaf(subs, 'ask', cmd_ask, 'ask')
     ask_parser.add_argument('text')
+    ask_parser.add_argument('--prior', default=None,
+                            help='follow-up turn: prior resolved intent JSON file')
 
     caps = subs.add_parser('capabilities')
     cap_subs = caps.add_subparsers(dest='capabilities_command')

@@ -146,9 +146,28 @@ def parse_request(server, body):
         except ModelBlocked as e:
             raise C.CostBlocked(str(e)) from None
 
-    doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
-                  cloud_allowed=consent is True and enabled and cloud is not None,
-                  before_cloud=gate if quality in ('high', 'auto') else None)
+    prior = body.get('prior')
+    if prior is None:
+        doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
+                      cloud_allowed=consent is True and enabled and cloud is not None,
+                      before_cloud=gate if quality in ('high', 'auto') else None)
+    else:
+        # Follow-up turn: deterministic context resolution first, existing router
+        # untouched on miss (parse_with_context delegates with identical args).
+        if not isinstance(prior, dict) or I.validate_intent(prior) \
+                or prior.get('status') not in ('resolved', 'approved', 'executed'):
+            raise CommandError(400, 'prior must be a valid resolved intent')
+        from src.runtime import nl_followup as F
+        try:
+            devices = _devices(server)
+        except CommandError:
+            devices = None
+        doc = F.parse_with_context(text.strip(), lang, quality, _low(server), prior,
+                                   cloud_transport=cloud,
+                                   medium_transport=_medium(server),
+                                   cloud_allowed=consent is True and enabled and cloud is not None,
+                                   before_cloud=gate if quality in ('high', 'auto') else None,
+                                   devices=devices)
     out = {'intent': doc, 'cloud_used': doc['provenance']['parser'] == 'cloud',
            'estimate_usd': C.estimate_usd(quality) if quality != 'auto'
            else (C.estimate_usd('high') if doc['provenance']['parser'] == 'cloud' else 0.0)}
