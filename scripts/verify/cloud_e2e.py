@@ -24,6 +24,51 @@ def sh(*args, timeout=90):
     return r.returncode, (r.stdout or '') + (r.stderr or '')
 
 
+# Pairing-code scrape patterns, best-first (S5b-proven: a bare 6-digit regex
+# catches keyboard digits and other noise; context words disambiguate).
+CODE_PATS = [r'(?i)(?:pair\w*|code|enter)\W{0,40}(\d{3})\s*(\d{3})',
+             r'\b(\d{3})\s{1,3}(\d{3})\b',
+             r'(?i)(?:pair\w*|code|enter)\W{0,40}(\d{6})',
+             r'\b(\d{6})\b']
+# Dumpsys output is auxiliary: view ids, sequence numbers and timing stats look
+# like bare digits, so only contextual matches are admissible from it.
+CODE_PATS_DUMPSYS = [CODE_PATS[0], CODE_PATS[2]]
+# Static hint rendered next to the pairing code (MainActivity codeCard).
+CODE_CARD_HINT = 'ENTER THIS CODE'
+
+
+def extract_codes(text, pats):
+    """Ordered unique 6-digit candidates from a text blob, best pattern first."""
+    out = []
+    for pt in pats:
+        for m in re.finditer(pt, text or ''):
+            code = ''.join(g for g in m.groups() if g)
+            if code not in out:
+                out.append(code)
+    return out
+
+
+def xml_shows_code(xml_text):
+    """True when the uiautomator dump shows a pairing code on screen."""
+    if not xml_text:
+        return False
+    if CODE_CARD_HINT in xml_text:
+        return True
+    return bool(re.search(r'(\d{3})\s+(\d{3})', xml_text))
+
+
+def fresh_candidates(xml_text, top_text, seen):
+    """Codes worth a pairing attempt: anything rendered on screen first (the
+    XML dump is authoritative), then only contextual dumpsys matches. Bare
+    digit runs from dumpsys are noise: runs 41215688399/41214555252 submitted
+    a dumpsys-only code while no code was displayed and the relay answered
+    409 'not paired'."""
+    cands = [c for c in extract_codes(xml_text, CODE_PATS) if c not in seen]
+    known = set(cands) | set(seen)
+    cands += [c for c in extract_codes(top_text, CODE_PATS_DUMPSYS) if c not in known]
+    return cands
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--apk', required=True)
@@ -107,48 +152,53 @@ def main():
                       'st=%s %s' % (st, json.dumps(hello)[:200])):
             raise SystemExit(1)
         rid = hello['relay_id']
-        # Contextual candidates (S5b-proven): a bare 6-digit regex catches
-        # keyboard digits and other noise; context words disambiguate. Try
-        # best-first, max 4 attempts (the relay locks at 5).
-        pats = [r'(?i)(?:pair\w*|code|enter)\W{0,40}(\d{3})\s*(\d{3})',
-                r'\b(\d{3})\s{1,3}(\d{3})\b',
-                r'(?i)(?:pair\w*|code|enter)\W{0,40}(\d{6})',
-                r'\b(\d{6})\b']
-        import re as _re
         seen, tried, conf, st = set(), [], None, None
+        repaired = False
         for rnd in range(6):
             if conf is not None and st == 200 and (conf.get('state') == 'PAIRED'):
                 break
-            texts = []
+            xml_text, top_text = '', ''
             sh('adb', 'shell', 'uiautomator', 'dump', '/sdcard/ob-e2e.xml', timeout=60)
             rc, dump = sh('adb', 'shell', 'cat', '/sdcard/ob-e2e.xml', timeout=60)
             if rc == 0:
-                texts.append(dump)
+                xml_text = dump
                 with open(os.path.join(outdir, 'e2e-ui-round%d.xml' % rnd), 'w', encoding='utf-8') as f:
                     f.write(dump[:200000])
             rc, top = sh('adb', 'shell', 'dumpsys', 'activity', 'top', timeout=60)
             if rc == 0:
-                texts.append(top)
+                top_text = top
+                with open(os.path.join(outdir, 'e2e-diag-round%d.txt' % rnd), 'w', encoding='utf-8') as f:
+                    f.write(top[:200000])
             sh('adb', 'shell', 'screencap', '-p', '/sdcard/ob-e2e-r%d.png' % rnd, timeout=60)
             sh('adb', 'pull', '/sdcard/ob-e2e-r%d.png' % rnd,
                os.path.join(outdir, 'e2e-ui-round%d.png' % rnd), timeout=60)
-            for text in texts:
-                for pt in pats:
-                    for m in _re.finditer(pt, text):
-                        code = ''.join(g for g in m.groups() if g)
-                        if code in seen or len(tried) >= 4:
-                            continue
-                        seen.add(code)
-                        tried.append(code)
-                        st, conf = post('/api/relay-pair-confirm', {'device_id': handle, 'code': code})
-                        if st == 200 and (conf.get('state') == 'PAIRED'):
-                            break
-                    if conf is not None and st == 200 and conf.get('state') == 'PAIRED':
-                        break
-                if conf is not None and st == 200 and conf.get('state') == 'PAIRED':
+            cands = fresh_candidates(xml_text, top_text, seen)
+            for code in cands:
+                if len(tried) >= 4:
                     break
+                seen.add(code)
+                tried.append(code)
+                st, conf = post('/api/relay-pair-confirm', {'device_id': handle, 'code': code})
+                if st == 200 and (conf.get('state') == 'PAIRED'):
+                    break
+            if conf is not None and st == 200 and conf.get('state') == 'PAIRED':
+                break
             if len(tried) >= 4:
                 break
+            if (not repaired and len(tried) < 4 and not xml_shows_code(xml_text)
+                    and (st == 409 or not cands)):
+                # No code is rendered on screen, so the pending display is lost
+                # (pair-start still reports CODE_SHOWN_ON_DEVICE): refresh it
+                # with a new pair-start instead of failing on stale state. One
+                # refresh; the 4-attempt budget stays global (relay locks at 5).
+                st0, hello0 = post('/api/relay-pair-start', {'device_id': handle})
+                if not record('pair-code refreshed',
+                              st0 == 200 and hello0.get('state') == 'CODE_SHOWN_ON_DEVICE',
+                              'st=%s' % st0):
+                    raise SystemExit(1)
+                rid = hello0['relay_id']
+                st, conf = None, None
+                repaired = True
             time.sleep(5)
         if not record('code read from screen', bool(tried), 'tried=%s' % tried):
             raise SystemExit(1)
