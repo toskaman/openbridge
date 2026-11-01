@@ -1,11 +1,30 @@
-"""Voice/text -> typed intent (V4-10). Deterministic, French + English, no model required.
+"""Voice/text -> typed intent (V4-10 + Campaign Two §4.6). Deterministic, French + English, no model required.
 
 The transcript is untrusted text. It can only select one of a few typed intents that map to existing primitives;
 it never carries a command string, a package name or an address. The result is a *proposal*: the owner reviews the
 transcript and the proposal on screen, and execution still goes through the Executor (schema, consent, identity).
-Voice is never an authorization factor (no voice biometrics)."""
+Voice is never an authorization factor (no voice biometrics).
+
+Campaign Two §4.6 layers deterministic normalization and fail-closed screens
+(src/ai/voice_normalize.py) in front of the legacy patterns:
+
+- single-reading STT repairs (tellee->tele, blue tooth->bluetooth) feed
+  matching only; a proposal may never rest on a repaired token (two-pass
+  rule: clean match -> proposal path, repaired-only match -> clarification);
+- uncertain verbs (mas/mais/mes in verb position, per Watch7 evidence),
+  conflicting intents, bare fragments ('scan', 'check'), control presses,
+  control-surface moves, volume changes and locate-my-device requests all
+  yield clarification, never a proposal;
+- the refusal list is extended (reboot, wipe/format, flash, unlock,
+  purchases, physical access) with localized texts.
+
+Legacy outcomes keep their byte-identical strings; every result gains the
+machine-readable keys 'outcome' (proposal|needs_clarification|refusal|
+unsupported), 'lang', 'clarifying_question' and 'normalization'.
+"""
 import re
-import unicodedata
+
+from src.ai import voice_normalize as VN
 
 INTENTS = {
     'discover': {'primitive_id': 'bounded_discovery', 'consent': False, 'says': 'Run one bounded discovery of this network'},
@@ -27,30 +46,89 @@ REFUSE = r'\b(shut ?down|eteins|eteindre|power off|install\w*|uninstall\w*|desin
 
 
 def _norm(t):
-    t = unicodedata.normalize('NFKD', t.lower())
-    return ''.join(c for c in t if not unicodedata.combining(c))
+    return VN.fold(t)
+
+
+def _meta(norm):
+    return {'repairs': list(norm['repairs']),
+            'uncertain_verb': norm['uncertain_verb'], 'lang_raw': norm['lang_raw']}
+
+
+def _clarify(transcript, norm, text):
+    return {'intent': None, 'outcome': 'needs_clarification', 'reason': text,
+            'clarifying_question': text, 'transcript': transcript,
+            'lang': norm['lang'], 'normalization': _meta(norm)}
 
 
 def compile_intent(transcript, devices=()):
     """devices: [{'key','category'}] from the graph. -> proposal dict (never executed here)."""
     if not isinstance(transcript, str) or not transcript.strip() or len(transcript) > 400:
-        return {'intent': None, 'reason': 'empty or too long transcript'}
-    t = _norm(transcript)
-    if re.search(REFUSE, t):
-        return {'intent': None, 'reason': 'This request needs a manual, explicitly confirmed action; voice cannot start it.', 'transcript': transcript}
+        return {'intent': None, 'outcome': 'unsupported',
+                'reason': 'empty or too long transcript'}
+    norm = VN.normalize(transcript)
+    t, fx, lang = norm['folded'], norm['fixed'], norm['lang']
+    if re.search(REFUSE, fx):
+        return {'intent': None, 'outcome': 'refusal',
+                'reason': 'This request needs a manual, explicitly confirmed action; voice cannot start it.',
+                'clarifying_question': None, 'transcript': transcript,
+                'lang': lang, 'normalization': _meta(norm)}
+    if VN.screen_refusal_extra(fx):
+        text = VN.question('refusal_extra', lang)
+        return {'intent': None, 'outcome': 'refusal', 'reason': text,
+                'clarifying_question': None, 'transcript': transcript,
+                'lang': lang, 'normalization': _meta(norm)}
+    if VN.screen_control_press(fx):
+        return _clarify(transcript, norm, VN.question('press', lang))
+    if VN.screen_migration_shape(fx):
+        return _clarify(transcript, norm, VN.question('migration', lang))
+    if VN.screen_locate_shape(fx):
+        return _clarify(transcript, norm, VN.question('locate', lang))
+    if VN.screen_volume_shape(fx):
+        return _clarify(transcript, norm, VN.question('volume', lang))
+    conflict = VN.screen_conflict(fx)
+    if conflict:
+        if conflict['kind'] == 'finish':
+            text = VN.conflict_finish_question(conflict['other'], lang)
+        elif conflict['kind'] == 'targets':
+            text = VN.question('conflict_targets', lang)
+        else:
+            text = VN.question('conflict_startstop', lang)
+        return _clarify(transcript, norm, text)
     hits = [name for name, rx in _P if re.search(rx, t)]
-    if not hits:
-        return {'intent': None, 'reason': 'No supported intent recognized; use the buttons or rephrase.', 'transcript': transcript}
-    name = hits[0]
-    spec = INTENTS[name]
-    target = None
-    if name in ('ble_scan_via_tv', 'why_disconnect') or name == 'ble_scan_via_phone':
-        want = 'phone' if name == 'ble_scan_via_phone' or re.search(r'\b(phone|telephone)\b', t) else 'tv'
-        cands = [d['key'] for d in devices if d.get('category') == want]
-        if len(cands) != 1:
-            return {'intent': name, 'reason': f'{len(cands)} {want} device(s) in the graph: choose one on screen', 'transcript': transcript,
-                    'primitive_id': spec['primitive_id'], 'needs_target': True}
-        target = cands[0]
-    return {'intent': name, 'primitive_id': spec['primitive_id'], 'device_key': target or 'fabric', 'requires_consent': spec['consent'],
-            'says': spec['says'], 'transcript': transcript, 'also_matched': hits[1:],
-            'note': 'Proposal only: review the transcript; nothing runs until you press Run' + (' and consent' if spec['consent'] else '') + '.'}
+    if hits and norm['uncertain_verb']:
+        return _clarify(transcript, norm, VN.question('uncertain', lang))
+    if hits and VN.is_fragment_match(hits[0], t):
+        kind = 'fragment_discover' if hits[0] == 'discover' else 'fragment_diagnose'
+        return _clarify(transcript, norm, VN.question(kind, lang))
+    if hits:
+        name = hits[0]
+        spec = INTENTS[name]
+        target = None
+        if name in ('ble_scan_via_tv', 'why_disconnect') or name == 'ble_scan_via_phone':
+            want = 'phone' if name == 'ble_scan_via_phone' or re.search(r'\b(phone|telephone)\b', t) else 'tv'
+            cands = [d['key'] for d in devices if d.get('category') == want]
+            if len(cands) != 1:
+                reason = f'{len(cands)} {want} device(s) in the graph: choose one on screen'
+                return {'intent': name, 'outcome': 'needs_clarification', 'reason': reason,
+                        'clarifying_question': reason, 'transcript': transcript,
+                        'primitive_id': spec['primitive_id'], 'needs_target': True,
+                        'lang': lang, 'normalization': _meta(norm)}
+            target = cands[0]
+        return {'intent': name, 'outcome': 'proposal', 'primitive_id': spec['primitive_id'],
+                'device_key': target or 'fabric', 'requires_consent': spec['consent'],
+                'says': spec['says'], 'transcript': transcript, 'also_matched': hits[1:],
+                'clarifying_question': None, 'lang': lang, 'normalization': _meta(norm),
+                'note': 'Proposal only: review the transcript; nothing runs until you press Run' + (' and consent' if spec['consent'] else '') + '.'}
+    if norm['repairs']:
+        fixed_hits = [name for name, rx in _P if re.search(rx, fx)]
+        if fixed_hits:
+            # Two-pass rule: the match needs a repaired token, so this stays
+            # a clarification ("did you mean ...?"), never a proposal.
+            return _clarify(transcript, norm,
+                            VN.repaired_question(fixed_hits[0], lang))
+    if VN.is_short(t):
+        return _clarify(transcript, norm, VN.question('guidance', lang))
+    return {'intent': None, 'outcome': 'unsupported',
+            'reason': 'No supported intent recognized; use the buttons or rephrase.',
+            'clarifying_question': None, 'transcript': transcript,
+            'lang': lang, 'normalization': _meta(norm)}

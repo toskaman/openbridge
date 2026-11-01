@@ -83,6 +83,14 @@ def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, st
         text = heard
     else:
         prefix, text = '', cmd['text']
+    if cmd['kind'] == 'voice':
+        # Campaign Two §4.6: deterministic fail-closed screens for STT
+        # transcripts (refusals, conflicts, presses, moves, locate). Typed
+        # text is certain input and always reaches the model tier.
+        from src.ai import voice_normalize as _VN
+        _screen = _VN.screen_voice_transcript(text, lang_hint=cmd.get('lang'))
+        if _screen is not None:
+            return (_screen['status'], prefix + _screen['text'])
     try:
         doc = _parse_local(server, parse_fn, text, cmd)
     except CMD.CommandError as e:
