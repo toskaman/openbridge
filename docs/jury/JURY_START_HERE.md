@@ -37,7 +37,7 @@ watch (S6) — see [runbook](DEMO_PHYSICAL_RUNBOOK.md) and
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2029 tests, no hardware needed
+python -m unittest discover -s tests   # 2053 tests, no hardware needed
 python -m src.cli judge demo           # offline demo → DEMO_COMPLETE
 python -m src.server                   # → http://127.0.0.1:18765
 ```

@@ -57,3 +57,7 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 
 - Suite: 2029 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay) re-synced to this tip; dated entries above frozen as history.
 - E2: cleanroom PSK-fixture rename (secret-scanner tripwire intact), scripted S5/S5b UI replay fallback (REPLAY-labeled), Playwright UI audit fixes (192 shots × 3 passes), release packs built + hash-verified, README/jury polish.
+
+## Latest integrated evidence — 01 November (E3 close-out, `feat/frontier90-staging`)
+
+- Suite: 2053 green locally; cross-platform CI compat fixes (yaml skip, nesting reason, psutil-absent, listener recovery); manifest byte rows corrected; F90 modules wired to CLI/API with smoke tests; emu-harness exit-127 fixed; cleanroom 8/8 green on the F90 tree ([run 41273696980](https://github.com/toskaman/openbridge/actions/runs/41273696980)); dated entries above frozen as history.
