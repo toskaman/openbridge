@@ -371,18 +371,19 @@ def main():
                    "both exit 0 · recorded this session on this commit")
     t5 = close_card()
 
-    # 2. stills (committed, real)
+    # 2. stills (committed, real) — v0.2.0 cut uses the new-UI stills
+    # (old fabric-tv-relay / refusal_channel kept in history only).
     stills = [
-        ("fabric-tv-relay-redacted-1440.png", "DETERMINISTIC UI STILL",
-         "docs/jury/screens/fabric-tv-relay-redacted-1440.png · 24 dev / 31 links · redacted"),
+        ("ask-v2-home-1440.webp", "NEW-UI STILL (committed 1 Nov)",
+         "docs/jury/screens/ask-v2-home-1440.webp · Home Ask + orb"),
         ("s5b_installed.png", "REAL_HARDWARE STILL (committed 31 Oct)",
          "docs/jury/screens/s5b_installed.png · Meta T2 panel on the real TV"),
         ("s5b_pressed.png", "REAL_HARDWARE STILL (committed 31 Oct)",
          "docs/jury/screens/s5b_pressed.png · after hold-press FIND · tx-4a96f8f6"),
         ("s5b_revoked.png", "REAL_HARDWARE STILL (committed 31 Oct)",
          "docs/jury/screens/s5b_revoked.png · after revoke: controls gone"),
-        ("refusal_channel.png", "SEEDED-UI STILL · REAL REFUSAL PAYLOAD",
-         "docs/jury/screens/refusal_channel.png · refused press in Activity timeline"),
+        ("activity-v2-refused-1440.png", "SEEDED-UI STILL · REAL REFUSAL PAYLOAD",
+         "docs/jury/screens/activity-v2-refused-1440.png · refused press in new Activity timeline"),
         ("tv-wd7-direct-drain-caption.png", "REAL_HARDWARE STILL (committed 31 Oct)",
          "docs/jury/screens/tv-wd7-direct-drain-caption.png · direct-LAN signed report"),
     ]
@@ -499,9 +500,10 @@ segment boundaries.
 | 5 | 0:54.133–1:12.133 | 18.0 s | 6 committed stills × 3 s, each with provenance header (filename + `MEDIA_MANIFEST.md` tag) | `Committed evidence stills: the TV panel lived,` / `was pressed, and was revoked.` |
 | 6 | 1:12.133–1:18.133 | 6.0 s | Closing card: claims + on-screen GAP + repo link | `OpenBridge: every claim receipted,` / `every limit labeled.` |
 
-Still order in segment 5: `fabric-tv-relay-redacted-1440.png`
-(DETERMINISTIC) → `s5b_installed.png` → `s5b_pressed.png` →
-`s5b_revoked.png` (all REAL_HARDWARE) → `refusal_channel.png`
+Still order in segment 5 (v0.2.0 cut): `ask-v2-home-1440.webp`
+(NEW-UI) → `s5b_installed.png` → `s5b_pressed.png` →
+`s5b_revoked.png` (all REAL_HARDWARE) →
+`activity-v2-refused-1440.png`
 (SEEDED-UI, real refusal payload) →
 `tv-wd7-direct-drain-caption.png` (REAL_HARDWARE).
 
@@ -516,7 +518,7 @@ Still order in segment 5: `fabric-tv-relay-redacted-1440.png`
   `OFFLINE REPLAY · SIMULATED · commit <sha> · no hardware touched` bar.
 - Stills: header shows the committed path plus the manifest tag —
   REAL_HARDWARE only where `MEDIA_MANIFEST.md` says so, SEEDED-UI for
-  `refusal_channel.png`.
+  `activity-v2-refused-1440.png`.
 - Receipt values on screen (tx ids, relay id, model id) are pixels of
   the real UI / real stills, never re-typed.
 
