@@ -961,17 +961,20 @@ def cmd_dashboards_propose(args):
                 'devices': prompt_devices, 'primitives': sorted(bindable),
                 'model_run': run, 'prompt_chars': len(prompt)}
     try:
-        outcome, patch, detail = v4_ui.parse_response(doc, bindable)
+        outcome, patch, detail, code = v4_ui.parse_response_full(doc, bindable)
     except v4_ui.UIError as e:
         raise CliError('inference', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
     offered = [d['opaque_id'] for d in bundle['devices']]
     # Prompt-time label map: opaque ids salt rotating discovery keys, so the
     # patch-target label is unrecoverable later without this record.
     if outcome != 'proposal':
-        key = 'clarifying_question' if outcome == 'needs_clarification' else 'reason'
-        return {'outcome': outcome, key: detail, 'offered_opaque_ids': offered,
-                'devices': prompt_devices, 'primitives': sorted(bindable),
-                'model_run': run, 'prompt_chars': len(prompt)}
+        key = 'clarifying_question' if outcome == 'clarification' else 'reason'
+        out = {'outcome': outcome, key: detail, 'offered_opaque_ids': offered,
+               'devices': prompt_devices, 'primitives': sorted(bindable),
+               'model_run': run, 'prompt_chars': len(prompt)}
+        if code:
+            out['code'] = code
+        return out
     return {'outcome': 'proposal', 'patch': patch, 'offered_opaque_ids': offered,
             'devices': prompt_devices,
             'primitives': sorted(bindable),
@@ -1114,7 +1117,8 @@ def _plan_from_text(args, text):
     with Core() as server:
         snap = ensure_discovery(server, default_providers(args))
     devices = snap.get('devices', []) if isinstance(snap, dict) else []
-    transport = nl_plan.local_chat(model_id, endpoint, timeout=getattr(args, 'timeout', None) or 180)
+    transport = nl_plan.local_chat(model_id, endpoint, timeout=getattr(args, 'timeout', None) or 180,
+                                   format=nl_plan.PLAN_RESPONSE_SCHEMA)
     try:
         res = nl_plan.plan(text, devices, transport)
     except nl_plan.PlanError as e:
