@@ -524,10 +524,13 @@ def _meta_key():
 def voice(server, path, body):
     from src.ai import voice_intent, voice_stt
     if path == '/api/v2/voice/intent':
-        if set(body) != {'text'}:
-            return 400, {'error': 'text only'}
+        if set(body) - {'text', 'lang'} or 'text' not in body:
+            return 400, {'error': 'text plus optional lang'}
+        hint = body.get('lang')
+        hint = hint if hint in ('fr', 'en') else None
         snap = server.fabric_snapshot or {'devices': []}
-        return 200, voice_intent.compile_intent(body['text'], [{'key': d['key'], 'category': d['category']} for d in snap['devices']])
+        return 200, voice_intent.compile_intent(body['text'], [{'key': d['key'], 'category': d['category']} for d in snap['devices']],
+                                                lang_hint=hint)
     if set(body) - {'audio_b64', 'language'} or not isinstance(body.get('audio_b64'), str):
         return 400, {'error': 'audio_b64 required'}
     import base64, binascii

@@ -32,12 +32,18 @@ import copy
 import json
 import re
 import secrets
+import threading
 
 from src.fabric.relay import MAX_CONTROLS
 from src.runtime.routing import SKILLS
 
 SCHEMA_VERSION = 1
 OUTCOMES = ('proposal', 'needs_clarification', 'refusal')
+
+# Spanning lock: one migration's check+install+remove (or restore+prune) runs
+# atomically with respect to other migrations. api_v2 serializes HTTP calls
+# elsewhere; this guards the module entry points (threads, tests, drains).
+_LOCK = threading.Lock()
 
 _FILLER = {'the', 'a', 'an', 'my', 'controls', 'control', 'buttons', 'button', 'panel', 'all'}
 
@@ -425,6 +431,11 @@ def apply(server, proposal, consent):
     if consent is not True:
         raise MigrationError(400, 'consent: true is required.')
     proposal = validate_proposal(copy.deepcopy(proposal))
+    with _LOCK:
+        return _apply_locked(server, proposal, RelayError, RemoteControlError)
+
+
+def _apply_locked(server, proposal, RelayError, RemoteControlError):
     src_rid, dst_rid = proposal['source']['relay_id'], proposal['destination']['relay_id']
     rc = _rc(server)
     live_src = rc.grants.get(src_rid) or {}
@@ -446,9 +457,6 @@ def apply(server, proposal, consent):
         _permission_guard(server, before)
         raise MigrationError(getattr(e, 'status', 409), 'Destination install failed: %s' % e) from None
     doomed = set(proposal['old_grant_disposition']['revoked_control_ids'])
-    kept = [{'label': g['label'], 'skill_id': g['skill_id'], 'target': g.get('target'),
-             'params': copy.deepcopy(g.get('params') or {})}
-            for cid, g in sorted(live_src.items()) if cid not in doomed]
     receipt = {'schema_version': SCHEMA_VERSION, 'migration_id': 'mig-' + secrets.token_hex(6),
                'source': proposal['source'], 'destination': proposal['destination'],
                'migrated': migrated, 'revoked_control_ids': sorted(doomed),
@@ -456,6 +464,17 @@ def apply(server, proposal, consent):
                'source_generation_after': rc._grant_versions.get(src_rid, 0),
                'destination_generation_after': rc._grant_versions.get(dst_rid, 0),
                'permission_delta': proposal.get('permission_delta', {})}
+    # Re-check the source under the spanning lock: an owner edit landing
+    # between the pre-check and now must 409 with a receipt, never silently
+    # change what is removed.
+    fresh_src = rc.grants.get(src_rid) or {}
+    if any(cid not in fresh_src for cid in proposal['old_grant_disposition']['revoked_control_ids']):
+        raise MigrationError(409, 'Source controls changed during migration; '
+                                  'the destination holds a copy, roll back with the receipt.',
+                             receipt=receipt)
+    kept = [{'label': g['label'], 'skill_id': g['skill_id'], 'target': g.get('target'),
+             'params': copy.deepcopy(g.get('params') or {})}
+            for cid, g in sorted(fresh_src.items()) if cid not in doomed]
     try:
         rc.set_controls({'relay_id': src_rid, 'controls': kept, 'consent': True})
     except (RemoteControlError, RelayError) as e:
@@ -495,6 +514,11 @@ def rollback(server, receipt, consent):
     if consent is not True:
         raise MigrationError(400, 'consent: true is required.')
     receipt = validate_receipt(copy.deepcopy(receipt))
+    with _LOCK:
+        return _rollback_locked(server, receipt, RelayError, RemoteControlError)
+
+
+def _rollback_locked(server, receipt, RelayError, RemoteControlError):
     src_rid, dst_rid = receipt['source']['relay_id'], receipt['destination']['relay_id']
     rc = _rc(server)
     relays = getattr(getattr(server, 'relays', None), 'relays', {}) or {}
@@ -503,6 +527,35 @@ def rollback(server, receipt, consent):
     before = _permission_snapshot(server)
     migrated = receipt['migrated']
     keys = {_def_key(d) for d in migrated}
+    # Generation comparison: the receipt recorded both sides' post-migration
+    # generations. An exact match proves no intervening writes, so def_key
+    # matching is unambiguous. Drift (owner edits, a prior rollback) is
+    # tolerated per the non-clobbering contract — but identical-looking new
+    # controls on the destination are then ambiguous ownership: pruning by
+    # def_key would delete the owner's new control, so that 409s instead.
+    src_after = receipt.get('source_generation_after')
+    dst_after = receipt.get('destination_generation_after')
+    drifted = []
+    if src_after is not None and rc._grant_versions.get(src_rid, 0) != src_after:
+        drifted.append('source')
+    if dst_after is not None and dst_rid in relays \
+            and rc._grant_versions.get(dst_rid, 0) != dst_after:
+        drifted.append('destination')
+    if dst_rid in relays and (drifted or src_after is None or dst_after is None):
+        want, have_dst = {}, {}
+        for d in migrated:
+            want[_def_key(d)] = want.get(_def_key(d), 0) + 1
+        for _, g in (rc.grants.get(dst_rid) or {}).items():
+            k = _def_key({'label': g.get('label'), 'skill_id': g.get('skill_id'),
+                          'target': g.get('target'), 'params': g.get('params') or {}})
+            have_dst[k] = have_dst.get(k, 0) + 1
+        collisions = sorted({d.get('label', '?') for d in migrated
+                             if have_dst.get(_def_key(d), 0) > want.get(_def_key(d), 0)})
+        if collisions:
+            raise MigrationError(409, 'Destination holds new identical control(s) %s created '
+                                      'after the migration%s; remove or rename them, then roll back.'
+                                 % (', '.join(repr(c) for c in collisions),
+                                    ' (%s changed)' % ' and '.join(drifted) if drifted else ''))
     notes = []
     current_src = [{'label': g['label'], 'skill_id': g['skill_id'], 'target': g.get('target'),
                     'params': copy.deepcopy(g.get('params') or {})}

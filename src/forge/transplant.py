@@ -11,6 +11,7 @@ explicit error code surfaced in the report.
 """
 import copy
 import hashlib
+import threading
 
 from src.forge import v4_schemas as S
 from src.forge import v4_substrate as VS
@@ -106,11 +107,22 @@ class SimulatedDispatcher:
             self.revoked.append(receipt_id)
 
 
+def _binding_ref(candidate):
+    """Candidate-derived evidence marker (Forge ID shape) bound into the published service.
+
+    The published Forge manifest must carry candidate-derived content so the
+    verify stage proves proposal→device binding, not just a service round-trip
+    of caller-supplied bytes (F-07). The marker is a deterministic lowercase
+    `txbind-<hex>` ref appended to the published manifest's evidence_refs.
+    """
+    return 'txbind-' + hashlib.sha256(S.canonical(candidate)).hexdigest()[:16]
+
+
 class TransplantService:
     """Owns transplant records; each stage is independently callable and tested."""
 
     def __init__(self, companions, links, proposer, dispatcher, substrate=None,
-                 service_factory=None):
+                 service_factory=None, provider_factory=None):
         self.companions = companions
         self.links = list(links)
         self.proposer = proposer
@@ -118,8 +130,11 @@ class TransplantService:
         self.substrate = substrate
         self.service_factory = service_factory or (
             lambda m: ForgeService(MemoryProvider(copy.deepcopy(m))))
+        self.provider_factory = provider_factory or (
+            lambda m: MemoryProvider(copy.deepcopy(m)))
         self._records = {}
         self._seq = 0
+        self._lock = threading.Lock()
 
     # -- stage 1: source discovery --------------------------------------
     def discover_source(self, capability_id):
@@ -190,8 +205,13 @@ class TransplantService:
         def mark(stage, status, detail=''):
             report[stage] = {'status': status, 'detail': str(detail)[:200]}
 
-        self._seq += 1
-        tid = 'tx-%04d' % self._seq
+        with self._lock:
+            self._seq += 1
+            tid = 'tx-%04d' % self._seq
+        service = None
+        published_sid = None
+        receipt = None
+        manifest_hash = ''
         try:
             source = self.discover_source(source_capability_id)
             mark('discover_source', 'ok', source['companion_id'])
@@ -206,6 +226,9 @@ class TransplantService:
             if consent is not True:
                 raise TransplantError('OWNER_CONSENT_REQUIRED')
             mark('consent', 'ok', 'explicit owner consent')
+            if isinstance(manifest, dict) and manifest.get('capability_id') != source_capability_id:
+                raise TransplantError('MANIFEST_CAPABILITY_MISMATCH: manifest %r is not the discovered source %r'
+                                      % (manifest.get('capability_id'), source_capability_id))
             manifest_doc = VS.to_manifest(
                 candidate, {'category': target_category,
                             'device_fingerprint': target_id},
@@ -219,11 +242,17 @@ class TransplantService:
                     raise TransplantError('COMPILE_%s' % compiled['status'])
                 manifest_hash = compiled['manifest_hash']
                 mark('compile', 'ok', manifest_hash)
-            service = self.service_factory(manifest)
+            bind_ref = _binding_ref(candidate)
+            publish_manifest = copy.deepcopy(manifest)
+            refs = publish_manifest.get('evidence_refs') if isinstance(publish_manifest, dict) else None
+            if isinstance(refs, list) and bind_ref not in refs and len(refs) < 32:
+                refs.append(bind_ref)
+            service = self.service_factory(publish_manifest)
             try:
-                published = service.publish_verified(manifest, consent=True)
+                published = service.publish_verified(publish_manifest, consent=True)
             except ForgeError as error:
                 raise TransplantError('PUBLISH_REJECTED: %s' % error) from None
+            published_sid = published['service_id']
             ui_plan = VS.ui_plan(
                 'transplant.%s' % tid, target_id,
                 [{'widget_id': 'w-%s' % tid, 'label': title,
@@ -233,64 +262,124 @@ class TransplantService:
             mark('publish_ui', 'ok', published['service_id'])
             receipt = self.dispatcher.dispatch(route, candidate)
             mark('dispatch', 'ok', receipt['receipt_id'])
-            verified = self._verify_independent(service, published['service_id'],
-                                                receipt, manifest_hash)
+            verified = self._verify_independent(publish_manifest, published['service_id'],
+                                                receipt, manifest_hash, bind_ref)
             mark('verify', 'ok', verified)
             record = {'transplant_id': tid, 'state': 'active', 'source': source,
                       'target': target, 'route': route, 'candidate': candidate,
                       'manifest_hash': manifest_hash, 'service_id': published['service_id'],
                       'service': service, 'ui_plan': ui_plan, 'receipt': receipt,
                       'report': report}
-            self._records[tid] = record
+            with self._lock:
+                self._records[tid] = record
             return self._public(record)
         except TransplantError as error:
+            self._compensate(service, published_sid, receipt)
             failed = next(s for s in STAGES if report[s]['status'] == 'pending')
             mark(failed, 'failed', error)
+            self._store_failure(tid, published_sid, manifest_hash, report)
+            raise
+        except Exception as error:
+            self._compensate(service, published_sid, receipt)
+            if published_sid is not None:
+                failed = next(s for s in STAGES if report[s]['status'] == 'pending')
+                mark(failed, 'failed', '%s: %s' % (type(error).__name__, error))
+                self._store_failure(tid, published_sid, manifest_hash, report)
             raise
 
-    def _verify_independent(self, service, service_id, receipt, manifest_hash):
-        """Independent path: fresh provider re-read, never dispatch state."""
+    def _compensate(self, service, service_id, receipt):
+        """Undo post-publish side effects so a failed transplant orphans nothing.
+
+        Best-effort by design: compensation must never mask the original error.
+        The UI plan is in-memory only (dropped by not storing it); compile is
+        pure with respect to this service (no staged handle to release).
+        """
+        if service is None or service_id is None:
+            return
         try:
-            read = service.read(service_id)
+            service.remove(service_id)
+        except Exception:
+            pass
+        rid = (receipt or {}).get('receipt_id')
+        revoke_hook = getattr(self.dispatcher, 'revoke', None)
+        if rid and callable(revoke_hook):
+            try:
+                revoke_hook(rid)
+            except Exception:
+                pass
+
+    def _store_failure(self, tid, service_id, manifest_hash, report):
+        """Persist a post-publish failure report under the tid for audit."""
+        if service_id is None:
+            return
+        report['revoke'] = {'status': 'ok', 'detail': 'compensated: live service removed'}
+        report['cleanup'] = {'status': 'ok', 'detail': 'compensated: receipt revoked, plan dropped'}
+        with self._lock:
+            self._records[tid] = {'transplant_id': tid, 'state': 'failed',
+                                  'service_id': service_id, 'manifest_hash': manifest_hash,
+                                  'ui_plan': {}, 'receipt': {}, 'report': report}
+
+    def _verify_independent(self, durable_manifest, service_id, receipt, manifest_hash, binding_ref):
+        """Independent path: a freshly constructed provider re-reads durable state.
+
+        Never the live service object and never dispatch state: a provider bug,
+        in-memory poisoning, or a publish path that echoes only through the
+        live object is invisible to a same-object re-read but cannot survive a
+        fresh provider over the durable manifest plus the candidate binding check.
+        """
+        try:
+            fresh_provider = self.provider_factory(copy.deepcopy(durable_manifest))
+            snapshot = fresh_provider.snapshot(durable_manifest['capability_id'])
         except ForgeError as error:
             raise TransplantError('VERIFICATION_FAILED: %s' % error) from None
-        if not read.get('observations'):
+        except Exception as error:
+            raise TransplantError('VERIFICATION_FAILED: %s' % error) from None
+        if not snapshot.get('observations'):
             raise TransplantError('VERIFICATION_FAILED: no observations on re-read')
+        if snapshot.get('service_id') != service_id:
+            raise TransplantError('VERIFICATION_FAILED: re-read service binding mismatch')
+        if binding_ref not in (snapshot.get('evidence_refs') or []):
+            raise TransplantError('VERIFICATION_FAILED: candidate binding missing on re-read')
         if receipt.get('state') != 'dispatched':
             raise TransplantError('VERIFICATION_FAILED: dispatch receipt not confirmed')
-        return 're-read %d observation(s); %s' % (len(read['observations']), manifest_hash)
+        return 're-read %d observation(s); %s' % (len(snapshot['observations']), manifest_hash)
 
     # -- stage 11+12: revocation + cleanup -------------------------------
     def revoke(self, transplant_id):
-        record = self._records.get(transplant_id)
-        if record is None:
-            raise TransplantError('UNKNOWN_TRANSPLANT')
-        if record['state'] == 'revoked':
-            return self._public(record)
+        with self._lock:
+            record = self._records.get(transplant_id)
+            if record is None:
+                raise TransplantError('UNKNOWN_TRANSPLANT')
+            if record['state'] in ('revoked', 'failed'):
+                return self._public(record)
         record['service'].remove(record['service_id'])
         revoke_hook = getattr(self.dispatcher, 'revoke', None)
-        if callable(revoke_hook):
-            revoke_hook(record['receipt']['receipt_id'])
-        record['receipt'] = {}
-        record['ui_plan'] = {}
-        record['candidate'] = {}
-        record['state'] = 'revoked'
-        record['report']['revoke'] = {'status': 'ok', 'detail': 'service removed'}
-        record['report']['cleanup'] = {'status': 'ok',
-                                       'detail': 'receipt, ui plan, proposal cleared'}
-        return self._public(record)
+        rid = (record.get('receipt') or {}).get('receipt_id')
+        if rid and callable(revoke_hook):
+            revoke_hook(rid)
+        with self._lock:
+            record['receipt'] = {}
+            record['ui_plan'] = {}
+            record['candidate'] = {}
+            record['state'] = 'revoked'
+            record['report']['revoke'] = {'status': 'ok', 'detail': 'service removed'}
+            record['report']['cleanup'] = {'status': 'ok',
+                                           'detail': 'receipt, ui plan, proposal cleared'}
+            return self._public(record)
 
     def report(self, transplant_id):
-        record = self._records.get(transplant_id)
-        if record is None:
-            raise TransplantError('UNKNOWN_TRANSPLANT')
-        return copy.deepcopy(record['report'])
+        with self._lock:
+            record = self._records.get(transplant_id)
+            if record is None:
+                raise TransplantError('UNKNOWN_TRANSPLANT')
+            return copy.deepcopy(record['report'])
 
     def get(self, transplant_id):
-        record = self._records.get(transplant_id)
-        if record is None:
-            raise TransplantError('UNKNOWN_TRANSPLANT')
-        return self._public(record)
+        with self._lock:
+            record = self._records.get(transplant_id)
+            if record is None:
+                raise TransplantError('UNKNOWN_TRANSPLANT')
+            return self._public(record)
 
     def _public(self, record):
         return {'transplant_id': record['transplant_id'], 'state': record['state'],
