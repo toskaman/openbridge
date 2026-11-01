@@ -12,7 +12,8 @@ fields below use event-page-verified facts + release artifacts.
 - Primary theme: Push the Frontier
 - Secondary theme: Build for Your World
 - Repository: https://github.com/toskaman/openbridge
-- Release: v0.2.0 (pending tag; attach app/evidence/media packs)
+- Release: v0.2.0 (tag on finalization merge; attach app/evidence/media packs)
+- License at release: MIT (owner PR #170 PolyForm pending — confirm before submitting)
 - License: (as in repo LICENSE; confirm portal license-scope item OPEN-17)
 
 ## Pitch (short)
@@ -23,8 +24,9 @@ authorization, and observable results.
 
 ## Demo
 
-- Video: final-fallback-video-c39a88e.mp4 (78.2 s, honest fallback —
-  labeled, no physical footage claimed) + srt + thumbnail.
+- Video: rebuilt fallback cut from the release tree (new UI
+  stills, 2096 suite card; honest fallback — labeled, no physical
+  footage claimed) + srt + thumbnail.
   Physical branch owner-gated; do NOT claim live motion footage.
 - Live/replay: offline `judge demo` (DEMO_COMPLETE) + clean install
   8/8; jury entry: docs/jury/JURY_START_HERE.md.
@@ -43,9 +45,9 @@ authorization, and observable results.
 - JURY_START_HERE.md, CLAIM_EVIDENCE_MATRIX.md,
   DEVICE_EVIDENCE.json (35 VERIFIED), HARDWARE_TEST_MATRIX.md,
   KNOWN_LIMITATIONS.md, FINAL_RELEASE_AUDIT_2026-11-01.md.
-- CI: verify + clean-room green on release SHA; Android 5/5 on
-  identical companion code (run3 4/5: e2e green on fresh hosts,
-  phone hang root-caused + fixed; CI re-run pending at draft time).
+- CI: verify + clean-room + Android 5/5 green on cdcfd1e
+  (runs 41322227793/41322394136/41322391294); 2096/2096 unit
+  suite; merge-commit CI re-runs before tag.
 
 ## Owner checklist (portal)
 

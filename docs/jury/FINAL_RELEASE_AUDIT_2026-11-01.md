@@ -17,34 +17,40 @@ used as pointers only, never as proof.
 | #167 README §7 + harness timeouts | main `19eaede` | CLEAN |
 | #168 S8 gate + eval + migrate CLI + security batch | main `2d7d919` | CLEAN |
 | #169 Release status + packs | main `ae1194a` | CLEAN |
+| #172 Harness fail-fast + audit + judge sim + submission draft | main `d32a490` | CLEAN (10/10) |
+| #171 UI v2 workspace + README/showcase on new screenshots | main `cdcfd1e` | CLEAN (10/10) |
 
-Merged staging branches deleted after merge (remote): s6/F30/F90/s8/main.
-No open PRs at freeze. No branch protection exists on main (owner setting);
-all merges used `--merge` (ancestry preserved, no squash, no rebase).
+Merged staging branches deleted after merge (remote):
+s6/F30/F90/s8/main + feat/finalfrontier-release + feat/ui-v2-workspace.
+Open PRs at freeze: #170 only (owner's own license PR, PolyForm
+Strict 1.0.0 — untouched by this run; release stays MIT per main).
+No branch protection exists on main (owner setting); all merges used
+`--merge` (ancestry preserved, no squash, no rebase).
 
 ## 2. Final validation matrix (§17)
 
 | Gate | Command / run | SHA | Env | Result |
 |---|---|---|---|---|
-| Unit suite (local) | `python -m unittest discover -s tests` | ae1194a (public clone) | Win, Py 3.14.4 | **2082 OK** |
-| Theme check | `python -m dev.build_web_theme --check` | ae1194a | Win | match |
-| Verify CI | run 41312093966 | ae1194a | win/ubuntu/mac + browsers | **success** |
-| Clean-room | run 41312113965 | ae1194a | 7 hosted + Debian | **success** |
-| Android lab | run 41313438904 (fresh hosts) | ae1194a | phone/wear/tv/e2e | 4/5: e2e GREEN on fresh hosts (infra proven); phone hung 26 min at stage=evidence then job-cancelled, no verdict |
-| Android lab | runs 41312111939 + 41312550552 | ae1194a | same code | 4/5 + 3/5: e2e×2 NET-04 409 (adb device offline ×20), phone×1 APP_CRASH-stage w/ adb daemon refused — all host/guest-death, zero Android-surface diff vs 19eaede (5/5 green) |
-| Harness fail-fast | regression test red→green + full suite | this commit | Win + Git Bash | phone hang root-caused (unbounded adb after guest death + pipeline masking); all adb bounded + pipefail; **2083 OK** |
+| Unit suite (local) | `python -m unittest discover -s tests` | cdcfd1e (fresh public clone) | Win, Py 3.14.4 | **2096 OK** |
+| Theme check | `python -m dev.build_web_theme --check` | cdcfd1e | Win | match |
+| Verify CI | run 41322227793 | cdcfd1e | win/ubuntu/mac + browsers | **success** |
+| Clean-room | run 41322394136 | cdcfd1e | 7 hosted + Debian | **success** |
+| Android lab | run 41322391294 | cdcfd1e | phone/wear/tv/e2e | **5/5 success** (fixed harness verdicts every wedge) |
+| Android lab (history) | runs 41312111939/41312550552/41313438904 | ae1194a | same companion code | 4/5, 3/5, 4/5: guest deaths + 1 harness hang, all root-caused (infra + unbounded adb, fixed in #172) |
+| Main flake | run 41320710336 test-windows re-run | d32a490 | win | SUCCESS on re-run (WinError 10053 loopback abort; same tree green 2× in PR) |
 | Forge | PR-gated (no main trigger by design) | 9f94059 (#168) | ubuntu | success |
-| Clean install | `clean_install_check.py` | ae1194a tree | isolated venv | **8/8** |
-| Offline demo | `judge demo` + replay checks | ae1194a | Win | DEMO_COMPLETE, PASS |
-| Links | 44 relative links + 8 images | ae1194a | — | all resolve |
-| Secrets | release_pack secret scan (3 packs) | ae1194a | — | no findings |
+| Clean install | `clean_install_check.py --venv E:/ob-clean-v2` | cdcfd1e clone | isolated venv | **8/8** |
+| Offline demo | `judge demo` + replay checks | cdcfd1e | Win | DEMO_COMPLETE, PASS |
+| Links | README + showcase images (14 refs) | cdcfd1e | — | all resolve, no old software UI |
+| Secrets | release_pack secret scan (3 packs) | release tree | — | re-run at §18.11 (was clean on ae1194a) |
 
 ## 3. Counts (regenerated, not copied)
 
-- Tests: **2082** on ae1194a (public clone), **2083** with this
-  commit (+1 harness fail-fast regression test; 2055+13+6+8+1=2083 ✓).
+- Tests: **2096** on cdcfd1e (fresh public clone; 2083 + 13 UI v2
+  static tests; 2055+13+6+8+1+13=2096 ✓).
 - Evidence registry: **35 VERIFIED** = 26 REAL_HARDWARE + 7 FULL_GUEST_OS +
-  2 OFFICIAL_PLATFORM_EMULATOR (recomputed from DEVICE_EVIDENCE.json).
+  2 OFFICIAL_PLATFORM_EMULATOR (recomputed on cdcfd1e from
+  DEVICE_EVIDENCE.json).
 - Python: 3.14 everywhere (CI-pinned 3.14.4); 3.12+ claims fixed in
   PLATFORMS.md/TROUBLESHOOTING.md.
 - Registry records ≠ unique physical capabilities (README says so).
@@ -59,14 +65,20 @@ all merges used `--merge` (ancestry preserved, no squash, no rebase).
   Glimmer OOM — published with the warts (README + RESULTS.md).
 - S8 gate: unsafe 2→0 on a NEW frozen 24-case set, 0 correct blocked;
   absolute rates remain indicative (24 cases, one host).
-- Video: 78 s honest fallback cut (no physical footage, labeled);
-  physical branch owner-gated. Built from c39a88e (in main via #168).
-- Android: 5/5 on main (41309860677 @ 19eaede) AND flaky emulator
-  hosts today on ae1194a (3 guest deaths across runs 41312111939 +
-  41312550552: e2e×2 NET-04 409 + phone×1 fail-fast, all with
-  `adb: device offline` / TCP-5554 refused; zero Android-surface code
-  diff 19eaede→ae1194a, so no code regression possible — re-run
-  41313438904 on fresh hosts pending).
+- Video: honest fallback cut (no physical footage, labeled);
+  physical branch owner-gated. Rebuilt from the release tree with new
+  UI stills + 2096 suite card (§18.11; old c39a88e cut superseded).
+- Android: 5/5 on cdcfd1e (run 41322391294) after the #172 harness
+  fix; earlier ae1194a flakes (guest deaths + 1 unbounded-adb hang)
+  all root-caused, none a product bug.
+- UI v2 (new): Studio proposals come from typed templates (Meta
+  parse not wired into Studio); rehearsal is SIMULATED and never
+  touches the runtime; no real-hardware Studio screenshots; replay
+  emits no REPLAY comets yet; watch-press comets lag ≤8 s on the
+  existing 8 s poll; live discovery found 0 devices in the
+  headless capture sandbox (README shows no discovery shot).
+- License: release is MIT (main's LICENSE at freeze); owner's
+  PolyForm PR #170 pending and untouched — owner decides.
 - BridgeWindows v4 plaintext-on-trusted-LAN + pairing-code brute-force
   caveats retained verbatim.
 - Glimmer 30B: 7 load attempts, 7 OOM — environmental, not quality.
@@ -93,64 +105,69 @@ Submission stays OWNER_REQUIRED.
 
 1. No physical vacuum-motion footage; manual-press runs owner-gated.
 2. F90 hardware validation pending (all 8 modules).
-3. Android emulator hosts flaky (guest death ~1/3 runs; harness now
-   bounded + regression-tested so every wedge yields a verdict, never a hang).
+3. Android emulator hosts flaky historically (guest deaths); harness
+   now bounded + regression-tested; 5/5 on cdcfd1e.
 4. Same-class instance ambiguity passes the S8 gate by design (consent
    preview shows the target).
 5. FR `lance chkdsk`-style pc_run uncovered by the gate (documented).
 6. Clean-room Debian leg is container-only; WebKit leg is 1/8 smokes.
 7. A1 Android companion fix + Doze soak + full-control re-pair still open.
-8. Single local-test flake observed once (2 fails under 12 GB model
-   load); 3 subsequent full greens + all CI green.
+8. UI v2: Studio templates (not Meta), no hardware Studio shots,
+   replay without REPLAY comets, ≤8 s watch-press comet lag.
+9. Owner PR #170 (license) + portal submission owner-only.
 
 ## 8. Release artifacts
 
-- Tag/release: v0.2.0 (pending CI) with app/evidence/media packs +
-  notes; video + packs also in `E:\OpenBridge-Overnight\frontier-final\`.
-- Packs (ae1194a, from public clone): app 1002f `53542eec…`,
-  evidence 28f `e7c509ad…`, media 9f+6 skips `f6c42d87…`; testzip clean,
-  manifests + sha256sums inside, secret scan clean.
-- Video: final-fallback-video-c39a88e.mp4 (78.20 s, 4,416,140 B) +
-  srt + thumbnail + SHA256SUMS + scene map.
+- Tag/release: v0.2.0 on the merge commit of the finalization PR,
+  with app/evidence/media packs + notes (§18.12); video + packs also
+  in `E:\OpenBridge-Overnight\frontier-final\`.
+- Packs: rebuilt from the release tree at §18.11 (app/evidence/media;
+  testzip + manifests + sha256sums + secret scan re-verified).
+- Video: rebuilt fallback cut from the release tree (new UI stills,
+  2096 suite card) + srt + thumbnail + SHA256SUMS + scene map.
 - Demo transcripts (judge/compose/refusal/gate) hashed in the ledger.
 
 ## 9. Freeze declaration
 
-No code changes after ae1194a except §17-allowed classes (critical,
+No code changes after cdcfd1e except §17-allowed classes (critical,
 security, CI repair, compliance, evidence, presentation, demo
-reliability). Next commit on main requires a freeze-exception note here.
+reliability). This finalization commit is docs-only (audit +
+RELEASE_STATUS + VIDEO_BUILD stills) — allowed class: evidence/
+presentation. Next commit on main requires a freeze-exception note here.
 
 ## 10. Repository (§20)
 
 - Starting SHA: `45c53fb4bc710fcd6e23844809b32cfa8dd19be6` (main before #164).
-- Final main SHA: `ae1194a6a2d486dfb2e61d2d082aea7ee17ea5f5` (+1 commit:
-  this audit + judge simulation + submission draft + harness fail-fast
-  fix + regression test; tag moves to the merge commit of this
-  branch's PR).
-- Merged PRs: #164, #165, #166, #167, #168, #169 (6/6, all --merge,
-  CI-gated, branches deleted).
-- New commits on main since start: 138 (incl. 6 merge commits).
-- Release tag: v0.2.0 (pending final Android gate).
-- GitHub release URL: pending (created by §18 step 12).
-- Verification links: verify run 41312093966, clean-room
-  41312113965, android 41313438904 (pending), forge 9f94059-gated.
+- Code freeze SHA: `cdcfd1e42d3fc367b3ca5054892f7a39111597df` (#171 merge).
+- Final main SHA: the merge commit of the finalization PR (code
+  freeze cdcfd1e + this docs-only delta); tag v0.2.0 points at it.
+- Merged PRs: #164→#169, #171, #172 (8/8, all --merge, CI-gated,
+  branches deleted). #170 open (owner license, untouched).
+- New commits on main since start: 145 at cdcfd1e (+1 finalize).
+- Release tag: v0.2.0 (on the finalization merge commit).
+- GitHub release URL: created by §18 step 12 (release notes carry it).
+- Verification links: verify run 41322227793, clean-room
+  41322394136, android 41322391294 (5/5), forge 9f94059-gated.
 
 ## 11. Engineering (§20)
 
 - Bugs fixed: Capability Forge theme drift (replay CSS ported to
   sources), S6 Win cp1252 encoding (cherry-picked to S6 branch), diag
   adb unbounded wait (60 s timeout), M1/L1 consent gaps, L4 store cap,
-  L6 label charset, stale README/docs counts and links.
+  L6 label charset, stale README/docs counts and links, emulator
+  harness hang (all adb bounded + pipefail, run 41313438904).
 - Features completed: S6 voice evidence, Frontier 30, Frontier 90
   (8 modules, API/CLI-wired), S8 intent/effect gate, migrate CLI,
-  ModelStudy48 + held-out eval harness, jury demo + fallback video.
+  ModelStudy48 + held-out eval harness, jury demo + fallback video,
+  UI v2 workspace (orb/comets/nav/Home/Devices/Studio/Workflows/
+  Activity/Settings + classic fallback).
 - Security improvements: §5 (4 fixed + tested, 2 dismissed with
-  evidence, A1 deferred).
-- Tests added: +28 net (2055→2083: S8 gate 13, migrate CLI 6,
-  security batch 8, harness fail-fast 1); full suite green locally and in CI.
-- Performance/lifecycle: clean-room 7-host matrix green; Android
-  lab green on identical companion code (19eaede) with infra flake
-  on re-runs (fail-fast, never false green).
+  evidence, A1 deferred). UI v2 server delta is assets-only.
+- Tests added: +41 net (2055→2096: S8 gate 13, migrate CLI 6,
+  security batch 8, harness fail-fast 1, UI v2 13); full suite green
+  locally and in CI (incl. new ui_v2_smoke browser job).
+- Lifecycle: clean-room 7-host matrix green; Android lab 5/5 on
+  cdcfd1e; one Windows loopback flake (10053) green on re-run.
 
 ## 12. Meta AI (§20)
 
@@ -166,7 +183,7 @@ reliability). Next commit on main requires a freeze-exception note here.
   pre-gate unsafe substitutions eliminated post-gate.
 - Known limitations: small calibration sets, no Glimmer runtime
   numbers on this host, same-class ambiguity by design, FR
-  pc_run gap — all documented.
+  pc_run gap, Studio templates not Meta-wired — all documented.
 - Improvements: unsafe substitutions 6→0; frozen registered
   eval sets; honest reporting (no cherry-picking).
 
@@ -179,10 +196,10 @@ reliability). Next commit on main requires a freeze-exception note here.
   7 FULL_GUEST_OS records; Android lab 5/5 on 19eaede.
 - Replay scenes: offline `judge demo` DEMO_COMPLETE + replay
   checks PASS on release tree.
-- Final media: 78.2 s fallback video + srt + thumbnail +
-  SHA256SUMS + scene map; packs app/evidence/media rebuilt.
+- Final media: rebuilt fallback video (new UI stills, 2096 card)
+  + srt + thumbnail + SHA256SUMS + scene map; packs rebuilt at §18.11.
 - Missing evidence: physical vacuum-motion footage (owner-gated
-  manual runs); F90 hardware validation.
+  manual runs); F90 hardware validation; hardware Studio shots.
 - Video status: VIDEO_READY as honest fallback (labeled, no
   physical footage claimed); physical branch owner-gated.
 
@@ -191,14 +208,17 @@ reliability). Next commit on main requires a freeze-exception note here.
 - What changed: full rewrite A–L (#167) — hero, 30-second
   pitch, verified demo centerpiece, architecture, hardware
   matrix, Meta section with warts, security, quickstart,
-  evidence links, hackathon note, developer note, license.
+  evidence links, hackathon note, developer note, license —
+  then UI v2 screenshot swap (#171): no old software UI
+  remains on README/showcase/tour; counts 2096.
 - Why: stale claims, copied bonus section without proof,
   outdated counts; jury needed 10-second comprehension +
-  verifiable depth.
-- Link validation: 44 relative links + 8 images resolve on
-  the release tree.
-- Screenshot validation: screens/ audited, captioned,
-  redacted, linked to proof.
+  verifiable depth; then the UI v2 redesign obsoleted the shots.
+- Link validation: README + showcase images (14 refs) resolve
+  on the release tree.
+- Screenshot validation: new stills are real captures (Activity
+  refusal is seeded-UI + real process() payload, captioned);
+  old stills kept in git history + evidence docs only.
 - Accuracy verification: every featured claim traced to
   CLAIM_EVIDENCE_MATRIX + DEVICE_EVIDENCE.json; no
   emulator→hardware promotion; no universal-Undo claim.
@@ -213,7 +233,8 @@ reliability). Next commit on main requires a freeze-exception note here.
 - Submission requirements: portal-only items (video
   requirement, bonus names, exclusions, license scope,
   disputes, editability) marked OPEN/OWNER_REQUIRED, never
-  assumed.
+  assumed. Owner PR #170 (PolyForm license) may change the
+  license answer — owner decides before submitting.
 - Deadline: 4 Nov 9 PM ET.
 - Submission status: NOT SUBMITTED — owner-only action, no
   receipt, no SUBMITTED claim anywhere.
@@ -229,24 +250,26 @@ reliability). Next commit on main requires a freeze-exception note here.
 - Presentation verdict: 10-second comprehension, clean
   install 8/8, offline demo works, claims traced; weakest:
   no physical-motion footage (disclosed).
-- Remaining weaknesses: the 8 residuals in §7.
+- Remaining weaknesses: the 9 residuals in §7.
+- Post-simulation: UI v2 reviewed after the sim (2095/2095 +
+  browser smoke + 10/10 PR CI); its limits are disclosed in §4/§7.
 
 ## 17. Final release verdict (§20)
 
-- `SOURCE_READY`: YES (ae1194a + this commit; freeze enforced,
-  §17 classes only: CI repair + evidence/presentation).
-- `CI_READY`: PENDING — verify + clean-room green on ae1194a;
-  Android run3 4/5 (e2e green on fresh hosts; phone hang
-  root-caused + fixed here); CI re-runs on this commit.
-- `SECURITY_REVIEWED`: YES (§5; A1 deferred to owner list).
+- `SOURCE_READY`: YES (code freeze cdcfd1e + this docs-only
+  delta; freeze enforced, §17 classes only).
+- `CI_READY`: YES on cdcfd1e (verify + clean-room + Android 5/5
+  green); merge-commit CI re-runs before tag per §17.
+- `SECURITY_REVIEWED`: YES (§5; A1 deferred to owner list;
+  UI v2 server delta assets-only).
 - `META_RUNTIME_VERIFIED`: YES (runtime usage + benchmarks +
-  S8 gate evidenced; limitations documented).
+  S8 gate evidenced; limitations incl. Studio templates documented).
 - `DEMO_READY`: YES (offline DEMO_COMPLETE + replay PASS;
   physical runs owner-gated).
-- `VIDEO_READY`: YES as honest fallback (labeled; physical
-  branch owner-gated).
+- `VIDEO_READY`: YES as honest fallback (rebuilt from release
+  tree; labeled; physical branch owner-gated).
 - `GITHUB_PUBLICATION_COMPLETE`: PENDING (tag + release after
-  Android gate).
+  merge-commit CI per §18.12).
 - `SUBMISSION_READY`: YES (packet + fields prepared; portal
-  action owner-only).
+  action owner-only; license answer depends on owner PR #170).
 - `SUBMITTED`: NO (no organizer confirmation; owner-only).
