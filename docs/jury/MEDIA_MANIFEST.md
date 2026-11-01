@@ -24,6 +24,7 @@ Corrupt/missing items are listed at the bottom — never silently dropped.
 | g04-watch-quick-controls.png | 30 KB, 480×480 | Watch7 native Scan-room / Watch-facts | 30 Oct | none |
 | g04-watch-press-ack.png | 38 KB, 480×480 | Watch "Press recorded (evidence run)" | 30 Oct | none |
 | watch-0-12-mdns-feed.png | 29 KB, 480×480 | Watch activity feed, mDNS row | 30 Oct | none |
+| tv-wd7-direct-drain-caption.png | 220 KB, 1920×1080 | TV PAIRED over direct LAN, adb down: signed-report caption + activity feed (order read back as "atestwifi") | 31 Oct | test relay id + port |
 
 ## Meta-generated controls + safety (REAL_HARDWARE)
 
