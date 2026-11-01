@@ -169,13 +169,27 @@ def parse_plan_response(doc, devices):
     return outcome, spec, detail
 
 
-def plan_from_reply(reply, devices):
+def _apply_intent_effect_gate(request_text, spec, devices):
+    """FINAL FRONTIER S8: refuse/clarify proposals unrelated to the request."""
+    from src.runtime import intent_effect
+    try:
+        intent_effect.check(request_text, spec, devices)
+    except intent_effect.IntentEffectError as e:
+        verb = 'refused' if e.kind == intent_effect.REFUSAL else 'needs clarification'
+        raise PlanError('model %s: %s' % (verb, e.detail)) from None
+
+
+def plan_from_reply(reply, devices, request_text=None):
     """Strictly validate model JSON into a workflow body. Raises PlanError.
 
     Accepts the S4.7 discriminated envelope (a proposal's steps are
     validated; a refusal or clarification raises PlanError carrying the
     model's own words, so nothing executes) and, for backward
     compatibility, a bare {"steps": [...]} object.
+
+    When request_text is given, the S8 intent/effect gate additionally
+    verifies the proposal actually matches the requested effect; unrelated
+    substitutions raise PlanError as a refusal or a clarification.
     """
     if not isinstance(reply, str) or not reply.strip() or len(reply) > MAX_REPLY_CHARS:
         raise PlanError('model reply is empty or oversized')
@@ -188,9 +202,14 @@ def plan_from_reply(reply, devices):
         if outcome != 'proposal':
             verb = 'refused' if outcome == 'refusal' else 'needs clarification'
             raise PlanError('model %s: %s' % (verb, detail))
+        if request_text is not None:
+            _apply_intent_effect_gate(request_text, spec, devices)
         return spec
     steps = doc.get('steps') if isinstance(doc, dict) else None
-    return _spec_from_steps(steps, devices)
+    spec = _spec_from_steps(steps, devices)
+    if request_text is not None:
+        _apply_intent_effect_gate(request_text, spec, devices)
+    return spec
 
 
 def local_chat(model_id, endpoint, timeout=180, chat=None, format=None, options=None):
@@ -237,7 +256,7 @@ def plan(text, devices, transport):
         raise PlanError('model unavailable: %s' % e) from None
     if not isinstance(res, dict) or not res.get('content'):
         raise PlanError('model returned no usable content')
-    spec = plan_from_reply(res['content'], devices)
+    spec = plan_from_reply(res['content'], devices, request_text=text)
     return {'spec': spec,
             'model_run': {'provider': 'meta', 'model': res.get('model_id', 'unknown'),
                           'endpoint': res.get('endpoint', '')},
