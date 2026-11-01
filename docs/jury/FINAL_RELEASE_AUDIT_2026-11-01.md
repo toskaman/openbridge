@@ -103,7 +103,8 @@ Submission stays OWNER_REQUIRED.
 
 ## 7. Residual limitations (frozen with the release)
 
-1. No physical vacuum-motion footage; manual-press runs owner-gated.
+1. No physical vacuum-motion footage (manual runs done
+   01-Nov: START/DOCK VERIFIED, oracle standby→goto_charge).
 2. F90 hardware validation pending (all 8 modules).
 3. Android emulator hosts flaky historically (guest deaths); harness
    now bounded + regression-tested; 5/5 on cdcfd1e.
@@ -111,10 +112,14 @@ Submission stays OWNER_REQUIRED.
    preview shows the target).
 5. FR `lance chkdsk`-style pc_run uncovered by the gate (documented).
 6. Clean-room Debian leg is container-only; WebKit leg is 1/8 smokes.
-7. A1 Android companion fix + Doze soak + full-control re-pair still open.
+7. A1: fix implemented (confirmPairing resets full_control) + APK
+   builds + probe ready; local emulator validation BLOCKED by a
+   host-side VM killer (6 repros, see docs/evidence/
+   a1-fullcontrol-repair-01nov.md); Doze soak + re-pair still open.
 8. UI v2: Studio templates (not Meta), no hardware Studio shots,
    replay without REPLAY comets, ≤8 s watch-press comet lag.
-9. Owner PR #170 (license) + portal submission owner-only.
+9. Portal submission owner-only (#170 merged: main is
+   PolyForm Strict 1.0.0, v0.2.0 tag stays MIT).
 
 ## 8. Release artifacts
 
@@ -192,14 +197,19 @@ presentation. Next commit on main requires a freeze-exception note here.
 - Physical scenes verified: 26 REAL_HARDWARE registry records
   (Oct 31 TV-panel install/dispatch/receipt/revoke chain;
   TV→phone handover; phone/TV/watch/Windows surfaces).
+- 01-Nov manual-press proof (post-tag, main 1326ebc): owner TV
+  presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce)
+  VERIFIED; independent oracle delta standby→goto_charge (no
+  camera footage); instrument + note in PR #174 (merged).
 - Emulator scenes verified: 2 OFFICIAL_PLATFORM_EMULATOR +
   7 FULL_GUEST_OS records; Android lab 5/5 on 19eaede.
 - Replay scenes: offline `judge demo` DEMO_COMPLETE + replay
   checks PASS on release tree.
 - Final media: rebuilt fallback video (new UI stills, 2096 card)
   + srt + thumbnail + SHA256SUMS + scene map; packs rebuilt at §18.11.
-- Missing evidence: physical vacuum-motion footage (owner-gated
-  manual runs); F90 hardware validation; hardware Studio shots.
+- Missing evidence: physical vacuum-motion footage (manual
+  runs done 01-Nov, oracle-only proof, no camera footage); F90
+  hardware validation; hardware Studio shots.
 - Video status: VIDEO_READY as honest fallback (labeled, no
   physical footage claimed); physical branch owner-gated.
 
@@ -233,8 +243,8 @@ presentation. Next commit on main requires a freeze-exception note here.
 - Submission requirements: portal-only items (video
   requirement, bonus names, exclusions, license scope,
   disputes, editability) marked OPEN/OWNER_REQUIRED, never
-  assumed. Owner PR #170 (PolyForm license) may change the
-  license answer — owner decides before submitting.
+  assumed. PR #170 merged: main is PolyForm Strict 1.0.0,
+  v0.2.0 tag stays MIT — declare the submitted revision.
 - Deadline: 4 Nov 9 PM ET.
 - Submission status: NOT SUBMITTED — owner-only action, no
   receipt, no SUBMITTED claim anywhere.
