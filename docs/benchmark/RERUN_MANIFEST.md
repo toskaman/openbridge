@@ -133,9 +133,9 @@ Sizes below are Windows-worktree bytes (CRLF), not git-blob sizes.
 | `docs/benchmark/v4/heldout_cases.json` | yes | 13252 |
 | `docs/benchmark/v4/ablation-20261027T191220Z.json` | yes | 4606 |
 | `docs/benchmark/v4/ablation-20261027T210021Z.json` | yes | 31041 |
-| `docs/benchmark/STATUS.md` | yes | 9352 |
+| `docs/benchmark/STATUS.md` | yes | 11006 |
 | `docs/benchmark/v4/REGISTRATION.md` | yes | 3237 |
-| `docs/benchmark/EVAL_1000_RULES_BASELINE.md` | yes | 3526 |
+| `docs/benchmark/EVAL_1000_RULES_BASELINE.md` | yes | 3641 |
 | `docs/benchmark/EVAL_SUBSET_50_LOCAL.md` | yes | 1945 |
 | `docs/benchmark/S5_UI_FREEZE.md` (frozen spec, not an eval output) | yes | 2203 |
 

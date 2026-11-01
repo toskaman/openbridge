@@ -822,6 +822,19 @@ class CompanionChannel(unittest.TestCase):
         self.assertEqual(rc['summary']['devices_total'], 2)
         self.assertEqual(rc['summary']['relays_total'], 0)
 
+    def test_fabric_status_reads_empty_registry_zero_hardware(self):
+        # Judge-C W1 golden path: a fresh machine (no devices, no relays)
+        # still gets a READ summary, never PREVIEW_BLOCKED.
+        from types import SimpleNamespace
+        from src.runtime.command import approve, execute
+        srv = SimpleNamespace(fabric_registry=SimpleNamespace(devices={}))
+        d = draft(status='resolved', skill_id='fabric.status', outcome='summarize fabric',
+                  confidence=0.9, targets=[{'kind': 'category', 'ref': 'fabric'}])
+        rc = execute(srv, d, consent=True, preview=approve(srv, d))
+        self.assertEqual(rc['state'], 'READ')
+        self.assertEqual(rc['summary']['devices_total'], 0)
+        self.assertEqual(rc['summary']['relays_total'], 0)
+
     def test_fallback_injects_fabric_target_when_empty(self):
         from src.runtime.nl_router import parse
         r = good_reply(); r['skill_id'] = None; r['confidence'] = 0.0

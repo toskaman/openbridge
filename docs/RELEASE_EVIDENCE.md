@@ -39,3 +39,25 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - [Background relay](DEVICE_EVIDENCE.json) (row 29): foreground service alive with activity closed + screen off, toggle regression 8/8 on a physical phone.
 - [Structured refusal channel](jury/OVERNIGHT_REPORT_31OCT.md) §B (TDD 3/3); [S5/S6 physical runbooks](jury/DEMO_PHYSICAL_RUNBOOK.md) + [final storyboard](jury/DEMO_STORYBOARD_FINAL.md); [compliance checklist](jury/COMPLIANCE_CHECKLIST.md).
 - Suite: 1245 green locally + Windows/Ubuntu/macOS/browser CI green; clean-room install 8/8 on 7 hosted targets ([run 41210900996](https://github.com/toskaman/openbridge/actions/runs/41210900996)). Android `e2e` job failing (builds green) — disclosed, not hidden.
+
+## Latest integrated evidence — 01 November (E1 UX fix-loop, `feat/f90-e1-fixux`)
+
+- Suite: 1835 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay) re-synced to this branch; dated entries above frozen as history.
+- Judge demo: readiness split into REQUIRED (core/os/evidence/storage) vs OPTIONAL (models/cloud/adb); every step carries a plain-language line; verdict is DEMO_COMPLETE only when required checks pass, else DEMO_BLOCKED.
+- Ask golden path: documented first example is now the unpaired-safe *How many devices are online* (fabric.status); zero-hardware approve/execute covered by new tests; `ask` semantics unchanged (`ble_scan_room` still needs a paired relay).
+- Jury paths: live `E:/shots` references replaced with committed `docs/jury/screens/…` paths, the git-ignored `shots/` staging folder, or author-PC capture notes; dated reports untouched.
+
+## Latest integrated evidence — 01 November (E2 readme, `feat/f90-readme`)
+
+- Suite: 2013 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay, showcase ledger) re-synced to this branch; dated entries above frozen as history.
+- Jury fast-track: README + `docs/jury/JURY_START_HERE.md` restructured for rapid comprehension (what it is, why new, what Meta does, what works, one extraordinary example, repro steps, security + limits, evidence links); engineering detail stays in linked supporting docs; no new claims.
+- Registry: 35 VERIFIED rows (26 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR), unchanged; all touched links verified resolvable.
+
+## Latest integrated evidence — 01 November (E2 staging integration, `feat/frontier90-staging`)
+
+- Suite: 2029 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay) re-synced to this tip; dated entries above frozen as history.
+- E2: cleanroom PSK-fixture rename (secret-scanner tripwire intact), scripted S5/S5b UI replay fallback (REPLAY-labeled), Playwright UI audit fixes (192 shots × 3 passes), release packs built + hash-verified, README/jury polish.
+
+## Latest integrated evidence — 01 November (E3 close-out, `feat/frontier90-staging`)
+
+- Suite: 2055 green locally; cross-platform CI compat fixes (yaml skip, nesting reason, psutil-absent, listener recovery); manifest byte rows corrected; F90 modules wired to CLI/API with smoke tests; emu-harness exit-127 + tv-checkout fixed with regression pins; cleanroom 8/8 green on the F90 tree ([run 41273696980](https://github.com/toskaman/openbridge/actions/runs/41273696980)); dated entries above frozen as history.

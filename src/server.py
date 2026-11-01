@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
 import threading
+import time
 import subprocess
 import os
 import sqlite3
@@ -28,7 +29,67 @@ from src.fabric import discovery as fabric_discovery
 from src.fabric import relay as fabric_relay
 
 UI = Path(__file__).parent / 'ui'
-ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript'), '/command_center.js': ('command_center.js', 'text/javascript'), '/explorer.js': ('explorer.js', 'text/javascript')}
+ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript'), '/command_center.js': ('command_center.js', 'text/javascript'), '/explorer.js': ('explorer.js', 'text/javascript'), '/replay.js': ('replay.js', 'text/javascript')}
+
+# Campaign One §3.6 HTTP hardening: request size caps and client patience.
+MAX_URL_BYTES = 8192            # request-target ceiling (stdlib guards the 64 KiB line; this is the app boundary)
+MAX_QUERY_FIELDS = 100          # parse_qs field flood ceiling
+MAX_BODY_BYTES = 8192           # default JSON body ceiling
+MAX_BODY_MANIFEST_BYTES = 65_536      # manifests/workflows carry signed plans
+MAX_BODY_TRANSCRIBE_BYTES = 700_000   # voice/transcribe carries base64 audio
+HEADER_TIMEOUT_S = 5            # slow-client patience for request line + headers
+BODY_TIMEOUT_S = 15             # total body patience: socket timeout is per-recv, so a 1-byte drip would otherwise hold a handler thread forever
+
+
+def _header_all(headers, name):
+    """Case-insensitive multi-value header lookup that never raises.
+
+    BaseHTTPRequestHandler normally supplies an EmailMessage (get_all), but the
+    HTTP/0.9 path supplies a plain dict — fail closed there instead of raising
+    AttributeError in the handler thread."""
+    get_all = getattr(headers, 'get_all', None)
+    if callable(get_all):
+        try:
+            return list(get_all(name, []))
+        except (AttributeError, TypeError, ValueError):
+            return []
+    if isinstance(headers, dict):
+        want = name.lower()
+        return [value for key, value in headers.items() if isinstance(key, str) and key.lower() == want]
+    return []
+
+
+def _header_one(headers, name, default=None):
+    values = _header_all(headers, name)
+    return values[0] if values else default
+
+
+def _query_params(path):
+    """Bounded query parsing: None when the query floods the field cap."""
+    try:
+        return parse_qs(urlsplit(path).query, max_num_fields=MAX_QUERY_FIELDS)
+    except ValueError:
+        return None
+
+
+def _read_body(rfile, length):
+    """Read exactly length bytes or raise. A monotonic total deadline bounds slow-drip bodies.
+
+    Raises TimeoutError when the drip outlasts BODY_TIMEOUT_S (both POST paths map it to
+    400 and free the handler thread) and ValueError when the client closes mid-body."""
+    deadline = time.monotonic() + BODY_TIMEOUT_S
+    chunks = []
+    remaining = length
+    read1 = getattr(rfile, 'read1', None)
+    while remaining > 0:
+        if time.monotonic() >= deadline:
+            raise TimeoutError('Request body too slow')
+        chunk = read1(min(remaining, 65536)) if read1 is not None else rfile.read(1)
+        if not chunk:
+            raise ValueError()
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    return b''.join(chunks)
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -44,6 +105,19 @@ class LocalServer(ThreadingHTTPServer):
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.0'
+
+    def setup(self):
+        super().setup()
+        try:
+            self.connection.settimeout(HEADER_TIMEOUT_S)   # slow-client patience starts before the request line
+        except OSError:
+            pass
+
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except ConnectionError:
+            self.close_connection = True   # client vanished mid-request: nothing to answer, stay quiet
 
     def log_message(self, *_):
         pass  # Avoid recording request paths or identifiers.
@@ -64,31 +138,42 @@ class Handler(BaseHTTPRequestHandler):
         from src.runtime import api_v2
         if self.path not in api_v2.POST_ROUTES:
             return self.reply(404, {'error': 'Operation unavailable'})
-        if self.headers.get('Content-Type') != 'application/json':
+        if _header_one(self.headers, 'Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
         try:
-            lengths = self.headers.get_all('Content-Length', [])
-            if len(lengths) != 1 or self.headers.get('Transfer-Encoding') or not 0 <= int(lengths[0]) <= (700_000 if self.path == '/api/v2/voice/transcribe' else 65_536 if self.path.startswith(('/api/v2/manifests/', '/api/v2/workflows/')) else 8192):
+            lengths = _header_all(self.headers, 'Content-Length')
+            cap = (MAX_BODY_TRANSCRIBE_BYTES if self.path == '/api/v2/voice/transcribe'
+                   else MAX_BODY_MANIFEST_BYTES if self.path.startswith(('/api/v2/manifests/', '/api/v2/workflows/'))
+                   else MAX_BODY_BYTES)
+            if len(lengths) != 1 or _header_one(self.headers, 'Transfer-Encoding'):
                 raise ValueError()
+            length = int(lengths[0])
+            if length < 0:
+                raise ValueError()
+            if length > cap:
+                return self.reply(413, {'error': 'Request too large'})
             self.connection.settimeout(5)
-            body = json.loads(self.rfile.read(int(lengths[0])))
-        except (ValueError, OSError):
+            body = json.loads(_read_body(self.rfile, length))
+        except (ValueError, TypeError, OSError):
             return self.reply(400, {'error': 'Invalid request'})
         return self.reply(*api_v2.post(self.server, self.path, body))
 
     def host_allowed(self):
-        hosts = self.headers.get_all('Host', [])
+        hosts = _header_all(self.headers, 'Host')
         return len(hosts) == 1 and hosts[0] == f'127.0.0.1:{self.server.server_port}'
 
     def do_GET(self):
         if not self.host_allowed():
             return self.reply(403, {'error': 'Untrusted host'})
+        if len(self.path) > MAX_URL_BYTES:
+            return self.reply(414, {'error': 'Request-target too long'})
         path = urlsplit(self.path).path
         if path.startswith('/api/v2/'):
             from src.runtime import api_v2
             return self.reply(*api_v2.get(self.server, path, urlsplit(self.path).query))
         if path == '/api/device-events':
-            if parse_qs(urlsplit(self.path).query).get('source') != ['android']:
+            params = _query_params(self.path)
+            if params is None or params.get('source') != ['android']:
                 return self.reply(400,{'error':'Explicit Android event source required'})
             self.send_response(200)
             self.send_header('Content-Type','text/event-stream')
@@ -111,7 +196,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/session':
             return self.reply(200, {'csrf_token': self.server.csrf_token})
         if path == '/api/devices':
-            source = parse_qs(urlsplit(self.path).query).get('source', ['demo'])
+            params = _query_params(self.path)
+            if params is None:
+                return self.reply(400, {'error': 'Invalid query'})
+            source = params.get('source', ['demo'])
             if source == ['android']:
                 return self.reply(200, self.server.android.discover())
             if source == ['freebox']:
@@ -151,6 +239,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, {'evidence_kind':'RECORDED_RUNTIME_CORE_CALL','live_request':False,'receipt':receipt})
             except (OSError,ValueError,AttributeError):
                 return self.reply(404, {'error':'No verified recorded model proof available'})
+        if path == '/api/demo-replay':
+            from src.runtime.demo_replay import serve_bundle
+            return self.reply(*serve_bundle())
         if path == '/api/demo-setting':
             if self.server.demo_engine is None or self.server.demo_engine.adapter.source != 'SIMULATED':
                 return self.reply(409, {'error':'Simulated transaction journal unavailable'})
@@ -165,27 +256,31 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         origin = f'http://127.0.0.1:{self.server.server_port}'
-        token = self.headers.get('X-CSRF-Token', '')
-        if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
+        token = _header_one(self.headers, 'X-CSRF-Token', '')
+        if not isinstance(token, str):
+            token = ''
+        if (not self.host_allowed() or _header_all(self.headers, 'Origin') != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
+        if len(self.path) > MAX_URL_BYTES:
+            return self.reply(414, {'error': 'Request-target too long'})
         if self.path.startswith('/api/v2/'):
             return self.v2_post()
         if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect', '/api/session-restore', '/api/watch-pair'):
             return self.reply(404, {'error': 'Operation unavailable'})
-        if self.headers.get('Content-Type') != 'application/json':
+        if _header_one(self.headers, 'Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
         try:
-            lengths = self.headers.get_all('Content-Length', [])
-            if len(lengths) != 1 or self.headers.get('Transfer-Encoding'):
+            lengths = _header_all(self.headers, 'Content-Length')
+            if len(lengths) != 1 or _header_one(self.headers, 'Transfer-Encoding'):
                 raise ValueError()
             length = int(lengths[0])
             if length < 0:
                 raise ValueError()
-            if length > 8192:
+            if length > MAX_BODY_BYTES:
                 return self.reply(413, {'error': 'Request too large'})
             self.connection.settimeout(5)
-            body = json.loads(self.rfile.read(length))
+            body = json.loads(_read_body(self.rfile, length))
             if not isinstance(body, dict) or not isinstance(body.get('device_id'), str):
                 raise ValueError()
             source = body.get('source', 'demo')
@@ -356,7 +451,7 @@ class Handler(BaseHTTPRequestHandler):
                 result = inspect_device(body['device_id'])
             else:
                 raise ValueError('Unknown source')
-        except (ValueError, UnicodeError, TimeoutError):
+        except (ValueError, TypeError, UnicodeError, TimeoutError):
             return self.reply(400, {'error': 'Invalid request or unknown device'})
         return self.reply(200, result)
 
@@ -488,14 +583,19 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             send = fabric_relay.failover_transport(urls) if transport_factory is fabric_relay.http_transport else transport_factory(url)
             pc_nonce = secrets.token_hex(16)
             hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
+            if not isinstance(hello, dict):  # mirrors R.pair: every malformed hello is RelayError, never KeyError/AttributeError
+                raise fabric_relay.RelayError('Not an OpenBridge Companion (pairing hello is not an object)')
             if hello.get('protocol') != fabric_relay.PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
                 raise fabric_relay.RelayError('Not an OpenBridge Companion')
+            rid = hello.get('relay_id')
+            if not isinstance(rid, str) or not fabric_relay.RELAY_ID.match(rid):
+                raise fabric_relay.RelayError('Relay omitted a valid relay id')
             with server.relay_pending_lock:
                 now = time.monotonic()
                 for h in [h for h, p in server.relay_pending.items() if now - p['started_at'] > PAIRING_TTL]:
                     del server.relay_pending[h]
                 server.relay_pending[handle] = {'send': send, 'url': url, 'urls': urls, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
-            return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': hello['relay_id'], 'declared': hello.get('declared', {})}
+            return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': rid, 'declared': hello.get('declared', {})}
         if path == '/api/relay-pair-confirm':
             handle = body.get('device_id')
             code = body.get('code')

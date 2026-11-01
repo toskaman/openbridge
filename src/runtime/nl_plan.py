@@ -4,6 +4,12 @@ deterministic validator admits only registered skills on live devices.
 The model is never trusted: unknown skills, unresolvable targets and invalid
 params become PlanError, never a guessed command. Execution stays on the
 existing Router + workflow engine with per-step approval and consent binding.
+
+Campaign Two S4.7: replies use the discriminated Meta result envelope
+(Proposal | Clarification | Refusal). A refusal or clarification validates
+to nothing executable -- the model may always refuse instead of emitting
+steps. Bare {"steps": [...]} replies are still accepted for backward
+compatibility with recorded prompts and direct API users.
 """
 import hashlib
 import json
@@ -19,6 +25,20 @@ PLAN_JSON_SCHEMA = {'type': 'object',
         'items': {'type': 'object', 'required': ['skill_id', 'target', 'params'],
             'properties': {'skill_id': {'type': 'string'}, 'target': {'type': 'string'},
                            'params': {'type': 'object'}}}}}}
+
+# S4.7 envelope constraint: the same steps shape wrapped in the shared
+# discriminated outcome, so constrained decoding can still emit a refusal
+# or a clarification instead of steps.
+PLAN_RESPONSE_SCHEMA = {'type': 'object',
+    'required': ['outcome'],
+    'properties': {'outcome': {'type': 'string'},
+                   'steps': {'type': 'array', 'minItems': 1, 'maxItems': MAX_STEPS,
+                       'items': {'type': 'object', 'required': ['skill_id', 'target', 'params'],
+                           'properties': {'skill_id': {'type': 'string'}, 'target': {'type': 'string'},
+                                          'params': {'type': 'object'}}}},
+                   'reason': {'type': 'string'},
+                   'code': {'type': 'string'},
+                   'clarifying_question': {'type': 'string'}}}
 
 
 class PlanError(ValueError):
@@ -52,7 +72,7 @@ def build_prompt(text, devices):
     skill_lines = ['- %s %s reversibility=%s consent=%s' % (sid, _param_hint(s.get('input')),
                                                             s.get('reversibility'), s.get('consent'))
                    for sid, s in sorted(SKILLS.items())]
-    return ('You plan device actions. Reply with ONE JSON object and nothing else: '
+    prompt = ('You plan device actions. Reply with ONE JSON object and nothing else: '
             '{"steps": [{"skill_id": "<id>", "target": "<device label>", '
             '"params": {}}]}. Rules: 1..%d steps; skill_id must be listed below; copy the target '
             'label EXACTLY character-for-character from the Devices list (never abbreviate; '
@@ -60,6 +80,14 @@ def build_prompt(text, devices):
             'keys. Example: {"steps": [{"skill_id": "tv_volume_step", "target": "android tv", '
             '"params": {"direction": "down"}}]}. Request: %s\nDevices:\n%s\nSkills:\n%s'
             % (MAX_STEPS, text.strip()[:500], '\n'.join(dev_lines), '\n'.join(skill_lines)))
+    prompt += (' If the request needs a skill, device, capability, approval bypass or '
+               'irreversible change not covered above, do NOT guess steps: reply '
+               '{"outcome": "refusal", "reason": "<why, <=500 chars>"} with no steps. '
+               'If exactly two readings match equally well, reply '
+               '{"outcome": "clarification", "clarifying_question": "<one question>"} '
+               'with no steps. A proposal wraps the steps object as '
+               '{"outcome": "proposal", "steps": [...]}.')
+    return prompt
 
 
 def resolve_target(target, devices):
@@ -67,7 +95,8 @@ def resolve_target(target, devices):
 
     The LABEL is the stable reference: device keys rotate every discovery, so
     plan-time keys would be stale at run time. The run layer re-resolves the
-    label against the live snapshot (same ghost rule as here)."""
+    label against the live snapshot (same ghost rule as here).
+    """
     if not isinstance(target, str) or not target or len(target) > 64:
         raise PlanError('invalid target %r' % (target,))
     for d in devices:
@@ -89,17 +118,10 @@ def _resolve_target(target, devices):
     return label, disambiguated
 
 
-def plan_from_reply(reply, devices):
-    """Strictly validate model JSON into a workflow body. Raises PlanError."""
+def _spec_from_steps(steps, devices):
+    """Strictly validate a steps list into a workflow body. Raises PlanError."""
     from src.runtime.primitives import validate, PrimitiveError
     from src.runtime.routing import SKILLS
-    if not isinstance(reply, str) or not reply.strip() or len(reply) > MAX_REPLY_CHARS:
-        raise PlanError('model reply is empty or oversized')
-    try:
-        doc = json.loads(reply)
-    except ValueError:
-        raise PlanError('model reply is not JSON') from None
-    steps = doc.get('steps') if isinstance(doc, dict) else None
     if not isinstance(steps, list) or not steps or len(steps) > MAX_STEPS:
         raise PlanError('reply needs steps[1..%d]' % MAX_STEPS)
     out = []
@@ -129,6 +151,46 @@ def plan_from_reply(reply, devices):
             step['disambiguated'] = True
         out.append(step)
     return {'consent': True, 'steps': out}
+
+
+def parse_plan_response(doc, devices):
+    """Split an enveloped reply into (outcome, spec|None, detail).
+
+    Only outcome == 'proposal' yields a validated spec; refusal and
+    clarification yield None (nothing executable). Raises PlanError on any
+    shape violation, including a payload smuggled on a non-proposal.
+    """
+    from src.forge import meta_result
+    try:
+        outcome, spec, detail, _ = meta_result.parse(
+            doc, 'steps', lambda steps: _spec_from_steps(steps, devices))
+    except meta_result.MetaError as e:
+        raise PlanError(str(e)) from None
+    return outcome, spec, detail
+
+
+def plan_from_reply(reply, devices):
+    """Strictly validate model JSON into a workflow body. Raises PlanError.
+
+    Accepts the S4.7 discriminated envelope (a proposal's steps are
+    validated; a refusal or clarification raises PlanError carrying the
+    model's own words, so nothing executes) and, for backward
+    compatibility, a bare {"steps": [...]} object.
+    """
+    if not isinstance(reply, str) or not reply.strip() or len(reply) > MAX_REPLY_CHARS:
+        raise PlanError('model reply is empty or oversized')
+    try:
+        doc = json.loads(reply)
+    except ValueError:
+        raise PlanError('model reply is not JSON') from None
+    if isinstance(doc, dict) and 'outcome' in doc:
+        outcome, spec, detail = parse_plan_response(doc, devices)
+        if outcome != 'proposal':
+            verb = 'refused' if outcome == 'refusal' else 'needs clarification'
+            raise PlanError('model %s: %s' % (verb, detail))
+        return spec
+    steps = doc.get('steps') if isinstance(doc, dict) else None
+    return _spec_from_steps(steps, devices)
 
 
 def local_chat(model_id, endpoint, timeout=180, chat=None, format=None, options=None):

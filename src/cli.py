@@ -364,7 +364,7 @@ def cmd_init(args):
 
 
 def cmd_doctor(args):
-    from src.runtime.readiness import collect
+    from src.runtime.readiness import REQUIRED, collect
     avail = local_availability()
     probes = {}
     try:
@@ -390,6 +390,10 @@ def cmd_doctor(args):
         probes['evidence'] = 'INVALID'
         probes['storage'] = 'NOT_TESTED'
     report = collect(probes)
+    split = collect(probes, required=REQUIRED)
+    report['required_global'] = split['global']
+    report['required'] = split['required']
+    report['optional'] = split['optional']
     report['detail'] = {'endpoints': avail['endpoints'], 'os': platform.system(),
                         'evidence_dir': str(evidence_dir(args))}
     return report
@@ -644,10 +648,14 @@ def cmd_ask(args):
     text = getattr(args, 'text', '')
     if not text.strip():
         raise CliError('args', 'EMPTY_REQUEST', 'ask needs a natural-language request.')
+    prior = None
+    prior_file = getattr(args, 'prior', None)
+    if prior_file:
+        prior = _read_json_file(prior_file, 'prior intent')
     with Core() as server:
         ensure_discovery(server, default_providers(args))
         try:
-            parsed = cmdmod.parse_request(server, {'text': text, 'lang': 'en'})
+            parsed = cmdmod.parse_request(server, {'text': text, 'lang': 'en', 'prior': prior})
         except cmdmod.CommandError as e:
             raise CliError('args', 'PARSE_FAILED', str(e))
         intent = parsed.get('intent', parsed) if isinstance(parsed, dict) else parsed
@@ -961,17 +969,20 @@ def cmd_dashboards_propose(args):
                 'devices': prompt_devices, 'primitives': sorted(bindable),
                 'model_run': run, 'prompt_chars': len(prompt)}
     try:
-        outcome, patch, detail = v4_ui.parse_response(doc, bindable)
+        outcome, patch, detail, code = v4_ui.parse_response_full(doc, bindable)
     except v4_ui.UIError as e:
         raise CliError('inference', 'PATCH_REJECTED', 'Model reply is not a valid panel: %s' % (e,)) from None
     offered = [d['opaque_id'] for d in bundle['devices']]
     # Prompt-time label map: opaque ids salt rotating discovery keys, so the
     # patch-target label is unrecoverable later without this record.
     if outcome != 'proposal':
-        key = 'clarifying_question' if outcome == 'needs_clarification' else 'reason'
-        return {'outcome': outcome, key: detail, 'offered_opaque_ids': offered,
-                'devices': prompt_devices, 'primitives': sorted(bindable),
-                'model_run': run, 'prompt_chars': len(prompt)}
+        key = 'clarifying_question' if outcome == 'clarification' else 'reason'
+        out = {'outcome': outcome, key: detail, 'offered_opaque_ids': offered,
+               'devices': prompt_devices, 'primitives': sorted(bindable),
+               'model_run': run, 'prompt_chars': len(prompt)}
+        if code:
+            out['code'] = code
+        return out
     return {'outcome': 'proposal', 'patch': patch, 'offered_opaque_ids': offered,
             'devices': prompt_devices,
             'primitives': sorted(bindable),
@@ -1057,6 +1068,115 @@ def cmd_dashboards_revoke(args):
     return {'relay_id': rid, 'revoked': True, 'state': state}
 
 
+def cmd_dashboards_export(args):
+    """Export a saved dashboard (or a relay's live panel) as a sealed bundle.
+
+    Read-only: verifies the source, seals it with a sha256 digest, and writes
+    (or prints) the bundle JSON. Targets travel as opaque hints only."""
+    from src.runtime import dashboards as D
+    from src.runtime import dashboard_port as P
+    from src.runtime.state_store import StateStore
+    name = getattr(args, 'name', '') or ''
+    rid = getattr(args, 'relay', '') or ''
+    if not name:
+        raise CliError('args', 'MISSING_INPUT', 'export needs --name BUNDLE_NAME.')
+    if bool(getattr(args, 'saved', None)) == bool(rid):
+        raise CliError('args', 'MISSING_INPUT',
+                       'export needs exactly one of --saved NAME (stored dashboard) or --relay RID (live panel).')
+    with Core() as server:
+        ensure_discovery(server, default_providers(args))
+        if rid:
+            from src.runtime import api_v2
+            controls = api_v2.remote_controls(server)
+            try:
+                bundle = P.export_bundle(name=name, controls=D.defs(controls, rid))
+            except P.PortError as e:
+                raise CliError('args', 'EXPORT_FAILED', str(e)[:200]) from None
+        else:
+            store = D.DashStore(StateStore.for_server(server))
+            try:
+                bundle = P.export_bundle(store=store, name=getattr(args, 'saved'))
+            except P.PortError as e:
+                raise CliError('args', 'EXPORT_FAILED', str(e)[:200]) from None
+            if bundle['name'] != name:
+                # Re-seal under the requested bundle name (export, not edit).
+                bundle = P.export_bundle(
+                    name=name,
+                    controls=[dict(c, target=c.get('target_hint'))
+                              for c in bundle['controls']])
+    text = json.dumps(bundle, indent=2, sort_keys=True, ensure_ascii=False)
+    out = getattr(args, 'out', None)
+    if out:
+        try:
+            Path(out).write_text(text, encoding='utf-8')
+        except OSError as e:
+            raise CliError('args', 'EXPORT_FAILED', 'Cannot write bundle: %s' % e)
+        return {'bundle': bundle['name'], 'controls': len(bundle['controls']),
+                'digest': bundle['integrity']['digest'], 'file': out}
+    return {'bundle': bundle}
+
+
+def cmd_dashboards_import(args):
+    """Install a sealed dashboard bundle on a relay (consent-bound).
+
+    Verifies the seal, resolves every target hint through the owner-supplied
+    --target/--target-map, then installs through set_controls. --dry-run
+    verifies + resolves and installs nothing."""
+    from src.runtime import api_v2
+    from src.runtime import dashboard_port as P
+    from src.runtime.remote_controls import RemoteControlError
+    spec = getattr(args, 'bundle', None)
+    if not spec:
+        raise CliError('args', 'MISSING_INPUT', 'import needs --bundle panel-bundle.json.')
+    try:
+        bundle = json.loads(Path(spec).read_text(encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'SPEC_UNREADABLE', 'Cannot read bundle: %s' % e)
+    rid = getattr(args, 'relay', '') or ''
+    if not rid:
+        raise CliError('args', 'MISSING_INPUT', 'import needs --relay RID.')
+    target = getattr(args, 'target', None) or None
+    raw_map = getattr(args, 'target_map', None)
+    try:
+        target_map = json.loads(raw_map) if raw_map else None
+    except ValueError as e:
+        raise CliError('args', 'SPEC_INVALID', 'target-map is not JSON: %s' % e)
+    if target_map is not None and not isinstance(target_map, dict):
+        raise CliError('args', 'SPEC_INVALID', 'target-map must be a JSON object.')
+    try:
+        plan = P.dry_run(bundle, target=target, target_map=target_map)
+    except P.PortError as e:
+        raise CliError('verify', 'BUNDLE_REJECTED', str(e)[:200]) from None
+    if getattr(args, 'dry_run', False):
+        return {'relay_id': rid, 'dry_run': True, 'name': plan['name'],
+                'controls': plan['controls'], 'targets': plan['targets'],
+                'bundle_digest': plan['bundle_digest']}
+    preview = {'relay_id': rid, 'bundle': plan['name'],
+               'digest': plan['bundle_digest'], 'controls': plan['controls']}
+    require_consent(args, preview_hash(preview), 'dashboards import on %s' % rid)
+    save_as = getattr(args, 'save_as', None) or None
+    with Core() as server:
+        ensure_discovery(server, default_providers(args))
+        controls = api_v2.remote_controls(server)
+        router = api_v2.router(server)
+        store = None
+        if save_as:
+            from src.runtime import dashboards as D
+            from src.runtime.state_store import StateStore
+            store = D.DashStore(StateStore.for_server(server))
+        try:
+            receipt = P.import_bundle(controls, rid, bundle, target=target,
+                                      target_map=target_map, consent=True,
+                                      resolve_target=router.resolve_target,
+                                      store=store, save_as=save_as)
+        except P.PortError as e:
+            raise CliError('verify', 'BUNDLE_REJECTED', str(e)[:200]) from None
+        except RemoteControlError as e:
+            raise CliError('device', 'INSTALL_FAILED', str(e)[:200]) from None
+    receipt.pop('state', None)
+    return receipt
+
+
 # ---------------- workflows ----------------
 
 def workflow_store():
@@ -1114,7 +1234,8 @@ def _plan_from_text(args, text):
     with Core() as server:
         snap = ensure_discovery(server, default_providers(args))
     devices = snap.get('devices', []) if isinstance(snap, dict) else []
-    transport = nl_plan.local_chat(model_id, endpoint, timeout=getattr(args, 'timeout', None) or 180)
+    transport = nl_plan.local_chat(model_id, endpoint, timeout=getattr(args, 'timeout', None) or 180,
+                                   format=nl_plan.PLAN_RESPONSE_SCHEMA)
     try:
         res = nl_plan.plan(text, devices, transport)
     except nl_plan.PlanError as e:
@@ -1205,6 +1326,46 @@ def _workflow_step_preview(wid, sid, step):
             'target': step['target'], 'params': step['params']}
 
 
+def cmd_workflows_compose(args):
+    from src.runtime import api_v2, composer as comp, nl_plan, nl_router
+    text = getattr(args, 'text', '') or ''
+    if not text.strip():
+        raise CliError('args', 'MISSING_INPUT', 'compose needs request text.')
+    model_id = getattr(args, 'model', None) or nl_router.TIERS['low'][0]
+    endpoint = next((ep for mid, ep in nl_router.TIERS.values() if mid == model_id), None)
+    if endpoint is None or endpoint.startswith('https://'):
+        raise CliError('args', 'MODEL_NOT_PINNED',
+                       'compose-text needs a pinned local Meta model (low/medium tier)')
+    with Core() as server:
+        snap = ensure_discovery(server, default_providers(args))
+        devices = snap.get('devices', []) if isinstance(snap, dict) else []
+        transport = nl_plan.local_chat(model_id, endpoint,
+                                       timeout=getattr(args, 'timeout', None) or 180,
+                                       format=comp.PROPOSAL_JSON_SCHEMA)
+        try:
+            doc = comp.propose_and_compose(text, devices, api_v2.router(server), transport)
+        except comp.ComposerError as e:
+            raise CliError('inference', 'COMPOSE_REJECTED', str(e)[:300])
+    out = {'composed': doc}
+    if doc['refused'] == 0:
+        try:
+            spec = comp.to_workflow(doc)
+        except comp.ComposerError as e:
+            raise CliError('args', 'SPEC_INVALID', str(e)[:200])
+        out['spec'] = spec
+        out['consent'] = preview_hash(spec)
+    return out
+
+
+def cmd_workflows_summary(args):
+    from src.runtime import composer as comp
+    wid = getattr(args, 'workflow_id', '') or ''
+    record = workflow_store().get(wid)
+    if record is None:
+        raise CliError('args', 'NOT_FOUND', 'Unknown workflow %r.' % wid)
+    return {'summary': comp.summarize(record)}
+
+
 def cmd_workflows_approve(args):
     from src.runtime.workflows import approve, WorkflowError
     from src.runtime import api_v2
@@ -1238,6 +1399,90 @@ def cmd_workflows_approve(args):
             raise CliError('permission', 'WORKFLOW_BLOCKED', str(e)[:200])
     return {'workflow_id': wid, 'step_id': sid, 'allowed': allow,
             'preview': preview, 'record': record}
+
+
+# ---------------- routes / diagnose / transplant (F90 wiring) ----------------
+
+def _read_json_file(spec_file, what):
+    try:
+        return json.loads(Path(spec_file).read_text(encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'SPEC_UNREADABLE', 'Cannot read %s: %s' % (what, e))
+
+
+def cmd_routes_list(args):
+    from urllib.parse import urlencode
+    from src.runtime import api_v2
+    target = getattr(args, 'target', '') or ''
+    if not target.strip():
+        raise CliError('args', 'MISSING_INPUT', 'routes list needs --target.')
+    with Core() as server:
+        status, body = api_v2.get(server, '/api/v2/route_intel', urlencode({'target': target}))
+    return check_status(status, body)
+
+
+def cmd_routes_dispatch(args):
+    from src.runtime import api_v2
+    target = getattr(args, 'target', '') or ''
+    if not target.strip():
+        raise CliError('args', 'MISSING_INPUT', 'routes dispatch needs --target.')
+    params = getattr(args, 'params', None)
+    if params:
+        try:
+            params = json.loads(params)
+        except ValueError as e:
+            raise CliError('args', 'PARAMS_INVALID', 'Cannot parse --params JSON: %s' % e)
+        if not isinstance(params, dict):
+            raise CliError('args', 'PARAMS_INVALID', '--params must be a JSON object.')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/route_intel/dispatch', {
+            'target': target, 'op': getattr(args, 'op', None) or 'get_status',
+            'params': params,
+            'capability': getattr(args, 'capability', None) or 'ble_scan',
+            'relay_id': getattr(args, 'relay', None)})
+    return check_status(status, body)
+
+
+def cmd_routes_simulate_loss(args):
+    from src.runtime import api_v2
+    target = getattr(args, 'target', '') or ''
+    lost = getattr(args, 'lost_relay', '') or ''
+    if not target.strip() or not lost.strip():
+        raise CliError('args', 'MISSING_INPUT',
+                       'routes simulate-loss needs --target and --lost-relay.')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/route_intel/simulate_loss',
+                                   {'target': target, 'lost_relay': lost})
+    return check_status(status, body)
+
+
+def cmd_diagnose(args):
+    from src.runtime import api_v2
+    question = getattr(args, 'question', '') or ''
+    bundle_file = getattr(args, 'bundle', None)
+    if not question.strip():
+        raise CliError('args', 'MISSING_INPUT', 'diagnose needs --question.')
+    if not bundle_file:
+        raise CliError('args', 'MISSING_INPUT', 'diagnose needs --bundle facts.json.')
+    bundle = _read_json_file(bundle_file, 'bundle')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/diagnose',
+                                   {'question': question, 'bundle': bundle,
+                                    'device': getattr(args, 'device', None)})
+    return check_status(status, body)
+
+
+def cmd_transplant_run(args):
+    from src.runtime import api_v2
+    request_file = getattr(args, 'request', None)
+    if not request_file:
+        raise CliError('args', 'MISSING_INPUT', 'transplant run needs --request plan.json.')
+    req = _read_json_file(request_file, 'transplant request')
+    if not isinstance(req, dict):
+        raise CliError('args', 'SPEC_INVALID', 'Transplant request must be a JSON object.')
+    with Core() as server:
+        status, body = api_v2.post(server, '/api/v2/transplant/run', req)
+    return check_status(status, body)
 
 
 # ---------------- approvals ----------------
@@ -1492,19 +1737,43 @@ def cmd_test_jury(args):
 # ---------------- judge demo / serve / agent ----------------
 
 def cmd_judge_demo(args):
+    from src.runtime.readiness import REQUIRED, collect, plain_line
     args.session_id = getattr(args, 'session_id', None) or 'judge-demo'
     steps = []
     report = cmd_doctor(args)
-    steps.append({'step': 'doctor', 'global': report['global']})
+    split = collect(report['features'], required=REQUIRED)
+    need, extra = split['required'], split['optional']
+    ready = sum(1 for v in need.values() if v == 'READY')
+    if split['global'] == 'READY':
+        missing = [n for n, v in sorted(extra.items()) if v != 'READY']
+        say = 'Ready for the offline demo: %d/%d required checks passed.' % (ready, len(need))
+        if missing:
+            say += ' Optional extras missing (%s); the demo continues without them.' % (
+                ', '.join(plain_line(n, extra[n]) for n in missing))
+        else:
+            say += ' All optional extras present too.'
+    else:
+        bad = [n for n, v in sorted(need.items()) if v != 'READY']
+        say = 'Demo blocked: required checks failing (%s).' % (
+            ', '.join(plain_line(n, need[n]) for n in bad))
+    steps.append({'step': 'doctor', 'required': split['global'], 'overall': report['global'],
+                  'say': say})
     found = cmd_devices_discover(args)
-    steps.append({'step': 'discover', 'count': found['count']})
+    noun = 'device' if found['count'] == 1 else 'devices'
+    steps.append({'step': 'discover', 'count': found['count'],
+                  'say': 'Found %d %s nearby (read-only scan, nothing was changed).'
+                         % (found['count'], noun)})
     caps = cmd_capabilities_list(args)
-    steps.append({'step': 'capabilities', 'primitives': len(caps['primitives'])})
+    steps.append({'step': 'capabilities', 'primitives': len(caps['primitives']),
+                  'say': '%d built-in device actions available.' % len(caps['primitives'])})
     exported = cmd_evidence_export(args)
-    steps.append({'step': 'evidence_export', 'sha256': exported['sha256'][:16]})
+    steps.append({'step': 'evidence_export', 'sha256': exported['sha256'][:16],
+                  'say': 'Saved the demo evidence file (sha %s).' % exported['sha256'][:16]})
     verified = cmd_evidence_verify(args)
-    steps.append({'step': 'evidence_verify', 'verified': verified['verified']})
-    return {'steps': steps, 'verdict': 'DEMO_COMPLETE'}
+    steps.append({'step': 'evidence_verify', 'verified': verified['verified'],
+                  'say': 'Evidence file verified: nothing was modified.'})
+    verdict = 'DEMO_COMPLETE' if split['global'] == 'READY' else 'DEMO_BLOCKED'
+    return {'steps': steps, 'verdict': verdict}
 
 
 def cmd_serve(args):
@@ -1618,8 +1887,35 @@ def build_parser():
     pair_parser.add_argument('device_id')
     leaf(device_subs, 'status', cmd_devices_status, 'devices status')
 
+    routes = subs.add_parser('routes')
+    route_subs = routes.add_subparsers(dest='routes_command')
+    routes_list = leaf(route_subs, 'list', cmd_routes_list, 'routes list')
+    routes_list.add_argument('--target', default=None)
+    routes_dispatch = leaf(route_subs, 'dispatch', cmd_routes_dispatch, 'routes dispatch')
+    routes_dispatch.add_argument('--target', default=None)
+    routes_dispatch.add_argument('--op', default='get_status')
+    routes_dispatch.add_argument('--params', default=None)
+    routes_dispatch.add_argument('--capability', default='ble_scan')
+    routes_dispatch.add_argument('--relay', default=None)
+    routes_sim = leaf(route_subs, 'simulate-loss', cmd_routes_simulate_loss,
+                      'routes simulate-loss')
+    routes_sim.add_argument('--target', default=None)
+    routes_sim.add_argument('--lost-relay', default=None)
+
+    diagnose_parser = leaf(subs, 'diagnose', cmd_diagnose, 'diagnose')
+    diagnose_parser.add_argument('--question', default=None)
+    diagnose_parser.add_argument('--bundle', default=None)
+    diagnose_parser.add_argument('--device', default=None)
+
+    transplant = subs.add_parser('transplant')
+    transplant_subs = transplant.add_subparsers(dest='transplant_command')
+    transplant_run = leaf(transplant_subs, 'run', cmd_transplant_run, 'transplant run')
+    transplant_run.add_argument('--request', default=None)
+
     ask_parser = leaf(subs, 'ask', cmd_ask, 'ask')
     ask_parser.add_argument('text')
+    ask_parser.add_argument('--prior', default=None,
+                            help='follow-up turn: prior resolved intent JSON file')
 
     caps = subs.add_parser('capabilities')
     cap_subs = caps.add_subparsers(dest='capabilities_command')
@@ -1646,6 +1942,17 @@ def build_parser():
     dash_install.add_argument('--target', default=None)
     dash_revoke = leaf(dash_subs, 'revoke', cmd_dashboards_revoke, 'dashboards revoke')
     dash_revoke.add_argument('--relay', default=None)
+    dash_export = leaf(dash_subs, 'export', cmd_dashboards_export, 'dashboards export')
+    dash_export.add_argument('--name', default=None)
+    dash_export.add_argument('--saved', default=None)
+    dash_export.add_argument('--relay', default=None)
+    dash_export.add_argument('--out', default=None)
+    dash_import = leaf(dash_subs, 'import', cmd_dashboards_import, 'dashboards import')
+    dash_import.add_argument('--bundle', default=None)
+    dash_import.add_argument('--relay', default=None)
+    dash_import.add_argument('--target', default=None)
+    dash_import.add_argument('--target-map', default=None)
+    dash_import.add_argument('--save-as', default=None)
 
     flows = subs.add_parser('workflows')
     flow_subs = flows.add_subparsers(dest='workflows_command')
@@ -1658,6 +1965,10 @@ def build_parser():
     run_parser.add_argument('--file', default=None)
     status_parser = leaf(flow_subs, 'status', cmd_workflows_status, 'workflows status')
     status_parser.add_argument('workflow_id')
+    compose_parser = leaf(flow_subs, 'compose', cmd_workflows_compose, 'workflows compose')
+    compose_parser.add_argument('text', nargs='?')
+    summary_parser = leaf(flow_subs, 'summary', cmd_workflows_summary, 'workflows summary')
+    summary_parser.add_argument('workflow_id')
     flow_approve = leaf(flow_subs, 'approve', cmd_workflows_approve, 'workflows approve')
     flow_approve.add_argument('workflow_id')
     flow_approve.add_argument('step_id')

@@ -6,6 +6,11 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
+# Campaign One §3.6 HTTP hardening: defense-in-depth query caps for direct
+# (in-process) callers; the HTTP front end enforces its own URL ceiling first.
+MAX_QUERY_BYTES = 8192
+MAX_QUERY_FIELDS = 100
+
 GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/permissions/state', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
@@ -28,15 +33,19 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/capabilities/layouts',
               '/api/v2/capabilities/render',
               '/api/v2/orchestration/status',
+              '/api/v2/composer/catalog',
+              '/api/v2/composer/summary',
+              '/api/v2/route_intel',
               '/api/v2/dashboards/list')
 POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',)
 
 
 import threading
 _ROUTER_INIT_LOCK = threading.Lock()
 _REMOTE_CONTROL_INIT_LOCK = threading.Lock()
 _HTTP_IDEM_INIT_LOCK = threading.Lock()
+_TRANSPLANT_LOCK = threading.Lock()
 
 
 def router(server):
@@ -236,8 +245,70 @@ def _hardware_relays(server):
     return out
 
 
+# ---------------- F90 wiring: route_intel / diagnose / transplant ----------------
+
+def _route_intel(server):
+    from src.fabric import route_intel as RI
+    manager = getattr(server, 'relays', None)
+    if manager is None or not callable(getattr(manager, 'eligible', None)):
+        return None
+    return RI.RouteIntel(manager)
+
+
+def _ri_route(route):
+    if route is None:
+        return None
+    return {'target': route.target, 'relay_id': route.relay_id,
+            'hops': list(route.hops), 'rank': route.rank}
+
+
+def _ri_record(record):
+    return {'target': record.target, 'route': _ri_route(record.route),
+            'command': record.command, 'outcome': record.outcome,
+            'reply': record.reply, 'error': record.error}
+
+
+def _ri_record_from(doc):
+    """Rebuild a DispatchRecord from its JSON form for failover."""
+    from src.fabric import route_intel as RI
+    if not isinstance(doc, dict) or doc.get('outcome') not in RI.OUTCOMES:
+        raise ValueError('record must be an object carrying a valid outcome')
+    route = doc.get('route')
+    if route is not None:
+        if not isinstance(route, dict) or not route.get('relay_id'):
+            raise ValueError('record.route must be an object carrying relay_id')
+        route = RI.Route(target=doc.get('target', ''), relay_id=route['relay_id'],
+                         hops=tuple(route.get('hops') or
+                                    ('pc', route['relay_id'], doc.get('target', ''))),
+                         rank=int(route.get('rank', 0)))
+    command = doc.get('command')
+    if command is not None and not isinstance(command, dict):
+        raise ValueError('record.command must be an object')
+    return RI.DispatchRecord(target=doc.get('target', ''), route=route,
+                             command=command, outcome=doc['outcome'])
+
+
+def _transplant_claim(server):
+    """Server-unique public transplant id (per-request services restart at tx-0001)."""
+    with _TRANSPLANT_LOCK:
+        server.transplant_seq = getattr(server, 'transplant_seq', 0) + 1
+        if getattr(server, 'transplant_runs', None) is None:
+            server.transplant_runs = {}
+        return 'tx-%04d' % server.transplant_seq
+
+
+def _transplant_hold(server, tid):
+    with _TRANSPLANT_LOCK:
+        return (getattr(server, 'transplant_runs', None) or {}).get(tid)
+
+
 def get(server, path, query):
-    q = parse_qs(query)
+    if len(query) > MAX_QUERY_BYTES:
+        return 414, {'error': 'Query string too long'}
+    try:
+        q = parse_qs(query, max_num_fields=MAX_QUERY_FIELDS)
+    except ValueError:
+        return 400, {'error': 'Too many query parameters'}
     ex = executor(server)
     if path == '/api/v2/contract':
         return 200, {'version': contract.CONTRACT_VERSION, 'schema': contract.schema()}
@@ -272,6 +343,20 @@ def get(server, path, query):
         if rec is None:
             return 404, {'error': 'unknown workflow id'}
         return 200, rec
+    if path == '/api/v2/composer/catalog':
+        from src.runtime import composer as comp
+        return 200, comp.catalog()
+    if path == '/api/v2/composer/summary':
+        from src.runtime import composer as comp
+        from src.runtime import workflows as W
+        from src.runtime.state_store import StateStore
+        store = StateStore.for_server(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        rec = W.StateStoreJournal(store).get((q.get('workflow_id') or [''])[0])
+        if rec is None:
+            return 404, {'error': 'unknown workflow id'}
+        return 200, comp.summarize(rec)
     if path == '/api/v2/dashboards/list':
         from src.runtime import dashboards as D
         from src.runtime.state_store import StateStore
@@ -365,6 +450,18 @@ def get(server, path, query):
     if path == '/api/v2/diagnosis':
         from src.runtime.fabric_diagnosis import diagnose
         return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), to_json(ex.recovery()))}
+    if path == '/api/v2/route_intel':
+        # Advisory enumeration only (pure read over RelayManager state; no snapshot needed).
+        intel = _route_intel(server)
+        if intel is None:
+            return 409, {'error': 'no relay manager on this server'}
+        target = (q.get('target') or [''])[0]
+        try:
+            found = intel.routes_for(target)
+        except ValueError as e:
+            return 400, {'error': str(e)}
+        return 200, {'target': target.strip(), 'routes': [_ri_route(r) for r in found],
+                     'selected': _ri_route(found[0] if found else None)}
     if path == '/api/v2/permissions/catalog':
         from src.fabric import permissions as P
         return 200, {'package': P.COMPANION_PKG, 'permissions': P.CATALOG,
@@ -498,10 +595,13 @@ def _meta_key():
 def voice(server, path, body):
     from src.ai import voice_intent, voice_stt
     if path == '/api/v2/voice/intent':
-        if set(body) != {'text'}:
-            return 400, {'error': 'text only'}
+        if set(body) - {'text', 'lang'} or 'text' not in body:
+            return 400, {'error': 'text plus optional lang'}
+        hint = body.get('lang')
+        hint = hint if hint in ('fr', 'en') else None
         snap = server.fabric_snapshot or {'devices': []}
-        return 200, voice_intent.compile_intent(body['text'], [{'key': d['key'], 'category': d['category']} for d in snap['devices']])
+        return 200, voice_intent.compile_intent(body['text'], [{'key': d['key'], 'category': d['category']} for d in snap['devices']],
+                                                lang_hint=hint)
     if set(body) - {'audio_b64', 'language'} or not isinstance(body.get('audio_b64'), str):
         return 400, {'error': 'audio_b64 required'}
     import base64, binascii
@@ -730,6 +830,18 @@ def post(server, path, body):
             return 200, W.cancel(str(body.get('workflow_id', '')), journal)
         except W.WorkflowError as e:
             return 400, {'error': str(e)}
+    if path == '/api/v2/composer/compose' and isinstance(body, dict):
+        # Dry run: deterministic allow/refuse per step, no dispatch, no consent needed.
+        from src.runtime import composer as comp
+        snap = getattr(server, 'fabric_snapshot', None) or {}
+        devices = snap.get('devices', []) if isinstance(snap, dict) else []
+        try:
+            if not isinstance(body.get('proposal'), dict):
+                raise comp.ComposerError('proposal must be an object with steps[1..8]')
+            prop = comp.proposal_from_doc(body['proposal'])
+            return 200, comp.compose(prop, devices, router(server))
+        except comp.ComposerError as e:
+            return 400, {'error': str(e)}
     if path.startswith('/api/v2/dashboards/') and isinstance(body, dict):
         from src.runtime import dashboards as D
         from src.runtime.remote_controls import RemoteControlError
@@ -764,6 +876,166 @@ def post(server, path, body):
             return 400, {'error': str(e)}
         except RemoteControlError as e:
             return e.status, {'error': str(e)}
+    if path.startswith('/api/v2/migrate/') and isinstance(body, dict):
+        from src.runtime import migrate as M
+        try:
+            if path == '/api/v2/migrate/propose':
+                return 200, M.propose(server, body.get('text'), source=body.get('source'),
+                                      target=body.get('target'), match=body.get('match'))
+            if path == '/api/v2/migrate/apply':
+                return 200, M.apply(server, body.get('proposal'), body.get('consent'))
+            if path == '/api/v2/migrate/rollback':
+                return 200, M.rollback(server, body.get('receipt'), body.get('consent'))
+            return 404, {'error': 'unknown migrate route'}
+        except M.MigrationError as e:
+            out = {'error': str(e)}
+            if e.receipt is not None:
+                out['receipt'] = e.receipt
+            return e.status, out
+    if path.startswith('/api/v2/route_intel/') and isinstance(body, dict):
+        from src.fabric import route_intel as RI
+        intel = _route_intel(server)
+        if intel is None:
+            return 409, {'error': 'no relay manager on this server'}
+        down = body.get('down') or ()
+        if not isinstance(down, (list, tuple)) or any(not isinstance(r, str) for r in down):
+            return 400, {'error': 'down must be a list of relay ids'}
+        capability = body.get('capability', RI.CAPABILITY)
+        if not isinstance(capability, str) or not capability:
+            return 400, {'error': 'capability must be a non-empty string'}
+        try:
+            if path == '/api/v2/route_intel/dispatch':
+                op = body.get('op', 'get_status')
+                params = body.get('params')
+                relay_id = body.get('relay_id')
+                if not isinstance(op, str) or not op:
+                    return 400, {'error': 'op must be a non-empty string'}
+                if params is not None and not isinstance(params, dict):
+                    return 400, {'error': 'params must be an object'}
+                if relay_id is not None and not isinstance(relay_id, str):
+                    return 400, {'error': 'relay_id must be a string'}
+                return 200, _ri_record(intel.dispatch(
+                    body.get('target', ''), op, params=params, capability=capability,
+                    down=down, relay_id=relay_id))
+            if path == '/api/v2/route_intel/failover':
+                target = body.get('target')
+                if target is not None and not isinstance(target, str):
+                    return 400, {'error': 'target must be a string'}
+                return 200, _ri_record(intel.failover(
+                    _ri_record_from(body.get('record')), target=target,
+                    capability=capability, down=down))
+            if path == '/api/v2/route_intel/simulate_loss':
+                lost = body.get('lost_relay', '')
+                if not isinstance(lost, str) or not lost:
+                    return 400, {'error': 'lost_relay must be a non-empty string'}
+                sim = intel.simulate_loss(body.get('target', ''), lost,
+                                          capability=capability, down=down)
+                return 200, {'target': sim.target, 'lost': _ri_route(sim.lost),
+                             'alternate': _ri_route(sim.alternate),
+                             'remaining': [_ri_route(r) for r in sim.remaining]}
+            return 404, {'error': 'unknown route_intel route'}
+        except RI.UncertainOutcome as e:
+            return 409, {'error': str(e)}
+        except ValueError as e:
+            return 400, {'error': str(e)}
+    if path == '/api/v2/diagnose' and isinstance(body, dict):
+        # Owner why-questions over an observed-facts bundle (src/fabric/diagnostics.py).
+        # Deliberately distinct from src/runtime/diagnostics.py (per-device fact
+        # readers feeding primitives): this layer consumes observed facts and answers
+        # questions; it never touches devices. Deterministic mode: the stub proposer
+        # quotes findings verbatim, so the explanation holds observed values only.
+        from src.fabric import diagnostics as FD
+        try:
+            report = FD.diagnose(body.get('question', ''), body.get('bundle', {}),
+                                 FD.DeterministicStubProposer(), device=body.get('device'))
+        except FD.DiagnosticError as e:
+            return 400, {'error': str(e)}
+        return 200, dict(report, mode='deterministic')
+    if path.startswith('/api/v2/transplant/') and isinstance(body, dict):
+        from src.forge import transplant as T
+        if path == '/api/v2/transplant/run':
+            if body.get('consent') is not True:
+                return 409, {'error': 'OWNER_CONSENT_REQUIRED'}
+            companions = body.get('companions')
+            links = body.get('links')
+            primitive_ids = body.get('primitive_ids')
+            manifest = body.get('manifest')
+            model_run = body.get('model_run')
+            facts_required = body.get('facts_required')
+            expires_at = body.get('expires_at')
+            grants = body.get('required_grants', ['observe', 'read'])
+            if (not isinstance(companions, dict) or not companions
+                    or any(not isinstance(c, dict) for c in companions.values())):
+                return 400, {'error': 'companions must be a non-empty object of objects'}
+            if not isinstance(links, list) or any(not isinstance(l, dict) for l in links):
+                return 400, {'error': 'links must be a list of objects'}
+            schemas = body.get('schemas')
+            sources = body.get('sources')
+            required = body.get('required')
+            if schemas is not None and (not isinstance(schemas, dict)
+                    or any(not isinstance(v, dict) for v in schemas.values())):
+                return 400, {'error': 'schemas must be an object of objects'}
+            if sources is not None and (not isinstance(sources, list)
+                    or any(not isinstance(s, str) for s in sources)):
+                return 400, {'error': 'sources must be a list of strings'}
+            if required is not None and (not isinstance(required, dict)
+                    or any(not isinstance(v, list) for v in required.values())):
+                return 400, {'error': 'required must be an object of lists'}
+            for key in ('source_capability_id', 'target_id', 'intent', 'target_category', 'title'):
+                if not isinstance(body.get(key), str) or not body.get(key):
+                    return 400, {'error': '%s must be a non-empty string' % key}
+            if not isinstance(primitive_ids, (list, tuple)) or not primitive_ids \
+                    or any(not isinstance(p, str) for p in primitive_ids):
+                return 400, {'error': 'primitive_ids must be a non-empty list of strings'}
+            if not isinstance(manifest, dict):
+                return 400, {'error': 'manifest must be an object'}
+            if (not isinstance(model_run, dict) or not model_run.get('model')
+                    or not model_run.get('run_id')):
+                return 400, {'error': 'model_run must carry model and run_id'}
+            if not isinstance(facts_required, list):
+                return 400, {'error': 'facts_required must be a list'}
+            if not isinstance(expires_at, (int, float)) or isinstance(expires_at, bool):
+                return 400, {'error': 'expires_at must be a number'}
+            if not isinstance(grants, (list, tuple)) or any(not isinstance(g, str) for g in grants):
+                return 400, {'error': 'required_grants must be a list of strings'}
+            # Deterministic proposal (stub, surfaced in the report), real simulated-only
+            # dispatcher; no substrate: transplant companions are simulated-only and not
+            # registry devices, so kernel compile cannot bind them (module reports 'skipped').
+            svc = T.TransplantService(dict(companions), list(links),
+                                      T.DeterministicStubProposer(),
+                                      T.SimulatedDispatcher(), substrate=None)
+            try:
+                out = svc.transplant(
+                    body['source_capability_id'], body['target_id'], body['intent'],
+                    body.get('bundle', {}), list(primitive_ids), manifest, model_run,
+                    body['title'], facts_required, expires_at, body['target_category'],
+                    required_grants=list(grants), schemas=schemas,
+                    sources=sources, required=required,
+                    consent=True)
+            except T.TransplantError as e:
+                return 400, {'error': str(e)}
+            except ValueError as e:
+                return 400, {'error': str(e)}
+            public = _transplant_claim(server)
+            with _TRANSPLANT_LOCK:
+                server.transplant_runs[public] = {'svc': svc, 'tid': out['transplant_id']}
+            return 200, dict(out, transplant_id=public)
+        held = _transplant_hold(server, body.get('transplant_id', ''))
+        if held is None:
+            return 404, {'error': 'unknown transplant'}
+        try:
+            if path == '/api/v2/transplant/revoke':
+                return 200, dict(held['svc'].revoke(held['tid']),
+                                 transplant_id=body['transplant_id'])
+            if path == '/api/v2/transplant/report':
+                return 200, {'transplant_id': body['transplant_id'],
+                             'report': held['svc'].report(held['tid'])}
+            if path == '/api/v2/transplant/get':
+                return 200, dict(held['svc'].get(held['tid']),
+                                 transplant_id=body['transplant_id'])
+            return 404, {'error': 'unknown transplant route'}
+        except T.TransplantError as e:
+            return (404 if str(e) == 'UNKNOWN_TRANSPLANT' else 400), {'error': str(e)}
     if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError
         w = workflows(server)

@@ -54,4 +54,10 @@ Before the event the owner had written a basic private `agent.exe` prototype (ne
 
 ## Current application theme — owner decision, 28 October 2026
 
-The owner selected Claude's latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. Codex integrated and tested the combined changes. No new Meta design call was made for this integration.
+The owner selected the latest application shell and main theme (`src/ui/theme/app.css`), replacing the earlier main-site Meta theme. The Forge theme and retained Spark/Wonder receipts describe their actual, separate contributions; they do not establish authorship of the new main shell. The combined changes were integrated and tested during the event. No new Meta design call was made for this integration.
+
+## Frontier 90 campaign additions (31 Oct – 1 Nov 2026)
+
+Authored during the event on top of the F30 base (`6f9edb68`): universal capability transplantation (`src/forge/transplant.py`), adaptive route intelligence (`src/fabric/route_intel.py`), safe control-surface migration (`src/runtime/migrate.py`), the cross-device workflow composer (`src/runtime/composer.py`), discriminated Meta results (`src/forge/meta_result.py`, Proposal/Clarification/Refusal), universal device diagnostics (`src/fabric/diagnostics.py`), NL follow-up resolution (`src/runtime/nl_followup.py`), portable dashboard bundles (`src/runtime/dashboard_port.py`), FR/EN voice normalization (`src/ai/voice_normalize.py`), HTTP hardening, relay-contract normalization, endurance/failure-matrix/fuzz/lifecycle/voice-worker test hardening (33 new test files), and the release-packaging extensions in `scripts/release_pack.py`.
+
+Development assistance: agentic coding environments under the participant's direction (build-time assistance only). Runtime inference remains Meta-only per the registry; no new model weights are redistributed and no new third-party runtime dependencies were added (see `THIRD_PARTY.md`). Model-backed evaluation calls made for the campaign (routing-36 held-out study: 72 local Llama calls; Glimmer resource-blocked) are recorded in `docs/benchmark/modelstudy48/` and are development evidence, not shipped behavior.

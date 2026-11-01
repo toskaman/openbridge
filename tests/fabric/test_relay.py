@@ -72,6 +72,32 @@ class RelayTests(unittest.TestCase):
         self.assertEqual((clean[0]['rssi'],clean[0]['company_ids'],len(clean[0]['name'])),(None,[6],60))
 
 
+class CapabilityAwareEligibilityTests(unittest.TestCase):
+    """E1-A2: eligibility is per-capability; ble_scan behavior is unchanged."""
+
+    def test_non_ble_capabilities_route_with_owner_consent(self):
+        m=manager(FakeRelay(),caps=('remote_controls',),rid='phone')
+        self.assertEqual(m.eligible('remote_controls'),['phone'])
+        self.assertEqual(m.eligible('ble_scan'),[])
+        m2=manager(FakeRelay(),caps=('command_submit',),rid='phone')
+        self.assertEqual(m2.eligible('command_submit'),['phone'])
+
+    def test_owner_consent_gates_every_capability(self):
+        m=manager(FakeRelay(),owner=False,caps=('remote_controls','command_submit'))
+        self.assertEqual(m.eligible('remote_controls'),[])
+        self.assertEqual(m.eligible('command_submit'),[])
+
+    def test_unknown_capability_yields_no_route(self):
+        m=manager(FakeRelay())
+        self.assertEqual(m.eligible('shell_exec'),[])
+        self.assertEqual(m.eligible(''),[])
+
+    def test_ble_scan_still_requires_bluetooth_permission(self):
+        self.assertEqual(manager(FakeRelay(),perm=False).eligible('ble_scan'),[])
+        self.assertEqual(manager(FakeRelay(),owner=False).eligible('ble_scan'),[])
+        self.assertEqual(manager(FakeRelay()).eligible('ble_scan'),['tv'])
+
+
 class TransportTests(unittest.TestCase):
     def test_http_transport_scope(self):
         R.http_transport('http://127.0.0.1:47800');R.http_transport('http://192.168.1.50:47800')

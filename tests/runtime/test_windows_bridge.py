@@ -23,7 +23,7 @@ DIAG = {'hostname': 'PC2', 'version': '4.0.0', 'architecture': 'x86', 'os_build'
 
 
 # Handshake key used by both ends of the fake link; must satisfy MIN_PSK_LENGTH.
-TEST_PSK = 'test-psk-0123456789abcdef01234567'
+TEST_PSK = 'test_psk_0123456789abcdef01234567'
 
 
 class FakeAgent:

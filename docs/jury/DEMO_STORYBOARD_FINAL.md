@@ -13,7 +13,7 @@ explicit authorization.**
 | 12–32 | One Device Fabric | "Discover my environment" → live topology with evidence chips | REAL_HARDWARE receipts | READY |
 | 32–85 | The breakthrough | "Create a control panel on my TV so I can operate my robot vacuum" → Meta inference → strict VALID → panel on the real TV → manual press → vacuum moves → receipt | S5 runbook (`DEMO_PHYSICAL_RUNBOOK.md`) | PENDING owner run (prior `s5-tv-panel-31oct` lacks observed motion + manual press) |
 | 85–112 | Watch chain | Watch QUICK CONTROLS → second device obeys → read-back | S6 runbook | DEMONSTRATED owner press (tx-5b326915aef0f777, TV 23→24 read-back) — camera footage PENDING owner run |
-| 112–140 | Safe by construction | Permission review → approval → revocation → refused re-press in the Activity timeline | Refusal-channel shot + receipts | READY (shot `E:/shots/refusal_channel.png`) |
+| 112–140 | Safe by construction | Permission review → approval → revocation → refused re-press in the Activity timeline | Refusal-channel shot + receipts | READY (shot `docs/jury/screens/refusal_channel.png`) |
 | 140–160 | Why it is hard | Meta-only runtime · local inference scores · crash-safe ledger · honest REAL vs SIMULATED labels | Eval scorecard + 5/5 crash receipts | READY after eval lands |
 | 160–180 | Close | Finished app + one-line proposition + repo link | — | READY |
 
@@ -31,13 +31,13 @@ explicit authorization.**
 
 | Scene | Source path | Revision | Take time | Provenance overlay |
 |---|---|---|---|---|
-| Problem stills | `E:/shots/fabric-*.png` | — | — | DETERMINISTIC |
+| Problem stills | `docs/jury/screens/fabric-*.png` | — | — | DETERMINISTIC |
 | Live discovery | screen capture | `git rev-parse HEAD` | — | DETERMINISTIC |
 | S5 request → inference | screen capture | HEAD | — | model id + digest |
 | S5 TV panel + manual press | camera + adb screenshot | HEAD | — | REAL_HARDWARE |
 | S5 vacuum motion | camera, timestamped | HEAD | — | REAL_HARDWARE + oracle |
 | S6 watch press → effect | camera + screen capture | HEAD | — | REAL_HARDWARE (press + read-back receipted tx-5b326915aef0f777; footage not yet captured) |
-| Refusal timeline | live UI, or `E:/shots/refusal_channel.png` (seeded-UI shot, payload is a real refusal) | HEAD | — | DETERMINISTIC |
+| Refusal timeline | live UI, or `docs/jury/screens/refusal_channel.png` (seeded-UI shot, payload is a real refusal) | HEAD | — | DETERMINISTIC |
 | Scorecard still | eval report | HEAD | — | MEASURED |
 | Close | screen capture | HEAD | — | — |
 
@@ -49,7 +49,7 @@ explicit authorization.**
 - No private pixels: redact names, serials, IPs, keys; no notifications visible.
 - 16:9, readable UI, English narration or subtitles, silent-audio intent kept.
 - Provenance overlay on beats 2–6 (model/path, commit SHA, receipt id).
-- Manifest (revision, scene times, source paths) in `E:/shots/manifest/`.
+- Manifest (revision, scene times, source paths) in `shots/manifest/` (git-ignored staging; author PC: `E:/shots/manifest/`).
 
 ## Edit plan
 
@@ -60,6 +60,7 @@ explicit authorization.**
 - If S5 motion is unavailable on the day: keep a verified-dispatch beat
   (labeled DISPATCH ONLY) or drop to the refusal/safety beat.
   S5b (31 Oct PM: T2 panel → hold-press FIND → receipt tx-4a96f8f6 →
-  15-poll oracle → revoke/deny VERIFIED, `E:/shots/s5b/`) is the
+  15-poll oracle → revoke/deny VERIFIED, stills in `docs/jury/screens/s5b_*.png`,
+  full chain in `docs/evidence/s5b-safe-seek-31oct.md`) is the
   ready-made DISPATCH ONLY fallback: same chain, zero motion, fully receipted.
 - Final pass: duration, codec, dimensions, redaction sweep, frame inspection.
