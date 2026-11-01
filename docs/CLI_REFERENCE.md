@@ -38,7 +38,10 @@ the preview step prints a `--consent HASH` that must be passed back.
 - `version` `doctor` `init`
 - `models list|status|test [--provider local|meta-cloud] [--deep] [--spend]|benchmark`
 - `devices discover [--providers mdns,ssdp,android,freebox,ble]|list|inspect ID|pair ID|status`
-- `ask "TEXT"` — resolves via the skill router; writes return an approval request.
+- `ask "TEXT" [--prior intent.json]` — resolves via the skill router; writes return an approval request. `--prior` resolves follow-ups ("pause it") against the prior turn.
+- `routes list --target T|dispatch --target T [--op OP] [--params JSON] [--capability C] [--relay ID]|simulate-loss --target T --lost-relay R` — relay-route enumeration and at-most-once dispatch.
+- `diagnose --question Q --bundle facts.json [--device ID]` — owner why-questions over observed facts (deterministic; questions listed in `src/fabric/diagnostics.py`).
+- `transplant run --request plan.json` — simulated-only capability transplant (request carries `consent: true`); lifecycle queries via the `/api/v2/transplant/*` routes.
 - `capabilities list|generate --intent T --target C [--model TIER] [--retries N]|inspect|publish|revoke ID`
 - `workflows list|plan [TEXT|--file]|run ID [--file]|status ID`
 - `approvals list|approve ID --consent H|deny ID`
