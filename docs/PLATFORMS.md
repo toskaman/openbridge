@@ -1,8 +1,9 @@
 # OpenBridge platform summary
 
 OpenBridge runs on Windows, Linux, and macOS on x64 and ARM64. The
-application runtime is Python 3.12+ standard library only — no third-party
-packages to install, no compiler needed. Use `python3` where a guide writes
+application runtime is Python 3.14 standard library only — no third-party
+packages to install, no compiler needed (CI-pinned 3.14.4; older versions
+untested and unsupported). Use `python3` where a guide writes
 `python` on Linux/macOS.
 
 ## CI coverage (what is proven, not just claimed)

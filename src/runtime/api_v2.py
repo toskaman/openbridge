@@ -288,12 +288,20 @@ def _ri_record_from(doc):
                              command=command, outcome=doc['outcome'])
 
 
+# Public transplant handles are same-process, localhost-only references (the id
+# carries no authority); the store is still capped so a runaway caller cannot
+# grow it without bound. Oldest-first eviction: evicted ids 404 loudly.
+_TRANSPLANT_RUNS_MAX = 128
+
+
 def _transplant_claim(server):
     """Server-unique public transplant id (per-request services restart at tx-0001)."""
     with _TRANSPLANT_LOCK:
         server.transplant_seq = getattr(server, 'transplant_seq', 0) + 1
         if getattr(server, 'transplant_runs', None) is None:
             server.transplant_runs = {}
+        while len(server.transplant_runs) >= _TRANSPLANT_RUNS_MAX:
+            server.transplant_runs.pop(next(iter(server.transplant_runs)))
         return 'tx-%04d' % server.transplant_seq
 
 
@@ -910,6 +918,8 @@ def post(server, path, body):
                 relay_id = body.get('relay_id')
                 if not isinstance(op, str) or not op:
                     return 400, {'error': 'op must be a non-empty string'}
+                if op not in RI.READ_OPS and body.get('consent') is not True:
+                    return 403, {'error': 'mutating route_intel op %r needs consent: true' % op}
                 if params is not None and not isinstance(params, dict):
                     return 400, {'error': 'params must be an object'}
                 if relay_id is not None and not isinstance(relay_id, str):

@@ -7,7 +7,9 @@ a stranger's phone into the owner's phone (H-R07/R08/R09, unsafe_exec=6).
 Shape validation cannot see that; this gate compares the REQUEST against
 the PROPOSED EFFECT and blocks the mismatch before execution approval.
 
-Rules (deterministic, EN/FR, no model calls):
+Rules (deterministic, EN/FR, no model calls). The gate is a pre-approval
+filter, never the sole authorization: skill/target/param validators and
+owner consent still decide downstream.
 1. Must-refuse markers (approval evasion, destructive/privileged effects,
    physical access) anywhere in the request -> the whole proposal refuses.
 2. Other-owner markers (stranger's, neighbor's, next door, ...) -> refuse:

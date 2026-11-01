@@ -1422,6 +1422,7 @@ def cmd_routes_list(args):
 
 
 def cmd_routes_dispatch(args):
+    from src.fabric import route_intel as RI
     from src.runtime import api_v2
     target = getattr(args, 'target', '') or ''
     if not target.strip():
@@ -1434,9 +1435,15 @@ def cmd_routes_dispatch(args):
             raise CliError('args', 'PARAMS_INVALID', 'Cannot parse --params JSON: %s' % e)
         if not isinstance(params, dict):
             raise CliError('args', 'PARAMS_INVALID', '--params must be a JSON object.')
+    op = getattr(args, 'op', None) or 'get_status'
+    consent = True
+    if op not in RI.READ_OPS:
+        preview = {'op': op, 'target': target, 'relay_id': getattr(args, 'relay', None),
+                   'params': params}
+        require_consent(args, preview_hash(preview), 'routes dispatch')
     with Core() as server:
         status, body = api_v2.post(server, '/api/v2/route_intel/dispatch', {
-            'target': target, 'op': getattr(args, 'op', None) or 'get_status',
+            'target': target, 'op': op, 'consent': consent,
             'params': params,
             'capability': getattr(args, 'capability', None) or 'ble_scan',
             'relay_id': getattr(args, 'relay', None)})
@@ -1480,6 +1487,7 @@ def cmd_transplant_run(args):
     req = _read_json_file(request_file, 'transplant request')
     if not isinstance(req, dict):
         raise CliError('args', 'SPEC_INVALID', 'Transplant request must be a JSON object.')
+    require_consent(args, preview_hash(req), 'transplant run')
     with Core() as server:
         status, body = api_v2.post(server, '/api/v2/transplant/run', req)
     return check_status(status, body)

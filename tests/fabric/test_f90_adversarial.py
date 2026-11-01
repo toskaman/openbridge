@@ -1686,6 +1686,27 @@ class DashboardAdversarial(unittest.TestCase):
             D.load(store, rc, 'anything', consent=False)
         self.assertEqual(copy.deepcopy(rc.grants), before)
 
+    def test_control_char_label_rejected(self):
+        server, keys, clock, rc, companion, store = self.dash_setup()
+        before = copy.deepcopy(rc.grants)
+        for bad_label in ('Vol\nInjected: evil', 'Tab\there', 'Del\x7fete'):
+            with self.assertRaises(D.DashboardError):
+                D.install_patch(
+                    rc, 'r-watch',
+                    {'widgets': [{'widget_id': 'w1', 'kind': 'button',
+                                  'label': bad_label,
+                                  'binding_primitive': 'tv_volume_step',
+                                  'params': {'direction': 'up'}}]},
+                    keys['tv'], D.BINDABLE_PATCH_SKILLS, consent=True)
+        self.assertEqual(copy.deepcopy(rc.grants), before)
+        D.install_patch(
+            rc, 'r-watch',
+            {'widgets': [{'widget_id': 'w1', 'kind': 'button',
+                          'label': 'Volume + (salon)',
+                          'binding_primitive': 'tv_volume_step',
+                          'params': {'direction': 'up'}}]},
+            keys['tv'], D.BINDABLE_PATCH_SKILLS, consent=True)
+
     def test_patch_unknown_label_fails_loudly(self):
         server, keys, clock, rc, companion, store = self.dash_setup()
         D.create(rc, 'r-watch', 'tv', keys['tv'], consent=True)

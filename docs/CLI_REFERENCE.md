@@ -41,7 +41,7 @@ the preview step prints a `--consent HASH` that must be passed back.
 - `ask "TEXT" [--prior intent.json]` — resolves via the skill router; writes return an approval request. `--prior` resolves follow-ups ("pause it") against the prior turn.
 - `routes list --target T|dispatch --target T [--op OP] [--params JSON] [--capability C] [--relay ID]|simulate-loss --target T --lost-relay R` — relay-route enumeration and at-most-once dispatch.
 - `diagnose --question Q --bundle facts.json [--device ID]` — owner why-questions over observed facts (deterministic; questions listed in `src/fabric/diagnostics.py`).
-- `transplant run --request plan.json` — simulated-only capability transplant (request carries `consent: true`); lifecycle queries via the `/api/v2/transplant/*` routes.
+- `transplant run --request plan.json --consent H` — simulated-only capability transplant (request carries `consent: true`); needs preview-bound owner consent; lifecycle queries via the `/api/v2/transplant/*` routes.
 - `migrate propose --text T [--source S] [--target D] [--match M]|apply --proposal P.json --consent H|rollback --receipt R.json --consent H` — move skill-bound controls between paired Companion interfaces; apply/rollback need preview-bound consent (`--yes` never bypasses).
 - `capabilities list|generate --intent T --target C [--model TIER] [--retries N]|inspect|publish|revoke ID`
 - `dashboards propose|install|revoke|export|import` — model-generated panels incl. sealed portable bundles (export → integrity-check → remap → fresh consent; no inherited grants).

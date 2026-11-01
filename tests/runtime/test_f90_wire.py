@@ -115,6 +115,48 @@ class RouteIntelAPI(unittest.TestCase):
         self.assertEqual(phone.sends, [])
         self.assertEqual(tv.sends, [])
 
+    def test_dispatch_mutating_op_needs_consent(self):
+        server, phone, tv = relay_server()
+        status, body = post(server, '/api/v2/route_intel/dispatch',
+                            {'target': TARGET, 'op': 'set_controls',
+                             'params': {'controls': []}})
+        self.assertEqual(status, 403)
+        self.assertIn('consent', body['error'])
+        self.assertEqual(phone.sends, [])
+        self.assertEqual(tv.sends, [])
+
+    def test_dispatch_mutating_op_with_consent_transmits(self):
+        server, phone, tv = relay_server()
+        status, body = post(server, '/api/v2/route_intel/dispatch',
+                            {'target': TARGET, 'op': 'set_controls',
+                             'params': {'controls': []}, 'consent': True})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(tv.sends), 1)
+        self.assertEqual(phone.sends, [])
+
+    def test_cli_dispatch_mutating_op_needs_preview_consent(self):
+        from argparse import Namespace
+        args = Namespace(target=TARGET, op='revoke_access', params=None,
+                         capability='ble_scan', relay=None, consent='nope', yes=False)
+        with self.assertRaises(cli.CliError) as e:
+            cli.cmd_routes_dispatch(args)
+        self.assertEqual(e.exception.code, 'CONSENT_REQUIRED')
+        preview = {'op': 'revoke_access', 'target': TARGET, 'relay_id': None, 'params': None}
+        self.assertIn(cli.preview_hash(preview), str(e.exception))
+
+    def test_cli_dispatch_read_op_needs_no_consent(self):
+        from argparse import Namespace
+        args = Namespace(target=TARGET, op='get_status', params=None,
+                         capability='ble_scan', relay=None, consent=None, yes=False)
+        core = mock.MagicMock()
+        core.__enter__.return_value = mock.sentinel.server
+        with mock.patch.object(cli, 'Core', return_value=core), \
+             mock.patch('src.runtime.api_v2.post', return_value=(200, {'ok': True})) as p:
+            out = cli.cmd_routes_dispatch(args)
+        self.assertEqual(out, {'ok': True})
+        _, body = p.call_args[0][1], p.call_args[0][2]
+        self.assertEqual(body['op'], 'get_status')
+
     def test_failover_redispatches_not_sent_as_fresh_command(self):
         server, phone, tv = relay_server()
         _, blocked = post(server, '/api/v2/route_intel/dispatch',
@@ -299,13 +341,37 @@ class F90WireCLI(unittest.TestCase):
 
     def test_transplant_run_runs_end_to_end(self):
         path = tempfile.mkdtemp() + '/request.json'
+        req = transplant_request()
         with open(path, 'w', encoding='utf-8') as fh:
-            json.dump(transplant_request(), fh)
-        code, out, _ = run_cli(['--json', 'transplant', 'run', '--request', path])
+            json.dump(req, fh)
+        code, out, _ = run_cli(['--json', 'transplant', 'run', '--request', path,
+                                '--consent', cli.preview_hash(req)])
         self.assertEqual(code, 0)
         doc = json.loads(out)
         self.assertEqual(doc['data']['state'], 'active')
         self.assertEqual(doc['data']['report']['verify']['status'], 'ok')
+
+    def test_transplant_run_needs_preview_consent(self):
+        path = tempfile.mkdtemp() + '/request.json'
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump(transplant_request(), fh)
+        code, out, _ = run_cli(['--json', 'transplant', 'run', '--request', path])
+        self.assertNotEqual(code, 0)
+        self.assertIn('CONSENT_REQUIRED', out)
+
+    def test_transplant_runs_store_evicts_oldest(self):
+        from types import SimpleNamespace
+        from src.runtime import api_v2
+        server = SimpleNamespace(
+            transplant_seq=0,
+            transplant_runs={'tx-%04d' % i: {'svc': None, 'tid': i}
+                             for i in range(1, api_v2._TRANSPLANT_RUNS_MAX + 1)})
+        public = api_v2._transplant_claim(server)
+        self.assertEqual(len(server.transplant_runs), api_v2._TRANSPLANT_RUNS_MAX - 1)
+        self.assertNotIn('tx-0001', server.transplant_runs)
+        self.assertEqual(public, 'tx-0001')
+        server.transplant_runs[public] = {'svc': None, 'tid': 'new'}
+        self.assertEqual(len(server.transplant_runs), api_v2._TRANSPLANT_RUNS_MAX)
 
     def test_ask_prior_reaches_parse_request(self):
         path = tempfile.mkdtemp() + '/prior.json'
