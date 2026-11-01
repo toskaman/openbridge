@@ -124,3 +124,11 @@ request from PC/phone/watch (skill `companion_foreground`).
    screen is off (wake first). Undone by HOME/the remote.
 4. All three skills are one-tap bindable (`BINDABLE_PATCH_SKILLS`);
    demo buttons live on the watch via the standard set_controls flow.
+
+Known device behavior (02-Nov-2026, owner TV 192.168.1.15): putting the TV
+to sleep drops Wi-Fi ADB (`offline`, reconnect refused while asleep), so the
+post-send oracle read cannot run. The receipt is honestly
+`EXECUTED_UNVERIFIED` ("sleep key sent; link dropped before read-back"),
+and `tv_wake` cannot reach a sleeping TV over a dead link — the owner wakes
+it with the remote, then `tv_wake`/`companion_foreground` verify normally.
+Do not present `tv_wake` as a remote power-on for this TV.
