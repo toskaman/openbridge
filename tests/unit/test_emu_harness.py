@@ -130,9 +130,14 @@ class TestWorkflowWiring(unittest.TestCase):
                 (i for i, s in enumerate(steps)
                  if str(s.get("uses", "")).startswith("actions/checkout@")),
                 None)
+            def _step_text(s):
+                with_block = s.get("with", {}) or {}
+                return " ".join(str(s.get(k, "")) for k in ("script", "run")) \
+                    + " " + str(with_block.get("script", ""))
+
             harness_at = next(
                 (i for i, s in enumerate(steps)
-                 if "emu_harness.sh" in str(s.get("script", s.get("run", "")))),
+                 if "emu_harness.sh" in _step_text(s)),
                 None)
             self.assertIsNotNone(harness_at, job)
             self.assertIsNotNone(checkout_at, job)
