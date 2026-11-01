@@ -41,6 +41,15 @@ SKILLS = {
     'capture_send': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                      'input': {'type': 'object', 'properties': {'capture_id': {'type': 'string', 'maxLength': 32}, 'name': {'type': 'string', 'maxLength': 64}}, 'required': ['capture_id'], 'additionalProperties': False},
                      'plain': 'Push a stored capture to /sdcard/OpenBridge/ on this device, hash-verified. Undo: delete the file on the device.'},
+    'tv_sleep': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                 'input': {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                 'plain': 'Put this TV to sleep now (screen off). Undo: any remote key or tv_wake.'},
+    'tv_wake': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                'input': {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                'plain': 'Wake this TV now (screen on).'},
+    'companion_foreground': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                             'input': {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                             'plain': 'Show the Companion app on this screen now. Undo: HOME or the remote.'},
     'capture_montage': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'none', 'targeted': False,
                         'input': {'type': 'object', 'properties': {'capture_ids': {'type': 'array', 'maxItems': 16, 'items': {'type': 'string', 'maxLength': 32}}, 'layout': {'type': 'string', 'enum': ['row', 'grid']}}, 'required': ['capture_ids'], 'additionalProperties': False},
                         'plain': 'Combine stored captures into one PNG on this PC (row or grid). No new device capture is made.'},
@@ -296,9 +305,12 @@ class Router:
             r = self._route(skill_id, snap, target, hops, 'op:read_facts', 'read_facts', observed, LEASE_S.get(tr, 300), 'registry last_seen', reason, detail)
             r['_params'] = lambda p: {}
             return [r]
-        if skill_id in ('screen_capture', 'file_pull', 'capture_send', 'file_push', 'app_launch', 'capability_probe'):
+        if skill_id in ('screen_capture', 'file_pull', 'capture_send', 'file_push', 'app_launch', 'capability_probe',
+                               'tv_sleep', 'tv_wake', 'companion_foreground'):
             # §7 media/file/action skills: ADB link (USB, Wi-Fi or emulator); reads need 'read', writes need 'control'.
             if d.get('category') not in ANDROID:
+                return out
+            if skill_id in ('tv_sleep', 'tv_wake') and d.get('category') != 'tv':
                 return out
             adb = link is not None and link['transport'] in ('USB', 'WIFI', 'EMULATOR') and bool(d.get('handles'))
             prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities'}.get(skill_id, skill_id)
@@ -317,7 +329,9 @@ class Router:
                             'capture_send': lambda p: dict(p, name=p.get('name') or (p['capture_id'] + '.png')),
                             'file_push': lambda p: {'transfer_id': p['transfer_id'], 'name': p['name']},
                             'app_launch': lambda p: {'action': 'launch_app', 'args': {'package': p['package']}},
-                            'capability_probe': lambda p: {}}[skill_id]
+                            'capability_probe': lambda p: {},
+                            'tv_sleep': lambda p: {}, 'tv_wake': lambda p: {},
+                            'companion_foreground': lambda p: {}}[skill_id]
             return [r]
         if skill_id == 'vacuum_command':
             if d.get('category') != 'vacuum':

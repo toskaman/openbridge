@@ -5,8 +5,10 @@ command: each primitive has a strict input schema, preconditions, a verification
 through the existing safety layers (deterministic gate + consent + transaction engine for writes, session journal for
 environment changes). The executor enforces schema, consent, identity, concurrency and timeouts, and always returns an
 honest TransactionReceipt: a result is `verified` only when an independent read-back confirmed it."""
+import re
 import secrets
 import threading
+import time
 from collections import deque
 from datetime import datetime, timezone
 
@@ -26,6 +28,20 @@ class PrimitiveError(Exception):
 
 def _s(type_, **kw):
     return dict(type=type_, **kw)
+
+
+def _read_wakefulness(android, handle):
+    # dumpsys power measured 435 KB on the owner TV (wake-lock history) — cap high, still bounded.
+    out = android.shell(handle, ('dumpsys', 'power'), max_bytes=1048576)
+    m = re.search(r'mWakefulness=(\w+)', out)
+    return m.group(1) if m else None
+
+
+def _focused_package(android, handle):
+    # dumpsys activity measured 69 KB and grows with task history — cap high, still bounded.
+    out = android.shell(handle, ('dumpsys', 'activity', 'activities'), max_bytes=4194304)
+    m = re.search(r'mFocusedApp=ActivityRecord\{[^}]* (\S+)/', out)
+    return m.group(1) if m else None
 
 
 ARGS_SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
@@ -174,6 +190,27 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('combined PNG stored server-side under a new capture id',),
                      'output PNG decodes; dimensions equal the tile math', '',
                      R.NONE.value, ('UNKNOWN_CAPTURE', 'MONTAGE_FAILED'), 60, 'single-global', False),
+    ActionDescriptor('tv_sleep', 'Put an Android TV to sleep (screen off, wakes on remote)',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent for this physical act', 'control grant on a current ADB link'),
+                     ('target is a TV', 'identity re-verified'),
+                     ('TV asleep; any remote key or tv_wake restores',),
+                     'mWakefulness read back Asleep via dumpsys power', 'tv_wake',
+                     R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'SLEEP_FAILED'), 30, 'single-per-device', True),
+    ActionDescriptor('tv_wake', 'Wake an Android TV (screen on)',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent for this physical act', 'control grant on a current ADB link'),
+                     ('target is a TV', 'identity re-verified'),
+                     ('TV awake',),
+                     'mWakefulness read back Awake via dumpsys power', 'tv_sleep',
+                     R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'WAKE_FAILED'), 30, 'single-per-device', True),
+    ActionDescriptor('companion_foreground', 'Bring the OpenBridge Companion app to the foreground',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent (interrupts what is on screen)', 'control grant on a current ADB link'),
+                     ('screen awake (tv_wake first if asleep)', 'identity re-verified'),
+                     ('Companion activity focused; HOME/remote undoes',),
+                     'mFocusedApp names fr.openbridge.companion via dumpsys activity', '',
+                     R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'DEVICE_ASLEEP', 'FOREGROUND_FAILED'), 30, 'single-per-device', True),
     ActionDescriptor('file_pull', 'Copy one file from under /sdcard/ into the server transfer store',
                      {'type': 'object', 'properties': {'remote': _s('string', maxLength=256)}, 'required': ['remote'], 'additionalProperties': False},
                      ('owner consent (file contents are sensitive)', 'read grant on a current ADB link'),
@@ -789,6 +826,72 @@ class Executor:
             return 'EXECUTED', None, out[:120], True, {'reply': out}
         return 'EXECUTED_UNVERIFIED', None, 'delivered, effect unverified', False, {'sent': out}
 
+    def _tv_sleep(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            self.ctx.android.shell(handle, ('input', 'keyevent', 'KEYCODE_SLEEP'))
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        try:
+            state = _read_wakefulness(self.ctx.android, handle)
+        except ValueError:
+            return 'EXECUTED_UNVERIFIED', None, 'sleep key sent; link dropped before read-back', False, \
+                {'wakefulness': None}
+        if state != 'Asleep':
+            time.sleep(2)
+            try:
+                state = _read_wakefulness(self.ctx.android, handle)
+            except ValueError:
+                return 'EXECUTED_UNVERIFIED', None, 'sleep key sent; link dropped before read-back', False, \
+                    {'wakefulness': None}
+        if state != 'Asleep':
+            raise ValueError('SLEEP_FAILED: wakefulness is %s' % state)
+        return 'EXECUTED', None, 'TV asleep (mWakefulness=Asleep)', True, {'wakefulness': 'Asleep'}
+
+    def _tv_wake(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            self.ctx.android.shell(handle, ('input', 'keyevent', 'KEYCODE_WAKEUP'))
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        try:
+            state = _read_wakefulness(self.ctx.android, handle)
+        except ValueError:
+            return 'EXECUTED_UNVERIFIED', None, 'wake key sent; link dropped before read-back', False, \
+                {'wakefulness': None}
+        if state != 'Awake':
+            time.sleep(2)
+            try:
+                state = _read_wakefulness(self.ctx.android, handle)
+            except ValueError:
+                return 'EXECUTED_UNVERIFIED', None, 'wake key sent; link dropped before read-back', False, \
+                    {'wakefulness': None}
+        if state != 'Awake':
+            raise ValueError('WAKE_FAILED: wakefulness is %s' % state)
+        return 'EXECUTED', None, 'TV awake (mWakefulness=Awake)', True, {'wakefulness': 'Awake'}
+
+    def _companion_foreground(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            wake = _read_wakefulness(self.ctx.android, handle)
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if wake != 'Awake':
+            raise PrimitiveError('DEVICE_ASLEEP', 'wake the screen first (tv_wake or the remote)')
+        try:
+            self.ctx.android.shell(handle, ('am', 'start', '-n', 'fr.openbridge.companion/.MainActivity'))
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        time.sleep(2)
+        try:
+            pkg = _focused_package(self.ctx.android, handle)
+        except ValueError:
+            return 'EXECUTED_UNVERIFIED', None, 'start sent; link dropped before focus read-back', False, \
+                {'package': None}
+        if pkg != 'fr.openbridge.companion':
+            raise ValueError('FOREGROUND_FAILED: focused package is %s' % pkg)
+        return 'EXECUTED', None, 'Companion focused', True, {'package': pkg}
+
     def _file_pull(self, key, params):
         handle = self._adb_handle(key)
         try:
@@ -822,7 +925,8 @@ class Executor:
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,
-               'retro_command': _retro_command}
+               'retro_command': _retro_command, 'tv_sleep': _tv_sleep, 'tv_wake': _tv_wake,
+               'companion_foreground': _companion_foreground}
 
     # ---------- recovery backlog ----------
     MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first

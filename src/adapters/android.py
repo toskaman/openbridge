@@ -127,6 +127,20 @@ class AndroidAdapter:
             raise ValueError('unreadable sha256sum output')
         return out[0]
 
+    def shell(self, handle, argv, timeout=15, max_bytes=65536):
+        """Run one fixed shell argv (callers pass literals only, never user input)."""
+        serial = self._serial_for_handle(handle)
+        if (not isinstance(argv, (tuple, list)) or not argv or len(argv) > 8
+                or any(not isinstance(a, str) or not a or len(a) > 128
+                       or not re.fullmatch(r'[A-Za-z0-9_./:=+-]+', a) for a in argv)):
+            raise ValueError('bad shell argv')
+        result = self.runner([self.executable, '-s', serial, 'shell', *argv], capture_output=True,
+                             text=True, encoding='utf-8', errors='replace', timeout=timeout,
+                             creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+        if result.returncode or len(result.stdout) > max_bytes:
+            raise ValueError('Shell command unavailable')
+        return result.stdout
+
     def discover(self):
         if not self.executable:
             return {'status': 'ADB_MISSING', 'devices': []}

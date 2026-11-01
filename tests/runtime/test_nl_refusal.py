@@ -239,6 +239,9 @@ class IrreversibleWithoutConsent(unittest.TestCase):
             'capture_send': {'capture_id': 'c-1'},
             'pc_run': {'command': 'whoami'},
             'retro_command': {'command': 'VOLUME_UP'},
+            'tv_sleep': {},
+            'tv_wake': {},
+            'companion_foreground': {},
         }
         for sid in gated:
             target = 'fabric' if not SKILLS[sid]['targeted'] else 'android tv'
