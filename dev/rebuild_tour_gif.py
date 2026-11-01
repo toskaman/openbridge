@@ -22,8 +22,8 @@ TEAL = (25, 197, 181)
 WHITE = (245, 248, 255)
 
 FRAMES = [
-    ("fabric-tv-relay-redacted-1440.png", "One live graph - 24 real home devices"),
-    ("ask-openbridge-1440.png", "Ask in plain words - Meta routes, you approve"),
+    ("ask-v2-home-1440.webp", "Ask in plain words - Meta routes, you approve"),
+    ("activity-v2-refused-1440.png", "Refusals shown in the timeline, not hidden"),
     ("phone-companion-0-12-paired.png", "Phone Companion 0.12 - PAIRED"),
     ("tv-companion-0-11-paired.png", "TV Companion - PAIRED relay"),
     ("g04-watch-quick-controls.png", "Watch7 - native QUICK CONTROLS"),
