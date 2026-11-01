@@ -1060,6 +1060,115 @@ def cmd_dashboards_revoke(args):
     return {'relay_id': rid, 'revoked': True, 'state': state}
 
 
+def cmd_dashboards_export(args):
+    """Export a saved dashboard (or a relay's live panel) as a sealed bundle.
+
+    Read-only: verifies the source, seals it with a sha256 digest, and writes
+    (or prints) the bundle JSON. Targets travel as opaque hints only."""
+    from src.runtime import dashboards as D
+    from src.runtime import dashboard_port as P
+    from src.runtime.state_store import StateStore
+    name = getattr(args, 'name', '') or ''
+    rid = getattr(args, 'relay', '') or ''
+    if not name:
+        raise CliError('args', 'MISSING_INPUT', 'export needs --name BUNDLE_NAME.')
+    if bool(getattr(args, 'saved', None)) == bool(rid):
+        raise CliError('args', 'MISSING_INPUT',
+                       'export needs exactly one of --saved NAME (stored dashboard) or --relay RID (live panel).')
+    with Core() as server:
+        ensure_discovery(server, default_providers(args))
+        if rid:
+            from src.runtime import api_v2
+            controls = api_v2.remote_controls(server)
+            try:
+                bundle = P.export_bundle(name=name, controls=D.defs(controls, rid))
+            except P.PortError as e:
+                raise CliError('args', 'EXPORT_FAILED', str(e)[:200]) from None
+        else:
+            store = D.DashStore(StateStore.for_server(server))
+            try:
+                bundle = P.export_bundle(store=store, name=getattr(args, 'saved'))
+            except P.PortError as e:
+                raise CliError('args', 'EXPORT_FAILED', str(e)[:200]) from None
+            if bundle['name'] != name:
+                # Re-seal under the requested bundle name (export, not edit).
+                bundle = P.export_bundle(
+                    name=name,
+                    controls=[dict(c, target=c.get('target_hint'))
+                              for c in bundle['controls']])
+    text = json.dumps(bundle, indent=2, sort_keys=True, ensure_ascii=False)
+    out = getattr(args, 'out', None)
+    if out:
+        try:
+            Path(out).write_text(text, encoding='utf-8')
+        except OSError as e:
+            raise CliError('args', 'EXPORT_FAILED', 'Cannot write bundle: %s' % e)
+        return {'bundle': bundle['name'], 'controls': len(bundle['controls']),
+                'digest': bundle['integrity']['digest'], 'file': out}
+    return {'bundle': bundle}
+
+
+def cmd_dashboards_import(args):
+    """Install a sealed dashboard bundle on a relay (consent-bound).
+
+    Verifies the seal, resolves every target hint through the owner-supplied
+    --target/--target-map, then installs through set_controls. --dry-run
+    verifies + resolves and installs nothing."""
+    from src.runtime import api_v2
+    from src.runtime import dashboard_port as P
+    from src.runtime.remote_controls import RemoteControlError
+    spec = getattr(args, 'bundle', None)
+    if not spec:
+        raise CliError('args', 'MISSING_INPUT', 'import needs --bundle panel-bundle.json.')
+    try:
+        bundle = json.loads(Path(spec).read_text(encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'SPEC_UNREADABLE', 'Cannot read bundle: %s' % e)
+    rid = getattr(args, 'relay', '') or ''
+    if not rid:
+        raise CliError('args', 'MISSING_INPUT', 'import needs --relay RID.')
+    target = getattr(args, 'target', None) or None
+    raw_map = getattr(args, 'target_map', None)
+    try:
+        target_map = json.loads(raw_map) if raw_map else None
+    except ValueError as e:
+        raise CliError('args', 'SPEC_INVALID', 'target-map is not JSON: %s' % e)
+    if target_map is not None and not isinstance(target_map, dict):
+        raise CliError('args', 'SPEC_INVALID', 'target-map must be a JSON object.')
+    try:
+        plan = P.dry_run(bundle, target=target, target_map=target_map)
+    except P.PortError as e:
+        raise CliError('verify', 'BUNDLE_REJECTED', str(e)[:200]) from None
+    if getattr(args, 'dry_run', False):
+        return {'relay_id': rid, 'dry_run': True, 'name': plan['name'],
+                'controls': plan['controls'], 'targets': plan['targets'],
+                'bundle_digest': plan['bundle_digest']}
+    preview = {'relay_id': rid, 'bundle': plan['name'],
+               'digest': plan['bundle_digest'], 'controls': plan['controls']}
+    require_consent(args, preview_hash(preview), 'dashboards import on %s' % rid)
+    save_as = getattr(args, 'save_as', None) or None
+    with Core() as server:
+        ensure_discovery(server, default_providers(args))
+        controls = api_v2.remote_controls(server)
+        router = api_v2.router(server)
+        store = None
+        if save_as:
+            from src.runtime import dashboards as D
+            from src.runtime.state_store import StateStore
+            store = D.DashStore(StateStore.for_server(server))
+        try:
+            receipt = P.import_bundle(controls, rid, bundle, target=target,
+                                      target_map=target_map, consent=True,
+                                      resolve_target=router.resolve_target,
+                                      store=store, save_as=save_as)
+        except P.PortError as e:
+            raise CliError('verify', 'BUNDLE_REJECTED', str(e)[:200]) from None
+        except RemoteControlError as e:
+            raise CliError('device', 'INSTALL_FAILED', str(e)[:200]) from None
+    receipt.pop('state', None)
+    return receipt
+
+
 # ---------------- workflows ----------------
 
 def workflow_store():
@@ -1690,6 +1799,17 @@ def build_parser():
     dash_install.add_argument('--target', default=None)
     dash_revoke = leaf(dash_subs, 'revoke', cmd_dashboards_revoke, 'dashboards revoke')
     dash_revoke.add_argument('--relay', default=None)
+    dash_export = leaf(dash_subs, 'export', cmd_dashboards_export, 'dashboards export')
+    dash_export.add_argument('--name', default=None)
+    dash_export.add_argument('--saved', default=None)
+    dash_export.add_argument('--relay', default=None)
+    dash_export.add_argument('--out', default=None)
+    dash_import = leaf(dash_subs, 'import', cmd_dashboards_import, 'dashboards import')
+    dash_import.add_argument('--bundle', default=None)
+    dash_import.add_argument('--relay', default=None)
+    dash_import.add_argument('--target', default=None)
+    dash_import.add_argument('--target-map', default=None)
+    dash_import.add_argument('--save-as', default=None)
 
     flows = subs.add_parser('workflows')
     flow_subs = flows.add_subparsers(dest='workflows_command')
