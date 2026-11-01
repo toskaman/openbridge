@@ -114,7 +114,7 @@ Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) 
 
 ## Proof, tests, reproducibility
 
-1835 tests green (Windows/Ubuntu/macOS + browser incl. WebKit) · clean-room install 8/8 on 7 hosted targets + Debian container · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+2016 tests green (Windows/Ubuntu/macOS + browser incl. WebKit) · clean-room install 8/8 on 7 hosted targets + Debian container · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
 
 ## Built for the hackathon
 

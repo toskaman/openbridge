@@ -13,7 +13,7 @@ ARTIFACT C — curated media package: selected authentic shots/clips plus a
 Usage:
   python scripts/release_pack.py app --out E:/OpenBridge-App.zip
   python scripts/release_pack.py evidence --out E:/OpenBridge-Evidence.zip [--evidence-dir D] [--test-results T]
-  python scripts/release_pack.py media --out E:/OpenBridge-Media.zip --media-dir D --manifest M.json
+  python scripts/release_pack.py media --out E:/OpenBridge-Media.zip --media-dir D --manifest M.json [--media-skip-missing]
 
 Every artifact gets BUILD.json, RELEASE_MANIFEST.json, sha256sums.txt and a
 secret-pattern refusal. No private keys, no model weights, no E: paths.
@@ -21,6 +21,7 @@ secret-pattern refusal. No private keys, no model weights, no E: paths.
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -33,7 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 SECRET_PATTERNS = (re.compile(rb'OPENBRIDGE_META_' + rb'KEY=\S+'),
-                   re.compile(rb'sk-[' + rb'A-Za-z0-9]{16,}'),
+                   re.compile(rb'(?<![A-Za-z0-9_-])sk-[' + rb'A-Za-z0-9]{20,}'),
                    re.compile(rb'api_' + rb'key["\']?\s*[:=]\s*["\']?[A-Za-z0-9_\-]{16,}'),
                    re.compile(rb'BEGIN PRI' + rb'VATE KEY'))
 
@@ -41,18 +42,27 @@ APP_EXCLUDE_DIRS = {'.git', '__pycache__', '.xbuild', '.pytest_cache', '.venv',
                     'node_modules', '.idea', '.vscode'}
 APP_EXCLUDE_SUFFIXES = {'.pyc', '.pyo'}
 APP_REQUIRED = ('src/server.py', 'src/cli.py', 'requirements.txt', 'docs/QUICKSTART.md',
-                'README.md', 'LICENSE', 'CONTRIBUTIONS.md',
+                'docs/TROUBLESHOOTING.md', 'docs/PLATFORMS.md', 'docs/OFFLINE_DEMO.md',
+                'README.md', 'LICENSE', 'CONTRIBUTIONS.md', 'THIRD_PARTY.md',
                 'scripts/verify/clean_install_check.py')
 
 EVIDENCE_DOCS = [('README.md', 'README.md'),
                  ('docs/QUICKSTART.md', 'QUICKSTART.md'),
+                 ('docs/jury/JURY_START_HERE.md', 'JURY_START_HERE.md'),
+                 ('docs/OFFLINE_DEMO.md', 'OFFLINE_DEMO.md'),
+                 ('docs/PLATFORMS.md', 'PLATFORMS.md'),
+                 ('docs/TROUBLESHOOTING.md', 'TROUBLESHOOTING.md'),
                  ('docs/jury/CLAIM_EVIDENCE_MATRIX.md', 'CLAIM_MATRIX.md'),
                  ('docs/HARDWARE_TEST_MATRIX.md', 'HARDWARE_COMPATIBILITY.md'),
                  ('docs/CLI_REFERENCE.md', 'CLI_REFERENCE.md'),
                  ('docs/HEADLESS_DEPLOYMENT.md', 'HEADLESS_DEPLOYMENT.md'),
                  ('docs/KNOWN_LIMITATIONS.md', 'KNOWN_LIMITATIONS.md'),
+                 ('docs/release/COMPANION_0_12_0.md', 'COMPANION_0_12_0.md'),
                  ('CONTRIBUTIONS.md', 'CONTRIBUTIONS.md'),
+                 ('THIRD_PARTY.md', 'THIRD_PARTY.md'),
                  ('LICENSE', 'LICENSE')]
+
+COMPANION_APK_DEFAULT = Path('artifacts/companion/openbridge-companion.apk')
 
 
 def sha256(path):
@@ -136,8 +146,15 @@ def build_evidence(staging, args):
             shutil.copy(origin, staging / dest)
     # The repo QUICKSTART is authoritative; generated install notes get their own name.
     (staging / 'START_HERE.md').write_text(
-        '# OpenBridge jury evidence\n\nStart with QUICKSTART.md, then CLAIM_MATRIX.md. '
-        'Every claim links to evidence in evidence/ or to the public repository.\n',
+        '# OpenBridge jury evidence\n\nRead JURY_START_HERE.md first (30-second to '
+        '10-minute paths), then QUICKSTART.md and CLAIM_MATRIX.md. Every claim links '
+        'to evidence in evidence/ or to the public repository.\n\n'
+        '- OFFLINE_DEMO.md: no-hardware demo (expect DEMO_COMPLETE).\n'
+        '- PLATFORMS.md: Windows/Linux/macOS x64+ARM64 coverage.\n'
+        '- TROUBLESHOOTING.md: diagnosis starting points.\n'
+        '- KNOWN_LIMITATIONS.md: honest limits, read before judging.\n'
+        '- COMPANION_STATUS.md: why no APK is bundled, how to build it.\n'
+        '- RELEASE_MANIFEST.json + sha256sums.txt: every file, hashed.\n',
         encoding='utf-8')
     reqs = []
     for name in ('requirements.txt', 'requirements-dev.txt', 'requirements-optional.txt'):
@@ -186,6 +203,31 @@ def build_evidence(staging, args):
     evidence_src = Path(args.evidence_dir) if args.evidence_dir else None
     if evidence_src and evidence_src.exists():
         shutil.copytree(evidence_src, staging / 'evidence', dirs_exist_ok=True)
+    apk_env = os.environ.get('OPENBRIDGE_COMPANION_APK')
+    apk = Path(apk_env) if apk_env else ROOT / COMPANION_APK_DEFAULT
+    if apk.exists():
+        (staging / 'companion').mkdir(parents=True, exist_ok=True)
+        shutil.copy(apk, staging / 'companion' / 'openbridge-companion.apk')
+        (staging / 'companion' / 'COMPANION_MANIFEST.json').write_text(json.dumps(
+            {'file': 'companion/openbridge-companion.apk', 'sha256': sha256(apk),
+             'bytes': apk.stat().st_size,
+             'provenance': 'local build via python -m dev.build_companion; '
+                           'install-verified only as recorded in COMPANION_0_12_0.md'},
+            indent=1), encoding='utf-8')
+        companion_note = ('This package INCLUDES a locally built APK at '
+                          'companion/openbridge-companion.apk (sha256 %s). It is the '
+                          'builder-local artifact, install-verified only as recorded '
+                          'in COMPANION_0_12_0.md — not a jury-certified binary.'
+                          % sha256(apk))
+    else:
+        companion_note = ('This package includes NO APK: the Companion APK is a local, '
+                          'per-owner-signed build artifact (gitignored under artifacts/) '
+                          'and is never bundled blindly. Build it with '
+                          '`python -m dev.build_companion` (needs Android SDK '
+                          'build-tools 34). Install verification for 0.12.0 is recorded '
+                          'in COMPANION_0_12_0.md.')
+    (staging / 'COMPANION_STATUS.md').write_text(
+        '# Companion artifact status\n\n%s\n' % companion_note, encoding='utf-8')
     (staging / 'source-and-build-info' / 'BUILD.json').write_text(
         json.dumps(build_info('evidence'), indent=1), encoding='utf-8')
 
@@ -198,7 +240,7 @@ def build_media(staging, args):
         raise SystemExit('media manifest must be a non-empty JSON list')
     media_src = Path(args.media_dir)
     (staging / 'media').mkdir(parents=True)
-    out_entries = []
+    out_entries, skipped = [], []
     for entry in entries:
         for key in ('file', 'test_id', 'classification', 'caption'):
             if key not in entry:
@@ -207,12 +249,19 @@ def build_media(staging, args):
             raise SystemExit('bad classification (REAL/EMULATOR/SIMULATED): %r' % entry)
         src = media_src / entry['file']
         if not src.exists():
+            if args.media_skip_missing:
+                skipped.append(entry['file'])
+                print('media SKIP (missing): %s' % entry['file'])
+                continue
             raise SystemExit('media file missing: %s' % src)
         shutil.copy(src, staging / 'media' / Path(entry['file']).name)
         out_entries.append({**entry, 'file': 'media/' + Path(entry['file']).name,
                             'sha256': sha256(src), 'bytes': src.stat().st_size})
+    if not out_entries:
+        raise SystemExit('media manifest produced zero files')
     (staging / 'MEDIA_MANIFEST.json').write_text(
-        json.dumps({'entries': out_entries, **build_info('media')}, indent=1), encoding='utf-8')
+        json.dumps({'entries': out_entries, 'skipped_missing': skipped,
+                    **build_info('media')}, indent=1), encoding='utf-8')
 
 
 BUILDERS = {'app': ('OpenBridge-App', build_app),
@@ -228,6 +277,8 @@ def main(argv=None):
     parser.add_argument('--test-results', default=None)
     parser.add_argument('--media-dir', default=None)
     parser.add_argument('--manifest', default=None)
+    parser.add_argument('--media-skip-missing', action='store_true',
+                        help='skip missing media files, recording them in MEDIA_MANIFEST.json')
     args = parser.parse_args(argv)
     top, builder = BUILDERS[args.artifact]
     staging = Path(tempfile.mkdtemp(prefix='release-pack-'))
