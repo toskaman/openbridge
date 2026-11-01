@@ -45,16 +45,16 @@ dump_diag() { # dump_diag <context> — always preserved, never fails the harnes
   {
     echo "--- context: $1 ---"
     echo "--- adb devices ---"
-    adb devices -l 2>&1 || echo "ADB_DEVICES_FAILED"
+    timeout 60 adb devices -l 2>&1 || echo "ADB_DEVICES_FAILED"
     echo "--- sys.boot_completed ---"
-    adb shell getprop sys.boot_completed 2>&1 || echo "GETPROP_FAILED"
+    timeout 60 adb shell getprop sys.boot_completed 2>&1 || echo "GETPROP_FAILED"
     echo "--- pid ---"
-    adb shell pidof "$PKG" 2>&1 || echo "NO_PID"
+    timeout 60 adb shell pidof "$PKG" 2>&1 || echo "NO_PID"
     echo "--- foreground probe ---"
     cat "$DEVICE-foreground.txt" 2>/dev/null || echo "NO_FOREGROUND_FILE"
   } | tee "$DEVICE-diag.txt" 2>/dev/null || true
-  adb logcat -d > "$DEVICE-logcat.txt" 2>/dev/null || true
-  adb shell dumpsys activity activities > "$DEVICE-activities.txt" 2>/dev/null || true
+  timeout 60 adb logcat -d > "$DEVICE-logcat.txt" 2>/dev/null || true
+  timeout 60 adb shell dumpsys activity activities > "$DEVICE-activities.txt" 2>/dev/null || true
   timeout 120 adb bugreport "$DEVICE-bugreport.zip" 2>/dev/null \
     || echo "BUGREPORT_FAILED" > "$DEVICE-bugreport-failed.txt"
   ls -la "$DEVICE"-* 2>/dev/null || true
