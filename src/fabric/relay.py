@@ -21,6 +21,12 @@ CONTROL_KINDS = ('button', 'confirm', 'status', 'label')   # layout v2; a missin
 MAX_STATUS_TEXT, MAX_LAYOUT_REVISION = 40, 100000
 MAX_COMMANDS, MAX_COMMAND_TEXT, MAX_COMMAND_REPORT = 8, 500, 160
 CONTROL_ID = re.compile(r'^[a-z0-9-]{4,40}$')
+# Enroll-time relay id shape. Real Companions send relay-<12 hex>, but the manager also tracks
+# test/simulated relays; what enroll MUST guarantee is that the id round-trips through the
+# durable store and the OS vault on the revoke path ('relay-key-' + id[6:] must stay a valid
+# secret name, <= 64 chars, letters/digits/dash/underscore). Anything else fails closed here,
+# at pair time, instead of raising an uncaught ValueError when the pairing is later revoked.
+RELAY_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,59}$')
 REQUEST_ID = re.compile(r'^[0-9a-f]{32}$')
 CLIP_ID = re.compile(r'^[a-z0-9-]{1,32}$')
 SHA256 = re.compile(r'^[0-9a-f]{64}$')
@@ -217,6 +223,8 @@ class RelayManager:
         self._lock = threading.Lock()
 
     def enroll(self, relay_id, key, device_key, declared):
+        if not isinstance(relay_id, str) or not RELAY_ID.match(relay_id):
+            raise RelayError('Invalid relay id (1-60 letters, digits, dash or underscore)')
         caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls', 'command_submit')}
         self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
                                  'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
