@@ -14,7 +14,7 @@ panel that runs on a real Android TV and drives a real robot vacuum**
 ([S5](../evidence/s5-tv-panel-31oct.md), [S5b](../evidence/s5b-safe-seek-31oct.md)).
 Without Meta inference there is no plain-language control, no generated
 panels, and no usable device explanations — only static device plumbing.
-30 verified evidence rows, honest limits stated inline.
+35 verified evidence rows, honest limits stated inline.
 
 ## In 2 minutes: demonstrated on real devices
 
@@ -27,9 +27,10 @@ panels, and no usable device explanations — only static device plumbing.
 | 5 | Refusals as first-class outcomes (timeline + receipts) | [report](OVERNIGHT_REPORT_31OCT.md) §B |
 | 6 | 2nd PC jobs, Freebox inventory, vacuum reads, legacy VMs, AVD, ESP32-QEMU | [matrix](../HARDWARE_TEST_MATRIX.md) |
 
-Limits up front: presses were ADB-injected (labeled), vacuum motion never
-observed, watch cross-device chain pending owner run — see
-[runbook](DEMO_PHYSICAL_RUNBOOK.md) and [limits](../KNOWN_LIMITATIONS.md).
+Limits up front: S5/S5b presses were ADB-injected (labeled), vacuum motion
+never observed; watch→TV volume is verified via an owner press on the
+watch (S6) — see [runbook](DEMO_PHYSICAL_RUNBOOK.md) and
+[limits](../KNOWN_LIMITATIONS.md).
 
 ## In 5 minutes: run it yourself
 
@@ -49,7 +50,7 @@ subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:
 
 - [Claim ↔ evidence matrix](CLAIM_EVIDENCE_MATRIX.md) — every claim, one status, one source
 - [Verified capabilities](VERIFIED_CAPABILITIES.md) — scenario-by-scenario verdicts
-- [Hardware matrix](../HARDWARE_TEST_MATRIX.md) + [registry](../DEVICE_EVIDENCE.json) — 30 rows
+- [Hardware matrix](../HARDWARE_TEST_MATRIX.md) + [registry](../DEVICE_EVIDENCE.json) — 35 rows
 - [Benchmark status](../benchmark/STATUS.md) + [model usage](../MODEL_USAGE_AND_EVALUATION.md)
 - [Release evidence](../RELEASE_EVIDENCE.md) · [release status](../RELEASE_STATUS.md)
 - [Compliance checklist](COMPLIANCE_CHECKLIST.md) — portal items marked OPEN stay OPEN
@@ -67,3 +68,8 @@ subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:
 | Refusal channel | Denied press in timeline | Server + UI | Structured verdicts | TDD 3/3, red render | API + events | shot staged from live UI | [report](OVERNIGHT_REPORT_31OCT.md) | §B |
 | Legacy + VMs | Agent exec exit 0 | 7 QEMU guests | None (protocol) | mutual-auth + exec | screenshots, hashes | labeled VMs, deleted after | [legacy](../evidence/vm-legacy-xp-win7-30oct.md) | rows 14–15 |
 | ESP32 agent | Boot + CROSS_OK | QEMU-ESP32, EMU | None (protocol) | serial handshake + execs | host agent fwd | no WiFi/TFT/physical | [esp32](../evidence/esp32-idf-qemu-30oct.md) | row 16 |
+| Cloud e2e flow | Pair → scan → revoke | Phone 13, REAL | None (signed protocol) | 9/9 PASS, 3 BLE advertisers, revoke→409 | dumpsys + forward list + HMAC | phone ended unpaired, screen kept awake | [cloud_e2e.py](../../scripts/verify/cloud_e2e.py) | row 31 |
+| Voice loop | Speak/type → STT → report + TTS | Phone 13, REAL | Llama 3B parse + MMS STT | 6 clips transcribed + spoken, FR order parsed | dumpsys MIC, caption dumps, sha256 | MMS hallucinates on silence, watch mic unproven | [command_drain.py](../../src/runtime/command_drain.py) | row 32 |
+| WD7 direct drain | Pair → adb down → drain → caption | TV 11, REAL | None (direct-LAN protocol) | drain with adb down, report captioned | adb devices assert + TV screencap | stray leading char in typed order, n=1 | [caption shot](screens/tv-wd7-direct-drain-caption.png) | row 33 |
+| S6 watch→TV volume | Owner press → TV vol step → revoke | Watch7 + TV 11, REAL | None (companion dispatch) | tx-5b326915aef0f777, MUSIC 23→24 | dumpsys audio + TV volume-event log | no watch shots, denial-by-absence, n=1+R1 | [S6](../evidence/s6-watch-tv-volume-01nov.md) | row 34 |
+| Watch voice loop | 3 FR orders → STT → signed reports | Watch7, REAL | Local STT + parse | 3/3 transcribed + reported, sleep-timeout tolerant | drain log transcripts + HMAC replies | STT mishears, no watch shots, n=3 | [voice-watch](../evidence/voice-watch-direct-01nov.md) | row 35 |

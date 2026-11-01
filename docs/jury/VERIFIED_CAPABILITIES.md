@@ -2,7 +2,7 @@
 
 Source of truth for what works today. Every verdict maps to the
 [claim matrix](CLAIM_EVIDENCE_MATRIX.md) and the [registry](../DEVICE_EVIDENCE.json)
-(30 rows: 21 REAL_HARDWARE, 7 FULL_GUEST_OS, 2 OFFICIAL_PLATFORM_EMULATOR).
+(35 rows: 26 REAL_HARDWARE, 7 FULL_GUEST_OS, 2 OFFICIAL_PLATFORM_EMULATOR).
 
 Status words: VERIFIED REAL HARDWARE · VERIFIED EMULATOR/FULL-GUEST ·
 VERIFIED UNIT/INTEGRATION/SIMULATED · IMPLEMENTED NOT VALIDATED ·
@@ -38,8 +38,9 @@ Limits: one TV model, foreground scans by design, Doze soak untested.
 - Phone / TV / Watch7 Companion: installed, paired, operational, controls
   rendered, commands dispatched — VERIFIED REAL HARDWARE
   ([G04](../evidence/g04-watch-30oct.md), rows 22–25, 29).
-- Watch cross-device chain (manual press → second device obeys → read-back):
-  IMPLEMENTED, owner run PENDING ([runbook](DEMO_PHYSICAL_RUNBOOK.md) §6).
+- Watch cross-device chain (owner press on watch → TV MUSIC 23→24 →
+  read-back): VERIFIED REAL HARDWARE ([S6](../evidence/s6-watch-tv-volume-01nov.md),
+  row 34, tx-5b326915aef0f777; independent repeat R1 22→23).
 - 2nd Windows PC jobs: VERIFIED REAL HARDWARE (plaintext v4 caveat applies).
 - ESP32: native IDF agent VERIFIED EMULATOR (QEMU serial + CROSS_OK); WiFi,
   TFT, and physical run pending ([row 16](../evidence/esp32-idf-qemu-30oct.md)).
