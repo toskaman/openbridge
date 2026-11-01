@@ -86,7 +86,7 @@ Windows, Linux, or macOS · Python 3.14 · zero third-party runtime packages.
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2013 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 2029 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
@@ -107,7 +107,7 @@ Full picture: [known limitations](docs/KNOWN_LIMITATIONS.md) · [relay security]
 
 ## Evidence — don't take our word for it
 
-2013 tests green (Windows/Ubuntu/macOS + browser incl. WebKit) · clean-room install 8/8 on 7 hosted targets + Debian container · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+2029 tests green (Windows/Ubuntu/macOS + browser incl. WebKit) · clean-room install 8/8 on 7 hosted targets + Debian container · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
 
 ## Built for the hackathon
 

@@ -52,3 +52,8 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - Suite: 2013 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay, showcase ledger) re-synced to this branch; dated entries above frozen as history.
 - Jury fast-track: README + `docs/jury/JURY_START_HERE.md` restructured for rapid comprehension (what it is, why new, what Meta does, what works, one extraordinary example, repro steps, security + limits, evidence links); engineering detail stays in linked supporting docs; no new claims.
 - Registry: 35 VERIFIED rows (26 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR), unchanged; all touched links verified resolvable.
+
+## Latest integrated evidence — 01 November (E2 staging integration, `feat/frontier90-staging`)
+
+- Suite: 2029 green locally (`python -m unittest discover -s tests`); live entry counts (README, jury start, narration overlay) re-synced to this tip; dated entries above frozen as history.
+- E2: cleanroom PSK-fixture rename (secret-scanner tripwire intact), scripted S5/S5b UI replay fallback (REPLAY-labeled), Playwright UI audit fixes (192 shots × 3 passes), release packs built + hash-verified, README/jury polish.
