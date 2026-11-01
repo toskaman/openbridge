@@ -10,7 +10,9 @@ Corrupt/missing items are listed at the bottom — never silently dropped.
 
 | File | Size | Depicts | Date | PII |
 |---|---|---|---|---|
-| openbridge-tour.gif | 320 KB, 960×540, 6×1.8 s | Fabric → Ask → phone → TV → watch → S5b panel | rebuilt 31 Oct (`dev/rebuild_tour_gif.py`) | none beyond source frames |
+| openbridge-tour.gif | 302 KB, 960×540, 6×1.8 s | Home Ask → refusal timeline → phone → TV → watch → S5b panel | rebuilt 1 Nov (`dev/rebuild_tour_gif.py`) | none beyond source frames |
+| ask-v2-home-1440.webp | 70 KB, 1440×900 | New Home workspace: Ask first, orb, honest no-model state | 1 Nov | none |
+| activity-v2-refused-1440.png | 196 KB, 1440×900 | SEEDED-UI: Activity Refused filter; payload is a real `process()` refusal (REVOKED) | 1 Nov | none |
 | fabric-tv-relay-redacted-1440.png | 210 KB, 1440×900 | My Devices: 24 dev / 31 links, names redacted | 28 Oct | none (redacted) |
 | ask-openbridge-1440.png | 319 KB, 1440×1000 | Ask panel: tiers + consent, fresh session | 28 Oct | none |
 

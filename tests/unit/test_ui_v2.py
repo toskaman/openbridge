@@ -70,7 +70,7 @@ class MotionIsVisualOnly(unittest.TestCase):
     def test_single_loop_and_lifecycle_hooks(self):
         src = text(UI / 'motion/motion_controller.js')
         self.assertEqual(src.count('requestAnimationFrame('), 1)
-        for hook in ('visibilitychange', 'IntersectionObserver', 'ResizeObserver', 'cancelAnimationFrame', 'prefers-reduced-motion', "pointer-events" if False else 'ob-flow-layer'):
+        for hook in ('visibilitychange', 'IntersectionObserver', 'ResizeObserver', 'cancelAnimationFrame', 'prefers-reduced-motion', 'ob-flow-layer'):
             self.assertIn(hook, src)
         css = text(UI / 'theme/workspace_v2.css')
         self.assertRegex(css, r'\.ob-flow-layer\{[^}]*pointer-events:none')
