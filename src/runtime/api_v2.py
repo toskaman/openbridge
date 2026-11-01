@@ -33,9 +33,11 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/capabilities/layouts',
               '/api/v2/capabilities/render',
               '/api/v2/orchestration/status',
+              '/api/v2/composer/catalog',
+              '/api/v2/composer/summary',
               '/api/v2/dashboards/list')
 POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/composer/compose',)
 
 
 import threading
@@ -282,6 +284,20 @@ def get(server, path, query):
         if rec is None:
             return 404, {'error': 'unknown workflow id'}
         return 200, rec
+    if path == '/api/v2/composer/catalog':
+        from src.runtime import composer as comp
+        return 200, comp.catalog()
+    if path == '/api/v2/composer/summary':
+        from src.runtime import composer as comp
+        from src.runtime import workflows as W
+        from src.runtime.state_store import StateStore
+        store = StateStore.for_server(server)
+        if store is None:
+            return 409, {'error': 'no state store on this server'}
+        rec = W.StateStoreJournal(store).get((q.get('workflow_id') or [''])[0])
+        if rec is None:
+            return 404, {'error': 'unknown workflow id'}
+        return 200, comp.summarize(rec)
     if path == '/api/v2/dashboards/list':
         from src.runtime import dashboards as D
         from src.runtime.state_store import StateStore
@@ -739,6 +755,18 @@ def post(server, path, body):
                                       body['consent'], router(server), journal)
             return 200, W.cancel(str(body.get('workflow_id', '')), journal)
         except W.WorkflowError as e:
+            return 400, {'error': str(e)}
+    if path == '/api/v2/composer/compose' and isinstance(body, dict):
+        # Dry run: deterministic allow/refuse per step, no dispatch, no consent needed.
+        from src.runtime import composer as comp
+        snap = getattr(server, 'fabric_snapshot', None) or {}
+        devices = snap.get('devices', []) if isinstance(snap, dict) else []
+        try:
+            if not isinstance(body.get('proposal'), dict):
+                raise comp.ComposerError('proposal must be an object with steps[1..8]')
+            prop = comp.proposal_from_doc(body['proposal'])
+            return 200, comp.compose(prop, devices, router(server))
+        except comp.ComposerError as e:
             return 400, {'error': str(e)}
     if path.startswith('/api/v2/dashboards/') and isinstance(body, dict):
         from src.runtime import dashboards as D
