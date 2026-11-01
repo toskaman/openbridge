@@ -13,12 +13,15 @@ Inventory reviewed 27 October 2026. No model weights, third-party fonts, downloa
 | greenlet 3.4.0 | Playwright dependency | MIT / PSF-2.0 licensing and notices: https://github.com/python-greenlet/greenlet/blob/master/LICENSE |
 | typing_extensions 4.16.0 | Development dependency | PSF-2.0: https://github.com/python/typing_extensions/blob/main/LICENSE |
 | bleak 3.0.2 | Optional PC Bluetooth | MIT: https://github.com/hbldh/bleak/blob/develop/LICENSE |
+| tinytuya 1.20.0 | Optional owner-linked Tuya local protocol (`src/adapters/tuya_local.py` lazy import, `dev/tuya_link.py` enrollment) | MIT: https://github.com/jasonacox/tinytuya/blob/master/LICENSE |
 | winrt-runtime and Windows BLE projections | Optional Windows Bluetooth dependencies; resolve versions from installed environment | MIT: https://github.com/pywinrt/pywinrt/blob/main/LICENSE; record exact installed wheel versions before packaging. |
 | Ollama | Separately installed local inference service | MIT code: https://github.com/ollama/ollama/blob/main/LICENSE. Model weights have separate licenses below. |
 | Android SDK command-line tools, build-tools 34.0.0, android-34, ADB | Optional Companion build/device tooling | SDK agreement: https://developer.android.com/studio/terms; Android platform-tools distribution includes its own notices. SDK/tools are not redistributed. Companion uses Android framework APIs without third-party libraries. |
 | actions/checkout v4, actions/setup-python v5 | CI only | MIT: https://github.com/actions/checkout/blob/v4/LICENSE and https://github.com/actions/setup-python/blob/v5/LICENSE |
 
-Development pins are in `requirements-dev.txt`. These version declarations do not pin all transitive wheel artifacts or browser binaries. If those are bundled later, collect their exact licenses/notices and hashes from the actual distribution rather than treating this source inventory as a binary manifest.
+Development pins are in `requirements-dev.txt`; optional runtime pins (`bleak`, `tinytuya`) are in `requirements-optional.txt`. These version declarations do not pin all transitive wheel artifacts or browser binaries. If those are bundled later, collect their exact licenses/notices and hashes from the actual distribution rather than treating this source inventory as a binary manifest.
+
+Re-audited 1 November 2026 (Frontier 90): `requirements*.txt` unchanged since the F30 base, application runtime still standard-library-only, and all F90 additions (`src/ai/voice_normalize.py`, `src/fabric/diagnostics.py`, `src/fabric/route_intel.py`, `src/forge/meta_result.py`, `src/forge/transplant.py`, `src/runtime/composer.py`, `src/runtime/dashboard_port.py`, `src/runtime/migrate.py`, `src/runtime/nl_followup.py`) import only the standard library and intra-repository modules. This re-audit added the previously missing `tinytuya` row above; no other gaps found.
 
 ## Optional model weights and hosted services
 

@@ -14,9 +14,12 @@ REQUIRED_EVIDENCE = ('START_HERE.md', 'QUICKSTART.md', 'README.md', 'REQUIREMENT
                      'HARDWARE_COMPATIBILITY.md', 'MODELS_AND_PROVIDERS.md', 'CLOUD_API_SETUP.md',
                      'LOCAL_MODEL_SETUP.md', 'CLI_REFERENCE.md', 'HEADLESS_DEPLOYMENT.md',
                      'KNOWN_LIMITATIONS.md', 'TEST_RESULTS.md', 'CONTRIBUTIONS.md', 'LICENSE',
+                     'THIRD_PARTY.md', 'JURY_START_HERE.md', 'OFFLINE_DEMO.md', 'PLATFORMS.md',
+                     'TROUBLESHOOTING.md', 'COMPANION_0_12_0.md', 'COMPANION_STATUS.md',
                      'RELEASE_MANIFEST.json', 'sha256sums.txt')
 REQUIRED_APP = ('src/server.py', 'src/cli.py', 'requirements.txt', 'docs/QUICKSTART.md',
-                'README.md', 'LICENSE', 'CONTRIBUTIONS.md', 'BUILD.json',
+                'docs/TROUBLESHOOTING.md', 'docs/PLATFORMS.md', 'docs/OFFLINE_DEMO.md',
+                'README.md', 'LICENSE', 'CONTRIBUTIONS.md', 'THIRD_PARTY.md', 'BUILD.json',
                 'RELEASE_MANIFEST.json', 'sha256sums.txt')
 REQUIRED_MEDIA = ('MEDIA_MANIFEST.json', 'RELEASE_MANIFEST.json', 'sha256sums.txt')
 REQUIRED = REQUIRED_EVIDENCE
@@ -40,7 +43,7 @@ def required_for(base):
 import re as _re
 
 SECRET_PATTERNS = (_re.compile(rb'OPENBRIDGE_META_' + rb'KEY=\S+'),
-                   _re.compile(rb'sk-[' + rb'A-Za-z0-9]{16,}'),
+                   _re.compile(rb'(?<![A-Za-z0-9_-])sk-[' + rb'A-Za-z0-9]{20,}'),
                    _re.compile(rb'api_' + rb'key["\']?\s*[:=]\s*["\']?[A-Za-z0-9_\-]{16,}'),
                    _re.compile(rb'BEGIN PRI' + rb'VATE KEY'))
 

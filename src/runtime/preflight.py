@@ -13,6 +13,7 @@ from pathlib import Path
 
 PINS = {  # package: (version, licence, purpose, required)
     'bleak': ('3.0.2', 'MIT', 'PC Bluetooth LE observation (optional; a Companion relay can replace it)', False),
+    'tinytuya': ('1.20.0', 'MIT', 'owner-linked Tuya local protocol (optional; only for a linked Tuya device)', False),
     'playwright': ('1.63.0', 'Apache-2.0', 'browser e2e tests only (dev)', False),
 }
 from src.ai.local_meta import MODEL_DIGEST as _LLAMA
