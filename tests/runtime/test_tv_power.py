@@ -66,6 +66,7 @@ class FakeTVAndroid:
         assert handle == "h1"
         self.shell_calls.append(tuple(argv))
         if tuple(argv[:2]) == ("dumpsys", "power"):
+            assert max_bytes >= 1048576, "oracle read must allow large dumpsys output"
             if self.oracle_down:
                 raise ValueError("Shell command unavailable")
             return self.power
@@ -158,6 +159,7 @@ class FakeForegroundAndroid(FakeTVAndroid):
         if tuple(argv[:2]) == ("dumpsys", "power"):
             return self.power
         if tuple(argv[:2]) == ("dumpsys", "activity"):
+            assert max_bytes >= 4194304, "focus read must allow large dumpsys output"
             if self.activity_down:
                 raise ValueError("Shell command unavailable")
             return self.activities

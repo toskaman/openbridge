@@ -31,13 +31,15 @@ def _s(type_, **kw):
 
 
 def _read_wakefulness(android, handle):
-    out = android.shell(handle, ('dumpsys', 'power'))
+    # dumpsys power measured 435 KB on the owner TV (wake-lock history) — cap high, still bounded.
+    out = android.shell(handle, ('dumpsys', 'power'), max_bytes=1048576)
     m = re.search(r'mWakefulness=(\w+)', out)
     return m.group(1) if m else None
 
 
 def _focused_package(android, handle):
-    out = android.shell(handle, ('dumpsys', 'activity', 'activities'))
+    # dumpsys activity measured 69 KB and grows with task history — cap high, still bounded.
+    out = android.shell(handle, ('dumpsys', 'activity', 'activities'), max_bytes=4194304)
     m = re.search(r'mFocusedApp=ActivityRecord\{[^}]* (\S+)/', out)
     return m.group(1) if m else None
 
