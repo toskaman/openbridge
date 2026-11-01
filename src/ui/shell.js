@@ -113,7 +113,7 @@
   }
 
   // ---------------- router ----------------
-  const VIEWS = { home: 'Home', explore: 'Explore', devices: 'My Devices', skills: 'Learned Skills', fabric: 'Device Fabric', automations: 'Automations', activity: 'Activity & Recovery', advanced: 'Advanced diagnostics' };
+  const VIEWS = { home: 'Home', explore: 'Explore', devices: 'My Devices', skills: 'Learned Skills', fabric: 'Device Fabric', automations: 'Automations', activity: 'Activity & Recovery', replay: 'Demo replay', advanced: 'Advanced diagnostics' };
   let current = null;
   function route() {
     const m = location.hash.match(/^#\/([a-z]+)(?:\/(.+))?/);
@@ -140,6 +140,7 @@
     if (view === 'fabric') renderGraph();
     if (view === 'automations') renderAutomations();
     if (view === 'activity') renderActivity();
+    if (view === 'replay' && typeof renderReplay === 'function') renderReplay(arg);
   }
   const go = (view, arg) => { location.hash = '#/' + view + (arg ? '/' + encodeURIComponent(arg) : ''); };
 
