@@ -2,6 +2,8 @@
 
 Independent source review for the release-preparation task, 27 October 2026. Scope: existing main runtime HTTP/model boundaries; Forge host, provider bridge, service lifecycle; new `src/forge/workspace.py`; controlled network-trace test. No protected source was modified. No penetration-test certification, comprehensive process-egress proof or assurance of every device/platform is claimed.
 
+> Staleness note (1 Nov 2026): this review predates the `aead1` sealed relay channel (29 Oct, `src/fabric/aead.py:1-15`, negotiated `src/server.py:525-529`), direct-LAN-first relay URLs (`src/adapters/android.py:261-271`, HW-proven 31 Oct on Galaxy Watch7 `relay-39f86439fbae`), and the BridgeWindows v4 mutual-HMAC/session-MAC transport. Any transport-confidentiality assumption above ("adb-forward only", "not encrypted") is stale; current statements live in `docs/RELAY_SECURITY.md` (LAN transport) and `docs/KNOWN_LIMITATIONS.md` (Pairing row).
+
 ## Assets, adversaries and trust
 
 Assets: owner consent, current device grants, observation provenance, loopback bearer/CSRF tokens, service revocation, model credentials, private identifiers, and host availability. Consider hostile remote web pages, malformed local HTTP clients, adversarial or stale runtime facts, untrusted model output, and accidental source/simulation confusion. The participant's local OS, source installation, injected internal reader and model installation remain trusted. A hostile same-user process can contact loopback, read the session-token endpoint, access local files or change executable code; loopback HTTP is not an OS-user security boundary.
