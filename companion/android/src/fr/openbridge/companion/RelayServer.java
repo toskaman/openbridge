@@ -110,7 +110,18 @@ final class RelayServer {
         Ui sink = (ui != null) ? ui : NOOP;
         if (instance == null) instance = new RelayServer(ctx.getApplicationContext(), sink);
         else if (ui != null) instance.ui = ui;   // a live screen re-attach wins; a headless (service) lookup never detaches it
+        if (ui != null) instance.replayPendingCode(ui);   // a re-attached screen missed earlier ui.code() calls
         return instance;
+    }
+    /** Live pairing code, if one is still valid; null once paired, expired or never requested. */
+    private synchronized String livePendingCode() {
+        if (pendingCode == null || System.currentTimeMillis() > pendingUntil) return null;
+        return pendingCode;
+    }
+    /** Re-deliver the live code to a (re-)attached screen; a no-op when none is live. */
+    private void replayPendingCode(Ui sink) {
+        String live = livePendingCode();
+        if (live != null) sink.code(live);
     }
     /** A screen going away drops its own sink so relay callbacks stop and it can be GC'd. */
     static synchronized void release(Ui ui) {
@@ -122,6 +133,9 @@ final class RelayServer {
     private String pendingCode, pendingRelayNonce, pendingPcNonce;
     private long pendingUntil;
     private int failedPairing;
+    private long lastPairRequest;
+    /** Minimum gap between two pair_request answers: a remote PC may not churn the on-screen code. */
+    private static final long PAIR_REQUEST_MIN_INTERVAL_MS = 5_000;
     private volatile boolean scanning;
 
     RelayServer(Context ctx, Ui ui) {
@@ -571,6 +585,12 @@ final class RelayServer {
 
     private synchronized JSONObject pairRequest(JSONObject msg) throws Exception {
         if (failedPairing >= 5) throw new SecurityException("pairing locked; reopen the app");
+        // Pairing starts with an on-device owner action: the app must be open on the screen
+        // (same consent signal as scans). A backgrounded relay never shows a pairing code.
+        if (!foreground) throw new SecurityException("open the OpenBridge Companion app on the device to allow pairing");
+        long now = System.currentTimeMillis();
+        if (now - lastPairRequest < PAIR_REQUEST_MIN_INTERVAL_MS) throw new SecurityException("pairing requested too often; wait a moment");
+        lastPairRequest = now;
         String pcNonce = msg.optString("pc_nonce");
         if (!pcNonce.matches("[0-9a-f]{16,64}")) throw new SecurityException("bad nonce");
         pendingCode = String.format("%06d", random.nextInt(1_000_000));
@@ -608,7 +628,7 @@ final class RelayServer {
         JSONObject body;
         try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
         // Pairing with the on-screen code is the owner's consent: scans are enabled right away (pausable in the app).
-        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).apply(); pendingCode = null; ui.code(null);
+        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).apply(); pendingCode = null; failedPairing = 0; ui.code(null);
         synchronized (seen) { seen.clear(); replies.clear(); }   // fresh pairing = fresh message space
         ui.status("Paired with OpenBridge. Bluetooth scans are available while this app is open.");
         return body;

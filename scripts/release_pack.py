@@ -41,7 +41,8 @@ APP_EXCLUDE_DIRS = {'.git', '__pycache__', '.xbuild', '.pytest_cache', '.venv',
                     'node_modules', '.idea', '.vscode'}
 APP_EXCLUDE_SUFFIXES = {'.pyc', '.pyo'}
 APP_REQUIRED = ('src/server.py', 'src/cli.py', 'requirements.txt', 'docs/QUICKSTART.md',
-                'README.md', 'LICENSE', 'CONTRIBUTIONS.md')
+                'README.md', 'LICENSE', 'CONTRIBUTIONS.md',
+                'scripts/verify/clean_install_check.py')
 
 EVIDENCE_DOCS = [('README.md', 'README.md'),
                  ('docs/QUICKSTART.md', 'QUICKSTART.md'),

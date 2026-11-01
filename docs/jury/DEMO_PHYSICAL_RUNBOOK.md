@@ -72,6 +72,18 @@ footage as physical proof.
 | 11 | Capability revoked | Revocation receipt | Receipt |
 | 12 | Subsequent invocation denied | DENIED verdict | Refusal record (§9 channel) |
 
+Demonstrated 31 Oct (R4, 23:10:29 UTC — steps 6–10 of this table): owner
+pressed Volume + on the watch over direct LAN (no watch adb exists); exactly
+one `EXECUTED` `tv_volume_step` (`tx-5b326915aef0f777`); TV `STREAM_MUSIC`
+23→24 read back via independent `adb dumpsys audio` snapshots plus the
+matching TV-side `ADJUST_RAISE` log entry (the only such events
+since 20:32 are the R1 pair (00:01:45) and the R4 pair (00:10:29),
+both experiment presses); revoke
+cleared the controls from the watch (owner-confirmed). On-watch rendering was
+owner-confirmed, not screenshotted (no watch adb); camera footage of the press
+is still pending. Full transcript:
+[docs/evidence/s6-watch-tv-volume-01nov.md](../evidence/s6-watch-tv-volume-01nov.md).
+
 Rules: honor watch sleep truthfully; no blind retry after an uncertain
 dispatch; no phantom success; no repeated command on reconnect. If a manual
 gesture is required, the owner performs it.

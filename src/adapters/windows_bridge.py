@@ -18,6 +18,10 @@ import threading
 
 PROTOCOL_MAJOR = '4'
 HANDSHAKE_TIMEOUT = 10.0
+# Minimum accepted pre-shared key length, in characters. The v4 handshake proves possession with
+# HMAC-SHA256, so anyone who captures one handshake can guess a short PSK offline; below this
+# threshold the bridge refuses to start (fail closed) instead of offering weak authentication.
+MIN_PSK_LENGTH = 16
 
 
 def _is_hex(value, length):
@@ -51,8 +55,11 @@ def frame(obj):
 
 class WindowsBridge:
     def __init__(self, psk, bind_ip, port=9876, sock_factory=socket.socket):
-        if not psk or not bind_ip or bind_ip in ('0.0.0.0', ''):
-            raise BridgeUnavailable('a pre-shared key and a specific LAN address are required')
+        if not isinstance(psk, str) or len(psk) < MIN_PSK_LENGTH:
+            raise BridgeUnavailable(
+                'a pre-shared key of at least %d characters is required' % MIN_PSK_LENGTH)
+        if not bind_ip or bind_ip in ('0.0.0.0', ''):
+            raise BridgeUnavailable('a specific LAN address to listen on is required')
         self._psk, self.bind_ip, self.port = psk, bind_ip, port
         self._sock_factory = sock_factory
         self._lock = threading.Lock()
