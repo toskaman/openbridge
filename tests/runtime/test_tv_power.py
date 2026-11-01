@@ -52,10 +52,11 @@ from src.runtime.primitives import Executor
 
 
 class FakeTVAndroid:
-    def __init__(self, power="mWakefulness=Awake\n"):
+    def __init__(self, power="mWakefulness=Awake\n", oracle_down=False):
         self._handles = {"SERIAL1": "h1"}
         self.identity = "id-1"
         self.power = power
+        self.oracle_down = oracle_down
         self.shell_calls = []
 
     def stable_identifier(self, handle, salt):
@@ -65,6 +66,8 @@ class FakeTVAndroid:
         assert handle == "h1"
         self.shell_calls.append(tuple(argv))
         if tuple(argv[:2]) == ("dumpsys", "power"):
+            if self.oracle_down:
+                raise ValueError("Shell command unavailable")
             return self.power
         return ""
 
@@ -92,6 +95,13 @@ class TvSleep(unittest.TestCase):
         self.c.android.power = "mWakefulness=Awake\n"
         r = self.ex.execute("tv_sleep", self.key, {}, True)
         self.assertEqual(r["state"], "FAILED")
+
+    def test_sleep_unverified_when_link_drops_after_send(self):
+        self.c.android.oracle_down = True
+        r = self.ex.execute("tv_sleep", self.key, {}, True)
+        self.assertEqual(r["state"], "EXECUTED_UNVERIFIED")
+        self.assertFalse(r["verified"])
+        self.assertEqual(self.c.android.shell_calls[0], ("input", "keyevent", "KEYCODE_SLEEP"))
 
     def test_sleep_blocked_when_adb_down(self):
         def dead(handle, argv, timeout=15, max_bytes=65536):
@@ -125,6 +135,12 @@ class TvWake(unittest.TestCase):
         r = self.ex.execute("tv_wake", self.key, {}, True)
         self.assertEqual(r["state"], "FAILED")
 
+    def test_wake_unverified_when_link_drops_after_send(self):
+        self.c.android.oracle_down = True
+        r = self.ex.execute("tv_wake", self.key, {}, True)
+        self.assertEqual(r["state"], "EXECUTED_UNVERIFIED")
+        self.assertFalse(r["verified"])
+
 
 FOCUSED_COMPANION = "mFocusedApp=ActivityRecord{a7ee65e u0 fr.openbridge.companion/.MainActivity t7101}\n"
 FOCUSED_OTHER = "mFocusedApp=ActivityRecord{a7ee65e u0 com.google.android.tvlauncher/.MainActivity t7101}\n"
@@ -134,6 +150,7 @@ class FakeForegroundAndroid(FakeTVAndroid):
     def __init__(self, power="mWakefulness=Awake\n", activities=FOCUSED_COMPANION):
         super().__init__(power=power)
         self.activities = activities
+        self.activity_down = False
 
     def shell(self, handle, argv, timeout=15, max_bytes=65536):
         assert handle == "h1"
@@ -141,6 +158,8 @@ class FakeForegroundAndroid(FakeTVAndroid):
         if tuple(argv[:2]) == ("dumpsys", "power"):
             return self.power
         if tuple(argv[:2]) == ("dumpsys", "activity"):
+            if self.activity_down:
+                raise ValueError("Shell command unavailable")
             return self.activities
         return ""
 
@@ -173,6 +192,12 @@ class CompanionForeground(unittest.TestCase):
     def test_foreground_needs_consent(self):
         r = self.ex.execute("companion_foreground", self.key, {}, False)
         self.assertEqual(r["state"], "BLOCKED")
+
+    def test_foreground_unverified_when_link_drops_after_send(self):
+        self.c.android.activity_down = True
+        r = self.ex.execute("companion_foreground", self.key, {}, True)
+        self.assertEqual(r["state"], "EXECUTED_UNVERIFIED")
+        self.assertFalse(r["verified"])
 
 
 class BindableSurface(unittest.TestCase):

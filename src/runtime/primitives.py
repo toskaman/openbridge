@@ -828,15 +828,20 @@ class Executor:
         handle = self._adb_handle(key)
         try:
             self.ctx.android.shell(handle, ('input', 'keyevent', 'KEYCODE_SLEEP'))
-            state = _read_wakefulness(self.ctx.android, handle)
         except ValueError as e:
             raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        try:
+            state = _read_wakefulness(self.ctx.android, handle)
+        except ValueError:
+            return 'EXECUTED_UNVERIFIED', None, 'sleep key sent; link dropped before read-back', False, \
+                {'wakefulness': None}
         if state != 'Asleep':
             time.sleep(2)
             try:
                 state = _read_wakefulness(self.ctx.android, handle)
-            except ValueError as e:
-                raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+            except ValueError:
+                return 'EXECUTED_UNVERIFIED', None, 'sleep key sent; link dropped before read-back', False, \
+                    {'wakefulness': None}
         if state != 'Asleep':
             raise ValueError('SLEEP_FAILED: wakefulness is %s' % state)
         return 'EXECUTED', None, 'TV asleep (mWakefulness=Asleep)', True, {'wakefulness': 'Asleep'}
@@ -845,15 +850,20 @@ class Executor:
         handle = self._adb_handle(key)
         try:
             self.ctx.android.shell(handle, ('input', 'keyevent', 'KEYCODE_WAKEUP'))
-            state = _read_wakefulness(self.ctx.android, handle)
         except ValueError as e:
             raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        try:
+            state = _read_wakefulness(self.ctx.android, handle)
+        except ValueError:
+            return 'EXECUTED_UNVERIFIED', None, 'wake key sent; link dropped before read-back', False, \
+                {'wakefulness': None}
         if state != 'Awake':
             time.sleep(2)
             try:
                 state = _read_wakefulness(self.ctx.android, handle)
-            except ValueError as e:
-                raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+            except ValueError:
+                return 'EXECUTED_UNVERIFIED', None, 'wake key sent; link dropped before read-back', False, \
+                    {'wakefulness': None}
         if state != 'Awake':
             raise ValueError('WAKE_FAILED: wakefulness is %s' % state)
         return 'EXECUTED', None, 'TV awake (mWakefulness=Awake)', True, {'wakefulness': 'Awake'}
@@ -873,8 +883,9 @@ class Executor:
         time.sleep(2)
         try:
             pkg = _focused_package(self.ctx.android, handle)
-        except ValueError as e:
-            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        except ValueError:
+            return 'EXECUTED_UNVERIFIED', None, 'start sent; link dropped before focus read-back', False, \
+                {'package': None}
         if pkg != 'fr.openbridge.companion':
             raise ValueError('FOREGROUND_FAILED: focused package is %s' % pkg)
         return 'EXECUTED', None, 'Companion focused', True, {'package': pkg}
