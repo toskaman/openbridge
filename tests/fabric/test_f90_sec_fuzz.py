@@ -839,10 +839,11 @@ class OversizedHttpBodyFuzz(unittest.TestCase):
         self.assertEqual(resp.status, 400)
         resp.read()
         conn.close()
-        # v2 route: oversize -> 400 Invalid request (fail-closed, never 500).
+        # v2 route: oversize -> 413 Request too large at the server layer
+        # (fail-closed, never 500; the 400 contract applies below the cap).
         big_v2 = json.dumps({'device_id': 'x', 'pad': 'z' * 9000}).encode()
         code, doc = post('/api/v2/execute', big_v2)
-        self.assertEqual(code, 400)
+        self.assertEqual(code, 413)
         code, _doc = post('/api/v2/execute', json.dumps({'device_id': 'x'}).encode())
         self.assertNotEqual(code, 500)
         # Server still answers after the fuzz (no crash, no hang).
