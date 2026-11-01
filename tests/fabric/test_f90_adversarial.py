@@ -395,7 +395,11 @@ class TransplantAdversarial(unittest.TestCase):
         svc = t_service(dispatcher=BoomDispatcher())
         with self.assertRaises(RuntimeError):
             t_run_full(svc)
-        self.assertEqual(svc._records, {})
+        # Compensation persists a failed audit report, but no live record:
+        # nothing stays active, installed, or dispatchable.
+        self.assertTrue(svc._records)
+        for record in svc._records.values():
+            self.assertNotEqual(record.get('state'), 'active')
 
     def test_cancellation_consent_false_blocks_dispatch(self):
         svc = t_service()
@@ -808,9 +812,20 @@ class ComposerAdversarial(unittest.TestCase):
             'skill_id': 'tv_volume_step', 'target': 'android tv',
             'params': {'direction': 'up'}}]}))
         comp = C.compose(prop, COMPOSER_DEVICES,
-                         FakeRoutes(error=RuntimeError('route db down')))
+                         FakeRoutes(error=RouteError(
+                             503, 'ROUTE_DB_DOWN', 'route db down')))
         self.assertEqual(comp['steps'][0]['status'], 'refused')
         self.assertIn('no permitted route', comp['steps'][0]['reason'])
+
+    def test_router_unexpected_error_propagates_never_silent(self):
+        # Non-RouteError failures are infrastructure bugs: they must raise,
+        # never masquerade as a refusal (and never admit).
+        prop = C.proposal_from_reply(json.dumps({'steps': [{
+            'skill_id': 'tv_volume_step', 'target': 'android tv',
+            'params': {'direction': 'up'}}]}))
+        with self.assertRaises(RuntimeError):
+            C.compose(prop, COMPOSER_DEVICES,
+                      FakeRoutes(error=RuntimeError('route db down')))
 
     def test_missing_model_dead_proposer(self):
         def dead(prompt):
@@ -1298,9 +1313,12 @@ class DiagnosticsAdversarial(unittest.TestCase):
         class EvilProp:
             def propose(self, req):
                 ref = req['findings'][0]['evidence_refs'][0]
+                # Grounded sentence (34-char overlap with the observed
+                # finding) carrying one invented number: grounding passes,
+                # the number check must fire.
                 return {'explanation':
-                        'The battery drains at 9999 percent per hour '
-                        'because aliens did it yesterday evening.',
+                        'Pixel is draining at 9999 percent per hour '
+                        'while unplugged.',
                         'recommendations': req['candidates'][:1],
                         'evidence_refs': [ref],
                         'uncertainty': FD.LIMIT, 'model': 'evil'}
@@ -1360,7 +1378,9 @@ class DiagnosticsAdversarial(unittest.TestCase):
 
     def test_malformed_model_unreadable_reply(self):
         def bad_chat(payload):
-            return {'model': 'm',
+            # Matching model identity so the reply reaches the JSON
+            # parse stage, where the malformed body must fail.
+            return {'model': 'meta-1',
                     'message': {'content': 'not json{{'}}
 
         with self.assertRaisesRegex(FD.DiagnosticError,
