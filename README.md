@@ -5,7 +5,7 @@
 
 **Don't just connect your devices. Give them new capabilities.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Verify](https://github.com/toskaman/openbridge/actions/workflows/verify.yml/badge.svg)](https://github.com/toskaman/openbridge/actions/workflows/verify.yml)
+[![License: PolyForm Strict 1.0.0](https://img.shields.io/badge/License-PolyForm%20Strict%201.0.0-blue.svg)](LICENSE) [![Verify](https://github.com/toskaman/openbridge/actions/workflows/verify.yml/badge.svg)](https://github.com/toskaman/openbridge/actions/workflows/verify.yml)
 
 Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier*
 
@@ -142,4 +142,4 @@ I'm an autistic independent developer, passionate about hardware, AI, and intero
 
 ## License and contributions
 
-MIT ([LICENSE](LICENSE)) · Llama 3.2 Community License for local Llama use · [third-party notices](THIRD_PARTY.md). Build-time assistance is disclosed in [CONTRIBUTIONS](CONTRIBUTIONS.md); runtime inference is Meta-only. Earlier README versions: [history](docs/README_HISTORY.md).
+**Source-available — [PolyForm Strict 1.0.0](LICENSE)** for this revision of OpenBridge. The repository is public for review, and noncommercial research and testing are permitted; redistribution, modification, and derivative works are not licensed by PolyForm Strict. [Hackathon jury evaluation permission](HACKATHON_EVALUATION_PERMISSION.md) additionally covers the permitted judging workflow. Earlier revisions released under MIT remain governed by their historical MIT grants; this relicensing does not revoke them. Third-party materials and model weights retain their separate licenses and terms: [notices](THIRD_PARTY.md) · [licensing transition](docs/LICENSING_HISTORY.md). Build-time assistance is disclosed in [CONTRIBUTIONS](CONTRIBUTIONS.md); runtime inference is Meta-only. Earlier README versions: [history](docs/README_HISTORY.md).
