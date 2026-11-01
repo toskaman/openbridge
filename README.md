@@ -122,7 +122,7 @@ Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) 
 
 Owner consent per privileged act · typed skills, never free-form shell · strict validation before dispatch · idempotency keys + crash-safe journal (honest UNCERTAIN, never blind re-execution) · independent read-back oracles · signed, expiring, replay-protected relay commands · pairing attempt limits · revocation that stops new admissions.
 
-Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green ([run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451), 1 Nov) — the main re-run lost phone to an emulator-host timeout (infra, not app: same APK/harness green on tv/wear/e2e) and is being re-run.
+Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green on main ([run 41309860677](https://github.com/toskaman/openbridge/actions/runs/41309860677), 1 Nov; first complete pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)).
 
 ![Refused press shown in the Activity timeline](docs/jury/screens/refusal_channel.png)
 
