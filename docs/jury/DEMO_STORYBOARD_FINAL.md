@@ -12,7 +12,7 @@ explicit authorization.**
 | 0–12 | The problem | Fragmented devices: PC, phone, TV, watch, vacuum on separate islands | Staged narration over real discovery stills | READY (stills on file) |
 | 12–32 | One Device Fabric | "Discover my environment" → live topology with evidence chips | REAL_HARDWARE receipts | READY |
 | 32–85 | The breakthrough | "Create a control panel on my TV so I can operate my robot vacuum" → Meta inference → strict VALID → panel on the real TV → manual press → vacuum moves → receipt | S5 runbook (`DEMO_PHYSICAL_RUNBOOK.md`) | PENDING owner run (prior `s5-tv-panel-31oct` lacks observed motion + manual press) |
-| 85–112 | Watch chain | Watch QUICK CONTROLS → second device obeys → read-back | S6 runbook | PENDING owner run |
+| 85–112 | Watch chain | Watch QUICK CONTROLS → second device obeys → read-back | S6 runbook | DEMONSTRATED owner press (tx-5b326915aef0f777, TV 23→24 read-back) — camera footage PENDING owner run |
 | 112–140 | Safe by construction | Permission review → approval → revocation → refused re-press in the Activity timeline | Refusal-channel shot + receipts | READY (shot `E:/shots/refusal_channel.png`) |
 | 140–160 | Why it is hard | Meta-only runtime · local inference scores · crash-safe ledger · honest REAL vs SIMULATED labels | Eval scorecard + 5/5 crash receipts | READY after eval lands |
 | 160–180 | Close | Finished app + one-line proposition + repo link | — | READY |
@@ -36,7 +36,7 @@ explicit authorization.**
 | S5 request → inference | screen capture | HEAD | — | model id + digest |
 | S5 TV panel + manual press | camera + adb screenshot | HEAD | — | REAL_HARDWARE |
 | S5 vacuum motion | camera, timestamped | HEAD | — | REAL_HARDWARE + oracle |
-| S6 watch press → effect | camera + screen capture | HEAD | — | REAL_HARDWARE |
+| S6 watch press → effect | camera + screen capture | HEAD | — | REAL_HARDWARE (press + read-back receipted tx-5b326915aef0f777; footage not yet captured) |
 | Refusal timeline | live UI, or `E:/shots/refusal_channel.png` (seeded-UI shot, payload is a real refusal) | HEAD | — | DETERMINISTIC |
 | Scorecard still | eval report | HEAD | — | MEASURED |
 | Close | screen capture | HEAD | — | — |

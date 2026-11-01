@@ -20,7 +20,7 @@ official rules), third-party rules summary (labeled T-P, not authoritative).
 | 8 | Creation window / pre-existing work policy | OPEN | Not stated on public pages; repo discloses event-built code + rewritten prototype in `CONTRIBUTIONS.md` (start reference 2026-10-26T16:24:00Z) |
 | 9 | Permitted model use (Meta Model API, open weights, coding agents) | CONFIRMED direction | Event pages: Muse Spark/Image/SAM via API, open weights, Muse Code agent |
 | 10 | Runtime is Meta-only; dev assistants are not runtime models | TRUE | `THIRD_PARTY.md`, runtime manifest, Meta-only guards (tested) |
-| 11 | No Git history rewrite, no backdated commits | TRUE | Append-only commits on `feat/p30-jury-release` |
+| 11 | No Git history rewrite, no backdated commits | TRUE | Append-only commits on `feat/frontier30-staging` |
 | 12 | IP/license: entrants own project; broad organizer license; no confidentiality | T-P ONLY | Third-party summary; owner accepted the official rules at selection |
 | 13 | Bonus awards (announced ~Nov 10; public vote / most viral among them) | T-P ONLY | Third-party summary; criteria OPEN until announced |
 | 14 | No award guaranteed or officially approved (claims) | TRUE | No such claim in repo; bonus section is eligibility reasoning only |
