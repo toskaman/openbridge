@@ -27,7 +27,7 @@ limits stated inline.
 | 5 | Refusals as first-class outcomes (timeline + receipts) | [report](OVERNIGHT_REPORT_31OCT.md) §B |
 | 6 | 2nd PC jobs, Freebox inventory, vacuum reads, legacy VMs, AVD, ESP32-QEMU | [matrix](../HARDWARE_TEST_MATRIX.md) |
 | 7 | Owner manual presses START + DOCK → oracle standby→goto_charge | [S5c](../evidence/s5-tv-panel-01nov-manual.md) |
-| 8 | TV sleep/wake + Companion reveal skills, oracle-verified | [TV-PWR](../evidence/tv-sleep-02nov.md) |
+| 8 | TV wake + Companion reveal oracle-verified; sleep owner-confirmed (UNVERIFIED receipt) | [TV-PWR](../evidence/tv-sleep-02nov.md) |
 
 Limits up front: S5/S5b presses were ADB-injected (labeled); the press leg
 is since superseded by owner manual presses (S5c), while vacuum motion
@@ -71,7 +71,7 @@ subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:
 | S6 watch→TV volume | Owner press → TV vol step → revoke | Watch7 + TV 11, REAL | None (companion dispatch) | tx-5b326915aef0f777, MUSIC 23→24 | dumpsys audio + TV volume-event log | no watch shots, denial-by-absence, n=1+R1 | [S6](../evidence/s6-watch-tv-volume-01nov.md) | row 34 |
 | Refusal channel | Denied press in timeline | Server + UI | Structured verdicts | TDD 3/3, red render | API + events | shot staged from live UI | [report](OVERNIGHT_REPORT_31OCT.md) | §B |
 | Manual press (S5c) | Owner START + DOCK → oracle | TV 11 + vacuum, REAL | Panel reused (fresh blocked) | tx-8abdd1eb, tx-63ee07451c4099ce | Tuya standby→goto_charge | motion unfilmed, n=1 | [S5c](../evidence/s5-tv-panel-01nov-manual.md) | row 36 |
-| TV power + reveal | Sleep → wake → foreground | TV 11, REAL | None (PC-driven skills) | wake + foreground verified | mWakefulness, mFocusedApp | sleep UNVERIFIED, remote wakes | [TV-PWR](../evidence/tv-sleep-02nov.md) | row 37 |
+| TV power + reveal | Wake + foreground verified; sleep sent, owner-confirmed | TV 11, REAL | None (PC-driven skills) | wake + foreground verified | mWakefulness, mFocusedApp | sleep receipt UNVERIFIED, remote wakes | [TV-PWR](../evidence/tv-sleep-02nov.md) | row 37 |
 
 Full detail for all 37 rows: [claim ↔ evidence matrix](CLAIM_EVIDENCE_MATRIX.md)
 + [registry](../DEVICE_EVIDENCE.json) + [verified capabilities](VERIFIED_CAPABILITIES.md).
