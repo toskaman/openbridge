@@ -226,7 +226,7 @@ class RelayManager:
     def __init__(self, transport):
         self.transport = transport            # callable(relay, message) -> reply dict, may raise OSError/TimeoutError
         self.relays = {}                      # relay_id -> {'key', 'device_key', 'capabilities', 'permissions', 'online', 'failures', 'busy'}
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()        # guards enroll/eligible/revoke/scan-admission; scan calls eligible() while holding it
 
     def enroll(self, relay_id, key, device_key, declared):
         # `declared` arrives from the relay over the wire: every malformed shape is refused as RelayError with a
@@ -245,27 +245,34 @@ class RelayManager:
             raise RelayError('Enroll refused: declared capabilities must be a list')
         if 'permissions' in declared and not isinstance(declared['permissions'], dict):
             raise RelayError('Enroll refused: declared permissions must be an object')
-        self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
-                                 'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
-                                 'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}
+        entry = {'key': key, 'device_key': device_key, 'capabilities': caps,
+                 'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
+                 'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}
+        with self._lock:
+            self.relays[relay_id] = entry
 
     def eligible(self, capability):
-        out = []
-        for rid, r in self.relays.items():
-            permitted = capability == 'ble_scan' and r['permissions'].get('BLUETOOTH_SCAN') is True and r['permissions'].get('owner_enabled') is True
-            if capability in r['capabilities'] and permitted and r['online'] and not r['busy']:
-                out.append(rid)
-        # Prefer mains-powered relays, then fewer recent failures.
-        return sorted(out, key=lambda rid: (self.relays[rid]['battery_powered'], self.relays[rid]['failures'], rid))
+        with self._lock:
+            out = []
+            for rid, r in self.relays.items():
+                permitted = capability == 'ble_scan' and r['permissions'].get('BLUETOOTH_SCAN') is True and r['permissions'].get('owner_enabled') is True
+                if capability in r['capabilities'] and permitted and r['online'] and not r['busy']:
+                    out.append(rid)
+            # Prefer mains-powered relays, then fewer recent failures.
+            return sorted(out, key=lambda rid: (self.relays[rid]['battery_powered'], self.relays[rid]['failures'], rid))
 
     def scan(self, seconds=8, relay_id=None):
-        candidates = [relay_id] if relay_id else self.eligible('ble_scan')
-        if relay_id and relay_id not in self.eligible('ble_scan'):
-            raise RelayError('Relay lacks permission, is offline or busy')
-        if not candidates:
-            raise RelayError('No authorized relay can scan BLE')
-        rid = candidates[0]; relay = self.relays[rid]
-        with self._lock:
+        with self._lock:  # admission is atomic: no revoke/enroll can slip between the check and the busy claim
+            candidates = [relay_id] if relay_id else self.eligible('ble_scan')
+            if relay_id and relay_id not in self.eligible('ble_scan'):
+                raise RelayError('Relay lacks permission, is offline or busy')
+            if not candidates:
+                raise RelayError('No authorized relay can scan BLE')
+            rid = candidates[0]
+            try:
+                relay = self.relays[rid]
+            except KeyError:
+                raise RelayError('Relay revoked during scan') from None
             if relay['busy']:
                 raise RelayError('Relay busy')
             relay['busy'] = True
@@ -273,6 +280,11 @@ class RelayManager:
             start = command(relay['key'], rid, 'start_discovery', {'radio': 'ble', 'seconds': min(seconds, MAX_SCAN_SECONDS)})
             reply = self.transport(relay, start)
             msg = verify(relay['key'], reply, relay['seen'])
+            with self._lock:  # a revoke or permission loss mid-flight voids the result (no revoked observations)
+                current = self.relays.get(rid)
+                if current is not relay or not (current['permissions'].get('BLUETOOTH_SCAN') is True
+                                                and current['permissions'].get('owner_enabled') is True):
+                    raise RelayError('Relay revoked during scan')
             observations = validate_report(msg.get('params', {}))
             relay['failures'] = 0
             return rid, observations
@@ -289,7 +301,8 @@ class RelayManager:
             relay['busy'] = False
 
     def revoke(self, relay_id):
-        relay = self.relays.pop(relay_id, None)
+        with self._lock:
+            relay = self.relays.pop(relay_id, None)
         if relay:
             try:
                 self.transport(relay, command(relay['key'], relay_id, 'revoke_access'))
