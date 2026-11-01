@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, work-reconciled against origin/main `e1ac139` on 31 October 2026 (PR158–159 merged; suite 1245 green locally + Windows/Ubuntu/macOS/browser CI; registry now 35 VERIFIED rows: 26 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR, vs 28 rows at `e1ac139`; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts (1203/1150/864) and pending flags in archived notes are historical.
+Authoritative checklist, work-reconciled against origin/main `2d7d919` on 1 November 2026 (PR164–168 merged; suite 2075 green locally + Windows/Ubuntu/macOS/browser CI; clean-room green on main; Android emulator lab 5/5 on main; registry 35 VERIFIED rows: 26 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts (1203/1150/864/1245) and pending flags in archived notes are historical.
 
 ## Integrated work
 
@@ -32,7 +32,14 @@ Authoritative checklist, work-reconciled against origin/main `e1ac139` on 31 Oct
 | Vacuum liveness (30 Oct) | Facts re-read + seek accepted, status stable (PR154) | Live docked read (registry row 26). Beep not ear-confirmed; no movement commands issued. |
 | Meta→device pairs S4/S5/S5b (31 Oct) | Llama-planned quiet-mode pair (TV vol 22→21 + vacuum dock, rows 27); Glimmer-generated TV vacuum panel + hold-press + revoke→deny (row 28); safe-seek beep chain + 15-poll oracle + revoke (row 30) | [S4](evidence/s4-quiet-mode-31oct.md), [S5](evidence/s5-tv-panel-31oct.md), [S5b](evidence/s5b-safe-seek-31oct.md). Presses adb-injected (labeled); vacuum motion never observed; manual-press + motion runs owner-gated ([runbook](jury/DEMO_PHYSICAL_RUNBOOK.md)). |
 | Background relay + refusal channel (31 Oct) | Foreground service alive screen-off + toggle 8/8 (row 29); structured refusal channel served + rendered (TDD 3/3) | [Registry row 29](DEVICE_EVIDENCE.json), [overnight report](jury/OVERNIGHT_REPORT_31OCT.md). Full-control re-pair review + Doze soak still open. |
-| Clean-room install lab (31 Oct) | 8/8 checks on 7 hosted targets + Debian container ([run 41210900996](https://github.com/toskaman/openbridge/actions/runs/41210900996)); verify on HEAD green (win/mac/ubuntu + browser incl. WebKit) | CI-hosted proof, not owner hardware. Android `e2e` job still failing (builds green); see [run 41215688399](https://github.com/toskaman/openbridge/actions/runs/41215688399). |
+| Clean-room install lab (31 Oct–1 Nov) | 8/8 checks on 7 hosted targets + Debian container, re-verified on main ([run 41304230306](https://github.com/toskaman/openbridge/actions/runs/41304230306)); verify green on main ([run 41304216321](https://github.com/toskaman/openbridge/actions/runs/41304216321)) | CI-hosted proof, not owner hardware. |
+| Android emulator lab (1 Nov) | 5/5 green on main (build-apk, phone, wear, tv, e2e: [run 41309860677](https://github.com/toskaman/openbridge/actions/runs/41309860677); first pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)) | Two main phone runs lost their emulator to host flake (infra, fail-fast verdicts); harness diag calls now timeout-bounded. |
+| S6 voice evidence (1 Nov) | Watch-TV volume + direct watch voice loop (registry rows 34–35), Win encoding fix | [PR164](https://github.com/toskaman/openbridge/pull/164). |
+| Frontier 30 (1 Nov) | E2E-409, relay code-loss, HonestyGate encoding, media/claim sync, 39 commits | [PR165](https://github.com/toskaman/openbridge/pull/165). |
+| Frontier 90 (1 Nov) | Transplant/migrate/composer/route-intel/diagnostics/voice-flow/refusal/dashboards + 33 test files, 82 commits | [PR166](https://github.com/toskaman/openbridge/pull/166); [report](jury/FRONTIER90_REPORT_2026-11-01.md). Software-tested; hardware validation pending per module. |
+| S8 intent/effect gate (1 Nov) | Deterministic refusal/clarification gate in NL planning; frozen 24-case eval unsafe 2→0, zero correct blocked | [PR168](https://github.com/toskaman/openbridge/pull/168); [results](benchmark/intenteffect/RESULTS.md). |
+| Migrate CLI + security batch (1 Nov) | migrate propose/apply/rollback CLI; consent on mutating dispatch + transplant CLI; transplant store cap; label charset | [PR168](https://github.com/toskaman/openbridge/pull/168). |
+| Honest fallback video (1 Nov) | 78 s reproducible cut: 2075-test log, replay checks, offline replay footage, 6 committed stills; no physical footage (labeled) | Build on E: (not in repo); scene map + hashes in the release ledger; physical branch owner-gated ([storyboard](jury/DEMO_STORYBOARD_FINAL.md)). |
 
 ## Remaining gates
 
@@ -48,12 +55,12 @@ Authoritative checklist, work-reconciled against origin/main `e1ac139` on 31 Oct
 
 Exact test counts, source revisions, receipts and CI belong to individual evidence records and PRs. Run `python -m unittest discover -s tests -q` and appropriate browser checks for new implementation. Software checks are distinct from physical acceptance and organizer approval.
 
-Codex owns release/integration and has taken over persistence while Claude is unavailable. Spark's merged Command Center contributions retain their recorded scope. Coordinate overlapping paths on [issue36](https://github.com/toskaman/openbridge/issues/36); the shared local board records assignments, not extra proof of delivery.
+Final Frontier run owns release/integration. Spark's merged Command Center contributions retain their recorded scope. Coordinate overlapping paths on [issue36](https://github.com/toskaman/openbridge/issues/36); the shared local board records assignments, not extra proof of delivery.
 
 ## Standing constraints
 
-- English interfaces and public documentation. Keep Claude's main theme and accurately scoped Meta attribution.
-- No videos, recordings, edits or renders until a NEW explicit owner request. No native desktop keyboard/mouse automation.
+- English interfaces and public documentation. Keep the current main theme and accurately scoped Meta attribution.
+- Video: the honest fallback cut is built and reproducible (owner-authorized this run); physical-device filming stays owner-gated. No native desktop keyboard/mouse automation.
 - Meta-only runtime models. Hosted calls require eligible fresh promotional-credit observations through the existing guard; no paid fallback, stale-balance reuse or automatic retries.
 - Multi-PC is delivered: the bridge accepts up to 8 agents and the second PC is verified (binary swap hash-matched). The earlier safety-blocked single-agent limit is superseded. Scheduling remains cancelled.
 - Preserve evidence, failed attempts, licenses and frozen evaluation inputs. Follow [workspace maintenance](WORKSPACE.md) before deleting generated files.
