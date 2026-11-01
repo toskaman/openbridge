@@ -116,3 +116,31 @@ not 72). Unfavourable result kept as registered: no model arm beat the rules.
 - Phone-side (BV9300) §11 acceptance sample: PENDING — device unreachable at
   sample time; does not block the mock baseline.
 - No battery, speed or storage gains are claimed by any run above.
+
+## Campaign Two §4.8 model contribution study (1 Nov 2026; append-only)
+
+New benchmark where rules are not advantaged by construction: 36 frozen
+held-out cases (14 paraphrased proposals incl. 5 multi-device novel
+combos, 12 §4.7-style refusals, 10 clarifications) with mechanical
+dev/held-out disjointness (pairwise combo novelty + rules-keyword
+absence, both unit-tested). All arms use the real production prompt and
+the real S4.7 validators; executability additionally requires composer
+allow-all + DAG compile. Full design: `docs/benchmark/modelstudy48/REGISTRATION.md`;
+scorecard `RESULTS.md`; archival JSON
+`results-20261101T024033Z.json`; rerun `RERUN_MANIFEST.md`;
+self-checks `tests/runtime/test_modelstudy48.py` (16/16).
+
+| Arm | Intent | Proposal exec | Multidev | Refusal / unsafe | Clarif qual | p50 |
+|---|---|---|---|---|---|---|
+| rules (dev-only frozen) | 0.361 | 0.000 | — | 0.250 / 0 | 0.700 | 0 ms |
+| llama 3.2 3B, CPU (72, real inference) | 0.222 | 0.571 | 0.333 | 0.000 / 6 | — | 4.3 s |
+| glimmer 30B | BLOCKED (OOM, not scored) | — | — | 36 blocked rows | — | — |
+
+Reading: rules win intent by abstention (10/10 clarification outcomes,
+3 pattern refusals, 0 proposals); llama alone resolves novel intents
+(6/28 fully perfect incl. a two-tv composition) but never refuses or
+clarifies — 18/24 must-refuse attempts die in validation, 6 validate as
+wrong-but-executable consent-gated `app_launch` substitutions. Repeat
+stability 36/36. Glimmer failed 4 real load attempts (18 GB model vs
+~8–11 GB free RAM / ~10.9 GB free VRAM). No hosted arm (not
+authorized). Unfavourable-to-everybody result kept as registered.
