@@ -16,14 +16,14 @@ FORBIDDEN = ('caused by', 'root cause is', 'proves', 'proven cause:')
 
 def load(name):
     tl = Timeline(clock=lambda: 10_000)
-    for dev, cat, n, v, t in sorted(json.loads((HERE / 'timeline_drills.json').read_text())[name], key=lambda r: r[4]):
+    for dev, cat, n, v, t in sorted(json.loads((HERE / 'timeline_drills.json').read_text(encoding='utf-8'))[name], key=lambda r: r[4]):
         tl.observe(dev, cat, n, v, 'drill', t=t)
     return tl
 
 
 class Drills(unittest.TestCase):
     def test_every_drill_matches_its_independent_label(self):
-        labels = json.loads((HERE / 'timeline_labels.json').read_text())
+        labels = json.loads((HERE / 'timeline_labels.json').read_text(encoding='utf-8'))
         for name, lab in labels.items():
             with self.subTest(drill=name):
                 a = hypotheses.analyze(load(name).rows(), lab['target'])
@@ -43,7 +43,7 @@ class Drills(unittest.TestCase):
                     self.assertEqual(a['hypotheses'][0]['confidence'], lab['top_confidence'])
 
     def test_every_hypothesis_cites_existing_entries_and_never_claims_cause(self):
-        for name in json.loads((HERE / 'timeline_drills.json').read_text()):
+        for name in json.loads((HERE / 'timeline_drills.json').read_text(encoding='utf-8')):
             tl = load(name)
             ids = {e['id'] for e in tl.rows()}
             a = hypotheses.analyze(tl.rows(), 'tv')

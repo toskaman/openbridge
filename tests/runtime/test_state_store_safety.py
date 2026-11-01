@@ -16,7 +16,7 @@ class StateSafety(unittest.TestCase):
     def test_missing_is_first_run_but_corruption_blocks_changes(self):
         with tempfile.TemporaryDirectory() as d:
             c=ctx(d);self.assertEqual(Executor(c).recovery().blocked_reason,'')
-            p=Path(d)/'runtime-state.json';p.write_text('{bad')
+            p=Path(d)/'runtime-state.json';p.write_text('{bad', encoding='utf-8')
             ex=Executor(ctx(d));calls=[]
             ex.RUNNERS=dict(Executor.RUNNERS,relay_revoke=lambda *a:calls.append(a))
             self.assertIn('STATE_UNREADABLE',ex.recovery().blocked_reason)
@@ -25,14 +25,14 @@ class StateSafety(unittest.TestCase):
             with self.assertRaises(RouteError) as cm:
                 Router(ctx(d)).skill_routes('ble_scan_room')
             self.assertEqual(cm.exception.code,'STATE_UNREADABLE')
-            self.assertEqual(p.read_text(),'{bad')
+            self.assertEqual(p.read_text(encoding='utf-8'),'{bad')
 
     def test_malformed_rows_and_foreign_version_are_not_empty_recovery(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/'runtime-state.json'
             for body in ({'version':99},{'version':1,'unresolved':[{'transaction_id':'x'}]},
                          {'version':1,'policies':{'device_facts':{'mode':'EVIL'}}}):
-                p.write_text(json.dumps(body))
+                p.write_text(json.dumps(body), encoding='utf-8')
                 self.assertTrue(Executor(ctx(d)).recovery().blocked_reason)
                 with self.assertRaises(RouteError):Router(ctx(d)).skill_routes('ble_scan_room')
 

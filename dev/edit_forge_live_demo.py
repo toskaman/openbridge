@@ -3,7 +3,7 @@ import json,os,shutil,subprocess
 from pathlib import Path
 out=Path('artifacts/forge-glimmer-demo');target=out/'openbridge-live-glimmer-presentation.mp4'
 if target.exists():raise SystemExit('Presentation already exists; preserve exported evidence')
-capture=json.loads((out/'capture-manifest.json').read_text());scenes={s['name']:s['at_seconds'] for s in capture['scenes']}
+capture=json.loads((out/'capture-manifest.json').read_text(encoding='utf-8'));scenes={s['name']:s['at_seconds'] for s in capture['scenes']}
 font=out/'export-font.ttf';shutil.copyfile(Path(os.environ['WINDIR'])/'Fonts/segoeui.ttf',font)
 wait_start=scenes['live-meta']+4;wait_end=scenes['validated']-4;validated=scenes['validated'];consent=scenes['consent'];latency=capture['model_trace']['elapsed_ms']/1000
 (out/'speed-label.txt').write_text(f'CPU wait shown at 8x speed | Actual local inference: {latency:.2f} seconds',encoding='utf-8')

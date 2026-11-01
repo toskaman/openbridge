@@ -434,7 +434,7 @@ class SharedFixtures(Base):
     def test_fixtures_validate(self):
         import pathlib
         d = pathlib.Path(__file__).with_name('fixtures')
-        load = lambda n: json.loads((d / n).read_text())
+        load = lambda n: json.loads((d / n).read_text(encoding='utf-8'))
         for name, typ in (('manifest_tv_mute.json', 'CandidateManifest'), ('grant_tv_mute.json', 'Grant'), ('uiplan_tv_remote.json', 'UIViewPlan'),
                           ('receipt_tv_mute.json', 'Receipt'), ('invoke_request.json', 'InvokeRequest')):
             self.assertEqual(validate(typ, load(name)), [], name)

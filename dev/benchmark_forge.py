@@ -60,7 +60,7 @@ def evaluate(route,cases):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--route',choices=['rules','llama3b','glimmer'],required=True);p.add_argument('--limit',type=int);args=p.parse_args()
-    cases=json.loads(DATA.read_text())['cases'];cases=cases[:args.limit] if args.limit else cases
+    cases=json.loads(DATA.read_text(encoding='utf-8'))['cases'];cases=cases[:args.limit] if args.limit else cases
     result=evaluate(args.route,cases);result['dataset_sha256']=hashlib.sha256(DATA.read_bytes()).hexdigest();result['scope']='Rules-gated two-step observation publication; not unrestricted multi-device reasoning. Synthetic scenarios only. Held-out cases frozen before model execution, no prompt tuning on results.'
-    target=ROOT/f'docs/forge/benchmark-{args.route}.json';target.write_text(json.dumps(result,indent=2)+'\n');print({k:v for k,v in result.items() if k!='rows'},flush=True)
+    target=ROOT/f'docs/forge/benchmark-{args.route}.json';target.write_text(json.dumps(result,indent=2)+'\n', encoding='utf-8');print({k:v for k,v in result.items() if k!='rows'},flush=True)
 if __name__=='__main__':main()
