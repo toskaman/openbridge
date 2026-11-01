@@ -61,11 +61,7 @@ Every Meta call is receipted with model id, digest, tokens, and cost — favorab
 | 7 Linux/legacy-Windows guests (QEMU) | FULL GUEST OS — agent protocol proven, labeled as VMs |
 | Pixel 6 AVD, ESP32 (native IDF agent) | OFFICIAL EMULATOR — proven, never counted as physical |
 
-![Device Fabric topology of a real home network](docs/jury/screens/fabric-tv-relay-redacted-1440.png)
-
-*Secondary proof — one live graph of a real home network (28 Oct 2026, names redacted): 24 devices — a Freebox router, mDNS/SSDP discovery, an Android phone over USB and an Android TV over ADB Wi-Fi as paired relays. This PC has no Bluetooth radio; BLE reach comes through the relays.*
-
-[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (35 VERIFIED records) · [known limitations](docs/KNOWN_LIMITATIONS.md)
+[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (35 VERIFIED records, incl. the 28 Oct live-graph run: 24 devices, names redacted) · [known limitations](docs/KNOWN_LIMITATIONS.md)
 
 ## New capabilities (Frontier 90)
 
@@ -88,11 +84,11 @@ Details: [Frontier 90 report](docs/jury/FRONTIER90_REPORT_2026-11-01.md) · [com
 
 **"Create a control panel on my TV so I can operate my robot vacuum."**
 
-![OpenBridge tour: six real captures — fabric, Ask, phone, TV, watch, Meta-built panel](docs/jury/screens/openbridge-tour.gif)
+![OpenBridge tour: six real captures — Home Ask, refusal timeline, phone, TV, watch, Meta-built panel](docs/jury/screens/openbridge-tour.gif)
 
-*Eleven seconds, six real captures. Rebuilt from committed evidence stills (`python dev/rebuild_tour_gif.py`). Scripted replays elsewhere in the docs are labeled REPLAY/SIMULATED.*
+*Eleven seconds, six real captures. Rebuilt from committed stills (`python dev/rebuild_tour_gif.py`). Scripted replays elsewhere in the docs are labeled REPLAY/SIMULATED.*
 
-![Ask OpenBridge natural-language panel](docs/jury/screens/ask-openbridge-1440.png)
+![Ask OpenBridge on the new Home workspace](docs/ui/screens/after-home-1440.webp)
 
 *Ask in English or French → fingerprint-bound preview → approve → receipt. Local tiers verified live.*
 
@@ -111,7 +107,7 @@ Windows, Linux, or macOS · Python 3.14 (CI-pinned 3.14.4) · zero third-party r
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2055 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 2096 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
@@ -124,9 +120,9 @@ Owner consent per privileged act · typed skills, never free-form shell · stric
 
 Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green on main ([run 41309860677](https://github.com/toskaman/openbridge/actions/runs/41309860677), 1 Nov; first complete pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)).
 
-![Refused press shown in the Activity timeline](docs/jury/screens/refusal_channel.png)
+![Refused press shown in the new Activity timeline](docs/jury/screens/activity-v2-refused-1440.png)
 
-*Every refused press lands in the Activity timeline with a server-composed reason — shown, not hidden. (Seeded-UI shot from a demo server; payload is a real `process()` refusal.)*
+*Every refused press lands in the Activity timeline with a server-composed reason — shown, not hidden. (Seeded-UI shot, 1 Nov 2026; payload is a real `process()` refusal: REVOKED, "This control is no longer authorized".)*
 
 Full picture: [known limitations](docs/KNOWN_LIMITATIONS.md) · [relay security](docs/RELAY_SECURITY.md) · [claim matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) (incl. "Never claimed").
 
