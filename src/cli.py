@@ -1422,6 +1422,7 @@ def cmd_routes_list(args):
 
 
 def cmd_routes_dispatch(args):
+    from src.fabric import route_intel as RI
     from src.runtime import api_v2
     target = getattr(args, 'target', '') or ''
     if not target.strip():
@@ -1434,9 +1435,15 @@ def cmd_routes_dispatch(args):
             raise CliError('args', 'PARAMS_INVALID', 'Cannot parse --params JSON: %s' % e)
         if not isinstance(params, dict):
             raise CliError('args', 'PARAMS_INVALID', '--params must be a JSON object.')
+    op = getattr(args, 'op', None) or 'get_status'
+    consent = True
+    if op not in RI.READ_OPS:
+        preview = {'op': op, 'target': target, 'relay_id': getattr(args, 'relay', None),
+                   'params': params}
+        require_consent(args, preview_hash(preview), 'routes dispatch')
     with Core() as server:
         status, body = api_v2.post(server, '/api/v2/route_intel/dispatch', {
-            'target': target, 'op': getattr(args, 'op', None) or 'get_status',
+            'target': target, 'op': op, 'consent': consent,
             'params': params,
             'capability': getattr(args, 'capability', None) or 'ble_scan',
             'relay_id': getattr(args, 'relay', None)})
@@ -1480,9 +1487,52 @@ def cmd_transplant_run(args):
     req = _read_json_file(request_file, 'transplant request')
     if not isinstance(req, dict):
         raise CliError('args', 'SPEC_INVALID', 'Transplant request must be a JSON object.')
+    require_consent(args, preview_hash(req), 'transplant run')
     with Core() as server:
         status, body = api_v2.post(server, '/api/v2/transplant/run', req)
     return check_status(status, body)
+
+
+def cmd_migrate_propose(args):
+    from src.runtime import api_v2
+    body = {'text': getattr(args, 'text', None), 'source': getattr(args, 'source', None),
+            'target': getattr(args, 'target', None), 'match': getattr(args, 'match', None)}
+    if not body['text'] and not (body['source'] and body['target']):
+        raise CliError('args', 'MISSING_INPUT',
+                       'migrate propose needs --text or --source + --target.')
+    with Core() as server:
+        status, resp = api_v2.post(server, '/api/v2/migrate/propose', body)
+    return check_status(status, resp)
+
+
+def cmd_migrate_apply(args):
+    from src.runtime import api_v2
+    proposal_file = getattr(args, 'proposal', None)
+    if not proposal_file:
+        raise CliError('args', 'MISSING_INPUT', 'migrate apply needs --proposal proposal.json.')
+    proposal = _read_json_file(proposal_file, 'migration proposal')
+    if not isinstance(proposal, dict):
+        raise CliError('args', 'SPEC_INVALID', 'Migration proposal must be a JSON object.')
+    require_consent(args, preview_hash(proposal), 'migrate apply')
+    with Core() as server:
+        status, resp = api_v2.post(server, '/api/v2/migrate/apply',
+                                   {'proposal': proposal, 'consent': True})
+    return check_status(status, resp)
+
+
+def cmd_migrate_rollback(args):
+    from src.runtime import api_v2
+    receipt_file = getattr(args, 'receipt', None)
+    if not receipt_file:
+        raise CliError('args', 'MISSING_INPUT', 'migrate rollback needs --receipt receipt.json.')
+    receipt = _read_json_file(receipt_file, 'migration receipt')
+    if not isinstance(receipt, dict):
+        raise CliError('args', 'SPEC_INVALID', 'Migration receipt must be a JSON object.')
+    require_consent(args, preview_hash(receipt), 'migrate rollback')
+    with Core() as server:
+        status, resp = api_v2.post(server, '/api/v2/migrate/rollback',
+                                   {'receipt': receipt, 'consent': True})
+    return check_status(status, resp)
 
 
 # ---------------- approvals ----------------
@@ -1911,6 +1961,18 @@ def build_parser():
     transplant_subs = transplant.add_subparsers(dest='transplant_command')
     transplant_run = leaf(transplant_subs, 'run', cmd_transplant_run, 'transplant run')
     transplant_run.add_argument('--request', default=None)
+
+    migrate = subs.add_parser('migrate')
+    migrate_subs = migrate.add_subparsers(dest='migrate_command')
+    migrate_propose = leaf(migrate_subs, 'propose', cmd_migrate_propose, 'migrate propose')
+    migrate_propose.add_argument('--text', default=None)
+    migrate_propose.add_argument('--source', default=None)
+    migrate_propose.add_argument('--target', default=None)
+    migrate_propose.add_argument('--match', default=None)
+    migrate_apply = leaf(migrate_subs, 'apply', cmd_migrate_apply, 'migrate apply')
+    migrate_apply.add_argument('--proposal', default=None)
+    migrate_rollback = leaf(migrate_subs, 'rollback', cmd_migrate_rollback, 'migrate rollback')
+    migrate_rollback.add_argument('--receipt', default=None)
 
     ask_parser = leaf(subs, 'ask', cmd_ask, 'ask')
     ask_parser.add_argument('text')

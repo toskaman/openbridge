@@ -24,9 +24,10 @@ its port and leaves no orphan process.
 
 ## Wrong Python version
 
-OpenBridge needs Python 3.12 or newer and is developed on 3.14.4 with the
-standard library only. If `doctor` reports a mismatch, install a supported
-Python and re-run. The clean-room check (`scripts/verify/clean_install_check.py`)
+OpenBridge needs Python 3.14 (CI-pinned 3.14.4; older versions untested
+and unsupported) with the standard library only. If `doctor` reports a
+mismatch, install a supported Python and re-run. The clean-room check
+(`scripts/verify/clean_install_check.py`)
 runs in an isolated venv with no third-party packages; any third-party import
 at runtime is a bug — report which module failed.
 

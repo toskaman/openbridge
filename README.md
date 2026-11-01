@@ -40,7 +40,8 @@ Without Meta inference, OpenBridge would be static plumbing: discovery would sti
 - **Explanations:** coverage advisor 56/60 usable for Glimmer vs 0/60 for Llama 3B (60 synthetic cases).
 - **Planning:** narrow agent benchmark — rules 90.0%, Glimmer 86.7%, Llama 53.3%; all unsafe proposals refused by the gate.
 - **Honest failures kept:** registered ablation — no model beat the rules (0.833 / 0.833 / 0.722); Forge Llama 0.0%, Forge Glimmer resource-blocked (0/64, nulls not zero-filled); 1,000-turn rules baseline 1.4%, model tiers pending.
-- **Held-out model study (36 cases):** rules intent 36.1% vs Llama 3B 22.2% — neither arm wins overall. Llama is the only arm that resolves novel intents, but it never refuses (6 consent-gated wrong-but-executable substitutions) and never clarifies; Glimmer blocked by host OOM. Full scorecard: [ModelStudy48](docs/benchmark/modelstudy48/RESULTS.md).
+- **Held-out model study (36 cases):** rules intent 36.1% vs Llama 3B 22.2% — neither arm wins overall. Llama is the only arm that resolves novel intents, but it never refuses (6 consent-gated wrong-but-executable substitutions) and never clarifies; Glimmer blocked by host OOM. Full scorecard: [ModelStudy48](docs/benchmark/modelstudy48/RESULTS.md). Post-fix set (S8 gate): unsafe 2→0, zero correct proposals blocked ([results](docs/benchmark/intenteffect/RESULTS.md)).
+- **Model references:** [third-party inventory](THIRD_PARTY.md) — Llama 3.2 license/attribution, Glimmer docs ([dev.meta.ai](https://dev.meta.ai/docs/muse-glimmer)) and upstream weights, pinned registry digests.
 
 Every Meta call is receipted with model id, digest, tokens, and cost — favorable and unfavorable results both published. Local models are digest-pinned with no cloud fallback; hosted Spark answers only synthetic facts, only with explicit consent, inside a hard budget. The runtime is Meta-models-only, enforced by [src/ai/registry.py](src/ai/registry.py). Methodology and receipts: [benchmark status](docs/benchmark/STATUS.md) · [model usage](docs/MODEL_USAGE_AND_EVALUATION.md) · [TV Glimmer journey](docs/forge/TV_GLIMMER_JOURNEY.md).
 
@@ -121,7 +122,7 @@ Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) 
 
 Owner consent per privileged act · typed skills, never free-form shell · strict validation before dispatch · idempotency keys + crash-safe journal (honest UNCERTAIN, never blind re-execution) · independent read-back oracles · signed, expiring, replay-protected relay commands · pairing attempt limits · revocation that stops new admissions.
 
-Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green ([run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451), 1 Nov) — the main re-run lost phone to an emulator-host timeout (infra, not app: same APK/harness green on tv/wear/e2e) and is being re-run.
+Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green on main ([run 41309860677](https://github.com/toskaman/openbridge/actions/runs/41309860677), 1 Nov; first complete pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)).
 
 ![Refused press shown in the Activity timeline](docs/jury/screens/refusal_channel.png)
 

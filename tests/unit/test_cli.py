@@ -478,3 +478,88 @@ class AskGoldenPathTests(unittest.TestCase):
         self.assertEqual(out['preview']['skill_id'], 'fabric.status')
         self.assertEqual(out['preview']['device_keys'], [])
         pending.assert_called_once()
+
+
+class MigrateCliTests(unittest.TestCase):
+    """FINAL FRONTIER S9: migrate propose/apply/rollback CLI wiring."""
+
+    def core_ctx(self):
+        core = mock.MagicMock()
+        core.__enter__.return_value = mock.sentinel.server
+        return core
+
+    def json_file(self, tmp, name, obj):
+        import os
+        path = os.path.join(tmp, name)
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump(obj, fh)
+        return path
+
+    def test_propose_needs_text_or_endpoints(self):
+        args = Namespace(text=None, source=None, target=None, match=None)
+        with self.assertRaises(cli.CliError) as e:
+            cli.cmd_migrate_propose(args)
+        self.assertEqual(e.exception.code, 'MISSING_INPUT')
+
+    def test_propose_posts_text(self):
+        args = Namespace(text='move volume to the tv', source=None, target=None, match=None)
+        with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+             mock.patch('src.runtime.api_v2.post', return_value=(200, {'outcome': 'proposal'})) as p:
+            out = cli.cmd_migrate_propose(args)
+        p.assert_called_once_with(mock.sentinel.server, '/api/v2/migrate/propose',
+                                  {'text': 'move volume to the tv', 'source': None,
+                                   'target': None, 'match': None})
+        self.assertEqual(out, {'outcome': 'proposal'})
+
+    def test_apply_needs_preview_consent(self):
+        import tempfile
+        proposal = {'outcome': 'proposal', 'moves': []}
+        with tempfile.TemporaryDirectory() as tmp:
+            args = Namespace(proposal=self.json_file(tmp, 'p.json', proposal),
+                             consent='nope', yes=False)
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_migrate_apply(args)
+        self.assertEqual(e.exception.code, 'CONSENT_REQUIRED')
+        self.assertIn(cli.preview_hash(proposal), str(e.exception))
+
+    def test_apply_posts_consent_true(self):
+        import tempfile
+        proposal = {'outcome': 'proposal', 'moves': []}
+        with tempfile.TemporaryDirectory() as tmp:
+            args = Namespace(proposal=self.json_file(tmp, 'p.json', proposal),
+                             consent=cli.preview_hash(proposal), yes=False)
+            with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+                 mock.patch('src.runtime.api_v2.post',
+                            return_value=(200, {'receipt': 'r1'})) as p:
+                out = cli.cmd_migrate_apply(args)
+        p.assert_called_once_with(mock.sentinel.server, '/api/v2/migrate/apply',
+                                  {'proposal': proposal, 'consent': True})
+        self.assertEqual(out, {'receipt': 'r1'})
+
+    def test_rollback_needs_preview_consent_and_posts(self):
+        import tempfile
+        receipt = {'migration_id': 'm1'}
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Namespace(proposal=None, receipt=self.json_file(tmp, 'r.json', receipt),
+                            consent=None, yes=True)
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_migrate_rollback(bad)
+            self.assertEqual(e.exception.code, 'CONSENT_REQUIRED')
+            good = Namespace(receipt=self.json_file(tmp, 'r.json', receipt),
+                             consent=cli.preview_hash(receipt), yes=False)
+            with mock.patch.object(cli, 'Core', return_value=self.core_ctx()), \
+                 mock.patch('src.runtime.api_v2.post',
+                            return_value=(200, {'rolled_back': True})) as p:
+                out = cli.cmd_migrate_rollback(good)
+        p.assert_called_once_with(mock.sentinel.server, '/api/v2/migrate/rollback',
+                                  {'receipt': receipt, 'consent': True})
+        self.assertEqual(out, {'rolled_back': True})
+
+    def test_rollback_rejects_non_object(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            args = Namespace(receipt=self.json_file(tmp, 'r.json', [1, 2]),
+                             consent='x', yes=False)
+            with self.assertRaises(cli.CliError) as e:
+                cli.cmd_migrate_rollback(args)
+        self.assertEqual(e.exception.code, 'SPEC_INVALID')

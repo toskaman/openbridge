@@ -2,7 +2,8 @@
 
 Supersedes the 30 Oct edition (preserved in git history). Eligibility is
 determined solely by the organizers: bonus criteria are unannounced
-(T-P summary only, ~Nov 10) and every item below is a candidate alignment
+(T-P summary only, ~Nov 10), award names below are provisional T-P labels
+(unconfirmed on official pages), and every item is a candidate alignment
 with stated proof — never a promise of prizes. Each award carries a
 verdict, what exists with links, what is missing, and the owner action.
 

@@ -30,6 +30,15 @@ REFUSED_KNOWN = 'REFUSED_KNOWN'     # relay received and refused; known outcome,
 
 OUTCOMES = (ACKED, NOT_SENT, UNCERTAIN, REFUSED_KNOWN)
 
+# Ops that never mutate relay state. Every other relay op sent through
+# /api/v2/route_intel/dispatch (start/stop_discovery, revoke_access,
+# set_controls, ...) requires explicit consent, like every sibling mutating
+# path. Unknown ops stay rejected by relay.command, never admitted here.
+READ_OPS = frozenset({'discover_capabilities', 'report_observations',
+                      'get_status', 'get_permissions', 'get_requests',
+                      'report_result', 'get_commands', 'report_command',
+                      'update_status'})
+
 
 class UncertainOutcome(RuntimeError):
     """Fail-closed refusal: the original command outcome is uncertain, so no

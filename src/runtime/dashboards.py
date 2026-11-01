@@ -62,6 +62,9 @@ def install_patch(controls, relay_id, patch, target, bindable_skills,
         label = w.get('label')
         if not isinstance(label, str) or not 0 < len(label) <= 40:
             raise DashboardError('label must be 1-40 characters: %r' % (w.get('widget_id'),))
+        if any(ord(ch) < 32 or ord(ch) == 0x7f for ch in label):
+            raise DashboardError('label must not contain control characters: %r'
+                                 % (w.get('widget_id'),))
         params = w.get('params')
         if not isinstance(params, dict) or \
                 any(not isinstance(v, (str, int, float, bool)) for v in params.values()):
