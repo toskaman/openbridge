@@ -36,6 +36,12 @@ def _read_wakefulness(android, handle):
     return m.group(1) if m else None
 
 
+def _focused_package(android, handle):
+    out = android.shell(handle, ('dumpsys', 'activity', 'activities'))
+    m = re.search(r'mFocusedApp=ActivityRecord\{[^}]* (\S+)/', out)
+    return m.group(1) if m else None
+
+
 ARGS_SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
     'key': {'type': 'string', 'maxLength': 24}, 'text': {'type': 'string', 'maxLength': 100}, 'package': {'type': 'string', 'maxLength': 120},
     'url': {'type': 'string', 'maxLength': 300}, 'setting': {'type': 'string', 'maxLength': 32}, 'value': {'type': 'integer', 'minimum': 0, 'maximum': 1800000},
@@ -196,6 +202,13 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('TV awake',),
                      'mWakefulness read back Awake via dumpsys power', 'tv_sleep',
                      R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'WAKE_FAILED'), 30, 'single-per-device', True),
+    ActionDescriptor('companion_foreground', 'Bring the OpenBridge Companion app to the foreground',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent (interrupts what is on screen)', 'control grant on a current ADB link'),
+                     ('screen awake (tv_wake first if asleep)', 'identity re-verified'),
+                     ('Companion activity focused; HOME/remote undoes',),
+                     'mFocusedApp names fr.openbridge.companion via dumpsys activity', '',
+                     R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'DEVICE_ASLEEP', 'FOREGROUND_FAILED'), 30, 'single-per-device', True),
     ActionDescriptor('file_pull', 'Copy one file from under /sdcard/ into the server transfer store',
                      {'type': 'object', 'properties': {'remote': _s('string', maxLength=256)}, 'required': ['remote'], 'additionalProperties': False},
                      ('owner consent (file contents are sensitive)', 'read grant on a current ADB link'),
@@ -845,6 +858,27 @@ class Executor:
             raise ValueError('WAKE_FAILED: wakefulness is %s' % state)
         return 'EXECUTED', None, 'TV awake (mWakefulness=Awake)', True, {'wakefulness': 'Awake'}
 
+    def _companion_foreground(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            wake = _read_wakefulness(self.ctx.android, handle)
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if wake != 'Awake':
+            raise PrimitiveError('DEVICE_ASLEEP', 'wake the screen first (tv_wake or the remote)')
+        try:
+            self.ctx.android.shell(handle, ('am', 'start', '-n', 'fr.openbridge.companion/.MainActivity'))
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        time.sleep(2)
+        try:
+            pkg = _focused_package(self.ctx.android, handle)
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if pkg != 'fr.openbridge.companion':
+            raise ValueError('FOREGROUND_FAILED: focused package is %s' % pkg)
+        return 'EXECUTED', None, 'Companion focused', True, {'package': pkg}
+
     def _file_pull(self, key, params):
         handle = self._adb_handle(key)
         try:
@@ -878,7 +912,8 @@ class Executor:
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,
-               'retro_command': _retro_command, 'tv_sleep': _tv_sleep, 'tv_wake': _tv_wake}
+               'retro_command': _retro_command, 'tv_sleep': _tv_sleep, 'tv_wake': _tv_wake,
+               'companion_foreground': _companion_foreground}
 
     # ---------- recovery backlog ----------
     MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first

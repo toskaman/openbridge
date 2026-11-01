@@ -126,5 +126,54 @@ class TvWake(unittest.TestCase):
         self.assertEqual(r["state"], "FAILED")
 
 
+FOCUSED_COMPANION = "mFocusedApp=ActivityRecord{a7ee65e u0 fr.openbridge.companion/.MainActivity t7101}\n"
+FOCUSED_OTHER = "mFocusedApp=ActivityRecord{a7ee65e u0 com.google.android.tvlauncher/.MainActivity t7101}\n"
+
+
+class FakeForegroundAndroid(FakeTVAndroid):
+    def __init__(self, power="mWakefulness=Awake\n", activities=FOCUSED_COMPANION):
+        super().__init__(power=power)
+        self.activities = activities
+
+    def shell(self, handle, argv, timeout=15, max_bytes=65536):
+        assert handle == "h1"
+        self.shell_calls.append(tuple(argv))
+        if tuple(argv[:2]) == ("dumpsys", "power"):
+            return self.power
+        if tuple(argv[:2]) == ("dumpsys", "activity"):
+            return self.activities
+        return ""
+
+
+class CompanionForeground(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.c, self.key = ctx(self.tmp)
+        self.c.android = FakeForegroundAndroid()
+        self.ex = Executor(self.c)
+
+    def test_foreground_executes_and_verifies_focus(self):
+        r = self.ex.execute("companion_foreground", self.key, {}, True)
+        self.assertEqual(r["state"], "EXECUTED")
+        self.assertTrue(r["verified"])
+        self.assertIn(("am", "start", "-n", "fr.openbridge.companion/.MainActivity"),
+                      self.c.android.shell_calls)
+
+    def test_foreground_refuses_when_screen_asleep(self):
+        self.c.android.power = "mWakefulness=Asleep\n"
+        r = self.ex.execute("companion_foreground", self.key, {}, True)
+        self.assertEqual(r["state"], "BLOCKED")
+        self.assertIn("DEVICE_ASLEEP", r["errors"][0])
+
+    def test_foreground_fails_when_focus_elsewhere(self):
+        self.c.android.activities = FOCUSED_OTHER
+        r = self.ex.execute("companion_foreground", self.key, {}, True)
+        self.assertEqual(r["state"], "FAILED")
+
+    def test_foreground_needs_consent(self):
+        r = self.ex.execute("companion_foreground", self.key, {}, False)
+        self.assertEqual(r["state"], "BLOCKED")
+
+
 if __name__ == "__main__":
     unittest.main()

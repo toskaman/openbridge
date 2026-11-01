@@ -58,6 +58,7 @@ SKILL_AUDIENCE = {
     'screen_capture': 'android',
     'file_pull': 'android',
     'capability_probe': 'android',
+    'companion_foreground': 'android',
     'capture_send': 'android',
     'file_push': 'android',
     'app_launch': 'android',
