@@ -29,7 +29,7 @@ from src.fabric import discovery as fabric_discovery
 from src.fabric import relay as fabric_relay
 
 UI = Path(__file__).parent / 'ui'
-ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript'), '/command_center.js': ('command_center.js', 'text/javascript'), '/explorer.js': ('explorer.js', 'text/javascript')}
+ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript'), '/command_center.js': ('command_center.js', 'text/javascript'), '/explorer.js': ('explorer.js', 'text/javascript'), '/replay.js': ('replay.js', 'text/javascript')}
 
 # Campaign One §3.6 HTTP hardening: request size caps and client patience.
 MAX_URL_BYTES = 8192            # request-target ceiling (stdlib guards the 64 KiB line; this is the app boundary)
@@ -239,6 +239,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, {'evidence_kind':'RECORDED_RUNTIME_CORE_CALL','live_request':False,'receipt':receipt})
             except (OSError,ValueError,AttributeError):
                 return self.reply(404, {'error':'No verified recorded model proof available'})
+        if path == '/api/demo-replay':
+            from src.runtime.demo_replay import serve_bundle
+            return self.reply(*serve_bundle())
         if path == '/api/demo-setting':
             if self.server.demo_engine is None or self.server.demo_engine.adapter.source != 'SIMULATED':
                 return self.reply(409, {'error':'Simulated transaction journal unavailable'})

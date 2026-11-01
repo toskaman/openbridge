@@ -8,6 +8,7 @@
 <link href="/style.css" rel="stylesheet"/>
 <script defer src="/app.js"></script>
 <script defer src="/explorer.js"></script>
+<script defer src="/replay.js"></script>
 <script defer src="/shell.js"></script>
 <script defer src="/command_center.js"></script>
 </head>
@@ -54,6 +55,7 @@
     <div class="nav-secondary">
       <button type="button" id="ask-nav"><svg aria-hidden="true"><use href="#i-meta"/></svg>Ask OpenBridge</button>
       <button type="button" data-action="assistant"><svg aria-hidden="true"><use href="#i-meta"/></svg>Meta AI Assistant</button>
+      <a href="#/replay" data-nav="replay"><svg aria-hidden="true"><use href="#i-media"/></svg><span>Demo replay</span></a>
       <a href="#/advanced" data-nav="advanced"><svg aria-hidden="true"><use href="#i-gear"/></svg><span>Advanced diagnostics</span></a>
     </div>
     <div class="sidebar-foot">
@@ -231,6 +233,12 @@
             </section>
           </div>
         </div>
+      </section>
+
+      <!-- DEMO REPLAY (§5.6 offline fallback: recorded S5/S5b receipts, SIMULATED playback) -->
+      <section class="view" data-view="replay" aria-labelledby="replay-title">
+        <div class="view-head"><div><h1 id="replay-title">Demo replay</h1><p class="sub">Scripted playback of the recorded S5/S5b receipts — the offline fallback when owner hardware is unavailable.</p></div></div>
+        <div class="replay-body"><p class="muted">Loading the recorded receipts…</p></div>
       </section>
 
       <!-- ADVANCED DIAGNOSTICS -->
