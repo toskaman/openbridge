@@ -30,6 +30,45 @@ from src.fabric import relay as fabric_relay
 UI = Path(__file__).parent / 'ui'
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style.css', 'text/css'), '/app.js': ('app.js', 'text/javascript'), '/shell.js': ('shell.js', 'text/javascript'), '/command_center.js': ('command_center.js', 'text/javascript'), '/explorer.js': ('explorer.js', 'text/javascript')}
 
+# Campaign One §3.6 HTTP hardening: request size caps and client patience.
+MAX_URL_BYTES = 8192            # request-target ceiling (stdlib guards the 64 KiB line; this is the app boundary)
+MAX_QUERY_FIELDS = 100          # parse_qs field flood ceiling
+MAX_BODY_BYTES = 8192           # default JSON body ceiling
+MAX_BODY_MANIFEST_BYTES = 65_536      # manifests/workflows carry signed plans
+MAX_BODY_TRANSCRIBE_BYTES = 700_000   # voice/transcribe carries base64 audio
+HEADER_TIMEOUT_S = 5            # slow-client patience for request line + headers
+
+
+def _header_all(headers, name):
+    """Case-insensitive multi-value header lookup that never raises.
+
+    BaseHTTPRequestHandler normally supplies an EmailMessage (get_all), but the
+    HTTP/0.9 path supplies a plain dict — fail closed there instead of raising
+    AttributeError in the handler thread."""
+    get_all = getattr(headers, 'get_all', None)
+    if callable(get_all):
+        try:
+            return list(get_all(name, []))
+        except (AttributeError, TypeError, ValueError):
+            return []
+    if isinstance(headers, dict):
+        want = name.lower()
+        return [value for key, value in headers.items() if isinstance(key, str) and key.lower() == want]
+    return []
+
+
+def _header_one(headers, name, default=None):
+    values = _header_all(headers, name)
+    return values[0] if values else default
+
+
+def _query_params(path):
+    """Bounded query parsing: None when the query floods the field cap."""
+    try:
+        return parse_qs(urlsplit(path).query, max_num_fields=MAX_QUERY_FIELDS)
+    except ValueError:
+        return None
+
 
 class LocalServer(ThreadingHTTPServer):
     def server_close(self):
@@ -44,6 +83,19 @@ class LocalServer(ThreadingHTTPServer):
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.0'
+
+    def setup(self):
+        super().setup()
+        try:
+            self.connection.settimeout(HEADER_TIMEOUT_S)   # slow-client patience starts before the request line
+        except OSError:
+            pass
+
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except ConnectionError:
+            self.close_connection = True   # client vanished mid-request: nothing to answer, stay quiet
 
     def log_message(self, *_):
         pass  # Avoid recording request paths or identifiers.
@@ -64,31 +116,42 @@ class Handler(BaseHTTPRequestHandler):
         from src.runtime import api_v2
         if self.path not in api_v2.POST_ROUTES:
             return self.reply(404, {'error': 'Operation unavailable'})
-        if self.headers.get('Content-Type') != 'application/json':
+        if _header_one(self.headers, 'Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
         try:
-            lengths = self.headers.get_all('Content-Length', [])
-            if len(lengths) != 1 or self.headers.get('Transfer-Encoding') or not 0 <= int(lengths[0]) <= (700_000 if self.path == '/api/v2/voice/transcribe' else 65_536 if self.path.startswith(('/api/v2/manifests/', '/api/v2/workflows/')) else 8192):
+            lengths = _header_all(self.headers, 'Content-Length')
+            cap = (MAX_BODY_TRANSCRIBE_BYTES if self.path == '/api/v2/voice/transcribe'
+                   else MAX_BODY_MANIFEST_BYTES if self.path.startswith(('/api/v2/manifests/', '/api/v2/workflows/'))
+                   else MAX_BODY_BYTES)
+            if len(lengths) != 1 or _header_one(self.headers, 'Transfer-Encoding'):
                 raise ValueError()
+            length = int(lengths[0])
+            if length < 0:
+                raise ValueError()
+            if length > cap:
+                return self.reply(413, {'error': 'Request too large'})
             self.connection.settimeout(5)
-            body = json.loads(self.rfile.read(int(lengths[0])))
-        except (ValueError, OSError):
+            body = json.loads(self.rfile.read(length))
+        except (ValueError, TypeError, OSError):
             return self.reply(400, {'error': 'Invalid request'})
         return self.reply(*api_v2.post(self.server, self.path, body))
 
     def host_allowed(self):
-        hosts = self.headers.get_all('Host', [])
+        hosts = _header_all(self.headers, 'Host')
         return len(hosts) == 1 and hosts[0] == f'127.0.0.1:{self.server.server_port}'
 
     def do_GET(self):
         if not self.host_allowed():
             return self.reply(403, {'error': 'Untrusted host'})
+        if len(self.path) > MAX_URL_BYTES:
+            return self.reply(414, {'error': 'Request-target too long'})
         path = urlsplit(self.path).path
         if path.startswith('/api/v2/'):
             from src.runtime import api_v2
             return self.reply(*api_v2.get(self.server, path, urlsplit(self.path).query))
         if path == '/api/device-events':
-            if parse_qs(urlsplit(self.path).query).get('source') != ['android']:
+            params = _query_params(self.path)
+            if params is None or params.get('source') != ['android']:
                 return self.reply(400,{'error':'Explicit Android event source required'})
             self.send_response(200)
             self.send_header('Content-Type','text/event-stream')
@@ -111,7 +174,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/session':
             return self.reply(200, {'csrf_token': self.server.csrf_token})
         if path == '/api/devices':
-            source = parse_qs(urlsplit(self.path).query).get('source', ['demo'])
+            params = _query_params(self.path)
+            if params is None:
+                return self.reply(400, {'error': 'Invalid query'})
+            source = params.get('source', ['demo'])
             if source == ['android']:
                 return self.reply(200, self.server.android.discover())
             if source == ['freebox']:
@@ -165,24 +231,28 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         origin = f'http://127.0.0.1:{self.server.server_port}'
-        token = self.headers.get('X-CSRF-Token', '')
-        if (not self.host_allowed() or self.headers.get_all('Origin', []) != [origin]
+        token = _header_one(self.headers, 'X-CSRF-Token', '')
+        if not isinstance(token, str):
+            token = ''
+        if (not self.host_allowed() or _header_all(self.headers, 'Origin') != [origin]
                 or not hmac.compare_digest(token.encode(), self.server.csrf_token.encode())):
             return self.reply(403, {'error': 'Origin or CSRF check failed'})
+        if len(self.path) > MAX_URL_BYTES:
+            return self.reply(414, {'error': 'Request-target too long'})
         if self.path.startswith('/api/v2/'):
             return self.v2_post()
         if self.path not in ('/api/inspect', '/api/recommend', '/api/demo-transaction', '/api/agent-plan', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/fabric-discover', '/api/freebox-authorize', '/api/relay-pair-start', '/api/relay-pair-confirm', '/api/relay-scan', '/api/companion-install', '/api/fabric-advise', '/api/tv-adb-connect', '/api/session-restore', '/api/watch-pair'):
             return self.reply(404, {'error': 'Operation unavailable'})
-        if self.headers.get('Content-Type') != 'application/json':
+        if _header_one(self.headers, 'Content-Type') != 'application/json':
             return self.reply(415, {'error': 'JSON required'})
         try:
-            lengths = self.headers.get_all('Content-Length', [])
-            if len(lengths) != 1 or self.headers.get('Transfer-Encoding'):
+            lengths = _header_all(self.headers, 'Content-Length')
+            if len(lengths) != 1 or _header_one(self.headers, 'Transfer-Encoding'):
                 raise ValueError()
             length = int(lengths[0])
             if length < 0:
                 raise ValueError()
-            if length > 8192:
+            if length > MAX_BODY_BYTES:
                 return self.reply(413, {'error': 'Request too large'})
             self.connection.settimeout(5)
             body = json.loads(self.rfile.read(length))
@@ -356,7 +426,7 @@ class Handler(BaseHTTPRequestHandler):
                 result = inspect_device(body['device_id'])
             else:
                 raise ValueError('Unknown source')
-        except (ValueError, UnicodeError, TimeoutError):
+        except (ValueError, TypeError, UnicodeError, TimeoutError):
             return self.reply(400, {'error': 'Invalid request or unknown device'})
         return self.reply(200, result)
 
