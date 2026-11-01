@@ -221,6 +221,17 @@ def validate_commands(report):
     return out
 
 
+# Per-capability permission gates: relay permission keys that must be True
+# for a relay to serve a capability. Owner consent ('owner_enabled') gates
+# every capability on top. Capabilities without an entry yield no routes
+# (fail-closed, as before for anything but ble_scan).
+CAPABILITY_PERMISSIONS = {
+    'ble_scan': ('BLUETOOTH_SCAN',),
+    'remote_controls': (),
+    'command_submit': (),
+}
+
+
 class RelayManager:
     """Tracks enrolled relays and picks one per request strictly by granted capability."""
     def __init__(self, transport):
@@ -253,9 +264,13 @@ class RelayManager:
 
     def eligible(self, capability):
         with self._lock:
+            required = CAPABILITY_PERMISSIONS.get(capability)
+            if required is None:
+                return []  # unknown capability: no route, never a guess
             out = []
             for rid, r in self.relays.items():
-                permitted = capability == 'ble_scan' and r['permissions'].get('BLUETOOTH_SCAN') is True and r['permissions'].get('owner_enabled') is True
+                permitted = all(r['permissions'].get(p) is True for p in required) \
+                    and r['permissions'].get('owner_enabled') is True
                 if capability in r['capabilities'] and permitted and r['online'] and not r['busy']:
                     out.append(rid)
             # Prefer mains-powered relays, then fewer recent failures.

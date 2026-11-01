@@ -99,6 +99,16 @@ class EnumerationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 intel.routes_for(bad)
 
+    def test_routes_for_non_ble_capability(self):
+        m = R.RelayManager(lambda e, msg: {})
+        m.enroll('phone', PHONE_KEY, 'dev-phone',
+                 {'capabilities': ['remote_controls'],
+                  'permissions': {'owner_enabled': True}})
+        intel = RouteIntel(m)
+        routes = intel.routes_for(TARGET, capability='remote_controls')
+        self.assertEqual([r.relay_id for r in routes], ['phone'])
+        self.assertEqual(intel.routes_for(TARGET, capability='nope'), [])
+
 
 class DisappearanceTests(unittest.TestCase):
     def test_simulated_loss_of_preferred_relay_selects_alternate(self):

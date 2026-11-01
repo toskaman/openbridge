@@ -133,5 +133,43 @@ class Clarification(unittest.TestCase):
         self.assertIn('RESPONSE_STEPS_WITH_CLARIFICATION', str(e.exception))
 
 
+class BidirectionalSmuggling(unittest.TestCase):
+    """E1-B-W2/F-01: each outcome allows exactly its own keys."""
+
+    def test_proposal_with_detail_keys_rejected(self):
+        for key, val in (('reason', 'x'), ('code', 'UNSUPPORTED'),
+                         ('clarifying_question', 'x?')):
+            with self.assertRaises(meta_result.MetaError, msg=key) as e:
+                meta_result.parse(
+                    {'outcome': 'proposal', 'patch': {}, key: val}, 'patch', echo)
+            self.assertIn('WITH_PROPOSAL', str(e.exception))
+
+    def test_cross_detail_keys_rejected(self):
+        with self.assertRaises(meta_result.MetaError) as e:
+            meta_result.parse(
+                {'outcome': 'refusal', 'reason': 'x', 'clarifying_question': 'y?'},
+                'patch', echo)
+        self.assertIn('RESPONSE_CLARIFYING_QUESTION_WITH_REFUSAL', str(e.exception))
+        for key in ('reason', 'code'):
+            with self.assertRaises(meta_result.MetaError, msg=key) as e:
+                meta_result.parse(
+                    {'outcome': 'clarification', 'clarifying_question': 'y?', key: 'x'},
+                    'patch', echo)
+            self.assertIn('WITH_CLARIFICATION', str(e.exception))
+
+    def test_oversize_payload_rejected_before_validation(self):
+        called = []
+
+        def validate(payload):
+            called.append(payload)
+            return payload
+
+        big = {'blob': 'x' * (meta_result.MAX_PAYLOAD_CHARS + 1)}
+        with self.assertRaises(meta_result.MetaError) as e:
+            meta_result.parse({'outcome': 'proposal', 'patch': big}, 'patch', validate)
+        self.assertIn('RESPONSE_PAYLOAD_TOO_LARGE', str(e.exception))
+        self.assertEqual(called, [])
+
+
 if __name__ == '__main__':
     unittest.main()
