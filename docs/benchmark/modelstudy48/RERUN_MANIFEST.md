@@ -78,5 +78,7 @@ were made, none are claimed, and the harness has no hosted path.
   (`w4-modelstudy48-full.json`).
 - Scorecard: `docs/benchmark/modelstudy48/RESULTS.md`.
 - SHA-256 (committed):
-  `c07837b12c397e901539724b215bcda6c8b3c576e62ce222c5d1586d8b6f4b5d`
-  (`results-20261101T024033Z.json`, 91,689 bytes).
+  `0dcea66a1127fa532f5d664b57b297ba63208d635279b8f8d0319450e4b3f3c5`
+  (`results-20261101T024033Z.json`, 88,316 bytes worktree).
+- SHA-256 (external pristine copy `w4-modelstudy48-full.json`, 91,689 bytes):
+  `c07837b12c397e901539724b215bcda6c8b3c576e62ce222c5d1586d8b6f4b5d`.
