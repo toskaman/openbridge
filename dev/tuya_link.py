@@ -35,7 +35,7 @@ def main():
     out = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge' / 'tuya.json'
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({'device_id': c['device_id'], 'ip': c['ip_address'], 'local_key': dev['key'],
-                               'version': str(c.get('protocol_version', '3.4')), 'source': source}))
+                               'version': str(c.get('protocol_version', '3.4')), 'source': source}), encoding='utf-8')
     d = tinytuya.Device(c['device_id'], c['ip_address'], key, version=float(c.get('protocol_version', '3.4')))
     d.set_socketTimeout(4)
     st = d.status()

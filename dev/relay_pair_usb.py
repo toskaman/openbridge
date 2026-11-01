@@ -23,4 +23,4 @@ if not code:sys.exit('code not readable')
 key=R.derive_key(code,hello['relay_nonce'],pc)
 declared=R.verify(key,send(None,R.command(key,hello['relay_id'],'discover_capabilities')),set())['params']
 print('PAIRED',json.dumps(declared))
-Path(Path.home()/('AppData/Local/OpenBridge/relay-test'+('-tv' if ':' in serial else '')+'.json')).write_text(json.dumps({'relay_id':hello['relay_id'],'key':key.hex()}))
+Path(Path.home()/('AppData/Local/OpenBridge/relay-test'+('-tv' if ':' in serial else '')+'.json')).write_text(json.dumps({'relay_id':hello['relay_id'],'key':key.hex()}),encoding='utf-8')

@@ -13,4 +13,4 @@ def chat(payload):
 b.chat=chat;start=time.perf_counter()
 try:trace['result']=MetaCapabilityPlanner(b).plan([manifest()],time.time())
 except Exception as e:trace['error']=str(e)
-trace['elapsed_ms']=round(1000*(time.perf_counter()-start));Path('docs/forge/glimmer-cpu-diagnostic.json').write_text(json.dumps(trace,indent=2)+'\n');print(json.dumps(trace,indent=2),flush=True)
+trace['elapsed_ms']=round(1000*(time.perf_counter()-start));Path('docs/forge/glimmer-cpu-diagnostic.json').write_text(json.dumps(trace,indent=2)+'\n',encoding='utf-8');print(json.dumps(trace,indent=2),flush=True)

@@ -41,6 +41,6 @@ def main():
                 page.close()
             browser.close()
     finally:server.shutdown();server.server_close();thread.join()
-    (output/'verification.json').write_text(json.dumps(rows,indent=2)+'\n')
+    (output/'verification.json').write_text(json.dumps(rows,indent=2)+'\n',encoding='utf-8')
     print('Forge browser checks passed at four widths. No hardware or model calls.')
 if __name__=='__main__':main()

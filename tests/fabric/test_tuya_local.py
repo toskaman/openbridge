@@ -38,8 +38,8 @@ class Tuya(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / 'tuya.json'
             self.assertIsNone(t.owner_link(p))
-            p.write_text(json.dumps(LINK)); self.assertEqual(t.owner_link(p)['ip'], '192.168.1.25')
-            p.write_text(json.dumps(dict(LINK, local_key='short'))); self.assertIsNone(t.owner_link(p))
+            p.write_text(json.dumps(LINK), encoding='utf-8'); self.assertEqual(t.owner_link(p)['ip'], '192.168.1.25')
+            p.write_text(json.dumps(dict(LINK, local_key='short')), encoding='utf-8'); self.assertIsNone(t.owner_link(p))
         with self.assertRaises(t.TuyaBlocked):
             t.TuyaVacuum(None)
 
