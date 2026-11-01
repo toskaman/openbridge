@@ -175,5 +175,18 @@ class CompanionForeground(unittest.TestCase):
         self.assertEqual(r["state"], "BLOCKED")
 
 
+class BindableSurface(unittest.TestCase):
+    def test_new_skills_are_ui_bindable(self):
+        from src.runtime.dashboards import BINDABLE_PATCH_SKILLS
+        for sid in ("tv_sleep", "tv_wake", "companion_foreground"):
+            self.assertIn(sid, BINDABLE_PATCH_SKILLS)
+
+    def test_routing_entries_require_control_consent(self):
+        from src.runtime.routing import SKILLS
+        for sid in ("tv_sleep", "tv_wake", "companion_foreground"):
+            self.assertEqual(SKILLS[sid]["consent"], "per_invocation")
+            self.assertTrue(SKILLS[sid]["targeted"])
+
+
 if __name__ == "__main__":
     unittest.main()
