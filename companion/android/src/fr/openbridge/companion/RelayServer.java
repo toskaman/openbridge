@@ -110,7 +110,18 @@ final class RelayServer {
         Ui sink = (ui != null) ? ui : NOOP;
         if (instance == null) instance = new RelayServer(ctx.getApplicationContext(), sink);
         else if (ui != null) instance.ui = ui;   // a live screen re-attach wins; a headless (service) lookup never detaches it
+        if (ui != null) instance.replayPendingCode(ui);   // a re-attached screen missed earlier ui.code() calls
         return instance;
+    }
+    /** Live pairing code, if one is still valid; null once paired, expired or never requested. */
+    private synchronized String livePendingCode() {
+        if (pendingCode == null || System.currentTimeMillis() > pendingUntil) return null;
+        return pendingCode;
+    }
+    /** Re-deliver the live code to a (re-)attached screen; a no-op when none is live. */
+    private void replayPendingCode(Ui sink) {
+        String live = livePendingCode();
+        if (live != null) sink.code(live);
     }
     /** A screen going away drops its own sink so relay callbacks stop and it can be GC'd. */
     static synchronized void release(Ui ui) {
