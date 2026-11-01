@@ -57,7 +57,7 @@ def spark_rank(esc):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--arms', default='rules'); ap.add_argument('--repeats', type=int, default=3)
     a = ap.parse_args()
-    raw = CASES.read_text(); data = json.loads(raw)
+    raw = CASES.read_text(encoding='utf-8'); data = json.loads(raw)
     arms = {'rules': lambda an, rows: an['hypotheses'][0]['id']}
     if 'llama' in a.arms:
         from src.ai.local_meta import LocalMetaBroker; arms['llama'] = local_rank(LocalMetaBroker())
@@ -93,7 +93,7 @@ def main():
     out = {'at': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'cases_sha256': hashlib.sha256(raw.encode()).hexdigest(),
            'summary': {k: {x: v[x] for x in ('n', 'top1_accuracy', 'errors', 'median_ms')} for k, v in results.items()}, 'arms': results}
     p = Path('docs/benchmark/v4'); f = p / f"ablation-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
-    f.write_text(json.dumps(out, indent=1)); print(json.dumps(out['summary'], indent=1)); print('saved', f)
+    f.write_text(json.dumps(out, indent=1), encoding='utf-8'); print(json.dumps(out['summary'], indent=1)); print('saved', f)
 
 
 if __name__ == '__main__':

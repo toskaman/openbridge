@@ -39,10 +39,10 @@ def main():
     keystore = keydir / 'companion.jks'
     if not keystore.exists():
         keydir.mkdir(parents=True, exist_ok=True)
-        pw = os.urandom(18).hex(); (keydir / 'pass.txt').write_text(pw)
+        pw = os.urandom(18).hex(); (keydir / 'pass.txt').write_text(pw, encoding='utf-8')
         run('keytool', '-genkeypair', '-keystore', keystore, '-storepass', pw, '-keypass', pw, '-alias', 'openbridge',
             '-keyalg', 'RSA', '-keysize', '3072', '-validity', '3650', '-dname', 'CN=OpenBridge Companion (participant build)')
-    pw = (keydir / 'pass.txt').read_text().strip()
+    pw = (keydir / 'pass.txt').read_text(encoding='utf-8').strip()
     apk = OUT / 'openbridge-companion.apk'
     run(BT / ('apksigner' + BAT), 'sign', '--ks', keystore, '--ks-pass', 'pass:' + pw, '--out', apk, OUT / 'aligned.apk')
     print(run(BT / ('apksigner' + BAT), 'verify', '--print-certs', apk).splitlines()[0])

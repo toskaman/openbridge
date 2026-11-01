@@ -216,13 +216,13 @@ def freebox(session, state_dir=None):
         import hashlib
         hashed = sorted(hashlib.sha256(m.encode()).hexdigest()[:16] for m in active)
         try:
-            prev = json.loads(path.read_text())
+            prev = json.loads(path.read_text(encoding='utf-8'))
             arrived = len(set(hashed) - set(prev['hosts'])); left = len(set(prev['hosts']) - set(hashed))
             out.append(finding('lan_presence_changes', {'arrived': arrived, 'left': left, 'since_s': int(time.time() - prev['at'])},
                                '', 'compared with previous diagnostic', True, 'difference of active hosts between two runs'))
         except (OSError, ValueError, KeyError):
             pass
-        path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps({'at': time.time(), 'hosts': hashed}))
+        path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps({'at': time.time(), 'hosts': hashed}), encoding='utf-8')
     return out
 
 

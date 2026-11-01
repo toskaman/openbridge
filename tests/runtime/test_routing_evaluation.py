@@ -43,11 +43,11 @@ class Evaluation(unittest.TestCase):
 
     def test_hash_guard_and_output_never_overwrites(self):
         with tempfile.TemporaryDirectory() as d:
-            root=Path(d);(root/'cases.json').write_bytes(b'{}');(root/'SHA256SUMS').write_text('0'*64+'  cases.json\n')
+            root=Path(d);(root/'cases.json').write_bytes(b'{}');(root/'SHA256SUMS').write_text('0'*64+'  cases.json\n', encoding='utf-8')
             with self.assertRaises(ValueError):ev.verify_frozen(root)
             p=root/'report.json';ev.write_report(p,{'status':'first'})
             with self.assertRaises(FileExistsError):ev.write_report(p,{'status':'second'})
-            self.assertEqual(json.loads(p.read_text())['status'],'first')
+            self.assertEqual(json.loads(p.read_text(encoding='utf-8'))['status'],'first')
 
     def test_other_skill_is_refused_before_context_creation(self):
         case=example();case['skill_id']='tv_volume_step'
