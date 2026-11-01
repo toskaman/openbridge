@@ -1,8 +1,8 @@
-# OpenBridge — Verified capabilities (31 Oct 2026)
+# OpenBridge — Verified capabilities (2 Nov 2026)
 
 Source of truth for what works today. Every verdict maps to the
 [claim matrix](CLAIM_EVIDENCE_MATRIX.md) and the [registry](../DEVICE_EVIDENCE.json)
-(35 rows: 26 REAL_HARDWARE, 7 FULL_GUEST_OS, 2 OFFICIAL_PLATFORM_EMULATOR).
+(37 rows: 28 REAL_HARDWARE, 7 FULL_GUEST_OS, 2 OFFICIAL_PLATFORM_EMULATOR).
 
 Status words: VERIFIED REAL HARDWARE · VERIFIED EMULATOR/FULL-GUEST ·
 VERIFIED UNIT/INTEGRATION/SIMULATED · IMPLEMENTED NOT VALIDATED ·
@@ -10,17 +10,19 @@ EXPERIMENTAL · PLANNED · BLOCKED/KNOWN LIMITATION.
 
 ## Scenario A — AI-created controls (TV panel → vacuum)
 
-**IMPLEMENTED, NOT YET FULLY VALIDATED.** Dispatch + revocation are
-VERIFIED REAL HARDWARE; the full story (manual press + observed motion) is not.
+**IMPLEMENTED, NOT YET FULLY VALIDATED.** Dispatch + revocation +
+manual press are VERIFIED REAL HARDWARE; filmed motion is not.
 
 - Glimmer 30B panel installed on a real TV, 4/4 controls bound, OCR-verified
   render, hold-press dispatched (tx-ab731d7b885b5e1a), revoke→deny VERIFIED —
   VERIFIED REAL HARDWARE ([S5](../evidence/s5-tv-panel-31oct.md), row 28).
 - T2 seek chain with 15-poll oracle + revoke + relay_revoke — VERIFIED REAL
   HARDWARE ([S5b](../evidence/s5b-safe-seek-31oct.md), row 30).
-- Gaps: presses ADB-injected (labeled); vacuum docked/cleaning, motion never
-  observed; n=1. Manual-press + motion runs are owner-gated
-  ([runbook](DEMO_PHYSICAL_RUNBOOK.md)).
+- Owner manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce)
+  VERIFIED 1 Nov; oracle standby→goto_charge — VERIFIED REAL HARDWARE
+  ([S5c](../evidence/s5-tv-panel-01nov-manual.md), row 36).
+- Gaps: return-to-dock behavior is oracle-proven, never filmed; n=1 each.
+  Filmed-motion runs stay owner-gated ([runbook](DEMO_PHYSICAL_RUNBOOK.md)).
 
 ## Scenario B — Devices extending each other (BLE relay)
 
