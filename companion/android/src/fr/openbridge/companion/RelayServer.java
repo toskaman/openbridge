@@ -628,7 +628,10 @@ final class RelayServer {
         JSONObject body;
         try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
         // Pairing with the on-screen code is the owner's consent: scans are enabled right away (pausable in the app).
-        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).apply(); pendingCode = null; failedPairing = 0; ui.code(null);
+        // A1: a fresh pairing must never inherit a stale full_control grant (process death / key loss / re-pair
+        // without unpair would otherwise restore full control with no fresh consent). The owner re-allows it
+        // explicitly in the app (toggleFullControl dialog); unpair() already clears the same pref.
+        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).putBoolean("full_control", false).apply(); pendingCode = null; failedPairing = 0; ui.code(null);
         synchronized (seen) { seen.clear(); replies.clear(); }   // fresh pairing = fresh message space
         ui.status("Paired with OpenBridge. Bluetooth scans are available while this app is open.");
         return body;

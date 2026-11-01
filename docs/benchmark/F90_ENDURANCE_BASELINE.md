@@ -57,3 +57,17 @@ Expected: exit 0, `graceful=True`, `shed=0`, `error_rate≈0.005`,
    the atomic flap drill, by design (atomicity keeps error totals
    deterministic). Not a tail-latency regression.
 4. No thread, socket, queue, or temp-file leakage across the session.
+
+## Re-run (2026-11-01 evening, main `1326ebc`, same config + seed 7)
+
+- Unit tests: 7/7 OK (38 s). Baseline: exit 0, wall 93.5 s.
+- All thresholds hold; ops/errors/journal/fabric identical to the
+  baseline (1128 ops, 6 injected RelayErrors, 71574 B journal, 762/762).
+- Latency p50/p95/max 26.6/172.0/521.5 ms (p95/max elevated by a
+  concurrent local Llama eval on this host; p95 < 250 ms holds).
+- CPU avg 21.5% (< 60), RSS Δ 4.7 MB (< 40), peak Python 2.7 MB,
+  threads Δ 0, sockets Δ 0, queue 1/0, drain 0.55 s, no debris.
+- Raw JSON (external, not in git):
+  `E:\OpenBridge-Overnight\frontier-final\endurance-rerun.json`.
+- Hardware validation (live relay endpoints) still pending: owner-gated
+  (TV in use); the simulated-wire baseline above is green on current main.

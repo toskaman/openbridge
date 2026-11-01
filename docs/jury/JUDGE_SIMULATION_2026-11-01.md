@@ -24,7 +24,7 @@ interoperability, cross-platform operation, failure handling.
 | A-6 | Android companion `full_control` reset unvalidated (A1) | recon §13 | MEDIUM | OPEN: needs emulator-validated Java change; owner list |
 | A-7 | Suite flaked once locally: 2 fails under 12 GB model load | local run 1 Nov | LOW | Not reproduced in 3 subsequent full greens (2082 OK) + all CI green; attributed to memory pressure, documented |
 | A-8 | F90 modules (8) software-tested + API/CLI-wired but no hardware validation | FRONTIER90 report | MEDIUM | Documented as NOT hw-validated; README claims CLI+API only |
-| A-9 | macOS graphical behavior untested (CI is unit-level) | verify workflow | LOW | Documented; macOS entry point labeled accordingly |
+| A-9 | macOS graphical behavior untested (CI is unit-level) | verify workflow | LOW | STALE — corrected 01-Nov evening: headless Chromium+WebKit UI smokes (verify `browser-macos`, 8 smokes) + cleanroom install+capture on macos-15-intel AND macos-26 are green; residual is headed/human-driven browsers only |
 
 ### A verdict
 
@@ -94,4 +94,4 @@ Nothing in the presentation overclaims what the evidence shows.
 3. No physical-motion footage; manual runs owner-gated.
 4. Small S8 calibration set (24 frozen cases).
 5. A1 Android companion fix open.
-6. macOS graphical path untested.
+6. macOS graphical path untested — CORRECTED 01-Nov evening: headless browser UI smokes + cleanroom captures green on macos-latest, macos-15-intel, macos-26; only headed/human-driven browsers untested.

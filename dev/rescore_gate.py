@@ -6,6 +6,7 @@ request_text (shape + S8 gate = AFTER). No model calls: identical bytes,
 so the delta isolates the gate effect. Fails closed on any correct
 proposal newly blocked (prints them; exit 1) unless --no-strict.
 """
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -19,6 +20,21 @@ from src.runtime import intent_effect as IE
 CASES = ROOT / 'docs' / 'benchmark' / 'intenteffect' / 'heldout2_cases.json'
 
 
+def resolve_cases(res):
+    """Cases file recorded by the run itself (fails closed on sha
+    mismatch); legacy files without the field keep heldout2."""
+    rel = res.get('cases_file')
+    if not rel:
+        return CASES
+    p = ROOT / rel
+    want = res.get('cases_sha256')
+    if want:
+        got = hashlib.sha256(p.read_bytes()).hexdigest()
+        if got != want:
+            raise SystemExit('cases sha mismatch: file %s is not the frozen run input' % p)
+    return p
+
+
 def main(argv):
     strict = '--no-strict' not in argv
     paths = [a for a in argv[1:] if not a.startswith('--')]
@@ -26,8 +42,9 @@ def main(argv):
         print('usage: rescore_gate.py <results.json> [--no-strict]')
         return 2
     res = json.loads(Path(paths[0]).read_text(encoding='utf-8'))
-    cases = {c['id']: c for c in json.loads(CASES.read_text(encoding='utf-8'))['cases']}
-    devices = res.get('devices') or json.loads(CASES.read_text(encoding='utf-8'))['devices']
+    case_path = resolve_cases(res)
+    cases = {c['id']: c for c in json.loads(case_path.read_text(encoding='utf-8'))['cases']}
+    devices = res.get('devices') or json.loads(case_path.read_text(encoding='utf-8'))['devices']
     live = [dict(d) for d in devices]
     for i, d in enumerate(live):
         d.setdefault('key', 'k%d' % i)
