@@ -109,3 +109,18 @@ before anything leaves this PC.
 - Revoke all demo grants; verify denied re-invocation.
 - Confirm the vacuum is docked or parked safe; confirm the TV shows no stale panel.
 - Remove temporary journals; record the final state in the report.
+
+## §TV-PWR — TV sleep/wake + Companion reveal (01/02-Nov-2026)
+
+Owner-visible behavior: the TV obeys while the Companion stays hidden
+(`RelayService` foreground service); the UI appears only on explicit
+request from PC/phone/watch (skill `companion_foreground`).
+
+1. From any surface, invoke `tv_sleep` on the TV (consent per invocation).
+   Oracle: `mWakefulness=Asleep` read back via `dumpsys power`.
+2. Invoke `tv_wake`. Oracle: `mWakefulness=Awake`.
+3. Invoke `companion_foreground`. Oracle: `mFocusedApp` names
+   `fr.openbridge.companion`. Refused with `DEVICE_ASLEEP` if the
+   screen is off (wake first). Undone by HOME/the remote.
+4. All three skills are one-tap bindable (`BINDABLE_PATCH_SKILLS`);
+   demo buttons live on the watch via the standard set_controls flow.
