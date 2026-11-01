@@ -115,6 +115,17 @@ class TestWorkflowWiring(unittest.TestCase):
         self.assertIn("phone-verdict.txt", body)
         self.assertIn("wear-verdict.txt", body)
 
+    def test_tv_uses_harness_single_line(self):
+        with open(WORKFLOW, encoding="utf-8") as fh:
+            body = fh.read()
+        self.assertIn("EMU_DEVICE=tv", body)
+        self.assertIn("tv-verdict.txt", body)
+        # The runner executes script lines via sh -c: no backslash
+        # continuations allowed (exit 127, run 41273698943).
+        for line in body.splitlines():
+            if "emu_harness.sh" in line:
+                self.assertFalse(line.rstrip().endswith("\\"), line)
+
 
 if __name__ == "__main__":
     unittest.main()

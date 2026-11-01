@@ -14,17 +14,18 @@
 #   "error: closed" / emulator death -> ADB_DEAD (retryable) or BOOT_FAIL
 #   (retryable). Anything after successful launch is APP_* (final).
 #
-# Env: EMU_DEVICE (phone|wear, required), EMU_APK (path, required),
+# Env: EMU_DEVICE (phone|wear|tv, required), EMU_APK (path, required),
 #      EMU_PKG (default fr.openbridge.companion),
 #      EMU_ACTIVITY (default .MainActivity),
 #      BOOT_RETRIES (default 2), ADB_RETRIES (default 2),
-#      no screencap on phone (pid/foreground probes); wear uses screencap.
+#      no screencap on phone (pid/foreground probes); wear/tv use screencap
+#      (tv additionally probes DPAD focus with a second capture).
 #
 # Outputs (always preserved, success or failure):
 #   <device>-verdict.txt, <device>-verdict.json, <device>-diag.txt,
 #   <device>-logcat.txt (+ pid/foreground/version or launch.png per device).
 set -u
-DEVICE="${EMU_DEVICE:?set EMU_DEVICE=phone|wear}"
+DEVICE="${EMU_DEVICE:?set EMU_DEVICE=phone|wear|tv}"
 APK="${EMU_APK:?set EMU_APK=path/to/apk}"
 PKG="${EMU_PKG:-fr.openbridge.companion}"
 ACTIVITY="${EMU_ACTIVITY:-.MainActivity}"
@@ -155,9 +156,15 @@ say "stage=evidence"
 evidence_fail=""
 adb shell dumpsys package "$PKG" 2>/dev/null | grep -m1 versionName \
   | tee "$DEVICE-version.txt" || evidence_fail="version probe failed"
-if [ "$DEVICE" = "wear" ]; then
-  adb exec-out screencap -p > wear-launch.png 2>/dev/null \
-    || evidence_fail="${evidence_fail}; wear screencap failed"
+if [ "$DEVICE" = "wear" ] || [ "$DEVICE" = "tv" ]; then
+  adb exec-out screencap -p > "$DEVICE-launch.png" 2>/dev/null \
+    || evidence_fail="${evidence_fail}; $DEVICE screencap failed"
+fi
+if [ "$DEVICE" = "tv" ]; then
+  adb shell input keyevent KEYCODE_DPAD_DOWN 2>/dev/null || true
+  sleep 2
+  adb exec-out screencap -p > tv-focus.png 2>/dev/null \
+    || evidence_fail="${evidence_fail}; tv focus screencap failed"
 fi
 adb logcat -d -t 300 > "$DEVICE-logcat.txt" 2>/dev/null \
   || evidence_fail="${evidence_fail}; logcat capture failed"
