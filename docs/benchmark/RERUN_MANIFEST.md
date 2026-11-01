@@ -46,8 +46,9 @@ Self-check suites (all pass, 23/23, exit 0):
 
 ### A3. `docs/benchmark/eval_1000_rules_baseline.json`
 
-- Command (explicit kit paths REQUIRED in this worktree — neither default
-  `OpenBridge_V7/05_TESTS` location in `dev/eval_1000.py` exists here):
+- Command (pass `--turns`/`--oracles` unless `OpenBridge_V7/05_TESTS` sits
+  next to the checkout — the `dev/eval_1000.py` defaults resolve in the
+  canonical layout; explicit paths work everywhere):
   `python dev/eval_1000.py --turns <KIT>/MODEL_VISIBLE_1000_USER_TURNS.jsonl --oracles <KIT>/EVALUATOR_ONLY_1000_ORACLES_DO_NOT_INJECT.jsonl --out <OUT>`
 - Pinned kit (outside the repo, `OpenBridge_V7/05_TESTS/`), SHA-256:
   - `MODEL_VISIBLE_1000_USER_TURNS.jsonl`: `05ff617360ec6689008c3023d11820f6d616c6db2ea218b17ccff69335876a1e`

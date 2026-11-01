@@ -1,6 +1,6 @@
 # Release status and remaining work
 
-Authoritative checklist, reconciled against origin/main `e1ac139` on 31 October 2026 (PR158–159 merged; suite 1245 green locally + Windows/Ubuntu/macOS/browser CI; registry 35 VERIFIED rows: 26 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts (1203/1150/864) and pending flags in archived notes are historical.
+Authoritative checklist, work-reconciled against origin/main `e1ac139` on 31 October 2026 (PR158–159 merged; suite 1245 green locally + Windows/Ubuntu/macOS/browser CI; registry now 35 VERIFIED rows: 26 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR, vs 28 rows at `e1ac139`; live :18765 still on an older commit, reload owner-gated). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts (1203/1150/864) and pending flags in archived notes are historical.
 
 ## Integrated work
 

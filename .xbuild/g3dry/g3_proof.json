@@ -1,0 +1,11 @@
+{
+ "plan": "G3_RUN_PLAN rev 2",
+ "scope": "integration smoke (NOT unseen novelty)",
+ "runner_sha256": "042d7982f67f3390a0fe552b67a9ae677462388bf62794e5204cbf0cd3db013f",
+ "dry_run": true,
+ "allowance_usd": 0.8,
+ "observation_id": "dry-1",
+ "calls": [],
+ "verdict": "KILL",
+ "kill_reason": "TV adb unreachable (192.168.1.15:5555)"
+}

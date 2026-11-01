@@ -1,0 +1,2083 @@
+{
+ "limit": 50,
+ "turns_file": "C:\\Users\\TheBox\\Desktop\\Hackaton\\OpenBridge_V7\\05_TESTS\\MODEL_VISIBLE_1000_USER_TURNS.jsonl",
+ "started_utc": "2026-10-31T11:54:03Z",
+ "arms": {
+  "rules": {
+   "turns": 50,
+   "conversations": 10,
+   "conversations_finished": 10,
+   "by_status": {
+    "unsupported": 50
+   },
+   "by_category": {
+    "TV_REMOTE_UI": {
+     "n": 40,
+     "resolved": 0
+    },
+    "WATCH_VACUUM": {
+     "n": 10,
+     "resolved": 0
+    }
+   },
+   "hard_fail_proxies": {
+    "crashes": 0,
+    "external_sends": 0
+   },
+   "latency_ms": {
+    "mean": 0.0,
+    "p50": 0.0,
+    "p95": 0.0
+   },
+   "tokens": {
+    "prompt": 0,
+    "eval": 0
+   },
+   "results": [
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.10429997928440571,
+     "id": "OB-CORE-001-T1",
+     "conversation_id": "OB-CORE-001",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.04840001929551363,
+     "id": "OB-CORE-001-T2",
+     "conversation_id": "OB-CORE-001",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.03590004052966833,
+     "id": "OB-CORE-001-T3",
+     "conversation_id": "OB-CORE-001",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.03320001997053623,
+     "id": "OB-CORE-001-T4",
+     "conversation_id": "OB-CORE-001",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.030800001695752144,
+     "id": "OB-CORE-001-T5",
+     "conversation_id": "OB-CORE-001",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.019399914890527725,
+     "id": "OB-CORE-002-T1",
+     "conversation_id": "OB-CORE-002",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017600017599761486,
+     "id": "OB-CORE-002-T2",
+     "conversation_id": "OB-CORE-002",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.01810002140700817,
+     "id": "OB-CORE-002-T3",
+     "conversation_id": "OB-CORE-002",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017300015315413475,
+     "id": "OB-CORE-002-T4",
+     "conversation_id": "OB-CORE-002",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.018099904991686344,
+     "id": "OB-CORE-002-T5",
+     "conversation_id": "OB-CORE-002",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.015900004655122757,
+     "id": "OB-CORE-003-T1",
+     "conversation_id": "OB-CORE-003",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.016200006939470768,
+     "id": "OB-CORE-003-T2",
+     "conversation_id": "OB-CORE-003",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.016700010746717453,
+     "id": "OB-CORE-003-T3",
+     "conversation_id": "OB-CORE-003",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.016900012269616127,
+     "id": "OB-CORE-003-T4",
+     "conversation_id": "OB-CORE-003",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017300015315413475,
+     "id": "OB-CORE-003-T5",
+     "conversation_id": "OB-CORE-003",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.023900065571069717,
+     "id": "OB-CORE-004-T1",
+     "conversation_id": "OB-CORE-004",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.046699889935553074,
+     "id": "OB-CORE-004-T2",
+     "conversation_id": "OB-CORE-004",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.036800047382712364,
+     "id": "OB-CORE-004-T3",
+     "conversation_id": "OB-CORE-004",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.02510007470846176,
+     "id": "OB-CORE-004-T4",
+     "conversation_id": "OB-CORE-004",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.021399930119514465,
+     "id": "OB-CORE-004-T5",
+     "conversation_id": "OB-CORE-004",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.0198000343516469,
+     "id": "OB-CORE-005-T1",
+     "conversation_id": "OB-CORE-005",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.02119992859661579,
+     "id": "OB-CORE-005-T2",
+     "conversation_id": "OB-CORE-005",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.0171000137925148,
+     "id": "OB-CORE-005-T3",
+     "conversation_id": "OB-CORE-005",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017000013031065464,
+     "id": "OB-CORE-005-T4",
+     "conversation_id": "OB-CORE-005",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017600017599761486,
+     "id": "OB-CORE-005-T5",
+     "conversation_id": "OB-CORE-005",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.019400031305849552,
+     "id": "OB-CORE-006-T1",
+     "conversation_id": "OB-CORE-006",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.018300022929906845,
+     "id": "OB-CORE-006-T2",
+     "conversation_id": "OB-CORE-006",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.0171000137925148,
+     "id": "OB-CORE-006-T3",
+     "conversation_id": "OB-CORE-006",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017000013031065464,
+     "id": "OB-CORE-006-T4",
+     "conversation_id": "OB-CORE-006",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.01580000389367342,
+     "id": "OB-CORE-006-T5",
+     "conversation_id": "OB-CORE-006",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.015600002370774746,
+     "id": "OB-CORE-007-T1",
+     "conversation_id": "OB-CORE-007",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.015400000847876072,
+     "id": "OB-CORE-007-T2",
+     "conversation_id": "OB-CORE-007",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.01650000922381878,
+     "id": "OB-CORE-007-T3",
+     "conversation_id": "OB-CORE-007",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.016600009985268116,
+     "id": "OB-CORE-007-T4",
+     "conversation_id": "OB-CORE-007",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017600017599761486,
+     "id": "OB-CORE-007-T5",
+     "conversation_id": "OB-CORE-007",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.016300007700920105,
+     "id": "OB-CORE-008-T1",
+     "conversation_id": "OB-CORE-008",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.015500001609325409,
+     "id": "OB-CORE-008-T2",
+     "conversation_id": "OB-CORE-008",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.015500001609325409,
+     "id": "OB-CORE-008-T3",
+     "conversation_id": "OB-CORE-008",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.0171000137925148,
+     "id": "OB-CORE-008-T4",
+     "conversation_id": "OB-CORE-008",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.026899971999228,
+     "id": "OB-CORE-008-T5",
+     "conversation_id": "OB-CORE-008",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.016300007700920105,
+     "id": "OB-CORE-009-T1",
+     "conversation_id": "OB-CORE-009",
+     "turn": 1,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.020400038920342922,
+     "id": "OB-CORE-009-T2",
+     "conversation_id": "OB-CORE-009",
+     "turn": 2,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.024799956008791924,
+     "id": "OB-CORE-009-T3",
+     "conversation_id": "OB-CORE-009",
+     "turn": 3,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.02659996971487999,
+     "id": "OB-CORE-009-T4",
+     "conversation_id": "OB-CORE-009",
+     "turn": 4,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.019400031305849552,
+     "id": "OB-CORE-009-T5",
+     "conversation_id": "OB-CORE-009",
+     "turn": 5,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.017400016076862812,
+     "id": "OB-CORE-010-T1",
+     "conversation_id": "OB-CORE-010",
+     "turn": 1,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.019400031305849552,
+     "id": "OB-CORE-010-T2",
+     "conversation_id": "OB-CORE-010",
+     "turn": 2,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.027499976567924023,
+     "id": "OB-CORE-010-T3",
+     "conversation_id": "OB-CORE-010",
+     "turn": 3,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.0315000070258975,
+     "id": "OB-CORE-010-T4",
+     "conversation_id": "OB-CORE-010",
+     "turn": 4,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "no registered skill matches"
+     ],
+     "latency_ms": 0.04300009459257126,
+     "id": "OB-CORE-010-T5",
+     "conversation_id": "OB-CORE-010",
+     "turn": 5,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    }
+   ]
+  },
+  "llama": {
+   "turns": 50,
+   "conversations": 10,
+   "conversations_finished": 10,
+   "by_status": {
+    "needs_clarification": 44,
+    "escalation_required": 1,
+    "unsupported": 1,
+    "resolved": 4
+   },
+   "by_category": {
+    "TV_REMOTE_UI": {
+     "n": 40,
+     "resolved": 2
+    },
+    "WATCH_VACUUM": {
+     "n": 10,
+     "resolved": 2
+    }
+   },
+   "hard_fail_proxies": {
+    "crashes": 0,
+    "external_sends": 0
+   },
+   "latency_ms": {
+    "mean": 5528.7,
+    "p50": 5479.3,
+    "p95": 7201.6
+   },
+   "tokens": {
+    "prompt": 33264,
+    "eval": 3445
+   },
+   "results": [
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "set vs step"
+     ],
+     "latency_ms": 5048.583900090307,
+     "id": "OB-CORE-001-T1",
+     "conversation_id": "OB-CORE-001",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "chiffres et fl\u00e8ches"
+     ],
+     "latency_ms": 8144.254500046372,
+     "id": "OB-CORE-001-T2",
+     "conversation_id": "OB-CORE-001",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 5905.207799980417,
+     "id": "OB-CORE-001-T3",
+     "conversation_id": "OB-CORE-001",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "effacer vs garder"
+     ],
+     "latency_ms": 5510.87799994275,
+     "id": "OB-CORE-001-T4",
+     "conversation_id": "OB-CORE-001",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 6398.056700010784,
+     "id": "OB-CORE-001-T5",
+     "conversation_id": "OB-CORE-001",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "sourdine vs mute"
+     ],
+     "latency_ms": 5885.172400041483,
+     "id": "OB-CORE-002-T1",
+     "conversation_id": "OB-CORE-002",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "set vs step"
+     ],
+     "latency_ms": 5247.558700037189,
+     "id": "OB-CORE-002-T2",
+     "conversation_id": "OB-CORE-002",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "unknown request"
+     ],
+     "latency_ms": 6075.804800027981,
+     "id": "OB-CORE-002-T3",
+     "conversation_id": "OB-CORE-002",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "button",
+      "back"
+     ],
+     "latency_ms": 4631.365700042807,
+     "id": "OB-CORE-002-T4",
+     "conversation_id": "OB-CORE-002",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "resolved document failed validation"
+     ],
+     "latency_ms": 5168.550599948503,
+     "id": "OB-CORE-002-T5",
+     "conversation_id": "OB-CORE-002",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "bedroom tv",
+      "remote control"
+     ],
+     "latency_ms": 5618.0925000226125,
+     "id": "OB-CORE-003-T1",
+     "conversation_id": "OB-CORE-003",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 5751.974100014195,
+     "id": "OB-CORE-003-T2",
+     "conversation_id": "OB-CORE-003",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "dangerous controls"
+     ],
+     "latency_ms": 4627.806899952702,
+     "id": "OB-CORE-003-T3",
+     "conversation_id": "OB-CORE-003",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4417.5746999681,
+     "id": "OB-CORE-003-T4",
+     "conversation_id": "OB-CORE-003",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4047.236999962479,
+     "id": "OB-CORE-003-T5",
+     "conversation_id": "OB-CORE-003",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "set vs step"
+     ],
+     "latency_ms": 4930.406100000255,
+     "id": "OB-CORE-004-T1",
+     "conversation_id": "OB-CORE-004",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "prouv\u00e9s"
+     ],
+     "latency_ms": 5279.107899987139,
+     "id": "OB-CORE-004-T2",
+     "conversation_id": "OB-CORE-004",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "son",
+      "navigation",
+      "applications"
+     ],
+     "latency_ms": 6714.32430006098,
+     "id": "OB-CORE-004-T3",
+     "conversation_id": "OB-CORE-004",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "application"
+     ],
+     "latency_ms": 6524.791999952868,
+     "id": "OB-CORE-004-T4",
+     "conversation_id": "OB-CORE-004",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "unsupported",
+     "skill_id": null,
+     "ambiguities": [
+      "model proposed unknown skill null"
+     ],
+     "latency_ms": 5624.676899984479,
+     "id": "OB-CORE-004-T5",
+     "conversation_id": "OB-CORE-004",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "add vs existing"
+     ],
+     "latency_ms": 6943.808899959549,
+     "id": "OB-CORE-005-T1",
+     "conversation_id": "OB-CORE-005",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "hDMI 1 and HDMI 2",
+      "select"
+     ],
+     "latency_ms": 6473.718599998392,
+     "id": "OB-CORE-005-T2",
+     "conversation_id": "OB-CORE-005",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "unknown request"
+     ],
+     "latency_ms": 4780.986300087534,
+     "id": "OB-CORE-005-T3",
+     "conversation_id": "OB-CORE-005",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "volume controlled vs non-volume controlled"
+     ],
+     "latency_ms": 5950.698900036514,
+     "id": "OB-CORE-005-T4",
+     "conversation_id": "OB-CORE-005",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 8416.538699995726,
+     "id": "OB-CORE-005-T5",
+     "conversation_id": "OB-CORE-005",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "resolved",
+     "skill_id": "tv_volume_step",
+     "ambiguities": [],
+     "latency_ms": 6017.167299985886,
+     "receipt": {
+      "skill_id": "tv_volume_step",
+      "targets": [
+       {
+        "kind": "device",
+        "ref": "tv"
+       }
+      ],
+      "params": {},
+      "provenance": "eval-mock"
+     },
+     "id": "OB-CORE-006-T1",
+     "conversation_id": "OB-CORE-006",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "set vs step"
+     ],
+     "latency_ms": 5067.168400040828,
+     "id": "OB-CORE-006-T2",
+     "conversation_id": "OB-CORE-006",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4525.547800003551,
+     "id": "OB-CORE-006-T3",
+     "conversation_id": "OB-CORE-006",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4147.5700999144465,
+     "id": "OB-CORE-006-T4",
+     "conversation_id": "OB-CORE-006",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4546.119199949317,
+     "id": "OB-CORE-006-T5",
+     "conversation_id": "OB-CORE-006",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "set vs step"
+     ],
+     "latency_ms": 5058.511299896054,
+     "id": "OB-CORE-007-T1",
+     "conversation_id": "OB-CORE-007",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "measure vs read"
+     ],
+     "latency_ms": 6023.616599966772,
+     "id": "OB-CORE-007-T2",
+     "conversation_id": "OB-CORE-007",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "volume control"
+     ],
+     "latency_ms": 4514.166099950671,
+     "id": "OB-CORE-007-T3",
+     "conversation_id": "OB-CORE-007",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "set vs step"
+     ],
+     "latency_ms": 5601.642700028606,
+     "id": "OB-CORE-007-T4",
+     "conversation_id": "OB-CORE-007",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 6149.085499928333,
+     "id": "OB-CORE-007-T5",
+     "conversation_id": "OB-CORE-007",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "tactile vs remote"
+     ],
+     "latency_ms": 5468.867099960335,
+     "id": "OB-CORE-008-T1",
+     "conversation_id": "OB-CORE-008",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4569.503100006841,
+     "id": "OB-CORE-008-T2",
+     "conversation_id": "OB-CORE-008",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "resolved",
+     "skill_id": "tv_volume_set",
+     "ambiguities": [],
+     "latency_ms": 6221.818499965593,
+     "receipt": {
+      "skill_id": "tv_volume_set",
+      "targets": [
+       {
+        "kind": "device",
+        "ref": "tv"
+       }
+      ],
+      "params": {},
+      "provenance": "eval-mock"
+     },
+     "id": "OB-CORE-008-T3",
+     "conversation_id": "OB-CORE-008",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 5742.098300019279,
+     "id": "OB-CORE-008-T4",
+     "conversation_id": "OB-CORE-008",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 5929.268799955025,
+     "id": "OB-CORE-008-T5",
+     "conversation_id": "OB-CORE-008",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "control vs vacuum",
+      "watch vs galaxy"
+     ],
+     "latency_ms": 5649.350700085051,
+     "id": "OB-CORE-009-T1",
+     "conversation_id": "OB-CORE-009",
+     "turn": 1,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "start vs pause vs return"
+     ],
+     "latency_ms": 5073.357800021768,
+     "id": "OB-CORE-009-T2",
+     "conversation_id": "OB-CORE-009",
+     "turn": 2,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4919.549499987625,
+     "id": "OB-CORE-009-T3",
+     "conversation_id": "OB-CORE-009",
+     "turn": 3,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "retire vs pause"
+     ],
+     "latency_ms": 4522.544399951585,
+     "id": "OB-CORE-009-T4",
+     "conversation_id": "OB-CORE-009",
+     "turn": 4,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "reboot vs check controls"
+     ],
+     "latency_ms": 7201.596500002779,
+     "id": "OB-CORE-009-T5",
+     "conversation_id": "OB-CORE-009",
+     "turn": 5,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "resolved",
+     "skill_id": "vacuum.start",
+     "ambiguities": [],
+     "latency_ms": 5479.26249995362,
+     "receipt": {
+      "skill_id": "vacuum.start",
+      "targets": [
+       {
+        "kind": "device",
+        "ref": "aspirateur"
+       }
+      ],
+      "params": {},
+      "provenance": "eval-mock"
+     },
+     "id": "OB-CORE-010-T1",
+     "conversation_id": "OB-CORE-010",
+     "turn": 1,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "resolved",
+     "skill_id": "vacuum.seek",
+     "ambiguities": [],
+     "latency_ms": 4818.176099914126,
+     "receipt": {
+      "skill_id": "vacuum.seek",
+      "targets": [
+       {
+        "kind": "device",
+        "ref": "vacuum"
+       }
+      ],
+      "params": {},
+      "provenance": "eval-mock"
+     },
+     "id": "OB-CORE-010-T2",
+     "conversation_id": "OB-CORE-010",
+     "turn": 2,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [
+      "unknown request"
+     ],
+     "latency_ms": 5345.70199996233,
+     "id": "OB-CORE-010-T3",
+     "conversation_id": "OB-CORE-010",
+     "turn": 3,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 4645.276699913666,
+     "id": "OB-CORE-010-T4",
+     "conversation_id": "OB-CORE-010",
+     "turn": 4,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "needs_clarification",
+     "skill_id": null,
+     "ambiguities": [],
+     "latency_ms": 5081.72429993283,
+     "id": "OB-CORE-010-T5",
+     "conversation_id": "OB-CORE-010",
+     "turn": 5,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    }
+   ]
+  },
+  "glimmer": {
+   "turns": 50,
+   "conversations": 10,
+   "conversations_finished": 10,
+   "by_status": {
+    "escalation_required": 50
+   },
+   "by_category": {
+    "TV_REMOTE_UI": {
+     "n": 40,
+     "resolved": 0
+    },
+    "WATCH_VACUUM": {
+     "n": 10,
+     "resolved": 0
+    }
+   },
+   "hard_fail_proxies": {
+    "crashes": 0,
+    "external_sends": 0
+   },
+   "latency_ms": {
+    "mean": 6249.5,
+    "p50": 6655.5,
+    "p95": 10489.5
+   },
+   "tokens": {
+    "prompt": 0,
+    "eval": 0
+   },
+   "results": [
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 10413.839699933305,
+     "id": "OB-CORE-001-T1",
+     "conversation_id": "OB-CORE-001",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 5030.310499947518,
+     "id": "OB-CORE-001-T2",
+     "conversation_id": "OB-CORE-001",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 5020.890099927783,
+     "id": "OB-CORE-001-T3",
+     "conversation_id": "OB-CORE-001",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9317.3986999318,
+     "id": "OB-CORE-001-T4",
+     "conversation_id": "OB-CORE-001",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9332.009100005962,
+     "id": "OB-CORE-001-T5",
+     "conversation_id": "OB-CORE-001",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9564.853899995796,
+     "id": "OB-CORE-002-T1",
+     "conversation_id": "OB-CORE-002",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9532.003200030886,
+     "id": "OB-CORE-002-T2",
+     "conversation_id": "OB-CORE-002",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 12085.686599952169,
+     "id": "OB-CORE-002-T3",
+     "conversation_id": "OB-CORE-002",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 12177.29220003821,
+     "id": "OB-CORE-002-T4",
+     "conversation_id": "OB-CORE-002",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1926.0079999221489,
+     "id": "OB-CORE-002-T5",
+     "conversation_id": "OB-CORE-002",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1377.8322999132797,
+     "id": "OB-CORE-003-T1",
+     "conversation_id": "OB-CORE-003",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1681.2605999875814,
+     "id": "OB-CORE-003-T2",
+     "conversation_id": "OB-CORE-003",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1202.002799953334,
+     "id": "OB-CORE-003-T3",
+     "conversation_id": "OB-CORE-003",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1670.090200030245,
+     "id": "OB-CORE-003-T4",
+     "conversation_id": "OB-CORE-003",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1197.3401999566704,
+     "id": "OB-CORE-003-T5",
+     "conversation_id": "OB-CORE-003",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1750.9418999543414,
+     "id": "OB-CORE-004-T1",
+     "conversation_id": "OB-CORE-004",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 2104.5956999296322,
+     "id": "OB-CORE-004-T2",
+     "conversation_id": "OB-CORE-004",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 5700.837199925445,
+     "id": "OB-CORE-004-T3",
+     "conversation_id": "OB-CORE-004",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9082.935799960978,
+     "id": "OB-CORE-004-T4",
+     "conversation_id": "OB-CORE-004",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 5833.115400047973,
+     "id": "OB-CORE-004-T5",
+     "conversation_id": "OB-CORE-004",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1835.5236999923363,
+     "id": "OB-CORE-005-T1",
+     "conversation_id": "OB-CORE-005",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1959.5942000159994,
+     "id": "OB-CORE-005-T2",
+     "conversation_id": "OB-CORE-005",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 6413.79300004337,
+     "id": "OB-CORE-005-T3",
+     "conversation_id": "OB-CORE-005",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 10489.530100021511,
+     "id": "OB-CORE-005-T4",
+     "conversation_id": "OB-CORE-005",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 6273.912600008771,
+     "id": "OB-CORE-005-T5",
+     "conversation_id": "OB-CORE-005",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9882.124900002964,
+     "id": "OB-CORE-006-T1",
+     "conversation_id": "OB-CORE-006",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9808.353299973533,
+     "id": "OB-CORE-006-T2",
+     "conversation_id": "OB-CORE-006",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9806.610699975863,
+     "id": "OB-CORE-006-T3",
+     "conversation_id": "OB-CORE-006",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9585.453300038353,
+     "id": "OB-CORE-006-T4",
+     "conversation_id": "OB-CORE-006",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9557.938799960539,
+     "id": "OB-CORE-006-T5",
+     "conversation_id": "OB-CORE-006",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 5064.183400012553,
+     "id": "OB-CORE-007-T1",
+     "conversation_id": "OB-CORE-007",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 8794.473899994045,
+     "id": "OB-CORE-007-T2",
+     "conversation_id": "OB-CORE-007",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9512.863100040704,
+     "id": "OB-CORE-007-T3",
+     "conversation_id": "OB-CORE-007",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9308.826200081967,
+     "id": "OB-CORE-007-T4",
+     "conversation_id": "OB-CORE-007",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9319.770599948242,
+     "id": "OB-CORE-007-T5",
+     "conversation_id": "OB-CORE-007",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 5018.833399983123,
+     "id": "OB-CORE-008-T1",
+     "conversation_id": "OB-CORE-008",
+     "turn": 1,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9303.244299953803,
+     "id": "OB-CORE-008-T2",
+     "conversation_id": "OB-CORE-008",
+     "turn": 2,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9320.642100065015,
+     "id": "OB-CORE-008-T3",
+     "conversation_id": "OB-CORE-008",
+     "turn": 3,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9567.103800014593,
+     "id": "OB-CORE-008-T4",
+     "conversation_id": "OB-CORE-008",
+     "turn": 4,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9286.541300010867,
+     "id": "OB-CORE-008-T5",
+     "conversation_id": "OB-CORE-008",
+     "turn": 5,
+     "sends": 0,
+     "category": "TV_REMOTE_UI"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9274.903200101107,
+     "id": "OB-CORE-009-T1",
+     "conversation_id": "OB-CORE-009",
+     "turn": 1,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 9885.160599951632,
+     "id": "OB-CORE-009-T2",
+     "conversation_id": "OB-CORE-009",
+     "turn": 2,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 6655.462600057945,
+     "id": "OB-CORE-009-T3",
+     "conversation_id": "OB-CORE-009",
+     "turn": 3,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1051.4416999649256,
+     "id": "OB-CORE-009-T4",
+     "conversation_id": "OB-CORE-009",
+     "turn": 4,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1599.8484999872744,
+     "id": "OB-CORE-009-T5",
+     "conversation_id": "OB-CORE-009",
+     "turn": 5,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1117.3396999947727,
+     "id": "OB-CORE-010-T1",
+     "conversation_id": "OB-CORE-010",
+     "turn": 1,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1749.3327999254689,
+     "id": "OB-CORE-010-T2",
+     "conversation_id": "OB-CORE-010",
+     "turn": 2,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1182.1737999562174,
+     "id": "OB-CORE-010-T3",
+     "conversation_id": "OB-CORE-010",
+     "turn": 3,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1989.970099995844,
+     "id": "OB-CORE-010-T4",
+     "conversation_id": "OB-CORE-010",
+     "turn": 4,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    },
+    {
+     "status": "escalation_required",
+     "skill_id": null,
+     "ambiguities": [
+      "all local tiers failed"
+     ],
+     "latency_ms": 1859.196100034751,
+     "id": "OB-CORE-010-T5",
+     "conversation_id": "OB-CORE-010",
+     "turn": 5,
+     "sends": 0,
+     "category": "WATCH_VACUUM"
+    }
+   ]
+  }
+ },
+ "manifest": {
+  "llama": {
+   "model_id": "llama3.2:3b-instruct-q4_K_M",
+   "endpoint": "http://127.0.0.1:11437",
+   "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+   "size": 2019393189
+  },
+  "glimmer": {
+   "model_id": "muse-glimmer:30b-q4_K_M",
+   "endpoint": "http://127.0.0.1:11438",
+   "digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1",
+   "size": 18157010252
+  }
+ }
+}

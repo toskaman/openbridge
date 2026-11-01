@@ -27,7 +27,7 @@ from src.runtime.primitives import Executor
 from src.runtime.routing import RouteError
 from tests.fabric.test_relay import FakeRelay, manager
 from tests.runtime.test_command_center import (
-    CMD_KEY, FakeTransport, cmd_server, good_reply,
+    FakeTransport, cmd_server, good_reply,
 )
 from tests.runtime.test_command_drain import (
     FakeRelay as DrainFake,

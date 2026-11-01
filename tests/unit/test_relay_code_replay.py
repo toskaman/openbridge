@@ -63,6 +63,14 @@ class RelayCodeReplayTests(unittest.TestCase):
         pair = body_of(self.relay, 'private synchronized JSONObject pairRequest(')
         self.assertEqual(pair.count('ui.code(pendingCode)'), 1)
 
+    def test_pair_request_requires_foreground_and_rate_limit(self):
+        # Pairing is owner-gated: the Companion app must be on screen and
+        # pair_requests are rate-limited. Pin both preconditions so a
+        # future refactor cannot silently drop the user-visible gate.
+        pair = body_of(self.relay, 'private synchronized JSONObject pairRequest(')
+        self.assertIn('!foreground', pair)
+        self.assertIn('PAIR_REQUEST_MIN_INTERVAL_MS', pair)
+
     def test_activity_attach_paths_go_through_get(self):
         # onCreate + onResume both attach via get(): the replay in get() covers
         # first attach, stacked-instance re-attach (no launchMode) and resume.

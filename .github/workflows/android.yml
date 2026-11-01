@@ -99,13 +99,13 @@ jobs:
               timeout 120 adb bugreport phone-bugreport.zip || echo "BUGREPORT_FAILED" > phone-bugreport-failed.txt
               ls -la *.txt *.zip || true
             }
-            timeout 120 adb wait-for-device
+            timeout 120 adb wait-for-device || { dump_diag; exit 1; }
             adb install --no-incremental apk/openbridge-companion.apk
             adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_SCAN || true
             adb shell pm grant fr.openbridge.companion android.permission.BLUETOOTH_CONNECT || true
             adb shell pm grant fr.openbridge.companion android.permission.RECORD_AUDIO || true
             adb shell am start -n fr.openbridge.companion/.MainActivity
-            timeout 60 adb wait-for-device
+            timeout 60 adb wait-for-device || { dump_diag; exit 1; }
             ok=0
             for i in 1 2 3 4 5 6; do
               sleep 5
@@ -115,7 +115,7 @@ jobs:
               echo "attempt $i/6: pid/foreground not ready, retrying"
             done
             if test "$ok" != 1; then
-              echo "PHONE acceptance FAILED after 6 attempts (bounded ~30s)"
+              echo "PHONE acceptance FAILED after 6 attempts (bounded ~30-60s)"
               dump_diag
               exit 1
             fi

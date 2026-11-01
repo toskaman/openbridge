@@ -124,9 +124,9 @@ class PairingEnrollTests(unittest.TestCase):
                       {'protocol': R.PROTOCOL, 'relay_nonce': 123}):
             with self.assertRaises(R.RelayError):
                 R.pair(lambda _r, _m, h=hello: h, lambda: '123456')
-        # Missing relay_id raises catchable KeyError today (follow-up: RelayError);
+        # Missing relay_id raises KeyError today (follow-up: narrow to RelayError);
         # the pairing is refused either way and the caller survives.
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             R.pair(lambda _r, _m: {'protocol': R.PROTOCOL, 'relay_nonce': 'rn'},
                    lambda: '123456')
 
@@ -240,7 +240,11 @@ class OversizeBoundsTests(unittest.TestCase):
             bridge._read_frame(FakeConn())
         self.assertEqual(reads, [4])  # only the length header was read
 
-    def test_http_transport_loopback_oversize_refused(self):
+    def test_http_transport_truncated_reply_rejected(self):
+        # Mechanism (src/fabric/relay.py http_transport): the reply body is
+        # read(300_000)-truncated, so an oversize reply fails closed with
+        # JSONDecodeError (a ValueError), never a phantom success. This pins
+        # the truncation behavior, not an explicit size check (follow-up).
         payloads = {'big': json.dumps({'ok': True, 'pad': 'x' * (2 << 20)}).encode(),
                     'small': json.dumps({'ok': True}).encode()}
         mode = {'name': 'big'}
@@ -263,7 +267,7 @@ class OversizeBoundsTests(unittest.TestCase):
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         try:
             send = R.http_transport('http://127.0.0.1:%d' % srv.server_port)
-            with self.assertRaises(Exception):
+            with self.assertRaises(ValueError):
                 send(None, {'op': 'probe'})
             mode['name'] = 'small'  # bridge still usable after the hostile reply
             self.assertEqual(send(None, {'op': 'probe'}), {'ok': True})
