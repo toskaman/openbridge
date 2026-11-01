@@ -124,9 +124,9 @@ class PairingEnrollTests(unittest.TestCase):
                       {'protocol': R.PROTOCOL, 'relay_nonce': 123}):
             with self.assertRaises(R.RelayError):
                 R.pair(lambda _r, _m, h=hello: h, lambda: '123456')
-        # Missing relay_id raises KeyError today (follow-up: narrow to RelayError);
-        # the pairing is refused either way and the caller survives.
-        with self.assertRaises(KeyError):
+        # C1 contract: a hello without a relay id is refused as RelayError
+        # (narrowed from KeyError); the pairing is refused and the caller survives.
+        with self.assertRaises(R.RelayError):
             R.pair(lambda _r, _m: {'protocol': R.PROTOCOL, 'relay_nonce': 'rn'},
                    lambda: '123456')
 
@@ -140,32 +140,35 @@ class PairingEnrollTests(unittest.TestCase):
             R.pair(send, lambda: '123456')
 
     def test_enroll_malformed_declared_never_crashes_or_escalates(self):
-        # Non-dict / non-coercible payloads raise a catchable error today (follow-up:
-        # narrow to RelayError); dict-shaped junk coerces to safe empty defaults.
-        # In every case the bridge survives, nothing is half-enrolled, and no unknown
-        # capability is granted.
-        bad_payloads = [None, 123, 'x', [], {'capabilities': 'ble_scan'},
-                        {'capabilities': [None, 123]},
-                        {'capabilities': ['ble_scan'], 'permissions': 'oops'},
-                        {'capabilities': ['ble_scan'], 'permissions': [1, 2]},
-                        {'capabilities': ['root_shell', 'ble_scan'],
-                         'permissions': {'BLUETOOTH_SCAN': 'yes'}}]
-        for i, declared in enumerate(bad_payloads):
+        # C1 contract: non-dict / non-coercible payloads are refused as RelayError
+        # (narrowed from AttributeError/ValueError/TypeError); dict-shaped junk
+        # coerces to safe empty defaults. In every case the bridge survives,
+        # nothing is half-enrolled, and no unknown capability is granted.
+        must_raise = [None, 123, 'x', [],
+                      {'capabilities': ['ble_scan'], 'permissions': 'oops'},
+                      {'capabilities': ['ble_scan'], 'permissions': [1, 2]}]
+        for i, declared in enumerate(must_raise):
             mgr = R.RelayManager(lambda r, m: {})
             rid = 'red-%d' % i
-            try:
+            with self.assertRaises(R.RelayError):
                 mgr.enroll(rid, KEY, 'dev', declared)
-            except Exception:
-                self.assertNotIn(rid, mgr.relays)  # no partial enrollment
-            else:
-                caps = mgr.relays[rid]['capabilities']
-                self.assertLessEqual(caps, {'ble_scan', 'remote_controls', 'command_submit'})
-                self.assertNotIn('root_shell', caps)
+            self.assertNotIn(rid, mgr.relays)  # no partial enrollment
             # Manager stays usable after the hostile payload.
             mgr.enroll('good-%d' % i, KEY, 'dev',
                        {'capabilities': ['ble_scan'],
                         'permissions': {'BLUETOOTH_SCAN': True, 'owner_enabled': True}})
             self.assertEqual(mgr.eligible('ble_scan'), ['good-%d' % i])
+        coerce = [{'capabilities': 'ble_scan'},
+                  {'capabilities': [None, 123]},
+                  {'capabilities': ['root_shell', 'ble_scan'],
+                   'permissions': {'BLUETOOTH_SCAN': 'yes'}}]
+        for j, declared in enumerate(coerce):
+            mgr = R.RelayManager(lambda r, m: {})
+            mgr.enroll('coerce-%d' % j, KEY, 'dev', declared)
+            caps = mgr.relays['coerce-%d' % j]['capabilities']
+            self.assertLessEqual(caps, {'ble_scan', 'remote_controls', 'command_submit'})
+            self.assertNotIn('root_shell', caps)
+            self.assertEqual(mgr.eligible('ble_scan'), [])  # junk grants nothing
 
     def test_enroll_unknown_capabilities_grant_nothing(self):
         mgr = R.RelayManager(lambda r, m: {})
@@ -240,11 +243,10 @@ class OversizeBoundsTests(unittest.TestCase):
             bridge._read_frame(FakeConn())
         self.assertEqual(reads, [4])  # only the length header was read
 
-    def test_http_transport_truncated_reply_rejected(self):
-        # Mechanism (src/fabric/relay.py http_transport): the reply body is
-        # read(300_000)-truncated, so an oversize reply fails closed with
-        # JSONDecodeError (a ValueError), never a phantom success. This pins
-        # the truncation behavior, not an explicit size check (follow-up).
+    def test_http_transport_oversize_reply_refused(self):
+        # C1 contract: a reply over MAX_REPLY_BYTES is refused as RelayError by
+        # an explicit size check (narrowed from read(300_000)-truncation surfacing
+        # as JSONDecodeError), never a phantom success.
         payloads = {'big': json.dumps({'ok': True, 'pad': 'x' * (2 << 20)}).encode(),
                     'small': json.dumps({'ok': True}).encode()}
         mode = {'name': 'big'}
@@ -267,7 +269,7 @@ class OversizeBoundsTests(unittest.TestCase):
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         try:
             send = R.http_transport('http://127.0.0.1:%d' % srv.server_port)
-            with self.assertRaises(ValueError):
+            with self.assertRaises(R.RelayError):
                 send(None, {'op': 'probe'})
             mode['name'] = 'small'  # bridge still usable after the hostile reply
             self.assertEqual(send(None, {'op': 'probe'}), {'ok': True})
