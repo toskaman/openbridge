@@ -46,7 +46,8 @@ class Scheduler(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / 'workers.json'
             p.write_text(json.dumps({'workers': [{'endpoint': 'http://192.168.1.20:11438', 'model_id': GLIMMER_ID},
-                                                 {'endpoint': 'http://1.1.1.1:1', 'model_id': GLIMMER_ID}]}))
+                                                 {'endpoint': 'http://1.1.1.1:1', 'model_id': GLIMMER_ID}]}),
+                             encoding='utf-8')
             ws = s.owner_workers(p)
             self.assertEqual([w.endpoint for w in ws], ['http://192.168.1.20:11438'])
             self.assertEqual(s.owner_workers(Path(d) / 'none.json'), [])

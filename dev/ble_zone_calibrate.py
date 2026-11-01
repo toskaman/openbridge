@@ -65,7 +65,7 @@ def main():
     rep = ble_zones.report(samples)
     out = Path('artifacts/ble-zones'); out.mkdir(parents=True, exist_ok=True)
     p = out / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '.json')
-    p.write_text(json.dumps({'samples': samples, 'report': rep, 'status': 'REAL_HARDWARE (owner-run calibration)'}, indent=1))
+    p.write_text(json.dumps({'samples': samples, 'report': rep, 'status': 'REAL_HARDWARE (owner-run calibration)'}, indent=1), encoding='utf-8')
     print(json.dumps(rep, indent=1)); print('saved', p)
 
 

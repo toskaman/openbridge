@@ -107,11 +107,13 @@ class ModelNetworkPathTests(unittest.TestCase):
         with TemporaryDirectory() as directory, Trace() as trace:
             path = Path(directory) / 'runtime-models.json'
             path.write_text(json.dumps({'environment': 'runtime', 'model_calls': [
-                {'model_id': LocalMetaBroker.model_id, 'endpoint': 'http://127.0.0.1:11437', 'execution': 'local'}]}))
+                {'model_id': LocalMetaBroker.model_id, 'endpoint': 'http://127.0.0.1:11437', 'execution': 'local'}]}),
+                                encoding='utf-8')
             with self.assertRaisesRegex(RegistryInvalid, 'not declared'):
                 require(LocalMetaBroker.model_id, 'http://127.0.0.1:9999', path)
             path.write_text(json.dumps({'environment': 'runtime', 'model_calls': [
-                {'model_id': LocalMetaBroker.model_id, 'endpoint': 'https://example.invalid', 'execution': 'local'}]}))
+                {'model_id': LocalMetaBroker.model_id, 'endpoint': 'https://example.invalid', 'execution': 'local'}]}),
+                                encoding='utf-8')
             with self.assertRaisesRegex(RegistryInvalid, 'Unapproved runtime model endpoint'):
                 require(LocalMetaBroker.model_id, 'https://example.invalid', path)
             broker = LocalMetaBroker(catalog=self.pinned_catalog(LocalMetaBroker))

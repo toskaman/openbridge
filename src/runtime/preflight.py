@@ -77,7 +77,7 @@ def storage():
     root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
     try:
         root.mkdir(parents=True, exist_ok=True)
-        probe = root / '.preflight'; probe.write_text('ok'); probe.unlink()
+        probe = root / '.preflight'; probe.write_text('ok', encoding='utf-8'); probe.unlink()
         return check('private_storage', 'OK', 'per-user state directory writable', True)
     except OSError as e:
         return check('private_storage', 'MISSING', f'cannot write private state: {type(e).__name__}', True)

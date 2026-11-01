@@ -9,7 +9,7 @@ facts=FreeboxAdapter().discover()['devices'][0]['facts']
 major=facts['api_version'].split('.')[0]
 s=FreeboxSession(Vault(),major)
 status_file=Path('artifacts/freebox_auth_status.json')
-def report(state):status_file.write_text(json.dumps({'state':state,'at':time.strftime('%H:%M:%S')}));print(state,flush=True)
+def report(state):status_file.write_text(json.dumps({'state':state,'at':time.strftime('%H:%M:%S')}),encoding='utf-8');print(state,flush=True)
 if s.state()=='AUTHORIZED':report('ALREADY_AUTHORIZED');sys.exit(0)
 s.request_authorization();report('PENDING_PRESS_BUTTON_ON_FREEBOX')
 deadline=time.monotonic()+480
