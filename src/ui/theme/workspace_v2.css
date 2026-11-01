@@ -176,3 +176,94 @@ body.ui-v2[data-view=home] .orb-chip{display:none}
    cause a transient horizontal overflow on small screens. */
 body.ui-v2 .view{animation:v2fade .16s ease}
 @keyframes v2fade{from{opacity:.55}to{opacity:1}}
+
+/* ---------- Ask hero (v2.1): the main entry point, with the live orb inside the card ---------- */
+.ask-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:28px;align-items:center;margin-bottom:18px;padding:30px 34px;border-radius:24px;
+  border:1px solid transparent;
+  background:radial-gradient(520px 320px at 88% 42%,rgba(124,77,255,.20),transparent 70%),radial-gradient(600px 260px at 0% 0%,rgba(56,219,205,.10),transparent 70%),linear-gradient(180deg,#141f33,#0e1626) padding-box,
+    linear-gradient(135deg,rgba(56,219,205,.55),rgba(40,54,78,.6) 40%,rgba(183,163,255,.55)) border-box;
+  box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.ask-hero-main{min-width:0}
+.ask-hero h1{font-size:clamp(28px,2.6vw,38px);line-height:1.08;letter-spacing:-.025em;margin:0 0 8px}
+.ask-hero .lede{margin:0 0 18px;font-size:15.5px;color:var(--v2-fg-2);max-width:62ch}
+.ask-hero .eyebrow{background:linear-gradient(90deg,var(--v2-cta),var(--v2-meta));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ask-orb{background:none;border:0;padding:0;gap:6px}
+.ask-orb .orb-canvas-host{width:min(100%,330px)}
+.ask-v2{display:grid;gap:12px}
+.ask-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ask-kicker{font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--v2-fg-3);margin:0}
+.ask-head .ask-model{margin:0;flex:1;align-items:center}
+.ask-head .ask-model small{display:none}
+.ask-lang{display:inline-flex;border:1px solid var(--v2-line);border-radius:999px;padding:2px;background:rgba(8,13,24,.5)}
+.lang-btn{background:none;border:0;color:var(--v2-fg-3);min-height:26px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700}
+.lang-btn.active{background:var(--v2-raise);color:var(--v2-fg)}
+.lang-btn:hover{filter:none;color:var(--v2-fg)}
+/* the composer */
+body.ui-v2 .ask-composer{display:flex;align-items:center;gap:6px;margin:0;padding:7px 7px 7px 20px;border-radius:18px;background:#0a1120;border:1px solid #33456a;
+  box-shadow:0 0 0 0 rgba(56,219,205,0),0 12px 36px rgba(0,0,0,.35);transition:box-shadow .2s,border-color .2s}
+body.ui-v2 .ask-composer:focus-within{border-color:var(--v2-cta);box-shadow:0 0 0 4px rgba(56,219,205,.16),0 14px 44px rgba(124,77,255,.28)}
+body.ui-v2 .ask-composer input{flex:1;min-width:0;background:transparent;border:0;box-shadow:none;font-size:18px;min-height:52px;padding:0;color:var(--v2-fg)}
+body.ui-v2 .ask-composer input::placeholder{color:#6f7d96}
+body.ui-v2 .ask-composer input:focus{box-shadow:none;border:0}
+.ask-mic{width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--v2-line);color:var(--v2-fg-2)}
+.ask-mic.recording{border-color:var(--v2-in);color:var(--v2-in);box-shadow:0 0 0 4px rgba(52,255,170,.15)}
+body.ui-v2 .ask-go{min-height:52px;padding:0 26px;border-radius:14px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#38DBCD,#4fb8ff 55%,#9b87ff);color:#04101f;box-shadow:0 8px 26px rgba(56,219,205,.28)}
+body.ui-v2 .ask-go svg{width:18px;height:18px}
+.chip-btn{background:rgba(28,40,64,.55);border:1px solid var(--v2-line);color:var(--v2-fg-2);border-radius:999px;min-height:30px;padding:5px 12px;font-size:12.5px;font-weight:500}
+.chip-btn:hover{border-color:var(--v2-cta);color:var(--v2-fg);filter:none;background:rgba(28,40,64,.9)}
+body.ui-v2 .ask-suggest{margin:0}
+/* AI quality: free vs paid at a glance */
+body.ui-v2 .ask-quality{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:8px;align-items:stretch;margin:2px 0 0}
+body.ui-v2 .ask-quality>.ask-label{align-self:center;margin-right:2px}
+.ask-tier{display:grid;gap:2px;justify-items:start;text-align:left;padding:8px 12px;border-radius:12px;border:1px solid var(--v2-line);background:rgba(10,17,32,.6);color:var(--v2-fg);min-height:52px;font-weight:500}
+.ask-tier:hover{border-color:#40557f;filter:none;background:rgba(18,27,42,.9)}
+.ask-tier .tier-top{display:flex;gap:8px;align-items:center;width:100%}
+.ask-tier strong{font-size:14px}
+.tier-cost{white-space:nowrap;margin-left:auto;font:700 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:999px}
+.tier-cost.free{color:var(--v2-good);background:rgba(88,225,171,.12);border:1px solid rgba(88,225,171,.35)}
+.tier-cost.paid{color:var(--v2-out);background:rgba(255,176,64,.12);border:1px solid rgba(255,176,64,.4)}
+.tier-sub{font-size:11.5px;color:var(--v2-fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ask-tier.active{border-color:var(--v2-cta);box-shadow:0 0 0 1px var(--v2-cta) inset,0 6px 20px rgba(56,219,205,.14);background:rgba(20,40,52,.7)}
+.ask-tier.paid.active{border-color:var(--v2-out);box-shadow:0 0 0 1px var(--v2-out) inset,0 6px 20px rgba(255,176,64,.14);background:rgba(48,36,18,.55)}
+.ask-tier.off{opacity:.6}
+body.ui-v2 .ask-consent{margin:0;padding:10px 12px;border:1px solid rgba(255,176,64,.4);border-radius:12px;background:rgba(255,176,64,.07)}
+/* progress + results */
+body.ui-v2 .ask-stages{flex-direction:row;flex-wrap:wrap;gap:6px;margin:0}
+body.ui-v2 .ask-stages:empty,body.ui-v2 .ask-result:empty{display:none}
+body.ui-v2 .ask-stages li{padding:4px 10px 4px 22px;border-radius:999px;border:1px solid var(--v2-line);font-size:12.5px;background:rgba(10,17,32,.6)}
+body.ui-v2 .ask-stages li::before{left:9px;top:50%;margin-top:-4px}
+body.ui-v2 .ask-stages li.active{border-color:var(--v2-meta);color:var(--v2-fg)}
+body.ui-v2 .ask-stages li.active::before{background:var(--v2-meta);animation:askpulse 1s ease-in-out infinite}
+body.ui-v2 .ask-stages li.failed{border-color:rgba(255,138,145,.5);color:var(--v2-bad)}
+body.ui-v2 .ask-stages li.failed::before{background:var(--v2-bad)}
+@keyframes askpulse{50%{opacity:.35}}
+:root[data-motion=off] .ask-stages li.active::before,:root[data-motion=reduced] .ask-stages li.active::before{animation:none}
+body.ui-v2 .ask-result{margin:0;padding:14px 16px;border-radius:14px;border:1px solid var(--v2-line);background:rgba(10,17,32,.55)}
+.ask-card{display:grid;gap:6px}
+.ask-card h3{font-size:15px;margin:0}
+.ask-card p{margin:0;color:var(--v2-fg-2)}
+.ask-card.warn h3{color:var(--v2-caution)}.ask-card.bad h3{color:var(--v2-bad)}.ask-card.studio h3{color:var(--v2-cta)}
+.ask-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.ask-foot{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;padding-top:4px;border-top:1px solid rgba(40,54,78,.6)}
+.ask-foot .ask-devices{margin:6px 0 0}.ask-foot .ask-recents{margin:6px 0 0}
+@media (max-width:1280px){.ask-hero{grid-template-columns:minmax(0,1fr) 260px;padding:24px}}
+@media (max-width:1100px){body.ui-v2 .ask-quality{grid-template-columns:repeat(2,minmax(0,1fr))}body.ui-v2 .ask-quality>.ask-label{grid-column:1/-1}}
+@media (max-width:960px){
+  .ask-hero{grid-template-columns:1fr;gap:10px;padding:20px 18px}
+  .ask-orb{order:-1;flex-direction:row;justify-content:flex-start;gap:12px}
+  .ask-orb .orb-canvas-host{width:110px;flex:none}
+  .ask-orb .orb-status{text-align:left}
+  .ask-orb .orb-legend{display:none}
+}
+@media (max-width:520px){
+  body.ui-v2 .ask-composer{flex-wrap:wrap;padding:8px 8px 8px 14px}
+  body.ui-v2 .ask-composer input{flex-basis:100%;font-size:16px;min-height:44px}
+  body.ui-v2 .ask-go{flex:1}
+  .ask-hero h1{font-size:25px}
+  .ask-kicker{display:none}
+  .ask-head .ask-model{white-space:nowrap;display:flex}
+}
+.target-device.tv{width:100%;aspect-ratio:16/10;border-radius:14px;border-width:8px}
+.target-device.tv .watch-face{grid-template-columns:1fr;width:100%;max-width:100%}
+.target-device.tv .watch-row{width:100%}.target-device.tv .watch-btn{flex:1;min-width:0}
+.target-device.phone{width:min(100%,190px);aspect-ratio:9/16;border-radius:26px}
