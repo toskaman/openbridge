@@ -19,7 +19,7 @@ Your devices were never designed to work together. OpenBridge fixes that: it dis
 
 Meta models do the understanding. Deterministic safety gates do the enforcing: every AI proposal passes strict validation, owner approval, and independent read-back before anything happens. Every run ends with a receipt.
 
-Nothing here is a mock-up: [30 verified evidence rows](docs/DEVICE_EVIDENCE.json) back every claim below, with honest limits stated where runs fell short.
+Nothing here is a mock-up: [35 verified evidence rows](docs/DEVICE_EVIDENCE.json) back every claim below, with honest limits stated where runs fell short.
 
 ## See OpenBridge in action
 
@@ -69,7 +69,7 @@ Local-first: Llama 3.2 3B (CPU) triages, Muse Glimmer 30B (GPU/CPU) plans and ex
 | 7 Linux/legacy-Windows guests (QEMU) | FULL GUEST OS — agent protocol proven, labeled as VMs |
 | Pixel 6 AVD, ESP32 (native IDF agent) | OFFICIAL EMULATOR — proven, never counted as physical |
 
-[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (30 VERIFIED rows) · [claim ↔ evidence](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [known limitations](docs/KNOWN_LIMITATIONS.md)
+[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (35 VERIFIED rows) · [claim ↔ evidence](docs/jury/CLAIM_EVIDENCE_MATRIX.md) · [known limitations](docs/KNOWN_LIMITATIONS.md)
 
 ## Meta AI — why it matters
 

@@ -18,7 +18,7 @@ spend needs explicit `--spend --consent SPEND-APPROVED`).
 |---|---|---|---|
 | Discover + understand | PASS (CLI discover, ADB-verified facts) | BLOCKED (no key) | phone + AVD |
 | Multi-device orchestration | PASS (wf-p30-phone-avd2: 2 captures + montage, sha verified) | BLOCKED | phone + AVD |
-| Watch → TV controls | OPEN (devices online since 30 Oct late; run pending) | BLOCKED | — |
+| Watch → TV controls | PASS (S6 owner press, tx-5b326915aef0f777, MUSIC 23→24 + R1 repeat) | BLOCKED | watch + TV |
 | TV → ESP32 controls | BLOCKED (devices absent) | BLOCKED | — |
 | Windows → Linux diag | BLOCKED (no Linux node online) | BLOCKED | — |
 | Watch → vacuum | OPEN (devices online since 30 Oct late; run pending) | BLOCKED | — |
