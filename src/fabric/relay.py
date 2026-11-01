@@ -35,6 +35,7 @@ VOICE_URL_SKEW = 120           # seconds of clock skew tolerated on a voice down
 MAX_SCAN_SECONDS = 15
 MAX_OBSERVATIONS = 200
 COMMAND_TTL = 30
+MAX_REPLY_BYTES = 300_000   # hard cap on an http_transport reply body; oversize replies are refused, never truncated-then-parsed
 
 
 class RelayError(RuntimeError):
@@ -95,7 +96,8 @@ MAX_NONCES = 512   # mirrors the Companion nonce-cache prune; bounds long-lived 
 
 
 def verify(key, message, seen_nonces, now=None):
-    """Used by relays (and by the PC on relay replies). Rejects bad MAC, expiry, replay and unknown ops.
+    """Used by relays (and by the PC on relay replies). Rejects malformed envelopes, bad MAC, expiry, replay
+    and unknown ops.
 
     seen_nonces is either a long-lived dict (nonce -> expires_at) that gives replay protection: a nonce is only
     forgotten after its message expired, and when the cache is full of live nonces new messages are refused, never
@@ -103,6 +105,8 @@ def verify(key, message, seen_nonces, now=None):
     pairing reply). Other container types are rejected so no caller can rely on a count-evicting cache."""
     if seen_nonces is not None and not isinstance(seen_nonces, dict):
         raise TypeError('seen_nonces must be a dict nonce cache (nonce -> expires_at) or None for a one-shot check')
+    if not isinstance(message, dict):
+        raise RelayError('Malformed message: not an object')
     now = time.time() if now is None else now
     msg = {k: v for k, v in message.items() if k != 'mac'}
     if not hmac.compare_digest(sign(key, msg), str(message.get('mac', ''))):
@@ -113,6 +117,8 @@ def verify(key, message, seen_nonces, now=None):
         raise RelayError('Expired command')
     if seen_nonces is None:             # one-shot check of a single message: nothing to remember
         return msg
+    if 'nonce' not in msg:
+        raise RelayError('Malformed message: missing nonce')
     if msg['nonce'] in seen_nonces:
         raise RelayError('Replay')
     for n in [n for n, exp in seen_nonces.items() if not (isinstance(exp, (int, float)) and exp >= now)]:
@@ -223,9 +229,22 @@ class RelayManager:
         self._lock = threading.Lock()
 
     def enroll(self, relay_id, key, device_key, declared):
+        # `declared` arrives from the relay over the wire: every malformed shape is refused as RelayError with a
+        # structured reason, and every check runs before the assignment below so a refused enroll leaves no
+        # partial state (including preserving any entry already stored under relay_id).
         if not isinstance(relay_id, str) or not RELAY_ID.match(relay_id):
             raise RelayError('Invalid relay id (1-60 letters, digits, dash or underscore)')
-        caps = {c for c in declared.get('capabilities', []) if c in ('ble_scan', 'remote_controls', 'command_submit')}
+        if not isinstance(declared, dict):
+            raise RelayError('Enroll refused: declared pairing data must be an object')
+        raw_caps = declared.get('capabilities', [])
+        if isinstance(raw_caps, (list, tuple, set, frozenset)):
+            caps = {c for c in raw_caps if c in ('ble_scan', 'remote_controls', 'command_submit')}
+        elif isinstance(raw_caps, (str, dict)):
+            caps = set()   # malformed shape: grant nothing (junk keys can never enable a capability)
+        else:
+            raise RelayError('Enroll refused: declared capabilities must be a list')
+        if 'permissions' in declared and not isinstance(declared['permissions'], dict):
+            raise RelayError('Enroll refused: declared permissions must be an object')
         self.relays[relay_id] = {'key': key, 'device_key': device_key, 'capabilities': caps,
                                  'permissions': dict(declared.get('permissions', {})), 'online': True, 'failures': 0,
                                  'busy': False, 'battery_powered': bool(declared.get('battery_powered')), 'seen': {}}
@@ -303,7 +322,10 @@ def _opener():
 
 
 def http_transport(base_url, timeout=25):
-    """POST JSON to a relay. base_url must be loopback (adb forward) or a private LAN address in the approved scope."""
+    """POST JSON to a relay. base_url must be loopback (adb forward) or a private LAN address in the approved scope.
+
+    The reply body is capped at MAX_REPLY_BYTES (one bounded read, never the whole body); an oversize or
+    malformed reply is refused as RelayError with a structured reason, never a phantom success."""
     from urllib.request import Request
     _check_scope(base_url)
 
@@ -313,10 +335,19 @@ def http_transport(base_url, timeout=25):
         from urllib.error import HTTPError
         try:
             with _opener().open(req, timeout=timeout) as r:
-                raw = r.read(300_000)
+                raw = r.read(MAX_REPLY_BYTES + 1)
         except HTTPError as error:
             raise RelayError('Relay refused: ' + error.read(200).decode('utf-8', 'replace')) from None
-        reply = json.loads(raw)
+        if len(raw) > MAX_REPLY_BYTES:
+            raise RelayError('Relay reply too large (over %d bytes)' % MAX_REPLY_BYTES)
+        try:
+            reply = json.loads(raw)
+        except (ValueError, RecursionError):
+            # ValueError covers JSONDecodeError and bad encodings; RecursionError covers hostile nesting depth
+            # in an otherwise bounded body. Both mean the bytes are not a usable reply, never a caller bug.
+            raise RelayError('Relay reply is not valid JSON') from None
+        if not isinstance(reply, dict):
+            raise RelayError('Relay reply must be a JSON object')
         if 'error' in reply:
             raise RelayError('Relay refused: ' + str(reply['error'])[:80])
         return reply
@@ -330,7 +361,8 @@ def failover_transport(urls, lan_timeout=3, timeout=25):
     device must never silently reroute. LAN URLs fail fast (`lan_timeout`)
     so blackholed subnets (client isolation) fall back quickly; loopback
     (adb forward) keeps the full `timeout`. Malformed replies (HTTPException,
-    bad JSON) propagate like RelayError: fail-closed, never rerouted."""
+    or bad JSON surfaced as RelayError) propagate at once: fail-closed,
+    never rerouted."""
     from urllib.parse import urlsplit
     import ipaddress
     urls = list(urls or [])
@@ -431,12 +463,22 @@ def fetch_voice_urls(urls, key, clip_id, expected_bytes, expected_sha256, timeou
 
 
 def pair(send, code_reader):
-    """Pairing: ask the relay to show a code, obtain it from the owner (code_reader), derive the key and prove it."""
+    """Pairing: ask the relay to show a code, obtain it from the owner (code_reader), derive the key and prove it.
+
+    The hello and the pairing reply arrive from the device over the wire: malformed shapes are refused as
+    RelayError with a structured reason. Transport errors (OSError/TimeoutError) propagate untouched so the
+    caller can tell a dead link from a refusing device. Pairing holds no manager state itself; the caller
+    enrolls the returned (relay_id, key, declared) triple, and enroll is atomic (see RelayManager.enroll)."""
     pc_nonce = secrets.token_hex(16)
     hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
+    if not isinstance(hello, dict):
+        raise RelayError('Not an OpenBridge relay (pairing hello is not an object)')
     if hello.get('protocol') != PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
         raise RelayError('Not an OpenBridge relay')
+    rid = hello.get('relay_id')
+    if not isinstance(rid, str) or not RELAY_ID.match(rid):
+        raise RelayError('Relay omitted a valid relay id')
     key = derive_key(code_reader(), hello['relay_nonce'], pc_nonce)
-    reply = send(None, command(key, hello['relay_id'], 'discover_capabilities'))
+    reply = send(None, command(key, rid, 'discover_capabilities'))
     declared = verify(key, reply, None).get('params', {})
-    return hello['relay_id'], key, declared
+    return rid, key, declared
