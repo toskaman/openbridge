@@ -25,6 +25,7 @@
 #   <device>-verdict.txt, <device>-verdict.json, <device>-diag.txt,
 #   <device>-logcat.txt (+ pid/foreground/version or launch.png per device).
 set -u
+set -o pipefail # a failed adb in a pipeline must fail the probe, not be masked by tee/grep
 DEVICE="${EMU_DEVICE:?set EMU_DEVICE=phone|wear|tv}"
 APK="${EMU_APK:?set EMU_APK=path/to/apk}"
 PKG="${EMU_PKG:-fr.openbridge.companion}"
@@ -61,8 +62,12 @@ dump_diag() { # dump_diag <context> — always preserved, never fails the harnes
 }
 
 adb_dead_probe() { # returns 0 if adb channel looks dead; prints signature
+  # Every adb call in this harness is wrapped in timeout(1): a wedged
+  # channel must yield a verdict, never a hang (run 41313438904: phone
+  # hung 26 min at stage=evidence on an unbounded adb call, job
+  # timeout-cancelled with no verdict).
   local out
-  out="$(adb devices 2>&1)" || { echo "adb devices exit=$? $out"; return 0; }
+  out="$(timeout 60 adb devices 2>&1)" || { echo "adb devices exit=$? $out"; return 0; }
   if echo "$out" | grep -qiE "error: closed|offline|unauthorized|no devices|not found"; then
     echo "$out" | head -3
     return 0
@@ -81,7 +86,7 @@ boot_ok=0
 while [ "$boot_attempt" -le "$BOOT_RETRIES" ]; do
   boot_attempt=$((boot_attempt + 1))
   if timeout 120 adb wait-for-device 2>/dev/null \
-     && adb shell getprop sys.boot_completed 2>/dev/null | grep -q 1; then
+     && timeout 60 adb shell getprop sys.boot_completed 2>/dev/null | grep -q 1; then
     boot_ok=1
     break
   fi
@@ -103,7 +108,7 @@ while [ "$adb_attempt" -le "$ADB_RETRIES" ]; do
   adb_attempt=$((adb_attempt + 1))
   if adb_sig="$(adb_dead_probe)"; then
     say "adb probe attempt $adb_attempt/$((ADB_RETRIES + 1)) dead: $adb_sig"
-    adb reconnect 2>/dev/null || adb kill-server 2>/dev/null || true
+    timeout 60 adb reconnect 2>/dev/null || timeout 60 adb kill-server 2>/dev/null || true
     sleep 10
     timeout 60 adb wait-for-device 2>/dev/null || true
   else
@@ -120,22 +125,22 @@ fi
 # ---------- STAGE 2: PRODUCT ASSERTIONS (single pass, NO retries) ----------
 say "stage=app (single pass, no retries)"
 # From here on, any failure is final — the harness exits without re-running.
-if ! adb install --no-incremental "$APK" 2>&1 | tee "$DEVICE-install.txt"; then
+if ! timeout 300 adb install --no-incremental "$APK" 2>&1 | tee "$DEVICE-install.txt"; then
   dump_diag "install"
   verdict APP_CRASH install "adb install failed (single attempt, no retry)" 1
   exit 1
 fi
-adb shell pm grant "$PKG" android.permission.BLUETOOTH_SCAN 2>/dev/null || true
-adb shell pm grant "$PKG" android.permission.BLUETOOTH_CONNECT 2>/dev/null || true
-adb shell pm grant "$PKG" android.permission.RECORD_AUDIO 2>/dev/null || true
-adb shell am start -n "$PKG/$ACTIVITY" 2>&1 | tee "$DEVICE-start.txt" || true
+timeout 60 adb shell pm grant "$PKG" android.permission.BLUETOOTH_SCAN 2>/dev/null || true
+timeout 60 adb shell pm grant "$PKG" android.permission.BLUETOOTH_CONNECT 2>/dev/null || true
+timeout 60 adb shell pm grant "$PKG" android.permission.RECORD_AUDIO 2>/dev/null || true
+timeout 60 adb shell am start -n "$PKG/$ACTIVITY" 2>&1 | tee "$DEVICE-start.txt" || true
 
 ok=0
 for i in 1 2 3 4 5 6; do
   sleep 5
   # NOTE: bounded settle polling, NOT retries — one assertion window, one verdict.
-  adb shell pidof "$PKG" 2>/dev/null | tee "$DEVICE-pid.txt" || true
-  adb shell dumpsys activity activities 2>/dev/null \
+  timeout 30 adb shell pidof "$PKG" 2>/dev/null | tee "$DEVICE-pid.txt" || true
+  timeout 30 adb shell dumpsys activity activities 2>/dev/null \
     | grep -m1 -i openbridge | tee "$DEVICE-foreground.txt" || true
   if [ -s "$DEVICE-pid.txt" ] && [ -s "$DEVICE-foreground.txt" ]; then ok=1; break; fi
   say "settle poll $i/6: pid/foreground not ready"
@@ -154,19 +159,19 @@ fi
 # ---------- STAGE 3: EVIDENCE (no retry; failure after pass is its own verdict) ----------
 say "stage=evidence"
 evidence_fail=""
-adb shell dumpsys package "$PKG" 2>/dev/null | grep -m1 versionName \
+timeout 60 adb shell dumpsys package "$PKG" 2>/dev/null | grep -m1 versionName \
   | tee "$DEVICE-version.txt" || evidence_fail="version probe failed"
 if [ "$DEVICE" = "wear" ] || [ "$DEVICE" = "tv" ]; then
-  adb exec-out screencap -p > "$DEVICE-launch.png" 2>/dev/null \
+  timeout 120 adb exec-out screencap -p > "$DEVICE-launch.png" 2>/dev/null \
     || evidence_fail="${evidence_fail}; $DEVICE screencap failed"
 fi
 if [ "$DEVICE" = "tv" ]; then
-  adb shell input keyevent KEYCODE_DPAD_DOWN 2>/dev/null || true
+  timeout 60 adb shell input keyevent KEYCODE_DPAD_DOWN 2>/dev/null || true
   sleep 2
-  adb exec-out screencap -p > tv-focus.png 2>/dev/null \
+  timeout 120 adb exec-out screencap -p > tv-focus.png 2>/dev/null \
     || evidence_fail="${evidence_fail}; tv focus screencap failed"
 fi
-adb logcat -d -t 300 > "$DEVICE-logcat.txt" 2>/dev/null \
+timeout 120 adb logcat -d -t 300 > "$DEVICE-logcat.txt" 2>/dev/null \
   || evidence_fail="${evidence_fail}; logcat capture failed"
 if [ ! -s "$DEVICE-logcat.txt" ]; then
   evidence_fail="${evidence_fail}; logcat empty"
