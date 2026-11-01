@@ -8,14 +8,27 @@ reports only, by design.
 
 ## Results (3/3 drained + reported, exit 0)
 
+Counts: `E:\shots\voice-loop-log.json` orders show reported 1+2=3
+(per-poll fresh stats); exit 0 gates ≥1 report (vehicle returns 0 when
+n>=1), the 3-count comes from the log plus session stderr. Each reported
+increment requires successful fetch+transcribe+parse and an HMAC-verified
+report reply, so 3× reported entails 3× signed round-trips.
+
 | # | Heard (local STT, verbatim) | Parse outcome |
 |---|---|---|
 | 1 | "enlève les boutons de volumes de la montre et met les bouton" | needs_clarification ("Set an ex…", truncated in log) |
 | 2 | "mas les boutons de volume sur la tellée" | needs_clarification ("Mas les boutons de volume sur …") |
 | 3 | "mais les boutons de volume sur la tellée" | needs_clarification ("Set un volume exact, ou faire …") |
 
-Quotes are the `[drain]` stderr lines (truncated at 80 chars by the logger);
-full lines live in the session tool output, transcripts above are exact.
+Heard quotes are `heard[:60]` inside `[drain]` stderr log lines cut at 80
+chars (`src/runtime/command_drain.py`: Heard cut at `:82`, log line cut at
+`:107` — an earlier revision conflated the two). Row 1 hits the 60-char
+limit exactly and ends mid-phrase, so its tail is unknown; the earlier
+"transcripts above are exact" claim is corrected here. Rows 2–3 are
+complete (<60 chars). Outcome quotes are truncated. The quoted lines lived
+in ephemeral session output (no persisted drain stderr for this run;
+`E:\shots\drain-live\watch.log` holds different transcripts from another
+session).
 
 ## What this proves
 
@@ -32,13 +45,18 @@ full lines live in the session tool output, transcripts above are exact.
   "tellée" (local model + watch mic + night-time speech).
 - No watch screenshots (no watch adb in this setup); on-watch captions were
   delivered (signed receipts) but not visually confirmed.
-- The watch slept near the end of the 6-minute window: 3 tail polls timed
-  out (`URLError WinError 10060`). The drain collected the errors, kept the
-  3 reports, and exited 0 — graceful degradation, same known
+- The watch slept near the end of the 6-minute window: tail polls timed
+  out (`URLError WinError 10060`; one unique error persisted in
+  `voice-loop-log.json` because the vehicle dedupes identical strings —
+  the count 3 comes from live stderr). The drain collected the errors,
+  kept the 3 reports, and exited 0 — graceful degradation, same known
   relay-sleeps-with-screen limitation as every watch run.
 
 ## Owner intent observed (not executed)
 
-All 3 orders ask for the same thing: remove the volume buttons from the
-watch and put volume controls on the TV instead. Recorded here as a feature
-request for a later session; no control layout was changed by this run.
+Orders #2–3 ask to put volume buttons on the TV; #1 asks to remove them
+from the watch, with its tail cut at 60 chars. Read together as one feature
+request — remove the volume buttons from the watch and put volume controls
+on the TV instead (human synthesis, not machine parse; no order was
+resolved to an action, all 3 went to clarification). Recorded here for a
+later session; no control layout was changed by this run.
