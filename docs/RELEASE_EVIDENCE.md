@@ -60,4 +60,4 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 
 ## Latest integrated evidence — 01 November (E3 close-out, `feat/frontier90-staging`)
 
-- Suite: 2053 green locally; cross-platform CI compat fixes (yaml skip, nesting reason, psutil-absent, listener recovery); manifest byte rows corrected; F90 modules wired to CLI/API with smoke tests; emu-harness exit-127 fixed; cleanroom 8/8 green on the F90 tree ([run 41273696980](https://github.com/toskaman/openbridge/actions/runs/41273696980)); dated entries above frozen as history.
+- Suite: 2055 green locally; cross-platform CI compat fixes (yaml skip, nesting reason, psutil-absent, listener recovery); manifest byte rows corrected; F90 modules wired to CLI/API with smoke tests; emu-harness exit-127 + tv-checkout fixed with regression pins; cleanroom 8/8 green on the F90 tree ([run 41273696980](https://github.com/toskaman/openbridge/actions/runs/41273696980)); dated entries above frozen as history.
