@@ -45,7 +45,7 @@ Honest limits, stated upfront: panel installation, button dispatch, receipts, an
 
 ## What can you actually do?
 
-1. **Ask in plain language.** *Scan for bluetooth devices* → preview exactly what will change → approve → read the receipt. French accepted too.
+1. **Ask in plain language.** *How many devices are online* → preview exactly what will change → approve → read the receipt. French accepted too. (Bluetooth scans need a paired relay first.)
 2. **Reach devices your PC can't see.** Bluetooth via phone/TV relays (with a proven [TV-to-phone handover](docs/release/COMPLETE_HANDOVER.md)), Freebox LAN inventory (127 known / 12 active hosts), a second PC, a Tuya vacuum — merged into one graph on strong identifiers only.
 3. **Control from any screen.** Phone, Android TV, and Galaxy Watch7 Companions are paired and operational on real hardware; a second Windows PC runs owner jobs. ESP32 runs natively under QEMU (physical deployment pending); more ports are planned, not claimed.
 4. **Revoke anything.** One tap revokes standing consent; every refused press lands in the Activity timeline with a server-composed reason. Journaled setting changes get per-change RESTORED / FAILED / MANUAL verdicts; physical acts are labeled non-undoable *before* you approve.
@@ -105,7 +105,7 @@ Windows, Linux, or macOS · Python 3.14 · zero third-party runtime packages.
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 1245 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 1835 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
@@ -114,7 +114,7 @@ Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) 
 
 ## Proof, tests, reproducibility
 
-1245 tests green (Windows/Ubuntu/macOS + browser incl. WebKit) · clean-room install 8/8 on 7 hosted targets + Debian container · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+1835 tests green (Windows/Ubuntu/macOS + browser incl. WebKit) · clean-room install 8/8 on 7 hosted targets + Debian container · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
 
 ## Built for the hackathon
 

@@ -99,7 +99,8 @@ gesture is required, the owner performs it.
 7. Revocation + denied re-invocation in the Activity timeline (§9 panel).
 8. Cleanup confirmation.
 
-Store captures under `E:/shots/` with `demo-s5-` / `demo-s6-` prefixes and log
+Store captures under `shots/` (a git-ignored staging folder at the repo root;
+the author PC uses `E:/shots/`) with `demo-s5-` / `demo-s6-` prefixes and log
 each file in the §22 report table. Serials, IPs, and keys must be redacted
 before anything leaves this PC.
 

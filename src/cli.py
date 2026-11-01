@@ -364,7 +364,7 @@ def cmd_init(args):
 
 
 def cmd_doctor(args):
-    from src.runtime.readiness import collect
+    from src.runtime.readiness import REQUIRED, collect
     avail = local_availability()
     probes = {}
     try:
@@ -390,6 +390,10 @@ def cmd_doctor(args):
         probes['evidence'] = 'INVALID'
         probes['storage'] = 'NOT_TESTED'
     report = collect(probes)
+    split = collect(probes, required=REQUIRED)
+    report['required_global'] = split['global']
+    report['required'] = split['required']
+    report['optional'] = split['optional']
     report['detail'] = {'endpoints': avail['endpoints'], 'os': platform.system(),
                         'evidence_dir': str(evidence_dir(args))}
     return report
@@ -1645,19 +1649,43 @@ def cmd_test_jury(args):
 # ---------------- judge demo / serve / agent ----------------
 
 def cmd_judge_demo(args):
+    from src.runtime.readiness import REQUIRED, collect, plain_line
     args.session_id = getattr(args, 'session_id', None) or 'judge-demo'
     steps = []
     report = cmd_doctor(args)
-    steps.append({'step': 'doctor', 'global': report['global']})
+    split = collect(report['features'], required=REQUIRED)
+    need, extra = split['required'], split['optional']
+    ready = sum(1 for v in need.values() if v == 'READY')
+    if split['global'] == 'READY':
+        missing = [n for n, v in sorted(extra.items()) if v != 'READY']
+        say = 'Ready for the offline demo: %d/%d required checks passed.' % (ready, len(need))
+        if missing:
+            say += ' Optional extras missing (%s); the demo continues without them.' % (
+                ', '.join(plain_line(n, extra[n]) for n in missing))
+        else:
+            say += ' All optional extras present too.'
+    else:
+        bad = [n for n, v in sorted(need.items()) if v != 'READY']
+        say = 'Demo blocked: required checks failing (%s).' % (
+            ', '.join(plain_line(n, need[n]) for n in bad))
+    steps.append({'step': 'doctor', 'required': split['global'], 'overall': report['global'],
+                  'say': say})
     found = cmd_devices_discover(args)
-    steps.append({'step': 'discover', 'count': found['count']})
+    noun = 'device' if found['count'] == 1 else 'devices'
+    steps.append({'step': 'discover', 'count': found['count'],
+                  'say': 'Found %d %s nearby (read-only scan, nothing was changed).'
+                         % (found['count'], noun)})
     caps = cmd_capabilities_list(args)
-    steps.append({'step': 'capabilities', 'primitives': len(caps['primitives'])})
+    steps.append({'step': 'capabilities', 'primitives': len(caps['primitives']),
+                  'say': '%d built-in device actions available.' % len(caps['primitives'])})
     exported = cmd_evidence_export(args)
-    steps.append({'step': 'evidence_export', 'sha256': exported['sha256'][:16]})
+    steps.append({'step': 'evidence_export', 'sha256': exported['sha256'][:16],
+                  'say': 'Saved the demo evidence file (sha %s).' % exported['sha256'][:16]})
     verified = cmd_evidence_verify(args)
-    steps.append({'step': 'evidence_verify', 'verified': verified['verified']})
-    return {'steps': steps, 'verdict': 'DEMO_COMPLETE'}
+    steps.append({'step': 'evidence_verify', 'verified': verified['verified'],
+                  'say': 'Evidence file verified: nothing was modified.'})
+    verdict = 'DEMO_COMPLETE' if split['global'] == 'READY' else 'DEMO_BLOCKED'
+    return {'steps': steps, 'verdict': verdict}
 
 
 def cmd_serve(args):
