@@ -54,6 +54,7 @@ SKILL_AUDIENCE = {
     'tv_volume_set': 'android',
     'tv_volume_step': 'android',
     'tv_sleep': 'android',
+    'tv_wake': 'android',
     'screen_capture': 'android',
     'file_pull': 'android',
     'capability_probe': 'android',

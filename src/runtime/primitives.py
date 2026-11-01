@@ -189,6 +189,13 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('TV asleep; any remote key or tv_wake restores',),
                      'mWakefulness read back Asleep via dumpsys power', 'tv_wake',
                      R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'SLEEP_FAILED'), 30, 'single-per-device', True),
+    ActionDescriptor('tv_wake', 'Wake an Android TV (screen on)',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent for this physical act', 'control grant on a current ADB link'),
+                     ('target is a TV', 'identity re-verified'),
+                     ('TV awake',),
+                     'mWakefulness read back Awake via dumpsys power', 'tv_sleep',
+                     R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'WAKE_FAILED'), 30, 'single-per-device', True),
     ActionDescriptor('file_pull', 'Copy one file from under /sdcard/ into the server transfer store',
                      {'type': 'object', 'properties': {'remote': _s('string', maxLength=256)}, 'required': ['remote'], 'additionalProperties': False},
                      ('owner consent (file contents are sensitive)', 'read grant on a current ADB link'),
@@ -821,6 +828,23 @@ class Executor:
             raise ValueError('SLEEP_FAILED: wakefulness is %s' % state)
         return 'EXECUTED', None, 'TV asleep (mWakefulness=Asleep)', True, {'wakefulness': 'Asleep'}
 
+    def _tv_wake(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            self.ctx.android.shell(handle, ('input', 'keyevent', 'KEYCODE_WAKEUP'))
+            state = _read_wakefulness(self.ctx.android, handle)
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if state != 'Awake':
+            time.sleep(2)
+            try:
+                state = _read_wakefulness(self.ctx.android, handle)
+            except ValueError as e:
+                raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if state != 'Awake':
+            raise ValueError('WAKE_FAILED: wakefulness is %s' % state)
+        return 'EXECUTED', None, 'TV awake (mWakefulness=Awake)', True, {'wakefulness': 'Awake'}
+
     def _file_pull(self, key, params):
         handle = self._adb_handle(key)
         try:
@@ -854,7 +878,7 @@ class Executor:
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,
-               'retro_command': _retro_command, 'tv_sleep': _tv_sleep}
+               'retro_command': _retro_command, 'tv_sleep': _tv_sleep, 'tv_wake': _tv_wake}
 
     # ---------- recovery backlog ----------
     MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first

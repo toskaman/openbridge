@@ -102,5 +102,29 @@ class TvSleep(unittest.TestCase):
         self.assertIn("DEVICE_UNAVAILABLE", r["errors"][0])
 
 
+class TvWake(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.c, self.key = ctx(self.tmp)
+        self.c.android = FakeTVAndroid(power="mWakefulness=Awake\n")
+        self.ex = Executor(self.c)
+
+    def test_wake_executes_and_verifies_awake(self):
+        r = self.ex.execute("tv_wake", self.key, {}, True)
+        self.assertEqual(r["state"], "EXECUTED")
+        self.assertTrue(r["verified"])
+        self.assertEqual(self.c.android.shell_calls[0], ("input", "keyevent", "KEYCODE_WAKEUP"))
+        self.assertEqual(r["result"]["wakefulness"], "Awake")
+
+    def test_wake_needs_consent(self):
+        r = self.ex.execute("tv_wake", self.key, {}, False)
+        self.assertEqual(r["state"], "BLOCKED")
+
+    def test_wake_fails_when_still_asleep(self):
+        self.c.android.power = "mWakefulness=Asleep\n"
+        r = self.ex.execute("tv_wake", self.key, {}, True)
+        self.assertEqual(r["state"], "FAILED")
+
+
 if __name__ == "__main__":
     unittest.main()
