@@ -6,6 +6,11 @@ from src.runtime import capabilities, contract
 from src.runtime.primitives import PRIMITIVES, Executor
 from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFact
 
+# Campaign One §3.6 HTTP hardening: defense-in-depth query caps for direct
+# (in-process) callers; the HTTP front end enforces its own URL ceiling first.
+MAX_QUERY_BYTES = 8192
+MAX_QUERY_FIELDS = 100
+
 GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/permissions/state', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
@@ -237,7 +242,12 @@ def _hardware_relays(server):
 
 
 def get(server, path, query):
-    q = parse_qs(query)
+    if len(query) > MAX_QUERY_BYTES:
+        return 414, {'error': 'Query string too long'}
+    try:
+        q = parse_qs(query, max_num_fields=MAX_QUERY_FIELDS)
+    except ValueError:
+        return 400, {'error': 'Too many query parameters'}
     ex = executor(server)
     if path == '/api/v2/contract':
         return 200, {'version': contract.CONTRACT_VERSION, 'schema': contract.schema()}
