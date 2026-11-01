@@ -114,10 +114,11 @@ def emit_install_plan(patch, manifests, target_device_fp, profile_id,
 def build_ui_prompt(intent_text, devices, primitive_ids, hints=None):
     """Prompt offered to the Meta model at runtime (offline-built, deterministic)."""
     lines = ['UI_DRAFT v2. Intent: %s.' % (intent_text.strip()[:200]),
-             'Reply with exactly one JSON response: {"outcome": "<proposal|refusal|needs_clarification|unsupported>", '
+             'Reply with exactly one JSON response: {"outcome": "<proposal|refusal|clarification>", '
              '"patch": {<patch, ONLY when outcome is proposal>}, '
-             '"reason": "<<=500 chars, for refusal/unsupported>", '
-             '"clarifying_question": "<for needs_clarification>"}.',
+             '"reason": "<<=500 chars, for refusal>", '
+             '"code": "<optional refusal code>", '
+             '"clarifying_question": "<for clarification>"}.',
              'A patch has exactly: {"schema_version": %d, "patch_id": "<id>", "target_opaque_id": "<opaque device id>", '
              '"origin": "meta_generated", "model_run_id": "<run>", "widgets": '
              '[{"widget_id": "<id>", "kind": "button", "label": "<=80 chars>", '
@@ -144,7 +145,7 @@ def build_ui_prompt(intent_text, devices, primitive_ids, hints=None):
                  'above, reply {"outcome": "refusal", "reason": "<why, <=500 chars>"} '
                  'with NO patch. Never substitute an unrelated primitive to look '
                  'helpful: a wrong binding is worse than a refusal. Ask with '
-                 '\'{"outcome": "needs_clarification", "clarifying_question": "<one "\''
+                 '\'{"outcome": "clarification", "clarifying_question": "<one "\''
                  'question>} ONLY when two listed primitives match equally well. '
                  '(No JSON at all is also read as a refusal.)')
     return '\n'.join(lines)

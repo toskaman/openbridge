@@ -1,9 +1,13 @@
-"""§12 model-level refusal: structured proposal/refusal/needs_clarification/
-unsupported outcomes. A refused request must never yield an installable
-substitute panel (S5-T3 pathology: 'Run shell command' bound to
-retro_command/VOLUME_DOWN). Deterministic validation stays the boundary:
+"""S12 model-level refusal, canonicalized by Campaign Two S4.7: structured
+proposal/refusal/clarification outcomes. A refused request must never yield
+an installable substitute panel (S5-T3 pathology: 'Run shell command' bound
+to retro_command/VOLUME_DOWN). Deterministic validation stays the boundary:
 install-level unknown-target/unknown-binding pins live in
 tests/unit/test_cli.py (PATCH_TARGET_UNKNOWN, PATCH_REJECTED).
+
+Frozen S12 spellings (needs_clarification, unsupported) still parse and are
+canonicalized to clarification/refusal, so historical records keep reading
+verbatim; new prompts emit the three canonical names only.
 """
 import json
 import unittest
@@ -56,18 +60,43 @@ class ParseResponse(unittest.TestCase):
         self.assertEqual((outcome, patch), ('refusal', None))
         self.assertIn('shell', detail)
 
-    def test_unsupported_and_clarification_yield_nothing(self):
+    def test_clarification_yields_nothing_installable(self):
+        o, p, q = v4_ui.parse_response({'outcome': 'clarification',
+                                        'clarifying_question': 'TV or vacuum?'}, self.BIND)
+        self.assertEqual((o, p), ('clarification', None))
+        self.assertIn('vacuum', q)
+
+    def test_legacy_spellings_canonicalized(self):
         o, p, _ = v4_ui.parse_response({'outcome': 'unsupported', 'reason': 'nope'}, self.BIND)
-        self.assertEqual((o, p), ('unsupported', None))
+        self.assertEqual((o, p), ('refusal', None))
         o, p, q = v4_ui.parse_response({'outcome': 'needs_clarification',
                                         'clarifying_question': 'TV or vacuum?'}, self.BIND)
-        self.assertEqual((o, p), ('needs_clarification', None))
+        self.assertEqual((o, p), ('clarification', None))
         self.assertIn('vacuum', q)
+
+    def test_refusal_code_accepted_and_surfaced(self):
+        o, p, detail, code = v4_ui.parse_response_full(
+            {'outcome': 'refusal', 'reason': 'shell execution is not offered',
+             'code': 'SHELL_NOT_OFFERED'}, self.BIND)
+        self.assertEqual((o, p, code), ('refusal', None, 'SHELL_NOT_OFFERED'))
+        self.assertIn('shell', detail)
+
+    def test_unknown_refusal_code_rejected_whole(self):
+        with self.assertRaises(v4_ui.UIError) as e:
+            v4_ui.parse_response_full(
+                {'outcome': 'refusal', 'reason': 'x', 'code': 'MADE_UP'}, self.BIND)
+        self.assertIn('RESPONSE_CODE', str(e.exception))
 
     def test_refusal_smuggling_patch_rejected_whole(self):
         with self.assertRaises(v4_ui.UIError) as e:
             v4_ui.parse_response({'outcome': 'refusal', 'reason': 'x', 'patch': dict(PATCH)}, self.BIND)
         self.assertIn('RESPONSE_PATCH_WITH_REFUSAL', str(e.exception))
+
+    def test_clarification_smuggling_patch_rejected_whole(self):
+        with self.assertRaises(v4_ui.UIError) as e:
+            v4_ui.parse_response({'outcome': 'clarification', 'clarifying_question': 'x?',
+                                  'patch': dict(PATCH)}, self.BIND)
+        self.assertIn('RESPONSE_PATCH_WITH_CLARIFICATION', str(e.exception))
 
     def test_unknown_outcome_and_bad_shape_rejected(self):
         with self.assertRaises(v4_ui.UIError):
@@ -78,6 +107,15 @@ class ParseResponse(unittest.TestCase):
             v4_ui.parse_response({'outcome': 'proposal'}, self.BIND)
         with self.assertRaises(v4_ui.UIError):
             v4_ui.parse_response({'outcome': 'refusal', 'reason': 'x' * 501}, self.BIND)
+
+    def test_empty_detail_rejected(self):
+        with self.assertRaises(v4_ui.UIError):
+            v4_ui.parse_response({'outcome': 'refusal', 'reason': '  '}, self.BIND)
+        with self.assertRaises(v4_ui.UIError):
+            v4_ui.parse_response({'outcome': 'clarification',
+                                  'clarifying_question': ''}, self.BIND)
+        with self.assertRaises(v4_ui.UIError):
+            v4_ui.parse_response({'outcome': 'refusal'}, self.BIND)
 
     def test_proposal_with_unknown_binding_rejected(self):
         bad = json.loads(json.dumps(PATCH))
@@ -104,15 +142,30 @@ class ProposeOutcomes(unittest.TestCase):
         self.assertNotIn('patch', out)
         self.assertIn('reply_sha256', out['model_run'])
 
-    def test_unsupported_request_returns_unsupported(self):
+    def test_shell_request_refusal_code_surfaced(self):
+        out = propose(json.dumps({'outcome': 'refusal', 'code': 'SHELL_NOT_OFFERED',
+                                  'reason': 'no offered primitive runs shell commands'}),
+                      text='Add a button that runs any shell command I type on the TV.')
+        self.assertEqual(out['outcome'], 'refusal')
+        self.assertEqual(out['code'], 'SHELL_NOT_OFFERED')
+        self.assertNotIn('patch', out)
+
+    def test_legacy_unsupported_canonicalized_to_refusal(self):
         out = propose(json.dumps({'outcome': 'unsupported', 'reason': 'device not listed'}))
-        self.assertEqual(out['outcome'], 'unsupported')
+        self.assertEqual(out['outcome'], 'refusal')
         self.assertNotIn('patch', out)
 
     def test_ambiguous_request_asks_without_executing(self):
+        out = propose(json.dumps({'outcome': 'clarification',
+                                  'clarifying_question': 'TV volume or vacuum?'}))
+        self.assertEqual(out['outcome'], 'clarification')
+        self.assertIn('vacuum', out['clarifying_question'])
+        self.assertNotIn('patch', out)
+
+    def test_legacy_needs_clarification_canonicalized(self):
         out = propose(json.dumps({'outcome': 'needs_clarification',
                                   'clarifying_question': 'TV volume or vacuum?'}))
-        self.assertEqual(out['outcome'], 'needs_clarification')
+        self.assertEqual(out['outcome'], 'clarification')
         self.assertIn('vacuum', out['clarifying_question'])
         self.assertNotIn('patch', out)
 
