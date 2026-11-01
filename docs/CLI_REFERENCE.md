@@ -42,7 +42,9 @@ the preview step prints a `--consent HASH` that must be passed back.
 - `routes list --target T|dispatch --target T [--op OP] [--params JSON] [--capability C] [--relay ID]|simulate-loss --target T --lost-relay R` — relay-route enumeration and at-most-once dispatch.
 - `diagnose --question Q --bundle facts.json [--device ID]` — owner why-questions over observed facts (deterministic; questions listed in `src/fabric/diagnostics.py`).
 - `transplant run --request plan.json` — simulated-only capability transplant (request carries `consent: true`); lifecycle queries via the `/api/v2/transplant/*` routes.
+- `migrate propose --text T [--source S] [--target D] [--match M]|apply --proposal P.json --consent H|rollback --receipt R.json --consent H` — move skill-bound controls between paired Companion interfaces; apply/rollback need preview-bound consent (`--yes` never bypasses).
 - `capabilities list|generate --intent T --target C [--model TIER] [--retries N]|inspect|publish|revoke ID`
+- `dashboards propose|install|revoke|export|import` — model-generated panels incl. sealed portable bundles (export → integrity-check → remap → fresh consent; no inherited grants).
 - `workflows list|plan [TEXT|--file]|run ID [--file]|status ID`
 - `approvals list|approve ID --consent H|deny ID`
 - `sessions list|inspect ID|undo ID --consent ID`
