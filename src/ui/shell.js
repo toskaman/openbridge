@@ -214,7 +214,7 @@
     const bad = ['FAILED', 'UNKNOWN_TIMEOUT', 'PARTIAL'].includes(e.state) || (e.kind === 'remote_request' && ['REVOKED', 'EXPIRED', 'BLOCKED', 'SUSPENDED'].includes(e.state));
     const title = e.kind === 'receipt' ? (PRIM[e.primitive_id] || e.primitive_id) : e.kind === 'remote_request' ? 'Remote press' : e.kind.replace(/_/g, ' ');
     const sub = e.kind === 'receipt' ? `${e.state}${e.verified ? ' · read back' : ''}` : e.kind === 'remote_request' ? `${e.state}${e.reason ? ' — ' + e.reason : ''}` : (e.finding ? `${e.finding} = ${e.value}` : '');
-    return h('li', { class: 'tl ' + (bad ? 'bad' : ok ? 'ok' : '') }, h('span', { class: 'tl-dot', 'aria-hidden': 'true' }), h('div', {}, h('strong', { text: title }), h('small', { text: `${sub}${sub ? ' · ' : ''}${(e.at || '').replace('T', ' ').slice(0, 19)}` })), e.transaction_id ? h('code', { text: e.transaction_id.slice(0, 11) }) : null);
+    return h('li', { class: 'tl ' + (bad ? 'bad' : ok ? 'ok' : '') }, h('span', { class: 'tl-dot', 'aria-hidden': 'true' }), h('div', {}, h('strong', { text: title }), h('small', { text: `${sub}${sub ? ' · ' : ''}${(e.at || '').replace('T', ' ').slice(0, 19)}` })), e.transaction_id ? h('code', { text: e.transaction_id.slice(0, 11), title: e.transaction_id }) : null);
   }
   function renderHomeActivity() {
     const ol = $('#home-activity'); if (!ol) return; ol.replaceChildren();
@@ -762,7 +762,19 @@
     if (e.key === 'Escape') { closeAssistant(); closeMenu(); }
     if (e.altKey && /^[1-6]$/.test(e.key)) { e.preventDefault(); go(Object.keys(VIEWS)[Number(e.key) - 1]); }
   });
-  $('#device-filter').addEventListener('input', e => { st.filter = e.target.value; renderDevices(); });
+  function filterTree() {
+    // The topology list is rendered by app.js; apply the same text filter DOM-side
+    // so Cards and Topology list always agree. Parents with a matching descendant stay.
+    const q = st.filter.toLowerCase();
+    const tree = $('#fabric-tree'); if (!tree) return;
+    for (const li of tree.querySelectorAll('li')) {
+      const btn = li.querySelector(':scope > .fabric-node, :scope > div.fabric-node');
+      const self = !btn || btn.textContent.toLowerCase().includes(q);
+      const child = [...li.querySelectorAll(':scope ul .fabric-node')].some(n => n.textContent.toLowerCase().includes(q));
+      li.hidden = Boolean(q) && !self && !child;
+    }
+  }
+  $('#device-filter').addEventListener('input', e => { st.filter = e.target.value; renderDevices(); filterTree(); });
   for (const b of $$('[data-layout]')) b.addEventListener('click', () => { st.layout = b.dataset.layout; for (const x of $$('[data-layout]')) { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); } $('#device-grid').hidden = st.layout !== 'grid'; $('#tree-wrap').hidden = st.layout !== 'tree'; });
   for (const b of $$('#device-tabs [role=tab]')) b.addEventListener('click', () => setTab(b.dataset.tab));
   $('#graph-skill').addEventListener('change', e => { st.graphSkill = e.target.value; renderGraph(); });
@@ -781,7 +793,7 @@
   $('#fabric-tree').addEventListener('click', e => { const n = e.target.closest('.fabric-node'); if (!n || !st.snap) return; const d = st.snap.devices.find(x => n.textContent.includes(label(x))); if (d) { st.selected = d.key; renderInspectorHead(d); setTab('controls'); } });
   // Hooks into app.js renderers (global function bindings in this classic-script realm).
   const baseRender = renderFabric;
-  renderFabric = function (snap) { baseRender(snap); onSnapshot(snap); }; // eslint-disable-line no-global-assign
+  renderFabric = function (snap) { baseRender(snap); onSnapshot(snap); filterTree(); }; // eslint-disable-line no-global-assign
   const baseShow = showDevice;
   let inSelect = false;
   showDevice = function (device, links) { // eslint-disable-line no-global-assign

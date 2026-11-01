@@ -85,7 +85,25 @@ async function exRefresh(root, full) {
     if (ex.active) await exSelectLayout(ex.active, true);
     else exPaint();
     exStatus('');
-  } catch (e) { exStatus('Explore failed: ' + (e.message || e)); }
+  } catch (e) { exExploreError(e); }
+}
+
+function exExploreError(e) {
+  const msg = e.message || String(e);
+  if (!/no graph yet|bounded_discovery/i.test(msg)) { exStatus('Explore failed: ' + msg); return; }
+  exStatus('');
+  const box = document.querySelector('[data-view="explore"] .explore-content');
+  if (!box) return;
+  const go = element('button', 'Discover devices', 'primary');
+  go.addEventListener('click', () => {
+    location.hash = '#/devices';
+    setTimeout(() => document.querySelector('#fabric-discover').click(), 60);
+  });
+  const wrap = element('div', undefined, 'empty');
+  wrap.append(element('strong', 'No devices yet'),
+    element('p', 'Run discovery first — Explore shows live controls once OpenBridge knows your devices.'),
+    go);
+  box.replaceChildren(wrap);
 }
 
 async function exSelectLayout(id, silent) {
