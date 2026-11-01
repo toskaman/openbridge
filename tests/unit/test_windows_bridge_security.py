@@ -52,12 +52,12 @@ class PlaintextWarningTests(unittest.TestCase):
                 mock.patch('src.fabric.mdns.lan_interface_ip', return_value='192.168.1.10'), \
                 mock.patch('src.fabric.mdns.default_scope', return_value='lan'), \
                 mock.patch('src.fabric.credential_vault.Vault', NoVault), \
-                mock.patch.dict(os.environ, {'OPENBRIDGE_WINDOWS_PSK': 'env-psk-0123456789abcdef'}):
+                mock.patch.dict(os.environ, {'OPENBRIDGE_WINDOWS_PSK': 'env_psk_0123456789abcdef'}):
             buf = io.StringIO()
             with redirect_stdout(buf):
                 out = server.start_windows_bridge(9999)
         self.assertIsInstance(out, FakeBridge)
-        self.assertEqual(made['psk'], 'env-psk-0123456789abcdef')
+        self.assertEqual(made['psk'], 'env_psk_0123456789abcdef')
         self.assertEqual((made['bind_ip'], made['port']), ('192.168.1.10', 9999))
         self.assertIn('NOT encrypted', buf.getvalue())
         self.assertIn('v4', buf.getvalue())
@@ -75,16 +75,16 @@ class PlaintextWarningTests(unittest.TestCase):
 
         class VaultWithPsk:
             def get(self, name):
-                return 'vault-psk-0123456789abcdef' if name == 'windows-bridge-psk' else None
+                return 'vault_psk_0123456789abcdef' if name == 'windows-bridge-psk' else None
 
         with mock.patch.object(windows_bridge, 'WindowsBridge', FakeBridge), \
                 mock.patch('src.fabric.mdns.lan_interface_ip', return_value='192.168.1.10'), \
                 mock.patch('src.fabric.mdns.default_scope', return_value='lan'), \
                 mock.patch('src.fabric.credential_vault.Vault', VaultWithPsk), \
-                mock.patch.dict(os.environ, {'OPENBRIDGE_WINDOWS_PSK': 'env-psk-0123456789abcdef'}):
+                mock.patch.dict(os.environ, {'OPENBRIDGE_WINDOWS_PSK': 'env_psk_0123456789abcdef'}):
             with redirect_stdout(io.StringIO()):
                 server.start_windows_bridge()
-        self.assertEqual(made['psk'], 'vault-psk-0123456789abcdef')
+        self.assertEqual(made['psk'], 'vault_psk_0123456789abcdef')
 
     def test_no_warning_when_psk_rejected(self):
         import src.server as server

@@ -46,8 +46,8 @@ from src.fabric.registry import Registry
 from src.fabric.relay_store import RelayStore
 from src.runtime.primitives import Executor
 
-PSK = 'test-psk-0123456789abcdef01234567'
-WRONG_PSK = 'wrong-psk-0123456789abcdef0123'
+PSK = 'test_psk_0123456789abcdef01234567'
+WRONG_PSK = 'wrong_psk_0123456789abcdef0123'
 AGENT_ID = 'TESTPC'
 A_NONCE = 'aa' * 16
 A_NONCE_2 = 'bb' * 16
