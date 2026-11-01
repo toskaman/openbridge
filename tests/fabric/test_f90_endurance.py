@@ -77,7 +77,9 @@ class FaultMeasurementTests(unittest.TestCase):
                              r['threads']['start'] + 2 + 1)  # workers + sampler
         self.assertLessEqual(r['queue']['max_depth'], 4)  # bounded queue maxsize
         self.assertEqual(r['config']['shed'], 0)
-        self.assertEqual(r['sockets']['delta'], 0)  # simulated wire: no sockets
+        # Simulated wire uses no sockets by construction; None means psutil
+        # is absent so the delta is unmeasurable (stdlib-only envs).
+        self.assertIn(r['sockets']['delta'], (0, None))
         self.assertLessEqual(r['journal']['open_entries'], 5)
         self.assertEqual(r['journal']['tmp_debris'], [])
 

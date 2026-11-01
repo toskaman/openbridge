@@ -99,8 +99,10 @@ class TestHarnessScript(unittest.TestCase):
 
 class TestWorkflowWiring(unittest.TestCase):
     def test_yaml_parses(self):
-        import yaml
-
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest('pyyaml not installed (stdlib-only runtime)')
         with open(WORKFLOW, encoding="utf-8") as fh:
             doc = yaml.safe_load(fh)
         self.assertIn("phone", doc["jobs"])

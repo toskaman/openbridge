@@ -214,12 +214,23 @@ class HttpTransportContractTests(unittest.TestCase):
             self.send(None, {'op': 'probe'})
 
     def test_malformed_json_refused_with_structured_reason(self):
-        # Was JSONDecodeError (a ValueError); deeply nested input was bare RecursionError.
-        for raw in (b'not json{{{', b'\xff\xfe\x00binary', b'{"truncated": true',
-                    b'[' * 20000 + b']' * 20000):
+        # Was JSONDecodeError (a ValueError).
+        for raw in (b'not json{{{', b'\xff\xfe\x00binary', b'{"truncated": true'):
             self._bodies['current'] = raw
             with self.assertRaisesRegex(R.RelayError, 'not valid JSON', msg=repr(raw[:20])):
                 self.send(None, {'op': 'probe'})
+        self._bodies['current'] = json.dumps({'ok': True}).encode()
+        self.assertEqual(self.send(None, {'op': 'probe'}), {'ok': True})
+
+    def test_deep_nesting_refused_with_structured_reason(self):
+        # Deeply nested input was bare RecursionError. The exact reason is
+        # platform-dependent (C-stack-limited parse: RecursionError on small
+        # stacks -> 'not valid JSON'; successful parse on large stacks ->
+        # 'must be a JSON object'), but it is always a structured RelayError,
+        # never a bare exception or a phantom success.
+        self._bodies['current'] = b'[' * 20000 + b']' * 20000
+        with self.assertRaises(R.RelayError):
+            self.send(None, {'op': 'probe'})
         self._bodies['current'] = json.dumps({'ok': True}).encode()
         self.assertEqual(self.send(None, {'op': 'probe'}), {'ok': True})
 
