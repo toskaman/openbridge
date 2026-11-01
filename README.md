@@ -107,7 +107,7 @@ Windows, Linux, or macOS · Python 3.14 (CI-pinned 3.14.4) · zero third-party r
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2095 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 2096 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
