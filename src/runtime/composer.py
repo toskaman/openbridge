@@ -16,10 +16,12 @@ RESTORED. Every composer surface repeats that disclaimer verbatim.
 """
 import hashlib
 import json
+import time
 
 COMPOSER_VERSION = 1
 MAX_COMPOSED_STEPS = 8
 MAX_REPLY_CHARS = 16384
+COMPOSED_TTL_S = 300
 
 # User-facing per-step outcomes (section 4.3). The DAG engine keeps its own
 # internal states; summarize() maps them onto exactly these six.
@@ -239,7 +241,7 @@ def compose(proposal, devices, router):
     """
     from src.runtime import nl_plan
     from src.runtime.primitives import validate, PrimitiveError
-    from src.runtime.routing import SKILLS
+    from src.runtime.routing import SKILLS, RouteError
     if not isinstance(proposal, dict) or not isinstance(proposal.get('steps'), list):
         raise ComposerError('proposal must be a validated proposal object')
     if not devices:
@@ -273,7 +275,11 @@ def compose(proposal, devices, router):
             label, key, category = 'fabric', 'fabric', 'fabric'
         try:
             doc = router.skill_routes(skill, None if key == 'fabric' else key)
-        except Exception as e:  # noqa: BLE001 - a failed route check refuses, never admits
+        except RouteError as e:
+            # A failed route check refuses, never admits — but only the
+            # router's declared error type. Anything else (TypeError,
+            # AttributeError from schema drift or a bad double) is an
+            # infrastructure bug and must raise, never masquerade as a refusal.
             steps.append(_refuse(s, 'no permitted route: %s' % str(e)[:160]))
             continue
         sel = (doc or {}).get('selected_route_id')
@@ -315,8 +321,15 @@ def compose(proposal, devices, router):
             'rollback': NO_ATOMIC_ROLLBACK}
 
 
-def to_workflow(composed):
+def to_workflow(composed, now=None):
     """Compile allowed steps into a DAG-engine workflow body.
+
+    Each compiled step carries the route evidence it was composed against
+    (route_id, route_evidence, selection_rule), a composition timestamp with
+    an expiry (composed_at, expires_at), and a deterministic per-step
+    idempotency key. The DAG engine re-resolves routes immediately before
+    dispatch and refuses on drift or expiry, so "READY at compose time" can
+    never silently become "assumed READY at run time".
 
     Raises ComposerError when any step was refused (the owner revises the
     proposal instead) or when the result fails DAG validation.
@@ -329,12 +342,26 @@ def to_workflow(composed):
     if refused:
         raise ComposerError('refused steps need revision: %s'
                             % '; '.join('%s (%s)' % r for r in refused)[:400])
-    body = {'consent': True, 'steps': [
-        {'id': s['id'], 'skill_id': s['skill_id'], 'target': s['target'],
-         'params': dict(s['params']), 'needs': list(s['needs']),
-         'on_fail': s['on_fail'],
-         'approval': bool((s.get('authorization') or {}).get('approval'))}
-        for s in steps]}
+    composed_at = time.time() if now is None else now
+    expires_at = composed_at + COMPOSED_TTL_S
+    out = []
+    for s in steps:
+        route = s.get('route') or {}
+        key_src = json.dumps({'id': s['id'], 'skill_id': s['skill_id'],
+                              'target': s['target'], 'params': s['params'],
+                              'route_id': route.get('route_id'),
+                              'composed_at': composed_at}, sort_keys=True, default=str)
+        out.append({'id': s['id'], 'skill_id': s['skill_id'], 'target': s['target'],
+                    'params': dict(s['params']), 'needs': list(s['needs']),
+                    'on_fail': s['on_fail'],
+                    'approval': bool((s.get('authorization') or {}).get('approval')),
+                    'route_id': route.get('route_id'),
+                    'route_evidence': route.get('evidence'),
+                    'selection_rule': route.get('rule'),
+                    'composed_at': composed_at, 'expires_at': expires_at,
+                    'idempotency_key': 'idem-' + hashlib.sha256(key_src.encode()).hexdigest()[:32]})
+    body = {'consent': True, 'composed_at': composed_at, 'expires_at': expires_at,
+            'steps': out}
     try:
         validate_workflow(body)
     except WorkflowError as e:

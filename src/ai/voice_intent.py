@@ -60,12 +60,18 @@ def _clarify(transcript, norm, text):
             'lang': norm['lang'], 'normalization': _meta(norm)}
 
 
-def compile_intent(transcript, devices=()):
-    """devices: [{'key','category'}] from the graph. -> proposal dict (never executed here)."""
+def compile_intent(transcript, devices=(), lang_hint=None):
+    """devices: [{'key','category'}] from the graph. -> proposal dict (never executed here).
+
+    lang_hint ('fr'|'en'|None) is the short-command language guard: transcripts
+    with zero signal words (e.g. 'scan bluetooth') detect as unknown, and
+    without a hint that defaults to English — mislanguaging short commands
+    from French speakers. Callers with locale info must pass it through.
+    """
     if not isinstance(transcript, str) or not transcript.strip() or len(transcript) > 400:
         return {'intent': None, 'outcome': 'unsupported',
                 'reason': 'empty or too long transcript'}
-    norm = VN.normalize(transcript)
+    norm = VN.normalize(transcript, lang_hint)
     t, fx, lang = norm['folded'], norm['fixed'], norm['lang']
     if re.search(REFUSE, fx):
         return {'intent': None, 'outcome': 'refusal',

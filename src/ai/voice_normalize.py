@@ -506,8 +506,17 @@ def repaired_question(intent, lang):
 # (refusals, conflicts, presses, moves, locate-my-device).
 # ---------------------------------------------------------------------------
 
+# ReDoS bound: several screens use `.*` patterns whose worst case is quadratic
+# in the input length. STT transcripts of real voice commands are tens of chars;
+# anything past the cap is truncated before any regex runs (a refusal prefix is
+# still caught; matches past the cap are out of scope for the screen tier).
+MAX_SCREEN_CHARS = 400
+
+
 def screen_voice_transcript(transcript, lang_hint=None):
     """None (no screen: route to the model tier) or {'status', 'text'}."""
+    if isinstance(transcript, str) and len(transcript) > MAX_SCREEN_CHARS:
+        transcript = transcript[:MAX_SCREEN_CHARS]
     norm = normalize(transcript, lang_hint)
     fixed, lang = norm['fixed'], norm['lang']
     if not fixed:

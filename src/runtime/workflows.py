@@ -120,11 +120,24 @@ def validate_workflow(body):
         on_fail = s.get('on_fail', 'fail')
         if on_fail not in ('fail', 'continue'):
             raise WorkflowError(f'invalid on_fail for step {sid!r}')
-        steps[sid] = {'id': sid, 'skill_id': skill, 'target': target,
-                      'params': copy.deepcopy(params), 'needs': list(needs),
-                      'when': copy.deepcopy(when) if when else None,
-                      'approval': s.get('approval') is True,
-                      'timeout_s': timeout, 'on_fail': on_fail}
+        step = {'id': sid, 'skill_id': skill, 'target': target,
+                'params': copy.deepcopy(params), 'needs': list(needs),
+                'when': copy.deepcopy(when) if when else None,
+                'approval': s.get('approval') is True,
+                'timeout_s': timeout, 'on_fail': on_fail}
+        # Composer evidence (section 4.3): carried through so _dispatch can
+        # re-resolve and refuse on drift or expiry. Absent on hand-built bodies.
+        for key in ('route_id', 'route_evidence', 'selection_rule', 'idempotency_key'):
+            if s.get(key) is not None:
+                if not isinstance(s[key], str):
+                    raise WorkflowError(f'invalid {key} for step {sid!r}')
+                step[key] = s[key]
+        for key in ('composed_at', 'expires_at'):
+            if s.get(key) is not None:
+                if not isinstance(s[key], (int, float)) or isinstance(s[key], bool):
+                    raise WorkflowError(f'invalid {key} for step {sid!r}')
+                step[key] = s[key]
+        steps[sid] = step
     for sid, s in steps.items():
         for n in s['needs']:
             if n not in steps:
@@ -209,22 +222,40 @@ def _substitute(params, receipts):
     return one(copy.deepcopy(params))
 
 
+def _blocked(errors, step):
+    receipt = {'state': 'BLOCKED', 'errors': [errors]}
+    if step.get('idempotency_key'):
+        receipt['idempotency_key'] = step['idempotency_key']
+    return receipt
+
+
 def _dispatch(router, step, invocation_id, receipts, actor):
     params = _substitute(step['params'], receipts)
     target = step['target']
     resolve = getattr(router, 'resolve_target', None)
     if callable(resolve):
         target = resolve(target)
+    if step.get('expires_at') is not None and time.time() > step['expires_at']:
+        return _blocked('composition expired: re-compose before dispatch', step)
     doc = router.skill_routes(step['skill_id'], target)
+    composed_route = step.get('route_id')
+    if composed_route:
+        live = next((r for r in (doc or {}).get('routes', [])
+                     if r.get('route_id') == composed_route), None)
+        if live is None or live.get('state') != 'READY':
+            return _blocked('route drift: composed route %s is no longer READY' % composed_route, step)
     route_id = doc['selected_route_id']
     arm = router.arm({'skill_id': step['skill_id'], 'target': target,
                       'params': params, 'route_id': route_id, 'consent': True},
                      actor=actor, invocation_id=invocation_id)
-    return router.invoke({'invocation_id': invocation_id,
-                          'skill_id': step['skill_id'], 'target': target,
-                          'route_id': route_id, 'lease_id': arm['lease_id'],
-                          'graph_revision': arm['graph_revision'],
-                          'params': params, 'consent': True}, actor=actor)
+    receipt = router.invoke({'invocation_id': invocation_id,
+                             'skill_id': step['skill_id'], 'target': target,
+                             'route_id': route_id, 'lease_id': arm['lease_id'],
+                             'graph_revision': arm['graph_revision'],
+                             'params': params, 'consent': True}, actor=actor)
+    if isinstance(receipt, dict) and step.get('idempotency_key'):
+        receipt = dict(receipt, idempotency_key=step['idempotency_key'])
+    return receipt
 
 
 def _drive(record, spec, router, store, actor):
