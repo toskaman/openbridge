@@ -1,11 +1,13 @@
 # OpenBridge quickstart (first-time install)
 
-Requirements: Windows, Linux, or macOS (x64 + ARM64 install clean-room 8/8
-in CI; macOS GUI first-run is CI-covered, not hand-tested), Python 3.14
-(standard library only — no third-party runtime packages). Optional:
-Android platform-tools (`adb`, https://developer.android.com/tools/releases/platform-tools)
+Requirements: Windows, Linux, or macOS (x64 + ARM64 install clean-room:
+the check script's 8 checks pass in CI; macOS GUI first-run is CI-covered,
+not hand-tested), Python 3.14 (standard library only — no third-party
+runtime packages; use `python3` on Linux/macOS where this guide writes
+`python`). Optional: Android platform-tools (`adb`, https://developer.android.com/tools/releases/platform-tools)
 for Android devices, Ollama (https://ollama.com) for local Meta models,
-`bleak` for PC Bluetooth.
+`bleak` for PC Bluetooth, `tinytuya` for owner-linked Tuya devices
+(see `requirements-optional.txt`).
 
 ```sh
 git clone https://github.com/toskaman/openbridge.git
