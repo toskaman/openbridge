@@ -1209,6 +1209,46 @@ def _workflow_step_preview(wid, sid, step):
             'target': step['target'], 'params': step['params']}
 
 
+def cmd_workflows_compose(args):
+    from src.runtime import api_v2, composer as comp, nl_plan, nl_router
+    text = getattr(args, 'text', '') or ''
+    if not text.strip():
+        raise CliError('args', 'MISSING_INPUT', 'compose needs request text.')
+    model_id = getattr(args, 'model', None) or nl_router.TIERS['low'][0]
+    endpoint = next((ep for mid, ep in nl_router.TIERS.values() if mid == model_id), None)
+    if endpoint is None or endpoint.startswith('https://'):
+        raise CliError('args', 'MODEL_NOT_PINNED',
+                       'compose-text needs a pinned local Meta model (low/medium tier)')
+    with Core() as server:
+        snap = ensure_discovery(server, default_providers(args))
+        devices = snap.get('devices', []) if isinstance(snap, dict) else []
+        transport = nl_plan.local_chat(model_id, endpoint,
+                                       timeout=getattr(args, 'timeout', None) or 180,
+                                       format=comp.PROPOSAL_JSON_SCHEMA)
+        try:
+            doc = comp.propose_and_compose(text, devices, api_v2.router(server), transport)
+        except comp.ComposerError as e:
+            raise CliError('inference', 'COMPOSE_REJECTED', str(e)[:300])
+    out = {'composed': doc}
+    if doc['refused'] == 0:
+        try:
+            spec = comp.to_workflow(doc)
+        except comp.ComposerError as e:
+            raise CliError('args', 'SPEC_INVALID', str(e)[:200])
+        out['spec'] = spec
+        out['consent'] = preview_hash(spec)
+    return out
+
+
+def cmd_workflows_summary(args):
+    from src.runtime import composer as comp
+    wid = getattr(args, 'workflow_id', '') or ''
+    record = workflow_store().get(wid)
+    if record is None:
+        raise CliError('args', 'NOT_FOUND', 'Unknown workflow %r.' % wid)
+    return {'summary': comp.summarize(record)}
+
+
 def cmd_workflows_approve(args):
     from src.runtime.workflows import approve, WorkflowError
     from src.runtime import api_v2
@@ -1662,6 +1702,10 @@ def build_parser():
     run_parser.add_argument('--file', default=None)
     status_parser = leaf(flow_subs, 'status', cmd_workflows_status, 'workflows status')
     status_parser.add_argument('workflow_id')
+    compose_parser = leaf(flow_subs, 'compose', cmd_workflows_compose, 'workflows compose')
+    compose_parser.add_argument('text', nargs='?')
+    summary_parser = leaf(flow_subs, 'summary', cmd_workflows_summary, 'workflows summary')
+    summary_parser.add_argument('workflow_id')
     flow_approve = leaf(flow_subs, 'approve', cmd_workflows_approve, 'workflows approve')
     flow_approve.add_argument('workflow_id')
     flow_approve.add_argument('step_id')
