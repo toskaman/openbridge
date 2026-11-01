@@ -648,7 +648,10 @@ def start_windows_bridge(port=9876):
     except Exception:
         pass
     psk=psk or os.environ.get('OPENBRIDGE_WINDOWS_PSK')
-    return WindowsBridge(psk, lan_interface_ip(default_scope()), port).start()
+    bridge = WindowsBridge(psk, lan_interface_ip(default_scope()), port)
+    print('Windows bridge (protocol v4): traffic is HMAC-authenticated but NOT encrypted; '
+          'anyone on the LAN can read it. A strong pre-shared key is required.', flush=True)
+    return bridge.start()
 
 
 def main():

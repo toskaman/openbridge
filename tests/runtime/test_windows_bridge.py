@@ -22,8 +22,12 @@ DIAG = {'hostname': 'PC2', 'version': '4.0.0', 'architecture': 'x86', 'os_build'
         'disks': [{'mount': 'C:\\', 'total_bytes': 100 * 1024 ** 3, 'free_bytes': 5 * 1024 ** 3}], 'gpu_temp_c': 0}
 
 
+# Handshake key used by both ends of the fake link; must satisfy MIN_PSK_LENGTH.
+TEST_PSK = 'test-psk-0123456789abcdef01234567'
+
+
 class FakeAgent:
-    def __init__(self, port, token='psk', guid='GUID-1', version='4.0.0'):
+    def __init__(self, port, token=TEST_PSK, guid='GUID-1', version='4.0.0'):
         self.port, self.token, self.guid, self.version = port, token, guid, version
         self.methods = []
         self._sess = None
@@ -116,7 +120,7 @@ def wait(cond, t=2.0):
 
 class Bridge(unittest.TestCase):
     def setUp(self):
-        self.b = WindowsBridge('psk', '127.0.0.1', 0)
+        self.b = WindowsBridge(TEST_PSK, '127.0.0.1', 0)
         s = socket.socket(); s.bind(('127.0.0.1', 0)); self.port = s.getsockname()[1]; s.close()
         self.b.port = self.port
         self.b.start()
@@ -125,7 +129,7 @@ class Bridge(unittest.TestCase):
         self.b.close()
 
     def test_refuses_wildcard_bind_and_missing_key(self):
-        for args in (('psk', '0.0.0.0'), ('', '127.0.0.1')):
+        for args in ((TEST_PSK, '0.0.0.0'), ('', '127.0.0.1')):
             with self.assertRaises(BridgeUnavailable):
                 WindowsBridge(*args)
 
