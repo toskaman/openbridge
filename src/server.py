@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import secrets
 import threading
+import time
 import subprocess
 import os
 import sqlite3
@@ -37,6 +38,7 @@ MAX_BODY_BYTES = 8192           # default JSON body ceiling
 MAX_BODY_MANIFEST_BYTES = 65_536      # manifests/workflows carry signed plans
 MAX_BODY_TRANSCRIBE_BYTES = 700_000   # voice/transcribe carries base64 audio
 HEADER_TIMEOUT_S = 5            # slow-client patience for request line + headers
+BODY_TIMEOUT_S = 15             # total body patience: socket timeout is per-recv, so a 1-byte drip would otherwise hold a handler thread forever
 
 
 def _header_all(headers, name):
@@ -68,6 +70,26 @@ def _query_params(path):
         return parse_qs(urlsplit(path).query, max_num_fields=MAX_QUERY_FIELDS)
     except ValueError:
         return None
+
+
+def _read_body(rfile, length):
+    """Read exactly length bytes or raise. A monotonic total deadline bounds slow-drip bodies.
+
+    Raises TimeoutError when the drip outlasts BODY_TIMEOUT_S (both POST paths map it to
+    400 and free the handler thread) and ValueError when the client closes mid-body."""
+    deadline = time.monotonic() + BODY_TIMEOUT_S
+    chunks = []
+    remaining = length
+    read1 = getattr(rfile, 'read1', None)
+    while remaining > 0:
+        if time.monotonic() >= deadline:
+            raise TimeoutError('Request body too slow')
+        chunk = read1(min(remaining, 65536)) if read1 is not None else rfile.read(1)
+        if not chunk:
+            raise ValueError()
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    return b''.join(chunks)
 
 
 class LocalServer(ThreadingHTTPServer):
@@ -131,7 +153,7 @@ class Handler(BaseHTTPRequestHandler):
             if length > cap:
                 return self.reply(413, {'error': 'Request too large'})
             self.connection.settimeout(5)
-            body = json.loads(self.rfile.read(length))
+            body = json.loads(_read_body(self.rfile, length))
         except (ValueError, TypeError, OSError):
             return self.reply(400, {'error': 'Invalid request'})
         return self.reply(*api_v2.post(self.server, self.path, body))
@@ -255,7 +277,7 @@ class Handler(BaseHTTPRequestHandler):
             if length > MAX_BODY_BYTES:
                 return self.reply(413, {'error': 'Request too large'})
             self.connection.settimeout(5)
-            body = json.loads(self.rfile.read(length))
+            body = json.loads(_read_body(self.rfile, length))
             if not isinstance(body, dict) or not isinstance(body.get('device_id'), str):
                 raise ValueError()
             source = body.get('source', 'demo')
@@ -558,14 +580,19 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             send = fabric_relay.failover_transport(urls) if transport_factory is fabric_relay.http_transport else transport_factory(url)
             pc_nonce = secrets.token_hex(16)
             hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
+            if not isinstance(hello, dict):  # mirrors R.pair: every malformed hello is RelayError, never KeyError/AttributeError
+                raise fabric_relay.RelayError('Not an OpenBridge Companion (pairing hello is not an object)')
             if hello.get('protocol') != fabric_relay.PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
                 raise fabric_relay.RelayError('Not an OpenBridge Companion')
+            rid = hello.get('relay_id')
+            if not isinstance(rid, str) or not fabric_relay.RELAY_ID.match(rid):
+                raise fabric_relay.RelayError('Relay omitted a valid relay id')
             with server.relay_pending_lock:
                 now = time.monotonic()
                 for h in [h for h, p in server.relay_pending.items() if now - p['started_at'] > PAIRING_TTL]:
                     del server.relay_pending[h]
                 server.relay_pending[handle] = {'send': send, 'url': url, 'urls': urls, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
-            return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': hello['relay_id'], 'declared': hello.get('declared', {})}
+            return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': rid, 'declared': hello.get('declared', {})}
         if path == '/api/relay-pair-confirm':
             handle = body.get('device_id')
             code = body.get('code')
