@@ -81,9 +81,17 @@ def main():
             assert debug(page)['spawned'][0] == before
             page.unroute('**/api/v2/command/parse')
 
-            # 3. Model settings collapsed; cloud consent only when needed.
-            expect(page.get_by_text('AI quality')).to_be_hidden()
+            # 3. AI quality: free vs paid on one row; cloud consent only when needed; orb inside the Ask card.
+            expect(page.get_by_text('AI quality')).to_be_visible()
             assert page.locator('#ask-openbridge input[type=checkbox]').count() == 0
+            assert page.locator('#ask-openbridge #home-orb canvas.ob-orb-canvas').count() == 1
+            # 3b. A "put controls on another device" request goes to the Studio, not to a failing route.
+            page.locator('#ask-input').fill('Create a control panel on my TV so I can operate my robot vacuum')
+            page.get_by_role('button', name='Ask', exact=True).click()
+            expect(page.get_by_text('This is a new capability')).to_be_visible()
+            page.get_by_role('link', name='Open in the Studio').click()
+            expect(page.locator('#studio-request')).to_have_value('Create a control panel on my TV so I can operate my robot vacuum')
+            page.goto(url + '#/home', wait_until='networkidle')
 
             # 4. Lifecycle: 100 navigations => one orb, one flow layer, one loop; hidden tab => no frames.
             for i in range(100):

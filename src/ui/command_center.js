@@ -9,9 +9,8 @@
      REQUEST text only (request-language selector below, neutral EN/FR codes). */
   const STRINGS = {
     title: 'Ask OpenBridge', tagline: 'Tell your devices what you want. Meta AI will find or learn a way.',
-    ask: 'Ask', placeholder: 'e.g. Start my vacuum · Scan for bluetooth devices',
-    quality: 'AI quality', low: 'Low · free local', medium: 'Medium · free local',
-    high: 'High · Meta cloud', auto: 'Auto · local first',
+    ask: 'Ask', placeholder: 'What should your devices do? e.g. Start my vacuum',
+    quality: 'AI quality',
     requestLang: 'Request', local: 'local', cloud: 'cloud', ready: 'ready', notReady: 'not ready',
     notConfigured: 'cloud not configured', disabled: 'cloud disabled',
     consent: 'I allow cloud calls for this request (at most $0.10 each, kill switch on).',
@@ -62,7 +61,7 @@
     'Start my vacuum',
     'Set living room TV volume to 10',
   ];
-  let tiers = null, quality = 'auto', cloudConsent = false, running = false, advancedOpen = false;
+  let tiers = null, quality = 'auto', cloudConsent = false, running = false;
 
   function el(tag, text, cls) {
     const n = document.createElement(tag);
@@ -72,6 +71,20 @@
   }
   function fmtUsd(v) { return v === 0 ? '$0.00' : `~$${Number(v).toFixed(2)}`; }
 
+  /* AI quality: one compact choice. Low and Medium are both free and run on this PC; High is Meta cloud and paid.
+     The real model ids, readiness and estimates still come from /api/v2/command/tiers (shown on each option). */
+  const QUALITY = [
+    { q: 'auto', name: 'Auto', cost: 'Free', sub: 'Local first', cls: 'free' },
+    { q: 'low', name: 'Fast', cost: 'Free', sub: 'On this PC', cls: 'free' },
+    { q: 'medium', name: 'Smart', cost: 'Free', sub: 'On this PC', cls: 'free' },
+    { q: 'high', name: 'Pro', cost: 'Paid', sub: 'Meta cloud', cls: 'paid' },
+  ];
+  function tierReady(q) {
+    if (!tiers) return null;
+    if (q === 'auto') return ['low', 'medium'].some(k => (tiers[k] || {}).ready) || tierReady('high');
+    const i = tiers[q] || {};
+    return q === 'high' ? !!(i.configured && i.enabled) : !!i.ready;
+  }
   function cloudPossible() {
     if (quality === 'high') return true;
     const hi = tiers && tiers.high;
@@ -82,7 +95,7 @@
     const dot = el('span', undefined, 'dot');
     let text = t('modelChecking'), ok = false;
     if (tiers) {
-      ok = ['low', 'medium'].some(q => (tiers[q] || {}).ready) || !!((tiers.high || {}).configured && (tiers.high || {}).enabled);
+      ok = !!tierReady('auto');
       text = ok ? t('modelReady') : t('modelOff');
     }
     dot.className = 'dot ' + (ok ? 'ok' : tiers ? 'warn' : '');
@@ -90,12 +103,50 @@
     if (tiers && !ok) line.append(el('small', t('modelHint'), 'muted'));
     return line;
   }
+  function qualityPicker() {
+    const box = el('div', undefined, 'ask-quality');
+    box.setAttribute('role', 'radiogroup');
+    box.setAttribute('aria-label', t('quality'));
+    box.append(el('span', t('quality'), 'ask-label'));
+    for (const o of QUALITY) {
+      const info = (tiers || {})[o.q] || {};
+      const ready = tierReady(o.q);
+      const b = el('button', undefined, `ask-tier ${o.cls}${quality === o.q ? ' active' : ''}${ready === false ? ' off' : ''}`);
+      b.type = 'button';
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', quality === o.q ? 'true' : 'false');
+      const top = el('span', undefined, 'tier-top');
+      top.append(el('strong', o.name), el('span', o.cost, 'tier-cost ' + o.cls));
+      const model = o.q === 'auto' ? o.sub : o.q === 'high' ? `${info.estimate_usd ? fmtUsd(info.estimate_usd) + ' / request' : 'Meta cloud'}${ready === false ? ' · not set up' : ''}`
+        : `${(info.model || o.sub).split(':')[0]}${ready === false ? ' · not ready' : ''}`;
+      b.append(top, el('span', model, 'tier-sub'));
+      b.title = o.q === 'auto' ? 'Uses the free local models first; the paid cloud tier only with your explicit approval.'
+        : `${o.cost} · ${o.sub}${info.model ? ' · ' + info.model : ''}${ready === false ? ' · not ready' : ''}`;
+      b.onclick = () => { quality = o.q; render(); };
+      box.append(b);
+    }
+    return box;
+  }
+  // Persistent nodes: re-rendering the controls never loses the typed text, the progress or the result.
+  const keep = { input: null, stages: null, result: null, devList: null };
   function render() {
+    const typed = keep.input ? keep.input.value : '';
     root.replaceChildren();
-    const head = el('div', undefined, 'panel-head');
-    const h = el('div'); h.append(el('h2', t('title')), el('p', t('tagline'), 'sub'));
+    root.classList.add('ask-v2');
+    const head = el('div', undefined, 'ask-head');
+    const h = el('div'); h.append(el('h2', t('title'), 'ask-kicker'));
     h.firstChild.id = 'ask-title';
-    head.append(h, modelLine());
+    const langBox = el('div', undefined, 'ask-lang');
+    langBox.setAttribute('role', 'group');
+    langBox.setAttribute('aria-label', 'Request language');
+    for (const l of ['en', 'fr']) {
+      const b = el('button', l.toUpperCase(), 'lang-btn' + (reqLang === l ? ' active' : ''));
+      b.type = 'button'; b.setAttribute('aria-pressed', reqLang === l ? 'true' : 'false');
+      b.title = l === 'en' ? 'I will type in English' : 'Je tape ma demande en français';
+      b.onclick = () => { reqLang = l; render(); };
+      langBox.append(b);
+    }
+    head.append(h, modelLine(), langBox);
     root.append(head);
 
     const form = el('div', undefined, 'ask-composer');
@@ -103,58 +154,34 @@
     input.id = 'ask-input'; input.maxLength = 2000; input.placeholder = t('placeholder');
     input.setAttribute('aria-label', t('title'));
     input.autocomplete = 'off';
-    const ask = el('button', t('ask'), 'primary');
+    input.value = typed;
+    keep.input = input;
+    const ask = el('button', t('ask'), 'primary ask-go');
     ask.type = 'button'; ask.onclick = () => run(input.value);
+    ask.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') run(input.value); });
-    const mic = el('button', undefined, 'ghost');
-    mic.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    const mic = el('button', undefined, 'ghost ask-mic');
+    mic.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     mic.type = 'button';
     const canMic = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.AudioContext);
     mic.disabled = !canMic;
     mic.title = t(canMic ? 'micReady' : 'micDenied');
     mic.setAttribute('aria-label', mic.title);
     mic.onclick = () => toggleMic(input, mic);
-    form.append(input, ask, mic);
+    form.append(input, mic, ask);
     root.append(form);
 
-    const adv = document.createElement('details');
-    adv.className = 'ask-advanced';
-    adv.open = advancedOpen;
-    adv.addEventListener('toggle', () => { advancedOpen = adv.open; });
-    adv.append(el('summary', t('modelSettings')));
-    const langBox = el('div', undefined, 'ask-lang');
-    langBox.append(el('span', t('requestLang'), 'ask-label'));
-    for (const l of ['en', 'fr']) {
-      const b = el('button', l.toUpperCase(), 'ghost small' + (reqLang === l ? ' active' : ''));
-      b.type = 'button'; b.onclick = () => { reqLang = l; render(); };
-      langBox.append(b);
+    const sug = el('div', undefined, 'ask-suggest');
+    sug.append(el('span', t('suggestions'), 'ask-label'));
+    for (const s of SUGGESTIONS) {
+      const b = el('button', s, 'chip-btn');
+      b.type = 'button'; b.onclick = () => { input.value = s; input.focus(); };
+      sug.append(b);
     }
-    adv.append(langBox);
-    const qbox = el('div', undefined, 'ask-quality');
-    qbox.append(el('span', t('quality'), 'ask-label'));
-    for (const q of ['low', 'medium', 'high', 'auto']) {
-      const b = el('button', t(q), 'ask-pill' + (quality === q ? ' active' : ''));
-      b.type = 'button'; b.onclick = () => { quality = q; render(); };
-      qbox.append(b);
-    }
-    adv.append(qbox);
-    const tierBox = el('div', undefined, 'ask-tiers');
-    if (!tiers) tierBox.append(el('span', '…', 'muted'));
-    else {
-      for (const q of ['low', 'medium', 'high']) {
-        const info = tiers[q] || {};
-        const pill = el('span', undefined, 'tag');
-        const ok = q === 'high' ? (info.configured && info.enabled) : info.ready;
-        const infer = info.last_inference === 'failed' ? ' · infer failed'
-          : (info.last_inference === 'ok' ? ' · infer ok' : '');
-        pill.textContent = `${q}: ${(info.model || '?').split(':')[0]} · ${ok ? t('ready') : t('notReady')} · ${q === 'high' ? t('cloud') : t('local')} · ${t('estimate')} ${fmtUsd(info.estimate_usd)}${infer}`;
-        tierBox.append(pill);
-      }
-    }
-    adv.append(tierBox);
-    root.append(adv);
+    root.append(sug);
 
-    // Cloud approval only when this request could actually use the cloud tier; never assumed.
+    root.append(qualityPicker());
+    // Cloud approval only when this request could actually use the paid cloud tier; never assumed.
     if (cloudPossible()) {
       const consentRow = el('label', undefined, 'ask-consent');
       const cb = document.createElement('input');
@@ -166,44 +193,64 @@
       root.append(consentRow);
     } else cloudConsent = false;
 
-    const sug = el('div', undefined, 'ask-suggest');
-    sug.append(el('span', t('suggestions'), 'ask-label'));
-    for (const s of SUGGESTIONS) {
-      const b = el('button', s, 'ghost small');
-      b.type = 'button'; b.onclick = () => { input.value = s; input.focus(); };
-      sug.append(b);
-    }
-    root.append(sug);
+    keep.stages = keep.stages || el('ol', undefined, 'ask-stages');
+    keep.result = keep.result || el('div', undefined, 'ask-result');
+    root.append(keep.stages, keep.result);
 
+    const foot = el('div', undefined, 'ask-foot');
     const dev = el('div', undefined, 'ask-devices');
     const devHead = el('div', undefined, 'ask-dev-head');
     devHead.append(el('span', 'From devices', 'ask-label'));
-    const check = el('button', 'Check devices', 'ghost small');
+    const check = el('button', 'Check devices', 'chip-btn');
     check.type = 'button'; check.onclick = () => checkDevices();
     devHead.append(check);
-    dev.append(devHead, el('div', undefined, 'ask-dev-list'));
-    root.append(dev);
-
-    root.append(el('ol', undefined, 'ask-stages'));
-    root.append(el('div', undefined, 'ask-result'));
+    keep.devList = keep.devList || el('div', undefined, 'ask-dev-list');
+    dev.append(devHead, keep.devList);
+    foot.append(dev);
     const rec = recentList();
     if (rec.length) {
       const box = el('div', undefined, 'ask-recents');
       box.append(el('span', t('recents'), 'ask-label'));
-      for (const r of rec) {
-        const b = el('button', `${r.text} → ${r.skill || r.state}`, 'ghost small');
+      for (const r of rec.slice(0, 4)) {
+        const b = el('button', `${r.text} → ${r.skill || r.state}`, 'chip-btn');
         b.type = 'button'; b.onclick = () => { input.value = r.text; input.focus(); };
         box.append(b);
       }
-      root.append(box);
+      foot.append(box);
     }
+    root.append(foot);
   }
 
   function stages() { return root.querySelector('.ask-stages'); }
   function stage(key) {
-    const li = el('li', t(key), 'done');
+    for (const x of stages().querySelectorAll('li.active')) x.className = 'done';
+    const li = el('li', t(key), 'active');
     stages().append(li);
     return li;
+  }
+  function settleStages(failed) {
+    for (const x of stages().querySelectorAll('li.active')) x.className = failed ? 'failed' : 'done';
+  }
+  /* Requests that ask for a new control surface ("put X controls on my Y") are capability creation: they go to the
+     Studio, which previews and asks approval before anything is installed. Deterministic, shown as such. */
+  const CREATE_RX = /\b(create|make|build|put|add|cr[ée]e[rz]?|fais|mets|ajoute)\b.*\b(control|controls|panel|button|buttons|remote|dashboard|commandes?|panneau|boutons?|t[ée]l[ée]commande)\b/i;
+  function studioLink(text) { return '#/studio/' + encodeURIComponent(text.trim()); }
+  function friendly(box, message, text) {
+    const card = el('div', undefined, 'ask-card warn');
+    if (/no READY route/i.test(message)) {
+      card.append(el('h3', 'No connected device can do this yet'),
+        el('p', 'OpenBridge understood the request, but no device that can run it is ready right now (offline, not paired, or missing a permission). Nothing was sent.'));
+      const row = el('div', undefined, 'ask-actions');
+      const dev = el('a', 'Check my devices', 'button ghost small'); dev.href = '#/devices';
+      row.append(dev);
+      if (CREATE_RX.test(text)) { const st = el('a', 'Build it in the Studio', 'button primary small'); st.href = studioLink(text); row.append(st); }
+      card.append(row);
+    } else {
+      card.className = 'ask-card bad';
+      card.append(el('h3', t('error')), el('p', message));
+    }
+    card.append(el('small', 'Details: ' + message, 'muted'));
+    box.append(card);
   }
   function resultBox() {
     const b = root.querySelector('.ask-result');
@@ -348,8 +395,21 @@
     } catch { /* silent: speech is a courtesy, never load-bearing */ }
   }
 
-  async function run(text) {
+  async function run(text, force) {
     if (running || !text.trim()) return;
+    if (!force && CREATE_RX.test(text)) {
+      stages().replaceChildren();
+      const box = resultBox();
+      const card = el('div', undefined, 'ask-card studio');
+      card.append(el('h3', 'This is a new capability'),
+        el('p', 'You are asking for controls of one device on another screen. The Capability Studio finds the devices, previews the controls and installs nothing until you approve.'));
+      const row = el('div', undefined, 'ask-actions');
+      const go = el('a', 'Open in the Studio', 'button primary small'); go.href = studioLink(text);
+      const anyway = el('button', 'Ask the model anyway', 'ghost small'); anyway.type = 'button'; anyway.onclick = () => run(text, true);
+      row.append(go, anyway); card.append(row, el('small', 'Recognised by OpenBridge wording rules, not by a model.', 'muted'));
+      box.append(card);
+      return;
+    }
     running = true;
     const byVoice = document.getElementById('ask-input').dataset.voice === '1';
     document.getElementById('ask-input').dataset.voice = '';
@@ -407,9 +467,11 @@
           kv(box, 'evidence', rc.transaction_id || '?');
           kv(box, 'timeTaken', `${Math.round(performance.now() - t0)} ms`);
           btn.textContent = t('approved');
+          settleStages(false);
           pushRecent(text.trim(), d.skill_id, rc.state);
           if (byVoice) speak(`${t('approved')}. ${rc.state || ''}`);
         } catch (e) {
+          settleStages(true);
           kv(box, 'failed', e.message);
           btn.disabled = false; btn.textContent = t('approve');
         }
@@ -418,8 +480,10 @@
       pushRecent(text.trim(), d.skill_id, 'preview');
       if (byVoice) speak(`${d.outcome || d.skill_id}. ${t('stApproval')}`);
     } catch (e) {
-      resultBox().append(el('p', `${t('error')}: ${e.message}`, 'ask-error'));
+      settleStages(true);
+      friendly(resultBox(), e.message, text);
     } finally {
+      settleStages(false);
       running = false;
     }
   }

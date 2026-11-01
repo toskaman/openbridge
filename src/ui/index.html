@@ -96,25 +96,22 @@
 
       <!-- HOME -->
       <section class="view" data-view="home" aria-labelledby="home-title">
-        <div class="workspace-hero">
-          <div class="hero-main">
+        <section class="ask-hero" id="ask-openbridge" aria-labelledby="home-title">
+          <div class="ask-hero-main">
             <p class="eyebrow">One intelligent workspace</p>
             <h1 id="home-title">What would you like your devices to do?</h1>
-            <p class="lede">Ask OpenBridge to connect, control or extend your devices — safely. Meta proposes, OpenBridge checks it, and nothing runs until you approve.</p>
-            <section class="panel ask-panel" id="ask-openbridge" aria-labelledby="ask-title">
-              <div id="ask-root"></div>
-            </section>
-            <div class="first-run" id="home-first-run" hidden>
-              <p>No devices yet. Discover what's nearby or try a safe offline demo.</p>
-              <div class="hero-actions"><button class="primary" type="button" data-action="discover-home">Discover devices</button><a class="button ghost" href="#/replay">Try the offline demo <span class="tag sim">SIMULATED</span></a><button class="ghost" type="button" data-action="connect">Connect a new device</button></div>
-            </div>
+            <p class="lede">Ask in plain words. Meta proposes, OpenBridge checks it, and nothing runs until you approve.</p>
+            <div id="ask-root"></div>
           </div>
-          <aside class="orb-stage hero-orb" id="home-orb" aria-label="OpenBridge activity">
+          <aside class="orb-stage ask-orb" id="home-orb" aria-label="OpenBridge activity">
             <div class="orb-canvas-host"></div>
             <div class="orb-status" data-orb-status><strong class="orb-state">Ready · waiting for your request</strong><span class="orb-note"></span></div>
             <p class="orb-legend"><span class="lg-out" title="Amber comets leave the orb when a real message is sent">↑ sent</span><span class="flow-counts" data-flow-counts>↑ 0 out · ↓ 0 in</span><span class="lg-in" title="Emerald comets dive into the orb when a real reply arrives">↓ received</span></p>
-            <p class="orb-foot"><a href="#/settings">Motion &amp; visual effects</a></p>
           </aside>
+        </section>
+        <div class="first-run" id="home-first-run" hidden>
+          <p>No devices yet. Discover what's nearby or try a safe offline demo.</p>
+          <div class="hero-actions"><button class="primary" type="button" data-action="discover-home">Discover devices</button><a class="button ghost" href="#/replay">Try the offline demo <span class="tag sim">SIMULATED</span></a><button class="ghost" type="button" data-action="connect">Connect a new device</button></div>
         </div>
         <div class="hero-graph" id="home-mini-graph" hidden aria-hidden="true"></div>
         <div class="stats" id="home-stats" aria-live="polite"></div>

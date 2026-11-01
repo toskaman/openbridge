@@ -75,7 +75,7 @@
         } else if (r.status === 403) {
           M.flow.cancel(corr);            // CSRF handshake: callers refresh the session and retry; not a refusal
         } else {
-          r.clone().json().then(doc => M.signal('invoke_refused', { corr, reason: `${op} · ${String(doc.error || 'HTTP ' + r.status).slice(0, 90)}` }))
+          r.clone().json().then(doc => M.signal('invoke_refused', { corr, reason: /no READY route/i.test(String(doc.error)) ? 'no connected device can do this yet' : `${op} · ${String(doc.error || 'HTTP ' + r.status).slice(0, 90)}` }))
             .catch(() => M.signal('invoke_refused', { corr, reason: `${op} · HTTP ${r.status}` }));
         }
         return r;

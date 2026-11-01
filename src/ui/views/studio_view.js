@@ -81,10 +81,29 @@
       make: d => [{ label: 'Device status', skill_id: 'device_facts', target: d, params: {} }],
       words: 'status → device_facts (read-only)' },
   ];
+  TEMPLATES.push({ id: 'vacuum', test: /vacuum|aspirateur|robot/i, source: 'vacuum',
+    make: v => [{ label: 'Start cleaning', skill_id: 'vacuum_command', target: v, params: { command: 'start' } },
+      { label: 'Pause', skill_id: 'vacuum_command', target: v, params: { command: 'pause' } },
+      { label: 'Back to dock', skill_id: 'vacuum_command', target: v, params: { command: 'dock' } }],
+    words: 'robot vacuum → vacuum_command (start / pause / dock, one typed command per press)' });
   function pickTemplate(text) {
+    const vac = TEMPLATES[4];
+    if (vac.test.test(text)) return { t: vac, m: null };     // "…on my TV so I can operate my robot vacuum": the vacuum is the device controlled
     const exact = TEMPLATES[1].test.exec(text);
     if (exact) return { t: TEMPLATES[1], m: exact };
     for (const t of [TEMPLATES[0], TEMPLATES[2], TEMPLATES[3]]) if (t.test.test(text)) return { t, m: null };
+    return null;
+  }
+  /* Destination named in the request ("on my TV", "sur ma montre"): prefer a paired Companion running on that kind of device. */
+  const DEST_WORDS = [['tv', /\b(tv|t[ée]l[ée]|television)\b/i], ['watch', /\b(watch|montre)\b/i], ['phone', /\b(phone|t[ée]l[ée]phone|mobile)\b/i]];
+  function preferRelay(text) {
+    const byKey = Object.fromEntries(S.devices.map(d => [d.key, d]));
+    for (const [cat, rx] of DEST_WORDS) {
+      const m = text.match(new RegExp('\\b(on|sur)\\s+(my|ma|mon)\\s+' + rx.source.replace(/^\\b|\\b$/g, ''), 'i'));
+      if (!m) continue;
+      const r = S.relays.find(x => x.category === cat && x.online) || S.relays.find(x => x.category === cat);
+      if (r) return r.relay_id;
+    }
     return null;
   }
 
@@ -125,24 +144,27 @@
   async function discover() {
     S.busy = true; S.error = ''; paint();
     if (S.sim) {
-      S.devices = [{ key: 'sim-tv', label: 'Living room TV (SIMULATED)', category: 'tv' }];
-      S.relays = [{ relay_id: 'sim-watch', label: 'Watch (SIMULATED)', online: true }];
+      S.devices = [{ key: 'sim-tv', label: 'Living room TV (SIMULATED)', category: 'tv' }, { key: 'sim-vacuum', label: 'Robot vacuum (SIMULATED)', category: 'vacuum' }];
+      S.relays = [{ relay_id: 'sim-watch', label: 'Watch (SIMULATED)', category: 'watch', online: true }, { relay_id: 'sim-tv-companion', label: 'TV Companion (SIMULATED)', category: 'tv', online: true }];
       S.skills = { tv_volume_step: { targeted: true, reversibility: 'IRREVERSIBLE', input: { type: 'object', properties: { direction: { type: 'string', enum: ['up', 'down'] } }, required: ['direction'], additionalProperties: false } },
         tv_volume_set: { targeted: true, reversibility: 'EXACT', input: { type: 'object', properties: { value: { type: 'integer', minimum: 0, maximum: 100 } }, required: ['value'], additionalProperties: false } },
         ble_scan_room: { targeted: false, reversibility: 'SESSION_CLEANUP', input: { type: 'object', properties: { seconds: { type: 'integer', minimum: 1, maximum: 15 } }, additionalProperties: false } },
-        device_facts: { targeted: true, reversibility: 'NONE', input: { type: 'object', properties: {}, additionalProperties: false } } };
+        device_facts: { targeted: true, reversibility: 'NONE', input: { type: 'object', properties: {}, additionalProperties: false } },
+        vacuum_command: { targeted: true, reversibility: 'IRREVERSIBLE', input: { type: 'object', properties: { command: { type: 'string', enum: ['start', 'pause', 'mode', 'dock', 'move', 'seek', 'empty_dust', 'reset_side_brush', 'reset_main_brush', 'reset_filter', 'water_level', 'work_mode'] }, value: { type: 'string', maxLength: 16 }, move_s: { type: 'number' } }, required: ['command'], additionalProperties: false } } };
     } else {
       try {
         const [fab, routes, skills] = await Promise.all([get('/api/fabric'), get('/api/v2/routes'), get('/api/v2/skills')]);
         S.devices = (fab.devices || []).filter(d => d.category !== 'ble');
         const byKey = Object.fromEntries(S.devices.map(d => [d.key, d]));
-        S.relays = (routes.routes || []).map(r => ({ relay_id: r.relay_id, label: byKey[r.target_device] ? devLabel(byKey[r.target_device]) : r.relay_id, online: !!r.online, status: r.status }));
+        S.relays = (routes.routes || []).map(r => ({ relay_id: r.relay_id, label: byKey[r.target_device] ? devLabel(byKey[r.target_device]) : r.relay_id, category: (byKey[r.target_device] || byKey[r.relay_device] || {}).category || '', online: !!r.online, status: r.status }));
         S.skills = Object.fromEntries((skills.skills || []).map(k => [k.skill_id, k]));
       } catch (e) { S.error = 'Discovery read failed: ' + e.message; }
     }
     const tv = S.devices.find(d => d.category === 'tv');
     if (!S.source || !S.devices.some(d => d.key === S.source)) S.source = tv ? tv.key : (S.devices[0] || {}).key || '';
-    if (!S.relay || !S.relays.some(r => r.relay_id === S.relay)) S.relay = (S.relays.find(r => r.online) || S.relays[0] || {}).relay_id || '';
+    const named = preferRelay(S.text);
+    if (named) S.relay = named;
+    else if (!S.relay || !S.relays.some(r => r.relay_id === S.relay)) S.relay = (S.relays.find(r => r.online) || S.relays[0] || {}).relay_id || '';
     S.busy = false;
     S.step = Math.max(S.step, 1);
     propose();
@@ -156,7 +178,15 @@
       S.step = 2; paint(); return;
     }
     const { t, m } = pick;
+    if (t.source && t.source !== 'any') {      // the template names the kind of device it controls
+      const cur = S.devices.find(d => d.key === S.source);
+      if (!cur || cur.category !== t.source) { const want = S.devices.find(d => d.category === t.source); S.source = want ? want.key : ''; }
+    }
     const src = t.source === null ? null : S.source;
+    if (t.source && t.source !== 'any' && !src) {
+      S.proposal = null; S.question = `No ${t.source === 'tv' ? 'TV' : t.source} has been discovered yet. Discover it first (Devices → Discover), then come back.`;
+      S.step = 2; paint(); return;
+    }
     if (t.source && !src) { S.proposal = null; S.step = 1; paint(); return; }
     S.proposal = { template: t.id, words: t.words, controls: t.make(src, m) };
     S.checks = validate();
@@ -271,8 +301,8 @@
     const box = h('section', { class: 'panel studio-block' }, h('h2', { text: '3 · Proposal & checks' }));
     if (S.question) {
       box.append(h('p', {}, h('strong', { text: 'Needs clarification: ' }), S.question));
-      const opts = [['Volume up / down', 'TV volume on my watch'], ['Set an exact volume', 'TV volume to 10'], ['Bluetooth scan', 'Bluetooth scan button'], ['Device status (read-only)', 'device status']];
-      box.append(h('div', { class: 'row wrap' }, ...opts.map(([t, q]) => h('button', { class: 'ghost small', type: 'button', onclick: () => { S.text = q; propose(); } }, t))));
+      const opts = [['Volume up / down', 'TV volume on my watch'], ['Set an exact volume', 'TV volume to 10'], ['Robot vacuum', 'Robot vacuum controls on my TV'], ['Bluetooth scan', 'Bluetooth scan button'], ['Device status (read-only)', 'device status']];
+      if (S.question.startsWith('Which')) box.append(h('div', { class: 'row wrap' }, ...opts.map(([t, q]) => h('button', { class: 'ghost small', type: 'button', onclick: () => { S.text = q; propose(); } }, t))));
       return box;
     }
     if (!S.proposal) { box.append(h('p', { class: 'muted', text: 'Choose a device to control to get a proposal.' })); return box; }
@@ -331,7 +361,7 @@
     if (!controls.length) face.append(h('span', { class: 'muted small', text: 'No controls yet' }));
     const badge = S.revoked ? h('p', { class: 'tag', text: 'REVOKED · drawn controls no longer run' }) : installed ? h('p', { class: 'tag ok', text: S.sim ? 'SIMULATED · installed on a simulated watch' : 'INSTALLED · acknowledged by the Companion' }) : h('p', { class: 'tag warn', text: 'PREVIEW ONLY — nothing installed' });
     return h('section', { class: 'panel target-panel', 'aria-label': 'Destination preview' }, h('h2', { text: 'Destination' }), h('p', { class: 'muted small', text: r ? r.label : S.sim ? 'Watch (SIMULATED)' : 'No Companion selected' }),
-      h('div', { class: 'target-device' }, face), badge);
+      h('div', { class: 'target-device ' + ((r && r.category) || (S.sim && S.relay === 'sim-tv-companion' ? 'tv' : 'watch')) }, face), badge);
   }
   function paint() {
     if (!root) return;

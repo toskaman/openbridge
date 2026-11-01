@@ -1,5 +1,6 @@
 """Ask OpenBridge panel: English UI under French locale, tier pills, fixtures-only ask flow."""
 import os
+import re
 import threading
 from playwright.sync_api import sync_playwright, expect
 from src.server import create_server
@@ -57,16 +58,15 @@ def main():
                 page.goto(f'http://127.0.0.1:{server.server_port}/#/home', wait_until='networkidle')
                 panel = page.locator('#ask-openbridge')
                 expect(panel).to_be_visible()
-                # V2: the composer comes first; model choices live in the collapsed "Model settings" section.
-                expect(panel.get_by_text('AI quality')).to_be_hidden()
-                panel.get_by_text('Model settings').click()
+                # V2.1: one compact AI-quality choice; free (local) vs paid (cloud) is explicit on each option.
                 expect(panel.get_by_text('AI quality')).to_be_visible()
+                expect(panel.locator('.ask-tier .tier-cost.free')).to_have_count(3)
+                expect(panel.locator('.ask-tier .tier-cost.paid')).to_have_count(1)
                 assert panel.get_by_role('checkbox').count() == 0, 'cloud consent must not show before it is needed'
-                panel.get_by_role('button', name='High · Meta cloud').click()
-                expect(panel.get_by_role('checkbox')).to_be_visible()      # shown only once the cloud tier is chosen
-                panel.get_by_role('button', name='Auto · local first').click()
+                panel.get_by_role('radio', name=re.compile('^Pro')).click()
+                expect(panel.get_by_role('checkbox')).to_be_visible()      # shown only once the paid cloud tier is chosen
+                panel.get_by_role('radio', name=re.compile('^Auto')).click()
                 expect(panel.get_by_role('checkbox')).to_have_count(0)
-                expect(panel.get_by_role('button', name='Ask', exact=True)).to_be_visible()
                 body = panel.inner_text()
                 assert 'Envoyer' not in body and 'Qualité' not in body, 'UI must stay English'
                 assert 'llama3.2' in body and '~$0.10' in body
