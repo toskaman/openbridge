@@ -8,7 +8,7 @@ from pathlib import Path
 from src.fabric import aead as A
 from src.fabric import relay as R
 
-V = json.loads((Path(__file__).parent / 'fixtures' / 'aead1_vector.json').read_text())
+V = json.loads((Path(__file__).parent / 'fixtures' / 'aead1_vector.json').read_text(encoding='utf-8'))
 KEY = bytes.fromhex(V['key_hex'])
 
 

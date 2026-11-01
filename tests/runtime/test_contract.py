@@ -7,7 +7,7 @@ GOLDEN=Path(__file__).resolve().parents[2]/'docs'/'coordination'/'contract_v1.sc
 
 class ContractCompatibilityTests(unittest.TestCase):
     def test_current_schema_is_compatible_with_published_golden(self):
-        ok,why=compatible(json.loads(GOLDEN.read_text()),schema());self.assertTrue(ok,why)
+        ok,why=compatible(json.loads(GOLDEN.read_text(encoding='utf-8')),schema());self.assertTrue(ok,why)
 
     def test_removing_or_renaming_a_field_is_rejected(self):
         old=schema();new=json.loads(json.dumps(old));new['types']['CapabilityDescriptor'].remove('reversible')

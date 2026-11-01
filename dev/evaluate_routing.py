@@ -153,11 +153,11 @@ def main():
     if args.output.exists():raise FileExistsError('Never overwrite a previous evaluation')
     verify_frozen()
     if subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=ROOT).strip():raise ValueError('TRACKED_WORKTREE_NOT_CLEAN')
-    review=json.loads((DATA/'meta-design-review-receipt.json').read_text())
+    review=json.loads((DATA/'meta-design-review-receipt.json').read_text(encoding='utf-8'))
     request=(DATA/'meta-design-review-request.json').read_bytes()
     if review.get('status')!='REVIEW_RECEIVED' or review.get('model_id')!='muse-spark-1.3' or review['review']['verdict']!='APPROVE' or sha(request)!=review['input_sha256']:
         raise ValueError('PRE_RUN_REVIEW_REQUIRED')
-    cases=json.loads((DATA/'cases.json').read_text())['cases'];gold=json.loads((DATA/'gold.json').read_text())['labels']
+    cases=json.loads((DATA/'cases.json').read_text(encoding='utf-8'))['cases'];gold=json.loads((DATA/'gold.json').read_text(encoding='utf-8'))['labels']
     report=evaluate(cases,gold)
     report['provenance']={'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
                           'recorded_at_utc':datetime.now(timezone.utc).isoformat(),'python':platform.python_version(),'platform':platform.platform(),

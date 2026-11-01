@@ -48,9 +48,11 @@ class STTLocalValidation(unittest.TestCase):
                 snaps = os.path.join(tmp, 'hub', 'models--facebook--mms-1b-all', 'snapshots', 'r1')
                 os.makedirs(snaps)
                 self.assertIsNone(stt_local.find_snapshot())
-                open(os.path.join(snaps, 'config.json'), 'w').write('{}')
+                with open(os.path.join(snaps, 'config.json'), 'w', encoding='utf-8') as f:
+                    f.write('{}')
                 self.assertIsNone(stt_local.find_snapshot())
-                open(os.path.join(snaps, 'model.safetensors'), 'w').write('x')
+                with open(os.path.join(snaps, 'model.safetensors'), 'w', encoding='utf-8') as f:
+                    f.write('x')
                 self.assertTrue(str(stt_local.find_snapshot()).endswith('r1'))
         finally:
             stt_local._home_override = old
