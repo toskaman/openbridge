@@ -7,3 +7,5 @@ artifacts/
 dist/
 *.log
 .pytest_cache/
+
+.xbuild/
