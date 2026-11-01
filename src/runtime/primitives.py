@@ -5,8 +5,10 @@ command: each primitive has a strict input schema, preconditions, a verification
 through the existing safety layers (deterministic gate + consent + transaction engine for writes, session journal for
 environment changes). The executor enforces schema, consent, identity, concurrency and timeouts, and always returns an
 honest TransactionReceipt: a result is `verified` only when an independent read-back confirmed it."""
+import re
 import secrets
 import threading
+import time
 from collections import deque
 from datetime import datetime, timezone
 
@@ -26,6 +28,12 @@ class PrimitiveError(Exception):
 
 def _s(type_, **kw):
     return dict(type=type_, **kw)
+
+
+def _read_wakefulness(android, handle):
+    out = android.shell(handle, ('dumpsys', 'power'))
+    m = re.search(r'mWakefulness=(\w+)', out)
+    return m.group(1) if m else None
 
 
 ARGS_SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
@@ -174,6 +182,13 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('combined PNG stored server-side under a new capture id',),
                      'output PNG decodes; dimensions equal the tile math', '',
                      R.NONE.value, ('UNKNOWN_CAPTURE', 'MONTAGE_FAILED'), 60, 'single-global', False),
+    ActionDescriptor('tv_sleep', 'Put an Android TV to sleep (screen off, wakes on remote)',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent for this physical act', 'control grant on a current ADB link'),
+                     ('target is a TV', 'identity re-verified'),
+                     ('TV asleep; any remote key or tv_wake restores',),
+                     'mWakefulness read back Asleep via dumpsys power', 'tv_wake',
+                     R.MANUAL.value, ('DEVICE_UNAVAILABLE', 'SLEEP_FAILED'), 30, 'single-per-device', True),
     ActionDescriptor('file_pull', 'Copy one file from under /sdcard/ into the server transfer store',
                      {'type': 'object', 'properties': {'remote': _s('string', maxLength=256)}, 'required': ['remote'], 'additionalProperties': False},
                      ('owner consent (file contents are sensitive)', 'read grant on a current ADB link'),
@@ -789,6 +804,23 @@ class Executor:
             return 'EXECUTED', None, out[:120], True, {'reply': out}
         return 'EXECUTED_UNVERIFIED', None, 'delivered, effect unverified', False, {'sent': out}
 
+    def _tv_sleep(self, key, params):
+        handle = self._adb_handle(key)
+        try:
+            self.ctx.android.shell(handle, ('input', 'keyevent', 'KEYCODE_SLEEP'))
+            state = _read_wakefulness(self.ctx.android, handle)
+        except ValueError as e:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if state != 'Asleep':
+            time.sleep(2)
+            try:
+                state = _read_wakefulness(self.ctx.android, handle)
+            except ValueError as e:
+                raise PrimitiveError('DEVICE_UNAVAILABLE', str(e)[:160]) from None
+        if state != 'Asleep':
+            raise ValueError('SLEEP_FAILED: wakefulness is %s' % state)
+        return 'EXECUTED', None, 'TV asleep (mWakefulness=Asleep)', True, {'wakefulness': 'Asleep'}
+
     def _file_pull(self, key, params):
         handle = self._adb_handle(key)
         try:
@@ -822,7 +854,7 @@ class Executor:
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,
-               'retro_command': _retro_command}
+               'retro_command': _retro_command, 'tv_sleep': _tv_sleep}
 
     # ---------- recovery backlog ----------
     MAX_RECEIPTS = 512        # resolved receipts beyond this are evicted oldest-first

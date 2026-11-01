@@ -53,6 +53,7 @@ SKILL_AUDIENCE = {
     'device_facts': 'any linked device',
     'tv_volume_set': 'android',
     'tv_volume_step': 'android',
+    'tv_sleep': 'android',
     'screen_capture': 'android',
     'file_pull': 'android',
     'capability_probe': 'android',
