@@ -32,7 +32,7 @@ official rules), third-party rules summary (labeled T-P, not authoritative).
 
 ## Owner actions before submitting
 
-1. Open the accepted Official Rules + submission portal; fill OPEN items 5–8, 13, 16–19.
+1. Open the accepted Official Rules + submission portal; fill OPEN items 16–19 (5–8, 13 already GUIDE CONFIRMED via the Cerebral Valley Guide).
 2. Confirm the video requirement + maximum duration before the final edit (storyboard assumes ~180 s).
 3. Repository must remain public and accessible. Keep the judge evaluation path executable and source-available license terms clear; see [licensing history](../LICENSING_HISTORY.md).
 4. Confirm no eligibility exclusion applies; note the organizer license scope.
