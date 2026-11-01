@@ -56,7 +56,7 @@ CUT (unusable): all fast pans/blur (183541 t≈70-77; 185018 t≈0-4, 13-15,
 21-25; 183952 t≈0-10), launcher browsing (183214 t≈15-34), typing waits
 (keep ≤2 s @2x if needed for Ask setup), vacuum-static watches beyond EDL.
 
-## Assembly notes (render step, needs owner Go)
+## Assembly notes (render step: DONE 01-Nov evening, see VIDEO_BUILD_V2.md)
 
 - Target: storyboard 175–180 s. Keep fallback skeleton (title/suite/
   checks/replay/stills/scorecard/close), INSERT IRL beats at B3 (32–85)
