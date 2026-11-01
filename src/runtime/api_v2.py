@@ -35,7 +35,7 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/orchestration/status',
               '/api/v2/dashboards/list')
 POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback',)
 
 
 import threading
@@ -774,6 +774,22 @@ def post(server, path, body):
             return 400, {'error': str(e)}
         except RemoteControlError as e:
             return e.status, {'error': str(e)}
+    if path.startswith('/api/v2/migrate/') and isinstance(body, dict):
+        from src.runtime import migrate as M
+        try:
+            if path == '/api/v2/migrate/propose':
+                return 200, M.propose(server, body.get('text'), source=body.get('source'),
+                                      target=body.get('target'), match=body.get('match'))
+            if path == '/api/v2/migrate/apply':
+                return 200, M.apply(server, body.get('proposal'), body.get('consent'))
+            if path == '/api/v2/migrate/rollback':
+                return 200, M.rollback(server, body.get('receipt'), body.get('consent'))
+            return 404, {'error': 'unknown migrate route'}
+        except M.MigrationError as e:
+            out = {'error': str(e)}
+            if e.receipt is not None:
+                out['receipt'] = e.receipt
+            return e.status, out
     if path.startswith('/api/v2/workflows/') and isinstance(body, dict):
         from src.substrate.kernel import SubstrateError
         w = workflows(server)
