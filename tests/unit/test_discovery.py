@@ -116,6 +116,12 @@ class ExplainDevice(unittest.TestCase):
         self.assertIn('vendor-manual-tv', p)
         self.assertIn('hypothesis', p.lower())
 
+    def test_prompt_lists_verified_candidates(self):
+        from src.ai import discovery as disc
+        p = disc.build_prompt(_device(), _peers(), _docs())
+        self.assertIn('Candidate skills for THIS device (verified)', p)
+        self.assertIn('tv_volume_step', p)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
