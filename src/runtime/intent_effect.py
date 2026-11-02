@@ -193,6 +193,18 @@ EFFECT_VOCAB = {
                                  'photographie'}),
     'tv_volume_set': _VOLUME,
     'tv_volume_step': _VOLUME,
+    # MI v2: these three were uncovered (any proposal clarified), which
+    # would veto legitimate sleep/wake/foreground compositions once the
+    # composer path is gated. Deliberately narrow: 'eteins/turn/off' and
+    # 'allume' stay out so "turn off ALL screens" cannot validate a
+    # single-tv substitution (that request must refuse/clarify instead).
+    'tv_sleep': frozenset({'sleep', 'sleeps', 'sleeping', 'slept',
+                           'dormant', 'veille', 'endormi', 'endormie',
+                           'endormir', 'dors'}),
+    'tv_wake': frozenset({'wake', 'wakes', 'waking', 'woken',
+                          'reveil', 'reveille', 'reveiller', 'reveillez'}),
+    'companion_foreground': frozenset({'foreground', 'front', 'avant',
+                                       'premier', 'devant'}),
     'vacuum_command': frozenset({'vacuum', 'vacuums', 'robot', 'robots',
                                  'cleaning', 'cleaner', 'cleaners', 'clean',
                                  'cleans', 'cleaned', 'aspirateur',

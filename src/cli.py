@@ -1341,7 +1341,7 @@ def cmd_workflows_compose(args):
         devices = snap.get('devices', []) if isinstance(snap, dict) else []
         transport = nl_plan.local_chat(model_id, endpoint,
                                        timeout=getattr(args, 'timeout', None) or 180,
-                                       format=comp.PROPOSAL_JSON_SCHEMA)
+                                       format=comp.COMPOSER_RESPONSE_SCHEMA)
         try:
             doc = comp.propose_and_compose(text, devices, api_v2.router(server), transport)
         except comp.ComposerError as e:

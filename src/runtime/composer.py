@@ -82,6 +82,25 @@ PROPOSAL_JSON_SCHEMA = {'type': 'object',
                                      'items': {'type': 'string'}}}}}}}
 _PROPOSAL_KEYS = {'skill_id', 'target', 'params', 'on_fail', 'needs'}
 
+# MI v2 envelope constraint: the same steps shape wrapped in the shared
+# discriminated outcome (mirrors nl_plan S4.7), so constrained decoding
+# can emit a refusal or a clarification INSTEAD of steps. Without this
+# the schema FORCES the model to guess steps for impossible requests.
+COMPOSER_RESPONSE_SCHEMA = {'type': 'object',
+    'required': ['outcome'],
+    'properties': {'outcome': {'type': 'string'},
+                   'steps': {'type': 'array', 'minItems': 1,
+                       'maxItems': MAX_COMPOSED_STEPS,
+                       'items': {'type': 'object', 'required': ['skill_id', 'target', 'params'],
+                           'properties': {'skill_id': {'type': 'string'},
+                                          'target': {'type': 'string'},
+                                          'params': {'type': 'object'},
+                                          'on_fail': {'type': 'string'},
+                                          'needs': {'type': 'array', 'items': {'type': 'string'}}}}},
+                   'reason': {'type': 'string'},
+                   'code': {'type': 'string'},
+                   'clarifying_question': {'type': 'string'}}}
+
 
 class ComposerError(ValueError):
     pass
@@ -125,7 +144,7 @@ def build_prompt(text, devices):
                       s.get('consent'), SKILL_AUDIENCE.get(sid, '?'),
                       s.get('plain'))
                    for sid, s in sorted(SKILLS.items())]
-    return ('You compose device workflows. Reply with ONE JSON object and nothing else: '
+    prompt = ('You compose device workflows. Reply with ONE JSON object and nothing else: '
             '{"steps": [{"skill_id": "<id>", "target": "<device label>", "params": {}}]}. '
             'Rules: 1..%d steps; skill_id must be listed below and plausible for the target; copy the '
             'target label EXACTLY character-for-character from the Devices list (never abbreviate; '
@@ -140,6 +159,18 @@ def build_prompt(text, devices):
             '(target "fabric"): %s\nSkills:\n%s'
             % (MAX_COMPOSED_STEPS, NO_ATOMIC_ROLLBACK, text.strip()[:500],
                '\n'.join(dev_lines), ', '.join(untargeted), '\n'.join(skill_lines)))
+    prompt += (' Copy the target label EXACTLY character-for-character from the '
+               'Devices list above; never shorten or paraphrase it ("watch" is WRONG, '
+               '"Smartwatch" is right; "TV" is WRONG, "Android TV" is right). '
+               'Every parameter name shown in the skill hint MUST appear in params '
+               'with a correctly typed value; never omit a hinted parameter. If the '
+               'request needs a skill, device, capability or effect not covered '
+               'above, do NOT guess steps: reply {"outcome": "refusal", "reason": '
+               '"<why, <=500 chars>"} with no steps. If exactly two readings match '
+               'equally well, reply {"outcome": "clarification", "clarifying_question": '
+               '"<one question>"} with no steps. A proposal wraps the steps object '
+               'as {"outcome": "proposal", "steps": [...]}.')
+    return prompt
 
 
 def proposal_from_doc(doc):
@@ -172,13 +203,30 @@ def proposal_from_doc(doc):
 
 
 def proposal_from_reply(reply):
-    """Strictly parse model JSON into a proposal. Raises ComposerError."""
+    """Strictly parse model JSON into a proposal. Raises ComposerError.
+
+    Accepts the S4.7 discriminated envelope (a proposal's steps are
+    validated; a refusal or clarification raises ComposerError carrying
+    the model's own words, so nothing executes) and, for backward
+    compatibility, a bare {"steps": [...]} object.
+    """
     if not isinstance(reply, str) or not reply.strip() or len(reply) > MAX_REPLY_CHARS:
         raise ComposerError('model reply is empty or oversized')
     try:
         doc = json.loads(reply)
     except ValueError:
         raise ComposerError('model reply is not JSON') from None
+    if isinstance(doc, dict) and 'outcome' in doc:
+        from src.forge import meta_result
+        try:
+            outcome, payload, detail, _ = meta_result.parse(
+                doc, 'steps', lambda steps: proposal_from_doc({'steps': steps}))
+        except meta_result.MetaError as e:
+            raise ComposerError(str(e)) from None
+        if outcome != meta_result.PROPOSAL:
+            verb = 'refused' if outcome == meta_result.REFUSAL else 'needs clarification'
+            raise ComposerError('model %s: %s' % (verb, detail))
+        return payload
     return proposal_from_doc(doc)
 
 
@@ -501,6 +549,14 @@ def propose_and_compose(text, devices, router, proposer):
     if not isinstance(res, dict) or not res.get('content'):
         raise ComposerError('model returned no usable content')
     composed = compose(proposal_from_reply(res['content']), devices, router)
+    allowed = [s for s in composed['steps'] if s['status'] == 'allowed']
+    if allowed:
+        from src.runtime import intent_effect
+        try:
+            intent_effect.check(text, {'steps': allowed}, devices)
+        except intent_effect.IntentEffectError as e:
+            verb = 'refused' if e.kind == intent_effect.REFUSAL else 'needs clarification'
+            raise ComposerError('model %s: %s' % (verb, e.detail)) from None
     composed['model_run'] = {'provider': 'meta', 'model': res.get('model_id', 'unknown'),
                              'endpoint': res.get('endpoint', '')}
     composed['reply_sha256'] = hashlib.sha256(res['content'].encode()).hexdigest()
