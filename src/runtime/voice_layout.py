@@ -35,8 +35,8 @@ _REMOVE_RX = re.compile(
     r'\b(enleve\w*|enlever|retire\w*|supprime\w*|efface\w*|vire\w*|cache\w*|'
     r'remove\w*|delete\w*|hide\w*|clear\w*)\b')
 _OBJECT_RX = re.compile(
-    r'\b(boutons?|menus?|commandes?|controles?|telecommandes?|touches?|'
-    r'buttons?|controls?|remotes?)\b')
+    r'\b(bou?tt?ons?|menus?|commandes?|controles?|telecommandes?|touches?|'
+    r'butt?ons?|controls?|remotes?)\b')
 
 TEXT = {
     'created_meta': {'fr': 'Meta a créé : %s. Appuie pour essayer.',
@@ -92,7 +92,9 @@ def resolve_tv_key(server):
 # Narrow offers keep a 3B CPU model accurate; the strict validator still decides.
 # tv_volume_set / tv_sleep are left out: the 3B model kept binding "Volume up" to an
 # absolute set and adding unasked "TV sleep" buttons (meta-runs evidence, 02-Nov 18:27).
-SCOPE_PRIMITIVES = ('tv_volume_step', 'tv_wake', 'vacuum_command')
+SCOPE_PRIMITIVES = ('tv_volume_step', 'tv_wake', 'app_launch', 'vacuum_command')
+# app_launch is offered for the TV with an allowlisted package only (enum below).
+TV_APPS = {'com.google.android.youtube.tv': 'youtube'}
 MAX_ATTEMPTS = 2   # one self-correction: the validator's error is fed back verbatim
 
 
@@ -108,6 +110,8 @@ PARAM_SCHEMAS = {
     'tv_volume_set': {'type': 'object', 'required': ['value'],
                       'properties': {'value': {'type': 'integer', 'minimum': 0, 'maximum': 100}}},
     'tv_wake': {'type': 'object', 'properties': {}},
+    'app_launch': {'type': 'object', 'required': ['package'],
+                   'properties': {'package': {'type': 'string', 'enum': sorted(TV_APPS)}}},
     'tv_sleep': {'type': 'object', 'properties': {}},
     'vacuum_command': {'type': 'object', 'required': ['command'],
                        'properties': {'command': {'type': 'string', 'enum': ['start', 'pause', 'dock', 'seek']}}},
@@ -137,7 +141,7 @@ def response_schema(offered_ids, bindable):
                            'clarifying_question': {'type': 'string'}}}
 
 
-PRIMITIVE_CATEGORY = {'tv_volume_step': 'tv', 'tv_wake': 'tv', 'tv_volume_set': 'tv', 'tv_sleep': 'tv',
+PRIMITIVE_CATEGORY = {'app_launch': 'tv', 'tv_volume_step': 'tv', 'tv_wake': 'tv', 'tv_volume_set': 'tv', 'tv_sleep': 'tv',
                       'vacuum_command': 'vacuum'}
 
 
@@ -162,6 +166,13 @@ def label_check(widgets):
     -> None when coherent, else 'LABEL_MISMATCH: ...' (fed back to Meta, never installed)."""
     for w in widgets:
         lab, prim, prm = w.get('label', ''), w.get('binding_primitive'), w.get('params') or {}
+        if prim == 'app_launch':
+            app = TV_APPS.get(prm.get('package'))
+            if app is None:
+                return 'LABEL_MISMATCH: app_launch package %r is not allowlisted' % prm.get('package')
+            if app not in lab.lower():
+                return 'LABEL_MISMATCH: "%s" launches %s; the label must name it' % (lab, app)
+            continue
         if _MUTE_RX.search(lab):
             return 'LABEL_MISMATCH: "%s" -- no mute primitive is offered' % lab
         up, down = bool(_UP_RX.search(lab)), bool(_DOWN_RX.search(lab))
@@ -189,7 +200,7 @@ def drop_empty_envelope(doc):
 
 
 _VAC_WORDS = re.compile(r'\b(aspirateur\w*|aspi|robot\w*|vacuum\w*|menage)\b')
-_TV_WORDS = re.compile(r'\b(tele\w*|tv|televiseur|volume\w*|son|sound)\b')
+_TV_WORDS = re.compile(r'\b(tele\w*|tv|televiseur|volume\w*|son|sound|youtube|yutube|you tube)\b')
 
 
 def scoped_devices(server, text=''):
