@@ -82,6 +82,16 @@ class PromptV2(unittest.TestCase):
         self.assertIn('never shorten', p.lower())
         self.assertIn('must appear', p.lower())
 
+    def test_prompt_example_target_is_placeholder(self):
+        from src.runtime import composer as comp
+        from src.runtime import nl_plan
+        devs = _devices()
+        for p in (comp.build_prompt('Do something', devs),
+                  nl_plan.build_prompt('Do something', devs)):
+            self.assertIn('<EXACT label from Devices>', p)
+            self.assertNotIn('"target": "android tv"', p)
+            self.assertIn('CATEGORY', p)
+
 
 class IntentGate(unittest.TestCase):
     def _proposer(self, steps):

@@ -76,8 +76,10 @@ def build_prompt(text, devices):
             '{"steps": [{"skill_id": "<id>", "target": "<device label>", '
             '"params": {}}]}. Rules: 1..%d steps; skill_id must be listed below; copy the target '
             'label EXACTLY character-for-character from the Devices list (never abbreviate; '
-            '"fabric" only for untargeted skills); params must match the hint exactly, no extra '
-            'keys. Example: {"steps": [{"skill_id": "tv_volume_step", "target": "android tv", '
+            '"fabric" only for untargeted skills); never use a device CATEGORY word as the '
+            'target (tv, watch, pc, computer and vacuum are WRONG by themselves); params must '
+            'match the hint exactly, no extra keys. Example: {"steps": [{"skill_id": '
+            '"tv_volume_step", "target": "<EXACT label from Devices>", '
             '"params": {"direction": "down"}}]}. Request: %s\nDevices:\n%s\nSkills:\n%s'
             % (MAX_STEPS, text.strip()[:500], '\n'.join(dev_lines), '\n'.join(skill_lines)))
     prompt += (' If the request needs a skill, device, capability, approval bypass or '

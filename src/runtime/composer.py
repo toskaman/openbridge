@@ -154,7 +154,7 @@ def build_prompt(text, devices):
             'for a simple sequence. %s Each step is an ACTION a device performs: the target is the '
             'device that ACTS (never the screen, remote or wrist device the owner holds). '
             'Only propose steps whose effect the owner accepts. '
-            'Example: {"steps": [{"skill_id": "tv_volume_step", "target": "android tv", '
+            'Example: {"steps": [{"skill_id": "tv_volume_step", "target": "<EXACT label from Devices>", '
             '"params": {"direction": "down"}}]}. Request: %s\nDevices:\n%s\nUntargeted skills '
             '(target "fabric"): %s\nSkills:\n%s'
             % (MAX_COMPOSED_STEPS, NO_ATOMIC_ROLLBACK, text.strip()[:500],
@@ -162,6 +162,9 @@ def build_prompt(text, devices):
     prompt += (' Copy the target label EXACTLY character-for-character from the '
                'Devices list above; never shorten or paraphrase it ("watch" is WRONG, '
                '"Smartwatch" is right; "TV" is WRONG, "Android TV" is right). '
+               'Never use a device CATEGORY word as the target: tv, watch, pc, '
+               'computer and vacuum are WRONG by themselves; only a full label '
+               'from the Devices list (or "fabric" for untargeted skills) is right. '
                'Every parameter name shown in the skill hint MUST appear in params '
                'with a correctly typed value; never omit a hinted parameter. If the '
                'request needs a skill, device, capability or effect not covered '
