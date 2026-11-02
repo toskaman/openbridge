@@ -696,8 +696,11 @@ def _idem_seen(server):
     return seen
 
 
-def _idem_begin(server, key):
-    """Claim an idempotency key: None when this call owns it, else (status, body)."""
+def _idem_begin(server, key, fingerprint=None):
+    """Claim an idempotency key: None when this call owns it, else (status, body).
+
+    A DONE key bound to a different fingerprint is INVOCATION_ID_REUSED (the
+    caller's request was never handled), not DUPLICATE_REQUEST (mirrors routing)."""
     import time as _t
     from src.runtime.state_store import StateStore, StateError
     store = StateStore.for_server(server)
@@ -709,6 +712,8 @@ def _idem_begin(server, key):
         if claimed:
             return None
         if row['state'] == 'DONE':
+            if fingerprint is not None and row.get('fingerprint') is not None and row['fingerprint'] != fingerprint:
+                return {'status': 409, 'body': {'error': 'INVOCATION_ID_REUSED: this idempotency_key was already used for a different request; use a fresh key'}}
             return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
         return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running elsewhere or was interrupted; use a fresh key'}}
     seen = _idem_seen(server)
@@ -716,17 +721,19 @@ def _idem_begin(server, key):
         now = _t.monotonic()
         for k in [k for k, v in seen.items() if v[0] == 'DONE' and now - v[1] > 600]:
             del seen[k]
-        state = seen.get(key, (None, 0))[0]
-        if state == 'DONE':
+        prior = seen.get(key, (None, 0, None))
+        if prior[0] == 'DONE':
+            if fingerprint is not None and prior[2] is not None and prior[2] != fingerprint:
+                return {'status': 409, 'body': {'error': 'INVOCATION_ID_REUSED: this idempotency_key was already used for a different request; use a fresh key'}}
             return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
-        if state == 'EXECUTING':
+        if prior[0] == 'EXECUTING':
             return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running; use a fresh key'}}
         if len(seen) >= 4096:
             victim = next((k for k, v in seen.items() if v[0] == 'DONE'), None)
             if victim is None:
                 return {'status': 503, 'body': {'error': 'STATE_JOURNAL_FULL: idempotency cache is full of running keys'}}
             del seen[victim]
-        seen[key] = ('EXECUTING', now)
+        seen[key] = ('EXECUTING', now, fingerprint)
         return None
 
 
@@ -749,7 +756,7 @@ def _idem_finish(server, key, fingerprint):
             pass   # leftover EXECUTING fails closed: retries refuse as uncertain, never re-dispatch
         return
     with server.http_idem_lock:
-        _idem_seen(server)[key] = ('DONE', _t.monotonic())
+        _idem_seen(server)[key] = ('DONE', _t.monotonic(), fingerprint)
 
 
 def _perm_sdk(runner):
@@ -1182,13 +1189,14 @@ def post(server, path, body):
     key = body.get('idempotency_key')
     if key is not None and (not isinstance(key, str) or not key or len(key) > 96):
         return 400, {'error': 'idempotency_key must be a non-empty string of at most 96 characters'}
+    binding = _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}) if key is not None else None
     if key is not None:
-        refused = _idem_begin(server, key)
+        refused = _idem_begin(server, key, binding)
         if refused is not None:
             return refused['status'], refused['body']
     r = executor(server).execute(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}, body.get('consent') is True)
     if key is not None:
-        _idem_finish(server, key, _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}))
+        _idem_finish(server, key, binding)
     status = 200 if r['state'] not in ('BLOCKED',) else 409
     return status, r
 
