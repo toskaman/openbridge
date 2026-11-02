@@ -81,6 +81,27 @@ class PcOpenUrl(unittest.TestCase):
         self.assertFalse(r['verified'])
         self.assertTrue(r['errors'][0].startswith('FAILED:'), r['errors'])
 
+    def test_managed_skills_route_to_bridged_pc(self):
+        from src.fabric.contracts import Link
+        from src.runtime.api_v2 import router
+        from tests.runtime.test_routing import Clock, world
+        clock = Clock()
+        server, keys = world(clock)
+        reg = server.fabric_registry
+        ck = reg.upsert([Identifier('windows_machine_guid', 'pc-9', True)],
+                        category='computer', label='PC9')
+        reg.devices[ck]['handles'] = {'WINDOWS_AGENT': 'windows-agent'}
+        reg.link(Link('pc', ck, 'LAN', ('observe', 'read'), 'WINDOWS_AGENT'))
+        server.fabric_snapshot = reg.snapshot()
+        for sid, prim in (('pc_place_file', 'pc_place_file'),
+                          ('pc_wallpaper', 'pc_wallpaper')):
+            with self.subTest(skill=sid):
+                doc = router(server).skill_routes(sid, ck)
+                self.assertIsNotNone(doc['selected_route_id'])
+                self.assertEqual(doc['routes'][0]['hops'][0]['primitive_id'], prim)
+                self.assertIsNone(router(server).skill_routes(sid, keys['tv'])
+                                  ['selected_route_id'])
+
     def test_skill_routes_to_bridged_pc(self):
         from src.fabric.contracts import Link
         from src.runtime.api_v2 import router
