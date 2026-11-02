@@ -113,11 +113,12 @@ def build_prompt(text, devices):
     """Strict capability-grounded composition prompt: labels only, never keys."""
     from src.runtime.nl_plan import param_hint
     from src.runtime.routing import SKILLS
+    from src.fabric.registry import sanitize_label
     dev_lines = []
     for d in devices:
         cands = candidates_for(d)
         dev_lines.append('- %s (%s)%s' % (
-            d.get('label'), d.get('category'),
+            sanitize_label(d.get('label')), d.get('category'),
             (': ' + ', '.join(cands)) if cands else ': no live link, do not use'))
     untargeted = sorted(s for s, aud in SKILL_AUDIENCE.items() if aud == 'fabric')
     skill_lines = ['- %s %s reversibility=%s consent=%s audience=%s: %s'
