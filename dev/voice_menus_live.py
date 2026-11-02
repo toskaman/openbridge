@@ -165,6 +165,28 @@ def main(argv=None):
                 emit('tv', 'TV volume = %d (ADB dumpsys audio, STREAM_MUSIC)' % v, volume=v)
                 STATE['volume'], last = v, v
             stop.wait(1.5)
+    vac_lock = threading.Lock()
+
+    def vacuum_read(why):
+        # Tuya local accepts one session at a time: read only at boot and a few seconds
+        # after a vacuum press (never polled), so reads cannot collide with dispatch.
+        from src.adapters.tuya_local import TuyaVacuum, owner_link
+        link = owner_link()
+        if not link:
+            return
+        with vac_lock:
+            try:
+                f = {x['name']: x['value'] for x in TuyaVacuum(link).facts()}
+                emit('vacuum', '%s: %s' % (why, ', '.join('%s=%s' % (k, f[k]) for k in ('vacuum_status', 'battery_level', 'fault_code') if k in f)), facts=f)
+            except Exception as e:  # noqa: BLE001
+                emit('vacuum', '%s: read failed %s' % (why, str(e)[:80]))
+
+    def vacuum_after_press(req):
+        for d in (4, 10):
+            time.sleep(d if d == 4 else 6)
+            vacuum_read('read-back +%ds after %s' % (d, req[:12]))
+
+    threading.Thread(target=vacuum_read, args=('vacuum status (Tuya local dps) at boot',), daemon=True).start()
     threading.Thread(target=toucher, daemon=True).start()
     threading.Thread(target=volume_poller, daemon=True).start()
 
@@ -193,6 +215,8 @@ def main(argv=None):
                         e.get('control_id', '')[:14], e.get('state'), e.get('reason') or '',
                         k[:12], (e.get('invocation_id') or '-')[:14], (e.get('transaction_id') or '-')[:14]),
                         state=e.get('state'))
+                    if e.get('skill_id') == 'vacuum_command':
+                        threading.Thread(target=vacuum_after_press, args=(k,), daemon=True).start()
             time.sleep(0.5)
     except KeyboardInterrupt:
         pass

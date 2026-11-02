@@ -137,6 +137,20 @@ def response_schema(offered_ids, bindable):
                            'clarifying_question': {'type': 'string'}}}
 
 
+PRIMITIVE_CATEGORY = {'tv_volume_step': 'tv', 'tv_wake': 'tv', 'tv_volume_set': 'tv', 'tv_sleep': 'tv',
+                      'vacuum_command': 'vacuum'}
+
+
+def target_check(widgets, category):
+    """Every button must act on the patch's single target: tv_* on the TV, vacuum_command on the vacuum."""
+    for w in widgets:
+        want = PRIMITIVE_CATEGORY.get(w.get('binding_primitive'))
+        if want and want != category:
+            return ('TARGET_MISMATCH: "%s" uses %s (a %s primitive) but the patch targets a %s; one panel = one '
+                    'device, use only that device\'s primitives' % (w.get('label'), w.get('binding_primitive'), want, category))
+    return None
+
+
 _UP_RX = re.compile(r'(\+|\bup\b|\bplus\b|\bmonte\w*|\bhaut\b|\blouder\b|\bincrease\b|\baugment\w*)', re.I)
 _DOWN_RX = re.compile(r'(\B-\B|-$|\s-\s|\bdown\b|\bmoins\b|\bbaisse\w*|\bbas\b|\bquieter\b|\bdecrease\b|\bdiminu\w*)', re.I)
 _MUTE_RX = re.compile(r'\b(mute|muet|sourdine|silence)\b', re.I)
@@ -174,11 +188,24 @@ def drop_empty_envelope(doc):
     return {k: v for k, v in doc.items() if not (k in opt and v in ('', None))}
 
 
-def scoped_devices(server):
+_VAC_WORDS = re.compile(r'\b(aspirateur\w*|aspi|robot\w*|vacuum\w*|menage)\b')
+_TV_WORDS = re.compile(r'\b(tele\w*|tv|televiseur|volume\w*|son|sound)\b')
+
+
+def scoped_devices(server, text=''):
+    """The ADB-attached TV and the linked vacuum; when the request names exactly one of
+    them, only that one is offered (a 3B model otherwise mixes targets)."""
     devs = list((server.fabric_snapshot or {}).get('devices') or [])
-    tv = resolve_tv_key(server)
+    tv = [d for d in devs if d.get('key') == resolve_tv_key(server)]
     vac = [d for d in devs if d.get('category') == 'vacuum']
-    return [d for d in devs if d.get('key') == tv] + (vac[:1] if len(vac) == 1 else [])
+    vac = vac[:1] if len(vac) == 1 else []
+    fixed = VN.normalize(text)['fixed'] if text else ''
+    wants_vac, wants_tv = bool(_VAC_WORDS.search(fixed)), bool(_TV_WORDS.search(fixed))
+    if wants_vac and not wants_tv:
+        return vac
+    if wants_tv and not wants_vac:
+        return tv
+    return tv + vac
 
 
 def meta_propose(server, text, transport=None, evidence_dir=None):
@@ -191,9 +218,10 @@ def meta_propose(server, text, transport=None, evidence_dir=None):
     from src.runtime import nl_plan, nl_router
     from src.runtime.dashboards import BINDABLE_PATCH_SKILLS
     from src.runtime.routing import SKILLS
-    bindable = tuple(p for p in SCOPE_PRIMITIVES if p in BINDABLE_PATCH_SKILLS)
     model_id, endpoint = nl_router.TIERS['low']
-    devices = scoped_devices(server)
+    devices = scoped_devices(server, text)
+    cats = {d.get('category') for d in devices}
+    bindable = tuple(p for p in SCOPE_PRIMITIVES if p in BINDABLE_PATCH_SKILLS and PRIMITIVE_CATEGORY.get(p) in cats)
     bundle = build_bundle(devices, list(bindable), salt='voice-%d' % int(time.time()))
     prompt_devices = [{'label': row.get('label', '?'), 'category': b['category'], 'opaque_id': b['opaque_id']}
                       for row, b in zip(devices, bundle['devices'])]
@@ -220,7 +248,12 @@ def meta_propose(server, text, transport=None, evidence_dir=None):
         except (ValueError, v4_ui.UIError) as e:
             outcome, patch, detail, code, err = 'rejected', None, str(e)[:120], None, str(e)[:120]
         out['attempts'].append({'run': run, 'reply': reply, 'outcome': outcome, 'error': err})
-        if outcome == 'proposal' and label_check(patch['widgets']):
+        cat = next((d['category'] for d in prompt_devices if d['opaque_id'] == (patch or {}).get('target_opaque_id')), None)
+        if outcome == 'proposal' and cat and target_check(patch['widgets'], cat):
+            err = detail = target_check(patch['widgets'], cat)
+            outcome, patch = 'rejected', None
+            out['attempts'][-1].update(outcome=outcome, error=err)
+        elif outcome == 'proposal' and label_check(patch['widgets']):
             err = detail = label_check(patch['widgets'])
             outcome, patch = 'rejected', None
             out['attempts'][-1].update(outcome=outcome, error=err)

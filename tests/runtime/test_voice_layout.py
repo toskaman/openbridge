@@ -127,14 +127,19 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual((st, len(t.calls)), ('resolved', 2))
         self.assertEqual(len(s.remote_controls.calls), 1)
 
-    def test_offer_is_scoped_to_tv_and_vacuum(self):
-        s = layout_server(FakeRelay())
-        s.fabric_snapshot['devices'].append({'key': 'dev-vac', 'label': 'Robot vacuum', 'category': 'vacuum'})
-        s.fabric_snapshot['devices'].append({'key': 'dev-pc', 'label': 'PC', 'category': 'pc'})
-        (st, _), t = self._create(s, lambda p, oid: proposal(oid))
-        self.assertIn('Robot vacuum', t.calls[0])
-        for absent in ('LG TV', 'Galaxy Watch7', '- PC', 'pc_wallpaper', 'file_push'):
-            self.assertNotIn(absent, t.calls[0])
+    def test_offer_is_scoped_to_the_named_device(self):
+        def offered(text):
+            s = layout_server(FakeRelay())
+            s.fabric_snapshot['devices'].append({'key': 'dev-vac', 'label': 'Robot vacuum', 'category': 'vacuum'})
+            s.fabric_snapshot['devices'].append({'key': 'dev-pc', 'label': 'PC', 'category': 'pc'})
+            _, t = self._create(s, lambda p, oid: {'outcome': 'refusal', 'reason': 'test'}, text=text)
+            for absent in ('LG TV', 'Galaxy Watch7', '- PC', 'pc_wallpaper', 'file_push'):
+                self.assertNotIn(absent, t.calls[0])
+            return ('Android TV' in t.calls[0], 'Robot vacuum' in t.calls[0],
+                    '- tv_volume_step {' in t.calls[0], '- vacuum_command {' in t.calls[0])
+        self.assertEqual(offered('mets les boutons volume télé'), (True, False, True, False))
+        self.assertEqual(offered("mets les boutons de l'aspirateur"), (False, True, False, True))
+        self.assertEqual(offered('crée un menu de boutons'), (True, True, True, True))
 
     def test_relay_without_remote_controls_refused(self):
         s = layout_server(FakeRelay(), caps=('command_submit',))
@@ -166,6 +171,13 @@ class SemanticGuardTests(unittest.TestCase):
         self.assertNotEqual(st, 'resolved')
         self.assertEqual((len(t.calls), s.remote_controls.calls), (2, []))
         self.assertIn('LABEL_MISMATCH', t.calls[1])
+
+    def test_one_panel_one_device(self):
+        W = self.W
+        self.assertTrue(L.target_check([W('Volume +', 'tv_volume_step', {'direction': 'up'}),
+                                        W('Start', 'vacuum_command', {'command': 'start'})], 'vacuum')
+                        .startswith('TARGET_MISMATCH'))
+        self.assertIsNone(L.target_check([W('Start', 'vacuum_command', {'command': 'start'})], 'vacuum'))
 
     def test_schema_pins_offered_ids_and_typed_params(self):
         sch = L.response_schema(['opaque:aa'], ('tv_volume_step', 'tv_volume_set'))
