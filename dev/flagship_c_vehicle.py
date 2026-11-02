@@ -180,7 +180,7 @@ def main(argv=None):
         from src.server import create_server
         from src.cli import ensure_discovery, default_providers
         server = create_server()
-        ensure_discovery(server, default_providers())
+        ensure_discovery(server, default_providers(args))
         io = LiveIO(server, args.relay_id, args.tv_key, args.tv_serial)
         receipt = run_vehicle(io, rounds=args.rounds)
     text = json.dumps(receipt, indent=1)

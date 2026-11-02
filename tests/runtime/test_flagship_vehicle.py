@@ -66,6 +66,12 @@ class VehicleTest(unittest.TestCase):
         self.assertEqual(receipt['verdict'], 'FAIL')
         self.assertIn('exactly-one', receipt['rounds'][0]['reason'])
 
+    def test_live_provider_defaults_resolve(self):
+        from argparse import Namespace
+        from src.cli import default_providers
+        self.assertEqual(default_providers(Namespace()),
+                         ['mdns', 'ssdp', 'android', 'tuya'])
+
     def test_receipt_is_json_sanitized(self):
         script = [{'v0': 10, 'v1': 11, 'exec_count': 1, 'post_revoke_exec': 0}]
         receipt = run_vehicle(make_io(script), rounds=1)
