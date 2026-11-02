@@ -240,7 +240,9 @@ def main(argv=None):
         from src.server import create_server
         from src.adapters.android import default_remember_path
         from src.cli import ensure_discovery, default_providers
-        server = create_server(adb_remember=default_remember_path())
+        from src.fabric.relay_store import default_owner_store
+        server = create_server(relay_store=default_owner_store(),
+                               adb_remember=default_remember_path())
         ensure_discovery(server, default_providers(args))
         relay_id = args.relay_id or resolve_relay_id(server)
         tv_key = args.tv_key or resolve_tv_key(server)

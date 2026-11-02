@@ -111,5 +111,20 @@ class VerdictTest(unittest.TestCase):
         self.assertEqual(v['tv_serial'], 'TV123')
 
 
+class RelayStoreWiringTest(unittest.TestCase):
+    def test_discovery_server_receives_owner_relay_store(self):
+        from src.fabric.relay_store import RelayStore
+        pf = P.Preflight('TV123', 3)
+        fake_server = mock.Mock()
+        fake_server.fabric_snapshot = {'devices': []}
+        with mock.patch('src.server.create_server', return_value=fake_server) as mk, \
+             mock.patch('src.cli.ensure_discovery', return_value=None), \
+             mock.patch.object(P, 'resolve_tv_key', return_value='tv-key'):
+            self.assertTrue(pf.check_discovery())
+        store = mk.call_args.kwargs['relay_store']
+        self.assertIsInstance(store, RelayStore)
+        self.assertEqual(store.path.name, 'relays.json')
+
+
 if __name__ == '__main__':
     unittest.main()

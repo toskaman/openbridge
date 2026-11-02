@@ -126,5 +126,22 @@ class VehicleTest(unittest.TestCase):
         self.assertIn('vehicle', receipt)
 
 
+class LiveWiringTest(unittest.TestCase):
+    def test_live_main_passes_owner_relay_store(self):
+        import dev.flagship_c_vehicle as V
+        from unittest import mock
+        from src.fabric.relay_store import RelayStore
+        with mock.patch('src.server.create_server') as mk, \
+             mock.patch('src.cli.ensure_discovery', return_value=None), \
+             mock.patch.object(V, 'resolve_relay_id', return_value='relay-1'), \
+             mock.patch.object(V, 'resolve_tv_key', return_value='tv-1'), \
+             mock.patch.object(V, 'LiveIO'), \
+             mock.patch.object(V, 'run_vehicle', return_value={'verdict': 'PASS'}):
+            self.assertEqual(V.main(['--tv-serial', 'TV123']), 0)
+        store = mk.call_args.kwargs['relay_store']
+        self.assertIsInstance(store, RelayStore)
+        self.assertEqual(store.path.name, 'relays.json')
+
+
 if __name__ == '__main__':
     unittest.main()

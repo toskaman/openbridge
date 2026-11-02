@@ -71,8 +71,10 @@ class Preflight:
         from src.server import create_server
         from src.adapters.android import default_remember_path
         from src.cli import ensure_discovery, default_providers
+        from src.fabric.relay_store import default_owner_store
         try:
-            server = create_server(adb_remember=default_remember_path())
+            server = create_server(relay_store=default_owner_store(),
+                                   adb_remember=default_remember_path())
             ensure_discovery(server, default_providers(Namespace()))
         except Exception as e:  # noqa: BLE001 - preflight records, not crashes
             return self.record('discovery', False, '%s: %s'
