@@ -467,3 +467,17 @@ def _test_press_interrupted_by_crash_gets_honest_uncertain_outcome(self):
 
 RemoteControls.test_resent_press_after_router_restart_is_refused_without_reexecution = _test_resent_press_after_router_restart_is_refused_without_reexecution
 RemoteControls.test_press_interrupted_by_crash_gets_honest_uncertain_outcome = _test_press_interrupted_by_crash_gets_honest_uncertain_outcome
+
+
+class PressHistoryTest(unittest.TestCase):
+    def test_filters_by_control(self):
+        from unittest import mock
+        from src.runtime.remote_controls import RemoteControls as RC
+        rc = RC(mock.Mock())
+        rc.history.extend([
+            {'control_id': 'a', 'request_id': 'r1'},
+            {'control_id': 'b', 'request_id': 'r2'},
+            {'control_id': 'a', 'request_id': 'r3'}])
+        self.assertEqual([e['request_id'] for e in rc.press_history('a')],
+                         ['r1', 'r3'])
+        self.assertEqual(rc.press_history('zzz'), [])

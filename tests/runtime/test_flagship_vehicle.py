@@ -147,10 +147,12 @@ class LiveRefreshTest(unittest.TestCase):
     def test_install_refreshes_discovery_and_reresolves(self):
         import dev.flagship_c_vehicle as V
         from unittest import mock
+        from src.runtime.remote_controls import RemoteControls as RC
         with mock.patch('src.runtime.api_v2.remote_controls') as mkrc, \
              mock.patch('src.cli.ensure_discovery') as mkdisc, \
              mock.patch.object(V, 'resolve_relay_id', return_value='relay-9'), \
              mock.patch.object(V, 'resolve_tv_key', return_value='tv-9'):
+            mkrc.return_value = mock.MagicMock(spec=RC)   # drift fails here, not live
             io = V.LiveIO(mock.Mock(), 'relay-0', 'tv-0', 'TV123')
             io.install([{'label': 'TV volume +', 'skill_id': 'tv_volume_step'}])
         mkdisc.assert_called_once_with(io.server, ['mdns', 'android'])
@@ -162,11 +164,13 @@ class LiveRefreshTest(unittest.TestCase):
     def test_await_press_touches_but_does_not_reinstall(self):
         import dev.flagship_c_vehicle as V
         from unittest import mock
+        from src.runtime.remote_controls import RemoteControls as RC
         with mock.patch('src.runtime.api_v2.remote_controls') as mkrc, \
              mock.patch('src.cli.ensure_discovery') as mkdisc, \
              mock.patch.object(V, 'resolve_relay_id', return_value='relay-9'), \
              mock.patch.object(V, 'resolve_tv_key', return_value='tv-9'), \
              mock.patch.object(V.time, 'sleep', return_value=None):
+            mkrc.return_value = mock.MagicMock(spec=RC)   # drift fails here, not live
             rc = mkrc.return_value
             rc.set_controls.return_value = {'controls': [{'control_id': 'ctl-1'}]}
             rc.press_history.side_effect = [[], [{'request_id': 'req-1'}]]
