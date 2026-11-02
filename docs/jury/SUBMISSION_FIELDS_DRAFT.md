@@ -26,9 +26,11 @@ authorization, and observable results.
 
 ## Demo
 
-- Video: jury cut V2 (159.33 s, 720p30) built by the committed
+- Video: jury cut V3 (159.33 s, 720p30, sha256 eee76671…, same cut
+  as V2 + 2115 suite card + tv-power close row) built by the committed
   builder from owner-recorded hardware footage + committed stills
-  ([build doc](VIDEO_BUILD_V2.md)) + srt + thumbnail + scene map.
+  ([build doc](VIDEO_BUILD_V3.md); V2 3d3e228e… frozen per
+  VIDEO_BUILD_V2.md) + srt + thumbnail + scene map.
   Finale filmed by the owner. Do NOT claim vacuum motion footage
   (return-to-dock is oracle-proven, unfilmed).
 - Live/replay: offline `judge demo` (DEMO_COMPLETE) + clean install
@@ -55,8 +57,10 @@ authorization, and observable results.
   KNOWN_LIMITATIONS.md, FINAL_RELEASE_AUDIT_2026-11-01.md.
 - CI on v0.2.0 tag (dd669c2): verify (run 41325164524) +
   clean-room (41322394136) + Android 5/5 (41325176026) SUCCESS;
-  2096/2096 unit suite at tag per tag CI. Main HEAD (2351308):
-  2115/2115 local + Verify run 41356836103 SUCCESS.
+  2096/2096 unit suite at tag per tag CI. Main 2351308 (PR #177):
+  2115/2115 local + Verify run 41356836103 SUCCESS. Main fa693f9
+  (PR #180 jury RC): 2115/2115 local OK, 282.7 s, 02-Nov (RC notes:
+  RC_NOTES_20261102.md).
 
 ## Owner checklist (portal)
 

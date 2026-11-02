@@ -88,10 +88,20 @@ INCLUDE = [
     "dev/s5b_safe_seek_chain.py",
     "dev/s5_tv_panel_chain.py",
     "dev/device_registry.py",
+    # Pack-completeness (Nov 2026): files the staged docs link to.
+    "HACKATHON_EVALUATION_PERMISSION.md",
+    "docs/ui/**/*",
+    "docs/benchmark/**/*",
+    "docs/superpowers/**/*",
+    "scripts/verify/cloud_e2e.py",
+    "src/runtime/command_drain.py",
 ]
 
 OPTIONAL = {
     "artifacts/s5-tv-panel-31oct/chain-transcript.json",
+    # t2-propose was never committed either (artifacts/ is gitignored);
+    # same honest treatment as the chain transcript (Nov 2026).
+    "artifacts/s5-tv-panel-31oct/t2-propose-medium.json",
 }
 
 # Archived snapshots keep root-relative links by design; their own link
