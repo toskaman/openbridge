@@ -15,6 +15,7 @@ import shutil
 import tempfile
 import threading
 import unittest
+import unittest.mock
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -262,6 +263,99 @@ class CorruptCallers(unittest.TestCase):
                 del os.environ['LOCALAPPDATA']
             else:
                 os.environ['LOCALAPPDATA'] = old
+            shutil.rmtree(d, ignore_errors=True)
+
+
+class _FlakyHandle:
+    """Proxy around a real lock file whose first N flush() calls raise
+    OSError (simulated cross-process first-touch contention)."""
+
+    def __init__(self, real, fail_flushes):
+        object.__setattr__(self, '_real', real)
+        object.__setattr__(self, 'budget', fail_flushes)
+        object.__setattr__(self, 'calls', 0)
+
+    def flush(self):
+        object.__setattr__(self, 'calls', self.calls + 1)
+        if self.calls <= self.budget:
+            raise OSError('simulated contended setup flush')
+        return self._real.flush()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return self._real.__exit__(*exc)
+
+    def __getattr__(self, name):
+        return getattr(object.__getattribute__(self, '_real'), name)
+
+
+class _flaky_lock_open:
+    """Patch Path.open so only `.lock` files get a flaky handle."""
+
+    def __init__(self, fail_flushes):
+        self.fail_flushes = fail_flushes
+        self.probe = None
+        self._patcher = None
+
+    def __enter__(self):
+        real_open = Path.open
+
+        def fake_open(slf, *args, **kwargs):
+            real = real_open(slf, *args, **kwargs)
+            if slf.suffix == '.lock':
+                self.probe = _FlakyHandle(real, self.fail_flushes)
+                return self.probe
+            return real
+
+        self._patcher = unittest.mock.patch.object(Path, 'open', fake_open)
+        self._patcher.start()
+        return self
+
+    def __exit__(self, *exc):
+        self._patcher.stop()
+        return False
+
+    @property
+    def calls(self):
+        return self.probe.calls if self.probe else 0
+
+
+class FirstTouchLockContract(unittest.TestCase):
+    """Owner review on PR #183: the first-touch setup write raced
+    across processes outside the retry loop, so a contended flush
+    escaped as a raw OSError instead of SessionError. The setup
+    write now lives inside the loop: transient contention retries,
+    persistent contention fails closed as SESSION_LOCK_FAILED."""
+
+    def test_transient_setup_flush_retries(self):
+        d = tempfile.mkdtemp(prefix='nft-')
+        try:
+            j = SessionJournal(os.path.join(d, 's.json'))
+            with _flaky_lock_open(fail_flushes=1) as probe:
+                with j._locked():
+                    pass
+            self.assertGreaterEqual(probe.calls, 2)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_persistent_setup_flush_fails_closed(self):
+        import time as time_mod
+        d = tempfile.mkdtemp(prefix='nft-')
+        try:
+            j = SessionJournal(os.path.join(d, 's.json'))
+            ticks = iter([0.0, 100.0])
+            with _flaky_lock_open(fail_flushes=10 ** 9), \
+                    unittest.mock.patch.object(time_mod, 'monotonic',
+                                               lambda: next(ticks, 100.0)), \
+                    unittest.mock.patch.object(time_mod, 'sleep',
+                                               lambda s: None):
+                with self.assertRaises(SessionError) as ctx:
+                    with j._locked():
+                        pass
+            self.assertEqual(ctx.exception.code, 'SESSION_LOCK_FAILED')
+        finally:
             shutil.rmtree(d, ignore_errors=True)
 
 

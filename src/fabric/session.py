@@ -37,11 +37,17 @@ class SessionJournal:
         with self._lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             with self.path.with_suffix('.lock').open('a+b') as handle:
-                if os.fstat(handle.fileno()).st_size == 0:
-                    handle.write(b'0'); handle.flush()
                 deadline = time.monotonic() + 5
                 while True:
                     try:
+                        # First-touch setup INSIDE the retry loop: two
+                        # processes racing on an empty lock file both see
+                        # size 0, and the loser's contended flush raises a
+                        # raw OSError that must retry (then fail-closed as
+                        # SESSION_LOCK_FAILED), never escape the module
+                        # contract. Mirrors transactions.py _exclusive.
+                        if os.fstat(handle.fileno()).st_size == 0:
+                            handle.write(b'0'); handle.flush()
                         handle.seek(0)
                         if os.name == 'nt':
                             import msvcrt
