@@ -34,6 +34,7 @@ ACTIONS = {
     'long_press': {'params': {'x': '0..1', 'y': '0..1'}, 'reversibility': 'IRREVERSIBLE', 'what': 'touch and hold'},
     'launch_app': {'params': {'package': 'installed launchable package'}, 'reversibility': 'IRREVERSIBLE', 'what': 'open an installed app'},
     'open_url': {'params': {'url': 'http(s) URL'}, 'reversibility': 'IRREVERSIBLE', 'what': 'open a web address'},
+    'view_file': {'params': {'name': 'pushed .png basename (OpenBridge dir only)'}, 'reversibility': 'IRREVERSIBLE', 'what': 'open an OpenBridge-pushed image in the system viewer'},
     'set': {'params': {'setting': sorted(SETTINGS), 'value': 'integer in range'}, 'reversibility': 'EXACT', 'what': 'change a setting with read-back; exact restore'},
     'get': {'params': {'setting': sorted(SETTINGS)}, 'reversibility': 'NONE', 'what': 'read a setting'},
     'list_apps': {'params': {}, 'reversibility': 'NONE', 'what': 'list launchable apps'},
@@ -173,6 +174,13 @@ class AndroidActions:
                 raise ActionError('http(s) URL only')
             self.shell('am', 'start', '-a', 'android.intent.action.VIEW', '-d', u)
             return {'opened': True}
+        if action == 'view_file':
+            n = p.get('name')
+            if not isinstance(n, str) or '..' in n or not re.fullmatch(r'[A-Za-z0-9_.-]{1,64}', n) or not n.endswith('.png'):
+                raise ActionError('view_file: pushed .png basename only')
+            self.shell('am', 'start', '-a', 'android.intent.action.VIEW', '-t', 'image/png',
+                       '-d', 'file:///sdcard/OpenBridge/' + n)
+            return {'viewed': n, 'screen': self.screen_state()}
         if action == 'get':
             return {'setting': p.get('setting'), 'value': self.get(p.get('setting'))}
         if action == 'set':
@@ -231,7 +239,7 @@ class AndroidActions:
             apps = []
         keys = [k for k in KEYS if self.category == 'tv' or k not in TV_ONLY]
         out['actions'].update({'key': keys, 'text': True, 'tap': pointer, 'swipe': pointer, 'long_press': pointer,
-                               'launch_app': bool(apps), 'open_url': True, 'list_apps': bool(apps), 'screen_state': True})
+                               'launch_app': bool(apps), 'open_url': True, 'view_file': True, 'list_apps': bool(apps), 'screen_state': True})
         try:
             out['actions']['audio_state'] = self.audio_state()['readable']
         except (ValueError, OSError):

@@ -34,6 +34,10 @@ class Catalog(unittest.TestCase):
         a.run('text', {'text': 'hello world'}); self.assertEqual(sh.calls[-1], ('input', 'text', 'hello%sworld'))
         r = a.run('launch_app', {'package': 'com.netflix.ninja'}); self.assertEqual(r['screen']['focused_app'], 'com.netflix.ninja')
         a.run('open_url', {'url': 'https://example.org/a'})
+        r = a.run('view_file', {'name': 'cap-abc123.png'})
+        self.assertEqual(sh.calls[-3], ('am', 'start', '-a', 'android.intent.action.VIEW', '-t', 'image/png',
+                                        '-d', 'file:///sdcard/OpenBridge/cap-abc123.png'))
+        self.assertEqual(r['screen']['power'], 'awake')
 
     def test_settings_exact_restore(self):
         sh = FakeShell(); a = AndroidActions(sh, 'phone')
@@ -58,6 +62,7 @@ class Catalog(unittest.TestCase):
         sh = FakeShell(); a = AndroidActions(sh, 'tv')
         bad = [('key', {'key': 'reboot'}), ('text', {'text': 'a;rm -rf /'}), ('tap', {'x': 2, 'y': 0}), ('launch_app', {'package': 'com.evil.notinstalled'}),
                ('open_url', {'url': 'file:///sdcard'}), ('open_url', {'url': 'https://x.org/$(id)'}), ('set', {'setting': 'adb_enabled', 'value': 0}),
+               ('view_file', {'name': '../evil.png'}), ('view_file', {'name': 'a/b.png'}), ('view_file', {'name': 'x.jpg'}), ('view_file', {'name': 'a$(id).png'}), ('view_file', {}),
                ('set', {'setting': 'media_volume', 'value': 16}), ('shell', {})]
         n = len([c for c in sh.calls if c[0] in ('input', 'am', 'monkey') or '--set' in c or 'put' in c])
         for act, args in bad:

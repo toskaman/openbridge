@@ -133,6 +133,7 @@ def _android_caps(device, grants, probe, fp, blocked_write):
                          'probe' if probe else 'catalog'))
     prompts = {'launch_app': {'type': 'text', 'name': 'package', 'label': 'Package'},
                'open_url': {'type': 'text', 'name': 'url', 'label': 'URL'},
+               'view_file': {'type': 'text', 'name': 'name', 'label': 'PNG name'},
                'text': {'type': 'text', 'name': 'text', 'label': 'Text'},
                'tap': {'type': 'text', 'name': 'xy', 'label': 'x,y'},
                'swipe': {'type': 'text', 'name': 'coords', 'label': 'x1,y1,x2,y2'},
