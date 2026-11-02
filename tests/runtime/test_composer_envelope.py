@@ -91,6 +91,7 @@ class PromptV2(unittest.TestCase):
             self.assertIn('<EXACT label from Devices>', p)
             self.assertNotIn('"target": "android tv"', p)
             self.assertIn('CATEGORY', p)
+        self.assertIn('NOTHING ELSE', comp.build_prompt('Do something', devs))
 
 
 class IntentGate(unittest.TestCase):

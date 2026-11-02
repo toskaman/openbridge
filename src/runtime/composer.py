@@ -160,7 +160,9 @@ def build_prompt(text, devices):
             % (MAX_COMPOSED_STEPS, NO_ATOMIC_ROLLBACK, text.strip()[:500],
                '\n'.join(dev_lines), ', '.join(untargeted), '\n'.join(skill_lines)))
     prompt += (' Copy the target label EXACTLY character-for-character from the '
-               'Devices list above; never shorten or paraphrase it ("watch" is WRONG, '
+               'Devices list above and NOTHING ELSE: no parentheses, no qualifiers, '
+               'no decoration ("Living Room TV (tv)" is WRONG, "Living Room TV" is '
+               'right); never shorten or paraphrase it ("watch" is WRONG, '
                '"Smartwatch" is right; "TV" is WRONG, "Android TV" is right). '
                'Never use a device CATEGORY word as the target: tv, watch, pc, '
                'computer and vacuum are WRONG by themselves; only a full label '
