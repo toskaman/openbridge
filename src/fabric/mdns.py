@@ -166,6 +166,57 @@ def lan_interface_ip(scope):
     return ip if in_scope(ip, scope) else None
 
 
+BROWSE_EXTRA_MAX = 4
+
+
+def extra_ifaces_from_env():
+    """Explicit extra browse interfaces (P2P/hotspot subnets): private IPv4 only, bounded."""
+    import os
+    out = []
+    for raw in (os.environ.get('OPENBRIDGE_MDNS_IFACES') or '').split(','):
+        ip = raw.strip()
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            continue
+        if addr.is_private and not addr.is_loopback and ip not in out:
+            out.append(ip)
+    return out[:BROWSE_EXTRA_MAX]
+
+
+def browse_interfaces(extra_ifaces=None, timeout=2.5, scope=None, services=SERVICE_TYPES, sock_factory=None):
+    """Browse the default interface plus explicit extra ones; merge instances.
+
+    Extra interfaces come from the argument or OPENBRIDGE_MDNS_IFACES
+    (validated, private-only, max 4). Nothing is probed implicitly.
+    """
+    scope = scope or default_scope()
+    want = list(extra_ifaces) if extra_ifaces else extra_ifaces_from_env()
+    ifaces = []
+    default = lan_interface_ip(scope)
+    if default:
+        ifaces.append(default)
+    for ip in want or []:
+        try:
+            addr = ipaddress.ip_address(ip) if isinstance(ip, str) else None
+        except ValueError:
+            addr = None
+        if addr is not None and addr.is_private and not addr.is_loopback \
+                and ip not in ifaces and len(ifaces) - (1 if default else 0) < BROWSE_EXTRA_MAX:
+            ifaces.append(ip)
+    if not ifaces:
+        ifaces = [None]
+    instances, ignored, packets = [], 0, 0
+    for iface in ifaces:
+        r = discover(timeout=timeout, scope=scope, services=services,
+                     sock_factory=sock_factory, interface_ip=iface)
+        instances.extend(r.get('instances', []))
+        ignored += r.get('ignored_out_of_scope', 0)
+        packets += r.get('packets', 0)
+    return {'status': 'READY', 'instances': instances,
+            'ignored_out_of_scope': ignored, 'packets': packets}
+
+
 def discover(timeout=2.5, scope=None, services=SERVICE_TYPES, sock_factory=None, interface_ip=None):
     """One bounded browse. Returns {'status','instances','ignored_out_of_scope','packets'}."""
     scope = scope or default_scope()

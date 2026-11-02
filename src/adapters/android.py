@@ -378,14 +378,14 @@ class AndroidAdapter:
         """Direct-LAN URL by mDNS match on the companion TXT relay id.
 
         Gives USB-paired devices a direct URL after pairing (their serial
-        carries no IP). Bounded single browse; any failure or mismatch is
-        None (the caller keeps the adb forward)."""
+        carries no IP). Bounded browse (default + explicit extra interfaces);
+        any failure or mismatch is None (the caller keeps the adb forward)."""
         import ipaddress as _ip
         from src.fabric import mdns
         if not isinstance(relay_id, str) or not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id):
             return None
         try:
-            res = mdns.discover(timeout=timeout, services=('_openbridge-relay._tcp',))
+            res = mdns.browse_interfaces(timeout=timeout, services=('_openbridge-relay._tcp',))
         except OSError:
             return None
         scope = mdns.default_scope()
