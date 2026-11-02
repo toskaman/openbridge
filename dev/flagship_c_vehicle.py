@@ -140,14 +140,15 @@ class LiveIO:
         self.tv_key = tv_key
         self.tv_serial = tv_serial
         self.state = {}
+        self._pending = []
         self._api_v2 = api_v2
 
-    def install(self, controls):
+    def _push(self, controls):
         # WIFI route leases live 60 s from discovery last_seen and device
-        # keys rotate every discovery run, so each round re-discovers the
-        # light subset that keeps the TV relay-service view (~7 s), then
-        # re-resolves relay + TV before installing. No security semantic
-        # changes: a tap landing after lease expiry is still refused.
+        # keys rotate every discovery run, so every install re-discovers
+        # the light subset that keeps the TV relay-service view (~7 s),
+        # then re-resolves relay + TV. No security semantic changes: a
+        # tap landing after lease expiry is still refused.
         from src.cli import ensure_discovery
         ensure_discovery(self.server, ['mdns', 'android'])
         self.relay_id = resolve_relay_id(self.server)
@@ -160,11 +161,22 @@ class LiveIO:
         st = self.rc.set_controls(body)
         return [c['control_id'] for c in st['controls']]
 
+    def install(self, controls):
+        self._pending = list(controls)
+        return self._push(controls)
+
     def prompt(self, text):
         print('OWNER: ' + text, flush=True)
         input()
 
     def await_press(self, control_id, budget_s):
+        # The owner taps only after TAP NOW: reinstall here so the 60 s
+        # route lease is born seconds before the tap instead of minutes.
+        # (control_id is the pre-prompt install; the await install owns
+        # the round: keys rotate every discovery run.)
+        control_id = self._push(self._pending)[0]
+        time.sleep(5)   # let the companion swap the layout before the tap
+        print('OWNER: TAP NOW on the watch (TV volume +), then say ok', flush=True)
         seen = {r['request_id'] for r in self.rc.press_history(control_id)}
         deadline = time.time() + budget_s
         while time.time() < deadline:
