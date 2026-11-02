@@ -245,7 +245,8 @@ class AndroidAdapter:
                 break
             if ep in current or not self._remember_valid(ep):
                 continue
-            if now - self._reattempted.get(ep, 0) < REMEMBER_WINDOW_S:
+            last = self._reattempted.get(ep)
+            if last is not None and now - last < REMEMBER_WINDOW_S:
                 continue
             self._reattempted[ep] = now
             tried += 1

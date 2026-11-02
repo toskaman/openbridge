@@ -115,7 +115,12 @@ class DefaultOwnerStore(unittest.TestCase):
         with mock.patch.dict(os.environ, {'LOCALAPPDATA': 'L:\\'}):
             s = default_owner_store()
         self.assertIsInstance(s, RelayStore)
-        self.assertEqual(s.path, Path('L:/OpenBridge/relays.json'))
+        # Platform-correct expectation: same join semantics as the
+        # product (a hardcoded 'L:/...' spelling only holds on
+        # Windows; on POSIX the backslash is a literal char).
+        self.assertEqual(s.path,
+                         Path('L:\\') / 'OpenBridge' / 'relays.json')
+        self.assertEqual(s.path.parts[-2:], ('OpenBridge', 'relays.json'))
 
 
 if __name__ == '__main__':

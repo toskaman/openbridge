@@ -108,5 +108,29 @@ class Remember(unittest.TestCase):
         self.assertEqual([c for c in calls if c and c[0] == 'connect'], [])
 
 
+    def test_fresh_boot_does_not_suppress_first_reconnect(self):
+        # Regression (CI ubuntu 2/2): the throttle used 0 as the
+        # "never attempted" sentinel against time.monotonic(), so on
+        # a host booted <REMEMBER_WINDOW_S ago the FIRST reconnect
+        # was wrongly throttled. A first attempt must always fire.
+        import tempfile
+        import time as time_mod
+        import unittest.mock
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / 'adb_known.json'
+            p.write_text(json.dumps({'endpoints': ['192.168.1.14:5555']}),
+                         encoding='utf-8')
+            calls = []
+            ad = AndroidAdapter(executable='adb',
+                                runner=run_factory(EMPTY_DEVICES, calls),
+                                remember_path=str(p))
+            with unittest.mock.patch.object(time_mod, 'monotonic',
+                                            return_value=5.0):
+                ad.discover()
+            connects = [c for c in calls if c and c[0] == 'connect']
+            self.assertEqual(len(connects), 1)
+
+
 if __name__ == '__main__':
     unittest.main()
