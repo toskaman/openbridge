@@ -81,6 +81,10 @@ class PromptTest(unittest.TestCase):
         self.assertEqual(C.candidates_for(devs[2]), [])
         self.assertIn('do not use', C.build_prompt('x', devs))
 
+    def test_prompt_states_target_is_the_device_that_acts(self):
+        prompt = C.build_prompt('put tv controls on my watch', DEVICES)
+        self.assertIn('device that ACTS', prompt)
+
     def test_candidates_follow_device_category(self):
         tv = C.candidates_for(DEVICES[0])
         vac = C.candidates_for(DEVICES[1])
