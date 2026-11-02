@@ -99,8 +99,10 @@ class ShutdownTests(unittest.TestCase):
 
     def test_external_stop_still_shuts_down_gracefully(self):
         stop = threading.Event()
-        # Pool enrollment costs ~1s of PBKDF2 before the first cycle issues.
-        timer = threading.Timer(2.0, stop.set)  # event-driven stop, no polling
+        # Pool enrollment costs ~1s of PBKDF2 before the first cycle issues;
+        # the stop budget needs headroom under full-suite CPU load (Nov 2026:
+        # 2.0s flaked with issued=0; 6.0s keeps issued<<1000 with margin).
+        timer = threading.Timer(6.0, stop.set)  # event-driven stop, no polling
         timer.start()
         try:
             r = E.run(cycles=1000, rate=20.0, workers=2, devices=24, relays=4,

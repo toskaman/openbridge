@@ -71,6 +71,7 @@ is preserved in git history, not deleted.
 | F90 endurance: 1128 ops simulated-wire rerun green, graceful shutdown | SIMULATED_VERIFIED (thresholds hold; hardware leg owner-gated, not run) | dev/f90_endurance.py; docs/jury/FRONTIER90_REPORT_2026-11-01.md |
 | Capability Studio proposals (UI v2) | TEMPLATE-DRIVEN, not Meta-generated (deterministic client templates; rehearsal SIMULATED; same consent/revoke rails) | docs/ui/UI_V2_WORKSPACE.md; src/ui/views/studio_view.js |
 | Jury video V2: 159.33 s cut with owner-recorded hardware footage, committed builder, shot-level honesty labels | VERIFIED ARTIFACT (sha256 3d3e228e…; V2 frozen; finale owner-filmed) | docs/jury/VIDEO_BUILD_V2.md, VIDEO_IRL_PLAN.md; scripts/video/build_jury_video.py |
+| Jury video V3: same 159.33 s cut + 2115 suite card + tv-power close row, GAP/STATIC/no-footage labels kept | VERIFIED ARTIFACT (sha256 eee76671…; 13989568 B; V2 builder+mp4 frozen untouched) | docs/jury/VIDEO_BUILD_V3.md; scripts/video/build_jury_video_v3.py |
 
 ## Never claimed
 ACID transactions; zero-knowledge or anonymous cloud calls; 2D or person location from BLE RSSI; that BLE presence proves interference; fabricated scores; organizer acceptance or bonus eligibility.

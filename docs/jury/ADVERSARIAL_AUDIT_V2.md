@@ -89,6 +89,18 @@ Fix (post-submission recommended): clear `full_control` on every fresh pairing,
 require one tap to re-allow. Acceptance: re-pair → flag false until tapped.
 Residual until fixed: pairing still requires the on-screen code (possession),
 so no remote attacker benefits; disclosed here and in row 29 limitations.
+**Status 02-Nov (PR #176, f6eb3c3): FIXED** — `confirmPairing()` now forces
+`full_control=false` (1 pref + comment, mirrors `unpair()`); APK
+sha256 `f8ca9ae0…4409c`; probe `dev/a1_repair_probe.py`; CI Android legs
+green (no-regression). Live-HW re-pair proof BLOCKED by a host-side emulator
+VM killer (6 falsified hypotheses; owner phone needs explicit OK) — full
+record in `docs/evidence/a1-fullcontrol-repair-01nov.md`. Doze multi-hour
+soak + real-hardware re-pair remain open.
+**Device-side enforcement mirror (ER-5, verified 02-Nov by code read):**
+nonce replay cache `RelayServer.java:93,615-619` (expiry prune, live cap,
+cleared on (re)pair `:635` + unpair), idempotent replies `:98,407-409,416`,
+aead1 `Aead.java` (byte-identical to `src/fabric/aead.py`), sealed-once →
+plaintext refused `:391-399,460-463`.
 **Finding (low):** stale pairing codes stay on screen past the 120 s TTL and are
 then refused ("not paired"); the vehicle hit this (S5b attempt 1).
 Evidence: TV screenshots + relay `confirmPairing` (`pendingCode` expiry without

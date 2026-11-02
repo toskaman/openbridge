@@ -833,7 +833,7 @@
   "environment": "REAL_HARDWARE",
   "evidence": [
    "docs/evidence/s5-tv-panel-31oct.md",
-   "artifacts/s5-tv-panel-31oct/chain-transcript.json"
+   "chain transcript quoted in S5 evidence doc (raw JSON never committed)"
   ],
   "independent_oracle": "TV screenshot OCR of the rendered panel plus press-history receipt plus tinytuya LAN status re-read after the dock command",
   "integration": "NATIVE_COMPANION",
@@ -932,7 +932,7 @@
   "evidence": [
    "docs/evidence/s5b-safe-seek-31oct.md",
    "dev/s5b_safe_seek_chain.py",
-   "artifacts/s5-tv-panel-31oct/t2-propose-medium.json"
+   "T2 proposal quoted in S5b evidence doc (raw JSON never committed)"
   ],
   "independent_oracle": "tinytuya direct re-reads (not via relay): pre/post facts + 15 polls; RemoteControls history entry (long_press, down_ms 486); Windows OCR word boxes for button location; post-revoke denial",
   "permissions": [
