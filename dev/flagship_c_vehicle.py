@@ -143,6 +143,15 @@ class LiveIO:
         self._api_v2 = api_v2
 
     def install(self, controls):
+        # WIFI route leases live 60 s from discovery last_seen and device
+        # keys rotate every discovery run, so each round re-discovers the
+        # light subset that keeps the TV relay-service view (~7 s), then
+        # re-resolves relay + TV before installing. No security semantic
+        # changes: a tap landing after lease expiry is still refused.
+        from src.cli import ensure_discovery
+        ensure_discovery(self.server, ['mdns', 'android'])
+        self.relay_id = resolve_relay_id(self.server)
+        self.tv_key = resolve_tv_key(self.server)
         body = {'relay_id': self.relay_id, 'consent': True, 'controls': [
             {'label': c['label'], 'skill_id': c['skill_id'],
              'target': self.tv_key,

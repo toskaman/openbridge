@@ -143,5 +143,22 @@ class LiveWiringTest(unittest.TestCase):
         self.assertEqual(store.path.name, 'relays.json')
 
 
+class LiveRefreshTest(unittest.TestCase):
+    def test_install_refreshes_discovery_and_reresolves(self):
+        import dev.flagship_c_vehicle as V
+        from unittest import mock
+        with mock.patch('src.runtime.api_v2.remote_controls') as mkrc, \
+             mock.patch('src.cli.ensure_discovery') as mkdisc, \
+             mock.patch.object(V, 'resolve_relay_id', return_value='relay-9'), \
+             mock.patch.object(V, 'resolve_tv_key', return_value='tv-9'):
+            io = V.LiveIO(mock.Mock(), 'relay-0', 'tv-0', 'TV123')
+            io.install([{'label': 'TV volume +', 'skill_id': 'tv_volume_step'}])
+        mkdisc.assert_called_once_with(io.server, ['mdns', 'android'])
+        body = mkrc.return_value.set_controls.call_args.args[0]
+        self.assertEqual(body['relay_id'], 'relay-9')
+        self.assertEqual(body['controls'][0]['target'], 'tv-9')
+        self.assertEqual(io.tv_key, 'tv-9')
+
+
 if __name__ == '__main__':
     unittest.main()
