@@ -83,6 +83,11 @@ def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, st
         text = heard
     else:
         prefix, text = '', cmd['text']
+    layout = getattr(server, 'voice_layout', None)   # opt-in (voice_layout.enable); None in production
+    if layout is not None:
+        hit = layout(rid, relay, text, cmd.get('lang'))
+        if hit is not None:
+            return hit[0], prefix + hit[1]
     if cmd['kind'] == 'voice':
         # Campaign Two §4.6: deterministic fail-closed screens for STT
         # transcripts (refusals, conflicts, presses, moves, locate). Typed

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>OpenBridge · Live</title>
+<style>
+:root{--bg:#0b0f17;--panel:#121826;--line:#1f2a3d;--txt:#e6edf7;--mut:#8592a8;--cy:#38d6ff;--vi:#a78bfa;--gr:#34d399;--wa:#fbbf24;--rd:#f87171;--mg:#f472b6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 "Segoe UI",system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line)}
+header h1{font-size:20px;margin:0;font-weight:650}header .live{margin-left:auto;color:var(--rd);font-weight:700;letter-spacing:.08em}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--rd);display:inline-block;animation:p 1.2s infinite;margin-right:6px}@keyframes p{50%{opacity:.25}}
+.pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px 20px}
+.st{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;transition:all .25s}
+.st b{display:block;font-size:12px;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}.st span{font-size:15px}
+.st.on{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy),0 0 24px rgba(56,214,255,.25)}
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;padding:0 20px 14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-height:0}
+.card h2{margin:0 0 8px;font-size:12px;letter-spacing:.1em;color:var(--mut);text-transform:uppercase;font-weight:600}
+.heard{font-size:28px;color:var(--cy);min-height:30px}
+.meta pre{margin:6px 0 0;font:16px/1.45 Consolas,monospace;color:#c7d2fe;white-space:pre-wrap;max-height:210px;overflow:hidden}
+.btns{display:flex;flex-direction:column;gap:8px}.btn{display:flex;justify-content:space-between;align-items:center;background:#0e2233;border:1px solid #1d4a66;border-radius:10px;padding:10px 12px;animation:in .4s}
+.btn .l{font-size:18px;font-weight:600}.btn .i{font:12px Consolas,monospace;color:var(--mut)}@keyframes in{from{transform:translateX(-12px);opacity:0}}
+.vol{display:flex;align-items:baseline;gap:12px}.vol .n{font-size:84px;font-weight:700;line-height:1;color:var(--gr);transition:transform .2s}.vol .n.bump{transform:scale(1.15)}
+.kpi{display:flex;gap:18px;color:var(--mut);margin-top:6px}.kpi b{color:var(--txt)}
+.log{flex:1;min-height:0;margin:0 20px 16px;background:#070a10;border:1px solid var(--line);border-radius:12px;padding:10px 12px;overflow:hidden;font:15px/1.5 Consolas,monospace;display:flex;flex-direction:column;justify-content:flex-end}
+.log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t{color:#56627a}.k{display:inline-block;min-width:84px}
+.k-voice,.k-report{color:var(--cy)}.k-meta{color:var(--vi)}.k-voice-layout,.k-layout{color:var(--mg)}.k-press{color:var(--wa)}.k-tv{color:var(--gr)}.k-warn{color:var(--rd)}.k-boot,.k-discovery,.k-relay,.k-ready{color:var(--mut)}
+.empty{color:var(--mut);font-style:italic}
+</style></head><body>
+<header><h1>OpenBridge · Voice → Meta → Watch → TV</h1><span id="model" style="color:var(--mut)"></span><span class="live"><span class="dot"></span>LIVE <span id="clock"></span></span></header>
+<div class="pipe">
+ <div class="st" id="s1"><b>1 · Voix (montre)</b><span>owner parle</span></div>
+ <div class="st" id="s2"><b>2 · Meta local</b><span>conçoit le menu</span></div>
+ <div class="st" id="s3"><b>3 · Installé</b><span>boutons sur la montre</span></div>
+ <div class="st" id="s4"><b>4 · Tap</b><span>appui physique</span></div>
+ <div class="st" id="s5"><b>5 · TV</b><span>volume relu ADB</span></div>
+</div>
+<div class="grid">
+ <div class="card"><h2>Entendu (STT local)</h2><div class="heard" id="heard"><span class="empty">en attente de la voix…</span></div>
+  <h2 style="margin-top:14px">Raisonnement Meta → proposition</h2><div class="meta"><div id="metaline" class="empty">—</div><pre id="metajson"></pre></div></div>
+ <div class="card"><h2>Boutons sur la montre (live)</h2><div class="btns" id="btns"><div class="empty">aucun bouton</div></div>
+  <h2 style="margin-top:16px">Volume TV (preuve ADB)</h2><div class="vol"><div class="n" id="vol">–</div><div id="volsub" style="color:var(--mut)"></div></div>
+  <div class="kpi"><span>taps <b id="presses">0</b></span><span>exécutés <b id="exec">0</b></span><span>départ <b id="v0">–</b></span></div></div>
+</div>
+<div class="log" id="log"></div>
+<script>
+let since=0, v0=null, lastVol=null; const L=document.getElementById('log');
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function on(id){['s1','s2','s3','s4','s5'].forEach(x=>document.getElementById(x).classList.toggle('on',x===id))}
+function ev(e){
+  const d=document.createElement('div'); d.innerHTML=`<span class="t">${e.utc}</span> <span class="k k-${e.kind}">${e.kind}</span> ${esc(e.text)}`;
+  L.appendChild(d); while(L.children.length>45)L.removeChild(L.firstChild);
+  if(e.kind==='voice'){const m=e.text.match(/heard: "(.*)" -> (\w+)/);document.getElementById('heard').textContent=m?'« '+m[1]+' »  → '+m[2]:e.text;on('s1')}
+  if(e.kind==='report'&&/Heard:/.test(e.text)){const m=e.text.match(/Heard: "([^"]*)"/);if(m)document.getElementById('heard').textContent='« '+m[1]+' »'}
+  if(e.kind==='meta'&&/thinking/.test(e.text)){on('s2');document.getElementById('metaline').textContent='⏳ '+e.text;document.getElementById('metajson').textContent=''}
+  if(e.kind==='meta'&&/^(proposal|refusal|clarification|rejected)/.test(e.text)){document.getElementById('metaline').textContent='✓ '+e.text}
+  if(e.kind==='meta'&&/widget/.test(e.text)){document.getElementById('metajson').textContent+=e.text.trim()+'\n'}
+  if(e.kind==='voice-layout'&&/installed/.test(e.text))on('s3');
+  if(e.kind==='press')on('s4');
+  if(e.kind==='tv'){const n=document.getElementById('vol');n.textContent=e.volume;if(v0===null){v0=e.volume;document.getElementById('v0').textContent=v0}
+    else{on('s5');n.classList.add('bump');setTimeout(()=>n.classList.remove('bump'),300)}
+    document.getElementById('volsub').textContent=v0!==null&&e.volume!==v0?`${e.volume>v0?'+':''}${e.volume-v0} depuis le départ`:'';}
+}
+function btns(b){const el=document.getElementById('btns');if(!b||!b.length){el.innerHTML='<div class="empty">aucun bouton</div>';return}
+  el.innerHTML=b.map(x=>`<div class="btn"><span class="l">${esc(x.label)}</span><span class="i">${esc(x.skill||'')} ${esc(JSON.stringify(x.params||{}))}<br>${esc(x.control_id)}</span></div>`).join('')}
+let lastBtns='';
+async function tick(){try{const r=await fetch('/state?since='+since);const j=await r.json();
+  j.events.forEach(e=>{ev(e);since=Math.max(since,e.t)});
+  const bs=JSON.stringify(j.state.buttons);if(bs!==lastBtns){lastBtns=bs;btns(j.state.buttons)}
+  document.getElementById('presses').textContent=j.state.presses;document.getElementById('exec').textContent=j.state.executed;
+  if(j.state.model)document.getElementById('model').textContent=j.state.model;
+ }catch(e){} setTimeout(tick,400)}
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('fr-FR'),500);tick();
+</script></body></html>
