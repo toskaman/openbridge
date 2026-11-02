@@ -372,6 +372,68 @@ def to_workflow(composed, now=None):
     return body
 
 
+def _control_label(label_fn, skill, target_label, device_key):
+    default = ('%s on %s' % (skill, target_label or device_key))[:40]
+    if label_fn is None:
+        return default
+    try:
+        text = label_fn(skill, target_label)
+    except Exception:
+        return default
+    if not isinstance(text, str):
+        return default
+    clean = ''.join(ch for ch in text.strip() if ord(ch) >= 32
+                    and ch not in '<>').strip()[:40]
+    return clean or default
+
+
+def to_controls(composed, relay_id, label_fn=None):
+    """Compile a FULLY-allowed composition into a set_controls body.
+
+    Mirrors to_workflow's fail-closed rule: any refused step aborts the
+    whole install (the owner revises instead of silently losing a step).
+    Model text never reaches skill/target/params — only sanitized labels.
+    The returned body carries NO consent key: the caller adds
+    consent:true only after the owner reviews preview[].
+    """
+    from src.fabric import relay as fabric_relay
+    from src.runtime.routing import SKILLS
+    if not isinstance(relay_id, str) or not relay_id:
+        raise ComposerError('relay_id must be a non-empty string')
+    steps = (composed or {}).get('steps') or []
+    if not steps:
+        raise ComposerError(
+            'nothing to compile: request clarification, install nothing')
+    refused = [(s.get('id', '?'), s.get('reason', ''))
+               for s in steps if s.get('status') != 'allowed']
+    if refused:
+        raise ComposerError('refused steps need revision: %s'
+                            % '; '.join('%s (%s)' % r for r in refused)[:400])
+    if len(steps) > fabric_relay.MAX_CONTROLS:
+        raise ComposerError('too many controls: %d > %d'
+                            % (len(steps), fabric_relay.MAX_CONTROLS))
+    controls, preview = [], []
+    for s in steps:
+        skill = s.get('skill_id')
+        if skill not in SKILLS:
+            raise ComposerError('unknown skill %r' % (skill,))
+        key = s.get('device_key')
+        if SKILLS[skill]['targeted'] and not isinstance(key, str):
+            raise ComposerError(
+                'targeted skill %r has no verified device' % (skill,))
+        target = key if SKILLS[skill]['targeted'] else 'fabric'
+        label = _control_label(label_fn, skill, s.get('target'), target)
+        controls.append({'label': label, 'skill_id': skill, 'target': target,
+                         'params': dict(s.get('params') or {})})
+        preview.append({'id': s.get('id'), 'label': label, 'skill_id': skill,
+                        'target': s.get('target'), 'device_key': target,
+                        'expected_effect': s.get('expected_effect', ''),
+                        'route_evidence': (s.get('route') or {}).get(
+                            'evidence')})
+    return {'relay_id': relay_id, 'controls': controls,
+            'preview': {'steps': preview, 'refused': []}}
+
+
 def outcome_of(step_state, receipt):
     """Map one DAG step state + receipt onto a user-facing outcome + note."""
     receipt = receipt or {}
