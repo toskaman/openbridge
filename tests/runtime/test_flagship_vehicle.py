@@ -159,7 +159,7 @@ class LiveRefreshTest(unittest.TestCase):
         self.assertEqual(body['controls'][0]['target'], 'tv-9')
         self.assertEqual(io.tv_key, 'tv-9')
 
-    def test_await_press_reinstalls_then_polls_new_id(self):
+    def test_await_press_touches_but_does_not_reinstall(self):
         import dev.flagship_c_vehicle as V
         from unittest import mock
         with mock.patch('src.runtime.api_v2.remote_controls') as mkrc, \
@@ -168,14 +168,43 @@ class LiveRefreshTest(unittest.TestCase):
              mock.patch.object(V, 'resolve_tv_key', return_value='tv-9'), \
              mock.patch.object(V.time, 'sleep', return_value=None):
             rc = mkrc.return_value
-            rc.set_controls.return_value = {'controls': [{'control_id': 'ctl-new'}]}
+            rc.set_controls.return_value = {'controls': [{'control_id': 'ctl-1'}]}
             rc.press_history.side_effect = [[], [{'request_id': 'req-1'}]]
             io = V.LiveIO(mock.Mock(), 'relay-0', 'tv-0', 'TV123')
-            io.install([{'label': 'TV volume +', 'skill_id': 'tv_volume_step'}])
-            self.assertEqual(io.await_press('ctl-old', 300), 'req-1')
-        self.assertEqual(mkdisc.call_count, 2)   # install + await
-        self.assertEqual(rc.set_controls.call_count, 2)
-        rc.press_history.assert_called_with('ctl-new')
+            with mock.patch.object(V.LiveIO, '_touch_attached', return_value=1) as mktouch:
+                self.assertEqual(io.await_press('ctl-1', 300), 'req-1')
+                mktouch.assert_called()
+        self.assertEqual(mkdisc.call_count, 0)   # no rediscovery while waiting
+        self.assertEqual(rc.set_controls.call_count, 0)   # stable control ids
+        rc.press_history.assert_called_with('ctl-1')
+
+    def test_touch_attached_only_bumps_attached(self):
+        import dev.flagship_c_vehicle as V
+        from types import SimpleNamespace
+        from unittest import mock
+        with mock.patch('src.runtime.api_v2.remote_controls'), \
+             mock.patch('subprocess.run') as mkrun:
+            mkrun.return_value = SimpleNamespace(
+                stdout='List of devices attached\nTV123\tdevice\nWATCH1\toffline\n')
+            server = SimpleNamespace(
+                android=SimpleNamespace(
+                    serial_for=lambda h: {'hz-tv': 'TV123', 'hz-w': 'WATCH1'}.get(h)),
+                fabric_registry=SimpleNamespace(devices={
+                    'tv-9': {'handles': {'WIFI': 'hz-tv'}, 'last_seen': 'OLD'},
+                    'w-1': {'handles': {'WIFI': 'hz-w'}, 'last_seen': 'OLD'}}),
+                fabric_snapshot={'devices': [
+                    {'key': 'tv-9', 'last_seen': 'OLD'},
+                    {'key': 'w-1', 'last_seen': 'OLD'}]})
+            io = V.LiveIO(server, 'relay-0', 'tv-9', 'TV123')
+            self.assertEqual(io._touch_attached(), 1)
+            self.assertNotEqual(
+                server.fabric_registry.devices['tv-9']['last_seen'], 'OLD')
+            self.assertNotEqual(
+                server.fabric_snapshot['devices'][0]['last_seen'], 'OLD')
+            self.assertEqual(
+                server.fabric_registry.devices['w-1']['last_seen'], 'OLD')
+            self.assertEqual(
+                server.fabric_snapshot['devices'][1]['last_seen'], 'OLD')
 
 
 if __name__ == '__main__':

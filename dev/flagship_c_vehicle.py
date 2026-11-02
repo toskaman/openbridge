@@ -169,17 +169,62 @@ class LiveIO:
         print('OWNER: ' + text, flush=True)
         input()
 
+    def _touch_attached(self):
+        """Refresh last_seen for registry devices currently attached over ADB.
+
+        Same evidential strength as discovery's adb listing (the device
+        answers `adb devices` right now), so the 60 s route lease stays
+        valid while the owner takes a human-scale time to tap. No key
+        rotation (no re-discovery), no reinstall: control ids are stable
+        for the whole wait. Unattached devices are not touched, so a
+        genuinely gone device still goes stale and refuses fail-closed.
+        Returns the number of devices touched.
+        """
+        import subprocess
+        from datetime import datetime, timezone
+        try:
+            p = subprocess.run(['adb', 'devices'], capture_output=True,
+                               timeout=30, text=True)
+        except Exception:
+            return 0
+        attached = set()
+        for line in (p.stdout or '').splitlines()[1:]:
+            parts = line.split()
+            if len(parts) == 2 and parts[1] == 'device':
+                attached.add(parts[0])
+        now = datetime.now(timezone.utc).isoformat()
+        android = getattr(self.server, 'android', None)
+        reg = getattr(getattr(self.server, 'fabric_registry', None),
+                      'devices', None) or {}
+        snap = (getattr(self.server, 'fabric_snapshot', None) or {}).get(
+            'devices', []) or []
+        by_key = {d.get('key'): d for d in snap}
+        touched = 0
+        for key, dev in reg.items():
+            serials = set()
+            for h in (dev.get('handles') or {}).values():
+                try:
+                    s = android.serial_for(h) if android else None
+                except Exception:
+                    s = None
+                if s:
+                    serials.add(s)
+            if serials & attached:
+                dev['last_seen'] = now
+                if key in by_key:
+                    by_key[key]['last_seen'] = now
+                touched += 1
+        return touched
+
     def await_press(self, control_id, budget_s):
-        # The owner taps only after TAP NOW: reinstall here so the 60 s
-        # route lease is born seconds before the tap instead of minutes.
-        # (control_id is the pre-prompt install; the await install owns
-        # the round: keys rotate every discovery run.)
-        control_id = self._push(self._pending)[0]
-        time.sleep(5)   # let the companion swap the layout before the tap
         print('OWNER: TAP NOW on the watch (TV volume +), then say ok', flush=True)
         seen = {r['request_id'] for r in self.rc.press_history(control_id)}
         deadline = time.time() + budget_s
+        last_touch = 0
         while time.time() < deadline:
+            if time.time() - last_touch >= 20:
+                self._touch_attached()
+                last_touch = time.time()
             for r in self.rc.press_history(control_id):
                 if r['request_id'] not in seen and not r.get('injected'):
                     return r['request_id']
