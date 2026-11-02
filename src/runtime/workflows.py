@@ -191,6 +191,21 @@ class MemoryStore:
             self._d[record['workflow_id']] = copy.deepcopy(record)
             return None
 
+    def claim_approval(self, workflow_id, step_id):
+        """Atomically transition a WAITING step to approved/running; False if already transitioned (R-1/F-14)."""
+        with self._lock:
+            cur = self._d.get(workflow_id)
+            if cur is None or cur.get('status') != 'waiting_approval' or cur.get('cancel_requested'):
+                return False
+            states = {s['id']: s for s in cur.get('steps', [])}
+            st = states.get(step_id)
+            if st is None or st.get('state') != 'WAITING':
+                return False
+            st['approved'] = True
+            st['state'] = 'QUEUED'
+            cur['status'] = 'running'
+            return True
+
 
 def _evict(wfs):
     while len(wfs) > MAX_JOURNAL:
@@ -238,6 +253,26 @@ class StateStoreJournal:
             _evict(wfs)
         self._s._mutate(change)
         return seen[0] if seen else None
+
+    def claim_approval(self, workflow_id, step_id):
+        """Atomically transition a WAITING step to approved/running (cross-process); False if already transitioned (R-1/F-14)."""
+        won = []
+
+        def change(d):
+            wfs = d.setdefault('workflows', {})
+            cur = wfs.get(workflow_id)
+            if cur is None or cur.get('status') != 'waiting_approval' or cur.get('cancel_requested'):
+                return
+            states = {s['id']: s for s in cur.get('steps', [])}
+            st = states.get(step_id)
+            if st is None or st.get('state') != 'WAITING':
+                return
+            st['approved'] = True
+            st['state'] = 'QUEUED'
+            cur['status'] = 'running'
+            won.append(True)
+        self._s._mutate(change)
+        return bool(won)
 
 
 def _substitute(params, receipts):
@@ -446,10 +481,17 @@ def approve(workflow_id, step_id, allow, router, store, actor='owner'):
             store.save(record)
             _release_lock(workflow_id, store)
             return record
-        states[step_id]['approved'] = True
-        states[step_id]['state'] = 'QUEUED'
-        record['status'] = 'running'
-        store.save(record)
+        # Atomic cross-process transition (R-1/F-14, mirrors claim_running):
+        # without it, two approvers both drive; the loser's DUPLICATE-failed
+        # save can land first and pin stored 'failed' over an executed step.
+        if not store.claim_approval(workflow_id, step_id):
+            current = store.get(workflow_id)
+            if current is not None and current['status'] in TERMINAL:
+                return current
+            raise WorkflowError('workflow is not waiting for approval')
+        record = store.get(workflow_id)
+        if record is None:
+            raise WorkflowError('workflow is not waiting for approval')
         try:
             return _drive(record, record['spec'], router, store, actor)
         finally:
