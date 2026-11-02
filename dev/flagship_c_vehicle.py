@@ -238,8 +238,9 @@ def main(argv=None):
         if not args.tv_serial:
             ap.error('live mode needs --tv-serial (relay + TV auto-resolve in-process)')
         from src.server import create_server
+        from src.adapters.android import default_remember_path
         from src.cli import ensure_discovery, default_providers
-        server = create_server()
+        server = create_server(adb_remember=default_remember_path())
         ensure_discovery(server, default_providers(args))
         relay_id = args.relay_id or resolve_relay_id(server)
         tv_key = args.tv_key or resolve_tv_key(server)

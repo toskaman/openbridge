@@ -69,9 +69,10 @@ class Preflight:
     def check_discovery(self):
         from argparse import Namespace
         from src.server import create_server
+        from src.adapters.android import default_remember_path
         from src.cli import ensure_discovery, default_providers
         try:
-            server = create_server()
+            server = create_server(adb_remember=default_remember_path())
             ensure_discovery(server, default_providers(Namespace()))
         except Exception as e:  # noqa: BLE001 - preflight records, not crashes
             return self.record('discovery', False, '%s: %s'
@@ -92,9 +93,10 @@ class Preflight:
     def check_key_rotation(self):
         from argparse import Namespace
         from src.server import create_server
+        from src.adapters.android import default_remember_path
         from src.cli import ensure_discovery, default_providers
         try:
-            s2 = create_server()
+            s2 = create_server(adb_remember=default_remember_path())
             ensure_discovery(s2, default_providers(Namespace()))
             k2 = resolve_tv_key(s2)
         except Exception as e:  # noqa: BLE001 - preflight records, not crashes

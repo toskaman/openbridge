@@ -31,12 +31,13 @@ def main(argv=None, input_fn=input):
     args = ap.parse_args(argv)
     from argparse import Namespace
     from src.server import create_server
+    from src.adapters.android import default_remember_path
     from src.cli import ensure_discovery, default_providers
     from src.runtime import api_v2
     from src.fabric import pc_consent as PC
     from pathlib import Path
     import os
-    server = create_server()
+    server = create_server(adb_remember=default_remember_path())
     ensure_discovery(server, default_providers(Namespace()))
     if getattr(server, 'pc_consent', None) is None:
         root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'

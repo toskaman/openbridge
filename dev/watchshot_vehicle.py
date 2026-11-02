@@ -187,9 +187,10 @@ def main(argv=None):
     else:
         from argparse import Namespace
         from dev.flagship_c_vehicle import resolve_tv_key
+        from src.adapters.android import default_remember_path as _remember_path
         from src.server import create_server
         from src.cli import ensure_discovery, default_providers
-        server = create_server()
+        server = create_server(adb_remember=_remember_path())
         ensure_discovery(server, default_providers(Namespace()))
         tv_key = args.tv_key or (resolve_tv_key(server) if args.source == 'tv' else None)
         watch_key = args.watch_key or resolve_watch_key(server)
