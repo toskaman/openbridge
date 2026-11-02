@@ -35,7 +35,10 @@ class IGDBlocked(PermissionError):
 
 class _NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *a, **k):
-        return None
+        # Never return None: urllib would swallow the redirect and either
+        # propagate a raw HTTPError or process the 302 body as the reply,
+        # depending on version (N-24). Refuse explicitly like relay does.
+        raise IGDBlocked('gateway redirected (refused, cross-origin not followed)')
 
 
 def _safe_url(url, location, scope):

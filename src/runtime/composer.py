@@ -132,11 +132,12 @@ def build_prompt(text, devices):
     """Strict capability-grounded composition prompt: labels only, never keys."""
     from src.runtime.nl_plan import param_hint
     from src.runtime.routing import SKILLS
+    from src.fabric.registry import sanitize_label
     dev_lines = []
     for d in devices:
         cands = candidates_for(d)
         dev_lines.append('- %s (%s)%s' % (
-            d.get('label'), d.get('category'),
+            sanitize_label(d.get('label')), d.get('category'),
             (': ' + ', '.join(cands)) if cands else ': no live link, do not use'))
     untargeted = sorted(s for s, aud in SKILL_AUDIENCE.items() if aud == 'fabric')
     skill_lines = ['- %s %s reversibility=%s consent=%s audience=%s: %s'
@@ -308,13 +309,20 @@ def coerce_params(schema, params):
     return out
 
 
-def compose(proposal, devices, router):
+def compose(proposal, devices, router, request_text=None):
     """Deterministically allow or refuse each proposed step.
 
     proposal: proposal_from_doc/proposal_from_reply output. devices: live
     snapshot rows ({key, label, category, handles}). router: Router (or a test
-    double with skill_routes). Never raises for per-step problems: every step
-    comes back 'allowed' or 'refused' with an open reason.
+    double with skill_routes). request_text: the owner's original request;
+    when provided, the intent gate runs once over the admitted steps: a
+    REFUSAL-kind verdict converts every allowed step to refused
+    (fail-closed: the proposal answers a request nothing may satisfy).
+    CLARIFICATION-kind verdicts pass through to per-step consent, which
+    judges relevance. The verdict is always returned as result['gate']
+    (allow/refused/clarification + code + detail). Never raises for
+    per-step problems: every step comes back 'allowed' or 'refused'
+    with an open reason.
     """
     from src.runtime import nl_plan
     from src.runtime.primitives import validate, PrimitiveError
@@ -392,9 +400,30 @@ def compose(proposal, devices, router):
             'failure_strategy': {'on_fail': s.get('on_fail', 'fail'),
                                  'note': failure_note(skill, s.get('on_fail', 'fail'))},
             'reversibility': SKILLS[skill]['reversibility']})
+    gate = {'verdict': 'allow', 'code': None, 'detail': None}
+    if request_text and any(s['status'] == 'allowed' for s in steps):
+        from src.runtime import intent_effect
+        admitted = {'steps': [s for s in steps if s['status'] == 'allowed']}
+        try:
+            intent_effect.check(request_text, admitted, devices)
+        except intent_effect.IntentEffectError as e:
+            if e.kind == intent_effect.REFUSAL:
+                for s in steps:
+                    if s['status'] == 'allowed':
+                        s['status'] = 'refused'
+                        s['reason'] = 'request refused by intent gate: %s' % e.code
+                gate = {'verdict': 'refused', 'code': e.code,
+                        'detail': e.detail}
+            else:
+                # CLARIFICATION-kind verdicts pass through deliberately:
+                # relevance stays with per-step consent, but the verdict
+                # is recorded (never silently dropped) for the bridge.
+                gate = {'verdict': 'clarification', 'code': e.code,
+                        'detail': e.detail}
     allowed = sum(1 for s in steps if s['status'] == 'allowed')
     return {'composer_version': COMPOSER_VERSION, 'steps': steps,
             'allowed': allowed, 'refused': len(steps) - allowed,
+            'gate': gate,
             'devices': [{'label': d.get('label'), 'category': d.get('category')}
                         for d in devices],
             'rollback': NO_ATOMIC_ROLLBACK}
@@ -574,15 +603,13 @@ def propose_and_compose(text, devices, router, proposer):
         raise ComposerError('model unavailable: %s' % e) from None
     if not isinstance(res, dict) or not res.get('content'):
         raise ComposerError('model returned no usable content')
-    composed = compose(proposal_from_reply(res['content']), devices, router)
-    allowed = [s for s in composed['steps'] if s['status'] == 'allowed']
-    if allowed:
-        from src.runtime import intent_effect
-        try:
-            intent_effect.check(text, {'steps': allowed}, devices)
-        except intent_effect.IntentEffectError as e:
-            verb = 'refused' if e.kind == intent_effect.REFUSAL else 'needs clarification'
-            raise ComposerError('model %s: %s' % (verb, e.detail)) from None
+    composed = compose(proposal_from_reply(res['content']), devices, router,
+                       request_text=text)
+    gate = composed.get('gate') or {}
+    if gate.get('verdict') == 'refused':
+        raise ComposerError('model refused: %s' % gate.get('detail'))
+    if gate.get('verdict') == 'clarification':
+        raise ComposerError('model needs clarification: %s' % gate.get('detail'))
     composed['model_run'] = {'provider': 'meta', 'model': res.get('model_id', 'unknown'),
                              'endpoint': res.get('endpoint', '')}
     composed['reply_sha256'] = hashlib.sha256(res['content'].encode()).hexdigest()

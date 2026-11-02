@@ -182,6 +182,38 @@ class MemoryStore:
         with self._lock:
             self._d[record['workflow_id']] = copy.deepcopy(record)
 
+    def claim_running(self, record):
+        """Atomically store a running record iff absent; return the existing record or None if created."""
+        with self._lock:
+            cur = self._d.get(record['workflow_id'])
+            if cur is not None:
+                return copy.deepcopy(cur)
+            self._d[record['workflow_id']] = copy.deepcopy(record)
+            return None
+
+    def claim_approval(self, workflow_id, step_id):
+        """Atomically transition a WAITING step to approved/running; False if already transitioned (R-1/F-14)."""
+        with self._lock:
+            cur = self._d.get(workflow_id)
+            if cur is None or cur.get('status') != 'waiting_approval' or cur.get('cancel_requested'):
+                return False
+            states = {s['id']: s for s in cur.get('steps', [])}
+            st = states.get(step_id)
+            if st is None or st.get('state') != 'WAITING':
+                return False
+            st['approved'] = True
+            st['state'] = 'QUEUED'
+            cur['status'] = 'running'
+            return True
+
+
+def _evict(wfs):
+    while len(wfs) > MAX_JOURNAL:
+        victim = next((k for k in wfs if wfs[k].get('status') in TERMINAL), None)
+        if victim is None:
+            break
+        del wfs[victim]
+
 
 class StateStoreJournal:
     """Durable journal: records live under the state file's 'workflows' key."""
@@ -200,13 +232,47 @@ class StateStoreJournal:
     def save(self, record):
         def change(d):
             wfs = d.setdefault('workflows', {})
+            cur = wfs.get(record['workflow_id'])
+            if cur is not None and cur.get('status') in TERMINAL and record.get('status') != cur.get('status'):
+                return  # terminal records are immutable: a racing driver must not clobber them
             wfs[record['workflow_id']] = copy.deepcopy(record)
-            while len(wfs) > MAX_JOURNAL:
-                victim = next((k for k in wfs if wfs[k].get('status') in TERMINAL), None)
-                if victim is None:
-                    break
-                del wfs[victim]
+            _evict(wfs)
         self._s._mutate(change)
+
+    def claim_running(self, record):
+        """Atomically store a running record iff absent (cross-process); return the existing record or None if created."""
+        seen = []
+
+        def change(d):
+            wfs = d.setdefault('workflows', {})
+            cur = wfs.get(record['workflow_id'])
+            if cur is not None:
+                seen.append(copy.deepcopy(cur))
+                return
+            wfs[record['workflow_id']] = copy.deepcopy(record)
+            _evict(wfs)
+        self._s._mutate(change)
+        return seen[0] if seen else None
+
+    def claim_approval(self, workflow_id, step_id):
+        """Atomically transition a WAITING step to approved/running (cross-process); False if already transitioned (R-1/F-14)."""
+        won = []
+
+        def change(d):
+            wfs = d.setdefault('workflows', {})
+            cur = wfs.get(workflow_id)
+            if cur is None or cur.get('status') != 'waiting_approval' or cur.get('cancel_requested'):
+                return
+            states = {s['id']: s for s in cur.get('steps', [])}
+            st = states.get(step_id)
+            if st is None or st.get('state') != 'WAITING':
+                return
+            st['approved'] = True
+            st['state'] = 'QUEUED'
+            cur['status'] = 'running'
+            won.append(True)
+        self._s._mutate(change)
+        return bool(won)
 
 
 def _substitute(params, receipts):
@@ -376,15 +442,14 @@ def run(body, router, store, workflow_id, actor='owner'):
         raise WorkflowError('invalid workflow id')
     spec = validate_workflow(body)
     lock = _lock_for(workflow_id)
+    record = {'workflow_id': workflow_id, 'status': 'running',
+              'name': body.get('name', '')[:120],
+              'steps': [{'id': s['id'], 'state': 'QUEUED'} for lvl in spec['levels'] for s in lvl],
+              'spec': spec, 'created_at': _iso()}
     with lock:
-        existing = store.get(workflow_id)
+        existing = store.claim_running(record)
         if existing is not None:
-            return existing  # terminal or waiting: never dispatch twice
-        record = {'workflow_id': workflow_id, 'status': 'running',
-                  'name': body.get('name', '')[:120],
-                  'steps': [{'id': s['id'], 'state': 'QUEUED'} for lvl in spec['levels'] for s in lvl],
-                  'spec': spec, 'created_at': _iso()}
-        store.save(record)
+            return existing  # terminal, waiting or driving elsewhere: never dispatch twice
         try:
             return _drive(record, spec, router, store, actor)
         finally:
@@ -416,10 +481,17 @@ def approve(workflow_id, step_id, allow, router, store, actor='owner'):
             store.save(record)
             _release_lock(workflow_id, store)
             return record
-        states[step_id]['approved'] = True
-        states[step_id]['state'] = 'QUEUED'
-        record['status'] = 'running'
-        store.save(record)
+        # Atomic cross-process transition (R-1/F-14, mirrors claim_running):
+        # without it, two approvers both drive; the loser's DUPLICATE-failed
+        # save can land first and pin stored 'failed' over an executed step.
+        if not store.claim_approval(workflow_id, step_id):
+            current = store.get(workflow_id)
+            if current is not None and current['status'] in TERMINAL:
+                return current
+            raise WorkflowError('workflow is not waiting for approval')
+        record = store.get(workflow_id)
+        if record is None:
+            raise WorkflowError('workflow is not waiting for approval')
         try:
             return _drive(record, record['spec'], router, store, actor)
         finally:

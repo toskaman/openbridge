@@ -323,7 +323,11 @@ def get(server, path, query):
     if path == '/api/v2/primitives':
         return 200, {'primitives': [to_json(p) for p in PRIMITIVES.values()]}
     if path == '/api/v2/recovery':
-        return 200, to_json(ex.recovery())
+        from src.fabric.session import SessionError
+        try:
+            return 200, to_json(ex.recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
     if path == '/api/v2/events':
         try:
             since = int((q.get('since') or ['0'])[0])
@@ -456,8 +460,13 @@ def get(server, path, query):
         led = getattr(server, 'relay_ledger', None)
         return 200, {'routes': route_rows(server), 'advertisers': led.advertisers(strong) if led else []}
     if path == '/api/v2/diagnosis':
+        from src.fabric.session import SessionError
         from src.runtime.fabric_diagnosis import diagnose
-        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), to_json(ex.recovery()))}
+        try:
+            rec = to_json(ex.recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
+        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), rec)}
     if path == '/api/v2/route_intel':
         # Advisory enumeration only (pure read over RelayManager state; no snapshot needed).
         intel = _route_intel(server)
@@ -696,8 +705,11 @@ def _idem_seen(server):
     return seen
 
 
-def _idem_begin(server, key):
-    """Claim an idempotency key: None when this call owns it, else (status, body)."""
+def _idem_begin(server, key, fingerprint=None):
+    """Claim an idempotency key: None when this call owns it, else (status, body).
+
+    A DONE key bound to a different fingerprint is INVOCATION_ID_REUSED (the
+    caller's request was never handled), not DUPLICATE_REQUEST (mirrors routing)."""
     import time as _t
     from src.runtime.state_store import StateStore, StateError
     store = StateStore.for_server(server)
@@ -709,6 +721,8 @@ def _idem_begin(server, key):
         if claimed:
             return None
         if row['state'] == 'DONE':
+            if fingerprint is not None and row.get('fingerprint') is not None and row['fingerprint'] != fingerprint:
+                return {'status': 409, 'body': {'error': 'INVOCATION_ID_REUSED: this idempotency_key was already used for a different request; use a fresh key'}}
             return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
         return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running elsewhere or was interrupted; use a fresh key'}}
     seen = _idem_seen(server)
@@ -716,17 +730,19 @@ def _idem_begin(server, key):
         now = _t.monotonic()
         for k in [k for k, v in seen.items() if v[0] == 'DONE' and now - v[1] > 600]:
             del seen[k]
-        state = seen.get(key, (None, 0))[0]
-        if state == 'DONE':
+        prior = seen.get(key, (None, 0, None))
+        if prior[0] == 'DONE':
+            if fingerprint is not None and prior[2] is not None and prior[2] != fingerprint:
+                return {'status': 409, 'body': {'error': 'INVOCATION_ID_REUSED: this idempotency_key was already used for a different request; use a fresh key'}}
             return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
-        if state == 'EXECUTING':
+        if prior[0] == 'EXECUTING':
             return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running; use a fresh key'}}
         if len(seen) >= 4096:
             victim = next((k for k, v in seen.items() if v[0] == 'DONE'), None)
             if victim is None:
                 return {'status': 503, 'body': {'error': 'STATE_JOURNAL_FULL: idempotency cache is full of running keys'}}
             del seen[victim]
-        seen[key] = ('EXECUTING', now)
+        seen[key] = ('EXECUTING', now, fingerprint)
         return None
 
 
@@ -749,7 +765,7 @@ def _idem_finish(server, key, fingerprint):
             pass   # leftover EXECUTING fails closed: retries refuse as uncertain, never re-dispatch
         return
     with server.http_idem_lock:
-        _idem_seen(server)[key] = ('DONE', _t.monotonic())
+        _idem_seen(server)[key] = ('DONE', _t.monotonic(), fingerprint)
 
 
 def _perm_sdk(runner):
@@ -1166,14 +1182,18 @@ def post(server, path, body):
     if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
         return cloud(server, path, body)
     if path == '/api/v2/recovery/acknowledge' and isinstance(body, dict):
+        from src.fabric.session import SessionError
         if set(body) - {'transaction_id', 'consent'} or not isinstance(body.get('transaction_id'), str) or body.get('consent') is not True:
             return 400, {'error': 'transaction_id and consent: true are required'}
-        if not executor(server).acknowledge(body['transaction_id']):
-            recovery = executor(server).recovery()
-            if recovery.blocked_reason.startswith('STATE_'):
-                return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
-            return 404, {'error': 'No unresolved transaction with this id'}
-        return 200, to_json(executor(server).recovery())
+        try:
+            if not executor(server).acknowledge(body['transaction_id']):
+                recovery = executor(server).recovery()
+                if recovery.blocked_reason.startswith('STATE_'):
+                    return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
+                return 404, {'error': 'No unresolved transaction with this id'}
+            return 200, to_json(executor(server).recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent', 'idempotency_key'}
@@ -1182,13 +1202,14 @@ def post(server, path, body):
     key = body.get('idempotency_key')
     if key is not None and (not isinstance(key, str) or not key or len(key) > 96):
         return 400, {'error': 'idempotency_key must be a non-empty string of at most 96 characters'}
+    binding = _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}) if key is not None else None
     if key is not None:
-        refused = _idem_begin(server, key)
+        refused = _idem_begin(server, key, binding)
         if refused is not None:
             return refused['status'], refused['body']
     r = executor(server).execute(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}, body.get('consent') is True)
     if key is not None:
-        _idem_finish(server, key, _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}))
+        _idem_finish(server, key, binding)
     status = 200 if r['state'] not in ('BLOCKED',) else 409
     return status, r
 

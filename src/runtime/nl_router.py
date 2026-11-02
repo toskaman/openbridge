@@ -6,8 +6,26 @@ become unsupported/escalation_required, never a guessed command. Cloud is used
 only with an explicit cloud_allowed consent; local failures alone never trigger
 a paid call.
 """
+import re
+
 from src.runtime import intent as I
 from src.runtime import skills as S
+
+_WORD_RX_CACHE = {}
+
+
+def _word_hit(keyword, hay):
+    """Whole-word keyword hit (both boundaries). Substring matching ('set'
+    inside 'reset', 'fabric' inside 'fabricant', 'ou' inside 'vous') fired
+    the deterministic fallback on unrelated requests; word boundaries keep
+    recall on true mentions (verified: 13/13 legit eval-1000 resolves kept,
+    the 14th was itself a fabricant artifact). Patterns cached: the keyword
+    catalog is static (<= ~50 entries)."""
+    rx = _WORD_RX_CACHE.get(keyword)
+    if rx is None:
+        rx = re.compile(r'\b' + re.escape(keyword) + r'\b')
+        _WORD_RX_CACHE[keyword] = rx
+    return rx.search(hay) is not None
 
 TIERS = {'low': ('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437'),
          'medium': ('muse-glimmer:30b-q4_K_M', 'http://127.0.0.1:11438'),
@@ -142,7 +160,7 @@ def _keyword_fallback(text, outcome):
     label the resolution as deterministic in the ambiguities.
     """
     hay = f'{text} {outcome or ""}'.lower()
-    scored = sorted(((sum(1 for k in c['keywords'] if k in hay), c['skill_id'])
+    scored = sorted(((sum(1 for k in c['keywords'] if _word_hit(k, hay)), c['skill_id'])
                      for c in S.all_skills()), reverse=True)
     if len(scored) > 1 and scored[0][0] > scored[1][0] and scored[0][0] > 0:
         return scored[0][1]
@@ -189,9 +207,10 @@ def _interpret(doc, reply, parser, model_id):
     sid = reply['skill_id']
     if sid is None:
         if reply['clarifying_question']:
+            amb = reply['ambiguities'] if isinstance(reply['ambiguities'], list) else []
             return dict(doc, status='needs_clarification',
                         clarifying_question=str(reply['clarifying_question'])[:300],
-                        ambiguities=[str(a)[:200] for a in reply['ambiguities']][:8])
+                        ambiguities=[str(a)[:200] for a in amb][:8])
         return dict(doc, status='unsupported',
                     ambiguities=['no registered skill matches'])
     if S.get(sid) is None:
@@ -201,6 +220,10 @@ def _interpret(doc, reply, parser, model_id):
     if not isinstance(conf, (int, float)) or isinstance(conf, bool) or conf < MIN_CONFIDENCE:
         return dict(doc, status='escalation_required',
                     ambiguities=['model confidence below 0.5'])
+    tg, amb = reply['targets'], reply['ambiguities']
+    if not isinstance(tg, list) or len(tg) > 8 or not isinstance(amb, list):
+        return dict(doc, status='escalation_required',
+                    ambiguities=['model reply shape invalid'])
     try:
         resolved = dict(doc, status='resolved', outcome=str(reply['outcome'])[:300],
                         skill_id=sid, targets=reply['targets'], params=reply['params'],

@@ -68,7 +68,8 @@ def param_hint(schema):
 def build_prompt(text, devices):
     """Strict planning prompt: labels + categories only, never device keys."""
     from src.runtime.routing import SKILLS
-    dev_lines = ['- %s (%s)' % (d.get('label'), d.get('category')) for d in devices]
+    from src.fabric.registry import sanitize_label
+    dev_lines = ['- %s (%s)' % (sanitize_label(d.get('label')), d.get('category')) for d in devices]
     skill_lines = ['- %s %s reversibility=%s consent=%s' % (sid, _param_hint(s.get('input')),
                                                             s.get('reversibility'), s.get('consent'))
                    for sid, s in sorted(SKILLS.items())]

@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.fabric import relay as R
-from src.fabric.session import SessionJournal
+from src.fabric.session import SessionError, SessionJournal
 from src.runtime import command_drain as D
 from src.runtime.state_store import StateStore
 from src.server import create_server
@@ -717,15 +717,21 @@ class SessionJournalLifecycleTests(unittest.TestCase):
             path.with_suffix('.tmp').write_text('{partial', encoding='utf-8')
             reopened = SessionJournal(str(path))
             self.assertEqual(len(reopened.open_changes()), 1)
-            # A corrupted file degrades to empty (documented) and the next
-            # record restores a valid store instead of wedging.
+            # A corrupted file fails closed (B-02b/F-13 deliberate
+            # contract change: degrade-to-empty + self-heal-overwrite
+            # masked tampering and silently dropped pending restores).
+            # Callers surface SESSION_CORRUPT explicitly (503/FAILED/
+            # CliError/journal_error) instead of wedging, and the
+            # corrupt bytes are preserved for review.
             path.write_text('{bad', encoding='utf-8')
             degraded = SessionJournal(str(path))
-            self.assertEqual(degraded.open_changes(), [])
-            degraded.record('adb_network_connected', 'TV',
-                            {'address': '192.168.1.5:5555'}, 'down', 'up')
-            rows = json.loads(path.read_text(encoding='utf-8'))
-            self.assertEqual(len(rows), 1)
+            with self.assertRaises(SessionError) as e:
+                degraded.open_changes()
+            self.assertEqual(e.exception.code, 'SESSION_CORRUPT')
+            with self.assertRaises(SessionError):
+                degraded.record('adb_network_connected', 'TV',
+                                {'address': '192.168.1.5:5555'}, 'down', 'up')
+            self.assertEqual(path.read_text(encoding='utf-8'), '{bad')
 
     def test_journal_writes_leave_no_temp_debris(self):
         with tempfile.TemporaryDirectory() as tmpdir:
