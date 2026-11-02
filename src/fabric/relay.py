@@ -113,7 +113,11 @@ def verify(key, message, seen_nonces, now=None):
         raise RelayError('Bad signature')
     if msg.get('protocol') != PROTOCOL or msg.get('op') not in OPERATIONS + ('reply',):
         raise RelayError('Unknown protocol or operation')
-    if not msg.get('issued_at', 0) - 5 <= now <= msg.get('expires_at', 0):
+    issued, expires = msg.get('issued_at'), msg.get('expires_at')
+    if isinstance(issued, bool) or isinstance(expires, bool) \
+            or not isinstance(issued, (int, float)) or not isinstance(expires, (int, float)):
+        raise RelayError('Malformed message: bad timestamps')
+    if not issued - 5 <= now <= expires:
         raise RelayError('Expired command')
     if seen_nonces is None:             # one-shot check of a single message: nothing to remember
         return msg
