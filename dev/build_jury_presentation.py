@@ -92,6 +92,9 @@ INCLUDE = [
 
 OPTIONAL = {
     "artifacts/s5-tv-panel-31oct/chain-transcript.json",
+    # t2-propose was never committed either (artifacts/ is gitignored);
+    # same honest treatment as the chain transcript (Nov 2026).
+    "artifacts/s5-tv-panel-31oct/t2-propose-medium.json",
 }
 
 # Archived snapshots keep root-relative links by design; their own link
