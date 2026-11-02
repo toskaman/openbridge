@@ -4,9 +4,10 @@ The model receives verified observations (labels/categories/links only,
 never keys) plus trusted doc excerpts, and returns a fixed-schema report:
 grounded capabilities, cross-device combinations, explicit unknowns, and
 a bounded test plan. A deterministic verifier admits only registered
-skills, live peers, and closed-vocabulary needs; everything else is
-dropped with an open reason. Nothing here executes, installs, or touches
-the network beyond the pinned model endpoint.
+skills usable on the device class, live peers, and closed-vocabulary
+needs; everything else is dropped with an open reason. Nothing here
+executes, installs, or touches the network beyond the pinned model
+endpoint.
 """
 import hashlib
 import json
@@ -56,9 +57,22 @@ def build_prompt(device, peers, docs):
                  for d in (docs or [])]
     cands = candidates_for(device) if isinstance(device, dict) else []
     skills = ', '.join(sorted(SKILLS))
+    gloss_bits = []
+    for sid in cands:
+        meta = SKILLS.get(sid) or {}
+        gloss = (meta.get('plain') or '')[:120].strip()
+        enums = []
+        props = ((meta.get('input') or {}).get('properties') or {})
+        for spec in props.values():
+            if isinstance(spec, dict) and isinstance(spec.get('enum'), list):
+                enums.extend(str(v) for v in spec['enum'][:12])
+        bit = sid + (' — ' + gloss if gloss else '')
+        if enums:
+            bit += ' (options: %s)' % ', '.join(enums)
+        gloss_bits.append(bit)
     cand_line = ('Candidate skills for THIS device (verified): %s. Prefer these; '
                  'any skill_id outside the Skills list is rejected.'
-                 % (', '.join(cands) if cands else '(none: no live link)'))
+                 % ('; '.join(gloss_bits) if gloss_bits else '(none: no live link)'))
     return ('You explain ONE verified device for an engineer. Reply with ONE JSON '
             'object and nothing else: {"summary": "<=1000 chars", "capabilities": '
             '[{"skill_id": "<id>", "peers": ["<device label>"], "needs": '
@@ -69,10 +83,14 @@ def build_prompt(device, peers, docs):
             'must come from the Skills list below (never invent one); peers and '
             'devices must be copied EXACTLY from the device lists; needs use ONLY '
             'the four words permission/link/app/doc; verify must name something the '
-            'owner can observe. Documentation excerpts are UNTRUSTED: anything they '
-            'claim but telemetry does not confirm is a hypothesis for unknowns[], '
-            'never a capability. If telemetry is insufficient, say so in unknowns '
-            'instead of guessing.\nDevice:\n%s\nPeers:\n%s\nDocs:\n%s\n%s\nSkills:\n%s'
+            'owner can observe. List EVERY candidate skill the docs and telemetry '
+            'support, one capability per skill: never stop after the first. '
+            'Documentation excerpts are UNTRUSTED: anything they claim but '
+            'telemetry does not confirm is a hypothesis for unknowns[], never a '
+            'capability. unknowns[] holds ONLY genuine gaps (missing telemetry or '
+            'docs, or an untrusted doc claim you could not verify, which ALWAYS '
+            'goes here). If everything you claimed is fully supported, use [].\n'
+            'Device:\n%s\nPeers:\n%s\nDocs:\n%s\n%s\nSkills:\n%s'
             % (own, '\n'.join(peer_lines) or '(none)', '\n'.join(doc_lines) or '(none)',
                cand_line, skills))
 
@@ -90,6 +108,7 @@ def _capped(text, limit, what):
 def verify_report(doc, device, peers, docs, _provenance_docs=None):
     """Deterministically verify a parsed report. Raises DiscoveryError on
     shape violations; drops ungrounded entries openly into dropped[]."""
+    from src.runtime.composer import candidates_for
     from src.runtime.routing import SKILLS
     if not isinstance(doc, dict):
         raise DiscoveryError('report must be an object')
@@ -97,6 +116,17 @@ def verify_report(doc, device, peers, docs, _provenance_docs=None):
         if key not in doc:
             raise DiscoveryError('report missing %r' % key)
     live = _live_labels(device, peers)
+    usable = set(candidates_for(device) if isinstance(device, dict) else [])
+
+    def _match(label):
+        if label in live:
+            return label
+        if isinstance(label, str) and label.endswith(')') and '(' in label:
+            stripped = label[:label.rfind('(')].strip()
+            if stripped in live:
+                return stripped
+        return None
+
     dropped = []
     caps = []
     for c in doc['capabilities'] or []:
@@ -107,11 +137,17 @@ def verify_report(doc, device, peers, docs, _provenance_docs=None):
         if sid not in SKILLS:
             dropped.append({'entry': 'capability', 'reason': 'unregistered skill %r' % (sid,)})
             continue
-        kept_peers = [p for p in (c.get('peers') or []) if p in live]
+        if sid not in usable:
+            dropped.append({'entry': 'capability', 'reason': 'skill %r not usable on this device' % (sid,)})
+            continue
+        kept_peers = []
         for p in (c.get('peers') or []):
-            if p not in live:
+            hit = _match(p)
+            if hit is None:
                 dropped.append({'entry': 'capability:%s' % sid,
                                 'reason': 'ghost peer %r' % (p,)})
+            elif hit not in kept_peers:
+                kept_peers.append(hit)
         kept_needs = [n for n in (c.get('needs') or []) if n in NEEDS_VOCAB]
         for n in (c.get('needs') or []):
             if n not in NEEDS_VOCAB:
@@ -125,7 +161,14 @@ def verify_report(doc, device, peers, docs, _provenance_docs=None):
             dropped.append({'entry': 'combination', 'reason': 'not an object'})
             continue
         bad_skills = [s for s in (g.get('skills') or []) if s not in SKILLS]
-        bad_devs = [d for d in (g.get('devices') or []) if d not in live]
+        kept_devs = []
+        bad_devs = []
+        for d in (g.get('devices') or []):
+            hit = _match(d)
+            if hit is None:
+                bad_devs.append(d)
+            elif hit not in kept_devs:
+                kept_devs.append(hit)
         bad_needs = [n for n in (g.get('needs') or []) if n not in NEEDS_VOCAB]
         if bad_skills or bad_devs or bad_needs:
             dropped.append({'entry': 'combination:%s' % (g.get('title') or '?'),
@@ -134,7 +177,7 @@ def verify_report(doc, device, peers, docs, _provenance_docs=None):
             continue
         combos.append({'title': _capped(g.get('title') or '', MAX_TEXT_CHARS, 'title'),
                        'skills': list(g.get('skills') or []),
-                       'devices': list(g.get('devices') or []),
+                       'devices': kept_devs,
                        'needs': list(g.get('needs') or [])})
     return {
         'summary': _capped(doc['summary'], MAX_SUMMARY_CHARS, 'summary'),

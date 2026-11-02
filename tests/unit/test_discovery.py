@@ -88,6 +88,43 @@ class VerifyReport(unittest.TestCase):
         with self.assertRaises(disc.DiscoveryError):
             disc.verify_report({'summary': 'x'}, _device(), _peers(), _docs(), _docs())
 
+    def test_wrong_audience_skill_dropped(self):
+        from src.ai import discovery as disc
+        doc = _good_report()
+        doc['capabilities'].append(
+            {'skill_id': 'pc_run', 'peers': [], 'needs': [],
+             'verify': 'none'})
+        rep = disc.verify_report(doc, _device(), _peers(), _docs(), _docs())
+        self.assertEqual(len(rep['capabilities']), 2)
+        self.assertEqual(len(rep['dropped']), 1)
+        self.assertIn('not usable', rep['dropped'][0]['reason'])
+
+    def test_no_link_device_drops_all_skills(self):
+        from src.ai import discovery as disc
+        dev = _device()
+        dev['handles'] = {}
+        rep = disc.verify_report(_good_report(), dev, _peers(), _docs(), _docs())
+        self.assertEqual(rep['capabilities'], [])
+        self.assertEqual(len(rep['dropped']), 2)
+
+    def test_decorated_peer_label_matched(self):
+        from src.ai import discovery as disc
+        doc = _good_report()
+        doc['capabilities'][1]['peers'] = ['Smartwatch (watch)']
+        doc['combinations'][0]['devices'] = ['Smartwatch (watch)']
+        rep = disc.verify_report(doc, _device(), _peers(), _docs(), _docs())
+        self.assertEqual(rep['capabilities'][1]['peers'], ['Smartwatch'])
+        self.assertEqual(rep['combinations'][0]['devices'], ['Smartwatch'])
+        self.assertEqual(rep['dropped'], [])
+
+    def test_genuinely_unknown_paren_label_still_ghost(self):
+        from src.ai import discovery as disc
+        doc = _good_report()
+        doc['capabilities'][0]['peers'] = ['Stranger Phone (phone)']
+        rep = disc.verify_report(doc, _device(), _peers(), _docs(), _docs())
+        self.assertEqual(rep['capabilities'][0]['peers'], [])
+        self.assertEqual(len(rep['dropped']), 1)
+
 
 class ExplainDevice(unittest.TestCase):
     def test_full_bridge_with_stub_proposer(self):
@@ -121,6 +158,22 @@ class ExplainDevice(unittest.TestCase):
         p = disc.build_prompt(_device(), _peers(), _docs())
         self.assertIn('Candidate skills for THIS device (verified)', p)
         self.assertIn('tv_volume_step', p)
+
+    def test_prompt_glosses_with_registry_plain_and_options(self):
+        from src.ai import discovery as disc
+        vac = {'key': 'd-v', 'label': 'Aspirateur', 'category': 'vacuum',
+               'handles': {'WIFI': 'h'}}
+        p = disc.build_prompt(vac, [], [])
+        self.assertIn('vacuum_command', p)
+        self.assertIn('Tuya', p)
+        self.assertIn('options: start', p)
+        self.assertNotIn('tv_sleep', p.split('Skills:')[0])
+
+    def test_prompt_demands_enumeration_and_precise_unknowns(self):
+        from src.ai import discovery as disc
+        p = disc.build_prompt(_device(), _peers(), _docs())
+        self.assertIn('never stop after the first', p)
+        self.assertIn('ONLY genuine gaps', p)
 
 
 if __name__ == '__main__':
