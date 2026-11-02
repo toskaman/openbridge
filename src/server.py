@@ -491,12 +491,13 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None, session_journal=None,
-                  relay_store=None):
+                  relay_store=None, pc_consent=None, adb_remember=None):
     server = LocalServer(('127.0.0.1', port), Handler)
     # Durable pairings are opt-in per launcher (main passes a vault-backed store); tests stay hermetic.
     server.relay_store = relay_store
+    server.pc_consent = pc_consent
     server.csrf_token = secrets.token_urlsafe(32)
-    server.android = AndroidAdapter()
+    server.android = AndroidAdapter(remember_path=adb_remember or os.environ.get('OPENBRIDGE_ADB_KNOWN_PATH'))
     server.android_events = AndroidEventMonitor(server.android)
     server.freebox = FreeboxAdapter()
     server.model_broker = model_broker
@@ -839,7 +840,9 @@ def main():
     relay_store = RelayStore(private_root / 'relays.json', Vault()) if os.environ.get('OPENBRIDGE_RELAY_STORE', '1') != '0' else None
     if relay_store is not None and not relay_store.enabled:
         print('No OS vault: Companion pairings stay in memory (re-pair after a restart).', flush=True)
-    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir,relay_store=relay_store) as server:
+    from src.fabric.pc_consent import PcConsentStore
+    pc_consent = PcConsentStore(private_root / 'pc_full_control.json')
+    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir,relay_store=relay_store,pc_consent=pc_consent,adb_remember=private_root / 'adb_known.json') as server:
         if args.windows_bridge:
             server.windows_bridge=start_windows_bridge()
         from src.runtime import command_drain

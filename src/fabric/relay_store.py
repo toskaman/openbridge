@@ -27,6 +27,17 @@ class RelayStoreError(OSError):
         self.code = code
 
 
+def default_owner_store():
+    """Owner dev-tool store: LOCALAPPDATA/OpenBridge/relays.json + OS vault.
+
+    Single spelling of the owner path shared by relay_pair, preflight and
+    the flagship vehicle, so a pairing made by one tool is visible to all.
+    """
+    from src.fabric.credential_vault import Vault
+    root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
+    return RelayStore(root / 'relays.json', Vault())
+
+
 class RelayStore:
     def __init__(self, path, vault):
         self.path, self.vault = Path(path), vault

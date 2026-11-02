@@ -51,6 +51,27 @@ class Base(unittest.TestCase):
 
 
 class MediaSkills(Base):
+    def test_view_image_ready_and_dispatches(self):
+        from src.runtime.primitives import Executor
+        seen = []
+        ex = executor(self.server)
+
+        def spy(self_, key, params):
+            seen.append(params)
+            return 'EXECUTED', None, None, True, {'viewed': True}
+
+        ex.RUNNERS = dict(Executor.RUNNERS, device_action=spy)
+        doc = self.routes('view_image', self.keys['phone'])
+        self.assertIsNotNone(doc['selected_route_id'])
+        self.assertEqual(doc['routes'][0]['hops'][0]['primitive_id'], 'device_action')
+        r = self.arm_invoke('view_image', self.keys['phone'], {'name': 'cap-1.png'})
+        self.assertEqual(r['state'], 'EXECUTED')
+        self.assertEqual(seen, [{'action': 'view_file', 'args': {'name': 'cap-1.png'}}])
+
+    def test_view_image_refuses_non_android(self):
+        doc = self.routes('view_image', 'dev-nope')
+        self.assertIsNone(doc['selected_route_id'])
+
     def test_screen_capture_ready_and_dispatches(self):
         r = self.arm_invoke('screen_capture', self.keys['phone'], {})
         self.assertEqual(r['state'], 'EXECUTED')

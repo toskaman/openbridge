@@ -3,7 +3,9 @@ import json
 import unittest
 from types import SimpleNamespace
 
-from dev.flagship_c_vehicle import resolve_relay_id, resolve_tv_key, run_vehicle
+from dev.flagship_c_vehicle import (music_state_from_dumpsys,
+                                    resolve_relay_id, resolve_tv_key,
+                                    run_vehicle)
 
 
 def make_io(script):
@@ -106,12 +108,107 @@ class VehicleTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             resolve_relay_id(srv)
 
+    def test_oracle_reads_stream_volume_not_min(self):
+        out = ('- STREAM_MUSIC:\n     Muted: false\n     Min: 0\n'
+               '     Max: 15\n     streamVolume:7\n')
+        self.assertEqual(music_state_from_dumpsys(out), (7, 15))
+
+    def test_oracle_unknown_format_is_null(self):
+        self.assertEqual(music_state_from_dumpsys('Audio service wat?'),
+                         (None, None))
+        self.assertEqual(music_state_from_dumpsys(None), (None, None))
+
     def test_receipt_is_json_sanitized(self):
         script = [{'v0': 10, 'v1': 11, 'exec_count': 1, 'post_revoke_exec': 0}]
         receipt = run_vehicle(make_io(script), rounds=1)
         text = json.dumps(receipt)
         self.assertNotIn('654321', text)
         self.assertIn('vehicle', receipt)
+
+
+class LiveWiringTest(unittest.TestCase):
+    def test_live_main_passes_owner_relay_store(self):
+        import dev.flagship_c_vehicle as V
+        from unittest import mock
+        from src.fabric.relay_store import RelayStore
+        with mock.patch('src.server.create_server') as mk, \
+             mock.patch('src.cli.ensure_discovery', return_value=None), \
+             mock.patch.object(V, 'resolve_relay_id', return_value='relay-1'), \
+             mock.patch.object(V, 'resolve_tv_key', return_value='tv-1'), \
+             mock.patch.object(V, 'LiveIO'), \
+             mock.patch.object(V, 'run_vehicle', return_value={'verdict': 'PASS'}):
+            self.assertEqual(V.main(['--tv-serial', 'TV123']), 0)
+        store = mk.call_args.kwargs['relay_store']
+        self.assertIsInstance(store, RelayStore)
+        self.assertEqual(store.path.name, 'relays.json')
+
+
+class LiveRefreshTest(unittest.TestCase):
+    def test_install_refreshes_discovery_and_reresolves(self):
+        import dev.flagship_c_vehicle as V
+        from unittest import mock
+        from src.runtime.remote_controls import RemoteControls as RC
+        with mock.patch('src.runtime.api_v2.remote_controls') as mkrc, \
+             mock.patch('src.cli.ensure_discovery') as mkdisc, \
+             mock.patch.object(V, 'resolve_relay_id', return_value='relay-9'), \
+             mock.patch.object(V, 'resolve_tv_key', return_value='tv-9'):
+            mkrc.return_value = mock.MagicMock(spec=RC)   # drift fails here, not live
+            io = V.LiveIO(mock.Mock(), 'relay-0', 'tv-0', 'TV123')
+            io.install([{'label': 'TV volume +', 'skill_id': 'tv_volume_step'}])
+        mkdisc.assert_called_once_with(io.server, ['mdns', 'android'])
+        body = mkrc.return_value.set_controls.call_args.args[0]
+        self.assertEqual(body['relay_id'], 'relay-9')
+        self.assertEqual(body['controls'][0]['target'], 'tv-9')
+        self.assertEqual(io.tv_key, 'tv-9')
+
+    def test_await_press_touches_but_does_not_reinstall(self):
+        import dev.flagship_c_vehicle as V
+        from unittest import mock
+        from src.runtime.remote_controls import RemoteControls as RC
+        with mock.patch('src.runtime.api_v2.remote_controls') as mkrc, \
+             mock.patch('src.cli.ensure_discovery') as mkdisc, \
+             mock.patch.object(V, 'resolve_relay_id', return_value='relay-9'), \
+             mock.patch.object(V, 'resolve_tv_key', return_value='tv-9'), \
+             mock.patch.object(V.time, 'sleep', return_value=None):
+            mkrc.return_value = mock.MagicMock(spec=RC)   # drift fails here, not live
+            rc = mkrc.return_value
+            rc.set_controls.return_value = {'controls': [{'control_id': 'ctl-1'}]}
+            rc.press_history.side_effect = [[], [{'request_id': 'req-1'}]]
+            io = V.LiveIO(mock.Mock(), 'relay-0', 'tv-0', 'TV123')
+            with mock.patch.object(V.LiveIO, '_touch_attached', return_value=1) as mktouch:
+                self.assertEqual(io.await_press('ctl-1', 300), 'req-1')
+                mktouch.assert_called()
+        self.assertEqual(mkdisc.call_count, 0)   # no rediscovery while waiting
+        self.assertEqual(rc.set_controls.call_count, 0)   # stable control ids
+        rc.press_history.assert_called_with('ctl-1')
+
+    def test_touch_attached_only_bumps_attached(self):
+        import dev.flagship_c_vehicle as V
+        from types import SimpleNamespace
+        from unittest import mock
+        with mock.patch('src.runtime.api_v2.remote_controls'), \
+             mock.patch('subprocess.run') as mkrun:
+            mkrun.return_value = SimpleNamespace(
+                stdout='List of devices attached\nTV123\tdevice\nWATCH1\toffline\n')
+            server = SimpleNamespace(
+                android=SimpleNamespace(
+                    serial_for=lambda h: {'hz-tv': 'TV123', 'hz-w': 'WATCH1'}.get(h)),
+                fabric_registry=SimpleNamespace(devices={
+                    'tv-9': {'handles': {'WIFI': 'hz-tv'}, 'last_seen': 'OLD'},
+                    'w-1': {'handles': {'WIFI': 'hz-w'}, 'last_seen': 'OLD'}}),
+                fabric_snapshot={'devices': [
+                    {'key': 'tv-9', 'last_seen': 'OLD'},
+                    {'key': 'w-1', 'last_seen': 'OLD'}]})
+            io = V.LiveIO(server, 'relay-0', 'tv-9', 'TV123')
+            self.assertEqual(io._touch_attached(), 1)
+            self.assertNotEqual(
+                server.fabric_registry.devices['tv-9']['last_seen'], 'OLD')
+            self.assertNotEqual(
+                server.fabric_snapshot['devices'][0]['last_seen'], 'OLD')
+            self.assertEqual(
+                server.fabric_registry.devices['w-1']['last_seen'], 'OLD')
+            self.assertEqual(
+                server.fabric_snapshot['devices'][1]['last_seen'], 'OLD')
 
 
 if __name__ == '__main__':

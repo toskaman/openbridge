@@ -242,6 +242,10 @@ class IrreversibleWithoutConsent(unittest.TestCase):
             'tv_sleep': {},
             'tv_wake': {},
             'companion_foreground': {},
+            'view_image': {'name': 'c-1.png'},
+            'pc_open_url': {'url': 'https://example.org/'},
+            'pc_place_file': {'transfer_id': 't-1', 'name': 'w.png'},
+            'pc_wallpaper': {'name': 'w.png'},
         }
         for sid in gated:
             target = 'fabric' if not SKILLS[sid]['targeted'] else 'android tv'

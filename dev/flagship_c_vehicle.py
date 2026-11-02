@@ -8,7 +8,6 @@ taps. Prints sanitized JSON only. Any failed assert FAILS the round loudly.
 """
 import argparse
 import json
-import re
 import subprocess
 import sys
 import time
@@ -16,7 +15,20 @@ from datetime import datetime, timezone
 
 VEHICLE = 'flagship-c-o3/1'
 PRESS_BUDGET_S = 300
-VOLUME_RE = re.compile(r'STREAM_MUSIC[^:]*:\s*\S+[^0-9]*?(\d{1,2})\b')
+
+
+def music_state_from_dumpsys(text):
+    """(index, max) for STREAM_MUSIC via the production audio_state parse.
+
+    Shared oracle for the vehicle + preflight: one tested parser, no
+    divergent regex. (None, None) when the format is unrecognized.
+    """
+    from src.fabric.android_actions import AndroidActions
+    st = AndroidActions(lambda *a: (text or '') if a == ('dumpsys', 'audio') else '',
+                        'tv').audio_state()
+    if not st['readable']:
+        return None, None
+    return st['volume_index'], st['max_index']
 
 
 def resolve_tv_key(server):
@@ -128,9 +140,19 @@ class LiveIO:
         self.tv_key = tv_key
         self.tv_serial = tv_serial
         self.state = {}
+        self._pending = []
         self._api_v2 = api_v2
 
-    def install(self, controls):
+    def _push(self, controls):
+        # WIFI route leases live 60 s from discovery last_seen and device
+        # keys rotate every discovery run, so every install re-discovers
+        # the light subset that keeps the TV relay-service view (~7 s),
+        # then re-resolves relay + TV. No security semantic changes: a
+        # tap landing after lease expiry is still refused.
+        from src.cli import ensure_discovery
+        ensure_discovery(self.server, ['mdns', 'android'])
+        self.relay_id = resolve_relay_id(self.server)
+        self.tv_key = resolve_tv_key(self.server)
         body = {'relay_id': self.relay_id, 'consent': True, 'controls': [
             {'label': c['label'], 'skill_id': c['skill_id'],
              'target': self.tv_key,
@@ -139,14 +161,70 @@ class LiveIO:
         st = self.rc.set_controls(body)
         return [c['control_id'] for c in st['controls']]
 
+    def install(self, controls):
+        self._pending = list(controls)
+        return self._push(controls)
+
     def prompt(self, text):
         print('OWNER: ' + text, flush=True)
         input()
 
+    def _touch_attached(self):
+        """Refresh last_seen for registry devices currently attached over ADB.
+
+        Same evidential strength as discovery's adb listing (the device
+        answers `adb devices` right now), so the 60 s route lease stays
+        valid while the owner takes a human-scale time to tap. No key
+        rotation (no re-discovery), no reinstall: control ids are stable
+        for the whole wait. Unattached devices are not touched, so a
+        genuinely gone device still goes stale and refuses fail-closed.
+        Returns the number of devices touched.
+        """
+        import subprocess
+        from datetime import datetime, timezone
+        try:
+            p = subprocess.run(['adb', 'devices'], capture_output=True,
+                               timeout=30, text=True)
+        except Exception:
+            return 0
+        attached = set()
+        for line in (p.stdout or '').splitlines()[1:]:
+            parts = line.split()
+            if len(parts) == 2 and parts[1] == 'device':
+                attached.add(parts[0])
+        now = datetime.now(timezone.utc).isoformat()
+        android = getattr(self.server, 'android', None)
+        reg = getattr(getattr(self.server, 'fabric_registry', None),
+                      'devices', None) or {}
+        snap = (getattr(self.server, 'fabric_snapshot', None) or {}).get(
+            'devices', []) or []
+        by_key = {d.get('key'): d for d in snap}
+        touched = 0
+        for key, dev in reg.items():
+            serials = set()
+            for h in (dev.get('handles') or {}).values():
+                try:
+                    s = android.serial_for(h) if android else None
+                except Exception:
+                    s = None
+                if s:
+                    serials.add(s)
+            if serials & attached:
+                dev['last_seen'] = now
+                if key in by_key:
+                    by_key[key]['last_seen'] = now
+                touched += 1
+        return touched
+
     def await_press(self, control_id, budget_s):
+        print('OWNER: TAP NOW on the watch (TV volume +), then say ok', flush=True)
         seen = {r['request_id'] for r in self.rc.press_history(control_id)}
         deadline = time.time() + budget_s
+        last_touch = 0
         while time.time() < deadline:
+            if time.time() - last_touch >= 20:
+                self._touch_attached()
+                last_touch = time.time()
             for r in self.rc.press_history(control_id):
                 if r['request_id'] not in seen and not r.get('injected'):
                     return r['request_id']
@@ -159,8 +237,7 @@ class LiveIO:
                            timeout=60, text=True)
         if p.returncode != 0:
             return None
-        m = VOLUME_RE.search(p.stdout)
-        return int(m.group(1)) if m else None
+        return music_state_from_dumpsys(p.stdout)[0]
 
     def journal_count(self, request_id):
         ex = self._api_v2.executor(self.server)
@@ -227,8 +304,11 @@ def main(argv=None):
         if not args.tv_serial:
             ap.error('live mode needs --tv-serial (relay + TV auto-resolve in-process)')
         from src.server import create_server
+        from src.adapters.android import default_remember_path
         from src.cli import ensure_discovery, default_providers
-        server = create_server()
+        from src.fabric.relay_store import default_owner_store
+        server = create_server(relay_store=default_owner_store(),
+                               adb_remember=default_remember_path())
         ensure_discovery(server, default_providers(args))
         relay_id = args.relay_id or resolve_relay_id(server)
         tv_key = args.tv_key or resolve_tv_key(server)

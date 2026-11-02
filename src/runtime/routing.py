@@ -62,6 +62,9 @@ SKILLS = {
     'app_launch': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                    'input': {'type': 'object', 'properties': {'package': {'type': 'string', 'maxLength': 120}}, 'required': ['package'], 'additionalProperties': False},
                    'plain': 'Launch one app package on this Android device.'},
+    'view_image': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                   'input': {'type': 'object', 'properties': {'name': {'type': 'string', 'maxLength': 64}}, 'required': ['name'], 'additionalProperties': False},
+                   'plain': 'Open one pushed PNG from /sdcard/OpenBridge/ in this Android system viewer.'},
     'capability_probe': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'none', 'targeted': True,
                          'input': {'type': 'object', 'properties': {}, 'additionalProperties': False},
                          'plain': 'Measure which typed actions this Android device supports (read-only probe).'},
@@ -71,6 +74,15 @@ SKILLS = {
     'retro_command': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': False,
                       'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'enum': ['VERSION', 'GET_STATUS', 'PAUSE_TOGGLE', 'VOLUME_UP', 'VOLUME_DOWN']}}, 'required': ['command'], 'additionalProperties': False},
                       'plain': 'Send one allowlisted command to the RetroArch running on this PC (loopback only).'},
+    'pc_open_url': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                    'input': {'type': 'object', 'properties': {'url': {'type': 'string', 'maxLength': 300}}, 'required': ['url'], 'additionalProperties': False},
+                    'plain': 'Open one http(s) URL in the default browser of this PC. Only process launch is verified, never page load.'},
+    'pc_place_file': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
+                      'input': {'type': 'object', 'properties': {'transfer_id': {'type': 'string', 'maxLength': 32}, 'name': {'type': 'string', 'maxLength': 64}}, 'required': ['transfer_id', 'name'], 'additionalProperties': False},
+                      'plain': 'Place one staged image as a managed file on this full-control PC (hashed pull).'},
+    'pc_wallpaper': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                     'input': {'type': 'object', 'properties': {'name': {'type': 'string', 'maxLength': 64}}, 'required': ['name'], 'additionalProperties': False},
+                     'plain': 'Apply one managed image as wallpaper on this full-control PC (previous recorded).'},
     'pc_run': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'maxLength': 2000}, 'shell': {'type': 'string', 'enum': ['cmd', 'powershell']}, 'timeout_s': {'type': 'integer', 'minimum': 1, 'maximum': 600}}, 'required': ['command'], 'additionalProperties': False},
                'plain': 'Run one owner-confirmed command on this Windows PC via its agent. Use inside an approval-gated workflow.'},
@@ -306,14 +318,14 @@ class Router:
             r['_params'] = lambda p: {}
             return [r]
         if skill_id in ('screen_capture', 'file_pull', 'capture_send', 'file_push', 'app_launch', 'capability_probe',
-                               'tv_sleep', 'tv_wake', 'companion_foreground'):
+                               'tv_sleep', 'tv_wake', 'companion_foreground', 'view_image'):
             # §7 media/file/action skills: ADB link (USB, Wi-Fi or emulator); reads need 'read', writes need 'control'.
             if d.get('category') not in ANDROID:
                 return out
             if skill_id in ('tv_sleep', 'tv_wake') and d.get('category') != 'tv':
                 return out
             adb = link is not None and link['transport'] in ('USB', 'WIFI', 'EMULATOR') and bool(d.get('handles'))
-            prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities'}.get(skill_id, skill_id)
+            prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities', 'view_image': 'device_action'}.get(skill_id, skill_id)
             need = 'read' if skill_id in ('screen_capture', 'file_pull', 'capability_probe') else 'control'
             hops = [{'device_key': target, 'transport': tr, 'primitive_id': prim, 'grant': g, 'required_grant': need}]
             reason = detail = None
@@ -321,7 +333,7 @@ class Router:
                 reason = 'link_down'
             elif GRANT_RANK.get(g, -1) < GRANT_RANK[need]:
                 reason, detail = 'grant_insufficient', {'missing_grant': need, 'hop_index': 0, 'blocking_device_key': None}
-            op = {'app_launch': 'op:device_action:launch_app', 'capability_probe': 'op:device_capabilities'}.get(skill_id, 'op:' + skill_id)
+            op = {'app_launch': 'op:device_action:launch_app', 'capability_probe': 'op:device_capabilities', 'view_image': 'op:device_action:view_file'}.get(skill_id, 'op:' + skill_id)
             r = self._route(skill_id, snap, target, hops, op, prim, observed,
                             LEASE_S.get(tr, 60), 'adb discovery', reason, detail)
             r['_params'] = {'screen_capture': lambda p: {'label': p['label']} if 'label' in p else {},
@@ -331,6 +343,7 @@ class Router:
                             'app_launch': lambda p: {'action': 'launch_app', 'args': {'package': p['package']}},
                             'capability_probe': lambda p: {},
                             'tv_sleep': lambda p: {}, 'tv_wake': lambda p: {},
+                            'view_image': lambda p: {'action': 'view_file', 'args': {'name': p['name']}},
                             'companion_foreground': lambda p: {}}[skill_id]
             return [r]
         if skill_id == 'vacuum_command':
@@ -363,6 +376,31 @@ class Router:
                             LEASE_S.get(tr, 300), 'windows agent discovery', reason, detail)
             r['_params'] = lambda p: {'command': p['command'], 'shell': p.get('shell', 'powershell'),
                                       'timeout_s': p.get('timeout_s', 120)}
+            return [r]
+        if skill_id == 'pc_open_url':
+            agent = link is not None and bool((d.get('handles') or {}).get('WINDOWS_AGENT'))
+            hops = [{'device_key': target, 'transport': tr, 'primitive_id': 'pc_open_url', 'grant': g, 'required_grant': 'read'}]
+            reason = detail = None
+            if d.get('category') != 'computer' or not agent:
+                reason = 'link_down'
+            elif GRANT_RANK.get(g, -1) < GRANT_RANK['read']:
+                reason, detail = 'grant_insufficient', {'missing_grant': 'read', 'hop_index': 0, 'blocking_device_key': None}
+            r = self._route(skill_id, snap, target, hops, 'op:pc_open_url', 'pc_open_url', observed,
+                            LEASE_S.get(tr, 300), 'windows agent discovery', reason, detail)
+            r['_params'] = lambda p: {'url': p['url']}
+            return [r]
+        if skill_id in ('pc_place_file', 'pc_wallpaper'):
+            agent = link is not None and bool((d.get('handles') or {}).get('WINDOWS_AGENT'))
+            hops = [{'device_key': target, 'transport': tr, 'primitive_id': skill_id, 'grant': g, 'required_grant': 'read'}]
+            reason = detail = None
+            if d.get('category') != 'computer' or not agent:
+                reason = 'link_down'
+            elif GRANT_RANK.get(g, -1) < GRANT_RANK['read']:
+                reason, detail = 'grant_insufficient', {'missing_grant': 'read', 'hop_index': 0, 'blocking_device_key': None}
+            r = self._route(skill_id, snap, target, hops, 'op:' + skill_id, skill_id, observed,
+                            LEASE_S.get(tr, 300), 'windows agent discovery', reason, detail)
+            r['_params'] = (lambda p: {'transfer_id': p['transfer_id'], 'name': p['name']}
+                            if skill_id == 'pc_place_file' else lambda p: {'name': p['name']})
             return [r]
         # Android volume skills: ADB link with control grant.
         if d.get('category') not in ANDROID:

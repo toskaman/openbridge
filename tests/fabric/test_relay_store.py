@@ -1,9 +1,11 @@
 """Durable relay pairings (key in the vault only, metadata file atomic, corrupt file fails closed) and restore after
 a server restart (signed proof required)."""
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from src.fabric import aead as A
 from src.fabric import relay as R
@@ -105,6 +107,15 @@ class Restore(unittest.TestCase):
         srv2, out2 = self.server(s, FakeCompanion(key=b'x' * 32))         # device was re-paired elsewhere
         self.assertTrue(out2[0][1].startswith('OFFLINE'))
         self.assertFalse(srv2.relays.relays['relay-abc123']['online'])
+
+
+class DefaultOwnerStore(unittest.TestCase):
+    def test_uses_localappdata_openbridge_path(self):
+        from src.fabric.relay_store import default_owner_store
+        with mock.patch.dict(os.environ, {'LOCALAPPDATA': 'L:\\'}):
+            s = default_owner_store()
+        self.assertIsInstance(s, RelayStore)
+        self.assertEqual(s.path, Path('L:/OpenBridge/relays.json'))
 
 
 if __name__ == '__main__':

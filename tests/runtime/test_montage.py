@@ -38,6 +38,39 @@ class PngCodecTest(unittest.TestCase):
             M.decode_png(solid(4, 4, (1, 2, 3, 255))[:40])
 
 
+class FitTest(unittest.TestCase):
+    def test_noop_when_already_fits(self):
+        raw = solid(100, 60, (9, 9, 9, 255))
+        self.assertEqual(M.png_size(M.fit_png(raw, 448)), (100, 60))
+
+    def test_downscales_keeping_aspect(self):
+        raw = solid(800, 400, (200, 10, 10, 255))
+        w, h, px = M.decode_png(M.fit_png(raw, 400))
+        self.assertEqual((w, h), (400, 200))
+        self.assertEqual(px[0:4], bytes((200, 10, 10, 255)))
+
+    def test_box_averages_two_tone(self):
+        left = M.encode_png(2, 1, bytes((0, 0, 0, 255, 255, 255, 255, 255)))
+        w, h, px = M.decode_png(M.fit_png(left, 16))
+        self.assertEqual((w, h), (2, 1))  # fits: untouched
+        big = M.encode_png(4, 4, bytes((0, 0, 0, 255)) * 8 + bytes((255, 255, 255, 255)) * 8)
+        w2, h2, px2 = M.decode_png(M.fit_png(big, 16))
+        self.assertEqual((w2, h2), (4, 4))  # fits: untouched
+        huge = M.encode_png(64, 64, bytes((0, 0, 0, 255)) * 2048 + bytes((255, 255, 255, 255)) * 2048)
+        w3, h3, px3 = M.decode_png(M.fit_png(huge, 16))
+        self.assertEqual((w3, h3), (16, 16))
+        self.assertEqual(px3[0:4], bytes((0, 0, 0, 255)))      # top stays black
+        self.assertEqual(px3[-4:], bytes((255, 255, 255, 255)))  # bottom stays white
+
+    def test_rejects_bad_max_side_and_non_png(self):
+        raw = solid(32, 32, (1, 1, 1, 255))
+        for bad in (0, 15, 2049, '448', True, None):
+            with self.assertRaises(M.MontageError, msg=repr(bad)):
+                M.fit_png(raw, bad)
+        with self.assertRaises(M.MontageError):
+            M.fit_png(b'junk.....................')
+
+
 class CombineTest(unittest.TestCase):
     def test_row_stacks_horizontally(self):
         a = solid(4, 2, (255, 0, 0, 255))

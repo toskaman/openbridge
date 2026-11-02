@@ -43,12 +43,26 @@ def parse_df_available_kb(text):
     return None
 
 
+REMEMBER_WINDOW_S = 60
+REMEMBER_MAX = 4
+REMEMBER_FILE_MAX = 8
+REMEMBER_EP = re.compile(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{2,5})$')
+
+
+def default_remember_path():
+    import os
+    from pathlib import Path
+    return Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge' / 'adb_known.json'
+
+
 class AndroidAdapter:
-    def __init__(self, executable=None, runner=subprocess.run):
+    def __init__(self, executable=None, runner=subprocess.run, remember_path=None):
         self.executable = executable or shutil.which('adb')
         self.runner = runner
         self._handles = {}
         self._lock = threading.RLock()
+        self._remember_path = remember_path
+        self._reattempted = {}
 
     def _run(self, args, max_bytes=131072):
         result = self.runner([self.executable, *args], capture_output=True, text=True,
@@ -164,9 +178,83 @@ class AndroidAdapter:
                                     'capabilities': ['inspect'] if state == 'device' else [],
                                     'observed_at': datetime.now(timezone.utc).isoformat()})
                 self._handles = current
+            if self._remember_path:
+                self._remember_seen([s for s in current if ':' in s])
+                self._reconnect_remembered(set(current))
             return {'status': 'READY' if devices else 'WAITING_FOR_DEVICE', 'devices': devices}
         except (OSError, ValueError, subprocess.SubprocessError):
             return {'status': 'ADB_UNAVAILABLE', 'devices': []}
+
+    def _remember_load(self):
+        import json
+        try:
+            with open(self._remember_path, encoding='utf-8') as f:
+                doc = json.load(f)
+            eps = doc.get('endpoints', []) if isinstance(doc, dict) else []
+            return [e for e in eps if isinstance(e, str)][:REMEMBER_FILE_MAX]
+        except (OSError, ValueError):
+            return []
+
+    def _remember_save(self, endpoints):
+        import json
+        import os
+        import tempfile
+        path = str(self._remember_path)
+        try:
+            os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
+            fd, tmp = tempfile.mkstemp(prefix='.adb-known-', dir=os.path.dirname(path) or '.')
+            try:
+                with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                    json.dump({'endpoints': sorted(set(endpoints))[:REMEMBER_FILE_MAX]}, f)
+                os.replace(tmp, path)
+            except BaseException:
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
+                raise
+        except OSError:
+            pass
+
+    @staticmethod
+    def _remember_valid(endpoint):
+        import ipaddress
+        m = REMEMBER_EP.match(endpoint or '')
+        if not m:
+            return False
+        try:
+            ip = ipaddress.ip_address(m.group(1))
+            port = int(m.group(2))
+        except ValueError:
+            return False
+        return ip.is_private and not ip.is_loopback and 1 <= port <= 65535
+
+    def _remember_seen(self, wifi_serials):
+        eps = self._remember_load()
+        for s in wifi_serials:
+            if self._remember_valid(s) and s not in eps:
+                eps.append(s)
+        self._remember_save(eps)
+
+    def _reconnect_remembered(self, current):
+        import time as _t
+        now = _t.monotonic()
+        tried = 0
+        for ep in self._remember_load():
+            if tried >= REMEMBER_MAX:
+                break
+            if ep in current or not self._remember_valid(ep):
+                continue
+            if now - self._reattempted.get(ep, 0) < REMEMBER_WINDOW_S:
+                continue
+            self._reattempted[ep] = now
+            tried += 1
+            try:
+                self.runner([self.executable, 'connect', ep], capture_output=True, text=True,
+                            encoding='utf-8', errors='replace', timeout=10,
+                            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            except (OSError, subprocess.SubprocessError):
+                pass
 
     def serial_for(self, handle):
         with self._lock:
@@ -290,14 +378,14 @@ class AndroidAdapter:
         """Direct-LAN URL by mDNS match on the companion TXT relay id.
 
         Gives USB-paired devices a direct URL after pairing (their serial
-        carries no IP). Bounded single browse; any failure or mismatch is
-        None (the caller keeps the adb forward)."""
+        carries no IP). Bounded browse (default + explicit extra interfaces);
+        any failure or mismatch is None (the caller keeps the adb forward)."""
         import ipaddress as _ip
         from src.fabric import mdns
         if not isinstance(relay_id, str) or not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id):
             return None
         try:
-            res = mdns.discover(timeout=timeout, services=('_openbridge-relay._tcp',))
+            res = mdns.browse_interfaces(timeout=timeout, services=('_openbridge-relay._tcp',))
         except OSError:
             return None
         scope = mdns.default_scope()

@@ -199,8 +199,8 @@ class WindowsBridge:
 
     # ---------- jobs (owner-requested, consent-gated by the pc_job primitive) ----------
     def run_job(self, command, shell, timeout_s):
-        """Run ONE owner-typed command on the client PC through the agent's exec.run. Only reachable through the
-        pc_job primitive (owner consent per job); bounds checked here too."""
+        """Run ONE owner-consented command on the client PC through the agent's exec.run. Only reachable through the
+        pc_job / pc_open_url primitives (owner consent per call); bounds checked here too."""
         if not isinstance(command, str) or not 0 < len(command) <= 2000 or '\x00' in command:
             raise BridgeUnavailable('command must be 1..2000 characters')
         if shell not in ('cmd', 'powershell'):
