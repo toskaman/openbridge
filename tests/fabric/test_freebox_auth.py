@@ -63,9 +63,17 @@ class FreeboxAuthTests(unittest.TestCase):
                                  {'mac':'aa:bb:cc:dd:ee:ff','ip':'192.168.1.51','comment':''}])
         self.assertTrue(all(m=='GET' for m,p,_ in box.calls if 'login' not in p))
 
-    def test_non_allowlisted_path_and_no_vault_refused(self):
-        s=FreeboxSession(MemVault(),12,transport=FakeBox())
-        with self.assertRaises(FreeboxAuthError):s.get('wifi/config/')
+    def test_non_allowlisted_path_refused_before_session(self):
+        # W1-068: the old test passed via missing-token, never the
+        # allowlist. With a token present, a non-allowlisted path
+        # must still refuse (allowlist gate precedes auth).
+        v=MemVault();v.put(TOKEN_NAME,'TOKEN')
+        s=FreeboxSession(v,12,transport=FakeBox())
+        with self.assertRaises(FreeboxAuthError):s.get('system/reboot/')
+        with self.assertRaises(FreeboxAuthError):s.get('wifi/bss/')
+        self.assertEqual(s.session,None)
+
+    def test_no_vault_refused(self):
         class NoVault(MemVault):available=False
         with self.assertRaises(FreeboxAuthError):FreeboxSession(NoVault(),12,transport=FakeBox()).request_authorization()
 

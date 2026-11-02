@@ -949,6 +949,20 @@ class RoutingAdversarial(unittest.TestCase):
              'graph_revision': lease['graph_revision'],
              'params': params or {'seconds': 8}, 'consent': True})
 
+    def test_armed_lease_survives_unrelated_link_edit(self):
+        # W1-001: invoke revalidates against the armed echo, not the
+        # live graph seq, so an unrelated device/link edit (phone
+        # grant downgrade + registry growth) must not void a ble
+        # lease armed before the edit.
+        from src.fabric.registry import Link
+        server, keys, clock, rt, calls, ex = routing_setup()
+        doc = rt.skill_routes('ble_scan_room')
+        lease = self.arm_ble(rt, doc)
+        server.fabric_registry.link(Link('pc', keys['phone'], 'USB', ('observe',), 'ADB:device'))
+        out = self.invoke_ble(rt, lease)
+        self.assertTrue(calls, 'unrelated edit must not void the lease into a no-dispatch path')
+        self.assertEqual(out.get('state'), 'VERIFIED')
+
     def test_stale_graph_revision_mismatch(self):
         server, keys, clock, rt, calls, ex = routing_setup()
         doc = rt.skill_routes('ble_scan_room')

@@ -13,7 +13,8 @@ def transport_of(serial):
     """Classify an adb serial without contacting anything. Wi-Fi ADB must already be paired/connected by the owner."""
     if serial.startswith('emulator-'):
         return 'EMULATOR'
-    if ':' in serial or '._adb-tls-connect._tcp' in serial or '._adb._tcp' in serial:
+    if ':' in serial or '._adb-tls-connect._tcp' in serial or '._adb._tcp' in serial \
+            or '_adb-tls-pairing' in serial:
         return 'WIFI'
     return 'USB'
 

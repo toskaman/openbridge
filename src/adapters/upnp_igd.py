@@ -20,9 +20,9 @@ NS_DEV = '{urn:schemas-upnp-org:device-1-0}'
 WAN_SERVICES = ('urn:schemas-upnp-org:service:WANIPConnection:2', 'urn:schemas-upnp-org:service:WANIPConnection:1',
                 'urn:schemas-upnp-org:service:WANPPPConnection:1')
 COMMON = 'urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1'
-READ_ACTIONS = {  # action -> service family
+READ_ACTIONS = {  # action -> service family (only what read() invokes)
     'GetStatusInfo': 'wan', 'GetExternalIPAddress': 'wan', 'GetConnectionTypeInfo': 'wan',
-    'GetCommonLinkProperties': 'common', 'GetTotalBytesReceived': 'common', 'GetTotalBytesSent': 'common'}
+    'GetCommonLinkProperties': 'common'}
 NEVER = ('AddPortMapping', 'AddAnyPortMapping', 'DeletePortMapping', 'DeletePortMappingRange', 'SetConnectionType',
          'ForceTermination', 'RequestConnection', 'RequestTermination', 'SetAutoDisconnectTime', 'SetIdleDisconnectTime',
          'SetWarnDisconnectDelay', 'GetGenericPortMappingEntry', 'GetSpecificPortMappingEntry', 'GetListOfPortMappings')

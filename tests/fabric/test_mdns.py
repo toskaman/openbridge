@@ -63,6 +63,19 @@ class MdnsTests(unittest.TestCase):
         self.assertEqual(out['ignored_out_of_scope'],1);self.assertTrue(sock.closed)
         self.assertTrue(all(g==('224.0.0.251',5353) for _,g in sock.sent))
 
+    def test_ipv6_only_instance_does_not_pass_scope(self):
+        # W1-055: the scope filter excluded ':' addresses, so an
+        # IPv6-only instance passed on all([])==True. Scope is
+        # IPv4-private: such instances must not be admitted.
+        from src.fabric.mdns import AAAA
+        inst = 'v6box._hap._tcp.local'
+        pkt = response([rr('_hap._tcp.local', PTR, encode_name(inst)),
+                        rr(inst, SRV, struct.pack('!HHH', 0, 0, 80) + encode_name('v6box.local')),
+                        rr('v6box.local', AAAA, socket.inet_pton(socket.AF_INET6, 'fe80::1'))])
+        sock = FakeSock([(pkt, '192.168.1.99')])
+        out = discover(timeout=0.3, sock_factory=lambda: sock)
+        self.assertEqual(out['instances'], [])
+
     def test_out_of_scope_addresses_in_records_are_dropped(self):
         import ipaddress
         sock=FakeSock([(freebox_packet(),'192.168.1.254')])
