@@ -164,6 +164,13 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('owner consent for this exact command',), ('agent connected', 'identity re-verified'),
                      ('the command ran once on that PC',), 'exit code and captured output returned; nothing is retried', '',
                      R.IRREVERSIBLE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'FAILED'), 630, 'single-per-device', True),
+    ActionDescriptor('pc_open_url', 'Open one http(s) URL in the client PC default browser through its BridgeWindows agent',
+                     {'type': 'object', 'properties': {'url': _s('string', maxLength=300)},
+                      'required': ['url'], 'additionalProperties': False},
+                     ('owner consent for this exact URL',), ('agent connected', 'identity re-verified'),
+                     ('the browser was asked to open the URL once on that PC',),
+                     'process launch acknowledged; page load is NOT verified', '',
+                     R.IRREVERSIBLE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'FAILED', 'BAD_URL'), 60, 'single-per-device', True),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -685,6 +692,36 @@ class Executor:
         ok = out['exit_code'] == 0 and not out['timed_out']
         return ('VERIFIED' if ok else 'FAILED'), None, out['exit_code'], ok, out
 
+    def _pc_open_url(self, key, params):
+        import base64
+        import time as _t
+        from src.adapters.windows_bridge import BridgeUnavailable
+        url = params.get('url')
+        if not isinstance(url, str) or not re.fullmatch(r'https?://[A-Za-z0-9.-]+\.[A-Za-z]{2,}(:\d{1,5})?(/[A-Za-z0-9\-._~:/?#\[\]@!&\'()*+,;=%]*)?', url or ''):
+            # No '$', backtick, quote or whitespace: the URL is embedded in a
+            # double-quoted PowerShell string, where $() and backticks expand.
+            raise PrimitiveError('BAD_URL', 'http(s) URL only (strict charset, no shell metacharacters)')
+        dev = self._device(key)
+        if dev['category'] != 'computer':
+            raise PrimitiveError('BLOCKED', 'not a bridged PC')
+        bridge = (self.ctx.fabric_adapters(('windows',)) or {}).get('windows')
+        if bridge is None or not bridge.connected():
+            raise PrimitiveError('DEVICE_UNAVAILABLE', 'Windows agent not connected')
+        known = {i.value for i in dev['identifiers'] if i.strong}
+        try:
+            if bridge.identity(self.ctx.fabric_salt) not in known:
+                raise PrimitiveError('IDENTITY_CHANGED', 'A different Windows PC is now connected; re-run discovery')
+            t0 = _t.monotonic()
+            r = bridge.run_job('Start-Process "%s"' % url, 'powershell', 60)
+        except BridgeUnavailable as e:
+            raise PrimitiveError('FAILED', str(e)[:120]) from None
+        out = {'url': url, 'exit_code': r.get('exit_code'), 'timed_out': bool(r.get('timed_out')),
+               'stdout': base64.b64decode(r.get('stdout_b64') or b'').decode('utf-8', 'replace')[-2000:],
+               'duration_s': round(_t.monotonic() - t0, 1),
+               'launched_only': True}
+        ok = out['exit_code'] == 0 and not out['timed_out']
+        return ('VERIFIED' if ok else 'FAILED'), None, out['exit_code'], ok, out
+
     def _tuya_command(self, key, params):
         from src.adapters.tuya_local import TuyaBlocked, command
         if self._device(key)['category'] != 'vacuum':
@@ -921,7 +958,7 @@ class Executor:
             raise ValueError(f'HASH_MISMATCH: device has {digest[:16]}.., expected {want[:16]}..')
         return 'EXECUTED', None, remote, True, {'remote': remote, 'sha256': want, 'bytes': len(data)}
 
-    RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'pc_open_url': _pc_open_url, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,

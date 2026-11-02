@@ -74,6 +74,9 @@ SKILLS = {
     'retro_command': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': False,
                       'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'enum': ['VERSION', 'GET_STATUS', 'PAUSE_TOGGLE', 'VOLUME_UP', 'VOLUME_DOWN']}}, 'required': ['command'], 'additionalProperties': False},
                       'plain': 'Send one allowlisted command to the RetroArch running on this PC (loopback only).'},
+    'pc_open_url': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                    'input': {'type': 'object', 'properties': {'url': {'type': 'string', 'maxLength': 300}}, 'required': ['url'], 'additionalProperties': False},
+                    'plain': 'Open one http(s) URL in the default browser of this PC. Only process launch is verified, never page load.'},
     'pc_run': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'maxLength': 2000}, 'shell': {'type': 'string', 'enum': ['cmd', 'powershell']}, 'timeout_s': {'type': 'integer', 'minimum': 1, 'maximum': 600}}, 'required': ['command'], 'additionalProperties': False},
                'plain': 'Run one owner-confirmed command on this Windows PC via its agent. Use inside an approval-gated workflow.'},
@@ -367,6 +370,18 @@ class Router:
                             LEASE_S.get(tr, 300), 'windows agent discovery', reason, detail)
             r['_params'] = lambda p: {'command': p['command'], 'shell': p.get('shell', 'powershell'),
                                       'timeout_s': p.get('timeout_s', 120)}
+            return [r]
+        if skill_id == 'pc_open_url':
+            agent = link is not None and bool((d.get('handles') or {}).get('WINDOWS_AGENT'))
+            hops = [{'device_key': target, 'transport': tr, 'primitive_id': 'pc_open_url', 'grant': g, 'required_grant': 'read'}]
+            reason = detail = None
+            if d.get('category') != 'computer' or not agent:
+                reason = 'link_down'
+            elif GRANT_RANK.get(g, -1) < GRANT_RANK['read']:
+                reason, detail = 'grant_insufficient', {'missing_grant': 'read', 'hop_index': 0, 'blocking_device_key': None}
+            r = self._route(skill_id, snap, target, hops, 'op:pc_open_url', 'pc_open_url', observed,
+                            LEASE_S.get(tr, 300), 'windows agent discovery', reason, detail)
+            r['_params'] = lambda p: {'url': p['url']}
             return [r]
         # Android volume skills: ADB link with control grant.
         if d.get('category') not in ANDROID:
