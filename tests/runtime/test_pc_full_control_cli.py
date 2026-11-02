@@ -9,9 +9,12 @@ class ConfirmTest(unittest.TestCase):
         self.assertTrue(confirm('w', input_fn=lambda _p: 'YES'))
 
     def test_anything_else_aborts(self):
-        for answer in ('yes', 'Y', '', 'YES ', ' yes', 'NO'):
+        for answer in ('yes', 'Y', '', 'NO', 'YES PLEASE', 'y'):
             with self.subTest(answer=answer):
                 self.assertFalse(confirm('w', input_fn=lambda _p, a=answer: a))
+
+    def test_surrounding_whitespace_is_tolerated(self):
+        self.assertTrue(confirm('w', input_fn=lambda _p: '  YES  '))
 
     def test_eof_aborts(self):
         def boom(_p):
