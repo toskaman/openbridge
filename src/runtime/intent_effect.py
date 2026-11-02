@@ -119,7 +119,8 @@ for _cls, _words in {
                    'aspirateurs'},
         'pc': {'pc', 'pcs', 'computer', 'computers', 'ordinateur',
                'ordinateurs'},
-        'watch': {'watch', 'watches', 'montre', 'montres'},
+        'watch': {'watch', 'watches', 'smartwatch', 'smartwatches',
+                  'montre', 'montres', 'montre-connectee'},
         'freebox': {'freebox'},
         'router': {'router', 'routers', 'routeur', 'routeurs'},
 }.items():

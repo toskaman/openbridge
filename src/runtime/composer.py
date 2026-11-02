@@ -284,6 +284,25 @@ def _refuse(step, reason):
             'failure_strategy': None, 'reversibility': None}
 
 
+def coerce_params(schema, params):
+    """One bounded repair: numeric strings -> int where the schema demands
+    integer (MI v3; the model emits JSON strings for ints). Value-preserving
+    only: full-digit strings, never bools/floats/out-of-shape values.
+    Anything else passes through untouched for validate() to refuse."""
+    import re
+    props = (schema or {}).get('properties') or {}
+    out = dict(params or {})
+    for name, sub in props.items():
+        if not isinstance(sub, dict) or sub.get('type') != 'integer':
+            continue
+        v = out.get(name)
+        if isinstance(v, bool) or not isinstance(v, str):
+            continue
+        if re.fullmatch(r'-?\d+', v.strip() or ''):
+            out[name] = int(v.strip())
+    return out
+
+
 def compose(proposal, devices, router):
     """Deterministically allow or refuse each proposed step.
 
@@ -306,7 +325,9 @@ def compose(proposal, devices, router):
             steps.append(_refuse(s, 'unknown skill %r' % (skill,)))
             continue
         try:
-            validate(SKILLS[skill]['input'], s.get('params') or {})
+            params = coerce_params(SKILLS[skill]['input'], s.get('params') or {})
+            validate(SKILLS[skill]['input'], params)
+            s = dict(s, params=params)
         except (PrimitiveError, TypeError, ValueError) as e:
             steps.append(_refuse(s, 'invalid params: %s' % e))
             continue
