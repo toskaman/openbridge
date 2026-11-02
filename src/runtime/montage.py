@@ -124,6 +124,38 @@ def encode_png(w, h, rgba):
     return b''.join(out)
 
 
+def fit_png(raw, max_side=448):
+    """Downscale a PNG to fit within max_side (aspect kept, box filter).
+
+    No-op when the image already fits. Used to shrink captures for
+    small screens (watches) before a bounded transfer.
+    """
+    if not isinstance(max_side, int) or isinstance(max_side, bool) \
+            or max_side < 16 or max_side > 2048:
+        raise MontageError('max_side out of bounds')
+    w, h, px = decode_png(raw)
+    if max(w, h) <= max_side:
+        return bytes(raw)
+    scale = max_side / max(w, h)
+    nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
+    out = bytearray(nw * nh * 4)
+    for y in range(nh):
+        y0, y1 = int(y / scale), min(h, max(int((y + 1) / scale), int(y / scale) + 1))
+        for x in range(nw):
+            x0 = int(x / scale)
+            x1 = min(w, max(int((x + 1) / scale), x0 + 1))
+            rs = gs = bs = aas = n = 0
+            for sy in range(y0, y1):
+                base = sy * w * 4
+                for sx in range(x0, x1):
+                    o = base + sx * 4
+                    rs += px[o]; gs += px[o + 1]; bs += px[o + 2]; aas += px[o + 3]
+                    n += 1
+            o = (y * nw + x) * 4
+            out[o:o + 4] = bytes((rs // n, gs // n, bs // n, aas // n))
+    return encode_png(nw, nh, bytes(out))
+
+
 def combine(images, layout='row', bg=(0, 0, 0, 255)):
     """Combine PNG byte strings into one PNG. layout: 'row' or 'grid'."""
     if layout not in ('row', 'grid'):
