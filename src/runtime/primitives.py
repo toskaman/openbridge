@@ -48,7 +48,7 @@ ARGS_SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
     'key': {'type': 'string', 'maxLength': 24}, 'text': {'type': 'string', 'maxLength': 100}, 'package': {'type': 'string', 'maxLength': 120},
     'url': {'type': 'string', 'maxLength': 300}, 'setting': {'type': 'string', 'maxLength': 32}, 'value': {'type': 'integer', 'minimum': 0, 'maximum': 1800000},
     'x': {'type': 'number'}, 'y': {'type': 'number'}, 'x1': {'type': 'number'}, 'y1': {'type': 'number'}, 'x2': {'type': 'number'}, 'y2': {'type': 'number'},
-    'ms': {'type': 'integer', 'minimum': 0, 'maximum': 10000}}}
+    'ms': {'type': 'integer', 'minimum': 0, 'maximum': 10000}, 'name': {'type': 'string', 'maxLength': 64}}}
 
 PRIMITIVES = {p.primitive_id: p for p in (
     ActionDescriptor('read_facts', 'Read diagnostics from one device',
@@ -144,7 +144,7 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('read grant on a current ADB link',), ('identity re-verified',), ('none: read-only',),
                      'each entry measured on the device now', '', R.NONE.value, ('DEVICE_UNAVAILABLE',), 60, 'single-per-device', False),
     ActionDescriptor('device_action', 'Run one typed action on an Android phone, TV or watch (remote keys, mouse, text, apps, URL, settings)',
-                     {'type': 'object', 'properties': {'action': _s('string', enum=sorted(['key', 'text', 'tap', 'swipe', 'long_press', 'launch_app', 'open_url', 'set', 'get', 'restore', 'list_apps', 'screen_state', 'audio_state'])),
+                     {'type': 'object', 'properties': {'action': _s('string', enum=sorted(['key', 'text', 'tap', 'swipe', 'long_press', 'launch_app', 'open_url', 'set', 'get', 'restore', 'list_apps', 'screen_state', 'audio_state', 'view_file'])),
                                                        'args': ARGS_SCHEMA}, 'required': ['action'], 'additionalProperties': False},
                      ('owner consent for this action',), ('identity re-verified', 'args valid for the action'),
                      ('device acted; settings read back',), 'settings: independent read-back (undo = device_action with action=restore); other actions report the screen state', '',

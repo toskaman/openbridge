@@ -62,6 +62,9 @@ SKILLS = {
     'app_launch': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': True,
                    'input': {'type': 'object', 'properties': {'package': {'type': 'string', 'maxLength': 120}}, 'required': ['package'], 'additionalProperties': False},
                    'plain': 'Launch one app package on this Android device.'},
+    'view_image': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
+                   'input': {'type': 'object', 'properties': {'name': {'type': 'string', 'maxLength': 64}}, 'required': ['name'], 'additionalProperties': False},
+                   'plain': 'Open one pushed PNG from /sdcard/OpenBridge/ in this Android system viewer.'},
     'capability_probe': {'version': 1, 'reversibility': 'NONE', 'idempotent': True, 'consent': 'none', 'targeted': True,
                          'input': {'type': 'object', 'properties': {}, 'additionalProperties': False},
                          'plain': 'Measure which typed actions this Android device supports (read-only probe).'},
@@ -306,14 +309,14 @@ class Router:
             r['_params'] = lambda p: {}
             return [r]
         if skill_id in ('screen_capture', 'file_pull', 'capture_send', 'file_push', 'app_launch', 'capability_probe',
-                               'tv_sleep', 'tv_wake', 'companion_foreground'):
+                               'tv_sleep', 'tv_wake', 'companion_foreground', 'view_image'):
             # §7 media/file/action skills: ADB link (USB, Wi-Fi or emulator); reads need 'read', writes need 'control'.
             if d.get('category') not in ANDROID:
                 return out
             if skill_id in ('tv_sleep', 'tv_wake') and d.get('category') != 'tv':
                 return out
             adb = link is not None and link['transport'] in ('USB', 'WIFI', 'EMULATOR') and bool(d.get('handles'))
-            prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities'}.get(skill_id, skill_id)
+            prim = {'app_launch': 'device_action', 'capability_probe': 'device_capabilities', 'view_image': 'device_action'}.get(skill_id, skill_id)
             need = 'read' if skill_id in ('screen_capture', 'file_pull', 'capability_probe') else 'control'
             hops = [{'device_key': target, 'transport': tr, 'primitive_id': prim, 'grant': g, 'required_grant': need}]
             reason = detail = None
@@ -321,7 +324,7 @@ class Router:
                 reason = 'link_down'
             elif GRANT_RANK.get(g, -1) < GRANT_RANK[need]:
                 reason, detail = 'grant_insufficient', {'missing_grant': need, 'hop_index': 0, 'blocking_device_key': None}
-            op = {'app_launch': 'op:device_action:launch_app', 'capability_probe': 'op:device_capabilities'}.get(skill_id, 'op:' + skill_id)
+            op = {'app_launch': 'op:device_action:launch_app', 'capability_probe': 'op:device_capabilities', 'view_image': 'op:device_action:view_file'}.get(skill_id, 'op:' + skill_id)
             r = self._route(skill_id, snap, target, hops, op, prim, observed,
                             LEASE_S.get(tr, 60), 'adb discovery', reason, detail)
             r['_params'] = {'screen_capture': lambda p: {'label': p['label']} if 'label' in p else {},
@@ -331,6 +334,7 @@ class Router:
                             'app_launch': lambda p: {'action': 'launch_app', 'args': {'package': p['package']}},
                             'capability_probe': lambda p: {},
                             'tv_sleep': lambda p: {}, 'tv_wake': lambda p: {},
+                            'view_image': lambda p: {'action': 'view_file', 'args': {'name': p['name']}},
                             'companion_foreground': lambda p: {}}[skill_id]
             return [r]
         if skill_id == 'vacuum_command':
