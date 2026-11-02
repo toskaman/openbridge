@@ -182,6 +182,23 @@ class MemoryStore:
         with self._lock:
             self._d[record['workflow_id']] = copy.deepcopy(record)
 
+    def claim_running(self, record):
+        """Atomically store a running record iff absent; return the existing record or None if created."""
+        with self._lock:
+            cur = self._d.get(record['workflow_id'])
+            if cur is not None:
+                return copy.deepcopy(cur)
+            self._d[record['workflow_id']] = copy.deepcopy(record)
+            return None
+
+
+def _evict(wfs):
+    while len(wfs) > MAX_JOURNAL:
+        victim = next((k for k in wfs if wfs[k].get('status') in TERMINAL), None)
+        if victim is None:
+            break
+        del wfs[victim]
+
 
 class StateStoreJournal:
     """Durable journal: records live under the state file's 'workflows' key."""
@@ -200,13 +217,27 @@ class StateStoreJournal:
     def save(self, record):
         def change(d):
             wfs = d.setdefault('workflows', {})
+            cur = wfs.get(record['workflow_id'])
+            if cur is not None and cur.get('status') in TERMINAL and record.get('status') != cur.get('status'):
+                return  # terminal records are immutable: a racing driver must not clobber them
             wfs[record['workflow_id']] = copy.deepcopy(record)
-            while len(wfs) > MAX_JOURNAL:
-                victim = next((k for k in wfs if wfs[k].get('status') in TERMINAL), None)
-                if victim is None:
-                    break
-                del wfs[victim]
+            _evict(wfs)
         self._s._mutate(change)
+
+    def claim_running(self, record):
+        """Atomically store a running record iff absent (cross-process); return the existing record or None if created."""
+        seen = []
+
+        def change(d):
+            wfs = d.setdefault('workflows', {})
+            cur = wfs.get(record['workflow_id'])
+            if cur is not None:
+                seen.append(copy.deepcopy(cur))
+                return
+            wfs[record['workflow_id']] = copy.deepcopy(record)
+            _evict(wfs)
+        self._s._mutate(change)
+        return seen[0] if seen else None
 
 
 def _substitute(params, receipts):
@@ -376,15 +407,14 @@ def run(body, router, store, workflow_id, actor='owner'):
         raise WorkflowError('invalid workflow id')
     spec = validate_workflow(body)
     lock = _lock_for(workflow_id)
+    record = {'workflow_id': workflow_id, 'status': 'running',
+              'name': body.get('name', '')[:120],
+              'steps': [{'id': s['id'], 'state': 'QUEUED'} for lvl in spec['levels'] for s in lvl],
+              'spec': spec, 'created_at': _iso()}
     with lock:
-        existing = store.get(workflow_id)
+        existing = store.claim_running(record)
         if existing is not None:
-            return existing  # terminal or waiting: never dispatch twice
-        record = {'workflow_id': workflow_id, 'status': 'running',
-                  'name': body.get('name', '')[:120],
-                  'steps': [{'id': s['id'], 'state': 'QUEUED'} for lvl in spec['levels'] for s in lvl],
-                  'spec': spec, 'created_at': _iso()}
-        store.save(record)
+            return existing  # terminal, waiting or driving elsewhere: never dispatch twice
         try:
             return _drive(record, spec, router, store, actor)
         finally:
