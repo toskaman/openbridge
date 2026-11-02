@@ -184,6 +184,21 @@ def _fingerprint(skill_id, primitive_id, params, approved_targets, route_id):
     return hashlib.sha256(canon.encode()).hexdigest()
 
 
+def _b2_invocation_id(intent_id, fingerprint):
+    """Deterministic journal identity for one approved b2 command, or None for a random id.
+
+    Two processes executing the same (intent, approved binding) must arm the
+    same invocation id, or the per-process random id lets both journal claims
+    land and both dispatch (N-03). Falls back to None (random id at arm) when
+    the intent carries no usable id; the in-process execution cache still
+    dedups those. Lease ids stay random per arm: same-process leases never
+    collide, and cross-process losers are refused by the journal claim."""
+    if not isinstance(intent_id, str) or not intent_id or len(intent_id) > 96:
+        return None
+    import hashlib
+    return 'inv-' + hashlib.sha256(('command-b2-v1\x1f%s\x1f%s' % (intent_id, fingerprint)).encode()).hexdigest()[:32]
+
+
 def approve(server, doc):
     from src.runtime.api_v2 import router
     if I.validate_intent(doc) or doc.get('status') != 'resolved':
@@ -315,10 +330,12 @@ def _execute_claimed(server, doc, preview, dispatched):
         r = router(server)
         skill = doc['skill_id']
         target = prev['device_keys'][0] if SKILLS[skill]['targeted'] else None
+        arm_id = _b2_invocation_id((doc or {}).get('intent_id'), preview['fingerprint'])
         try:
             lease = r.arm({'skill_id': skill, 'target': target,
                            'route_id': prev['route']['selected_route_id'],
-                           'params': prev['params'], 'consent': True})
+                           'params': prev['params'], 'consent': True},
+                          invocation_id=arm_id)
             body = {k: lease[k] for k in ('invocation_id', 'route_id', 'lease_id', 'graph_revision')}
             body.update(skill_id=skill, params=prev['params'], consent=True)
             if target is not None:
