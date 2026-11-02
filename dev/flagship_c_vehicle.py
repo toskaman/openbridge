@@ -19,6 +19,55 @@ PRESS_BUDGET_S = 300
 VOLUME_RE = re.compile(r'STREAM_MUSIC[^:]*:\s*\S+[^0-9]*?(\d{1,2})\b')
 
 
+def resolve_tv_key(server):
+    """Pick the TV view exposing the companion relay service (exactly 1).
+
+    Device keys are discovery-run specific, so the vehicle resolves its
+    target in-process instead of trusting a key printed by another run.
+    """
+    devs = (server.fabric_snapshot or {}).get('devices', []) or []
+    cands = []
+    for d in devs:
+        if d.get('category') != 'tv':
+            continue
+        facts = d.get('facts') or {}
+        svcs = ((facts.get('mdns_services') or {}).get('value')) or []
+        caps = [(c or {}).get('name') for c in d.get('capabilities', []) or []]
+        if '_openbridge-relay._tcp' in svcs or 'companion_relay' in caps:
+            cands.append(d)
+    if len(cands) != 1:
+        raise SystemExit('TV auto-resolve failed: %d candidates %s; pass --tv-key'
+                         % (len(cands), sorted(c.get('key') for c in cands)))
+    return cands[0]['key']
+
+
+def resolve_relay_id(server):
+    """Pick the online relay attached to a watch (exactly 1).
+
+    Falls back to the single online relay when no watch mapping exists;
+    anything ambiguous fails loudly instead of guessing a target.
+    """
+    relays = getattr(getattr(server, 'relays', None), 'relays', {}) or {}
+    online = {rid: r for rid, r in relays.items() if r.get('online')}
+    if not online:
+        raise SystemExit('no online relay; pair + adb-connect the watch first')
+    reg = getattr(server, 'fabric_registry', None)
+    devs = dict(reg.devices.items()) if reg is not None else {}
+    watch = []
+    for rid in sorted(online):
+        r = online[rid]
+        key = next((k for k, d in devs.items()
+                    if r.get('device_key') in (d.get('handles') or {}).values()), None)
+        if key is not None and devs[key].get('category') == 'watch':
+            watch.append(rid)
+    if len(watch) == 1:
+        return watch[0]
+    if not watch and len(online) == 1:
+        return next(iter(sorted(online)))
+    raise SystemExit('relay auto-resolve failed: watch=%s online=%s; pass --relay-id'
+                     % (watch, sorted(online)))
+
+
 def utcnow():
     return datetime.now(timezone.utc).isoformat(timespec='seconds')
 
@@ -175,14 +224,18 @@ def main(argv=None):
     if args.self_test:
         receipt = run_vehicle(SelfTestIO(), rounds=args.rounds)
     else:
-        if not (args.relay_id and args.tv_key and args.tv_serial):
-            ap.error('live mode needs --relay-id, --tv-key, --tv-serial')
+        if not args.tv_serial:
+            ap.error('live mode needs --tv-serial (relay + TV auto-resolve in-process)')
         from src.server import create_server
         from src.cli import ensure_discovery, default_providers
         server = create_server()
-        ensure_discovery(server, default_providers())
-        io = LiveIO(server, args.relay_id, args.tv_key, args.tv_serial)
+        ensure_discovery(server, default_providers(args))
+        relay_id = args.relay_id or resolve_relay_id(server)
+        tv_key = args.tv_key or resolve_tv_key(server)
+        io = LiveIO(server, relay_id, tv_key, args.tv_serial)
         receipt = run_vehicle(io, rounds=args.rounds)
+        receipt['relay_id'] = relay_id
+        receipt['tv_key'] = tv_key
     text = json.dumps(receipt, indent=1)
     print(text)
     if args.out:

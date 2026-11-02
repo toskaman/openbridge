@@ -3,7 +3,7 @@ import json
 import unittest
 from types import SimpleNamespace
 
-from dev.flagship_c_vehicle import run_vehicle
+from dev.flagship_c_vehicle import resolve_relay_id, resolve_tv_key, run_vehicle
 
 
 def make_io(script):
@@ -65,6 +65,46 @@ class VehicleTest(unittest.TestCase):
         receipt = run_vehicle(make_io(script), rounds=1)
         self.assertEqual(receipt['verdict'], 'FAIL')
         self.assertIn('exactly-one', receipt['rounds'][0]['reason'])
+
+    def test_live_provider_defaults_resolve(self):
+        from argparse import Namespace
+        from src.cli import default_providers
+        self.assertEqual(default_providers(Namespace()),
+                         ['mdns', 'ssdp', 'android', 'tuya'])
+
+    def test_tv_resolve_picks_relay_service_view(self):
+        tv_plain = {'key': 'dev-a', 'category': 'tv', 'facts': {}, 'capabilities': []}
+        tv_relay = {'key': 'dev-b', 'category': 'tv',
+                    'facts': {'mdns_services': {'value': ['_openbridge-relay._tcp']}},
+                    'capabilities': []}
+        srv = SimpleNamespace(fabric_snapshot={'devices': [tv_plain, tv_relay]})
+        self.assertEqual(resolve_tv_key(srv), 'dev-b')
+
+    def test_tv_resolve_fails_loudly_when_ambiguous(self):
+        devs = [{'key': 'dev-%d' % i, 'category': 'tv',
+                 'facts': {'mdns_services': {'value': ['_openbridge-relay._tcp']}},
+                 'capabilities': []} for i in range(2)]
+        with self.assertRaises(SystemExit):
+            resolve_tv_key(SimpleNamespace(fabric_snapshot={'devices': devs}))
+
+    def test_relay_resolve_picks_watch(self):
+        relays = {'r-phone': {'online': True, 'device_key': 'h1'},
+                  'r-watch': {'online': True, 'device_key': 'h2'}}
+        reg = SimpleNamespace(devices={'k1': {'category': 'phone', 'handles': {'ADB': 'h1'}},
+                                       'k2': {'category': 'watch', 'handles': {'ADB': 'h2'}}})
+        srv = SimpleNamespace(relays=SimpleNamespace(relays=relays), fabric_registry=reg)
+        self.assertEqual(resolve_relay_id(srv), 'r-watch')
+
+    def test_relay_resolve_falls_back_to_single_online(self):
+        relays = {'r-x': {'online': True, 'device_key': 'hz'}}
+        srv = SimpleNamespace(relays=SimpleNamespace(relays=relays),
+                              fabric_registry=SimpleNamespace(devices={}))
+        self.assertEqual(resolve_relay_id(srv), 'r-x')
+
+    def test_relay_resolve_fails_with_none_online(self):
+        srv = SimpleNamespace(relays=SimpleNamespace(relays={}), fabric_registry=None)
+        with self.assertRaises(SystemExit):
+            resolve_relay_id(srv)
 
     def test_receipt_is_json_sanitized(self):
         script = [{'v0': 10, 'v1': 11, 'exec_count': 1, 'post_revoke_exec': 0}]
