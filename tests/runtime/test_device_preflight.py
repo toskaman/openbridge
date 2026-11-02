@@ -95,6 +95,24 @@ class HeadroomTest(unittest.TestCase):
             self.assertFalse(pf.check_headroom())
 
 
+class TruncationTest(unittest.TestCase):
+    BIG = 'x' * 7000 + DUMPSYS_MUSIC
+
+    def test_adb_truncates_by_default_but_not_with_limit_none(self):
+        from types import SimpleNamespace
+        with mock.patch('subprocess.run',
+                        return_value=SimpleNamespace(returncode=0, stdout='y' * 7000)):
+            self.assertEqual(len(P.adb('devices')[1]), 6000)
+            self.assertEqual(len(P.adb('devices', limit=None)[1]), 7000)
+
+    def test_oracle_reads_music_block_beyond_6k(self):
+        from types import SimpleNamespace
+        pf = P.Preflight('TV123', 3)
+        with mock.patch('subprocess.run',
+                        return_value=SimpleNamespace(returncode=0, stdout=self.BIG)):
+            self.assertEqual(pf.read_tv_volume(), 7)
+
+
 class VerdictTest(unittest.TestCase):
     def test_all_ok_is_go(self):
         pf = P.Preflight('TV123', 3)

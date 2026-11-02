@@ -26,10 +26,11 @@ def utcnow():
     return datetime.now(timezone.utc).isoformat(timespec='seconds')
 
 
-def adb(*args, timeout=CHECK_TIMEOUT_S):
+def adb(*args, timeout=CHECK_TIMEOUT_S, limit=6000):
     p = subprocess.run(['adb'] + list(args), capture_output=True,
                        timeout=timeout, text=True)
-    return p.returncode, (p.stdout or '')[:6000]
+    out = p.stdout or ''
+    return p.returncode, out if limit is None else out[:limit]
 
 
 def parse_volume(dumpsys_text):
@@ -139,7 +140,8 @@ class Preflight:
         return ok
 
     def read_tv_volume(self):
-        code, out = adb('-s', self.tv_serial, 'shell', 'dumpsys', 'audio')
+        code, out = adb('-s', self.tv_serial, 'shell', 'dumpsys', 'audio',
+                        limit=None)
         if code != 0:
             return None
         return parse_volume(out)
@@ -161,7 +163,8 @@ class Preflight:
         return self.record('oracle', True, '%d -> %d' % (v0, v1))
 
     def check_headroom(self):
-        code, out = adb('-s', self.tv_serial, 'shell', 'dumpsys', 'audio')
+        code, out = adb('-s', self.tv_serial, 'shell', 'dumpsys', 'audio',
+                        limit=None)
         vmax = parse_max(out) if code == 0 else None
         if vmax is None:
             return self.record('headroom', False, 'max unknown; lower TV volume first')
