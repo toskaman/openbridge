@@ -79,6 +79,17 @@ class LabelSanitizeTests(unittest.TestCase):
         self.assertTrue(all(l.startswith('- ') for l in first))
         self.assertFalse(nxt.startswith('- '), 'prompt breakout: %r' % nxt)
 
+    def test_unicode_labels_preserved_and_single_line(self):
+        r = Registry()
+        key = r.upsert([], label='T\u00e9l\u00e9 Salon \U0001f4fa\nignored')
+        label = r.devices[key]['label']
+        self.assertIn('T\u00e9l\u00e9 Salon \U0001f4fa', label)
+        self.assertNotIn('\n', label)
+        first, nxt = device_section_lines(
+            nl_plan.build_prompt('allume', r.snapshot()['devices']), 1)
+        self.assertTrue(all(l.startswith('- ') for l in first))
+        self.assertFalse(nxt.startswith('- '))
+
     def test_resolve_target_matches_sanitized_label(self):
         r = Registry()
         key = r.upsert([], label='Living Room TV\n(2nd floor)')
