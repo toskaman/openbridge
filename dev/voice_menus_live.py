@@ -186,6 +186,29 @@ def main(argv=None):
             time.sleep(d if d == 4 else 6)
             vacuum_read('read-back +%ds after %s' % (d, req[:12]))
 
+    def warmup():
+        # Load both local models before the first spoken order (cold loads take minutes).
+        t0 = time.time()
+        try:
+            from src.ai import stt_local
+            if stt_local.available():
+                stt_local.transcribe_pcm(bytes(16000 * 2), 'fr')
+                emit('stt', 'local STT (facebook/mms-1b-all) warm in %.0fs' % (time.time() - t0))
+            else:
+                emit('warn', 'local STT unavailable on this PC')
+        except Exception as e:  # noqa: BLE001
+            emit('warn', 'STT warm-up failed %s' % str(e)[:100])
+        t1 = time.time()
+        try:
+            from src.forge import v4_ui
+            from src.runtime import nl_plan
+            mid, ep = nl_router.TIERS['low']
+            nl_plan.local_chat(mid, ep, timeout=300, format=v4_ui.UI_RESPONSE_SCHEMA,
+                               options={'num_predict': 40})('Reply {"outcome": "refusal", "reason": "warm-up"}')
+            emit('meta', 'Meta model warm in %.0fs (keep_alive 10m)' % (time.time() - t1))
+        except Exception as e:  # noqa: BLE001
+            emit('warn', 'Meta warm-up: %s' % str(e)[:100])
+    threading.Thread(target=warmup, daemon=True).start()
     threading.Thread(target=vacuum_read, args=('vacuum status (Tuya local dps) at boot',), daemon=True).start()
     threading.Thread(target=toucher, daemon=True).start()
     threading.Thread(target=volume_poller, daemon=True).start()
