@@ -88,6 +88,13 @@ INCLUDE = [
     "dev/s5b_safe_seek_chain.py",
     "dev/s5_tv_panel_chain.py",
     "dev/device_registry.py",
+    # Pack-completeness (Nov 2026): files the staged docs link to.
+    "HACKATHON_EVALUATION_PERMISSION.md",
+    "docs/ui/**/*",
+    "docs/benchmark/**/*",
+    "docs/superpowers/**/*",
+    "scripts/verify/cloud_e2e.py",
+    "src/runtime/command_drain.py",
 ]
 
 OPTIONAL = {
