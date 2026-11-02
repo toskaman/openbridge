@@ -10,7 +10,9 @@ from src.fabric import mdns
 
 MDNS_LABEL_KEYS = ('fn', 'md', 'box_model_name', 'manufacturer', 'model', 'name')
 COMPANION_SERVICE = '_openbridge-relay._tcp'
-COMPANION_RELAY_ID = re.compile(r'relay-[0-9a-f]{12}')
+# Store-compatible relay ids (relay_store.RID): 6-32 hex. Companions emit
+# exactly 12 today, but ingest must not drop store-valid ids.
+COMPANION_RELAY_ID = re.compile(r'relay-[0-9a-f]{6,32}')
 
 
 def install_salt(root=None):

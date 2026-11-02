@@ -298,6 +298,15 @@ def vacuum_intent(**kw):
     return d
 
 
+def youtube_intent(**kw):
+    d = draft(status='resolved', skill_id='app_launch',
+              outcome='open youtube on tv', confidence=0.9,
+              targets=[{'kind': 'device', 'ref': 'tv'}],
+              params={'package': 'com.google.android.youtube.tv'})
+    d.update(kw)
+    return d
+
+
 def fake_devices():
     return {'dev-vac1': {'key': 'dev-vac1', 'category': 'vacuum', 'label': 'Roborock'},
             'dev-tv1': {'key': 'dev-tv1', 'category': 'tv', 'label': 'Living room TV'}}
@@ -382,6 +391,20 @@ class CommandService(unittest.TestCase):
                                   catalog=lambda: {'models': []}, chat=chat)
         t('prompt')
         self.assertEqual(seen[0]['keep_alive'], '10m')
+
+    def test_approve_execute_app_launch_dispatches_once(self):
+        # W1-005 dispatch proof: the registered app_launch intent
+        # previews, fingerprints, arms and invokes exactly once.
+        from src.runtime.command import approve, execute
+        srv = FakeServer()
+        prev = approve(srv, youtube_intent())
+        self.assertEqual(prev['device_keys'], ['dev-tv1'])
+        self.assertEqual(prev['primitive_id'], 'b2:app_launch')
+        rc = execute(srv, youtube_intent(), consent=True, preview=prev)
+        kinds = [c[0] for c in srv.skill_router.calls]
+        self.assertIn('arm', kinds)
+        self.assertIn('invoke', kinds)
+        self.assertEqual(rc['transaction_id'], 'tx-1')
 
     def test_approve_previews_without_dispatch(self):
         from src.runtime.command import approve

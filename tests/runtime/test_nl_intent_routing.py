@@ -332,6 +332,9 @@ PARITY = (
      [{'kind': 'device', 'ref': 'vacuum-1'}]),
     ('fabric.status', 'how many devices are online',
      "combien d'appareils sont en ligne", 'count online devices', []),
+    ('app_launch', 'open YouTube on the TV',
+     'ouvre YouTube sur la télé', 'open youtube on tv',
+     [{'kind': 'device', 'ref': 'tv-1'}]),
 )
 
 VOICE_PARITY = (
@@ -355,6 +358,21 @@ class FrenchEnglishParity(unittest.TestCase):
         from src.runtime import skills as S
         self.assertEqual({row[0] for row in PARITY},
                          {c['skill_id'] for c in S.all_skills()})
+
+    def test_model_may_propose_app_launch(self):
+        # W1-005: the P0 registry must resolve model-proposed app
+        # launches (the watch drain path); unknown-skill rejection
+        # here means YouTube-from-watch can never resolve.
+        doc = N.parse('open YouTube on the TV', 'en', 'low',
+                      FakeTransport(resolved(
+                          'app_launch', 'open youtube on tv',
+                          [{'kind': 'device', 'ref': 'tv-1'}],
+                          {'package': 'com.google.android.youtube.tv'})),
+                      None)
+        self.assertEqual(doc['status'], 'resolved')
+        self.assertEqual(doc['skill_id'], 'app_launch')
+        self.assertEqual(doc['params']['package'],
+                         'com.google.android.youtube.tv')
 
     def test_deterministic_fallback_parity(self):
         self.assertGreaterEqual(len(PARITY), 10)

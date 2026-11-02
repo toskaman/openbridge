@@ -98,6 +98,22 @@ class SubstitutionRefusals(unittest.TestCase):
 
 
 class LegitimatePlansPass(unittest.TestCase):
+    def test_watch_verb_youtube_launch_agrees(self):
+        # W1-006: 'watch YouTube on the TV' names the YouTube effect;
+        # the gate must not clarify a verbatim app request.
+        reply = proposal(step('app_launch', 'living-room tv',
+                              {'package': 'com.google.android.youtube.tv'}))
+        out = nl_plan.plan('Watch YouTube on the living-room tv.',
+                           DEVICES, transport_for(reply))
+        self.assertEqual(len(out['spec']['steps']), 1)
+
+    def test_french_watch_youtube_launch_agrees(self):
+        reply = proposal(step('app_launch', 'living-room tv',
+                              {'package': 'com.google.android.youtube.tv'}))
+        out = nl_plan.plan('Regarde YouTube sur le téléviseur du salon.',
+                           DEVICES, transport_for(reply))
+        self.assertEqual(len(out['spec']['steps']), 1)
+
     def test_single_volume_step(self):
         reply = proposal(step('tv_volume_step', 'living-room tv', {'direction': 'up'}))
         out = nl_plan.plan('Crank the living-room tv up a single tick.',

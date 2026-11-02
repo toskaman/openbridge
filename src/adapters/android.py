@@ -157,15 +157,27 @@ class AndroidAdapter:
 
     def discover(self):
         if not self.executable:
-            return {'status': 'ADB_MISSING', 'devices': []}
+            return {'status': 'ADB_MISSING', 'devices': [],
+                    'skipped_adb_states': {}}
         try:
             output = self._run(['devices', '-l'])
             devices = []
+            skipped = {}
             with self._lock:
                 current = {}
                 for line in output.splitlines():
-                    fields = line.split()
-                    if len(fields) < 2 or fields[1] not in ('device', 'offline', 'unauthorized'):
+                    stripped = line.strip()
+                    if not stripped or stripped == 'List of devices attached' \
+                            or stripped.startswith('*'):
+                        continue
+                    fields = stripped.split()
+                    if len(fields) < 2:
+                        continue
+                    if fields[1] not in ('device', 'offline', 'unauthorized'):
+                        state = fields[1]
+                        if state == 'no' and len(fields) > 2 and fields[2].startswith('permission'):
+                            state = 'no permissions'
+                        skipped[state] = skipped.get(state, 0) + 1
                         continue
                     serial, state = fields[:2]
                     if not re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', serial):
@@ -181,9 +193,10 @@ class AndroidAdapter:
             if self._remember_path:
                 self._remember_seen([s for s in current if ':' in s])
                 self._reconnect_remembered(set(current))
-            return {'status': 'READY' if devices else 'WAITING_FOR_DEVICE', 'devices': devices}
+            return {'status': 'READY' if devices else 'WAITING_FOR_DEVICE', 'devices': devices,
+                    'skipped_adb_states': skipped}
         except (OSError, ValueError, subprocess.SubprocessError):
-            return {'status': 'ADB_UNAVAILABLE', 'devices': []}
+            return {'status': 'ADB_UNAVAILABLE', 'devices': [], 'skipped_adb_states': {}}
 
     def _remember_load(self):
         import json
@@ -383,7 +396,7 @@ class AndroidAdapter:
         any failure or mismatch is None (the caller keeps the adb forward)."""
         import ipaddress as _ip
         from src.fabric import mdns
-        if not isinstance(relay_id, str) or not re.fullmatch(r'relay-[0-9a-f]{12}', relay_id):
+        if not isinstance(relay_id, str) or not re.fullmatch(r'relay-[0-9a-f]{6,32}', relay_id):
             return None
         try:
             res = mdns.browse_interfaces(timeout=timeout, services=('_openbridge-relay._tcp',))

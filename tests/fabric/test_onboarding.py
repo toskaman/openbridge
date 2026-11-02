@@ -93,6 +93,18 @@ class Candidates(unittest.TestCase):
         self.assertNotIn(':47800', repr(snap))
         self.assertNotIn('relay_address', repr(snap))
 
+    def test_companion_short_relay_id_attaches(self):
+        # W1-063: the store accepts relay ids with 6-32 hex chars, so
+        # mDNS ingest must attach them (the 12-hex-only gate dropped
+        # store-valid companions before they could match).
+        reg = Registry()
+        ingest_mdns(reg, mdns({'service': '_openbridge-relay._tcp', 'instance': 'OpenBridge-x', 'port': 47800,
+                               'host': 'h.local', 'category': 'companion',
+                               'txt': {'relay': 'relay-abc123'}}), b's')
+        kinds = {k for d in reg.snapshot()['devices']
+                 for k in d.get('identifier_kinds', [])}
+        self.assertIn('companion_relay', kinds)
+
     def test_companion_form_fallback_is_phone(self):
         reg = Registry()
         ingest_mdns(reg, mdns({'service': '_openbridge-relay._tcp', 'instance': 'OpenBridge-x', 'port': 47800,

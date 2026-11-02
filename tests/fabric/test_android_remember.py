@@ -132,5 +132,23 @@ class Remember(unittest.TestCase):
             self.assertEqual(len(connects), 1)
 
 
+    def test_nonstandard_adb_states_are_counted_not_devices(self):
+        # W1-039: recovery/sideload/permission/authorizing lines are not
+        # usable devices, but skipping them silently hides setup
+        # problems; the skip must be counted and observable.
+        out = ('List of devices attached\n'
+               'AB0001\trecovery\n'
+               'AB0002\tsideload\n'
+               'AB0003\tno permissions (user in plugdev group missing)\n'
+               'AB0004\tauthorizing\n')
+        ad = AndroidAdapter(executable='adb',
+                            runner=run_factory(out, []))
+        doc = ad.discover()
+        self.assertEqual(doc['devices'], [])
+        self.assertEqual(doc.get('skipped_adb_states'),
+                         {'recovery': 1, 'sideload': 1,
+                          'no permissions': 1, 'authorizing': 1})
+
+
 if __name__ == '__main__':
     unittest.main()
