@@ -189,9 +189,10 @@ def _interpret(doc, reply, parser, model_id):
     sid = reply['skill_id']
     if sid is None:
         if reply['clarifying_question']:
+            amb = reply['ambiguities'] if isinstance(reply['ambiguities'], list) else []
             return dict(doc, status='needs_clarification',
                         clarifying_question=str(reply['clarifying_question'])[:300],
-                        ambiguities=[str(a)[:200] for a in reply['ambiguities']][:8])
+                        ambiguities=[str(a)[:200] for a in amb][:8])
         return dict(doc, status='unsupported',
                     ambiguities=['no registered skill matches'])
     if S.get(sid) is None:
@@ -201,6 +202,10 @@ def _interpret(doc, reply, parser, model_id):
     if not isinstance(conf, (int, float)) or isinstance(conf, bool) or conf < MIN_CONFIDENCE:
         return dict(doc, status='escalation_required',
                     ambiguities=['model confidence below 0.5'])
+    tg, amb = reply['targets'], reply['ambiguities']
+    if not isinstance(tg, list) or len(tg) > 8 or not isinstance(amb, list):
+        return dict(doc, status='escalation_required',
+                    ambiguities=['model reply shape invalid'])
     try:
         resolved = dict(doc, status='resolved', outcome=str(reply['outcome'])[:300],
                         skill_id=sid, targets=reply['targets'], params=reply['params'],
