@@ -64,12 +64,19 @@ class SessionJournal:
                         fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def _load(self):
-        # Residual B-02b: a corrupt file still reads as [] (pinned by
-        # test_corrupt_file_read_behavior_pinned). Missing file -> [] too.
+        # B-02b fail-closed (mirrors StateStore STATE_UNREADABLE): a missing
+        # file is a fresh journal ([]), but anything unreadable or mis-shaped
+        # raises SESSION_CORRUPT -- never silently drop pending restores or
+        # overwrite the evidence. Callers map this to 503/FAILED/CliError.
         try:
-            return json.loads(self.path.read_text(encoding='utf-8'))
-        except (OSError, ValueError):
+            rows = json.loads(self.path.read_text(encoding='utf-8'))
+        except FileNotFoundError:
             return []
+        except (OSError, ValueError) as error:
+            raise SessionError('SESSION_CORRUPT', f'Session journal cannot be verified ({type(error).__name__}); preserve the file for review, no update was applied') from None
+        if not isinstance(rows, list):
+            raise SessionError('SESSION_CORRUPT', 'Session journal is not a change list; preserve the file for review, no update was applied') from None
+        return rows
 
     def _save(self, rows):
         self.path.parent.mkdir(parents=True, exist_ok=True)

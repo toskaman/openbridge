@@ -156,18 +156,21 @@ class SessionFileSemantics(unittest.TestCase):
         finally:
             shutil.rmtree(d, ignore_errors=True)
 
-    def test_corrupt_file_read_behavior_pinned(self):
-        # Documents CURRENT read contract (residual B-02b, fail-open read):
-        # open_changes() on a corrupt file returns []. Desired behavior is
-        # fail-closed (raise); change this test deliberately with that fix.
-        from src.fabric.session import SessionJournal
+    def test_corrupt_file_fails_closed(self):
+        # B-02b FIXED (F-13): the old fail-open pin (open_changes() -> [] on
+        # a corrupt file) is replaced by the fail-closed contract: missing
+        # file -> [], corrupt file -> SessionError SESSION_CORRUPT, and the
+        # corrupt bytes are preserved (see test_nightfall_session_corrupt.py).
+        from src.fabric.session import SessionError, SessionJournal
         d = tempfile.mkdtemp(prefix='n06-sem-')
         try:
             p = os.path.join(d, 'session.json')
             with open(p, 'w', encoding='utf-8') as f:
                 f.write('{not json')
             sj = SessionJournal(p)
-            self.assertEqual(sj.open_changes(), [])
+            with self.assertRaises(SessionError) as e:
+                sj.open_changes()
+            self.assertEqual(e.exception.code, 'SESSION_CORRUPT')
         finally:
             shutil.rmtree(d, ignore_errors=True)
 

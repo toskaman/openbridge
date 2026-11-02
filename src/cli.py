@@ -1608,13 +1608,29 @@ def session_journal():
     return SessionJournal(path)
 
 
+def _journal_open_changes(journal):
+    from src.fabric.session import SessionError
+    try:
+        return journal.open_changes()
+    except SessionError as e:
+        raise CliError('internal', 'SESSION_CORRUPT', 'Session journal is corrupt; preserve %s for review.' % journal.path)
+
+
+def _journal_close(journal, sid, state, detail=''):
+    from src.fabric.session import SessionError
+    try:
+        journal.close(sid, state, detail)
+    except SessionError as e:
+        raise CliError('internal', 'SESSION_CORRUPT', 'Session journal is corrupt; preserve %s for review.' % journal.path)
+
+
 def cmd_sessions_list(args):
-    return {'sessions': session_journal().open_changes()}
+    return {'sessions': _journal_open_changes(session_journal())}
 
 
 def cmd_sessions_inspect(args):
     sid = getattr(args, 'session_id', '') or ''
-    for row in session_journal().open_changes():
+    for row in _journal_open_changes(session_journal()):
         if str(row.get('id', '')) == sid:
             return {'session': row}
     raise CliError('args', 'NOT_FOUND', 'Unknown session %r.' % sid)
@@ -1625,7 +1641,7 @@ def cmd_sessions_undo(args):
     sid = getattr(args, 'session_id', '') or ''
     journal = session_journal()
     target = None
-    for row in journal.open_changes():
+    for row in _journal_open_changes(journal):
         if str(row.get('id', '')) == sid:
             target = row
     if target is None:
@@ -1636,7 +1652,7 @@ def cmd_sessions_undo(args):
             outcome = restore(target, server.android)
         except Exception as e:
             raise CliError('uncertain', 'UNDO_UNCERTAIN', 'Restore outcome uncertain: %s' % e)
-    journal.close(sid, 'reverted')
+    _journal_close(journal, sid, 'reverted')
     return {'session_id': sid, 'outcome': outcome}
 
 
@@ -1683,7 +1699,7 @@ def cmd_evidence_export(args):
     dest.mkdir(parents=True, exist_ok=True)
     journal = session_journal()
     payload = {'session_id': sid, 'exported_at': time.time(),
-               'open_changes': journal.open_changes(), 'snapshot': snapshot_load()}
+               'open_changes': _journal_open_changes(journal), 'snapshot': snapshot_load()}
     blob = dest / (sid + '.json')
     blob.write_text(json.dumps(payload, indent=1), encoding='utf-8')
     digest = hashlib.sha256(blob.read_bytes()).hexdigest()

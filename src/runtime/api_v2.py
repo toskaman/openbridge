@@ -323,7 +323,11 @@ def get(server, path, query):
     if path == '/api/v2/primitives':
         return 200, {'primitives': [to_json(p) for p in PRIMITIVES.values()]}
     if path == '/api/v2/recovery':
-        return 200, to_json(ex.recovery())
+        from src.fabric.session import SessionError
+        try:
+            return 200, to_json(ex.recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
     if path == '/api/v2/events':
         try:
             since = int((q.get('since') or ['0'])[0])
@@ -456,8 +460,13 @@ def get(server, path, query):
         led = getattr(server, 'relay_ledger', None)
         return 200, {'routes': route_rows(server), 'advertisers': led.advertisers(strong) if led else []}
     if path == '/api/v2/diagnosis':
+        from src.fabric.session import SessionError
         from src.runtime.fabric_diagnosis import diagnose
-        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), to_json(ex.recovery()))}
+        try:
+            rec = to_json(ex.recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
+        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), rec)}
     if path == '/api/v2/route_intel':
         # Advisory enumeration only (pure read over RelayManager state; no snapshot needed).
         intel = _route_intel(server)
@@ -1173,14 +1182,18 @@ def post(server, path, body):
     if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
         return cloud(server, path, body)
     if path == '/api/v2/recovery/acknowledge' and isinstance(body, dict):
+        from src.fabric.session import SessionError
         if set(body) - {'transaction_id', 'consent'} or not isinstance(body.get('transaction_id'), str) or body.get('consent') is not True:
             return 400, {'error': 'transaction_id and consent: true are required'}
-        if not executor(server).acknowledge(body['transaction_id']):
-            recovery = executor(server).recovery()
-            if recovery.blocked_reason.startswith('STATE_'):
-                return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
-            return 404, {'error': 'No unresolved transaction with this id'}
-        return 200, to_json(executor(server).recovery())
+        try:
+            if not executor(server).acknowledge(body['transaction_id']):
+                recovery = executor(server).recovery()
+                if recovery.blocked_reason.startswith('STATE_'):
+                    return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
+                return 404, {'error': 'No unresolved transaction with this id'}
+            return 200, to_json(executor(server).recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent', 'idempotency_key'}
