@@ -26,10 +26,11 @@ authorization, and observable results.
 
 ## Demo
 
-- Video: rebuilt fallback cut from the release tree (new UI
-  stills, 2096 suite card; honest fallback — labeled, no physical
-  footage claimed) + srt + thumbnail.
-  Physical branch owner-gated; do NOT claim live motion footage.
+- Video: jury cut V2 (159.33 s, 720p30) built by the committed
+  builder from owner-recorded hardware footage + committed stills
+  ([build doc](VIDEO_BUILD_V2.md)) + srt + thumbnail + scene map.
+  Finale filmed by the owner. Do NOT claim vacuum motion footage
+  (return-to-dock is oracle-proven, unfilmed).
 - Live/replay: offline `judge demo` (DEMO_COMPLETE) + clean install
   8/8; jury entry: docs/jury/JURY_START_HERE.md.
 
@@ -43,16 +44,19 @@ authorization, and observable results.
   goto_charge; instrument + note in PR #174 (merged).
 - Safety: S8 deterministic intent/effect gate over proposals;
   consent + receipts; ModelStudy48 published incl. the loss
-  (rules 36.1% vs Llama 22.2%) and 6→0 unsafe substitutions.
+  (rules 36.1% vs Llama 22.2%, 6 ungated substitutions) and the
+  gate wins (eval2 unsafe 2→0, eval3 unsafe 4→0, zero
+  fully-correct proposals blocked).
 
 ## Evidence to link
 
 - JURY_START_HERE.md, CLAIM_EVIDENCE_MATRIX.md,
-  DEVICE_EVIDENCE.json (35 VERIFIED), HARDWARE_TEST_MATRIX.md,
+  DEVICE_EVIDENCE.json (37 VERIFIED), HARDWARE_TEST_MATRIX.md,
   KNOWN_LIMITATIONS.md, FINAL_RELEASE_AUDIT_2026-11-01.md.
-- CI: verify (run 41325164524) + clean-room (41322394136) +
-  Android 5/5 (41325176026) SUCCESS on v0.2.0 (dd669c2);
-  2096/2096 unit suite.
+- CI on v0.2.0 tag (dd669c2): verify (run 41325164524) +
+  clean-room (41322394136) + Android 5/5 (41325176026) SUCCESS;
+  2096/2096 unit suite at tag per tag CI. Main HEAD (2351308):
+  2115/2115 local + Verify run 41356836103 SUCCESS.
 
 ## Owner checklist (portal)
 

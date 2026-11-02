@@ -21,7 +21,7 @@ Your devices were never designed to work together. OpenBridge fixes that: it dis
 
 Meta models do the understanding. Deterministic safety gates do the enforcing: every AI proposal passes strict validation, owner approval, and independent read-back before anything happens. Every run ends with a receipt.
 
-The showcased hardware evidence is genuine: [35 verified evidence records](docs/DEVICE_EVIDENCE.json) (26 real hardware, 7 full-guest VMs, 2 official emulators — records, not 35 unique physical capabilities), with honest limits stated where runs fell short. Automated demonstrations that use fixtures or replayed receipts are labeled SIMULATED or REPLAY where they appear, and never counted as physical proof.
+The showcased hardware evidence is genuine: [37 verified evidence records](docs/DEVICE_EVIDENCE.json) (28 real hardware, 7 full-guest VMs, 2 official emulators — records, not 37 unique physical capabilities), with honest limits stated where runs fell short. Automated demonstrations that use fixtures or replayed receipts are labeled SIMULATED or REPLAY where they appear, and never counted as physical proof.
 
 ## Why it's new
 
@@ -40,7 +40,7 @@ Without Meta inference, OpenBridge would be static plumbing: discovery would sti
 - **Explanations:** coverage advisor 56/60 usable for Glimmer vs 0/60 for Llama 3B (60 synthetic cases).
 - **Planning:** narrow agent benchmark — rules 90.0%, Glimmer 86.7%, Llama 53.3%; all unsafe proposals refused by the gate.
 - **Honest failures kept:** registered ablation — no model beat the rules (0.833 / 0.833 / 0.722); Forge Llama 0.0%, Forge Glimmer resource-blocked (0/64, nulls not zero-filled); 1,000-turn rules baseline 1.4%, model tiers pending.
-- **Held-out model study (36 cases):** rules intent 36.1% vs Llama 3B 22.2% — neither arm wins overall. Llama is the only arm that resolves novel intents, but it never refuses (6 consent-gated wrong-but-executable substitutions) and never clarifies; Glimmer blocked by host OOM. Full scorecard: [ModelStudy48](docs/benchmark/modelstudy48/RESULTS.md). Post-fix set (S8 gate): unsafe 2→0, zero correct proposals blocked ([results](docs/benchmark/intenteffect/RESULTS.md)).
+- **Held-out model study (ModelStudy48):** rules intent 36.1% vs Llama 3B 22.2% — neither arm wins overall. Llama is the only arm that resolves novel intents, but it never refuses (6 consent-gated wrong-but-executable substitutions) and never clarifies; Glimmer blocked by host OOM. Full scorecard: [ModelStudy48](docs/benchmark/modelstudy48/RESULTS.md). S8 gate calibration-extension (24 new frozen cases × 2 repeats = 48 replies): unsafe 4→0, zero fully-correct proposals blocked ([results3](docs/benchmark/intenteffect/RESULTS3.md)); eval2 regression reproduces 2→0.
 - **Model references:** [third-party inventory](THIRD_PARTY.md) — Llama 3.2 license/attribution, Glimmer docs ([dev.meta.ai](https://dev.meta.ai/docs/muse-glimmer)) and upstream weights, pinned registry digests.
 
 Every Meta call is receipted with model id, digest, tokens, and cost — favorable and unfavorable results both published. Local models are digest-pinned with no cloud fallback; hosted Spark answers only synthetic facts, only with explicit consent, inside a hard budget. The runtime is Meta-models-only, enforced by [src/ai/registry.py](src/ai/registry.py). Methodology and receipts: [benchmark status](docs/benchmark/STATUS.md) · [model usage](docs/MODEL_USAGE_AND_EVALUATION.md) · [TV Glimmer journey](docs/forge/TV_GLIMMER_JOURNEY.md).
@@ -61,7 +61,7 @@ Every Meta call is receipted with model id, digest, tokens, and cost — favorab
 | 7 Linux/legacy-Windows guests (QEMU) | FULL GUEST OS — agent protocol proven, labeled as VMs |
 | Pixel 6 AVD, ESP32 (native IDF agent) | OFFICIAL EMULATOR — proven, never counted as physical |
 
-[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (35 VERIFIED records, incl. the 28 Oct live-graph run: 24 devices, names redacted) · [known limitations](docs/KNOWN_LIMITATIONS.md)
+[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (37 VERIFIED records, incl. the 28 Oct live-graph run: 24 devices, names redacted) · [known limitations](docs/KNOWN_LIMITATIONS.md)
 
 ## New capabilities (Frontier 90)
 
@@ -98,7 +98,7 @@ Local Muse Glimmer proposes the panel. OpenBridge validates every control agains
 
 *Meta-generated T2 panel mid-run on the real TV (31 Oct 2026): hold-press FIND dispatched, receipt tx-4a96f8f6, 15-poll oracle stable, revoke + deny verified after. Press ADB-injected (labeled on the record).*
 
-Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); the vacuum was already docked/cleaning so motion was not observed, and presses were ADB-injected, not manual taps. Owner-gated manual-press + motion runs are scripted in the [physical runbook](docs/jury/DEMO_PHYSICAL_RUNBOOK.md). Latest [releases](https://github.com/toskaman/openbridge/releases) (newest: Forge integration preview, 27 Oct); early [demo preview](https://github.com/toskaman/openbridge/releases/tag/v0.1.0-alpha.2) (26 Oct state); final video pending owner authorization per the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
+Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); owner-performed manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce) were VERIFIED 1 Nov with oracle standby→goto_charge ([S5c proof](docs/evidence/s5-tv-panel-01nov-manual.md)) — return-to-dock behavior is oracle-proven, with no video of physical motion. TV wake + Companion reveal verified 2 Nov (sleep effect owner-confirmed, receipt honestly UNVERIFIED — [proof](docs/evidence/tv-sleep-02nov.md)); this TV drops Wi-Fi ADB in sleep, so wake needs the remote. Latest [releases](https://github.com/toskaman/openbridge/releases) (newest: v0.2.0 Final Frontier, 1 Nov, MIT tag); jury cut V2 (159 s incl. owner-recorded hardware footage) built by the committed builder ([build doc](docs/jury/VIDEO_BUILD_V2.md)); the finale is filmed by the owner per the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
 
 ## Try it yourself
 
@@ -107,7 +107,7 @@ Windows, Linux, or macOS · Python 3.14 (CI-pinned 3.14.4) · zero third-party r
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2096 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 2115 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
@@ -118,7 +118,7 @@ Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) 
 
 Owner consent per privileged act · typed skills, never free-form shell · strict validation before dispatch · idempotency keys + crash-safe journal (honest UNCERTAIN, never blind re-execution) · independent read-back oracles · signed, expiring, replay-protected relay commands · pairing attempt limits · revocation that stops new admissions.
 
-Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green on main ([run 41309860677](https://github.com/toskaman/openbridge/actions/runs/41309860677), 1 Nov; first complete pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)).
+Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green on main ([run 41325176026](https://github.com/toskaman/openbridge/actions/runs/41325176026), 1 Nov; first complete pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)).
 
 ![Refused press shown in the new Activity timeline](docs/jury/screens/activity-v2-refused-1440.png)
 
@@ -128,7 +128,7 @@ Full picture: [known limitations](docs/KNOWN_LIMITATIONS.md) · [relay security]
 
 ## Evidence — don't take our word for it
 
-2055 tests green locally (Windows, 2 consecutive runs) + browser incl. WebKit · verify green on main ([run 41304216321](https://github.com/toskaman/openbridge/actions/runs/41304216321)) · clean-room install green on main, 6 hosted runners + Debian container ([run 41304230306](https://github.com/toskaman/openbridge/actions/runs/41304230306)) · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+2115 tests green locally (Windows) + browser incl. WebKit · verify green on main ([run 41356836103](https://github.com/toskaman/openbridge/actions/runs/41356836103), post-#177) · clean-room install green on main ([run 41325178319](https://github.com/toskaman/openbridge/actions/runs/41325178319)) · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
 
 ## Built for the hackathon
 

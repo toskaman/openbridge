@@ -33,7 +33,7 @@ python -m unittest discover -s tests  # full controlled suite, no hardware neede
 ## Notes for jurors
 
 - The demo is labeled as a demo everywhere it appears; it reproduces the safe
-  subset only. Real-device behavior is covered separately by the 35 verified
+  subset only. Real-device behavior is covered separately by the 37 verified
   evidence rows ([DEVICE_EVIDENCE.json](DEVICE_EVIDENCE.json),
   [HARDWARE_TEST_MATRIX.md](HARDWARE_TEST_MATRIX.md)).
 - Scripted UI tours (`tour-*.webm` in the media package) show the same flows

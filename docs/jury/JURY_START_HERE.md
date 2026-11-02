@@ -13,7 +13,7 @@ read-back proves it. The breakthrough: **Meta AI composes new cross-device
 controls that never existed as integrations** — a TV panel driving a robot
 vacuum — while deterministic gates enforce safety. Without Meta inference
 there is no plain-language control, no generated panels, and no usable device
-explanations — only static device plumbing. 35 verified evidence rows, honest
+explanations — only static device plumbing. 37 verified evidence rows, honest
 limits stated inline.
 
 ## In 2 minutes: demonstrated on real devices
@@ -26,10 +26,14 @@ limits stated inline.
 | 4 | Phone, TV, Watch7 Companions paired; native watch controls | [G04](../evidence/g04-watch-30oct.md) · [matrix](../HARDWARE_TEST_MATRIX.md) |
 | 5 | Refusals as first-class outcomes (timeline + receipts) | [report](OVERNIGHT_REPORT_31OCT.md) §B |
 | 6 | 2nd PC jobs, Freebox inventory, vacuum reads, legacy VMs, AVD, ESP32-QEMU | [matrix](../HARDWARE_TEST_MATRIX.md) |
+| 7 | Owner manual presses START + DOCK → oracle standby→goto_charge | [S5c](../evidence/s5-tv-panel-01nov-manual.md) |
+| 8 | TV wake + Companion reveal oracle-verified; sleep owner-confirmed (UNVERIFIED receipt) | [TV-PWR](../evidence/tv-sleep-02nov.md) |
 
-Limits up front: S5/S5b presses were ADB-injected (labeled), vacuum motion
-never observed; watch→TV volume is verified via an owner press on the
-watch (S6) — see [runbook](DEMO_PHYSICAL_RUNBOOK.md) and
+Limits up front: S5/S5b presses were ADB-injected (labeled); the press leg
+is since superseded by owner manual presses (S5c), while vacuum motion
+stays oracle-proven, never filmed; watch→TV volume is verified via an owner
+press on the watch (S6); TV wake needs the remote on the owner set (Wi-Fi
+ADB drops in sleep) — see [runbook](DEMO_PHYSICAL_RUNBOOK.md) and
 [limits](../KNOWN_LIMITATIONS.md).
 
 ## In 5 minutes: run it yourself
@@ -37,7 +41,7 @@ watch (S6) — see [runbook](DEMO_PHYSICAL_RUNBOOK.md) and
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2055 tests, no hardware needed
+python -m unittest discover -s tests   # 2115 tests, no hardware needed
 python -m src.cli judge demo           # offline demo → DEMO_COMPLETE
 python -m src.server                   # → http://127.0.0.1:18765
 ```
@@ -50,13 +54,13 @@ subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:
 
 - [Claim ↔ evidence matrix](CLAIM_EVIDENCE_MATRIX.md) — every claim, one status, one source
 - [Verified capabilities](VERIFIED_CAPABILITIES.md) — scenario-by-scenario verdicts
-- [Hardware matrix](../HARDWARE_TEST_MATRIX.md) + [registry](../DEVICE_EVIDENCE.json) — 35 rows
+- [Hardware matrix](../HARDWARE_TEST_MATRIX.md) + [registry](../DEVICE_EVIDENCE.json) — 37 rows
 - [Benchmark status](../benchmark/STATUS.md) + [model usage](../MODEL_USAGE_AND_EVALUATION.md)
 - [Release evidence](../RELEASE_EVIDENCE.md) · [release status](../RELEASE_STATUS.md)
 - [Compliance checklist](COMPLIANCE_CHECKLIST.md) — portal items marked OPEN stay OPEN
 - [Final storyboard](DEMO_STORYBOARD_FINAL.md) · [narration](DEMO_NARRATION.md) · [capture checklist](VIDEO_CAPTURE_CHECKLIST.md)
 
-## Featured evidence (the extraordinary example + 5)
+## Featured evidence (the extraordinary example + 7)
 
 | Feature | Demo | Hardware | Meta contribution | Result | Oracle | Limits | Proof | Source |
 |---|---|---|---|---|---|---|---|---|
@@ -66,6 +70,8 @@ subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:
 | BLE relay + handover | Phone/TV scans, failover | Phone + TV, REAL | Rules + signed channel | dedup + consent-void | second relay scan | one TV, PC has no BT | [handover](../release/COMPLETE_HANDOVER.md) | rows 25, 29 |
 | S6 watch→TV volume | Owner press → TV vol step → revoke | Watch7 + TV 11, REAL | None (companion dispatch) | tx-5b326915aef0f777, MUSIC 23→24 | dumpsys audio + TV volume-event log | no watch shots, denial-by-absence, n=1+R1 | [S6](../evidence/s6-watch-tv-volume-01nov.md) | row 34 |
 | Refusal channel | Denied press in timeline | Server + UI | Structured verdicts | TDD 3/3, red render | API + events | shot staged from live UI | [report](OVERNIGHT_REPORT_31OCT.md) | §B |
+| Manual press (S5c) | Owner START + DOCK → oracle | TV 11 + vacuum, REAL | Panel reused (fresh blocked) | tx-8abdd1eb, tx-63ee07451c4099ce | Tuya standby→goto_charge | motion unfilmed, n=1 | [S5c](../evidence/s5-tv-panel-01nov-manual.md) | row 36 |
+| TV power + reveal | Wake + foreground verified; sleep sent, owner-confirmed | TV 11, REAL | None (PC-driven skills) | wake + foreground verified | mWakefulness, mFocusedApp | sleep receipt UNVERIFIED, remote wakes | [TV-PWR](../evidence/tv-sleep-02nov.md) | row 37 |
 
-Full detail for all 35 rows: [claim ↔ evidence matrix](CLAIM_EVIDENCE_MATRIX.md)
+Full detail for all 37 rows: [claim ↔ evidence matrix](CLAIM_EVIDENCE_MATRIX.md)
 + [registry](../DEVICE_EVIDENCE.json) + [verified capabilities](VERIFIED_CAPABILITIES.md).

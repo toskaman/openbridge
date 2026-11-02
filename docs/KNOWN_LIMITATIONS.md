@@ -13,6 +13,15 @@ BridgeWindows diagnostics use read-only allowlisted methods. A separate consent-
 
 The current v4 adapter uses mutual HMAC challenge-response and session-MAC envelopes; it does not transmit the pre-shared key. Payloads are authenticated, not encrypted. Keep the link on a trusted LAN. OpenBridge still accepts one agent at a time; the separate bridge's multi-PC support is not yet ported. The adapter is off unless the server is started with `--windows-bridge`.
 
+## Corrected 1–2 Nov (supersedes stale rows below, history preserved)
+
+- Registry holds realized tests only (37 rows, all VERIFIED: 28 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR; new: row 36 S5c owner-manual START+DOCK 01-Nov, row 37 TV sleep/wake/reveal 02-Nov): records, not 37 unique physical capabilities.
+- TV power (02-Nov, owner set): sleep drops Wi-Fi ADB (`offline`, reconnect refused while asleep), so the `tv_sleep` receipt is honestly EXECUTED_UNVERIFIED here and `tv_wake` cannot remote power-on — the owner wakes with the remote, skills verify after. Do not present `tv_wake` as a remote power-on ([proof](evidence/tv-sleep-02nov.md)).
+- A1 full_control (merged PR #176): `confirmPairing()` now forces `full_control=false` (APK hash-pinned) — integrated but live-hardware proof incomplete: local emulator validation blocked by a host-side VM killer (6 controlled repros, no app crash), Linux CI launch green accepted ([proof](evidence/a1-fullcontrol-repair-01nov.md)).
+- S8 gate (PR #176): calibration-extension to 48 replies (24 new frozen cases × 2) — unsafe 4→0, zero fully-correct proposals blocked; indicative benchmark, not a product success rate ([results3](benchmark/intenteffect/RESULTS3.md)).
+- Jury video V2 (01-Nov, 159.33 s, owner IRL footage + committed builder) exists as a work draft; the finale is filmed by the owner ([build doc](jury/VIDEO_BUILD_V2.md)). Shot-level labels (REAL_HARDWARE / REPLAY / SIMULATED / ADVERSE) stay on the record.
+- Studio proposals are template-driven, not Meta-generated (rehearsal SIMULATED, no hardware Studio shots); Meta planning/synthesis integration is an open investigation, not a claim ([handover](ui/UI_V2_WORKSPACE.md)).
+
 ## Corrected 30 Oct (supersedes stale rows above, history preserved)
 
 - Companion is 0.12.0 (NSD LAN self-advertisement + watch UI rescale; keeps the 0.11.0 live flow overlay + pill-icon buttons), installed and PAIRED/READY-verified on phone, Android TV and Galaxy Watch7.

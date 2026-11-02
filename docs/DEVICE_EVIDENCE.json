@@ -1131,5 +1131,71 @@
    "run vehicle .xbuild/v_watch_voice.py is uncommitted session tooling",
    "n=3 orders, single session"
   ]
+ },
+ {
+  "test_id": "s5-tv-manual-press-01nov",
+  "test_utc": "2026-11-01T17:50:46Z",
+  "commit_sha": "1326ebca0bd47f15ed972797b33c38d251b537d1",
+  "platform": "Android TV 11 + Tuya local robot",
+  "device_alias": "Android TV + Tuya robot vacuum (generated-panel pair)",
+  "public_device_id": "tv-vacuum-s5-01",
+  "os_version": "Android TV 11 (SDK 30) / Tuya firmware 3.4",
+  "companion_version": "0.12.0 (TV)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "31-Oct Glimmer-validated panel set reused verbatim (fresh proposal blocked: Glimmer OOM, Llama PATCH_REJECTED); only the target pointer re-resolved",
+   "attempt 1: owner manual START tap, tx-8abdd1eb, VERIFIED (oracle standby, 95->86 pct); owner manual DOCK tap BLOCKED by device 'lease stale' (60 s WIFI lease expired after ~3.5 min gap) — adverse preserved",
+   "attempt 2: owner manual DOCK press (TV remote key), tx-63ee07451c4099ce, VERIFIED with 'Dock vacuum: done, verified' on the panel screenshot",
+   "controls revoked (0 grants), invoke-after-revoke denied, relay_revoke VERIFIED"
+  ],
+  "evidence": [
+   "docs/evidence/s5-tv-panel-01nov-manual.md"
+  ],
+  "independent_oracle": "Tuya read-back: vacuum_status standby -> goto_charge, battery 83 pct — return-to-dock behavior proven by oracle, not by video",
+  "permissions": [
+   "owner manual presses on TV panel + remote",
+   "owner-linked Tuya local key (existing config, never logged)",
+   "blanket owner test authorization for benign commands"
+  ],
+  "limitations": [
+   "no video of physical vacuum motion; motion behavior oracle-proven only",
+   "attempt-2 pairing operator-assisted (code read from one screenshot, in-transcript); owner performed every press",
+   "n=1 session, 2 attempts"
+  ]
+ },
+ {
+  "test_id": "tv-power-reveal-02nov",
+  "test_utc": "2026-11-01T21:29:32Z",
+  "commit_sha": "20f2c8edc23580c5e0f32beb7add3ccce73392ae",
+  "platform": "Android TV 11",
+  "device_alias": "Android TV (owner set)",
+  "public_device_id": "tv-companion-01",
+  "os_version": "Android TV 11 (SDK 30)",
+  "companion_version": "0.12.0 (TV, backgrounded)",
+  "environment": "REAL_HARDWARE",
+  "integration": "NATIVE_COMPANION",
+  "status": "VERIFIED",
+  "operations": [
+   "tv_sleep: SLEEP keyevent sent from PC; owner confirmed the screen went dark (receipt EXECUTED_UNVERIFIED — Wi-Fi ADB dropped before read-back)",
+   "owner woke the TV with the remote; ADB link returned by itself",
+   "tv_wake: EXECUTED verified=True (mWakefulness=Awake read back)",
+   "companion_foreground: EXECUTED verified=True (mFocusedApp names fr.openbridge.companion); Companion visible on screen, owner-confirmed"
+  ],
+  "evidence": [
+   "docs/evidence/tv-sleep-02nov.md"
+  ],
+  "independent_oracle": "dumpsys power (mWakefulness) + dumpsys activity (mFocusedApp) read back over ADB, plus owner eyes on the screen",
+  "permissions": [
+   "owner-authorized physical run; owner present, watched the screen",
+   "consent per invocation on all three skills"
+  ],
+  "limitations": [
+   "this TV drops Wi-Fi ADB in sleep (offline, reconnect refused) — tv_wake cannot remote power-on; the remote wakes",
+   "tv_sleep receipt stays UNVERIFIED on this set (effect owner-confirmed, oracle unreadable)",
+   "TV idled back to sleep between run and owner check (fast sleep timeout); disable it when filming",
+   "n=1 session"
+  ]
  }
 ]

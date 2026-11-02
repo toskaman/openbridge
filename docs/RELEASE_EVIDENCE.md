@@ -61,3 +61,10 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 ## Latest integrated evidence — 01 November (E3 close-out, `feat/frontier90-staging`)
 
 - Suite: 2055 green locally; cross-platform CI compat fixes (yaml skip, nesting reason, psutil-absent, listener recovery); manifest byte rows corrected; F90 modules wired to CLI/API with smoke tests; emu-harness exit-127 + tv-checkout fixed with regression pins; cleanroom 8/8 green on the F90 tree ([run 41273696980](https://github.com/toskaman/openbridge/actions/runs/41273696980)); dated entries above frozen as history.
+
+## Latest integrated evidence — 02 November (overnight jury-surface sync, `feat/overnight-docs-a`)
+
+- Suite: 2115 green locally (`python -m unittest discover -s tests`); main HEAD `2351308` Verify SUCCESS ([run 41356836103](https://github.com/toskaman/openbridge/actions/runs/41356836103)); PR164–177 merged; dated entries above frozen as history.
+- Registry: 37 VERIFIED rows (28 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR) — new row 36 S5c owner-manual START+DOCK 01-Nov, row 37 TV sleep/wake/reveal 02-Nov; matrix re-rendered via `python -m dev.device_registry --render`.
+- Living docs re-synced to HEAD: README, jury start, release status, known limitations, verified capabilities, submission draft/evidence, offline demo, narration overlay (2115/37/S8-48/v0.2.0-MIT-vs-main-PolyForm/TV-wake limit/video V2); audit docs dated 01-Nov left as history.
+- License: main is PolyForm Strict 1.0.0 from PR #170; v0.2.0 tag dd669c2 stays MIT; owner declares the submitted revision's license.
