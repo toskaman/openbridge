@@ -132,6 +132,7 @@ class Tuya(unittest.TestCase):
         self.assertEqual(ingest_tuya(reg, v, b's')['status'], 'OK')
         key, dev = next(iter(reg.devices.items()))
         self.assertEqual(dev['category'], 'vacuum')
+        self.assertEqual(dev['handles'], {'TUYA_LOCAL': 'tuya-local'})
         self.assertNotIn('bfxx', repr(reg.snapshot()))
         c = SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(), fabric_adapters=lambda p=None: {'tuya': v})
         ex = Executor(c)
