@@ -90,6 +90,10 @@ def _vacuum(target):
 
 
 def _tv(target):
+    # Static convenience set (no model involved). The YouTube shortcut is a
+    # fixed app_launch button, not part of any verified proof chain: S6 and
+    # the flagship-C chain exercise volume steps only. Kept for UX parity
+    # with the shipped TV dashboard; remove here if curation changes.
     return [{'label': 'Volume +', 'skill_id': 'tv_volume_step', 'target': target,
              'params': {'direction': 'up'}},
             {'label': 'Volume -', 'skill_id': 'tv_volume_step', 'target': target,

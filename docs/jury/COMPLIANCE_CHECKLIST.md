@@ -38,6 +38,10 @@ official rules), third-party rules summary (labeled T-P, not authoritative).
 4. Confirm no eligibility exclusion applies; note the organizer license scope.
 5. Submit from the owner's account; keep the CONTRIBUTIONS.md disclosure attached.
 
+## Submission line-in-sand
+
+The submitted revision is the exact commit SHA the owner enters in the portal (TBD at submit time; the release-candidate notes in `docs/jury/RC_NOTES_20261102.md` record the prepared base). Every merged commit, evidence note, and video edit after that SHA is post-submission improvement and must not be presented as judged work. If the portal permits edits after submit (item 19, OPEN), any updated revision is declared with its new SHA and a dated changelog entry — never silently.
+
 ## License clarification (participant-provided, 1 November 2026)
 
 The owner supplied a Cerebral Valley organizer clarification that **no OSI-approved license is required**, and public source-available licenses are acceptable if judges can access and run the submission. This is participant-provided organizer guidance, not an independently authenticated waiver. OpenBridge's current source-available license is [PolyForm Strict 1.0.0](../../LICENSE); judges receive a separate scoped [evaluation permission](../../HACKATHON_EVALUATION_PERMISSION.md). Historical MIT licenses remain effective for older versions. The repository must stay public, the demo instructions must work, and official hackathon entry terms continue to apply.
