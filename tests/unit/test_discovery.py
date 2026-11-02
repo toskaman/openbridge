@@ -117,6 +117,16 @@ class VerifyReport(unittest.TestCase):
         self.assertEqual(rep['combinations'][0]['devices'], ['Smartwatch'])
         self.assertEqual(rep['dropped'], [])
 
+    def test_empty_unknown_string_dropped_not_fatal(self):
+        from src.ai import discovery as disc
+        doc = _good_report()
+        doc['unknowns'] = ['']
+        doc['test_plan'] = ['  ']
+        rep = disc.verify_report(doc, _device(), _peers(), _docs(), _docs())
+        self.assertEqual(rep['unknowns'], [])
+        self.assertEqual(rep['test_plan'], [])
+        self.assertEqual(len(rep['dropped']), 2)
+
     def test_genuinely_unknown_paren_label_still_ghost(self):
         from src.ai import discovery as disc
         doc = _good_report()

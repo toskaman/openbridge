@@ -179,12 +179,24 @@ def verify_report(doc, device, peers, docs, _provenance_docs=None):
                        'skills': list(g.get('skills') or []),
                        'devices': kept_devs,
                        'needs': list(g.get('needs') or [])})
+    unknowns = []
+    for u in (doc['unknowns'] or []):
+        if not isinstance(u, str) or not u.strip():
+            dropped.append({'entry': 'unknown', 'reason': 'empty string'})
+            continue
+        unknowns.append(_capped(u, MAX_TEXT_CHARS, 'unknown'))
+    test_plan = []
+    for t in (doc['test_plan'] or []):
+        if not isinstance(t, str) or not t.strip():
+            dropped.append({'entry': 'test step', 'reason': 'empty string'})
+            continue
+        test_plan.append(_capped(t, MAX_TEXT_CHARS, 'test step'))
     return {
         'summary': _capped(doc['summary'], MAX_SUMMARY_CHARS, 'summary'),
         'capabilities': caps,
         'combinations': combos,
-        'unknowns': [_capped(u, MAX_TEXT_CHARS, 'unknown') for u in (doc['unknowns'] or [])],
-        'test_plan': [_capped(t, MAX_TEXT_CHARS, 'test step') for t in (doc['test_plan'] or [])],
+        'unknowns': unknowns,
+        'test_plan': test_plan,
         'dropped': dropped,
         'verified_devices': sorted(live),
         'doc_digests': [d.get('digest') for d in (docs or [])],
