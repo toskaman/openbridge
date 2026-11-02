@@ -3,7 +3,9 @@ import json
 import unittest
 from types import SimpleNamespace
 
-from dev.flagship_c_vehicle import resolve_relay_id, resolve_tv_key, run_vehicle
+from dev.flagship_c_vehicle import (music_state_from_dumpsys,
+                                    resolve_relay_id, resolve_tv_key,
+                                    run_vehicle)
 
 
 def make_io(script):
@@ -105,6 +107,16 @@ class VehicleTest(unittest.TestCase):
         srv = SimpleNamespace(relays=SimpleNamespace(relays={}), fabric_registry=None)
         with self.assertRaises(SystemExit):
             resolve_relay_id(srv)
+
+    def test_oracle_reads_stream_volume_not_min(self):
+        out = ('- STREAM_MUSIC:\n     Muted: false\n     Min: 0\n'
+               '     Max: 15\n     streamVolume:7\n')
+        self.assertEqual(music_state_from_dumpsys(out), (7, 15))
+
+    def test_oracle_unknown_format_is_null(self):
+        self.assertEqual(music_state_from_dumpsys('Audio service wat?'),
+                         (None, None))
+        self.assertEqual(music_state_from_dumpsys(None), (None, None))
 
     def test_receipt_is_json_sanitized(self):
         script = [{'v0': 10, 'v1': 11, 'exec_count': 1, 'post_revoke_exec': 0}]

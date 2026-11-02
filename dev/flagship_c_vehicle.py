@@ -8,7 +8,6 @@ taps. Prints sanitized JSON only. Any failed assert FAILS the round loudly.
 """
 import argparse
 import json
-import re
 import subprocess
 import sys
 import time
@@ -16,7 +15,20 @@ from datetime import datetime, timezone
 
 VEHICLE = 'flagship-c-o3/1'
 PRESS_BUDGET_S = 300
-VOLUME_RE = re.compile(r'STREAM_MUSIC[^:]*:\s*\S+[^0-9]*?(\d{1,2})\b')
+
+
+def music_state_from_dumpsys(text):
+    """(index, max) for STREAM_MUSIC via the production audio_state parse.
+
+    Shared oracle for the vehicle + preflight: one tested parser, no
+    divergent regex. (None, None) when the format is unrecognized.
+    """
+    from src.fabric.android_actions import AndroidActions
+    st = AndroidActions(lambda *a: (text or '') if a == ('dumpsys', 'audio') else '',
+                        'tv').audio_state()
+    if not st['readable']:
+        return None, None
+    return st['volume_index'], st['max_index']
 
 
 def resolve_tv_key(server):
@@ -159,8 +171,7 @@ class LiveIO:
                            timeout=60, text=True)
         if p.returncode != 0:
             return None
-        m = VOLUME_RE.search(p.stdout)
-        return int(m.group(1)) if m else None
+        return music_state_from_dumpsys(p.stdout)[0]
 
     def journal_count(self, request_id):
         ex = self._api_v2.executor(self.server)
