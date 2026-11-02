@@ -1,0 +1,1 @@
+{"steps": [{"skill_id": "tv_volume_step", "target": "android tv", "params": {"direction": "up"}}, {"skill_id": "tv_volume_step", "target": "android tv", "params": {"direction": "down"}}]}
