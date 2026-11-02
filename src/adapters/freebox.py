@@ -9,7 +9,11 @@ DISCOVERY_URL = 'http://mafreebox.freebox.fr/api_version'
 
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
-        return None
+        # Never return None: urllib would swallow the redirect and either
+        # propagate a raw HTTPError or parse the 302 body as discovery data,
+        # depending on version (N-24). discover() maps ValueError to
+        # GATEWAY_UNAVAILABLE.
+        raise ValueError('discovery redirected (refused)')
 
 
 def fetch_discovery():

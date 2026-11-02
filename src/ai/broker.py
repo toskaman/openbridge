@@ -48,7 +48,10 @@ class CreditPermit:
 
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
-        return None
+        # Never return None: urllib would swallow the redirect and either
+        # propagate a raw HTTPError or parse the 302 body as provider output,
+        # depending on version (N-24). The credential is still never forwarded.
+        raise ModelBlocked('provider redirected (refused, credential not forwarded)')
 
 
 class MetaTransport:
