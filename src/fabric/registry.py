@@ -116,13 +116,16 @@ class Registry:
         with self._lock:
             devices = []
             for dev in self.devices.values():
+                facts = {}
+                for f, obs in dev['observations'].items():
+                    bv = self.best_value(dev['key'], f)
+                    facts[f] = {'value': bv.value,
+                                'sources': sorted(o.source for o in obs.values()),
+                                'verified': bv.verified,
+                                'observed_at': bv.observed_at}
                 devices.append({'key': dev['key'], 'category': dev['category'], 'label': dev['label'],
                     'identifier_kinds': sorted({i.kind for i in dev['identifiers']}),
-                    'facts': {f: {'value': self.best_value(dev['key'], f).value,
-                                  'sources': sorted(o.source for o in obs.values()),
-                                  'verified': self.best_value(dev['key'], f).verified,
-                                  'observed_at': self.best_value(dev['key'], f).observed_at}
-                              for f, obs in dev['observations'].items()},
+                    'facts': facts,
                     'capabilities': [vars(c) for c in dev['capabilities'].values()],
                     'handles': dict(dev.get('handles', {})), 'last_seen': dev['last_seen']})
             links = [vars(l) | {'grants': list(l.grants)} for l in self.links.values()]
