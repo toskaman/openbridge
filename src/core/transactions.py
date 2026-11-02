@@ -54,10 +54,16 @@ class TransactionEngine:
         lease=None
         acquired=False
         try:
-            lease=self.path.with_suffix('.lock').open('a+b')
-            if lease.tell()==0:
-                lease.write(b'0');lease.flush()
-            lease.seek(0)
+            try:
+                lease=self.path.with_suffix('.lock').open('a+b')
+                if lease.tell()==0:
+                    lease.write(b'0');lease.flush()
+                lease.seek(0)
+            except OSError:
+                # A racing holder may own the lock byte already (Windows:
+                # PermissionError on the contended setup write). Contention
+                # of any form is a clean Blocked, never a raw OSError.
+                raise TransactionBlocked('Transaction journal lock is contended') from None
             try:
                 if sys.platform=='win32':
                     import msvcrt
