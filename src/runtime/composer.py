@@ -235,13 +235,18 @@ def _refuse(step, reason):
             'failure_strategy': None, 'reversibility': None}
 
 
-def compose(proposal, devices, router):
+def compose(proposal, devices, router, request_text=None):
     """Deterministically allow or refuse each proposed step.
 
     proposal: proposal_from_doc/proposal_from_reply output. devices: live
     snapshot rows ({key, label, category, handles}). router: Router (or a test
-    double with skill_routes). Never raises for per-step problems: every step
-    comes back 'allowed' or 'refused' with an open reason.
+    double with skill_routes). request_text: the owner's original request;
+    when provided, a REFUSAL-kind intent-gate verdict converts every
+    allowed step to refused (fail-closed: the proposal answers a request
+    nothing may satisfy). CLARIFICATION-kind verdicts pass through to
+    per-step consent, which judges relevance. Never raises for per-step
+    problems: every step comes back 'allowed' or 'refused' with an open
+    reason.
     """
     from src.runtime import nl_plan
     from src.runtime.primitives import validate, PrimitiveError
@@ -317,6 +322,19 @@ def compose(proposal, devices, router):
             'failure_strategy': {'on_fail': s.get('on_fail', 'fail'),
                                  'note': failure_note(skill, s.get('on_fail', 'fail'))},
             'reversibility': SKILLS[skill]['reversibility']})
+    if request_text and any(s['status'] == 'allowed' for s in steps):
+        from src.runtime import intent_effect
+        admitted = {'steps': [s for s in steps if s['status'] == 'allowed']}
+        try:
+            intent_effect.check(request_text, admitted, devices)
+        except intent_effect.IntentEffectError as e:
+            if e.kind == intent_effect.REFUSAL:
+                for s in steps:
+                    if s['status'] == 'allowed':
+                        s['status'] = 'refused'
+                        s['reason'] = 'request refused by intent gate: %s' % e.code
+            # CLARIFICATION-kind verdicts pass through deliberately (see
+            # docstring): relevance stays with per-step consent.
     allowed = sum(1 for s in steps if s['status'] == 'allowed')
     return {'composer_version': COMPOSER_VERSION, 'steps': steps,
             'allowed': allowed, 'refused': len(steps) - allowed,
@@ -437,7 +455,8 @@ def propose_and_compose(text, devices, router, proposer):
         raise ComposerError('model unavailable: %s' % e) from None
     if not isinstance(res, dict) or not res.get('content'):
         raise ComposerError('model returned no usable content')
-    composed = compose(proposal_from_reply(res['content']), devices, router)
+    composed = compose(proposal_from_reply(res['content']), devices, router,
+                       request_text=text)
     composed['model_run'] = {'provider': 'meta', 'model': res.get('model_id', 'unknown'),
                              'endpoint': res.get('endpoint', '')}
     composed['reply_sha256'] = hashlib.sha256(res['content'].encode()).hexdigest()
