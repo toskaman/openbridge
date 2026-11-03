@@ -142,9 +142,12 @@ class N03B2DoubleDispatch(unittest.TestCase):
             self.assertEqual(len(losers), 1)
             self.assertEqual(winners[0]['state'], 'VERIFIED')
             self.assertEqual(losers[0]['refuse_status'], 409)
-            # Scheduling decides which honest refusal the loser sees: DONE
-            # (duplicate) or still-EXECUTING (uncertain). CommandError carries
-            # status + message only (RouteError code is not forwarded).
+            # Scheduling decides which honest refusal the loser sees: DONE (duplicate) or
+            # still-EXECUTING (uncertain). The uncertain case has two paths — the loser
+            # boots its Router while the winner's journal row is EXECUTING (arm-time
+            # refusal) or loses the atomic journal claim (claim-time refusal) — but both
+            # carry the same wording, since neither path can tell live-elsewhere from
+            # crashed. CommandError carries status + message only (code is not forwarded).
             self.assertIn(losers[0]['refuse_message'], (
                 'This request was already handled',
                 'An invocation with this id is already running elsewhere or was interrupted; use a fresh invocation id'))

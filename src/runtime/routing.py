@@ -116,6 +116,13 @@ def _fp(obj):
     return hashlib.sha256(json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()
 
 
+# Single wording for every UNCERTAIN_OUTCOME refusal: at arm/probe time the router cannot
+# distinguish an invocation that is live in another process from one whose process crashed
+# (both surface as a journal EXECUTING row with fingerprint None), so every such refusal
+# carries the same honest text. A finished invocation instead refuses as DUPLICATE_REQUEST.
+_UNCERTAIN_MSG = 'An invocation with this id is already running elsewhere or was interrupted; use a fresh invocation id'
+
+
 class Router:
     def __init__(self, server, clock=time.time):
         self.server, self.clock = server, clock
@@ -565,8 +572,8 @@ class Router:
         with self._lock:
             done = self.completed.get((actor, invocation_id)) if invocation_id is not None else None
             if done is not None:
-                if done[1] is None:    # journal EXECUTING row with no DONE: a crash interrupted it; never re-arm it
-                    raise RouteError(409, 'UNCERTAIN_OUTCOME', 'A previous invocation with this id was interrupted; use a fresh invocation id')
+                if done[1] is None:    # journal EXECUTING row with no DONE: live elsewhere or crashed; never re-arm it
+                    raise RouteError(409, 'UNCERTAIN_OUTCOME', _UNCERTAIN_MSG)
                 raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
             doc = self._evaluate(skill_id, target)
             self._validate_input(skill_id, params)
@@ -607,9 +614,11 @@ class Router:
                 if done is None:
                     raise RouteError(409, 'CONSENT_VOID', 'No armed invocation with this id (expired, voided by a route change, or never armed); review again')
                 if done[1] is None:
-                    raise RouteError(409, 'UNCERTAIN_OUTCOME', 'A previous invocation with this id was interrupted; use a fresh invocation id')
+                    raise RouteError(409, 'UNCERTAIN_OUTCOME', _UNCERTAIN_MSG)
                 if done[1] != _fp(dict(req, target=target)):
                     raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different skill, route, lease or params')
+                if done[0] is None:    # journal DONE row restored after a restart: no binding to replay; the id is consumed
+                    raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
                 b = done[0]
             else:
                 b = None
@@ -630,9 +639,11 @@ class Router:
                 if done is None:
                     raise RouteError(409, 'CONSENT_VOID', 'route changed: review again')
                 if done[1] is None:
-                    raise RouteError(409, 'UNCERTAIN_OUTCOME', 'A previous invocation with this id was interrupted; use a fresh invocation id')
+                    raise RouteError(409, 'UNCERTAIN_OUTCOME', _UNCERTAIN_MSG)
                 if done[1] != _fp(dict(req, target=target)):
                     raise RouteError(409, 'INVOCATION_ID_REUSED', 'invocation_id reused with a different skill, route, lease or params')
+                if done[0] is None:    # journal DONE row restored after a restart: no binding to replay; the id is consumed
+                    raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
                 replay, doc, route, binding, join, ikey = done[0], None, None, None, True, (actor, req['invocation_id'])
             else:
                 replay = None
@@ -682,7 +693,7 @@ class Router:
                     self.completed[ikey] = (binding, row.get('fingerprint'), self.clock())
                 if row['state'] == 'DONE':
                     raise RouteError(409, 'DUPLICATE_REQUEST', 'This request was already handled')
-                raise RouteError(409, 'UNCERTAIN_OUTCOME', 'An invocation with this id is already running elsewhere or was interrupted; use a fresh invocation id')
+                raise RouteError(409, 'UNCERTAIN_OUTCOME', _UNCERTAIN_MSG)
         try:
             receipt = self.ledger.run(actor, req['invocation_id'], binding, dispatch)
         except rc.InvocationIdReused:

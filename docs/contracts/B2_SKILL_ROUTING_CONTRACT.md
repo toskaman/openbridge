@@ -94,6 +94,10 @@ Each route has:
   - Same ID + different binding: `409 INVOCATION_ID_REUSED`, nothing dispatched.
   - New ID: dispatched, even with identical params (two deliberate volume-up presses = two presses).
   - Full ledger: refused, never evicting a live ID.
+- **Restart refusals** (journal rows reloaded with no in-memory binding): a finished id refuses as
+  `409 DUPLICATE_REQUEST` (the id is consumed; a new intent needs a fresh id), never re-executes and
+  never falls through to dispatch. An unfinished id refuses as `409 UNCERTAIN_OUTCOME` with one fixed
+  wording shared by every uncertain path, since no path can tell live-elsewhere from crashed.
 - **Concurrency**: per-device concurrency stays `single-per-device` as today. One physical device reached by two transports gives two providers but one `device_key`.
 
 ## 7. Uncertain outcomes

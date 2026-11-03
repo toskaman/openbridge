@@ -386,3 +386,21 @@ class DurableJournal(Base):
             self.invoke(lease3, {'seconds': 5})
         self.assertEqual(e.exception.code, 'DUPLICATE_REQUEST')
         self.assertEqual(len(self.calls), 2)
+
+    def test_direct_invoke_of_restarted_done_id_is_duplicate(self):
+        # §3.4: after a restart, a direct invoke (no armed lease) of a journal-DONE id must
+        # refuse as DUPLICATE_REQUEST, never fall through to dispatch with route=None.
+        from src.runtime.routing import Router
+        lease = self.arm_with_id(self.routes(), 'inv-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+        first = self.invoke(lease)
+        self.assertEqual(first['state'], 'VERIFIED')
+        self.assertEqual(len(self.calls), 1)
+        fresh = Router(self.server)                       # restart: empty memory, same journal file
+        fresh.clock = self.clock
+        stale = {'invocation_id': lease['invocation_id'], 'skill_id': 'ble_scan_room',
+                 'route_id': lease['route_id'], 'lease_id': lease['lease_id'],
+                 'graph_revision': lease['graph_revision'], 'params': {'seconds': 8}, 'consent': True}
+        with self.assertRaises(RouteError) as e:
+            fresh.invoke(stale)
+        self.assertEqual(e.exception.code, 'DUPLICATE_REQUEST')
+        self.assertEqual(len(self.calls), 1)
