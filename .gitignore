@@ -8,5 +8,6 @@ dist/
 *.log
 .pytest_cache/
 shots/
+TEST_RESULTS/
 
 .xbuild/

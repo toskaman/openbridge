@@ -114,6 +114,39 @@ class PlaceFile(unittest.TestCase):
             self.assertEqual(r['state'], 'BLOCKED')
             self.assertEqual(bridge.jobs, [])
 
+    def test_oversized_bytes_rejected_before_bridge(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            ex, key, bridge, store, consent = rig(Path(tmp))
+            consent.set('aa01bb02', True, confirm=True)
+            tid = store.put(b'\x89PNG\r\n\x1a\n' + b'\x00' * (8 * 1024 * 1024), kind='cap')
+            r = ex.execute('pc_place_file', key,
+                           {'transfer_id': tid, 'name': 'wall.png'}, consent=True)
+            self.assertEqual(r['state'], 'BLOCKED')
+            self.assertIn('TOO_LARGE', r['errors'][0])
+            self.assertEqual(bridge.jobs, [])
+
+    def test_hash_mismatch_is_failed_not_verified(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            ex, key, bridge, store, consent = rig(Path(tmp))
+            consent.set('aa01bb02', True, confirm=True)
+            tid = store.put(PNG, kind='cap')
+
+            def agent_corrupt(command, shell, timeout_s):
+                out = '0' * 64  # wrong hash: transfer must not verify
+                return {'exit_code': 0, 'timed_out': False,
+                        'stdout_b64': base64.b64encode(out.encode()),
+                        'stderr_b64': base64.b64encode(b'')}
+
+            bridge.run_job = agent_corrupt
+            r = ex.execute('pc_place_file', key,
+                           {'transfer_id': tid, 'name': 'wall.png'}, consent=True)
+            self.assertEqual(r['state'], 'FAILED')
+            self.assertIn('HASH_MISMATCH', r['errors'][0])
+
 
 class Wallpaper(unittest.TestCase):
     def test_blocked_without_full_control(self):

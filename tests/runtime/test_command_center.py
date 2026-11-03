@@ -222,6 +222,16 @@ class NLRouter(unittest.TestCase):
         self.assertNotIn('Bearer', p)
         self.assertNotIn('sk-', p)
 
+    def test_prompt_exposes_keywords_and_app_launch_example(self):
+        from src.runtime.nl_router import build_prompt
+        p = build_prompt('Open YouTube on the TV', 'en')
+        # Curated keywords are visible to the model (else small models cannot
+        # map verbs like open/watch to app_launch; observed live, Llama 3B).
+        self.assertIn('words: youtube, launch, open', p)
+        self.assertIn('"skill_id": "app_launch"', p)
+        self.assertIn('Book me a flight to Paris', p)
+        self.assertIn('Turn the vacuum on and off', p)
+
     def test_prompt_prefers_resolving_with_direct_examples(self):
         from src.runtime.nl_router import build_prompt
         p = build_prompt('How many devices are online', 'en')
@@ -364,6 +374,53 @@ class CommandService(unittest.TestCase):
         devs['dev-tv2'] = {'key': 'dev-tv2', 'category': 'tv', 'label': 'TV'}
         with self.assertRaises(CommandError):
             resolve_targets([{'kind': 'device', 'ref': 'tv'}], devs)
+
+    def test_resolve_prefers_actionable_view_over_duplicate(self):
+        from src.runtime.command import resolve_targets, CommandError
+        # Live discovery reports one TV via several protocols (adb handle row
+        # + UPnP view-only row). The view-only row can never dispatch, so it
+        # must not force a 409; two ACTIONABLE rows still must refuse.
+        devs = dict(fake_devices())
+        devs['dev-tv1'] = dict(devs['dev-tv1'], handles={'WIFI': 'h1'})
+        devs['dev-tv2'] = {'key': 'dev-tv2', 'category': 'tv', 'label': 'TV'}
+        self.assertEqual(resolve_targets([{'kind': 'device', 'ref': 'tv'}], devs),
+                         ['dev-tv1'])
+        devs['dev-tv2'] = dict(devs['dev-tv2'], endpoints={'cast': ('192.168.1.99', 8009)})
+        with self.assertRaises(CommandError):
+            resolve_targets([{'kind': 'device', 'ref': 'tv'}], devs)
+
+    def test_resolve_explains_duplicate_views(self):
+        from src.runtime.command import resolve_targets_ex
+        devs = dict(fake_devices())
+        devs['dev-tv1'] = dict(devs['dev-tv1'], handles={'WIFI': 'h1'},
+                              weak={('ip', '192.168.1.15')},
+                              identifiers=[{'kind': 'android_serial'}])
+        devs['dev-tv2'] = {'key': 'dev-tv2', 'category': 'tv', 'label': 'TV',
+                           'weak': {('ip', '192.168.1.15')},
+                           'identifiers': [{'kind': 'upnp_udn'}]}
+        keys, trace = resolve_targets_ex([{'kind': 'device', 'ref': 'tv'}], devs)
+        self.assertEqual(keys, ['dev-tv1'])
+        self.assertEqual(trace[0]['rule'], 'actionable-tiebreak')
+        self.assertEqual(trace[0]['winner'], 'dev-tv1')
+        cands = {c['key']: c for c in trace[0]['candidates']}
+        self.assertEqual(sorted(cands), ['dev-tv1', 'dev-tv2'])
+        self.assertTrue(cands['dev-tv1']['actionable'])
+        self.assertFalse(cands['dev-tv2']['actionable'])
+        self.assertEqual(cands['dev-tv1']['via'], ['WIFI'])
+        # Identity explanation: same weak IP, disjoint strong-id families.
+        self.assertEqual(cands['dev-tv1']['weak_ips'], ['192.168.1.15'])
+        self.assertEqual(cands['dev-tv2']['weak_ips'], ['192.168.1.15'])
+        self.assertEqual(cands['dev-tv1']['id_kinds'], ['android_serial'])
+        self.assertEqual(cands['dev-tv2']['id_kinds'], ['upnp_udn'])
+
+    def test_approve_preview_carries_target_trace(self):
+        from src.runtime.command import approve
+        srv = FakeServer()
+        srv.reg.devices['dev-tv1'] = dict(srv.reg.devices['dev-tv1'], handles={'WIFI': 'h1'})
+        srv.reg.devices['dev-tv2'] = {'key': 'dev-tv2', 'category': 'tv', 'label': 'TV'}
+        prev = approve(srv, youtube_intent())
+        self.assertEqual(prev['device_keys'], ['dev-tv1'])
+        self.assertEqual(prev['target_trace'][0]['rule'], 'actionable-tiebreak')
 
     def test_ollama_transport_parses_strict_json(self):
         from src.runtime.nl_router import OllamaIntentTransport, TransportError

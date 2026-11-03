@@ -132,7 +132,8 @@ def build_prompt(text, lang):
              'Use skill_id null + clarifying_question when ambiguous; unknown requests get',
              'skill_id null and confidence 0. Never invent a skill_id. Registered skills:']
     for c in S.all_skills():
-        lines.append(f"- {c['skill_id']}: {c['description']} (targets: {','.join(c['targets'])})")
+        lines.append(f"- {c['skill_id']}: {c['description']} (targets: {','.join(c['targets'])}; "
+                     f"words: {', '.join(c['keywords'])})")
     lines.append('Prefer resolving with the closest registered skill. Ask a clarifying '
                  'question ONLY when two or more registered skills match equally well.')
     lines.append('Example: "Start my vacuum" -> {"outcome": "start cleaning", '
@@ -144,10 +145,21 @@ def build_prompt(text, lang):
     lines.append('Example: "Scan for bluetooth devices" -> {"outcome": "scan nearby bluetooth", '
                  '"skill_id": "ble_scan_room", "targets": [{"kind": "device", "ref": "relay"}], '
                  '"params": {}, "confidence": 0.9, "ambiguities": [], "clarifying_question": null}')
+    lines.append('Example: "Open YouTube on the TV" -> {"outcome": "open youtube on tv", '
+                 '"skill_id": "app_launch", "targets": [{"kind": "device", "ref": "tv"}], '
+                 '"params": {"package": "com.google.android.youtube.tv"}, "confidence": 0.9, '
+                 '"ambiguities": [], "clarifying_question": null})')
     lines.append('Example: "Turn it up" -> {"outcome": "ambiguous tv volume set vs step", '
                  '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
                  '"ambiguities": ["set vs step"], '
                  '"clarifying_question": "Set an exact volume, or step up once?"}')
+    lines.append('Example: "Turn the vacuum on and off" -> {"outcome": "conflicting start vs pause", '
+                 '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
+                 '"ambiguities": ["start vs pause"], '
+                 '"clarifying_question": "Should the vacuum start, or pause?"}')
+    lines.append('Example: "Book me a flight to Paris" -> {"outcome": "no registered skill books flights", '
+                 '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
+                 '"ambiguities": [], "clarifying_question": null})')
     lines.append(f'User language: {lang}. User request: {text}')
     return '\n'.join(lines)
 
