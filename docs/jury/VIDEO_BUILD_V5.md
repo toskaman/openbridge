@@ -1,5 +1,7 @@
 # Jury video V5 — new-footage cut (03-Nov-2026, branch `release/jury-final-03nov`)
 
+§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+
 V2/V3/V4 (`3d3e228e…`/`eee76671…`/`12f49234…`) stay frozen as history.
 V5 adds the 02-Nov owner footage: filmed START/DOCK dispatch,
 "done, verified" on screen, and a filmed lease-stale refusal.
@@ -26,7 +28,7 @@ filmed refusal → safety stills → watch stills → scorecard → close card.
 ## Honesty record (what V5 does NOT claim)
 - Vacuum locomotion/docking: NOT visibly filmed. Every floor beat carries
   STATIC + the close card keeps the GAP row. Forensic basis:
-  `PHYSICAL_EVIDENCE_VERIFICATION.md` (centroid tracks, frame strips).
+  [02nov-vacuum-forensics](../evidence/02nov-vacuum-forensics.md) (centroid tracks, frame strips).
 - The two x8 files are accelerated copies (encoder Lavf, factor stated in
   filename, unverified from bytes — no original on Z:). Labeled on-screen.
 - The refusal is a STALE-LEASE denial ("Unavailable: lease stale"), not a
@@ -57,6 +59,6 @@ source-reproducible; until then the V4 staging dir is a required input.
 
 ## Missing shots (unchanged)
 Vacuum motion/docking on camera (owner-gated). Watch/multi-device scenes:
-runbooks ready (WATCH_CAPTURE_RUNBOOK.md, MULTI_DEVICE_CAPTURE_RUNBOOK.md),
-all UNVERIFIED until filmed. Duration fit vs portal max is owner-gated
+capture runbooks not committed — filming owner-gated, all UNVERIFIED
+until filmed. Duration fit vs portal max is owner-gated
 (170.70 s, no padding).

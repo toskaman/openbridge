@@ -98,7 +98,7 @@ Local Muse Glimmer proposes the panel. OpenBridge validates every control agains
 
 *Meta-generated T2 panel mid-run on the real TV (31 Oct 2026): hold-press FIND dispatched, receipt tx-4a96f8f6, 15-poll oracle stable, revoke + deny verified after. Press ADB-injected (labeled on the record).*
 
-Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); owner-performed manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce) were VERIFIED 1 Nov with oracle standby→goto_charge ([S5c proof](docs/evidence/s5-tv-panel-01nov-manual.md)) — return-to-dock behavior is oracle-proven; 02-Nov footage adds filmed START/DOCK dispatch with on-screen "done, verified" and a filmed lease-stale refusal, while vacuum locomotion/docking itself is still not visibly filmed ([forensic record](docs/evidence/02nov-vacuum-forensics.md)). TV wake + Companion reveal verified 2 Nov (sleep effect owner-confirmed, receipt honestly UNVERIFIED — [proof](docs/evidence/tv-sleep-02nov.md)); this TV drops Wi-Fi ADB in sleep, so wake needs the remote. Latest [releases](https://github.com/toskaman/openbridge/releases) (newest: v0.2.0 Final Frontier, 1 Nov, MIT tag); jury cut V5 (171 s incl. new owner-recorded footage; V2/V3/V4 frozen) built by the committed builder ([build doc](docs/jury/VIDEO_BUILD_V5.md)); the finale is filmed by the owner per the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
+Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); owner-performed manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce) were VERIFIED 1 Nov with oracle standby→goto_charge ([S5c proof](docs/evidence/s5-tv-panel-01nov-manual.md)) — return-to-dock behavior is oracle-proven; 02-Nov footage adds filmed START/DOCK dispatch with on-screen "done, verified" and a filmed lease-stale refusal, while vacuum locomotion/docking itself is still not visibly filmed ([forensic record](docs/evidence/02nov-vacuum-forensics.md)). TV wake + Companion reveal verified 2 Nov (sleep effect owner-confirmed, receipt honestly UNVERIFIED — [proof](docs/evidence/tv-sleep-02nov.md)); this TV drops Wi-Fi ADB in sleep, so wake needs the remote. License split: main is PolyForm Strict 1.0.0 (+ hackathon jury evaluation permission); the v0.2.0 tag (`dd669c2`) is a historical MIT snapshot, not the release. Official submission video is owner-filmed only (canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING); agent-built cuts V2–V5 are HISTORICAL DRAFTs, never the submission ([latest build doc](docs/jury/VIDEO_BUILD_V5.md)). The finale is filmed by the owner per the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
 
 ## Try it yourself
 
@@ -107,7 +107,7 @@ Windows, Linux, or macOS · Python 3.14 (CI-pinned 3.14.4) · zero third-party r
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2377 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 2378 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
@@ -128,7 +128,7 @@ Full picture: [known limitations](docs/KNOWN_LIMITATIONS.md) · [relay security]
 
 ## Evidence — don't take our word for it
 
-2377 tests green locally (Windows) + browser incl. WebKit · verify green on main ([run 41439826982](https://github.com/toskaman/openbridge/actions/runs/41439826982), post-#182) · clean-room install green on main ([run 41325178319](https://github.com/toskaman/openbridge/actions/runs/41325178319)) · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+2378 tests green locally (Windows) at `333d14d` + browser incl. WebKit (history: 2115 main-line-era, 2132 jury-final) · verify green on main ([run 41439826982](https://github.com/toskaman/openbridge/actions/runs/41439826982), post-#182) · clean-room install green on main ([run 41325178319](https://github.com/toskaman/openbridge/actions/runs/41325178319)) · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
 
 ## Built for the hackathon
 

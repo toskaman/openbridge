@@ -6,7 +6,7 @@
 
 V4 owner instructions replace older responsibility assignments. Sol independently tests/audits; Claude owns generic platform/trust/kernel work; Muse Code owns generative Forge/agent source and Meta owns runtime candidate proposals. No platform, generator, protected master document, frozen evaluation or original evidence was edited. No provider, credentials, hardware, deployment, capture, call, shutdown or video was used by this audit. Temporary ledgers and fake effects are clearly marked SIMULATED.
 
-Observed repository public/MIT through connected GitHub CLI. Baseline CI checks122970299734 (Ubuntu),122970299240 (browser),122970298660 (Windows) all reported success on the exact baseline. These are software checks, not V4 acceptance. Owner-provided participant-guide copy is the dated rules source; live portal cutoff and contribution eligibility remain separately unverified.
+Observed repository public/MIT through connected GitHub CLI (historical observation at this baseline; main is PolyForm Strict 1.0.0 since owner PR #170, 01-Nov-2026). Baseline CI checks122970299734 (Ubuntu),122970299240 (browser),122970298660 (Windows) all reported success on the exact baseline. These are software checks, not V4 acceptance. Owner-provided participant-guide copy is the dated rules source; live portal cutoff and contribution eligibility remain separately unverified.
 
 ## INVENTORY_OF_PREBUILT_LOGIC
 

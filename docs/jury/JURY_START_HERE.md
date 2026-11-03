@@ -41,10 +41,12 @@ ADB drops in sleep) — see [runbook](DEMO_PHYSICAL_RUNBOOK.md) and
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2115 tests, no hardware needed
+python -m unittest discover -s tests   # 2378 tests, no hardware needed
 python -m src.cli judge demo           # offline demo → DEMO_COMPLETE
 python -m src.server                   # → http://127.0.0.1:18765
 ```
+
+Submitted revision: `MERGE_SHA_TO_FILL` (freeze pin — the owner enters the exact SHA in the portal; count history: 2115 main-line-era / 2132 jury-final / 2378 absolute-final). See the [compliance checklist](COMPLIANCE_CHECKLIST.md) line-in-sand.
 
 No hardware? The offline demo, fixtures, and browser smokes reproduce the safe
 subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:

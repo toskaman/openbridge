@@ -21,7 +21,7 @@ interoperability, cross-platform operation, failure handling.
 | A-3 | Transplant store unbounded growth | `src/forge/transplant.py` (pre-#168) | MEDIUM | FIXED in #168: cap 128, oldest-evicted + tests |
 | A-4 | Transplant CLI ran without explicit consent flag | `src/cli.py` (pre-#168) | MEDIUM | FIXED in #168: consent gate + tests |
 | A-5 | Dashboard label charset unsanitized | `src/runtime/dashboards.py` (pre-#168) | LOW | FIXED in #168 |
-| A-6 | Android companion `full_control` reset unvalidated (A1) | recon §13 | MEDIUM | OPEN: needs emulator-validated Java change; owner list |
+| A-6 | Android companion `full_control` reset unvalidated (A1) | recon §13 | MEDIUM | STALE 02-Nov: fix merged in PR #176 (`confirmPairing` resets `full_control`, APK hash-pinned); live-hardware proof incomplete, local emulator blocked — see [KNOWN_LIMITATIONS.md](../KNOWN_LIMITATIONS.md) |
 | A-7 | Suite flaked once locally: 2 fails under 12 GB model load | local run 1 Nov | LOW | Not reproduced in 3 subsequent full greens (2082 OK) + all CI green; attributed to memory pressure, documented |
 | A-8 | F90 modules (8) software-tested + API/CLI-wired but no hardware validation | FRONTIER90 report | MEDIUM | Documented as NOT hw-validated; README claims CLI+API only |
 | A-9 | macOS graphical behavior untested (CI is unit-level) | verify workflow | LOW | STALE — corrected 01-Nov evening: headless Chromium+WebKit UI smokes (verify `browser-macos`, 8 smokes) + cleanroom install+capture on macos-15-intel AND macos-26 are green; residual is headed/human-driven browsers only |

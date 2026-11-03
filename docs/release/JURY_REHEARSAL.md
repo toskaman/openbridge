@@ -1,5 +1,7 @@
 # Internal jury rehearsal
 
+Historical as of 27-Oct-2026: internal self-review snapshot; ratings provisional, video/portal gates NOT ASSESSED.
+
 27 October 2026. This is one evidence-based internal self-review using the preparation kit's `JURY_RELEASE_GATES.md` and `ELIGIBILITY_AND_SCORECARD.md`. It is not an official score, actual judge assessment, independent human panel, or simulated claim that twelve experts reviewed the product. The four equal 0–10 ratings below are subjective, provisional practice ratings; the anchors are the preparation kit's internal anchors, not organizer scoring thresholds.
 
 **No release-ready claim.** Final video remains on owner hold and no final video has been produced for this preparation. Portal fields, participant/team eligibility, applicable declarations and organizer acceptance have not been reviewed or completed. Engineering evidence cannot compensate for an unmet submission gate.

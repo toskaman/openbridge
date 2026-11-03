@@ -1,5 +1,7 @@
 # Evidence demo preview brief
 
+Historical as of Oct-2026: review-preview brief, not the final submission; silent-177 s preview scope superseded by the owner-filmed finale.
+
 Purpose: a direct recording of the actual browser application, following the private preparation guide's three-minute evidence sequence. This is a review preview, not a final contest submission.
 
 Format: English, 16:9, captioned and intentionally silent, final duration 177 seconds. Use actual app captures; do not reconstruct hardware behavior or add generated product scenes. The HyperFrames entry workflow was consulted; this deliverable is scoped to recording the browser session itself rather than authoring a motion composition.

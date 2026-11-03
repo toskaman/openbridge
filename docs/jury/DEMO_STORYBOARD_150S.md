@@ -1,5 +1,7 @@
 # 150-second demo storyboard (V4-06)
 
+Historical as of Oct-2026: V4-06-era board; superseded by [DEMO_STORYBOARD_FINAL.md](DEMO_STORYBOARD_FINAL.md) — record-only-after-proof rule retained.
+
 Real app captures only, captioned, names redacted (`?redact`). Each beat shows the status label on screen. Record only after the pending hardware runs below are done; otherwise drop the beat rather than simulate it.
 
 | Time | Beat | Screen | Proof shown | Needs before recording |

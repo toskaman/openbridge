@@ -24,6 +24,8 @@ Merged staging branches deleted after merge (remote):
 s6/F30/F90/s8/main + feat/finalfrontier-release + feat/ui-v2-workspace.
 Open PRs at freeze: #170 only (owner's own license PR, PolyForm
 Strict 1.0.0 — untouched by this run; release stays MIT per main).
+[HISTORICAL 01-Nov: PR #170 has since merged — main is PolyForm Strict
+1.0.0, v0.2.0 tag stays MIT; see](../LICENSING_HISTORY.md).
 No branch protection exists on main (owner setting); all merges used
 `--merge` (ancestry preserved, no squash, no rebase).
 
@@ -79,6 +81,8 @@ No branch protection exists on main (owner setting); all merges used
   headless capture sandbox (README shows no discovery shot).
 - License: release is MIT (main's LICENSE at freeze); owner's
   PolyForm PR #170 pending and untouched — owner decides.
+  [HISTORICAL: #170 merged 01-Nov; main is now PolyForm Strict 1.0.0,
+  v0.2.0 tag stays MIT — see](../LICENSING_HISTORY.md).
 - BridgeWindows v4 plaintext-on-trusted-LAN + pairing-code brute-force
   caveats retained verbatim.
 - Glimmer 30B: 7 load attempts, 7 OOM — environmental, not quality.

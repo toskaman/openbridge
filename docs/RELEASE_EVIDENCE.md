@@ -1,6 +1,6 @@
 # Release evidence index
 
-Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-recovery-receipt.json, glimmer-smoke-receipt.json, local-meta-adb-receipt.json, runtime-meta-receipt.json, physical-transaction-attempt.json (refusal). Benchmarks: docs/benchmark/. Screens: docs/jury/screens/. Full chronological log: EVIDENCE_LEDGER.md. Baseline: DEVICE_FABRIC_BASELINE.md. Limitations: KNOWN_LIMITATIONS.md.
+Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-recovery-receipt.json, glimmer-smoke-receipt.json, local-meta-adb-receipt.json, runtime-meta-receipt.json, physical-transaction-attempt.json (refusal). Benchmarks: docs/benchmark/. Screens: docs/jury/screens/. Full chronological log: [EVIDENCE_LEDGER.md](../EVIDENCE_LEDGER.md) (frozen 27 Oct — later evidence lives in docs/evidence/*.md + the registry). Baseline: DEVICE_FABRIC_BASELINE.md. Limitations: KNOWN_LIMITATIONS.md.
 
 ## Latest integrated evidence — 28 October
 
@@ -68,3 +68,9 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - Registry: 37 VERIFIED rows (28 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR) — new row 36 S5c owner-manual START+DOCK 01-Nov, row 37 TV sleep/wake/reveal 02-Nov; matrix re-rendered via `python -m dev.device_registry --render`.
 - Living docs re-synced to HEAD: README, jury start, release status, known limitations, verified capabilities, submission draft/evidence, offline demo, narration overlay (2115/37/S8-48/v0.2.0-MIT-vs-main-PolyForm/TV-wake limit/video V2); audit docs dated 01-Nov left as history.
 - License: main is PolyForm Strict 1.0.0 from PR #170; v0.2.0 tag dd669c2 stays MIT; owner declares the submitted revision's license.
+
+## Latest integrated evidence — 03 November (absolute-final followup, freeze merge `MERGE_SHA_TO_FILL`)
+
+- Suite: 2378 green locally (`python -m unittest discover -s tests`) at `333d14d`; freeze pin `MERGE_SHA_TO_FILL` (parent fills the exact SHA at freeze); count history: 2115 main-line-era (02-Nov) / 2132 jury-final (03-Nov V5 branch) / 2378 absolute-final; dated entries above frozen as history.
+- Videos V2 (`3d3e228e…`) / V3 (`eee76671…`) / V4 (`12f49234…`) / V5 (`b3cb41e7…`) are HISTORICAL DRAFTs, never the submission; the official video is owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+- License: main is PolyForm Strict 1.0.0 (+ HACKATHON_EVALUATION_PERMISSION judge grant); v0.2.0 tag dd669c2 MIT is historical; owner declares the submitted revision's license.

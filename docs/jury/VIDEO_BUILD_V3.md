@@ -1,5 +1,7 @@
 # Jury video V3 — quality pass (02-Nov-2026, main `2351308`)
 
+§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+
 V2 (`final-jury-video-718b401.mp4`, sha `3d3e228e…`) stays frozen as history.
 V3 is a minimal polish of the same cut — same segments, same EDL timings,
 same IRL selects, same honesty labels.

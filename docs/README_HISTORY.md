@@ -34,7 +34,7 @@ The simulated recovery sandbox records its snapshot before mutation, verifies re
 
 See CONTRIBUTIONS.md for origin, DEVICE_SCOPE.md for supported capabilities, EVIDENCE_LEDGER.md for checks, RISK_REGISTER.md for limitations, and docs/safety/BOUNDARIES.md for the runtime model policy. Preparation documents and utilities are maintained separately and are not included as event-built product work.
 
-MIT licensed. Python's standard library and browser-native APIs are the only runtime dependencies.
+MIT licensed (historical — this snapshot predates the 01-Nov PolyForm Strict 1.0.0 relicensing; see [LICENSING_HISTORY.md](LICENSING_HISTORY.md)). Python's standard library and browser-native APIs are the only runtime dependencies.
 
 ## Controlled physical-write status
 

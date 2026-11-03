@@ -1,5 +1,7 @@
 # Overnight execution report — 31 Oct 2026 (OvernightRun M1–M6 extract)
 
+Historical as of 31-Oct-2026: overnight-run extract; HEADs, PRs, and counts frozen at run time.
+
 ## A. Repository state
 
 - Inspected HEAD at start: `cb471de` (`origin/main`, PR157 merged, CI 10/10).

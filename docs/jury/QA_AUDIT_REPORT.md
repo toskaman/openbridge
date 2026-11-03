@@ -28,7 +28,7 @@ disclosed) — out of my scope, listed here for the merger.
 
 - README renders (GitHub markdown, no HTML): yes; 6 images + 2 badges, all targets present.
 - Internal links: repo sweep clean (7 fixed); jury ZIP validator: 290 files, 0 missing, 0 broken.
-- Badges truthful: MIT (LICENSE exists) + live verify.yml badge (reflects CI, whatever it is).
+- Badges truthful: MIT (LICENSE exists) + live verify.yml badge (reflects CI, whatever it is). [HISTORICAL 31-Oct, pre-PolyForm: main is PolyForm Strict 1.0.0 since owner PR #170, 01-Nov.]
 - No staged-as-real media: GIF frames are committed stills; emulator shots labeled; PII shots excluded; the one seeded-UI shot (`refusal_channel.png`, demo server, real refusal payload) is labeled at every display point.
 - No universal-Undo / exactly-once-physical / encrypted-transport claims: scoped to journaled settings; v4 plaintext disclosed.
 - No invented benchmarks: unfavorable arms published (ablation, Forge 0%, EVAL 1.4%).
