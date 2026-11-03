@@ -1,5 +1,7 @@
 # Current risks
 
+Historical as of 27-Oct-2026: risk snapshot; item 6 (pending organizer answers) and the start-date row need owner re-confirmation before submission.
+
 1. Hardware diversity: evidence comes from one phone (Xiaomi, Android 14) and one Android TV (Android 11). Other vendors may differ; adapters fail closed and the UI shows vendor-aware guidance.
 2. Physical cable pull during revert is verified on one phone, including quarantine and exact recovery after reconnect. Cable loss during other write phases/devices remains unproven. Five process-kill recovery points are separately recorded in EVIDENCE_LEDGER.md.
 3. Muse Glimmer needs ~18 GB; on a 16 GB GPU shared with other models it may need other local models unloaded. The product never substitutes another model silently.

@@ -1,5 +1,7 @@
 # Release acceptance gates — verdicts (30 Oct 2026)
 
+Historical as of 30-Oct-2026: gate verdicts for main `972b545`; superseded by the current [release status](../RELEASE_STATUS.md).
+
 Revision under review: main `972b545` (§8 merged). Verdict scale:
 PASS / CONDITIONAL / OPEN. An OPEN gate is stated, never hidden.
 

@@ -19,6 +19,6 @@ Forge foundation, verified publication and TV proof were merged through PRs #1, 
 
 ## Verify
 
-`python -m unittest discover -s tests -q` passed 314 tests after syncing main on 27 October 2026. Browser checks require the pinned development requirements and Chromium. Run the `tests.e2e.forge_*` modules for lifecycle, failure recovery, expiry, injected-source labels, model memory and concurrent revocation. These controlled tests make no actual hardware or model requests.
+`python -m unittest discover -s tests -q` passed 314 tests after syncing main on 27 October 2026 (historical count; current suite count in [release status](../RELEASE_STATUS.md)). Browser checks require the pinned development requirements and Chromium. Run the `tests.e2e.forge_*` modules for lifecycle, failure recovery, expiry, injected-source labels, model memory and concurrent revocation. These controlled tests make no actual hardware or model requests.
 
 Theme sources live in `src/ui/theme/`; run `python -m dev.build_web_theme` to compile both existing asset routes, and `python -m dev.build_web_theme --check` to detect drift. Main device discovery and Forge share the foundation without new backend asset routes or external fonts.

@@ -40,7 +40,7 @@ official rules), third-party rules summary (labeled T-P, not authoritative).
 
 ## Submission line-in-sand
 
-The submitted revision is the exact commit SHA the owner enters in the portal (TBD at submit time; the release-candidate notes in `docs/jury/RC_NOTES_20261102.md` record the prepared base). Every merged commit, evidence note, and video edit after that SHA is post-submission improvement and must not be presented as judged work. If the portal permits edits after submit (item 19, OPEN), any updated revision is declared with its new SHA and a dated changelog entry — never silently.
+The submitted revision is the exact commit SHA the owner enters in the portal (freeze pin `MERGE_SHA_TO_FILL` — parent fills the exact SHA at freeze; the release-candidate notes in `docs/jury/RC_NOTES_20261102.md` record the prepared base). Every merged commit, evidence note, and video edit after that SHA is post-submission improvement and must not be presented as judged work. If the portal permits edits after submit (item 19, OPEN), any updated revision is declared with its new SHA and a dated changelog entry — never silently.
 
 ## License clarification (participant-provided, 1 November 2026)
 

@@ -4,6 +4,8 @@ Ten independent reviewers, evidence-backed findings only. Each finding carries
 severity, location, evidence, reproduction, fix, acceptance test and residual risk.
 Speculative findings are rejected. Status: draft until the last runs land.
 
+Historical as of Oct-2026: DRAFT audit; findings predate the November release freezes — verify against [RELEASE_STATUS.md](../RELEASE_STATUS.md) before citing.
+
 ## 1. Hackathon Judge — breakthrough clarity
 
 **Finding (info):** the demo story is real but multi-threaded (phone relay +

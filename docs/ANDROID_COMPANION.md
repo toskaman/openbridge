@@ -1,6 +1,6 @@
 # OpenBridge Companion (Android phone / Android TV)
 
-Native Android app in Java (companion/android), no third-party libraries, built with the official SDK tools only (`python -m dev.build_companion`: javac -> d8 -> aapt2 -> zipalign -> apksigner). Kotlin was preferred by the brief; Java was chosen because it needs no Gradle/Kotlin toolchain download and keeps the build reproducible offline. minSdk 26, targetSdk 34, 33 KB APK.
+Native Android app in Java (companion/android), no third-party libraries, built with the official SDK tools only (`python -m dev.build_companion`: javac -> d8 -> aapt2 -> zipalign -> apksigner). Kotlin was preferred by the brief; Java was chosen because it needs no Gradle/Kotlin toolchain download and keeps the build reproducible offline. minSdk 26, targetSdk 34, 33 KB APK (historical build size — re-verify with a fresh `python -m dev.build_companion`).
 
 - TV: LEANBACK_LAUNCHER entry, large focusable buttons, D-pad navigation, no touchscreen requirement.
 - Bluetooth: `hasSystemFeature(FEATURE_BLUETOOTH_LE)`; Android 12+ `BLUETOOTH_SCAN` with `neverForLocation`; Android 8–11 legacy BLUETOOTH/ADMIN + ACCESS_FINE_LOCATION (maxSdk 30). Permissions are requested through the system dialog only; never granted silently.

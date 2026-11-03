@@ -18,6 +18,8 @@ Newer committed results since the 26 Oct rows above; details in
 | Frozen 50-turn local eval (31 Oct) | rules, Llama 3.2 3B, Glimmer 30B | `docs/benchmark/EVAL_SUBSET_50_LOCAL.md` | rules 0/50, Llama 4/50 + 44 clarifications, Glimmer BLOCKED (host OOM, not scored); raw `.xbuild/eval_subset_50.json` stays uncommitted |
 | §11 eval-kit rules baseline, 1,000 turns (30 Oct) | rules path only | `docs/benchmark/EVAL_1000_RULES_BASELINE.md` + `eval_1000_rules_baseline.json` | 14/1,000 resolved (1.4%, correctness UNGRADED); 0 crashes / 0 sends; model tiers PENDING |
 | V4-04 re-ranking ablation (27 Oct) | rules, Llama 3.2 3B, Glimmer 30B | `docs/benchmark/v4/REGISTRATION.md` + `ablation-20261027T210021Z.json` | top-1: rules 0.833, Llama 0.833, Glimmer 0.722 (8 validator errors); Spark not run; no model arm beat the rules |
+| Held-out model study ModelStudy48 (01-Nov) | rules, Llama 3.2 3B (Glimmer blocked) | [modelstudy48/RESULTS.md](benchmark/modelstudy48/RESULTS.md) | intent: rules .361 vs Llama .222; Llama never refuses/clarifies (6 ungated wrong-but-executable substitutions); Glimmer host-OOM, not scored |
+| S8 intent/effect gate calibration (01-Nov) | deterministic gate over proposals | [intenteffect/RESULTS.md](benchmark/intenteffect/RESULTS.md), [RESULTS3.md](benchmark/intenteffect/RESULTS3.md) | eval2 unsafe 2→0, eval3 (48 replies) unsafe 4→0, zero fully-correct blocked; indicative, not a product success rate |
 
 Missing / unpublished (explicit): `.xbuild/eval_subset_50.json` is absent by
 design (local artifact, never committed); hosted-Spark eval arms not run (no

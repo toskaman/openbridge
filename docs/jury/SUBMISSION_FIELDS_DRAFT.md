@@ -12,11 +12,13 @@ fields below use event-page-verified facts + release artifacts.
 - Primary theme: Push the Frontier
 - Secondary theme: Build for Your World
 - Repository: https://github.com/toskaman/openbridge
-- Release: v0.2.0 (tag on finalization merge; attach app/evidence/media packs)
-- License at release (v0.2.0 tag dd669c2): MIT.
-- License at main HEAD: PolyForm Strict 1.0.0 (owner PR #170 merged
-  01-Nov; history in docs/LICENSING_HISTORY.md). Declare the submitted
-  revision's license; confirm portal license-scope item OPEN-17.
+- Submitted revision: MERGE_SHA_TO_FILL (freeze pin; owner enters the exact
+  SHA in the portal — no v0.2.0 tag move; attach app/evidence/media packs).
+- License at the submitted revision: PolyForm Strict 1.0.0 (owner PR #170
+  merged 01-Nov; history in docs/LICENSING_HISTORY.md) + the
+  HACKATHON_EVALUATION_PERMISSION judge grant. The v0.2.0 tag (dd669c2)
+  MIT grant is historical, not the release. Confirm portal license-scope
+  item OPEN-17.
 
 ## Pitch (short)
 
@@ -26,13 +28,13 @@ authorization, and observable results.
 
 ## Demo
 
-- Video: jury cut V3 (159.33 s, 720p30, sha256 eee76671…, same cut
-  as V2 + 2115 suite card + tv-power close row) built by the committed
-  builder from owner-recorded hardware footage + committed stills
-  ([build doc](VIDEO_BUILD_V3.md); V2 3d3e228e… frozen per
-  VIDEO_BUILD_V2.md) + srt + thumbnail + scene map.
-  Finale filmed by the owner. Do NOT claim vacuum motion footage
-  (return-to-dock is oracle-proven, unfilmed).
+- Video: official submission video is owner-filmed only, canonical slot
+  `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+  Agent-built cuts V2 (3d3e228e…) / V3 (eee76671…) / V4 (12f49234…) /
+  V5 (b3cb41e7…) are HISTORICAL DRAFTs, never the submission
+  ([latest build doc](VIDEO_BUILD_V5.md)). Finale filmed by the owner.
+  Do NOT claim vacuum motion footage (return-to-dock is oracle-proven,
+  unfilmed).
 - Live/replay: offline `judge demo` (DEMO_COMPLETE) + clean install
   8/8; jury entry: docs/jury/JURY_START_HERE.md.
 
@@ -55,12 +57,13 @@ authorization, and observable results.
 - JURY_START_HERE.md, CLAIM_EVIDENCE_MATRIX.md,
   DEVICE_EVIDENCE.json (37 VERIFIED), HARDWARE_TEST_MATRIX.md,
   KNOWN_LIMITATIONS.md, FINAL_RELEASE_AUDIT_2026-11-01.md.
-- CI on v0.2.0 tag (dd669c2): verify (run 41325164524) +
+- CI history: v0.2.0 tag (dd669c2, historical MIT): verify (run 41325164524) +
   clean-room (41322394136) + Android 5/5 (41325176026) SUCCESS;
   2096/2096 unit suite at tag per tag CI. Main 2351308 (PR #177):
-  2115/2115 local + Verify run 41356836103 SUCCESS. Main fa693f9
+  2115/2115 main-line-era + Verify run 41356836103 SUCCESS. Main fa693f9
   (PR #180 jury RC): 2115/2115 local OK, 282.7 s, 02-Nov (RC notes:
-  RC_NOTES_20261102.md).
+  RC_NOTES_20261102.md). Absolute-final: 2378/2378 at 333d14d
+  (freeze pin MERGE_SHA_TO_FILL).
 
 ## Owner checklist (portal)
 

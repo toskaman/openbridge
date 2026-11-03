@@ -1,5 +1,7 @@
 # Prompt30 gates G01–G22 + final report (30 Oct 2026)
 
+Historical as of 30-Oct-2026: P30 gate verdicts at PR149; suite counts 1145/1150 superseded by later freezes.
+
 Revision: `feat/p30-cli-release` (merged as PR149 `73cfef5`).
 Scale: PASS / PARTIAL / BLOCKED / OPEN. BLOCKED/OPEN are stated, never hidden.
 

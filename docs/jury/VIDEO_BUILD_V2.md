@@ -1,5 +1,7 @@
 # Jury video v2 (with IRL footage) — reproducible build (2026-11-01)
 
+§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+
 Output: `E:\OpenBridge-Overnight\frontier-final\final-jury-video-718b401.mp4`
 (159.33 s, 1280x720, 30 fps, H.264 yuv420p, CRF 23, **silent**,
 13.4 MB) + burned EN subtitles + standalone `video_v2/narration.srt` +
@@ -79,6 +81,6 @@ measured boundaries, then burned with libass `subtitles`.
 
 ## 6. What is NOT changed
 
-- The frozen v0.2.0 release (tag dd669c2, MIT, 78 s fallback cut) is
-  untouched. This jury cut is post-tag material (lot branch 718b401)
-  for the PORTAL submission upload — owner-only, NOT submitted by me.
+- The historical v0.2.0 tag (dd669c2, MIT) and its 78 s fallback cut
+  are untouched. This jury cut is post-tag material (lot branch 718b401)
+  and a HISTORICAL DRAFT — never the submission (see §0).

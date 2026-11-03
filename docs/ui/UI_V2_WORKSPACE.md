@@ -78,6 +78,7 @@ fails only in a sandbox where outbound HTTPS is forced through a proxy (it also 
 5. Real-hardware screenshots of the Studio were not produced here (no paired Companion in the build sandbox). Do not
    present the rehearsal as hardware proof.
 6. axe-core audit not run (no new dependency added); keyboard, focus and live-region behaviour are covered by the smoke.
+7. GAP: no loading/disabled/offline/model-status state inventory exists yet — per-view loading, disabled, offline, and model-status states are not catalogued.
 
 ## Before / after (real screenshots of this branch, headless Chromium, no hardware)
 

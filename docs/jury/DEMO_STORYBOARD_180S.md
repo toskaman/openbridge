@@ -1,5 +1,7 @@
 # 180-second demo storyboard (30 Oct 2026)
 
+Historical as of 30-Oct-2026: superseded by [DEMO_STORYBOARD_FINAL.md](DEMO_STORYBOARD_FINAL.md) (31 Oct one-story redesign); beats kept for history.
+
 Real captures only, names redacted. Each beat shows its status label on
 screen. Record only after the listed proof exists; otherwise DROP the beat —
 never simulate it. **Video BLOCKED: no recording without the owner's new
