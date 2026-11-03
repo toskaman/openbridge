@@ -153,6 +153,14 @@ def in_scope(ip, scope):
     return any(address in net for net in scope if net.version == address.version)
 
 
+def _v4_scoped(addrs, scope):
+    # Scope is IPv4-private: at least one IPv4 address must exist and all
+    # of them must be in scope. (all([]) is True, so the non-empty check
+    # is what keeps IPv6-only instances from slipping through.)
+    v4 = [a for a in addrs if ':' not in a]
+    return bool(v4) and all(in_scope(a, scope) for a in v4)
+
+
 def lan_interface_ip(scope):
     """Local IPv4 of the default-route interface, if it is inside the approved scope (no packet is sent)."""
     probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -164,6 +172,57 @@ def lan_interface_ip(scope):
     finally:
         probe.close()
     return ip if in_scope(ip, scope) else None
+
+
+BROWSE_EXTRA_MAX = 4
+
+
+def extra_ifaces_from_env():
+    """Explicit extra browse interfaces (P2P/hotspot subnets): private IPv4 only, bounded."""
+    import os
+    out = []
+    for raw in (os.environ.get('OPENBRIDGE_MDNS_IFACES') or '').split(','):
+        ip = raw.strip()
+        try:
+            addr = ipaddress.ip_address(ip)
+        except ValueError:
+            continue
+        if addr.is_private and not addr.is_loopback and ip not in out:
+            out.append(ip)
+    return out[:BROWSE_EXTRA_MAX]
+
+
+def browse_interfaces(extra_ifaces=None, timeout=2.5, scope=None, services=SERVICE_TYPES, sock_factory=None):
+    """Browse the default interface plus explicit extra ones; merge instances.
+
+    Extra interfaces come from the argument or OPENBRIDGE_MDNS_IFACES
+    (validated, private-only, max 4). Nothing is probed implicitly.
+    """
+    scope = scope or default_scope()
+    want = list(extra_ifaces) if extra_ifaces else extra_ifaces_from_env()
+    ifaces = []
+    default = lan_interface_ip(scope)
+    if default:
+        ifaces.append(default)
+    for ip in want or []:
+        try:
+            addr = ipaddress.ip_address(ip) if isinstance(ip, str) else None
+        except ValueError:
+            addr = None
+        if addr is not None and addr.is_private and not addr.is_loopback \
+                and ip not in ifaces and len(ifaces) - (1 if default else 0) < BROWSE_EXTRA_MAX:
+            ifaces.append(ip)
+    if not ifaces:
+        ifaces = [None]
+    instances, ignored, packets = [], 0, 0
+    for iface in ifaces:
+        r = discover(timeout=timeout, scope=scope, services=services,
+                     sock_factory=sock_factory, interface_ip=iface)
+        instances.extend(r.get('instances', []))
+        ignored += r.get('ignored_out_of_scope', 0)
+        packets += r.get('packets', 0)
+    return {'status': 'READY', 'instances': instances,
+            'ignored_out_of_scope': ignored, 'packets': packets}
 
 
 def discover(timeout=2.5, scope=None, services=SERVICE_TYPES, sock_factory=None, interface_ip=None):
@@ -203,5 +262,5 @@ def discover(timeout=2.5, scope=None, services=SERVICE_TYPES, sock_factory=None,
         return {'status': 'MDNS_UNAVAILABLE', 'instances': [], 'ignored_out_of_scope': 0, 'packets': packets}
     finally:
         sock.close()
-    instances = [i for i in assemble(records) if not i['addresses'] or all(in_scope(a, scope) for a in i['addresses'] if ':' not in a)]
+    instances = [i for i in assemble(records) if not i['addresses'] or _v4_scoped(i['addresses'], scope)]
     return {'status': 'OK', 'instances': instances, 'ignored_out_of_scope': len(ignored), 'packets': packets}

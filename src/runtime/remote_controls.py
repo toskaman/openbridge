@@ -415,6 +415,11 @@ class RemoteControls:
                 done += 1
         return done
 
+    def press_history(self, control_id):
+        """Lock-protected snapshot of processed press entries for one control (oldest first)."""
+        with self._lock:
+            return [e for e in self.history if e.get('control_id') == control_id]
+
     def process(self, rid, req, origin='press'):
         from src.runtime.api_v2 import router
         from src.runtime.routing import RouteError

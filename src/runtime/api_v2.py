@@ -36,9 +36,11 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/composer/catalog',
               '/api/v2/composer/summary',
               '/api/v2/route_intel',
-              '/api/v2/dashboards/list')
+              '/api/v2/dashboards/list',
+              '/api/v2/pc/full-control')
 POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',)
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
+ '/api/v2/pc/full-control',)
 
 
 import threading
@@ -310,6 +312,17 @@ def _transplant_hold(server, tid):
         return (getattr(server, 'transplant_runs', None) or {}).get(tid)
 
 
+def _pc_identity(server, device_key):
+    reg = getattr(server, 'fabric_registry', None)
+    dev = (reg.devices.get(device_key, {}) if reg else {}) or {}
+    if not dev or dev.get('category') != 'computer':
+        return None
+    for i in dev.get('identifiers', []) or []:
+        if getattr(i, 'strong', False):
+            return i.value
+    return None
+
+
 def get(server, path, query):
     if len(query) > MAX_QUERY_BYTES:
         return 414, {'error': 'Query string too long'}
@@ -318,12 +331,25 @@ def get(server, path, query):
     except ValueError:
         return 400, {'error': 'Too many query parameters'}
     ex = executor(server)
+    if path == '/api/v2/pc/full-control':
+        from src.fabric import pc_consent as PC
+        ident = _pc_identity(server, (q.get('device_key') or [''])[0])
+        if ident is None:
+            return 404, {'error': 'Unknown device'}
+        store = getattr(server, 'pc_consent', None)
+        return 200, {'device_key': (q.get('device_key') or [''])[0],
+                     'enabled': bool(store and store.allowed(ident)),
+                     'warning': PC.FULL_CONTROL_WARNING}
     if path == '/api/v2/contract':
         return 200, {'version': contract.CONTRACT_VERSION, 'schema': contract.schema()}
     if path == '/api/v2/primitives':
         return 200, {'primitives': [to_json(p) for p in PRIMITIVES.values()]}
     if path == '/api/v2/recovery':
-        return 200, to_json(ex.recovery())
+        from src.fabric.session import SessionError
+        try:
+            return 200, to_json(ex.recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
     if path == '/api/v2/events':
         try:
             since = int((q.get('since') or ['0'])[0])
@@ -456,8 +482,13 @@ def get(server, path, query):
         led = getattr(server, 'relay_ledger', None)
         return 200, {'routes': route_rows(server), 'advertisers': led.advertisers(strong) if led else []}
     if path == '/api/v2/diagnosis':
+        from src.fabric.session import SessionError
         from src.runtime.fabric_diagnosis import diagnose
-        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), to_json(ex.recovery()))}
+        try:
+            rec = to_json(ex.recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
+        return 200, {'findings': diagnose(server.fabric_snapshot, route_rows(server), rec)}
     if path == '/api/v2/route_intel':
         # Advisory enumeration only (pure read over RelayManager state; no snapshot needed).
         intel = _route_intel(server)
@@ -696,8 +727,11 @@ def _idem_seen(server):
     return seen
 
 
-def _idem_begin(server, key):
-    """Claim an idempotency key: None when this call owns it, else (status, body)."""
+def _idem_begin(server, key, fingerprint=None):
+    """Claim an idempotency key: None when this call owns it, else (status, body).
+
+    A DONE key bound to a different fingerprint is INVOCATION_ID_REUSED (the
+    caller's request was never handled), not DUPLICATE_REQUEST (mirrors routing)."""
     import time as _t
     from src.runtime.state_store import StateStore, StateError
     store = StateStore.for_server(server)
@@ -709,6 +743,8 @@ def _idem_begin(server, key):
         if claimed:
             return None
         if row['state'] == 'DONE':
+            if fingerprint is not None and row.get('fingerprint') is not None and row['fingerprint'] != fingerprint:
+                return {'status': 409, 'body': {'error': 'INVOCATION_ID_REUSED: this idempotency_key was already used for a different request; use a fresh key'}}
             return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
         return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running elsewhere or was interrupted; use a fresh key'}}
     seen = _idem_seen(server)
@@ -716,17 +752,19 @@ def _idem_begin(server, key):
         now = _t.monotonic()
         for k in [k for k, v in seen.items() if v[0] == 'DONE' and now - v[1] > 600]:
             del seen[k]
-        state = seen.get(key, (None, 0))[0]
-        if state == 'DONE':
+        prior = seen.get(key, (None, 0, None))
+        if prior[0] == 'DONE':
+            if fingerprint is not None and prior[2] is not None and prior[2] != fingerprint:
+                return {'status': 409, 'body': {'error': 'INVOCATION_ID_REUSED: this idempotency_key was already used for a different request; use a fresh key'}}
             return {'status': 409, 'body': {'error': 'DUPLICATE_REQUEST: this idempotency_key was already handled'}}
-        if state == 'EXECUTING':
+        if prior[0] == 'EXECUTING':
             return {'status': 409, 'body': {'error': 'UNCERTAIN_OUTCOME: this idempotency_key is already running; use a fresh key'}}
         if len(seen) >= 4096:
             victim = next((k for k, v in seen.items() if v[0] == 'DONE'), None)
             if victim is None:
                 return {'status': 503, 'body': {'error': 'STATE_JOURNAL_FULL: idempotency cache is full of running keys'}}
             del seen[victim]
-        seen[key] = ('EXECUTING', now)
+        seen[key] = ('EXECUTING', now, fingerprint)
         return None
 
 
@@ -749,7 +787,7 @@ def _idem_finish(server, key, fingerprint):
             pass   # leftover EXECUTING fails closed: retries refuse as uncertain, never re-dispatch
         return
     with server.http_idem_lock:
-        _idem_seen(server)[key] = ('DONE', _t.monotonic())
+        _idem_seen(server)[key] = ('DONE', _t.monotonic(), fingerprint)
 
 
 def _perm_sdk(runner):
@@ -1166,14 +1204,35 @@ def post(server, path, body):
     if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
         return cloud(server, path, body)
     if path == '/api/v2/recovery/acknowledge' and isinstance(body, dict):
+        from src.fabric.session import SessionError
         if set(body) - {'transaction_id', 'consent'} or not isinstance(body.get('transaction_id'), str) or body.get('consent') is not True:
             return 400, {'error': 'transaction_id and consent: true are required'}
-        if not executor(server).acknowledge(body['transaction_id']):
-            recovery = executor(server).recovery()
-            if recovery.blocked_reason.startswith('STATE_'):
-                return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
-            return 404, {'error': 'No unresolved transaction with this id'}
-        return 200, to_json(executor(server).recovery())
+        try:
+            if not executor(server).acknowledge(body['transaction_id']):
+                recovery = executor(server).recovery()
+                if recovery.blocked_reason.startswith('STATE_'):
+                    return 503, {'error': recovery.blocked_reason, 'recovery': to_json(recovery)}
+                return 404, {'error': 'No unresolved transaction with this id'}
+            return 200, to_json(executor(server).recovery())
+        except SessionError as error:
+            return 503, {'error': str(error)}
+    if path == '/api/v2/pc/full-control' and isinstance(body, dict):
+        from src.fabric import pc_consent as PC
+        if set(body) - {'device_key', 'enable', 'confirm'} \
+                or not isinstance(body.get('device_key'), str) \
+                or not isinstance(body.get('enable'), bool):
+            return 400, {'error': 'device_key, enable and (to enable) confirm:true are required'}
+        ident = _pc_identity(server, body['device_key'])
+        if ident is None:
+            return 404, {'error': 'Unknown device'}
+        store = getattr(server, 'pc_consent', None)
+        if store is None:
+            return 503, {'error': 'no consent store on this server'}
+        try:
+            store.set(ident, body['enable'], confirm=body.get('confirm') is True)
+        except PC.ConsentError as e:
+            return 400, {'error': str(e)}
+        return 200, {'device_key': body['device_key'], 'enabled': store.allowed(ident)}
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent', 'idempotency_key'}
@@ -1182,13 +1241,14 @@ def post(server, path, body):
     key = body.get('idempotency_key')
     if key is not None and (not isinstance(key, str) or not key or len(key) > 96):
         return 400, {'error': 'idempotency_key must be a non-empty string of at most 96 characters'}
+    binding = _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}) if key is not None else None
     if key is not None:
-        refused = _idem_begin(server, key)
+        refused = _idem_begin(server, key, binding)
         if refused is not None:
             return refused['status'], refused['body']
     r = executor(server).execute(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}, body.get('consent') is True)
     if key is not None:
-        _idem_finish(server, key, _idem_fingerprint(body.get('primitive_id'), body.get('device_key'), body.get('params') or {}))
+        _idem_finish(server, key, binding)
     status = 200 if r['state'] not in ('BLOCKED',) else 409
     return status, r
 

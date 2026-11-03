@@ -20,9 +20,9 @@ NS_DEV = '{urn:schemas-upnp-org:device-1-0}'
 WAN_SERVICES = ('urn:schemas-upnp-org:service:WANIPConnection:2', 'urn:schemas-upnp-org:service:WANIPConnection:1',
                 'urn:schemas-upnp-org:service:WANPPPConnection:1')
 COMMON = 'urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1'
-READ_ACTIONS = {  # action -> service family
+READ_ACTIONS = {  # action -> service family (only what read() invokes)
     'GetStatusInfo': 'wan', 'GetExternalIPAddress': 'wan', 'GetConnectionTypeInfo': 'wan',
-    'GetCommonLinkProperties': 'common', 'GetTotalBytesReceived': 'common', 'GetTotalBytesSent': 'common'}
+    'GetCommonLinkProperties': 'common'}
 NEVER = ('AddPortMapping', 'AddAnyPortMapping', 'DeletePortMapping', 'DeletePortMappingRange', 'SetConnectionType',
          'ForceTermination', 'RequestConnection', 'RequestTermination', 'SetAutoDisconnectTime', 'SetIdleDisconnectTime',
          'SetWarnDisconnectDelay', 'GetGenericPortMappingEntry', 'GetSpecificPortMappingEntry', 'GetListOfPortMappings')
@@ -35,7 +35,10 @@ class IGDBlocked(PermissionError):
 
 class _NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *a, **k):
-        return None
+        # Never return None: urllib would swallow the redirect and either
+        # propagate a raw HTTPError or process the 302 body as the reply,
+        # depending on version (N-24). Refuse explicitly like relay does.
+        raise IGDBlocked('gateway redirected (refused, cross-origin not followed)')
 
 
 def _safe_url(url, location, scope):

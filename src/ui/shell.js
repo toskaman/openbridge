@@ -70,6 +70,7 @@
       const diag = capOf(d, 'windows_diagnostics');
       add('pc-diag', 'PC health', 'activity', diag ? 'available' : 'detected', 'CPU, memory, disks and uptime from the OpenBridge agent on that PC.', 'allowlisted agent reads');
       add('pc-job', 'Run a command', 'pc', diag ? 'available' : 'permission', diag ? 'Run one command you type on that PC and see its output. It cannot be undone, so you approve each one.' : 'Seen on the network. Install the matching OpenBridge agent build to connect it.', diag ? 'pc_job via BridgeWindows exec.run · clear TCP on your LAN' : 'no agent link yet', diag ? null : { action: 'connect', connectType: 'pc' });
+      add('pc-full', 'Full control', 'pc', diag ? 'permission' : 'detected', diag ? 'Allow managed file writes and wallpaper changes on that PC. Off unless you enable it here, after a warning.' : 'Seen on the network. Connect the agent first.', 'pc_place_file + pc_wallpaper · owner toggle · revocable any time', diag ? { action: 'pcfull' } : { action: 'connect', connectType: 'pc' });
     } else if (d.category === 'router') {
       const r = capOf(d, 'lan_inventory') || capOf(d, 'igd_status') || capOf(d, 'freebox_api');
       const avail = g !== 'observe' && g !== 'none';
@@ -349,10 +350,33 @@
       const card = h('div', { class: 'cap ' + c.state }, h('div', { class: 'cap-top' }, icon(c.icon), h('strong', { text: c.name }), h('span', { class: 'pill ' + c.state, text: STATE_TXT[c.state] })), h('p', { text: c.plain }), h('details', {}, h('summary', { text: 'Technical details' }), h('code', { text: c.tech })));
       if (c.state === 'available' && ['remote', 'touch', 'apps', 'settings', 'diag', 'visual', 'vac-status', 'vac-settings', 'vac-drive', 'pc-diag', 'pc-job', 'router-diag', 'ble'].includes(c.id)) card.append(h('button', { class: 'ghost small', type: 'button', onclick: () => setTab('controls') }, 'Use'));
       if (c.action === 'connect') card.append(h('button', { class: 'ghost small', type: 'button', onclick: () => openConnect(c.connectType) }, 'How to connect'));
+      if (c.action === 'pcfull') {
+        const btn = h('button', { class: 'ghost small', type: 'button', text: 'Full control…' });
+        btn.onclick = () => pcfull(d, btn);
+        api('/api/v2/pc/full-control?device_key=' + encodeURIComponent(d.key)).then(
+          st => { btn.textContent = st.enabled ? 'Full control: ON (revoke)' : 'Full control: OFF (enable)'; },
+          () => { btn.textContent = 'Full control: unavailable'; btn.disabled = true; });
+        card.append(btn);
+      }
       grid.append(card);
     }
     ov.append(grid);
     if (isAndroid(d) && adbLinked(d)) ov.append(h('button', { class: 'ghost small probe', type: 'button', onclick: e => probe(d, e.currentTarget) }, 'Check what this device supports now'));
+  }
+  async function pcfull(d, btn) {
+    btn.disabled = true; btn.textContent = 'Checking…';
+    try {
+      const st = await api('/api/v2/pc/full-control?device_key=' + encodeURIComponent(d.key));
+      if (st.enabled) {
+        await post('/api/v2/pc/full-control', { device_key: d.key, enable: false });
+        btn.textContent = 'Full control: OFF (enable)';
+      } else {
+        if (!window.confirm((st.warning || 'Enable full control for this PC?') + '\n\nEnable full control for this PC?')) { btn.disabled = false; btn.textContent = 'Full control: OFF (enable)'; return; }
+        await post('/api/v2/pc/full-control', { device_key: d.key, enable: true, confirm: true });
+        btn.textContent = 'Full control: ON (revoke)';
+      }
+    } catch (e) { btn.textContent = 'Full control failed: ' + e.message; }
+    btn.disabled = false;
   }
   async function probe(d, btn) {
     btn.disabled = true; btn.textContent = 'Checking (read-only)…';

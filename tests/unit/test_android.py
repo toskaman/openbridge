@@ -82,6 +82,8 @@ class AndroidCompatibilityTests(unittest.TestCase):
         self.assertEqual(transport_of('adb-R5CT1234-AbCdEf._adb-tls-connect._tcp'),'WIFI')
         self.assertEqual(transport_of('emulator-5554'),'EMULATOR')
         self.assertEqual(transport_of('R5CT1234'),'USB')
+        # W1-040: TLS-pairing serials are LAN, never USB.
+        self.assertEqual(transport_of('adb-R5CT1234-AbCdEf._adb-tls-pairing._tcp'),'WIFI')
         a=self.adapter('List of devices attached\n192.168.1.20:5555 device\nadb-X-Y._adb-tls-connect._tcp device\n',{})
         self.assertEqual([d['transport'] for d in a.discover()['devices']],['WIFI','WIFI'])
 

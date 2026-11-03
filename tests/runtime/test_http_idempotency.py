@@ -48,16 +48,24 @@ class HttpIdempotency(unittest.TestCase):
         self.assertIn('DUPLICATE', r2.get('error', ''))
         self.assertEqual(len(srv.runtime_executor.calls), 1)
 
-    def test_same_key_changed_body_still_duplicate_no_redispatch(self):
+    def test_same_key_changed_body_is_reused_error_no_redispatch(self):
         # Gate D variant: key reuse with a different body must not execute
-        # again. Current contract: 409 DUPLICATE either way (safe direction).
+        # again, and must not be reported as DUPLICATE (the caller's request
+        # was NOT handled; the first body was). N-11: the journal stored the
+        # first body's fingerprint but never compared it, so collisions were
+        # misreported as replays. INVOCATION_ID_REUSED mirrors routing.
+        from src.runtime.api_v2 import _idem_fingerprint
+        same = body('k-reuse')
+        other = body('k-reuse', params={'command': 'dock'})
+        self.assertNotEqual(
+            _idem_fingerprint(same['primitive_id'], same['device_key'], same['params']),
+            _idem_fingerprint(other['primitive_id'], other['device_key'], other['params']))
         for srv in (keyed_server(tempfile.mkdtemp()), keyed_server()):
             st1, _ = post(srv, '/api/v2/execute', body('k-reuse'))
-            other = body('k-reuse', params={'command': 'dock'})
-            st2, r2 = post(srv, '/api/v2/execute', other)
+            st2, r2 = post(srv, '/api/v2/execute', body('k-reuse', params={'command': 'dock'}))
             self.assertEqual(st1, 200)
             self.assertEqual(st2, 409)
-            self.assertIn('DUPLICATE', r2.get('error', ''))
+            self.assertIn('INVOCATION_ID_REUSED', r2.get('error', ''))
             self.assertEqual(len(srv.runtime_executor.calls), 1)
             self.assertEqual(srv.runtime_executor.calls[0][2], {'command': 'start'})
 

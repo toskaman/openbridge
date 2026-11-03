@@ -10,7 +10,9 @@ from src.fabric import mdns
 
 MDNS_LABEL_KEYS = ('fn', 'md', 'box_model_name', 'manufacturer', 'model', 'name')
 COMPANION_SERVICE = '_openbridge-relay._tcp'
-COMPANION_RELAY_ID = re.compile(r'relay-[0-9a-f]{12}')
+# Store-compatible relay ids (relay_store.RID): 6-32 hex. Companions emit
+# exactly 12 today, but ingest must not drop store-valid ids.
+COMPANION_RELAY_ID = re.compile(r'relay-[0-9a-f]{6,32}')
 
 
 def install_salt(root=None):
@@ -200,6 +202,7 @@ def ingest_tuya(registry, vacuum, salt):
     obs = [DeviceObservation(f['name'], f['value'], 'TUYA_LOCAL', 'LAN', t, True) for f in facts]
     key = registry.upsert(ids, category='vacuum', label='Robot vacuum (Tuya)', observations=obs, weak=[('ip', vacuum.ip)])
     registry.link(Link('pc', key, 'LAN', ('observe', 'read', 'control'), 'TUYA_LOCAL'))
+    registry.devices[key].setdefault('handles', {})['TUYA_LOCAL'] = 'tuya-local'
     registry.capability(key, Capability('tuya_status', 'read', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'local protocol 3.4, owner-linked key'))
     registry.capability(key, Capability('tuya_setting', 'write', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'suction / volume, exact Undo'))
     registry.capability(key, Capability('robot_control', 'write', 'IMPLEMENTED_UNVERIFIED', 'TUYA_LOCAL', 'start, pause, dock, moves (auto-stop), seek, dust, resets: irreversible, consent per command'))

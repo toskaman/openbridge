@@ -82,6 +82,25 @@ PROPOSAL_JSON_SCHEMA = {'type': 'object',
                                      'items': {'type': 'string'}}}}}}}
 _PROPOSAL_KEYS = {'skill_id', 'target', 'params', 'on_fail', 'needs'}
 
+# MI v2 envelope constraint: the same steps shape wrapped in the shared
+# discriminated outcome (mirrors nl_plan S4.7), so constrained decoding
+# can emit a refusal or a clarification INSTEAD of steps. Without this
+# the schema FORCES the model to guess steps for impossible requests.
+COMPOSER_RESPONSE_SCHEMA = {'type': 'object',
+    'required': ['outcome'],
+    'properties': {'outcome': {'type': 'string'},
+                   'steps': {'type': 'array', 'minItems': 1,
+                       'maxItems': MAX_COMPOSED_STEPS,
+                       'items': {'type': 'object', 'required': ['skill_id', 'target', 'params'],
+                           'properties': {'skill_id': {'type': 'string'},
+                                          'target': {'type': 'string'},
+                                          'params': {'type': 'object'},
+                                          'on_fail': {'type': 'string'},
+                                          'needs': {'type': 'array', 'items': {'type': 'string'}}}}},
+                   'reason': {'type': 'string'},
+                   'code': {'type': 'string'},
+                   'clarifying_question': {'type': 'string'}}}
+
 
 class ComposerError(ValueError):
     pass
@@ -113,11 +132,12 @@ def build_prompt(text, devices):
     """Strict capability-grounded composition prompt: labels only, never keys."""
     from src.runtime.nl_plan import param_hint
     from src.runtime.routing import SKILLS
+    from src.fabric.registry import sanitize_label
     dev_lines = []
     for d in devices:
         cands = candidates_for(d)
         dev_lines.append('- %s (%s)%s' % (
-            d.get('label'), d.get('category'),
+            sanitize_label(d.get('label')), d.get('category'),
             (': ' + ', '.join(cands)) if cands else ': no live link, do not use'))
     untargeted = sorted(s for s, aud in SKILL_AUDIENCE.items() if aud == 'fabric')
     skill_lines = ['- %s %s reversibility=%s consent=%s audience=%s: %s'
@@ -125,7 +145,7 @@ def build_prompt(text, devices):
                       s.get('consent'), SKILL_AUDIENCE.get(sid, '?'),
                       s.get('plain'))
                    for sid, s in sorted(SKILLS.items())]
-    return ('You compose device workflows. Reply with ONE JSON object and nothing else: '
+    prompt = ('You compose device workflows. Reply with ONE JSON object and nothing else: '
             '{"steps": [{"skill_id": "<id>", "target": "<device label>", "params": {}}]}. '
             'Rules: 1..%d steps; skill_id must be listed below and plausible for the target; copy the '
             'target label EXACTLY character-for-character from the Devices list (never abbreviate; '
@@ -135,11 +155,28 @@ def build_prompt(text, devices):
             'for a simple sequence. %s Each step is an ACTION a device performs: the target is the '
             'device that ACTS (never the screen, remote or wrist device the owner holds). '
             'Only propose steps whose effect the owner accepts. '
-            'Example: {"steps": [{"skill_id": "tv_volume_step", "target": "android tv", '
+            'Example: {"steps": [{"skill_id": "tv_volume_step", "target": "<EXACT label from Devices>", '
             '"params": {"direction": "down"}}]}. Request: %s\nDevices:\n%s\nUntargeted skills '
             '(target "fabric"): %s\nSkills:\n%s'
             % (MAX_COMPOSED_STEPS, NO_ATOMIC_ROLLBACK, text.strip()[:500],
                '\n'.join(dev_lines), ', '.join(untargeted), '\n'.join(skill_lines)))
+    prompt += (' Copy the target label EXACTLY character-for-character from the '
+               'Devices list above and NOTHING ELSE: no parentheses, no qualifiers, '
+               'no decoration ("Living Room TV (tv)" is WRONG, "Living Room TV" is '
+               'right); never shorten or paraphrase it ("watch" is WRONG, '
+               '"Smartwatch" is right; "TV" is WRONG, "Android TV" is right). '
+               'Never use a device CATEGORY word as the target: tv, watch, pc, '
+               'computer and vacuum are WRONG by themselves; only a full label '
+               'from the Devices list (or "fabric" for untargeted skills) is right. '
+               'Every parameter name shown in the skill hint MUST appear in params '
+               'with a correctly typed value; never omit a hinted parameter. If the '
+               'request needs a skill, device, capability or effect not covered '
+               'above, do NOT guess steps: reply {"outcome": "refusal", "reason": '
+               '"<why, <=500 chars>"} with no steps. If exactly two readings match '
+               'equally well, reply {"outcome": "clarification", "clarifying_question": '
+               '"<one question>"} with no steps. A proposal wraps the steps object '
+               'as {"outcome": "proposal", "steps": [...]}.')
+    return prompt
 
 
 def proposal_from_doc(doc):
@@ -172,13 +209,30 @@ def proposal_from_doc(doc):
 
 
 def proposal_from_reply(reply):
-    """Strictly parse model JSON into a proposal. Raises ComposerError."""
+    """Strictly parse model JSON into a proposal. Raises ComposerError.
+
+    Accepts the S4.7 discriminated envelope (a proposal's steps are
+    validated; a refusal or clarification raises ComposerError carrying
+    the model's own words, so nothing executes) and, for backward
+    compatibility, a bare {"steps": [...]} object.
+    """
     if not isinstance(reply, str) or not reply.strip() or len(reply) > MAX_REPLY_CHARS:
         raise ComposerError('model reply is empty or oversized')
     try:
         doc = json.loads(reply)
     except ValueError:
         raise ComposerError('model reply is not JSON') from None
+    if isinstance(doc, dict) and 'outcome' in doc:
+        from src.forge import meta_result
+        try:
+            outcome, payload, detail, _ = meta_result.parse(
+                doc, 'steps', lambda steps: proposal_from_doc({'steps': steps}))
+        except meta_result.MetaError as e:
+            raise ComposerError(str(e)) from None
+        if outcome != meta_result.PROPOSAL:
+            verb = 'refused' if outcome == meta_result.REFUSAL else 'needs clarification'
+            raise ComposerError('model %s: %s' % (verb, detail))
+        return payload
     return proposal_from_doc(doc)
 
 
@@ -236,13 +290,39 @@ def _refuse(step, reason):
             'failure_strategy': None, 'reversibility': None}
 
 
-def compose(proposal, devices, router):
+def coerce_params(schema, params):
+    """One bounded repair: numeric strings -> int where the schema demands
+    integer (MI v3; the model emits JSON strings for ints). Value-preserving
+    only: full-digit strings, never bools/floats/out-of-shape values.
+    Anything else passes through untouched for validate() to refuse."""
+    import re
+    props = (schema or {}).get('properties') or {}
+    out = dict(params or {})
+    for name, sub in props.items():
+        if not isinstance(sub, dict) or sub.get('type') != 'integer':
+            continue
+        v = out.get(name)
+        if isinstance(v, bool) or not isinstance(v, str):
+            continue
+        if re.fullmatch(r'-?\d+', v.strip() or ''):
+            out[name] = int(v.strip())
+    return out
+
+
+def compose(proposal, devices, router, request_text=None):
     """Deterministically allow or refuse each proposed step.
 
     proposal: proposal_from_doc/proposal_from_reply output. devices: live
     snapshot rows ({key, label, category, handles}). router: Router (or a test
-    double with skill_routes). Never raises for per-step problems: every step
-    comes back 'allowed' or 'refused' with an open reason.
+    double with skill_routes). request_text: the owner's original request;
+    when provided, the intent gate runs once over the admitted steps: a
+    REFUSAL-kind verdict converts every allowed step to refused
+    (fail-closed: the proposal answers a request nothing may satisfy).
+    CLARIFICATION-kind verdicts pass through to per-step consent, which
+    judges relevance. The verdict is always returned as result['gate']
+    (allow/refused/clarification + code + detail). Never raises for
+    per-step problems: every step comes back 'allowed' or 'refused'
+    with an open reason.
     """
     from src.runtime import nl_plan
     from src.runtime.primitives import validate, PrimitiveError
@@ -258,7 +338,9 @@ def compose(proposal, devices, router):
             steps.append(_refuse(s, 'unknown skill %r' % (skill,)))
             continue
         try:
-            validate(SKILLS[skill]['input'], s.get('params') or {})
+            params = coerce_params(SKILLS[skill]['input'], s.get('params') or {})
+            validate(SKILLS[skill]['input'], params)
+            s = dict(s, params=params)
         except (PrimitiveError, TypeError, ValueError) as e:
             steps.append(_refuse(s, 'invalid params: %s' % e))
             continue
@@ -318,9 +400,30 @@ def compose(proposal, devices, router):
             'failure_strategy': {'on_fail': s.get('on_fail', 'fail'),
                                  'note': failure_note(skill, s.get('on_fail', 'fail'))},
             'reversibility': SKILLS[skill]['reversibility']})
+    gate = {'verdict': 'allow', 'code': None, 'detail': None}
+    if request_text and any(s['status'] == 'allowed' for s in steps):
+        from src.runtime import intent_effect
+        admitted = {'steps': [s for s in steps if s['status'] == 'allowed']}
+        try:
+            intent_effect.check(request_text, admitted, devices)
+        except intent_effect.IntentEffectError as e:
+            if e.kind == intent_effect.REFUSAL:
+                for s in steps:
+                    if s['status'] == 'allowed':
+                        s['status'] = 'refused'
+                        s['reason'] = 'request refused by intent gate: %s' % e.code
+                gate = {'verdict': 'refused', 'code': e.code,
+                        'detail': e.detail}
+            else:
+                # CLARIFICATION-kind verdicts pass through deliberately:
+                # relevance stays with per-step consent, but the verdict
+                # is recorded (never silently dropped) for the bridge.
+                gate = {'verdict': 'clarification', 'code': e.code,
+                        'detail': e.detail}
     allowed = sum(1 for s in steps if s['status'] == 'allowed')
     return {'composer_version': COMPOSER_VERSION, 'steps': steps,
             'allowed': allowed, 'refused': len(steps) - allowed,
+            'gate': gate,
             'devices': [{'label': d.get('label'), 'category': d.get('category')}
                         for d in devices],
             'rollback': NO_ATOMIC_ROLLBACK}
@@ -500,7 +603,13 @@ def propose_and_compose(text, devices, router, proposer):
         raise ComposerError('model unavailable: %s' % e) from None
     if not isinstance(res, dict) or not res.get('content'):
         raise ComposerError('model returned no usable content')
-    composed = compose(proposal_from_reply(res['content']), devices, router)
+    composed = compose(proposal_from_reply(res['content']), devices, router,
+                       request_text=text)
+    gate = composed.get('gate') or {}
+    if gate.get('verdict') == 'refused':
+        raise ComposerError('model refused: %s' % gate.get('detail'))
+    if gate.get('verdict') == 'clarification':
+        raise ComposerError('model needs clarification: %s' % gate.get('detail'))
     composed['model_run'] = {'provider': 'meta', 'model': res.get('model_id', 'unknown'),
                              'endpoint': res.get('endpoint', '')}
     composed['reply_sha256'] = hashlib.sha256(res['content'].encode()).hexdigest()

@@ -3,6 +3,7 @@
 Rules: observations merge into one device only when they share a STRONG identifier of the same kind.
 Weak signals (same IP, same name, randomized MAC) only create a 'possible_same' hint; they never merge
 and never let an action target a different device."""
+import re
 import threading
 import uuid
 from src.fabric.contracts import DeviceObservation, Identifier, Capability, Link, LINK_GRANTS, now
@@ -12,6 +13,26 @@ MAX_DEVICES = 2000
 CATEGORY_RANK = {'unknown': 0, 'ble': 1, 'iot': 2, 'nas': 3, 'printer': 3, 'media': 4, 'computer': 5, 'hub': 5, 'android': 5,
                  'network': 5, 'apple': 5, 'vacuum': 6, 'phone': 6, 'watch': 6, 'tv': 6, 'router': 7}
 MAX_OBSERVATIONS_PER_DEVICE = 200
+LABEL_MAX = 80
+_CTRL_CHARS = re.compile(r'[\x00-\x1f\x7f]+')
+
+
+def sanitize_label(label):
+    """Make an untrusted discovery label safe for prompts, UI and logs.
+
+    Labels arrive from LAN/radio data (mDNS txt, BLE names, SSDP/UPnP
+    descriptions, DHCP hostnames) and are interpolated into model prompts
+    (nl_plan/composer build one '- label (category)' line per device), so
+    a newline in a label breaks out of its line. Controls collapse to a
+    space, whitespace runs collapse, over-long labels truncate, and an
+    empty/non-string label falls back to 'Device' (never drop the device).
+    """
+    if not isinstance(label, str):
+        return 'Device'
+    clean = ' '.join(_CTRL_CHARS.sub(' ', label).split())
+    if not clean:
+        return 'Device'
+    return clean[:LABEL_MAX]
 
 
 class Registry:
@@ -29,6 +50,7 @@ class Registry:
 
     def upsert(self, identifiers, *, category='unknown', label='Device', observations=(), weak=()):
         """Return the device key. `weak` are (kind, value) hints such as IP or announced name."""
+        label = sanitize_label(label)
         with self._lock:
             strong = [i for i in identifiers if i.strong]
             matches = {self._by_identifier(i) for i in strong} - {None}
@@ -94,13 +116,16 @@ class Registry:
         with self._lock:
             devices = []
             for dev in self.devices.values():
+                facts = {}
+                for f, obs in dev['observations'].items():
+                    bv = self.best_value(dev['key'], f)
+                    facts[f] = {'value': bv.value,
+                                'sources': sorted(o.source for o in obs.values()),
+                                'verified': bv.verified,
+                                'observed_at': bv.observed_at}
                 devices.append({'key': dev['key'], 'category': dev['category'], 'label': dev['label'],
                     'identifier_kinds': sorted({i.kind for i in dev['identifiers']}),
-                    'facts': {f: {'value': self.best_value(dev['key'], f).value,
-                                  'sources': sorted(o.source for o in obs.values()),
-                                  'verified': self.best_value(dev['key'], f).verified,
-                                  'observed_at': self.best_value(dev['key'], f).observed_at}
-                              for f, obs in dev['observations'].items()},
+                    'facts': facts,
                     'capabilities': [vars(c) for c in dev['capabilities'].values()],
                     'handles': dict(dev.get('handles', {})), 'last_seen': dev['last_seen']})
             links = [vars(l) | {'grants': list(l.grants)} for l in self.links.values()]

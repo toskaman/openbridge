@@ -5,6 +5,7 @@ command: each primitive has a strict input schema, preconditions, a verification
 through the existing safety layers (deterministic gate + consent + transaction engine for writes, session journal for
 environment changes). The executor enforces schema, consent, identity, concurrency and timeouts, and always returns an
 honest TransactionReceipt: a result is `verified` only when an independent read-back confirmed it."""
+import os
 import re
 import secrets
 import threading
@@ -48,7 +49,7 @@ ARGS_SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
     'key': {'type': 'string', 'maxLength': 24}, 'text': {'type': 'string', 'maxLength': 100}, 'package': {'type': 'string', 'maxLength': 120},
     'url': {'type': 'string', 'maxLength': 300}, 'setting': {'type': 'string', 'maxLength': 32}, 'value': {'type': 'integer', 'minimum': 0, 'maximum': 1800000},
     'x': {'type': 'number'}, 'y': {'type': 'number'}, 'x1': {'type': 'number'}, 'y1': {'type': 'number'}, 'x2': {'type': 'number'}, 'y2': {'type': 'number'},
-    'ms': {'type': 'integer', 'minimum': 0, 'maximum': 10000}}}
+    'ms': {'type': 'integer', 'minimum': 0, 'maximum': 10000}, 'name': {'type': 'string', 'maxLength': 64}}}
 
 PRIMITIVES = {p.primitive_id: p for p in (
     ActionDescriptor('read_facts', 'Read diagnostics from one device',
@@ -144,7 +145,7 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('read grant on a current ADB link',), ('identity re-verified',), ('none: read-only',),
                      'each entry measured on the device now', '', R.NONE.value, ('DEVICE_UNAVAILABLE',), 60, 'single-per-device', False),
     ActionDescriptor('device_action', 'Run one typed action on an Android phone, TV or watch (remote keys, mouse, text, apps, URL, settings)',
-                     {'type': 'object', 'properties': {'action': _s('string', enum=sorted(['key', 'text', 'tap', 'swipe', 'long_press', 'launch_app', 'open_url', 'set', 'get', 'restore', 'list_apps', 'screen_state', 'audio_state'])),
+                     {'type': 'object', 'properties': {'action': _s('string', enum=sorted(['key', 'text', 'tap', 'swipe', 'long_press', 'launch_app', 'open_url', 'set', 'get', 'restore', 'list_apps', 'screen_state', 'audio_state', 'view_file'])),
                                                        'args': ARGS_SCHEMA}, 'required': ['action'], 'additionalProperties': False},
                      ('owner consent for this action',), ('identity re-verified', 'args valid for the action'),
                      ('device acted; settings read back',), 'settings: independent read-back (undo = device_action with action=restore); other actions report the screen state', '',
@@ -164,6 +165,29 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('owner consent for this exact command',), ('agent connected', 'identity re-verified'),
                      ('the command ran once on that PC',), 'exit code and captured output returned; nothing is retried', '',
                      R.IRREVERSIBLE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'FAILED'), 630, 'single-per-device', True),
+    ActionDescriptor('pc_open_url', 'Open one http(s) URL in the client PC default browser through its BridgeWindows agent',
+                     {'type': 'object', 'properties': {'url': _s('string', maxLength=300)},
+                      'required': ['url'], 'additionalProperties': False},
+                     ('owner consent for this exact URL',), ('agent connected', 'identity re-verified'),
+                     ('the browser was asked to open the URL once on that PC',),
+                     'process launch acknowledged; page load is NOT verified', '',
+                     R.IRREVERSIBLE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'FAILED', 'BAD_URL'), 60, 'single-per-device', True),
+    ActionDescriptor('pc_place_file', 'Place staged bytes as one managed file on a full-control PC (hashed pull)',
+                     {'type': 'object', 'properties': {'transfer_id': _s('string', maxLength=32), 'name': _s('string', maxLength=64)},
+                      'required': ['transfer_id', 'name'], 'additionalProperties': False},
+                     ('owner consent for this exact file', 'full control enabled for this PC'),
+                     ('agent connected', 'identity re-verified', 'transfer id exists'),
+                     ('file written under the managed dir on that PC',),
+                     'Get-FileHash on the PC equals the staged sha256', '',
+                     R.MANUAL.value, ('FULL_CONTROL_OFF', 'UNKNOWN_TRANSFER', 'BAD_NAME', 'NOT_AN_IMAGE', 'TOO_LARGE', 'DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'HASH_MISMATCH', 'FAILED'), 120, 'single-per-device', True),
+    ActionDescriptor('pc_wallpaper', 'Apply one managed image as wallpaper on a full-control PC (previous recorded)',
+                     {'type': 'object', 'properties': {'name': _s('string', maxLength=64)},
+                      'required': ['name'], 'additionalProperties': False},
+                     ('owner consent for this exact file', 'full control enabled for this PC'),
+                     ('agent connected', 'identity re-verified', 'file present in the managed dir'),
+                     ('wallpaper set to the managed file on that PC',),
+                     'HKCU Wallpaper value read back equals the managed path; previous recorded', '',
+                     R.MANUAL.value, ('FULL_CONTROL_OFF', 'BAD_NAME', 'MISSING_FILE', 'DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'FAILED'), 90, 'single-per-device', True),
     ActionDescriptor('watch_stop', 'Stop a watch',
                      {'type': 'object', 'properties': {'watch_id': _s('string', maxLength=32)}, 'required': ['watch_id'], 'additionalProperties': False},
                      (), ('watch exists',), ('no further reads',), 'watch state STOPPED', '', R.NONE.value, ('UNKNOWN_WATCH',), 10, 'single-global', False),
@@ -685,6 +709,148 @@ class Executor:
         ok = out['exit_code'] == 0 and not out['timed_out']
         return ('VERIFIED' if ok else 'FAILED'), None, out['exit_code'], ok, out
 
+    def _pc_open_url(self, key, params):
+        import base64
+        import time as _t
+        from src.adapters.windows_bridge import BridgeUnavailable
+        url = params.get('url')
+        if not isinstance(url, str) or not re.fullmatch(r'https?://[A-Za-z0-9.-]+\.[A-Za-z]{2,}(:\d{1,5})?(/[A-Za-z0-9\-._~:/?#\[\]@!&\'()*+,;=%]*)?', url or ''):
+            # No '$', backtick, quote or whitespace: the URL is embedded in a
+            # double-quoted PowerShell string, where $() and backticks expand.
+            raise PrimitiveError('BAD_URL', 'http(s) URL only (strict charset, no shell metacharacters)')
+        dev = self._device(key)
+        if dev['category'] != 'computer':
+            raise PrimitiveError('BLOCKED', 'not a bridged PC')
+        bridge = (self.ctx.fabric_adapters(('windows',)) or {}).get('windows')
+        if bridge is None or not bridge.connected():
+            raise PrimitiveError('DEVICE_UNAVAILABLE', 'Windows agent not connected')
+        known = {i.value for i in dev['identifiers'] if i.strong}
+        try:
+            if bridge.identity(self.ctx.fabric_salt) not in known:
+                raise PrimitiveError('IDENTITY_CHANGED', 'A different Windows PC is now connected; re-run discovery')
+            t0 = _t.monotonic()
+            r = bridge.run_job('Start-Process "%s"' % url, 'powershell', 60)
+        except BridgeUnavailable as e:
+            raise PrimitiveError('FAILED', str(e)[:120]) from None
+        out = {'url': url, 'exit_code': r.get('exit_code'), 'timed_out': bool(r.get('timed_out')),
+               'stdout': base64.b64decode(r.get('stdout_b64') or b'').decode('utf-8', 'replace')[-2000:],
+               'duration_s': round(_t.monotonic() - t0, 1),
+               'launched_only': True}
+        ok = out['exit_code'] == 0 and not out['timed_out']
+        return ('VERIFIED' if ok else 'FAILED'), None, out['exit_code'], ok, out
+
+    def _pc_full_control(self, key):
+        """(bridge, identity) for a computer, or raise. The flag follows the
+        machine actually on the wire, and is re-checked on every call."""
+        from src.adapters.windows_bridge import BridgeUnavailable  # noqa: F401
+        dev = self._device(key)
+        if dev['category'] != 'computer':
+            raise PrimitiveError('BLOCKED', 'not a bridged PC')
+        bridge = (self.ctx.fabric_adapters(('windows',)) or {}).get('windows')
+        if bridge is None or not bridge.connected():
+            raise PrimitiveError('DEVICE_UNAVAILABLE', 'Windows agent not connected')
+        known = {i.value for i in dev['identifiers'] if i.strong}
+        ident = bridge.identity(self.ctx.fabric_salt)
+        if ident not in known:
+            raise PrimitiveError('IDENTITY_CHANGED', 'A different Windows PC is now connected; re-run discovery')
+        consent = getattr(self.ctx, 'pc_consent', None)
+        if consent is None or not consent.allowed(ident):
+            raise PrimitiveError('FULL_CONTROL_OFF', 'enable full control for this PC first')
+        return bridge, ident
+
+    @staticmethod
+    def _managed_name(name):
+        if not isinstance(name, str) or '..' in name or "'" in name \
+                or not re.fullmatch(r'[A-Za-z0-9_.-]{1,64}', name) \
+                or name.lower().rsplit('.', 1)[-1] not in ('png', 'jpg', 'jpeg'):
+            raise PrimitiveError('BAD_NAME', 'managed image basename only (*.png/*.jpg)')
+        return name
+
+    def _pc_place_file(self, key, params):
+        import base64
+        import secrets as _secrets
+        import tempfile as _tf
+        from src.adapters.windows_bridge import BridgeUnavailable
+        from src.fabric import mdns
+        from src.fabric.apk_portal import ApkPortal
+        from src.runtime.capture_store import StoreError
+        bridge, _ident = self._pc_full_control(key)
+        name = self._managed_name(params.get('name'))
+        try:
+            data = bytes(self._captures().get(params['transfer_id']))
+        except StoreError as e:
+            raise PrimitiveError('UNKNOWN_TRANSFER', str(e)[:160]) from None
+        if len(data) > 8 * 1024 * 1024:
+            raise PrimitiveError('TOO_LARGE', 'staged file exceeds 8 MB')
+        if not (data.startswith(b'\x89PNG\r\n\x1a\n') or data.startswith(b'\xff\xd8\xff')):
+            raise PrimitiveError('NOT_AN_IMAGE', 'staged bytes are not PNG/JPEG')
+        lan_ip = mdns.lan_interface_ip(mdns.default_scope())
+        if not lan_ip:
+            raise PrimitiveError('DEVICE_UNAVAILABLE', 'no LAN interface for the pull')
+        want = hashlib.sha256(data).hexdigest()
+        tmp = _tf.NamedTemporaryFile(prefix='ob-place-', suffix='.bin', delete=False)
+        portal = None
+        try:
+            tmp.write(data)
+            tmp.close()
+            token = _secrets.token_hex(8)
+            portal = ApkPortal(tmp.name, lan_ip, minutes=5, filename=name,
+                               content_type='image/png', url_path='/f/' + token).start()
+            url = portal.url
+            if not re.fullmatch(r'http://\d+\.\d+\.\d+\.\d+:\d{1,5}/f/[0-9a-f]{16}', url):
+                raise PrimitiveError('FAILED', 'portal URL outside fixed shape')
+            cmd = ("$d=$env:LOCALAPPDATA+'\\OpenBridge\\managed';"
+                   "New-Item -ItemType Directory -Force -Path $d|Out-Null;"
+                   "$f=$d+'\\" + name + "';"
+                   "Invoke-WebRequest -Uri '" + url + "' -OutFile $f;"
+                   "(Get-FileHash $f -Algorithm SHA256).Hash")
+            try:
+                r = bridge.run_job(cmd, 'powershell', 90)
+            except BridgeUnavailable as e:
+                raise PrimitiveError('FAILED', str(e)[:120]) from None
+            got = base64.b64decode(r.get('stdout_b64') or b'').decode('utf-8', 'replace').strip().upper()
+            if got != want.upper():
+                raise ValueError('HASH_MISMATCH: agent has %s.., expected %s..' % (got[:16], want[:16]))
+            ok = r.get('exit_code') == 0 and not r.get('timed_out')
+            out = {'remote': 'managed\\' + name, 'sha256': want, 'bytes': len(data)}
+            return ('VERIFIED' if ok else 'FAILED'), None, out['remote'], ok, out
+        finally:
+            try:
+                os.unlink(tmp.name)
+            except OSError:
+                pass
+            if portal is not None:
+                portal.stop()
+
+    def _pc_wallpaper(self, key, params):
+        import base64
+        from src.adapters.windows_bridge import BridgeUnavailable
+        bridge, _ident = self._pc_full_control(key)
+        name = self._managed_name(params.get('name'))
+        cmd = ("$d=$env:LOCALAPPDATA+'\\OpenBridge\\managed';$f=$d+'\\" + name + "';"
+               "if(!(Test-Path $f)){Write-Output 'MISSING';exit 2};"
+               "$p=(Get-ItemProperty 'HKCU:\\Control Panel\\Desktop' -Name Wallpaper -ErrorAction SilentlyContinue).Wallpaper;"
+               "Add-Type -MemberDefinition '[DllImport(\"user32.dll\",CharSet=CharSet.Auto)]public static extern int SystemParametersInfo(int a,int b,string c,int d);' -Name W -Namespace O;"
+               "[O.W]::SystemParametersInfo(20,0,$f,3)|Out-Null;"
+               "$n=(Get-ItemProperty 'HKCU:\\Control Panel\\Desktop' -Name Wallpaper).Wallpaper;"
+               "Write-Output ('PREV|'+$p);Write-Output ('CUR|'+$n)")
+        try:
+            r = bridge.run_job(cmd, 'powershell', 60)
+        except BridgeUnavailable as e:
+            raise PrimitiveError('FAILED', str(e)[:120]) from None
+        text = base64.b64decode(r.get('stdout_b64') or b'').decode('utf-8', 'replace')
+        if 'MISSING' in text.splitlines():
+            raise PrimitiveError('MISSING_FILE', 'place the file first (pc_place_file)')
+        prev = next((l[5:] for l in text.splitlines() if l.startswith('PREV|')), '')
+        cur = next((l[4:] for l in text.splitlines() if l.startswith('CUR|')), '')
+        verified = cur.lower().endswith(('\\openbridge\\managed\\' + name).lower())
+        restorable = prev.lower().endswith('.png') or prev.lower().endswith('.jpg') or prev.lower().endswith('.jpeg')
+        restorable = restorable and '\\openbridge\\managed\\' in prev.lower()
+        out = {'previous': prev[:260], 'current': cur[:260], 'restorable': bool(restorable),
+               'restore_note': 're-apply the previous file with pc_wallpaper' if restorable else 'previous wallpaper was not a managed file'}
+        ok = verified and r.get('exit_code') == 0 and not r.get('timed_out')
+        return ('VERIFIED' if ok else 'FAILED'), prev[:260] or None, cur[:260] or None, ok, out
+
     def _tuya_command(self, key, params):
         from src.adapters.tuya_local import TuyaBlocked, command
         if self._device(key)['category'] != 'vacuum':
@@ -921,7 +1087,7 @@ class Executor:
             raise ValueError(f'HASH_MISMATCH: device has {digest[:16]}.., expected {want[:16]}..')
         return 'EXECUTED', None, remote, True, {'remote': remote, 'sha256': want, 'bytes': len(data)}
 
-    RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'pc_open_url': _pc_open_url, 'pc_place_file': _pc_place_file, 'pc_wallpaper': _pc_wallpaper, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,

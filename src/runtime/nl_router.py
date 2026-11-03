@@ -6,8 +6,26 @@ become unsupported/escalation_required, never a guessed command. Cloud is used
 only with an explicit cloud_allowed consent; local failures alone never trigger
 a paid call.
 """
+import re
+
 from src.runtime import intent as I
 from src.runtime import skills as S
+
+_WORD_RX_CACHE = {}
+
+
+def _word_hit(keyword, hay):
+    """Whole-word keyword hit (both boundaries). Substring matching ('set'
+    inside 'reset', 'fabric' inside 'fabricant', 'ou' inside 'vous') fired
+    the deterministic fallback on unrelated requests; word boundaries keep
+    recall on true mentions (verified: 13/13 legit eval-1000 resolves kept,
+    the 14th was itself a fabricant artifact). Patterns cached: the keyword
+    catalog is static (<= ~50 entries)."""
+    rx = _WORD_RX_CACHE.get(keyword)
+    if rx is None:
+        rx = re.compile(r'\b' + re.escape(keyword) + r'\b')
+        _WORD_RX_CACHE[keyword] = rx
+    return rx.search(hay) is not None
 
 TIERS = {'low': ('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437'),
          'medium': ('muse-glimmer:30b-q4_K_M', 'http://127.0.0.1:11438'),
@@ -114,7 +132,8 @@ def build_prompt(text, lang):
              'Use skill_id null + clarifying_question when ambiguous; unknown requests get',
              'skill_id null and confidence 0. Never invent a skill_id. Registered skills:']
     for c in S.all_skills():
-        lines.append(f"- {c['skill_id']}: {c['description']} (targets: {','.join(c['targets'])})")
+        lines.append(f"- {c['skill_id']}: {c['description']} (targets: {','.join(c['targets'])}; "
+                     f"words: {', '.join(c['keywords'])})")
     lines.append('Prefer resolving with the closest registered skill. Ask a clarifying '
                  'question ONLY when two or more registered skills match equally well.')
     lines.append('Example: "Start my vacuum" -> {"outcome": "start cleaning", '
@@ -126,10 +145,21 @@ def build_prompt(text, lang):
     lines.append('Example: "Scan for bluetooth devices" -> {"outcome": "scan nearby bluetooth", '
                  '"skill_id": "ble_scan_room", "targets": [{"kind": "device", "ref": "relay"}], '
                  '"params": {}, "confidence": 0.9, "ambiguities": [], "clarifying_question": null}')
+    lines.append('Example: "Open YouTube on the TV" -> {"outcome": "open youtube on tv", '
+                 '"skill_id": "app_launch", "targets": [{"kind": "device", "ref": "tv"}], '
+                 '"params": {"package": "com.google.android.youtube.tv"}, "confidence": 0.9, '
+                 '"ambiguities": [], "clarifying_question": null})')
     lines.append('Example: "Turn it up" -> {"outcome": "ambiguous tv volume set vs step", '
                  '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
                  '"ambiguities": ["set vs step"], '
                  '"clarifying_question": "Set an exact volume, or step up once?"}')
+    lines.append('Example: "Turn the vacuum on and off" -> {"outcome": "conflicting start vs pause", '
+                 '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
+                 '"ambiguities": ["start vs pause"], '
+                 '"clarifying_question": "Should the vacuum start, or pause?"}')
+    lines.append('Example: "Book me a flight to Paris" -> {"outcome": "no registered skill books flights", '
+                 '"skill_id": null, "targets": [], "params": {}, "confidence": 0.0, '
+                 '"ambiguities": [], "clarifying_question": null})')
     lines.append(f'User language: {lang}. User request: {text}')
     return '\n'.join(lines)
 
@@ -142,7 +172,7 @@ def _keyword_fallback(text, outcome):
     label the resolution as deterministic in the ambiguities.
     """
     hay = f'{text} {outcome or ""}'.lower()
-    scored = sorted(((sum(1 for k in c['keywords'] if k in hay), c['skill_id'])
+    scored = sorted(((sum(1 for k in c['keywords'] if _word_hit(k, hay)), c['skill_id'])
                      for c in S.all_skills()), reverse=True)
     if len(scored) > 1 and scored[0][0] > scored[1][0] and scored[0][0] > 0:
         return scored[0][1]
@@ -189,9 +219,10 @@ def _interpret(doc, reply, parser, model_id):
     sid = reply['skill_id']
     if sid is None:
         if reply['clarifying_question']:
+            amb = reply['ambiguities'] if isinstance(reply['ambiguities'], list) else []
             return dict(doc, status='needs_clarification',
                         clarifying_question=str(reply['clarifying_question'])[:300],
-                        ambiguities=[str(a)[:200] for a in reply['ambiguities']][:8])
+                        ambiguities=[str(a)[:200] for a in amb][:8])
         return dict(doc, status='unsupported',
                     ambiguities=['no registered skill matches'])
     if S.get(sid) is None:
@@ -201,6 +232,10 @@ def _interpret(doc, reply, parser, model_id):
     if not isinstance(conf, (int, float)) or isinstance(conf, bool) or conf < MIN_CONFIDENCE:
         return dict(doc, status='escalation_required',
                     ambiguities=['model confidence below 0.5'])
+    tg, amb = reply['targets'], reply['ambiguities']
+    if not isinstance(tg, list) or len(tg) > 8 or not isinstance(amb, list):
+        return dict(doc, status='escalation_required',
+                    ambiguities=['model reply shape invalid'])
     try:
         resolved = dict(doc, status='resolved', outcome=str(reply['outcome'])[:300],
                         skill_id=sid, targets=reply['targets'], params=reply['params'],

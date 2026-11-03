@@ -18,8 +18,32 @@ class CommandError(Exception):
         self.status = status
 
 
-def resolve_targets(targets, devices):
-    keys = []
+def _actionable(d):
+    return bool(d.get('handles') or d.get('endpoints'))
+
+
+def _via(d):
+    return sorted((d.get('handles') or {})) + sorted((d.get('endpoints') or {}))
+
+
+def _weak_ips(d):
+    return sorted(v for k, v in (d.get('weak') or set()) if k == 'ip')
+
+
+def _id_kinds(d):
+    kinds = []
+    for i in (d.get('identifiers') or set()):
+        kinds.append(getattr(i, 'kind', None) or (i.get('kind') if isinstance(i, dict) else None))
+    return sorted(k for k in kinds if k)
+
+
+def resolve_targets_ex(targets, devices):
+    """Resolve like resolve_targets but also explain duplicate views.
+
+    Returns (keys, trace); trace records every candidate row, which rule
+    selected the winner, and why (mega §5: duplicate device cards must
+    have a traceable identity explanation)."""
+    keys, trace = [], []
     for t in targets or []:
         ref = (t.get('ref') or '').strip().lower()
         if not ref:
@@ -32,9 +56,28 @@ def resolve_targets(targets, devices):
                 hits.add(k)
         if not hits:
             raise CommandError(404, f'no authorized device matches {t.get("ref")!r}')
+        rule = 'unique'
+        seen = set(hits)
         if len(hits) > 1:
-            raise CommandError(409, f'ambiguous target {t.get("ref")!r}: {len(hits)} devices match')
+            action = {k for k in hits if _actionable(devices[k])}
+            if len(action) == 1:
+                hits = action  # duplicate protocol views; only one can dispatch
+                rule = 'actionable-tiebreak'
+            else:
+                raise CommandError(409, f'ambiguous target {t.get("ref")!r}: {len(hits)} devices match')
         keys.append(next(iter(hits)))
+        trace.append({'ref': t.get('ref'), 'rule': rule, 'winner': keys[-1],
+                      'candidates': [{'key': k, 'label': devices[k].get('label'),
+                                      'category': devices[k].get('category'),
+                                      'actionable': _actionable(devices[k]),
+                                      'via': _via(devices[k]),
+                                      'weak_ips': _weak_ips(devices[k]),
+                                      'id_kinds': _id_kinds(devices[k])} for k in sorted(seen)]})
+    return keys, trace
+
+
+def resolve_targets(targets, devices):
+    keys, _ = resolve_targets_ex(targets, devices)
     return keys
 
 
@@ -184,6 +227,21 @@ def _fingerprint(skill_id, primitive_id, params, approved_targets, route_id):
     return hashlib.sha256(canon.encode()).hexdigest()
 
 
+def _b2_invocation_id(intent_id, fingerprint):
+    """Deterministic journal identity for one approved b2 command, or None for a random id.
+
+    Two processes executing the same (intent, approved binding) must arm the
+    same invocation id, or the per-process random id lets both journal claims
+    land and both dispatch (N-03). Falls back to None (random id at arm) when
+    the intent carries no usable id; the in-process execution cache still
+    dedups those. Lease ids stay random per arm: same-process leases never
+    collide, and cross-process losers are refused by the journal claim."""
+    if not isinstance(intent_id, str) or not intent_id or len(intent_id) > 96:
+        return None
+    import hashlib
+    return 'inv-' + hashlib.sha256(('command-b2-v1\x1f%s\x1f%s' % (intent_id, fingerprint)).encode()).hexdigest()[:32]
+
+
 def approve(server, doc):
     from src.runtime.api_v2 import router
     if I.validate_intent(doc) or doc.get('status') != 'resolved':
@@ -193,10 +251,11 @@ def approve(server, doc):
     except S.SkillError as e:
         raise CommandError(400, str(e)) from None
     devs = _devices(server)
+    target_trace = []
     if S.get(doc['skill_id'])['targets'] == ['fabric']:
         keys = []   # fabric-scoped reads address the registry itself, not a device
     else:
-        keys = resolve_targets(doc.get('targets'), devs)
+        keys, target_trace = resolve_targets_ex(doc.get('targets'), devs)
         if len(keys) != 1:
             raise CommandError(409, 'P0 executes one device per command')
     approved_targets = [{'key': k, 'label': devs[k].get('label'),
@@ -204,6 +263,7 @@ def approve(server, doc):
     prev = {'skill_id': doc['skill_id'], 'primitive_id': solved['primitive_id'],
             'params': solved['params'], 'device_keys': keys,
             'approved_targets': approved_targets,
+            'target_trace': target_trace,
             'risk_level': solved['risk_level'],
             'verification': solved['verification'],
             'consent_required': True}
@@ -315,10 +375,12 @@ def _execute_claimed(server, doc, preview, dispatched):
         r = router(server)
         skill = doc['skill_id']
         target = prev['device_keys'][0] if SKILLS[skill]['targeted'] else None
+        arm_id = _b2_invocation_id((doc or {}).get('intent_id'), preview['fingerprint'])
         try:
             lease = r.arm({'skill_id': skill, 'target': target,
                            'route_id': prev['route']['selected_route_id'],
-                           'params': prev['params'], 'consent': True})
+                           'params': prev['params'], 'consent': True},
+                          invocation_id=arm_id)
             body = {k: lease[k] for k in ('invocation_id', 'route_id', 'lease_id', 'graph_revision')}
             body.update(skill_id=skill, params=prev['params'], consent=True)
             if target is not None:

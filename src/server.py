@@ -224,7 +224,11 @@ class Handler(BaseHTTPRequestHandler):
                                    'agent_enabled': self.server.agent is not None,
                                    'development_design_model': 'muse-spark-1.3'})
         if path == '/api/session-changes':
-            return self.reply(200, {'changes': self.server.session_journal.open_changes()})
+            from src.fabric.session import SessionError
+            try:
+                return self.reply(200, {'changes': self.server.session_journal.open_changes()})
+            except SessionError as error:
+                return self.reply(503, {'error': str(error)})
         if path == '/api/companion-install':
             return self.reply(200, dict(self.server.companion_install))
         if path == '/api/freebox-authorization':
@@ -311,12 +315,16 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError()
                 return self.reply(*self.server.start_freebox_authorization())
             if self.path == '/api/session-restore':
-                from src.fabric.session import restore
+                from src.fabric.session import SessionError, restore
                 ids = body.get('restore')
                 if body['device_id'] != 'session' or not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
                     raise ValueError()
                 results = []
-                for change in self.server.session_journal.open_changes():
+                try:
+                    changes = self.server.session_journal.open_changes()
+                except SessionError as error:
+                    return self.reply(503, {'error': str(error)})
+                for change in changes:
                     if change['id'] in ids:
                         try:
                             state, detail = restore(change, self.server.android._run)
@@ -326,14 +334,21 @@ class Handler(BaseHTTPRequestHandler):
                             from src.fabric.credential_vault import Vault
                             Vault().delete('freebox-app-token')
                         if state != 'FAILED':
-                            self.server.session_journal.close(change['id'], state, detail)
+                            try:
+                                self.server.session_journal.close(change['id'], state, detail)
+                            except SessionError as error:
+                                return self.reply(503, {'error': str(error), 'results': results})
                     else:
                         state, detail = 'KEPT', 'Kept by the owner'
-                        self.server.session_journal.close(change['id'], 'KEPT', detail)
+                        try:
+                            self.server.session_journal.close(change['id'], 'KEPT', detail)
+                        except SessionError as error:
+                            return self.reply(503, {'error': str(error), 'results': results})
                     results.append({'id': change['id'], 'title': change['title'], 'device': change['device'], 'state': state, 'detail': detail})
                 return self.reply(200, {'results': results})
             if self.path == '/api/tv-adb-connect':
                 from src.fabric.guidance import guide
+                from src.fabric.session import SessionError
                 reg = self.server.fabric_registry
                 dev = reg.devices.get(body['device_id']) if reg else None
                 if dev is None or dev['category'] not in ('tv', 'media'):
@@ -344,13 +359,21 @@ class Handler(BaseHTTPRequestHandler):
                 manufacturer = (reg.best_value(dev['key'], 'manufacturer') or type('o', (), {'value': None})).value
                 was_connected = any(f'{ips[0]}:5555' == k for k in self.server.android._handles)
                 state = self.server.android.connect_network(ips[0])
+                journal_error = None
                 if state == 'AUTHORIZED' and not was_connected:
-                    self.server.session_journal.record('adb_network_connected', dev['label'], {'address': f'{ips[0]}:5555'}, 'not connected', 'connected')
+                    try:
+                        self.server.session_journal.record('adb_network_connected', dev['label'], {'address': f'{ips[0]}:5555'}, 'not connected', 'connected')
+                    except SessionError as error:
+                        journal_error = str(error)
                 issue = {'PORT_CLOSED': 'tv_network_debugging', 'WAITING_FOR_TV_APPROVAL': 'tv_debug_prompt', 'CONNECT_FAILED': 'tv_network_debugging'}.get(state)
                 tried = [f'adb connect {ips[0]}:5555 -> {state}']
-                return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None})
+                result = {'state': state, 'guide': guide(issue, manufacturer=manufacturer or dev['label'], television=True, tried=tried) if issue else None}
+                if journal_error is not None:
+                    result['journal_error'] = journal_error
+                return self.reply(200, result)
             if self.path == '/api/watch-pair':
                 from src.fabric.guidance import guide
+                from src.fabric.session import SessionError
                 if body['device_id'] not in ('watch', 'android'):
                     raise ValueError()
                 addr, code = str(body.get('address', '')), str(body.get('code', ''))
@@ -358,10 +381,17 @@ class Handler(BaseHTTPRequestHandler):
                 if not m:
                     return self.reply(200, {'state': 'NEED_INPUT', 'guide': guide('watch_wireless_debugging', manufacturer=body.get('manufacturer'))})
                 state, target = self.server.android.pair_wireless(m.group(1), int(m.group(2)), code.strip())
+                journal_error = None
                 if state == 'AUTHORIZED':
-                    self.server.session_journal.record('adb_network_connected', 'Smartwatch' if body['device_id'] == 'watch' else 'Android device', {'address': target}, 'not connected', 'connected')
+                    try:
+                        self.server.session_journal.record('adb_network_connected', 'Smartwatch' if body['device_id'] == 'watch' else 'Android device', {'address': target}, 'not connected', 'connected')
+                    except SessionError as error:
+                        journal_error = str(error)
                 issue = {'PAIR_FAILED': 'watch_pair_failed', 'PAIRED_NOT_ADVERTISED': 'watch_wireless_debugging', 'CONNECT_FAILED': 'watch_wireless_debugging'}.get(state)
-                return self.reply(200, {'state': state, 'guide': guide(issue, manufacturer=body.get('manufacturer')) if issue else None})
+                result = {'state': state, 'guide': guide(issue, manufacturer=body.get('manufacturer')) if issue else None}
+                if journal_error is not None:
+                    result['journal_error'] = journal_error
+                return self.reply(200, result)
             if self.path == '/api/fabric-advise':
                 from src.fabric import advisor
                 goal = body.get('goal')
@@ -461,12 +491,13 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=None, fabric_salt=None, session_journal=None,
-                  relay_store=None):
+                  relay_store=None, pc_consent=None, adb_remember=None):
     server = LocalServer(('127.0.0.1', port), Handler)
     # Durable pairings are opt-in per launcher (main passes a vault-backed store); tests stay hermetic.
     server.relay_store = relay_store
+    server.pc_consent = pc_consent
     server.csrf_token = secrets.token_urlsafe(32)
-    server.android = AndroidAdapter()
+    server.android = AndroidAdapter(remember_path=adb_remember or os.environ.get('OPENBRIDGE_ADB_KNOWN_PATH'))
     server.android_events = AndroidEventMonitor(server.android)
     server.freebox = FreeboxAdapter()
     server.model_broker = model_broker
@@ -500,6 +531,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.windows_bridge = None
     server.freebox_auth = {'state': 'IDLE'}
     def start_freebox_authorization(session_factory=None):
+        from src.fabric.session import SessionError
         if server.freebox_auth.get('state') == 'PENDING':
             return 409, {'error': 'Authorization already pending on the Freebox screen'}
         session = (session_factory or (lambda: fabric_adapters()['freebox']['session']))()
@@ -524,7 +556,10 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                     server.freebox_auth = {'state': 'FAILED', 'detail': str(error)[:120]}; return
                 if st in ('granted', 'denied', 'timeout'):
                     if st == 'granted':
-                        server.session_journal.record('freebox_app_authorized', 'Freebox', {'app_id': 'fr.openbridge.devicefabric'}, 'not authorized', 'authorized (read-only)')
+                        try:
+                            server.session_journal.record('freebox_app_authorized', 'Freebox', {'app_id': 'fr.openbridge.devicefabric'}, 'not authorized', 'authorized (read-only)')
+                        except SessionError as error:
+                            server.freebox_auth = {'state': 'GRANTED', 'journal_error': str(error)}; return
                     server.freebox_auth = {'state': st.upper()}; return
                 time.sleep(2)
             server.freebox_auth = {'state': 'TIMEOUT'}
@@ -707,6 +742,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
     server.agent_dir = Path(os.environ.get('OPENBRIDGE_AGENT_DIR', 'artifacts/agent'))
     def start_companion_install(handle, attempts=40, delay=15):
         from src.fabric.guidance import classify_install, guide
+        from src.fabric.session import SessionError
         if server.companion_install.get('state') == 'RETRYING':
             return 409, {'error': 'Installation already in progress'}
         if not server.companion_apk.exists():
@@ -725,9 +761,16 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                     code, issue = 'DEVICE_UNAVAILABLE', 'usb_authorization_pending'
                 if code == 'SUCCESS':
                     serial = next((k for k, v in server.android._handles.items() if v == handle), None)
+                    journal_error = None
                     if serial and not was_installed:
-                        server.session_journal.record('companion_installed', handle, {'serial': serial}, 'not installed', 'installed')
-                    server.companion_install = {'state': 'INSTALLED', 'attempts': attempt + 1}; return
+                        try:
+                            server.session_journal.record('companion_installed', handle, {'serial': serial}, 'not installed', 'installed')
+                        except SessionError as error:
+                            journal_error = str(error)
+                    server.companion_install = {'state': 'INSTALLED', 'attempts': attempt + 1}
+                    if journal_error is not None:
+                        server.companion_install['journal_error'] = journal_error
+                    return
                 g = guide(issue, tried=[f'adb install attempt {attempt + 1}: {code}'], **device_profile(handle)) if issue else None
                 server.companion_install = {'state': 'RETRYING' if issue else 'FAILED', 'code': code, 'attempts': attempt + 1, 'guide': g}
                 if not issue:
@@ -797,7 +840,9 @@ def main():
     relay_store = RelayStore(private_root / 'relays.json', Vault()) if os.environ.get('OPENBRIDGE_RELAY_STORE', '1') != '0' else None
     if relay_store is not None and not relay_store.enabled:
         print('No OS vault: Companion pairings stay in memory (re-pair after a restart).', flush=True)
-    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir,relay_store=relay_store) as server:
+    from src.fabric.pc_consent import PcConsentStore
+    pc_consent = PcConsentStore(private_root / 'pc_full_control.json')
+    with create_server(args.port, model_broker=broker,demo_engine=demo_engine,agent_dir=agent_dir,relay_store=relay_store,pc_consent=pc_consent,adb_remember=private_root / 'adb_known.json') as server:
         if args.windows_bridge:
             server.windows_bridge=start_windows_bridge()
         from src.runtime import command_drain

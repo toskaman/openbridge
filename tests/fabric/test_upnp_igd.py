@@ -58,6 +58,16 @@ class IGD(unittest.TestCase):
         self.assertEqual(r['connection_type'], 'UNSUPPORTED')
         self.assertEqual(r['connection_status'], 'Connected')
 
+    def test_unused_counter_actions_are_refused(self):
+        # W1-071: GetTotalBytes* were allowlisted but never invoked
+        # by read(); dead entries do not belong in a security
+        # allowlist.
+        f = FakeIGD()
+        svc = upnp_igd.services(LOC, default_scope(), http=f)
+        for a in ('GetTotalBytesReceived', 'GetTotalBytesSent'):
+            with self.subTest(action=a), self.assertRaises(IGDBlocked):
+                upnp_igd.soap(a, svc['common'], LOC, default_scope(), http=f)
+
     def test_write_actions_are_refused_before_sending(self):
         f = FakeIGD()
         svc = upnp_igd.services(LOC, default_scope(), http=f)
