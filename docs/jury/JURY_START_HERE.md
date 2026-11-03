@@ -46,7 +46,7 @@ python -m src.cli judge demo           # offline demo → DEMO_COMPLETE
 python -m src.server                   # → http://127.0.0.1:18765
 ```
 
-Submitted revision: `MERGE_SHA_TO_FILL` (freeze pin — the owner enters the exact SHA in the portal; count history: 2115 main-line-era / 2132 jury-final / 2378 absolute-final). See the [compliance checklist](COMPLIANCE_CHECKLIST.md) line-in-sand.
+Submitted revision: release tag v0.3.0 (content freeze `7d74757`, merge #188; full SHAs in docs/submission/FINAL_SUBMISSION.md; count history: 2115 main-line-era / 2132 jury-final / 2378 absolute-final). See the [compliance checklist](COMPLIANCE_CHECKLIST.md) line-in-sand.
 
 No hardware? The offline demo, fixtures, and browser smokes reproduce the safe
 subset. With hardware: [QUICKSTART](../QUICKSTART.md). With models:

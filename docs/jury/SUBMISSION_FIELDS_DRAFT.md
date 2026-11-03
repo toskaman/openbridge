@@ -12,7 +12,8 @@ fields below use event-page-verified facts + release artifacts.
 - Primary theme: Push the Frontier
 - Secondary theme: Build for Your World
 - Repository: https://github.com/toskaman/openbridge
-- Submitted revision: MERGE_SHA_TO_FILL (freeze pin; owner enters the exact
+- Submitted revision: release tag v0.3.0 (content freeze `7d74757`, merge #188;
+  full SHAs in docs/submission/FINAL_SUBMISSION.md; owner enters the exact
   SHA in the portal — no v0.2.0 tag move; attach app/evidence/media packs).
 - License at the submitted revision: PolyForm Strict 1.0.0 (owner PR #170
   merged 01-Nov; history in docs/LICENSING_HISTORY.md) + the
@@ -63,7 +64,7 @@ authorization, and observable results.
   2115/2115 main-line-era + Verify run 41356836103 SUCCESS. Main fa693f9
   (PR #180 jury RC): 2115/2115 local OK, 282.7 s, 02-Nov (RC notes:
   RC_NOTES_20261102.md). Absolute-final: 2378/2378 at 333d14d
-  (freeze pin MERGE_SHA_TO_FILL).
+  (content freeze `7d74757`, merge #188; release tag v0.3.0).
 
 ## Owner checklist (portal)
 
