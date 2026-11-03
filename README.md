@@ -107,7 +107,7 @@ Windows, Linux, or macOS · Python 3.14 (CI-pinned 3.14.4) · zero third-party r
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2132 controlled tests, no hardware needed
+python -m unittest discover -s tests   # 2377 controlled tests, no hardware needed
 python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
 python -m src.server                   # loopback server → http://127.0.0.1:18765
 ```
@@ -128,7 +128,7 @@ Full picture: [known limitations](docs/KNOWN_LIMITATIONS.md) · [relay security]
 
 ## Evidence — don't take our word for it
 
-2132 tests green locally (Windows) + browser incl. WebKit · verify green on main ([run 41439826982](https://github.com/toskaman/openbridge/actions/runs/41439826982), post-#182) · clean-room install green on main ([run 41325178319](https://github.com/toskaman/openbridge/actions/runs/41325178319)) · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+2377 tests green locally (Windows) + browser incl. WebKit · verify green on main ([run 41439826982](https://github.com/toskaman/openbridge/actions/runs/41439826982), post-#182) · clean-room install green on main ([run 41325178319](https://github.com/toskaman/openbridge/actions/runs/41325178319)) · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
 
 ## Built for the hackathon
 
