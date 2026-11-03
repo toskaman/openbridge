@@ -11,13 +11,14 @@ confirmations remain owner actions (see bottom).
 - Primary theme: Push the Frontier
 - Secondary theme: Build for Your World
 - Repository: https://github.com/toskaman/openbridge
-- Submitted revision: release tag v0.3.0 (content freeze `7d74757`, merge #188;
-  full freeze SHA `7d7475781bc4548ff20ca2339123708de7454ef9`; the v0.3.0 tag points
-  at the pin-sync commit — read its exact SHA from the tag/release page and enter
-  that SHA in the portal).
-- Release: https://github.com/toskaman/openbridge/releases/tag/v0.3.0
-  (app/evidence/media packs + SHA-256 checksums; no video until the owner finale).
-- Jury entry: https://github.com/toskaman/openbridge/blob/v0.3.0/docs/jury/JURY_START_HERE.md
+- Submitted revision: release tag v0.3.1 (video-link commit on v0.3.0
+  `a4138298b5f45c80e8ce9432470246e1c4d4aa1c`; content freeze
+  `7d7475781bc4548ff20ca2339123708de7454ef9`, merge #188; the v0.3.1 tag points
+  at the video-link commit — read its exact SHA from the tag/release page and
+  enter that SHA in the portal).
+- Release: https://github.com/toskaman/openbridge/releases/tag/v0.3.1
+  (app/evidence/media packs + SHA-256 checksums).
+- Jury entry: https://github.com/toskaman/openbridge/blob/v0.3.1/docs/jury/JURY_START_HERE.md
 - License at the submitted revision: PolyForm Strict 1.0.0
   (history in docs/LICENSING_HISTORY.md) + HACKATHON_EVALUATION_PERMISSION.md,
   the scoped judge-run grant. The v0.2.0 tag (`dd669c2`) MIT grant is historical.
@@ -79,10 +80,10 @@ intelligence, explicit consent, and one interface for heterogeneous hardware.
 
 ## Demo video
 
-FINAL_OWNER_VIDEO_PENDING — the owner films the only official submission video
-(≤180 s, working product, English-intelligible, SIMULATED parts labeled, licensed
-music). Canonical slot: `submission/final-video.mp4`. Agent-built cuts V2–V5 are
-HISTORICAL DRAFTs, never the submission. Owner pastes the video link in the portal.
+https://youtu.be/Q4slAW3NjuQ — "OpenBridge Jury", owner-filmed, delivered
+03-Nov-2026 (link verified live + oEmbed title/author/embeddable; canonical slot:
+`submission/final-video.mp4`). Agent-built cuts V2–V5 are HISTORICAL DRAFTs,
+never the submission. Owner pastes this video link in the portal.
 
 ## Selected screenshots
 
@@ -137,9 +138,10 @@ Full path: docs/jury/JURY_START_HERE.md (30 s → 10 min ladder).
 
 ## Owner-only remaining
 
-- [ ] Film + upload the finale video (≤180 s); paste link in portal.
+- [x] Film + upload the finale video — DELIVERED 03-Nov:
+      https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury"); paste link in portal.
 - [ ] Confirm track/theme/members, bonus names, license scope, editability
       (portal-only items).
-- [ ] Enter submitted-revision SHA from the v0.3.0 tag page.
+- [ ] Enter submitted-revision SHA from the v0.3.1 tag page.
 - [ ] Submit before 4 Nov 9 PM ET; keep the receipt; report back for the
       SUBMITTED flag. Do not accept new legal terms without reading them.

@@ -1,6 +1,6 @@
 # Jury video V4 — cold-open reorder (02-Nov-2026, exec branch `e2d5eb3`)
 
-§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
 
 V3 (`final-jury-video-2351308.mp4`, sha `eee76671…`) stays frozen as history.
 V2 (`3d3e228e…`) stays frozen. V4 reuses the SAME segments, SAME trims,

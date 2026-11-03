@@ -12,7 +12,8 @@ fields below use event-page-verified facts + release artifacts.
 - Primary theme: Push the Frontier
 - Secondary theme: Build for Your World
 - Repository: https://github.com/toskaman/openbridge
-- Submitted revision: release tag v0.3.0 (content freeze `7d74757`, merge #188;
+- Submitted revision: release tag v0.3.1 (video-link commit on v0.3.0
+  `a413829`; content freeze `7d74757`, merge #188;
   full SHAs in docs/submission/FINAL_SUBMISSION.md; owner enters the exact
   SHA in the portal — no v0.2.0 tag move; attach app/evidence/media packs).
 - License at the submitted revision: PolyForm Strict 1.0.0 (owner PR #170
@@ -29,8 +30,9 @@ authorization, and observable results.
 
 ## Demo
 
-- Video: official submission video is owner-filmed only, canonical slot
-  `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+- Video: official submission video (owner-filmed):
+  https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury",
+  canonical slot `submission/final-video.mp4`).
   Agent-built cuts V2 (3d3e228e…) / V3 (eee76671…) / V4 (12f49234…) /
   V5 (b3cb41e7…) are HISTORICAL DRAFTs, never the submission
   ([latest build doc](VIDEO_BUILD_V5.md)). Finale filmed by the owner.
@@ -64,7 +66,8 @@ authorization, and observable results.
   2115/2115 main-line-era + Verify run 41356836103 SUCCESS. Main fa693f9
   (PR #180 jury RC): 2115/2115 local OK, 282.7 s, 02-Nov (RC notes:
   RC_NOTES_20261102.md). Absolute-final: 2378/2378 at 333d14d
-  (content freeze `7d74757`, merge #188; release tag v0.3.0).
+  (content freeze `7d74757`, merge #188; release tag v0.3.1,
+  video-link commit on v0.3.0).
 
 ## Owner checklist (portal)
 

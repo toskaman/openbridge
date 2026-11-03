@@ -65,4 +65,4 @@ Corrupt/missing items are listed at the bottom — never silently dropped.
 - Clean-room per-OS `tour-*.webm` × 6 + `phone-demo.mp4`: cited by the
   manifest, not found on disk (CI artifacts, unrecovered).
 - Forge `capability-forge-170s.mp4` + live-glimmer mp4s: specs only, unproduced.
-- Official submission video (canonical slot `submission/final-video.mp4`): FINAL_OWNER_VIDEO_PENDING — owner is filming; no agent-generated video allowed.
+- Official submission video: https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", owner-filmed, delivered 03-Nov; link verified live + oEmbed title/author/embeddable; canonical slot `submission/final-video.mp4`). No agent-generated video.

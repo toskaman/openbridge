@@ -4,9 +4,8 @@ Date: 03-Nov-2026. This report records the release candidate, not the portal act
 
 ## 1. Executive summary
 
-- Status: TECHNICALLY_READY_OWNER_PENDING (code, tests, docs, packs ready;
-  owner video + portal filing remain).
-- Version: v0.3.0 (release tag on the pin-sync commit; content freeze `7d74757`,
+- Status: READY_FOR_SUBMISSION (all artifacts delivered; portal filing remains).
+- Version: v0.3.1 (video-link commit on v0.3.0 `a413829`; content freeze `7d74757`,
   merge #188; start of campaign: origin/main `a5e8208`, PR #182).
 - Tests: 2378/2378 (`python -m unittest discover -s tests`), N03 cross-process
   dispatch-once verified, incl. new restart-duplicate regression test.
@@ -15,7 +14,8 @@ Date: 03-Nov-2026. This report records the release candidate, not the portal act
   (3 macOS jobs infra-cancelled in queue, zero steps ran, code covered by main).
 - Systems: Windows + Ubuntu + macOS + Chromium + WebKit CI; clean-room +
   Android labs are manual-dispatch and run on the freeze SHA (see §8).
-- Video: FINAL_OWNER_VIDEO_PENDING (owner films the only official finale).
+- Video: DELIVERED 03-Nov — https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury";
+  link live + oEmbed verified).
 - Submission: prepared (docs/submission/FINAL_SUBMISSION.md), NOT submitted.
 
 ## 2. Rules (labels: OFFICIAL_CONFIRMED / ORGANIZER_CLARIFICATION /
@@ -68,7 +68,8 @@ PARTICIPANT_PROVIDED_OFFICIAL_GUIDE / THIRD_PARTY_UNVERIFIED / PORTAL_ONLY)
   ModelStudy48/S8 rows added.
 - Old jury cuts V2–V5 kept as labeled history (builders, manifests, docs);
   removed from every active submission surface. Exactly one canonical video
-  reference: `submission/final-video.mp4`, FINAL_OWNER_VIDEO_PENDING.
+  reference: https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", owner-filmed,
+  delivered 03-Nov; canonical slot `submission/final-video.mp4`).
 - v0.2.0 release assets left untouched as immutable history (documented choice).
 - Jury ladder: docs/jury/JURY_START_HERE.md (30 s → 10 min), README, QUICKSTART,
   claim/evidence matrix, verified capabilities, limitations, submission pack.
@@ -116,22 +117,24 @@ release validation (§8).
 
 ## 8. Release v0.3.0
 
-- Freeze: content `7d74757` (merge #188) + pin-sync/submission commit (this
-  report's commit); tag v0.3.0 on the pin-sync commit after its CI is green.
+- Freeze: v0.3.1 (this commit: video-link on v0.3.0 `a413829`; content
+  `7d74757`, merge #188); tag v0.3.1 after its CI is green. v0.3.0 packs
+  superseded (identical code, pre-video docs).
 - Packs (built from the freeze commit via scripts/release_pack.py, secret-scan
-  enforced): OpenBridge-App-v0.3.0.zip, OpenBridge-Evidence-v0.3.0.zip,
-  OpenBridge-Media-v0.3.0.zip — each with BUILD.json, RELEASE_MANIFEST.json,
+  enforced): OpenBridge-App-v0.3.1.zip, OpenBridge-Evidence-v0.3.1.zip,
+  OpenBridge-Media-v0.3.1.zip — each with BUILD.json, RELEASE_MANIFEST.json,
   sha256sums.txt. Hashes recorded on the GitHub release page (packs postdate
   this report by construction).
 - Validation: clean-room manual dispatch + Android manual dispatch on the freeze
   SHA; archive extraction test; run-from-archive smoke; no-secret rescan.
-- Release page: https://github.com/toskaman/openbridge/releases/tag/v0.3.0
-  (no video asset until the owner finale is delivered).
+- Release page: https://github.com/toskaman/openbridge/releases/tag/v0.3.1
+  (video is the YouTube link in §9; no mp4 redistributed).
 
 ## 9. Video
 
-- Status: FINAL_OWNER_VIDEO_PENDING. Exactly one canonical slot:
-  `submission/final-video.mp4` (see submission/README.md). No agent-generated,
+- Status: DELIVERED 03-Nov — https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury",
+  channel MS; verified live + oEmbed title/author/embeddable; canonical slot
+  `submission/final-video.mp4`, see submission/README.md). No agent-generated,
   reused, or fallback jury video is published or linked as the submission.
 - V2 (3d3e228e) / V3 (eee76671, 159.33 s) / V4 (12f49234) / V5 (b3cb41e7,
   170.70 s): HISTORICAL DRAFTs with builders + manifests preserved.
@@ -157,7 +160,8 @@ consent), commercial path (docs/jury investor section).
 
 ## 11. Owner-only remaining
 
-- Film + upload the finale video (≤180 s); keep raw + subtitles.
+- [x] Film + upload the finale video — DELIVERED: https://youtu.be/Q4slAW3NjuQ
+  (owner keeps raw + subtitles).
 - Portal: confirm track/members/bonus/license/editability; enter the v0.3.0
   commit SHA; attach packs; submit before 4 Nov 9 PM ET; keep receipt.
 - Read (do not auto-accept) any new portal terms/waiver.
@@ -166,8 +170,8 @@ consent), commercial path (docs/jury investor section).
 
 ## 12. Verdict
 
-TECHNICALLY_READY_OWNER_PENDING — supported by: merged main (content freeze
-`7d74757`), 2378-test suite green locally + 5/5 CI on the merge, docs synced
-with zero broken links, Meta-only runtime enforced, packs + checksums procedure
-ready, submission fields copy-ready. NOT READY_FOR_SUBMISSION (video + portal
-filing are owner acts) and NOT SUBMITTED_VERIFIED (no portal receipt).
+READY_FOR_SUBMISSION — supported by: merged main (release v0.3.1), 2378-test
+suite green locally + 5/5 CI, docs synced with zero broken links, Meta-only
+runtime enforced, official owner video delivered + verified live, packs +
+checksums published, submission fields copy-ready. NOT SUBMITTED_VERIFIED
+(portal filing is the remaining owner act; no receipt yet).

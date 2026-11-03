@@ -1,6 +1,6 @@
 # Jury video v2 (with IRL footage) — reproducible build (2026-11-01)
 
-§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
 
 Output: `E:\OpenBridge-Overnight\frontier-final\final-jury-video-718b401.mp4`
 (159.33 s, 1280x720, 30 fps, H.264 yuv420p, CRF 23, **silent**,

@@ -1,6 +1,6 @@
 # Fallback video — reproducible build (E3, Campaign Three §5.6)
 
-§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
 
 Honest technical fallback video. No physical-device footage exists in this
 cut, so none is claimed: the video assembles only real captures — actual

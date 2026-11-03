@@ -69,8 +69,8 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - Living docs re-synced to HEAD: README, jury start, release status, known limitations, verified capabilities, submission draft/evidence, offline demo, narration overlay (2115/37/S8-48/v0.2.0-MIT-vs-main-PolyForm/TV-wake limit/video V2); audit docs dated 01-Nov left as history.
 - License: main is PolyForm Strict 1.0.0 from PR #170; v0.2.0 tag dd669c2 stays MIT; owner declares the submitted revision's license.
 
-## Latest integrated evidence — 03 November (absolute-final followup, content freeze `7d74757`)
+## Latest integrated evidence — 03 November (absolute-final followup, release v0.3.1)
 
-- Suite: 2378 green locally (`python -m unittest discover -s tests`) at `333d14d`; content freeze `7d74757` (merge #188; release tag v0.3.0 on the pin-sync commit); count history: 2115 main-line-era (02-Nov) / 2132 jury-final (03-Nov V5 branch) / 2378 absolute-final; dated entries above frozen as history.
-- Videos V2 (`3d3e228e…`) / V3 (`eee76671…`) / V4 (`12f49234…`) / V5 (`b3cb41e7…`) are HISTORICAL DRAFTs, never the submission; the official video is owner-filmed only, canonical slot `submission/final-video.mp4`, status FINAL_OWNER_VIDEO_PENDING.
+- Suite: 2378 green locally (`python -m unittest discover -s tests`) at `333d14d`; release v0.3.1 (video-link commit on v0.3.0 `a413829`; content freeze `7d74757`, merge #188); count history: 2115 main-line-era (02-Nov) / 2132 jury-final (03-Nov V5 branch) / 2378 absolute-final; dated entries above frozen as history.
+- Videos V2 (`3d3e228e…`) / V3 (`eee76671…`) / V4 (`12f49234…`) / V5 (`b3cb41e7…`) are HISTORICAL DRAFTs, never the submission; the official video (owner-filmed) is https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
 - License: main is PolyForm Strict 1.0.0 (+ HACKATHON_EVALUATION_PERMISSION judge grant); v0.2.0 tag dd669c2 MIT is historical; owner declares the submitted revision's license.
