@@ -80,8 +80,8 @@ intelligence, explicit consent, and one interface for heterogeneous hardware.
 
 ## Demo video
 
-https://youtu.be/TZaxCcRmrLQ — "OpenBridge Jury v5 MetaMMS 175s", partly owner-filmed, Meta MMS-TTS narration, re-delivered 04-Nov,
-03-Nov-2026 (link verified live + oEmbed title/author/embeddable; canonical slot:
+https://youtu.be/TZaxCcRmrLQ — "OpenBridge Jury v5 MetaMMS 175s", partly owner-filmed, Meta MMS-TTS narration, re-delivered
+04-Nov-2026 (link verified live + oEmbed title/author/embeddable; canonical slot:
 `submission/final-video.mp4`). Agent-built cuts V2–V5 are HISTORICAL DRAFTs,
 never the submission. Owner pastes this video link in the portal.
 
