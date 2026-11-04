@@ -11,6 +11,10 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 [Demo for judges](docs/jury/JURY_START_HERE.md) · [Showcase](docs/showcase/index.html) · [Quickstart](docs/QUICKSTART.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)
 
+<video src="https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v4_175s.mp4" controls="controls" style="max-width: 100%;"></video>
+
+*Official submission video (owner-filmed, 175 s, 1080p) — also on [YouTube](https://youtu.be/Q4slAW3NjuQ) (portal submission link).*
+
 ![Meta-generated T2 panel mid-run on the real TV, hold-press dispatched](docs/jury/screens/s5b_pressed.png)
 
 *Meta AI generated this TV control panel on demand; OpenBridge validated it, installed it on the real Android TV, and dispatched the hold-press to the robot vacuum over the approved Tuya interface — then revoked it, with denial verified (31 Oct 2026). Press ADB-injected (labeled on the record); vacuum motion not observed. Full scope below.*

@@ -128,7 +128,8 @@ release validation (§8).
 - Validation: clean-room manual dispatch + Android manual dispatch on the freeze
   SHA; archive extraction test; run-from-archive smoke; no-secret rescan.
 - Release page: https://github.com/toskaman/openbridge/releases/tag/v0.3.1
-  (video is the YouTube link in §9; no mp4 redistributed).
+  (video: YouTube link in §9 + `OpenBridge_Jury_v4_175s.mp4` mirror attached
+  to the release and embedded at the top of the README).
 
 ## 9. Video
 
