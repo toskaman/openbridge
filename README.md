@@ -11,9 +11,9 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 [Demo for judges](docs/jury/JURY_START_HERE.md) · [Showcase](docs/showcase/index.html) · [Quickstart](docs/QUICKSTART.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)
 
-[![Official submission video — OpenBridge Jury (owner-filmed, 175 s, 1080p)](https://i.ytimg.com/vi/Q4slAW3NjuQ/hqdefault.jpg)](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v4_175s.mp4)
+[![Official submission video — OpenBridge Jury (175 s, 1080p, narration: Meta MMS-TTS)](docs/jury/screens/jury_video_poster.jpg)](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v5_MetaMMS_175s.mp4)
 
-*Official submission video (owner-filmed, 175 s, 1080p) — click the image to play · [YouTube](https://youtu.be/Q4slAW3NjuQ) (portal submission link) · [mp4 file](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v4_175s.mp4).*
+*Official submission video (175 s, 1080p; real screen and device footage, partly filmed by the owner; English narration by self-hosted Meta MMS-TTS) — click the image to play · [mp4 file](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v5_MetaMMS_175s.mp4).*
 
 ![Meta-generated T2 panel mid-run on the real TV, hold-press dispatched](docs/jury/screens/s5b_pressed.png)
 
@@ -48,6 +48,21 @@ Without Meta inference, OpenBridge would be static plumbing: discovery would sti
 - **Model references:** [third-party inventory](THIRD_PARTY.md) — Llama 3.2 license/attribution, Glimmer docs ([dev.meta.ai](https://dev.meta.ai/docs/muse-glimmer)) and upstream weights, pinned registry digests.
 
 Every Meta call is receipted with model id, digest, tokens, and cost — favorable and unfavorable results both published. Local models are digest-pinned with no cloud fallback; hosted Spark answers only synthetic facts, only with explicit consent, inside a hard budget. The runtime is Meta-models-only, enforced by [src/ai/registry.py](src/ai/registry.py). Methodology and receipts: [benchmark status](docs/benchmark/STATUS.md) · [model usage](docs/MODEL_USAGE_AND_EVALUATION.md) · [TV Glimmer journey](docs/forge/TV_GLIMMER_JOURNEY.md).
+
+## AI models vs. OS features (compliance, 4 Nov 2026 ruling)
+
+Every model OpenBridge calls at runtime is a Meta model. No ElevenLabs, Kokoro or other non-Meta TTS/STT is used anywhere — in the product or in the demo video.
+
+| Part | What it is | Meta model call? |
+|---|---|---|
+| Request understanding, panel composition, planning | Llama 3.2 3B (local), Glimmer (local), Spark (hosted, consent-gated) — enforced by [src/ai/registry.py](src/ai/registry.py) | **Yes — Meta** |
+| Watch/phone voice transcription | Meta MMS `facebook/mms-1b-all` locally ([src/ai/stt_local.py](src/ai/stt_local.py)), or Meta Muse Voice Transcribe 1.0 ([src/ai/voice_stt.py](src/ai/voice_stt.py)); the companion only records raw PCM | **Yes — Meta** |
+| Spoken replies on the Android companion | Android `TextToSpeech` (OS built-in) | No — OS feature |
+| Spoken replies in the web Command Center | Browser `speechSynthesis` (built-in) | No — browser feature |
+| Demo video voiceover | Meta MMS-TTS (`facebook/mms-tts-eng`), self-hosted, rendered offline | Meta model (self-hosted) |
+| Demo video subtitles, music, SFX | Authored subtitles, original score | No model |
+
+The earlier ElevenLabs narration was removed from the video on 4 Nov 2026 and replaced with Meta MMS-TTS; the end card states this.
 
 ## What works today
 
@@ -102,7 +117,7 @@ Local Muse Glimmer proposes the panel. OpenBridge validates every control agains
 
 *Meta-generated T2 panel mid-run on the real TV (31 Oct 2026): hold-press FIND dispatched, receipt tx-4a96f8f6, 15-poll oracle stable, revoke + deny verified after. Press ADB-injected (labeled on the record).*
 
-Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); owner-performed manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce) were VERIFIED 1 Nov with oracle standby→goto_charge ([S5c proof](docs/evidence/s5-tv-panel-01nov-manual.md)) — return-to-dock behavior is oracle-proven; 02-Nov footage adds filmed START/DOCK dispatch with on-screen "done, verified" and a filmed lease-stale refusal, while vacuum locomotion/docking itself is still not visibly filmed ([forensic record](docs/evidence/02nov-vacuum-forensics.md)). TV wake + Companion reveal verified 2 Nov (sleep effect owner-confirmed, receipt honestly UNVERIFIED — [proof](docs/evidence/tv-sleep-02nov.md)); this TV drops Wi-Fi ADB in sleep, so wake needs the remote. License split: main is PolyForm Strict 1.0.0 (+ hackathon jury evaluation permission); the v0.2.0 tag (`dd669c2`) is a historical MIT snapshot, not the release. Official submission video (owner-filmed): https://youtu.be/Q4slAW3NjuQ (canonical slot `submission/final-video.mp4`); agent-built cuts V2–V5 are HISTORICAL DRAFTs, never the submission ([latest build doc](docs/jury/VIDEO_BUILD_V5.md)). The finale was filmed by the owner per the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
+Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); owner-performed manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce) were VERIFIED 1 Nov with oracle standby→goto_charge ([S5c proof](docs/evidence/s5-tv-panel-01nov-manual.md)) — return-to-dock behavior is oracle-proven; 02-Nov footage adds filmed START/DOCK dispatch with on-screen "done, verified" and a filmed lease-stale refusal, while vacuum locomotion/docking itself is still not visibly filmed ([forensic record](docs/evidence/02nov-vacuum-forensics.md)). TV wake + Companion reveal verified 2 Nov (sleep effect owner-confirmed, receipt honestly UNVERIFIED — [proof](docs/evidence/tv-sleep-02nov.md)); this TV drops Wi-Fi ADB in sleep, so wake needs the remote. License split: main is PolyForm Strict 1.0.0 (+ hackathon jury evaluation permission); the v0.2.0 tag (`dd669c2`) is a historical MIT snapshot, not the release. Official submission video: [OpenBridge_Jury_v5_MetaMMS_175s.mp4](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v5_MetaMMS_175s.mp4) — real product footage, part of it filmed by the owner, edited into the final cut; narration re-voiced on 4 Nov with self-hosted Meta MMS-TTS (the earlier non-Meta narration was removed). Earlier cuts are historical drafts ([build doc](docs/jury/VIDEO_BUILD_V5.md)); filmed parts follow the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
 
 ## Try it yourself
 
