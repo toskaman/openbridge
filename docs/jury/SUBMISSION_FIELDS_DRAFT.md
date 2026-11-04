@@ -30,8 +30,8 @@ authorization, and observable results.
 
 ## Demo
 
-- Video: official submission video (owner-filmed):
-  https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury",
+- Video: official submission video (partly owner-filmed, narration: self-hosted Meta MMS-TTS):
+  https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s",
   canonical slot `submission/final-video.mp4`).
   Agent-built cuts V2 (3d3e228e…) / V3 (eee76671…) / V4 (12f49234…) /
   V5 (b3cb41e7…) are HISTORICAL DRAFTs, never the submission

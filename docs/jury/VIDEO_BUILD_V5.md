@@ -1,6 +1,6 @@
 # Jury video V5 — new-footage cut (03-Nov-2026, branch `release/jury-final-03nov`)
 
-§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
+§0 HISTORICAL DRAFT — never the submission. Official video = partly owner-filmed https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", re-delivered 04-Nov).
 
 V2/V3/V4 (`3d3e228e…`/`eee76671…`/`12f49234…`) stay frozen as history.
 V5 adds the 02-Nov owner footage: filmed START/DOCK dispatch,

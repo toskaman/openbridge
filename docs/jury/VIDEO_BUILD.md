@@ -1,6 +1,6 @@
 # Fallback video — reproducible build (E3, Campaign Three §5.6)
 
-§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
+§0 HISTORICAL DRAFT — never the submission. Official video = partly owner-filmed https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", re-delivered 04-Nov).
 
 Honest technical fallback video. No physical-device footage exists in this
 cut, so none is claimed: the video assembles only real captures — actual

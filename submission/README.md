@@ -1,8 +1,8 @@
 # Official submission video — canonical slot
 
-Status: DELIVERED 03-Nov-2026.
+Status: RE-DELIVERED 04-Nov-2026.
 
-- Official video (owner-filmed): https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury",
+- Official video (partly owner-filmed, narration: self-hosted Meta MMS-TTS): https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s",
   channel MS). Reception 03-Nov: link live (HTTP 200), oEmbed title/author
   confirmed, embedding allowed. Duration/codec of the owner master are
   owner-attested (a YouTube transcode hash would not authenticate the master).

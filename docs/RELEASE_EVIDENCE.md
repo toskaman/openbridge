@@ -72,5 +72,5 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 ## Latest integrated evidence — 03 November (absolute-final followup, release v0.3.1)
 
 - Suite: 2378 green locally (`python -m unittest discover -s tests`) at `333d14d`; release v0.3.1 (video-link commit on v0.3.0 `a413829`; content freeze `7d74757`, merge #188); count history: 2115 main-line-era (02-Nov) / 2132 jury-final (03-Nov V5 branch) / 2378 absolute-final; dated entries above frozen as history.
-- Videos V2 (`3d3e228e…`) / V3 (`eee76671…`) / V4 (`12f49234…`) / V5 (`b3cb41e7…`) are HISTORICAL DRAFTs, never the submission; the official video (owner-filmed) is https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
+- Videos V2 (`3d3e228e…`) / V3 (`eee76671…`) / V4 (`12f49234…`) / V5 (`b3cb41e7…`) are HISTORICAL DRAFTs, never the submission; the official video (partly owner-filmed, narration: self-hosted Meta MMS-TTS) is https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", re-delivered 04-Nov).
 - License: main is PolyForm Strict 1.0.0 (+ HACKATHON_EVALUATION_PERMISSION judge grant); v0.2.0 tag dd669c2 MIT is historical; owner declares the submitted revision's license.

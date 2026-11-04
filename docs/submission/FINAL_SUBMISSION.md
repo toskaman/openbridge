@@ -80,7 +80,7 @@ intelligence, explicit consent, and one interface for heterogeneous hardware.
 
 ## Demo video
 
-https://youtu.be/Q4slAW3NjuQ — "OpenBridge Jury", owner-filmed, delivered
+https://youtu.be/TZaxCcRmrLQ — "OpenBridge Jury v5 MetaMMS 175s", partly owner-filmed, Meta MMS-TTS narration, re-delivered 04-Nov,
 03-Nov-2026 (link verified live + oEmbed title/author/embeddable; canonical slot:
 `submission/final-video.mp4`). Agent-built cuts V2–V5 are HISTORICAL DRAFTs,
 never the submission. Owner pastes this video link in the portal.
@@ -138,8 +138,8 @@ Full path: docs/jury/JURY_START_HERE.md (30 s → 10 min ladder).
 
 ## Owner-only remaining
 
-- [x] Film + upload the finale video — DELIVERED 03-Nov:
-      https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury"); paste link in portal.
+- [x] Film + upload the finale video — RE-DELIVERED 04-Nov:
+      https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s"); paste link in portal.
 - [ ] Confirm track/theme/members, bonus names, license scope, editability
       (portal-only items).
 - [ ] Enter submitted-revision SHA from the v0.3.1 tag page.

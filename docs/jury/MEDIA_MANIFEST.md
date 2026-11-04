@@ -65,4 +65,4 @@ Corrupt/missing items are listed at the bottom — never silently dropped.
 - Clean-room per-OS `tour-*.webm` × 6 + `phone-demo.mp4`: cited by the
   manifest, not found on disk (CI artifacts, unrecovered).
 - Forge `capability-forge-170s.mp4` + live-glimmer mp4s: specs only, unproduced.
-- Official submission video: https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", owner-filmed, delivered 03-Nov; link verified live + oEmbed title/author/embeddable; canonical slot `submission/final-video.mp4`). No agent-generated video.
+- Official submission video: https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", partly owner-filmed, Meta MMS-TTS narration, re-delivered 04-Nov; link verified live + oEmbed title/author/embeddable; canonical slot `submission/final-video.mp4`). No agent-generated video.

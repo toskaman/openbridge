@@ -1,6 +1,6 @@
 # Jury video V3 — quality pass (02-Nov-2026, main `2351308`)
 
-§0 HISTORICAL DRAFT — never the submission. Official video = owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", delivered 03-Nov).
+§0 HISTORICAL DRAFT — never the submission. Official video = partly owner-filmed https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", re-delivered 04-Nov).
 
 V2 (`final-jury-video-718b401.mp4`, sha `3d3e228e…`) stays frozen as history.
 V3 is a minimal polish of the same cut — same segments, same EDL timings,

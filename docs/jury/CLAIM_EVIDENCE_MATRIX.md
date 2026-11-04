@@ -74,7 +74,7 @@ is preserved in git history, not deleted.
 | Jury video V3: same 159.33 s cut + 2115 suite card + tv-power close row, GAP/STATIC/no-footage labels kept | HISTORICAL DRAFT, never the submission — VERIFIED ARTIFACT (sha256 eee76671…; 13989568 B; V2 builder+mp4 frozen untouched) | docs/jury/VIDEO_BUILD_V3.md; scripts/video/build_jury_video_v3.py |
 | Jury video V4: cold-open reorder, same 159.33 s, press beats at 0:00, uniform 1280x720, Glimmer + R1/R4 captions | HISTORICAL DRAFT, never the submission — VERIFIED ARTIFACT (sha256 12f49234…; V2/V3 frozen untouched) | docs/jury/VIDEO_BUILD_V4.md; scripts/video/build_jury_video_v4.py |
 | Jury video V5: new-footage cut, 170.70 s, filmed START/DOCK dispatch + filmed lease-stale refusal, 2132 suite card | HISTORICAL DRAFT, never the submission — VERIFIED ARTIFACT (sha256 b3cb41e7…; V2/V3/V4 frozen untouched) | docs/jury/VIDEO_BUILD_V5.md; scripts/video/build_jury_video_v5.py |
-| Official submission video | VERIFIED ARTIFACT — owner-filmed https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", channel MS; link live + oEmbed title/author/embeddable 03-Nov; canonical slot `submission/final-video.mp4`); no agent-generated video | docs/jury/MEDIA_MANIFEST.md |
+| Official submission video | VERIFIED ARTIFACT — partly owner-filmed https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", channel MS; link live + oEmbed title/author/embeddable 04-Nov; canonical slot `submission/final-video.mp4`); no agent-generated video | docs/jury/MEDIA_MANIFEST.md |
 
 ## Never claimed
 ACID transactions; zero-knowledge or anonymous cloud calls; 2D or person location from BLE RSSI; that BLE presence proves interference; fabricated scores; organizer acceptance or bonus eligibility.

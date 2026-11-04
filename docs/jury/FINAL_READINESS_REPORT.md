@@ -14,7 +14,7 @@ Date: 03-Nov-2026. This report records the release candidate, not the portal act
   (3 macOS jobs infra-cancelled in queue, zero steps ran, code covered by main).
 - Systems: Windows + Ubuntu + macOS + Chromium + WebKit CI; clean-room +
   Android labs are manual-dispatch and run on the freeze SHA (see §8).
-- Video: DELIVERED 03-Nov — https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury";
+- Video: RE-DELIVERED 04-Nov — https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s";
   link live + oEmbed verified).
 - Submission: prepared (docs/submission/FINAL_SUBMISSION.md), NOT submitted.
 
@@ -68,8 +68,8 @@ PARTICIPANT_PROVIDED_OFFICIAL_GUIDE / THIRD_PARTY_UNVERIFIED / PORTAL_ONLY)
   ModelStudy48/S8 rows added.
 - Old jury cuts V2–V5 kept as labeled history (builders, manifests, docs);
   removed from every active submission surface. Exactly one canonical video
-  reference: https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury", owner-filmed,
-  delivered 03-Nov; canonical slot `submission/final-video.mp4`).
+  reference: https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", partly owner-filmed, Meta MMS-TTS narration,
+  re-delivered 04-Nov; canonical slot `submission/final-video.mp4`).
 - v0.2.0 release assets left untouched as immutable history (documented choice).
 - Jury ladder: docs/jury/JURY_START_HERE.md (30 s → 10 min), README, QUICKSTART,
   claim/evidence matrix, verified capabilities, limitations, submission pack.
@@ -128,12 +128,12 @@ release validation (§8).
 - Validation: clean-room manual dispatch + Android manual dispatch on the freeze
   SHA; archive extraction test; run-from-archive smoke; no-secret rescan.
 - Release page: https://github.com/toskaman/openbridge/releases/tag/v0.3.1
-  (video: YouTube link in §9 + `OpenBridge_Jury_v4_175s.mp4` mirror attached
+  (video: YouTube link in §9 + `OpenBridge_Jury_v5_MetaMMS_175s.mp4` mirror attached
   to the release and embedded at the top of the README).
 
 ## 9. Video
 
-- Status: DELIVERED 03-Nov — https://youtu.be/Q4slAW3NjuQ ("OpenBridge Jury",
+- Status: RE-DELIVERED 04-Nov — https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s",
   channel MS; verified live + oEmbed title/author/embeddable; canonical slot
   `submission/final-video.mp4`, see submission/README.md). No agent-generated,
   reused, or fallback jury video is published or linked as the submission.
@@ -161,7 +161,7 @@ consent), commercial path (docs/jury investor section).
 
 ## 11. Owner-only remaining
 
-- [x] Film + upload the finale video — DELIVERED: https://youtu.be/Q4slAW3NjuQ
+- [x] Film + upload the finale video — RE-DELIVERED 04-Nov: https://youtu.be/TZaxCcRmrLQ
   (owner keeps raw + subtitles).
 - Portal: confirm track/members/bonus/license/editability; enter the v0.3.0
   commit SHA; attach packs; submit before 4 Nov 9 PM ET; keep receipt.
