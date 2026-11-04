@@ -11,9 +11,9 @@ Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier
 
 [Demo for judges](docs/jury/JURY_START_HERE.md) · [Showcase](docs/showcase/index.html) · [Quickstart](docs/QUICKSTART.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)
 
-<video src="https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v4_175s.mp4" controls="controls" style="max-width: 100%;"></video>
+[![Official submission video — OpenBridge Jury (owner-filmed, 175 s, 1080p)](https://i.ytimg.com/vi/Q4slAW3NjuQ/hqdefault.jpg)](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v4_175s.mp4)
 
-*Official submission video (owner-filmed, 175 s, 1080p) — also on [YouTube](https://youtu.be/Q4slAW3NjuQ) (portal submission link).*
+*Official submission video (owner-filmed, 175 s, 1080p) — click the image to play · [YouTube](https://youtu.be/Q4slAW3NjuQ) (portal submission link) · [mp4 file](https://github.com/toskaman/openbridge/releases/download/v0.3.1/OpenBridge_Jury_v4_175s.mp4).*
 
 ![Meta-generated T2 panel mid-run on the real TV, hold-press dispatched](docs/jury/screens/s5b_pressed.png)
 
