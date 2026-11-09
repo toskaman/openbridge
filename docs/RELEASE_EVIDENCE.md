@@ -66,11 +66,11 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 
 - Suite: 2115 green locally (`python -m unittest discover -s tests`); main HEAD `2351308` Verify SUCCESS ([run 41356836103](https://github.com/toskaman/openbridge/actions/runs/41356836103)); PR164–177 merged; dated entries above frozen as history.
 - Registry: 37 VERIFIED rows (28 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR) — new row 36 S5c owner-manual START+DOCK 01-Nov, row 37 TV sleep/wake/reveal 02-Nov; matrix re-rendered via `python -m dev.device_registry --render`.
-- Living docs re-synced to HEAD: README, jury start, release status, known limitations, verified capabilities, submission draft/evidence, offline demo, narration overlay (2115/37/S8-48/v0.2.0-MIT-vs-main-PolyForm/TV-wake limit/video V2); audit docs dated 01-Nov left as history.
-- License: main is PolyForm Strict 1.0.0 from PR #170; v0.2.0 tag dd669c2 stays MIT; owner declares the submitted revision's license.
+- Living docs re-synced to HEAD: README, jury start, release status, known limitations, verified capabilities, submission draft/evidence, offline demo, narration overlay (2115/37/S8-48/PolyForm-license/TV-wake limit/video V2); audit docs dated 01-Nov left as history.
+- License: main is PolyForm Strict 1.0.0 from PR #170; owner declares the submitted revision's license.
 
 ## Latest integrated evidence — 03 November (absolute-final followup, release v0.3.1)
 
 - Suite: 2378 green locally (`python -m unittest discover -s tests`) at `333d14d`; release v0.3.1 (video-link commit on v0.3.0 `a413829`; content freeze `7d74757`, merge #188); count history: 2115 main-line-era (02-Nov) / 2132 jury-final (03-Nov V5 branch) / 2378 absolute-final; dated entries above frozen as history.
 - Videos V2 (`3d3e228e…`) / V3 (`eee76671…`) / V4 (`12f49234…`) / V5 (`b3cb41e7…`) are HISTORICAL DRAFTs, never the submission; the official video (partly owner-filmed, narration: self-hosted Meta MMS-TTS) is https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", re-delivered 04-Nov).
-- License: main is PolyForm Strict 1.0.0 (+ HACKATHON_EVALUATION_PERMISSION judge grant); v0.2.0 tag dd669c2 MIT is historical; owner declares the submitted revision's license.
+- License: main is PolyForm Strict 1.0.0 (+ HACKATHON_EVALUATION_PERMISSION judge grant); owner declares the submitted revision's license.

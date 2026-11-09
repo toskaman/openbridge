@@ -23,9 +23,9 @@ used as pointers only, never as proof.
 Merged staging branches deleted after merge (remote):
 s6/F30/F90/s8/main + feat/finalfrontier-release + feat/ui-v2-workspace.
 Open PRs at freeze: #170 only (owner's own license PR, PolyForm
-Strict 1.0.0 — untouched by this run; release stays MIT per main).
-[HISTORICAL 01-Nov: PR #170 has since merged — main is PolyForm Strict
-1.0.0, v0.2.0 tag stays MIT; see](../LICENSING_HISTORY.md).
+Strict 1.0.0 — untouched by this run).
+PR #170 has since merged — main is PolyForm Strict 1.0.0 throughout;
+see [licensing](../LICENSING.md).
 No branch protection exists on main (owner setting); all merges used
 `--merge` (ancestry preserved, no squash, no rebase).
 
@@ -79,10 +79,8 @@ No branch protection exists on main (owner setting); all merges used
   emits no REPLAY comets yet; watch-press comets lag ≤8 s on the
   existing 8 s poll; live discovery found 0 devices in the
   headless capture sandbox (README shows no discovery shot).
-- License: release is MIT (main's LICENSE at freeze); owner's
-  PolyForm PR #170 pending and untouched — owner decides.
-  [HISTORICAL: #170 merged 01-Nov; main is now PolyForm Strict 1.0.0,
-  v0.2.0 tag stays MIT — see](../LICENSING_HISTORY.md).
+- License: PolyForm Strict 1.0.0 (main's LICENSE); owner's
+  PolyForm PR #170 merged 01-Nov — see [licensing](../LICENSING.md).
 - BridgeWindows v4 plaintext-on-trusted-LAN + pairing-code brute-force
   caveats retained verbatim.
 - Glimmer 30B: 7 load attempts, 7 OOM — environmental, not quality.
@@ -123,7 +121,7 @@ Submission stays OWNER_REQUIRED.
 8. UI v2: Studio templates (not Meta), no hardware Studio shots,
    replay without REPLAY comets, ≤8 s watch-press comet lag.
 9. Portal submission owner-only (#170 merged: main is
-   PolyForm Strict 1.0.0, v0.2.0 tag stays MIT).
+   PolyForm Strict 1.0.0 throughout the tree).
 
 ## 8. Release artifacts
 

@@ -33,7 +33,7 @@ PARTICIPANT_PROVIDED_OFFICIAL_GUIDE / THIRD_PARTY_UNVERIFIED / PORTAL_ONLY)
   owner confirms. Bonus names/dates: PARTIALLY CONFLICTING (Nov 10 vs Nov 16).
 - Waiver/IP (ownership retained + broad organizer license): THIRD_PARTY quoting
   a PORTAL_ONLY waiver — owner reads before accepting. No open-source mandate
-  found; repo license split declared (PolyForm main + judge grant, MIT v0.2.0).
+  found; repo license declared (PolyForm Strict 1.0.0 main + judge grant).
 - Start-ref/provenance: zero files predate 2026-10-26T16:24:00Z; v4-rewrite and
   build-time assistants disclosed (CONTRIBUTIONS.md).
 
@@ -63,7 +63,7 @@ PARTICIPANT_PROVIDED_OFFICIAL_GUIDE / THIRD_PARTY_UNVERIFIED / PORTAL_ONLY)
 - 165 active Markdown files inventoried; 0 broken relative links; all cited
   short SHAs resolve. 38 files synced in #188 (D1–D7): SHA re-pins, 2378 counts
   + era notes, V4/V5 HISTORICAL matrix rows + canonical owner-video slot,
-  MIT stales annotated, v0.2.0 framing retired, DRAFT_PACK archived with
+  license stales annotated, v0.2.0 framing retired, DRAFT_PACK archived with
   SUPERSEDED pointer, 35-vs-37 contradiction fixed, staleness headers,
   ModelStudy48/S8 rows added.
 - Old jury cuts V2–V5 kept as labeled history (builders, manifests, docs);

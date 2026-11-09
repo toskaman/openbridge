@@ -15,4 +15,4 @@ The software is provided AS IS, WITHOUT WARRANTIES, to the extent permitted by l
 
 The organizers' rights under the hackathon's official entry terms remain unaffected. Public GitHub access and GitHub platform terms are also unaffected.
 
-See [licensing history](docs/LICENSING_HISTORY.md) and [third-party inventory](THIRD_PARTY.md).
+See [licensing](docs/LICENSING.md) and [third-party inventory](THIRD_PARTY.md).

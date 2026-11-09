@@ -34,7 +34,7 @@ official rules), third-party rules summary (labeled T-P, not authoritative).
 
 1. Open the accepted Official Rules + submission portal; fill OPEN items 16–19 (5–8, 13 already GUIDE CONFIRMED via the Cerebral Valley Guide).
 2. Confirm the video requirement + maximum duration before the final edit (storyboard assumes ~180 s).
-3. Repository must remain public and accessible. Keep the judge evaluation path executable and source-available license terms clear; see [licensing history](../LICENSING_HISTORY.md).
+3. Repository must remain public and accessible. Keep the judge evaluation path executable and source-available license terms clear; see [licensing](../LICENSING.md).
 4. Confirm no eligibility exclusion applies; note the organizer license scope.
 5. Submit from the owner's account; keep the CONTRIBUTIONS.md disclosure attached.
 
@@ -44,4 +44,4 @@ The submitted revision is the exact commit SHA the owner enters in the portal (r
 
 ## License clarification (participant-provided, 1 November 2026)
 
-The owner supplied a Cerebral Valley organizer clarification that **no OSI-approved license is required**, and public source-available licenses are acceptable if judges can access and run the submission. This is participant-provided organizer guidance, not an independently authenticated waiver. OpenBridge's current source-available license is [PolyForm Strict 1.0.0](../../LICENSE); judges receive a separate scoped [evaluation permission](../../HACKATHON_EVALUATION_PERMISSION.md). Historical MIT licenses remain effective for older versions. The repository must stay public, the demo instructions must work, and official hackathon entry terms continue to apply.
+The owner supplied a Cerebral Valley organizer clarification that **no OSI-approved license is required**, and public source-available licenses are acceptable if judges can access and run the submission. This is participant-provided organizer guidance, not an independently authenticated waiver. OpenBridge's current source-available license is [PolyForm Strict 1.0.0](../../LICENSE); judges receive a separate scoped [evaluation permission](../../HACKATHON_EVALUATION_PERMISSION.md). The repository must stay public, the demo instructions must work, and official hackathon entry terms continue to apply.
