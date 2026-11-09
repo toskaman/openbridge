@@ -373,7 +373,7 @@ def main():
                    "both exit 0 · recorded this session on this commit")
     t5 = close_card()
 
-    # 2. stills (committed, real) — 1-Nov fallback cut (historical v0.2.0-tag era) uses the new-UI stills
+    # 2. stills (committed, real) — 1-Nov fallback cut (retired-tag era) uses the new-UI stills
     # (old fabric-tv-relay / refusal_channel kept in history only).
     stills = [
         ("ask-v2-home-1440.webp", "NEW-UI STILL (committed 1 Nov)",
@@ -502,7 +502,7 @@ segment boundaries.
 | 5 | 0:54.133–1:12.133 | 18.0 s | 6 committed stills × 3 s, each with provenance header (filename + `MEDIA_MANIFEST.md` tag) | `Committed evidence stills: the TV panel lived,` / `was pressed, and was revoked.` |
 | 6 | 1:12.133–1:18.133 | 6.0 s | Closing card: claims + on-screen GAP + repo link | `OpenBridge: every claim receipted,` / `every limit labeled.` |
 
-Still order in segment 5 (1-Nov fallback cut, historical v0.2.0-tag era): `ask-v2-home-1440.webp`
+Still order in segment 5 (1-Nov fallback cut, retired-tag era): `ask-v2-home-1440.webp`
 (NEW-UI) → `s5b_installed.png` → `s5b_pressed.png` →
 `s5b_revoked.png` (all REAL_HARDWARE) →
 `activity-v2-refused-1440.png`

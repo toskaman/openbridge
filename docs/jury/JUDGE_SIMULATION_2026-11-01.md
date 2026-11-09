@@ -1,6 +1,6 @@
 # JUDGE SIMULATION — 1 November 2026 (OPERATION FINAL FRONTIER §16)
 
-Target: `main` @ `ae1194a` (PRs #164→#169 merged), release candidate v0.2.0.
+Target: `main` @ `ae1194a` (PRs #164→#169 merged), former release candidate v0.2.0 (tag retired 09-Nov-2026).
 Method: three adversarial passes against current files, CI state, and
 evidence — scored against what a stranger can verify, not what the
 changelog claims. Adverse findings preserved; fixes reference the commit

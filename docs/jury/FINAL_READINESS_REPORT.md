@@ -70,7 +70,7 @@ PARTICIPANT_PROVIDED_OFFICIAL_GUIDE / THIRD_PARTY_UNVERIFIED / PORTAL_ONLY)
   removed from every active submission surface. Exactly one canonical video
   reference: https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s", partly owner-filmed, Meta MMS-TTS narration,
   re-delivered 04-Nov; canonical slot `submission/final-video.mp4`).
-- v0.2.0 release assets left untouched as immutable history (documented choice).
+- v0.2.0 release assets retired with the tag deletion (owner decision 09-Nov-2026).
 - Jury ladder: docs/jury/JURY_START_HERE.md (30 s → 10 min), README, QUICKSTART,
   claim/evidence matrix, verified capabilities, limitations, submission pack.
 

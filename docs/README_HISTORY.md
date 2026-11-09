@@ -56,7 +56,7 @@ This isolated check starts its own temporary server and synthetic journal. It ve
 
 ## Evidence walkthrough preview
 
-A captioned English preview is available with the [alpha.2 release](https://github.com/toskaman/openbridge/releases/tag/v0.1.0-alpha.2). It is 177 seconds, 1080p/30fps, intentionally silent, and records actual application interactions. Its [public manifest](../docs/jury/DEMO_PREVIEW.json) pins the captured source revision and states which evidence is recorded or simulated. This is a preview, not a final contest submission.
+A captioned English preview was published with the alpha.2 release (retired by the owner on 09-Nov-2026). It is 177 seconds, 1080p/30fps, intentionally silent, and records actual application interactions. Its [public manifest](../docs/jury/DEMO_PREVIEW.json) pins the captured source revision and states which evidence is recorded or simulated. This is a preview, not a final contest submission.
 
 ## Optional local Meta reasoning — Built with Llama
 

@@ -15,7 +15,7 @@ fields below use event-page-verified facts + release artifacts.
 - Submitted revision: release tag v0.3.1 (video-link commit on v0.3.0
   `a413829`; content freeze `7d74757`, merge #188;
   full SHAs in docs/submission/FINAL_SUBMISSION.md; owner enters the exact
-  SHA in the portal — no v0.2.0 tag move; attach app/evidence/media packs).
+  SHA in the portal (v0.2.0 tag retired 09-Nov-2026); attach app/evidence/media packs).
 - License at the submitted revision: PolyForm Strict 1.0.0 (owner PR #170
   merged 01-Nov; see docs/LICENSING.md) + the
   HACKATHON_EVALUATION_PERMISSION judge grant. Confirm portal license-scope
@@ -59,7 +59,7 @@ authorization, and observable results.
 - JURY_START_HERE.md, CLAIM_EVIDENCE_MATRIX.md,
   DEVICE_EVIDENCE.json (37 VERIFIED), HARDWARE_TEST_MATRIX.md,
   KNOWN_LIMITATIONS.md, FINAL_RELEASE_AUDIT_2026-11-01.md.
-- CI history: v0.2.0 tag (dd669c2): verify (run 41325164524) +
+- CI history at dd669c2: verify (run 41325164524) +
   clean-room (41322394136) + Android 5/5 (41325176026) SUCCESS;
   2096/2096 unit suite at tag per tag CI. Main 2351308 (PR #177):
   2115/2115 main-line-era + Verify run 41356836103 SUCCESS. Main fa693f9

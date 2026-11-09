@@ -125,8 +125,9 @@ Submission stays OWNER_REQUIRED.
 
 ## 8. Release artifacts
 
-- Tag/release: v0.2.0 on the merge commit of the finalization PR,
-  with app/evidence/media packs + notes (§18.12); video + packs also
+- Tag/release v0.2.0 was cut on the merge commit of the finalization PR,
+  with app/evidence/media packs + notes (§18.12), then retired by the owner
+  on 09-Nov-2026 (tag and release deleted); video + packs also
   in `E:\OpenBridge-Overnight\frontier-final\`.
 - Packs: rebuilt from the release tree at §18.11 (app/evidence/media;
   testzip + manifests + sha256sums + secret scan re-verified).
@@ -147,12 +148,12 @@ presentation. Next commit on main requires a freeze-exception note here.
 - Starting SHA: `45c53fb4bc710fcd6e23844809b32cfa8dd19be6` (main before #164).
 - Code freeze SHA: `cdcfd1e42d3fc367b3ca5054892f7a39111597df` (#171 merge).
 - Final main SHA: the merge commit of the finalization PR (code
-  freeze cdcfd1e + this docs-only delta); tag v0.2.0 points at it.
+  freeze cdcfd1e + this docs-only delta); retired tag v0.2.0 pointed at it.
 - Merged PRs: #164→#169, #171, #172 (8/8, all --merge, CI-gated,
   branches deleted). #170 open (owner license, untouched).
 - New commits on main since start: 145 at cdcfd1e (+1 finalize).
-- Release tag: v0.2.0 (on the finalization merge commit).
-- GitHub release URL: created by §18 step 12 (release notes carry it).
+- Release tag: v0.2.0 was cut on the finalization merge commit (retired 09-Nov-2026).
+- GitHub release URL: created by §18 step 12 (release retired 09-Nov-2026).
 - Verification links: verify run 41322227793, clean-room
   41322394136, android 41322391294 (5/5), forge 9f94059-gated.
 
@@ -245,8 +246,8 @@ presentation. Next commit on main requires a freeze-exception note here.
 - Submission requirements: portal-only items (video
   requirement, bonus names, exclusions, license scope,
   disputes, editability) marked OPEN/OWNER_REQUIRED, never
-  assumed. PR #170 merged: main is PolyForm Strict 1.0.0,
-  v0.2.0 tag stays MIT — declare the submitted revision.
+  assumed. PR #170 merged: main is PolyForm Strict 1.0.0 —
+  declare the submitted revision.
 - Deadline: 4 Nov 9 PM ET.
 - Submission status: NOT SUBMITTED — owner-only action, no
   receipt, no SUBMITTED claim anywhere.

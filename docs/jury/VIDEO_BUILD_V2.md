@@ -81,6 +81,6 @@ measured boundaries, then burned with libass `subtitles`.
 
 ## 6. What is NOT changed
 
-- The v0.2.0 tag (dd669c2) and its 78 s fallback cut
-  are untouched. This jury cut is post-tag material (lot branch 718b401)
-  and a HISTORICAL DRAFT — never the submission (see §0).
+- The v0.2.0 tag was retired (deleted 09-Nov-2026); its 78 s fallback cut
+  survives only as post-tag material (lot branch 718b401).
+  This jury cut is a HISTORICAL DRAFT — never the submission (see §0).

@@ -76,5 +76,6 @@
     "The actual physical write was refused; original state was preserved.",
     "Only one authorized physical USB phone was available."
   ],
-  "release_url": "https://github.com/toskaman/openbridge/releases/tag/v0.1.0-alpha.2"
+  "release_url": null,
+  "release_note": "alpha.2 release retired by owner 09-Nov-2026"
 }
