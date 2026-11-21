@@ -23,6 +23,14 @@ and lets an AI <b>create brand-new controls</b> between them, on demand.<br>
 Nothing runs without your approval. Every action is <b>checked on the real device</b> afterwards.
 </p>
 
+<p align="center">
+  <sub><b>HARDWARE PARTNER</b></sub>
+  <br><br>
+  <a href="https://www.engoeyewear.com"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/engo-white.png"><img src="docs/assets/partners/engo-black.png" height="34" alt="ENGO smart glasses"></picture></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.activelook.net"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/activelook-white.svg"><img src="docs/assets/partners/activelook-black.svg" height="40" alt="ActiveLook by Microoled"></picture></a>
+</p>
+
 ---
 
 ## 🎬 See it in action
@@ -139,6 +147,7 @@ Every home and every company is full of devices that **could** help each other b
 | 📱 **Android phones** (Xiaomi, Blackview) | Companion, pairing, Bluetooth relay, device actions | 🟢 Real hardware |
 | 🤖 **Robot vacuum** (Tuya) | Start · pause · dock from the TV or the PC, with state read-back | 🟢 Real hardware |
 | 🌐 **Freebox Delta** (ISP router) | Network inventory and device discovery, read-only by policy | 🟢 Real hardware |
+| 🕶️ **ENGO smart glasses** (ActiveLook) | Live status, alerts and confirmations on a heads-up display | 🟡 Integration in progress |
 | 💻 **Windows PCs** | Remote agent between PCs, consent-gated jobs | 🟢 Real hardware |
 | 🕰️ **Windows XP · Windows 7 · Linux** | Lightweight agent proven on genuine guest operating systems | 🔵 Virtual machines |
 | 🔧 **ESP32 · Pixel 6** | Native microcontroller agent · Android emulator | 🟣 Official emulators |
@@ -173,13 +182,32 @@ These capabilities are **implemented and covered by automated tests**. What they
 | **Device diagnostics** | Ask *“why isn't this working?”* and get an answer based only on observed facts. |
 | **Portable dashboards** | Export a set of controls, move it to another home and re-approve. No permissions are inherited. |
 
-**Next integrations on the roadmap:** Matter · Thread · Zigbee · Home Assistant · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
+**Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · Matter · Thread · Zigbee · Home Assistant · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
 ---
 
-## 🤝 Partner with OpenBridge
+## 🤝 Partners
 
-**I'm looking for companies that want their devices to be part of this.**
+### 🕶️ Our hardware partner
+
+<p align="center">
+  <a href="https://www.engoeyewear.com"><img src="docs/assets/readme/partner-engo.svg" width="100%" alt="Official hardware partner: ENGO smart glasses, powered by ActiveLook by Microoled"></a>
+</p>
+
+**[ENGO](https://www.engoeyewear.com)** designs heads-up display smart glasses in Grenoble, France, built on **[ActiveLook](https://www.activelook.net)**, Microoled's ultra-light micro-OLED display platform. ENGO is sending OpenBridge a pair of glasses, and together we're bringing OpenBridge into your field of view:
+
+- 👀 **Glanceable status:** see what your devices are doing without reaching for your phone.
+- 🔔 **Alerts that find you:** a refused action, a device going offline, a long job finished.
+- ✅ **Confirmations in sight:** “Done, verified” appears right where you're already looking.
+
+<p align="center">
+  <a href="https://www.engoeyewear.com"><img src="https://img.shields.io/badge/Discover_the_glasses-engoeyewear.com-111111?style=for-the-badge" alt="Discover ENGO glasses"></a>
+  <a href="docs/partners/ENGO.md"><img src="https://img.shields.io/badge/Integration_plan-ENGO_×_OpenBridge-e7f11f?style=for-the-badge&labelColor=1a1a1a" alt="Integration plan"></a>
+</p>
+
+### 🚀 Become the next partner
+
+**ENGO took the first step. Your devices could be next.**
 
 OpenBridge gets better with every new kind of hardware it meets. If you build or sell connected devices (smart-home products, robot vacuums, TVs and set-top boxes, wearables, routers and ISP boxes, IoT / maker boards, automotive or industrial equipment), let's work together.
 
@@ -200,7 +228,7 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
         <li>🎥 A <b>filmed demo</b> of your product working with others</li>
         <li>🧾 A <b>public, verified compatibility report</b></li>
         <li>🐞 Detailed <b>feedback on your API / SDK</b> from a real-world integrator</li>
-        <li>⭐ Your brand listed as a <b>hardware partner</b> on this page</li>
+        <li>⭐ Your brand featured as a <b>hardware partner</b> on this page, like ENGO</li>
       </ul>
     </td>
   </tr>
@@ -217,7 +245,9 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
 
 **OpenBridge** relie les appareils que vous possédez déjà (TV, montre, téléphone, box internet, robot aspirateur, PC) et laisse une IA **créer de nouvelles commandes entre eux**, à la demande : des boutons « aspirateur » sur la TV, une télécommande TV sur la montre… Rien ne s'exécute sans votre accord, et chaque action est **vérifiée sur l'appareil réel**. L'IA tourne **en local**, sur votre propre machine.
 
-**Vous fabriquez ou distribuez des appareils connectés ?** Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, une **démo filmée** de votre produit, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
+**ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
+
+**Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, une **démo filmée** de votre produit, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
 📩 **toskaman5962@gmail.com**
 </details>
