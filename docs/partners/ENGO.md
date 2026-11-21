@@ -8,7 +8,16 @@
 
 [ENGO](https://www.engoeyewear.com) designs heads-up display (HUD) smart glasses in Grenoble, France. They are built on [ActiveLook](https://www.activelook.net), Microoled's ultra-light, low-power micro-OLED display platform, driven over Bluetooth Low Energy.
 
-ENGO is OpenBridge's first official hardware partner and is sending a pair of glasses for integration and testing.
+ENGO is OpenBridge's first official hardware partner and is sending a pair of smart glasses for integration and testing (covering the ENGO 2 and newly launched ENGO 3 generation).
+
+## Supported Hardware Generations
+
+| Model | Weight | Optics & Display | Battery | Connectivity | Special Features |
+|---|---|---|---|---|---|
+| **ENGO 1** (2021) | ~42g | MicroOLED (Monochrome Yellow) | 10–12h | BLE 4.2 | Proximity gesture sensor |
+| **ENGO 2** (2022+) | 36g (Std) / 41g (Lrg) | MicroOLED (Monochrome Yellow, 10k nits) | 10–12h | BLE 5.0 | Magnetic pogo-pin dock, IP54 |
+| **ENGO 3** (Current) | **38.5g** (Std) / **41g** (Cyclist) | **MultiColor MicroOLED** (Green/Amber/Red zones) | **18–20h** | **Bluetooth 5.4** | Color zone alerts, IP55, engo Compagnon app |
+| **ENGO 3 Titanium** | **28.9g** (3D printed) | **MultiColor MicroOLED** | **24h+** | **Bluetooth 5.4** | Aerospace-grade 3D-printed titanium frame |
 
 ## Why a heads-up display
 
@@ -27,6 +36,9 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 2. **Status layouts.** A compact, glanceable view of the devices you care about.
 3. **Alerts and confirmations.** Refusals, offline devices and “Done, verified” receipts pushed to the display.
 4. **Display only, by design.** The glasses show information; they never trigger privileged actions on their own. Every action still goes through approval and read-back.
+
+👉 **Accéder au dossier technique dédié : [Dossier Spécialisé ENGO × OpenBridge (Hub R&D)](engo/README.md)**  
+*(Spécifications matérielles détaillées, manuel du protocole BLE, guide de l'émulateur, catalogue des 10+ features et architecture d'intégration)*
 
 ## Progress
 
