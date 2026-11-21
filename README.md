@@ -225,9 +225,11 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
       <h4>What you get</h4>
       <ul>
         <li>🔌 A <b>native OpenBridge integration</b> of your device</li>
-        <li>🎥 A <b>filmed demo</b> of your product working with others</li>
+        <li>🛠️ <b>Custom scripts</b> written specifically for your product</li>
+        <li>✨ <b>New features</b> that make your device work with everything around it</li>
+        <li>🧪 <b>Hundreds, even thousands, of tests and benchmarks</b>, run on the real hardware</li>
+        <li>🐞 Code improvements and detailed <b>feedback on your API / SDK</b> from a real-world integrator</li>
         <li>🧾 A <b>public, verified compatibility report</b></li>
-        <li>🐞 Detailed <b>feedback on your API / SDK</b> from a real-world integrator</li>
         <li>⭐ Your brand featured as a <b>hardware partner</b> on this page, like ENGO</li>
       </ul>
     </td>
@@ -247,7 +249,7 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
 
-**Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, une **démo filmée** de votre produit, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
+**Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
 📩 **toskaman5962@gmail.com**
 </details>
