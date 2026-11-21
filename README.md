@@ -1,164 +1,270 @@
-# OpenBridge
-### One AI. Many devices. New possibilities.
+<p align="center">
+  <img src="docs/assets/readme/hero.svg" alt="OpenBridge — One AI. Many devices. New possibilities." width="100%">
+</p>
 
-**Turn disconnected hardware into an intelligent, permission-aware system — powered by Meta AI.**
+<p align="center">
+  <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
+  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%20%E2%80%94%20Hardware%20partnership"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-Contact_me-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
+  <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
+</p>
 
-**Don't just connect your devices. Give them new capabilities.**
+<p align="center">
+  <a href="https://github.com/toskaman/openbridge/actions/workflows/verify.yml"><img src="https://github.com/toskaman/openbridge/actions/workflows/verify.yml/badge.svg" alt="Verify"></a>
+  <img src="https://img.shields.io/badge/platforms-Windows%20·%20Linux%20·%20macOS%20·%20Android%20·%20Android%20TV%20·%20Wear%20OS-0d1330" alt="Platforms">
+  <img src="https://img.shields.io/badge/AI-local--first-2dd4bf" alt="Local-first AI">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-a78bfa" alt="License"></a>
+</p>
 
-[![License: PolyForm Strict 1.0.0](https://img.shields.io/badge/License-PolyForm%20Strict%201.0.0-blue.svg)](LICENSE) [![Verify](https://github.com/toskaman/openbridge/actions/workflows/verify.yml/badge.svg)](https://github.com/toskaman/openbridge/actions/workflows/verify.yml)
+<h3 align="center">Say what you want. Your devices figure out how to do it together.</h3>
 
-Meta Global AI Developer Hackathon 2026 · Indie Developer · *Push the Frontier*
+<p align="center">
+OpenBridge connects the devices you already own — TV, smartwatch, phone, router, robot vacuum, PCs —<br>
+and lets an AI <b>create brand-new controls</b> between them, on demand.<br>
+Nothing runs without your approval. Every action is <b>checked on the real device</b> afterwards.
+</p>
 
-[Demo for judges](docs/jury/JURY_START_HERE.md) · [Showcase](docs/showcase/index.html) · [Quickstart](docs/QUICKSTART.md) · [Evidence](docs/RELEASE_EVIDENCE.md) · [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)
+---
 
-[![Official submission video — OpenBridge Jury (175 s, 1080p, narration: Meta MMS-TTS)](docs/jury/screens/jury_video_poster.jpg)](https://github.com/toskaman/openbridge/releases/download/v0.3.2/OpenBridge_Jury_v5_MetaMMS_175s.mp4)
+## 🎬 See it in action
 
-*Official submission video (175 s, 1080p; real screen and device footage, partly filmed by the owner; English narration by self-hosted Meta MMS-TTS) — click the image to play · [YouTube](https://youtu.be/TZaxCcRmrLQ) (portal submission link) · [mp4 file](https://github.com/toskaman/openbridge/releases/download/v0.3.2/OpenBridge_Jury_v5_MetaMMS_175s.mp4).*
+> Real devices. Real living room. No mock-ups. Every clip below was filmed with a phone pointed at the actual hardware.
 
-![Meta-generated T2 panel mid-run on the real TV, hold-press dispatched](docs/jury/screens/s5b_pressed.png)
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/assets/readme/demo-tv-vacuum.webp" width="260" alt="Saying 'start vacuum' to the TV starts the robot vacuum"><br>
+      <b>“Start the vacuum” — said to the TV</b><br>
+      <sub>The TV gets vacuum buttons it never had. Press one, the robot starts.</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/readme/demo-watch-creates-tv-controls.webp" width="260" alt="Asking the watch for TV volume buttons, then using them"><br>
+      <b>Your watch becomes a TV remote</b><br>
+      <sub>Ask the watch out loud. Volume buttons appear on it — and they drive the TV.</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/assets/readme/demo-return-to-dock.webp" width="260" alt="Pressing Dock on the TV sends the vacuum back to its base"><br>
+      <b>“Go home” — from the couch</b><br>
+      <sub>One press on the TV remote sends the robot back to its dock.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/assets/readme/demo-watch-remove-buttons.webp" width="260" alt="Asking the watch to remove its buttons"><br>
+      <b>Take it back, just as easily</b><br>
+      <sub>“Remove the buttons” — and the control is withdrawn everywhere.</sub>
+    </td>
+    <td align="center">
+      <img src="docs/assets/readme/demo-refused.webp" width="260" alt="OpenBridge refusing an action because the device state is stale"><br>
+      <b>It knows when to say no</b><br>
+      <sub>Device state not confirmed fresh? OpenBridge refuses — and says why.</sub>
+    </td>
+    <td align="center">
+      <img src="docs/assets/readme/demo-watch-companion.webp" width="260" alt="The OpenBridge companion on a Galaxy Watch7 exchanging live data"><br>
+      <b>Alive on every screen</b><br>
+      <sub>The same companion runs on phone, TV and Galaxy Watch7 — paired and live.</sub>
+    </td>
+  </tr>
+</table>
 
-*Meta AI generated this TV control panel on demand; OpenBridge validated it, installed it on the real Android TV, and dispatched the hold-press to the robot vacuum over the approved Tuya interface — then revoked it, with denial verified (31 Oct 2026). Press ADB-injected (labeled on the record); vacuum motion not observed. Full scope below.*
+<p align="center">
+  <a href="https://youtu.be/TZaxCcRmrLQ"><img src="docs/assets/readme/demo-poster.jpg" width="85%" alt="Watch the full OpenBridge demo"></a>
+</p>
 
-## What it is
+---
 
-Your devices were never designed to work together. OpenBridge fixes that: it discovers everything on your network, learns what each device can verifiably do, and lets Meta AI interpret those capabilities and compose **new authorized cross-device controls** — a TV panel that operates your robot vacuum, a watch button that quiets the living room.
+## 💡 The idea, in 30 seconds
 
-Meta models do the understanding. Deterministic safety gates do the enforcing: every AI proposal passes strict validation, owner approval, and independent read-back before anything happens. Every run ends with a receipt.
+Every home and every company is full of devices that **could** help each other but **never will** — because each brand lives in its own app, its own cloud, its own remote.
 
-The showcased hardware evidence is genuine: [37 verified evidence records](docs/DEVICE_EVIDENCE.json) (28 real hardware, 7 full-guest VMs, 2 official emulators — records, not 37 unique physical capabilities), with honest limits stated where runs fell short. Automated demonstrations that use fixtures or replayed receipts are labeled SIMULATED or REPLAY where they appear, and never counted as physical proof.
+**OpenBridge is the missing layer between them.** Think of it as a universal translator plus a careful assistant:
 
-## Why it's new
+- 🔎 It **finds** what's around you and learns what each device can *actually* do.
+- 🧠 You **ask in plain language** (English or French, typed or spoken) from any screen.
+- ✨ The AI **invents the control you need** — even one no manufacturer ever shipped, like vacuum buttons on a TV.
+- 🛡️ You **approve**, it acts, and then it **checks on the device itself** that it really worked.
 
-- **AI composes what was never built.** The TV vacuum panel below was generated on demand from verified capabilities — not picked from prebuilt integrations. Meta *creates* the control surface; deterministic gates decide what may run.
-- **Verified before used.** Every device link in the showcased runs is proven (read-back, screenshot, second observer) before any command flows through it. Simulated results are labeled SIMULATED and never counted as physical proof.
-- **Permission-aware by construction.** Owner consent per privileged act, fingerprint-bound previews, revocation that stops new admissions, and refusals shown in the timeline — not hidden.
+<p align="center">
+  <img src="docs/assets/readme/how-it-works.svg" alt="How it works: Discover, Understand, Create, Approve and verify" width="100%">
+</p>
 
-Design details: [architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md) · [verified capabilities](docs/jury/VERIFIED_CAPABILITIES.md) · [claim ↔ evidence matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md).
+---
 
-## What Meta AI does
+## 🚀 Why it's different
 
-Without Meta inference, OpenBridge would be static plumbing: discovery would still list devices, but nothing would understand a plain-language request, compose a new control panel, propose a multi-step plan, or explain a device in usable words. The intelligence is Meta's; the proof is deterministic.
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h4>✨ The AI creates, it doesn't just pick</h4>
+      Most smart-home apps only offer integrations someone pre-built. OpenBridge <b>composes new controls</b> from what your devices can verifiably do — and puts them on whichever screen you choose: TV, watch, phone or PC.
+    </td>
+    <td width="50%" valign="top">
+      <h4>✅ “Done” means done</h4>
+      Sending a command is not proof. After every action, OpenBridge <b>reads the device back</b> to confirm the change really happened. If it can't confirm, it says <i>unverified</i> — never a fake success.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🛡️ You stay in control</h4>
+      Nothing privileged runs without your OK. Every control can be <b>revoked instantly</b>, refusals are shown with a reason, and eligible actions can be <b>undone</b>. Commands between devices are signed, expiring and replay-protected.
+    </td>
+    <td valign="top">
+      <h4>🔒 Private by default</h4>
+      The AI runs <b>locally on your own machine</b>. Cloud AI is optional, only with your explicit consent, inside a hard budget. Your home doesn't have to leave your home.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🔌 Works with what you already own</h4>
+      No new hub to buy. A PC with no Bluetooth can still reach Bluetooth devices <b>through your phone or TV</b>. Even Windows XP and Windows 7 machines can join.
+    </td>
+    <td valign="top">
+      <h4>🧾 A receipt for everything</h4>
+      Every run ends with a receipt: what was asked, what was approved, what was done, what was verified. Crash in the middle? It <b>never blindly re-runs</b> an action — it tells you exactly where it stopped.
+    </td>
+  </tr>
+</table>
 
-- **Understanding requests:** tiered Meta-only routing (Llama → Glimmer → Spark only with consent) resolves English/French requests to registered skills. No fixed command grammar.
-- **Composing new controls:** Glimmer generated the real TV vacuum panel (4/4 buttons bound, OCR-verified render); Llama planned the quiet-mode pair (TV vol 22→21 + vacuum dock).
-- **Explanations:** coverage advisor 56/60 usable for Glimmer vs 0/60 for Llama 3B (60 synthetic cases).
-- **Planning:** narrow agent benchmark — rules 90.0%, Glimmer 86.7%, Llama 53.3%; all unsafe proposals refused by the gate.
-- **Honest failures kept:** registered ablation — no model beat the rules (0.833 / 0.833 / 0.722); Forge Llama 0.0%, Forge Glimmer resource-blocked (0/64, nulls not zero-filled); 1,000-turn rules baseline 1.4%, model tiers pending.
-- **Held-out model study (ModelStudy48):** rules intent 36.1% vs Llama 3B 22.2% — neither arm wins overall. Llama is the only arm that resolves novel intents, but it never refuses (6 consent-gated wrong-but-executable substitutions) and never clarifies; Glimmer blocked by host OOM. Full scorecard: [ModelStudy48](docs/benchmark/modelstudy48/RESULTS.md). S8 gate calibration-extension (24 new frozen cases × 2 repeats = 48 replies): unsafe 4→0, zero fully-correct proposals blocked ([results3](docs/benchmark/intenteffect/RESULTS3.md)); eval2 regression reproduces 2→0.
-- **Model references:** [third-party inventory](THIRD_PARTY.md) — Llama 3.2 license/attribution, Glimmer docs ([dev.meta.ai](https://dev.meta.ai/docs/muse-glimmer)) and upstream weights, pinned registry digests.
+---
 
-Every Meta call is receipted with model id, digest, tokens, and cost — favorable and unfavorable results both published. Local models are digest-pinned with no cloud fallback; hosted Spark answers only synthetic facts, only with explicit consent, inside a hard budget. The runtime is Meta-models-only, enforced by [src/ai/registry.py](src/ai/registry.py). Methodology and receipts: [benchmark status](docs/benchmark/STATUS.md) · [model usage](docs/MODEL_USAGE_AND_EVALUATION.md) · [TV Glimmer journey](docs/forge/TV_GLIMMER_JOURNEY.md).
+## 🧪 Proven on real hardware — not on slides
 
-## AI models vs. OS features (compliance, 4 Nov 2026 ruling)
+<p align="center">
+  <img src="docs/assets/readme/numbers.svg" alt="2,300+ automated tests · 37 verified device runs · 28 on real hardware · 6 platforms · 0 runtime dependencies" width="100%">
+</p>
 
-Every model OpenBridge calls at runtime is a Meta model. No non-Meta speech model (TTS or STT) is used anywhere — in the product or in the demo video.
-
-| Part | What it is | Meta model call? |
+| Device | What OpenBridge does with it | Proof level |
 |---|---|---|
-| Request understanding, panel composition, planning | Llama 3.2 3B (local), Glimmer (local), Spark (hosted, consent-gated) — enforced by [src/ai/registry.py](src/ai/registry.py) | **Yes — Meta** |
-| Watch/phone voice transcription | Meta MMS `facebook/mms-1b-all` locally ([src/ai/stt_local.py](src/ai/stt_local.py)), or Meta Muse Voice Transcribe 1.0 ([src/ai/voice_stt.py](src/ai/voice_stt.py)); the companion only records raw PCM | **Yes — Meta** |
-| Spoken replies on the Android companion | Android `TextToSpeech` (OS built-in) | No — OS feature |
-| Spoken replies in the web Command Center | Browser `speechSynthesis` (built-in) | No — browser feature |
-| Demo video voiceover | Meta MMS-TTS (`facebook/mms-tts-eng`), self-hosted, rendered offline | Meta model (self-hosted) |
-| Demo video subtitles, music, SFX | Authored subtitles, original score | No model |
+| 📺 **Android TV** | Companion installed, AI-made control panels, voice requests, volume control | 🟢 Real hardware |
+| ⌚ **Samsung Galaxy Watch7** | Voice requests, controls created & removed on the fly, drives the TV | 🟢 Real hardware |
+| 📱 **Android phones** (Xiaomi, Blackview) | Companion, pairing, Bluetooth relay, device actions | 🟢 Real hardware |
+| 🤖 **Robot vacuum** (Tuya) | Start · pause · dock from the TV or the PC, with state read-back | 🟢 Real hardware |
+| 🌐 **Freebox Delta** (ISP router) | Network inventory, device discovery — read-only by policy | 🟢 Real hardware |
+| 💻 **Windows PCs** | Remote agent between PCs, consent-gated jobs | 🟢 Real hardware |
+| 🕰️ **Windows XP · Windows 7 · Linux** | Lightweight agent proven on genuine guest operating systems | 🔵 Virtual machines |
+| 🔧 **ESP32 · Pixel 6** | Native microcontroller agent · Android emulator | 🟣 Official emulators |
 
-The video end card states the narration source.
+Every result is logged in a public [evidence registry](docs/DEVICE_EVIDENCE.json). Anything emulated or simulated is labelled as such — it's never counted as physical proof. Limits are written down too: [known limitations](docs/KNOWN_LIMITATIONS.md).
 
-## What works today
+<details>
+<summary><b>🖥️ More screenshots</b></summary>
+<br>
+<p align="center">
+  <img src="docs/assets/readme/tv-companion-quick-controls.png" width="90%" alt="The OpenBridge companion on the Android TV with AI-generated quick controls"><br>
+  <sub>The OpenBridge companion on a real Android TV, with quick controls created on demand.</sub>
+</p>
+<p align="center">
+  <img src="docs/assets/readme/device-fabric.png" width="90%" alt="Device Fabric: what OpenBridge discovered around the PC"><br>
+  <sub>Device Fabric: everything discovered around the PC — and exactly what each device is allowed to do (observe, read, or control with consent).</sub>
+</p>
+</details>
 
-| You can… | Status |
+---
+
+## 🔭 Already built, waiting for more hardware
+
+These capabilities are **implemented and covered by automated tests**. What they need now is more real devices to be validated on:
+
+| Capability | In one sentence |
 |---|---|
-| Ask in plain language (EN/FR) → preview → approve → receipt | Live; Bluetooth scans need a paired relay first |
-| Reach devices your PC can't see (BLE relays, Freebox inventory, 2nd PC, Tuya vacuum) | Live; proven TV-to-phone handover ([proof](docs/release/COMPLETE_HANDOVER.md)) |
-| Control from paired screens (phone, TV, Watch7 Companions) | Live on real hardware; ESP32 native under QEMU, physical run pending |
-| Revoke anything; refusals shown; eligible Undo with per-change verdicts | Live; physical acts labeled non-undoable *before* approval |
+| **Capability transplant** | Give a device a function it never had — then take it back cleanly. |
+| **Control migration** | Move a live control from your watch to your TV (and back) without losing permissions. |
+| **Workflow composer** | Chain up to 8 steps across devices — each step reported honestly, failures never hidden. |
+| **Adaptive routing** | If one path to a device dies, use another — without ever executing twice. |
+| **Device diagnostics** | Ask *“why isn't this working?”* and get an answer based only on observed facts. |
+| **Portable dashboards** | Export a set of controls, move it to another home, re-approve — no permissions inherited. |
 
-| Tested hardware | Result |
-|---|---|
-| Android phone, Android TV, Galaxy Watch7 Companions | REAL HARDWARE — installed, paired, controls rendered, commands dispatched |
-| Freebox Delta router, Tuya robot vacuum, 2nd Windows PC | REAL HARDWARE — reads + consented commands with read-back |
-| 7 Linux/legacy-Windows guests (QEMU) | FULL GUEST OS — agent protocol proven, labeled as VMs |
-| Pixel 6 AVD, ESP32 (native IDF agent) | OFFICIAL EMULATOR — proven, never counted as physical |
+**Next integrations on the roadmap:** Matter · Thread · Zigbee · Home Assistant · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
-[Hardware matrix](docs/HARDWARE_TEST_MATRIX.md) · [evidence registry](docs/DEVICE_EVIDENCE.json) (37 VERIFIED records, incl. the 28 Oct live-graph run: 24 devices, names redacted) · [known limitations](docs/KNOWN_LIMITATIONS.md)
+---
 
-## New capabilities (Frontier 90)
+## 🤝 Partner with OpenBridge
 
-Implemented, wired (CLI + HTTP API), and covered by unit/integration tests — hardware validation pending for each:
+**I'm looking for companies that want their devices to be part of this.**
 
-| Capability | What it does | Status |
-|---|---|---|
-| Capability transplantation | Give a device a control it never had: discover → propose → validate → consent → publish → verify → revoke | Software-tested |
-| Control migration | Move a live control between screens (watch ↔ TV) with permission snapshots and idempotent rollback | Software-tested |
-| Workflow composer | Bounded 1–8 step cross-device workflows with per-step outcomes; failures never reported as success | Software-tested |
-| Adaptive routing | Multi-route enumeration with loss simulation; at-most-once failover, never blind re-execution | Software-tested |
-| Device diagnostics | Grounded why-answers from observed facts only; prompt-injection quarantine | Software-tested |
-| Voice normalization | FR/EN intent normalization over a 55-case corpus incl. verbatim Watch7 transcripts; uncertain speech stays in clarification | Software-tested |
-| Structured AI results | Discriminated Proposal / Clarification / Refusal envelopes with anti-smuggling guards | Software-tested |
-| Portable dashboards | Sealed dashboard bundles: export → integrity-check → remap → fresh consent; no inherited grants | Software-tested |
+OpenBridge gets better with every new kind of hardware it meets. If you build or sell connected devices — smart-home products, robot vacuums, TVs and set-top boxes, wearables, routers and ISP boxes, IoT / maker boards, automotive or industrial equipment — let's work together.
 
-Details: [Frontier 90 report](docs/jury/FRONTIER90_REPORT_2026-11-01.md) · [composer guide](docs/COMPOSER.md).
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h4>What I'm asking for</h4>
+      <ul>
+        <li>📦 <b>Test hardware</b> (loan or sample units)</li>
+        <li>📚 Access to <b>APIs, SDKs or developer documentation</b></li>
+        <li>🧑‍💻 A technical contact for integration questions</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h4>What you get</h4>
+      <ul>
+        <li>🔌 A <b>native OpenBridge integration</b> of your device</li>
+        <li>🎥 A <b>filmed demo</b> of your product working with others</li>
+        <li>🧾 A <b>public, verified compatibility report</b></li>
+        <li>🐞 Detailed <b>feedback on your API / SDK</b> from a real-world integrator</li>
+        <li>⭐ Your brand listed as a <b>hardware partner</b> on this page</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-## The extraordinary example: a TV panel for the vacuum, composed by Meta AI
+<p align="center">
+  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%20%E2%80%94%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_toskaman5962@gmail.com-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
+</p>
+<p align="center"><sub>I reply in English and French. Commercial licensing and integration partnerships are available on request.</sub></p>
 
-**"Create a control panel on my TV so I can operate my robot vacuum."**
+<details>
+<summary><b>🇫🇷 En bref, en français</b></summary>
+<br>
 
-![OpenBridge tour: six real captures — Home Ask, refusal timeline, phone, TV, watch, Meta-built panel](docs/jury/screens/openbridge-tour.gif)
+**OpenBridge** relie les appareils que vous possédez déjà — TV, montre, téléphone, box internet, robot aspirateur, PC — et laisse une IA **créer de nouvelles commandes entre eux**, à la demande : des boutons « aspirateur » sur la TV, une télécommande TV sur la montre… Rien ne s'exécute sans votre accord, et chaque action est **vérifiée sur l'appareil réel**. L'IA tourne **en local**, sur votre propre machine.
 
-*Eleven seconds, six real captures. Rebuilt from committed stills (`python dev/rebuild_tour_gif.py`). Scripted replays elsewhere in the docs are labeled REPLAY/SIMULATED.*
+**Vous fabriquez ou distribuez des appareils connectés ?** Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, une **démo filmée** de votre produit, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
-![Ask OpenBridge on the new Home workspace](docs/ui/screens/after-home-1440.webp)
+📩 **toskaman5962@gmail.com**
+</details>
 
-*Ask in English or French → fingerprint-bound preview → approve → receipt. Local tiers verified live.*
+---
 
-Local Muse Glimmer proposes the panel. OpenBridge validates every control against authorized capabilities, installs it on the real Android TV, and dispatches the hold-press to the vacuum over the approved Tuya interface — then revokes it, with denial verified.
+## ⚡ Try it in 2 minutes
 
-![Meta-generated T2 panel on the real TV, hold-press dispatched](docs/jury/screens/s5b_pressed.png)
-
-*Meta-generated T2 panel mid-run on the real TV (31 Oct 2026): hold-press FIND dispatched, receipt tx-4a96f8f6, 15-poll oracle stable, revoke + deny verified after. Press ADB-injected (labeled on the record).*
-
-Honest limits, stated upfront: panel installation, button dispatch, receipts, and revocation are verified on real hardware ([S5 proof](docs/evidence/s5-tv-panel-31oct.md), [S5b proof](docs/evidence/s5b-safe-seek-31oct.md)); owner-performed manual presses START (tx-8abdd1eb) + DOCK (tx-63ee07451c4099ce) were VERIFIED 1 Nov with oracle standby→goto_charge ([S5c proof](docs/evidence/s5-tv-panel-01nov-manual.md)) — return-to-dock behavior is oracle-proven; 02-Nov footage adds filmed START/DOCK dispatch with on-screen "done, verified" and a filmed lease-stale refusal, while vacuum locomotion/docking itself is still not visibly filmed ([forensic record](docs/evidence/02nov-vacuum-forensics.md)). TV wake + Companion reveal verified 2 Nov (sleep effect owner-confirmed, receipt honestly UNVERIFIED — [proof](docs/evidence/tv-sleep-02nov.md)); this TV drops Wi-Fi ADB in sleep, so wake needs the remote. License: main is PolyForm Strict 1.0.0 (+ hackathon jury evaluation permission for judges). Official submission video: https://youtu.be/TZaxCcRmrLQ · [OpenBridge_Jury_v5_MetaMMS_175s.mp4](https://github.com/toskaman/openbridge/releases/download/v0.3.2/OpenBridge_Jury_v5_MetaMMS_175s.mp4) — real product footage, part of it filmed by the owner, edited into the final cut; narration by self-hosted Meta MMS-TTS. Earlier cuts are historical drafts ([build doc](docs/jury/VIDEO_BUILD_V5.md)); filmed parts follow the [storyboard](docs/jury/DEMO_STORYBOARD_FINAL.md).
-
-## Try it yourself
-
-Windows, Linux, or macOS · Python 3.14 (CI-pinned 3.14.4) · zero third-party runtime packages.
+Windows, Linux or macOS · Python 3.14 · **no third-party packages to install.**
 
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2378 controlled tests, no hardware needed
-python -m src.cli judge demo           # offline demo, verdict DEMO_COMPLETE
-python -m src.server                   # loopback server → http://127.0.0.1:18765
+python -m unittest discover -s tests   # 2,300+ tests, no hardware needed
+python -m src.cli judge demo           # offline demo, no devices required
+python -m src.server                   # open http://127.0.0.1:18765
 ```
 
-Local Meta models: `python -m dev.start_local_meta --pull-model` (Llama 3.2 3B) and `python -m dev.start_glimmer --pull-model` (Glimmer 30B, ~18 GB). Companions, headless/SSH use, and hardware needs: [QUICKSTART](docs/QUICKSTART.md) · [CLI reference](docs/CLI_REFERENCE.md).
+Want the local AI models, the Android / TV / watch companion, or headless use over SSH? → **[Quickstart](docs/QUICKSTART.md)** · [CLI reference](docs/CLI_REFERENCE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-## Security and limitations — honest by design
+---
 
-Owner consent per privileged act · typed skills, never free-form shell · strict validation before dispatch · idempotency keys + crash-safe journal (honest UNCERTAIN, never blind re-execution) · independent read-back oracles · signed, expiring, replay-protected relay commands · pairing attempt limits · revocation that stops new admissions.
+## 📚 Go deeper
 
-Caveats, not footnotes: BridgeWindows v4 frames are authenticated but plaintext (trusted LAN only; sealed v5 is design-only); pairing codes fall to offline brute force if a transcript is captured (USB enrollment recommended); BLE scans are foreground-only by design; Android emulator lab 5/5 green on main ([run 41325176026](https://github.com/toskaman/openbridge/actions/runs/41325176026), 1 Nov; first complete pass [run 41277954451](https://github.com/toskaman/openbridge/actions/runs/41277954451)).
+- 🏗️ **[Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)** — how discovery, AI, safety gates and verification fit together
+- 🧪 **[Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md)** — every device tested, and how
+- 🧾 **[Evidence registry](docs/DEVICE_EVIDENCE.json)** · [Release evidence](docs/RELEASE_EVIDENCE.md) — the raw proof behind every claim
+- 🔐 **[Relay security](docs/RELAY_SECURITY.md)** · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md) — pairing, signing, consent, rollback
+- ⚠️ **[Known limitations](docs/KNOWN_LIMITATIONS.md)** — what doesn't work yet, stated upfront
+- 📖 **[All documentation](docs/README.md)** — everything else
 
-![Refused press shown in the new Activity timeline](docs/jury/screens/activity-v2-refused-1440.png)
+---|---|
+| 🏗️ [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md) | How discovery, AI, safety gates and verification fit together |
+| 🧪 [Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md) | Every device tested, and how |
+| 🧾 [Evidence registry](docs/DEVICE_EVIDENCE.json) · [Release evidence](docs/RELEASE_EVIDENCE.md) | The raw proof behind every claim |
+| 🔐 [Relay security](docs/RELAY_SECURITY.md) · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md) | Pairing, signing, consent, rollback |
+| ⚠️ [Known limitations](docs/KNOWN_LIMITATIONS.md) | What doesn't work yet — stated upfront |
+| 📖 [All documentation](docs/README.md) | Everything else |
 
-*Every refused press lands in the Activity timeline with a server-composed reason — shown, not hidden. (Seeded-UI shot, 1 Nov 2026; payload is a real `process()` refusal: REVOKED, "This control is no longer authorized".)*
+---
 
-Full picture: [known limitations](docs/KNOWN_LIMITATIONS.md) · [relay security](docs/RELAY_SECURITY.md) · [claim matrix](docs/jury/CLAIM_EVIDENCE_MATRIX.md) (incl. "Never claimed").
+## 👋 About me
 
-## Evidence — don't take our word for it
+I'm an autistic independent developer, passionate about hardware, AI and interoperability since childhood. I love finding out how systems work — and making them work together. **OpenBridge is that curiosity, built into a product**, and built solo.
 
-2378 tests green locally (Windows) at `333d14d` + browser incl. WebKit (history: 2115 main-line-era, 2132 jury-final) · verify green on main ([run 41685044459](https://github.com/toskaman/openbridge/actions/runs/41685044459), freeze v0.3.0) · clean-room ([run 41685064110](https://github.com/toskaman/openbridge/actions/runs/41685064110)) + Android ([run 41685068611](https://github.com/toskaman/openbridge/actions/runs/41685068611)) green on freeze · [CI runs](https://github.com/toskaman/openbridge/actions) · [release evidence](docs/RELEASE_EVIDENCE.md) · [release status](docs/RELEASE_STATUS.md) · [full docs](docs/README.md). Anything unverified is labeled as such — simulated results are never counted as physical proof.
+If your devices should talk to each other, [let's talk](mailto:toskaman5962@gmail.com?subject=OpenBridge).
 
-## Built for the hackathon
+---
 
-**Push the Frontier:** Meta models inspect unfamiliar physical devices, identify verified interfaces, synthesize missing authorized capabilities, and coordinate heterogeneous hardware — beyond generic chatbots. **Build for Your World:** useful devices that couldn't cooperate now can, through safe operations across existing hardware.
-
-Built from the ground up during the event (start ref 2026-10-26T16:24:00Z; zero files predate it; an earlier private prototype was rewritten from scratch as Bridge Agent v4 — see [CONTRIBUTIONS](CONTRIBUTIONS.md)). Track: Indie Developer, solo. Scoring/bonus details marked T-P ONLY or OPEN in the [compliance checklist](docs/jury/COMPLIANCE_CHECKLIST.md) must be verified in the portal; no award is claimed. Per-award fit, each tied to its evidence: [bonus strategy](docs/jury/BONUS_STRATEGY.md).
-
-## About the developer
-
-I'm an autistic independent developer, passionate about hardware, AI, and interoperability since childhood. I like finding out how systems work — and making them work together. OpenBridge is that curiosity, built into a product.
-
-## License and contributions
-
-**Source-available — [PolyForm Strict 1.0.0](LICENSE)** for this revision of OpenBridge. The repository is public for review, and noncommercial research and testing are permitted; redistribution, modification, and derivative works are not licensed by PolyForm Strict. [Hackathon jury evaluation permission](HACKATHON_EVALUATION_PERMISSION.md) additionally covers the permitted judging workflow. Third-party materials and model weights retain their separate licenses and terms: [notices](THIRD_PARTY.md) · [licensing](docs/LICENSING.md). Build-time assistance is disclosed in [CONTRIBUTIONS](CONTRIBUTIONS.md); runtime inference is Meta-only. Earlier README versions: [history](docs/README_HISTORY.md).
+<sub>**License:** source-available under [PolyForm Strict 1.0.0](LICENSE) — free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. For commercial use or partnerships, [get in touch](mailto:toskaman5962@gmail.com?subject=OpenBridge%20%E2%80%94%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>

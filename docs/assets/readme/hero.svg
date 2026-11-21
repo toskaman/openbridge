@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" role="img" aria-label="OpenBridge — One AI. Many devices. New possibilities.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b1a"/>
+      <stop offset="0.55" stop-color="#0d1330"/>
+      <stop offset="1" stop-color="#1a0f33"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7cf3e1" stop-opacity="0.55"/>
+      <stop offset="0.45" stop-color="#8b5cf6" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="0.4" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.35" stop-color="#b9fff4"/>
+      <stop offset="0.75" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </radialGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.6" stop-color="#c7fff6"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0.6"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+    <style>
+      .dev{fill:#111a3d;stroke:#2dd4bf;stroke-opacity:.55;stroke-width:1.5}
+      .ico{fill:none;stroke:#c7fff6;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+      .lbl{font:600 13px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#9fb3d9;letter-spacing:.06em}
+      .link{fill:none;stroke:url(#line);stroke-width:1.6;stroke-dasharray:4 7;animation:flow 1.6s linear infinite}
+      .pkt{fill:#7cf3e1}
+      @keyframes flow{to{stroke-dashoffset:-22}}
+      .pulse{transform-origin:1010px 220px;animation:pulse 3.2s ease-in-out infinite}
+      @keyframes pulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.12);opacity:1}}
+      .ring{transform-origin:1010px 220px;animation:spin 18s linear infinite}
+      .ring2{transform-origin:1010px 220px;animation:spin 26s linear infinite reverse}
+      @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+  </defs>
+
+  <rect width="1280" height="440" fill="url(#bg)"/>
+  <rect width="1280" height="440" fill="url(#grid)"/>
+  <circle cx="1010" cy="220" r="230" fill="url(#glow)"/>
+
+  <!-- Left: wordmark -->
+  <g font-family="'Segoe UI',Inter,Helvetica,Arial,sans-serif">
+    <text x="72" y="118" font-size="15" font-weight="700" fill="#2dd4bf" letter-spacing="5">UNIVERSAL DEVICE INTELLIGENCE</text>
+    <text x="68" y="200" font-size="86" font-weight="800" fill="url(#title)" letter-spacing="-2">OpenBridge</text>
+    <text x="72" y="252" font-size="30" font-weight="600" fill="#e6ecff">One AI. Many devices.</text>
+    <text x="72" y="290" font-size="30" font-weight="600" fill="#a78bfa">New possibilities.</text>
+    <text x="72" y="346" font-size="17" fill="#9fb3d9">Your TV, watch, phone, router and robot vacuum were never built</text>
+    <text x="72" y="370" font-size="17" fill="#9fb3d9">to work together. OpenBridge makes them — safely, and verified.</text>
+  </g>
+
+  <!-- Right: device constellation -->
+  <g class="ring2"><circle cx="1010" cy="220" r="150" fill="none" stroke="#a78bfa" stroke-opacity=".12" stroke-dasharray="2 10"/></g>
+  <g class="ring"><circle cx="1010" cy="220" r="96" fill="none" stroke="#2dd4bf" stroke-opacity=".22" stroke-dasharray="30 14"/></g>
+
+  <!-- links -->
+  <path class="link" d="M1010 220 L860 110"/>
+  <path class="link" d="M1010 220 L1160 110"/>
+  <path class="link" d="M1010 220 L830 250"/>
+  <path class="link" d="M1010 220 L1190 250"/>
+  <path class="link" d="M1010 220 L920 370"/>
+  <path class="link" d="M1010 220 L1100 370"/>
+
+  <!-- travelling packets -->
+  <circle class="pkt" r="3.5"><animateMotion dur="2.4s" repeatCount="indefinite" path="M860 110 L1010 220"/></circle>
+  <circle class="pkt" r="3.5"><animateMotion dur="2.9s" repeatCount="indefinite" path="M1010 220 L1160 110"/></circle>
+  <circle class="pkt" r="3.5"><animateMotion dur="2.2s" repeatCount="indefinite" path="M1010 220 L830 250"/></circle>
+  <circle class="pkt" r="3.5"><animateMotion dur="3.1s" repeatCount="indefinite" path="M1190 250 L1010 220"/></circle>
+  <circle class="pkt" r="3.5"><animateMotion dur="2.6s" repeatCount="indefinite" path="M1010 220 L920 370"/></circle>
+  <circle class="pkt" r="3.5"><animateMotion dur="2.0s" repeatCount="indefinite" path="M1100 370 L1010 220"/></circle>
+
+  <!-- core orb -->
+  <g class="pulse">
+    <circle cx="1010" cy="220" r="46" fill="url(#orb)"/>
+    <g fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="1.4">
+      <ellipse cx="1010" cy="220" rx="40" ry="14"/>
+      <ellipse cx="1010" cy="220" rx="40" ry="14" transform="rotate(60 1010 220)"/>
+      <ellipse cx="1010" cy="220" rx="40" ry="14" transform="rotate(-60 1010 220)"/>
+    </g>
+  </g>
+
+  <!-- TV -->
+  <g transform="translate(860 110)">
+    <circle r="34" class="dev"/>
+    <rect x="-16" y="-11" width="32" height="20" rx="3" class="ico"/><path d="M-7 14h14" class="ico"/>
+    <text y="56" text-anchor="middle" class="lbl">TV</text>
+  </g>
+  <!-- Watch -->
+  <g transform="translate(1160 110)">
+    <circle r="34" class="dev"/>
+    <circle r="10" class="ico"/><path d="M-6 -10l2-8h8l2 8M-6 10l2 8h8l2-8" class="ico"/>
+    <text y="56" text-anchor="middle" class="lbl">WATCH</text>
+  </g>
+  <!-- Phone -->
+  <g transform="translate(830 250)">
+    <circle r="34" class="dev"/>
+    <rect x="-9" y="-15" width="18" height="30" rx="3.5" class="ico"/><path d="M-2 10h4" class="ico"/>
+    <text y="56" text-anchor="middle" class="lbl">PHONE</text>
+  </g>
+  <!-- Router -->
+  <g transform="translate(1190 250)">
+    <circle r="34" class="dev"/>
+    <rect x="-16" y="2" width="32" height="10" rx="3" class="ico"/><path d="M-8 2l-4-12M8 2l4-12M-6 -6a9 9 0 0 1 12 0" class="ico"/>
+    <text y="56" text-anchor="middle" class="lbl">ROUTER</text>
+  </g>
+  <!-- Vacuum -->
+  <g transform="translate(920 370)">
+    <circle r="34" class="dev"/>
+    <circle r="15" class="ico"/><circle r="4" class="ico"/><path d="M-11 -6h22" class="ico"/>
+    <text y="-44" text-anchor="middle" class="lbl">VACUUM</text>
+  </g>
+  <!-- PC -->
+  <g transform="translate(1100 370)">
+    <circle r="34" class="dev"/>
+    <rect x="-15" y="-12" width="30" height="19" rx="2.5" class="ico"/><path d="M-19 12h38" class="ico"/>
+    <text y="-44" text-anchor="middle" class="lbl">PC</text>
+  </g>
+</svg>

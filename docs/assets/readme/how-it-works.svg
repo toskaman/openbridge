@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 330" width="1280" height="330" role="img" aria-label="How OpenBridge works: Discover, Understand, Create, Verify">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0f24"/>
+      <stop offset="1" stop-color="#140d2b"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#151f47"/>
+      <stop offset="1" stop-color="#0f1634"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <style>
+      .t{font:700 22px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#ffffff}
+      .n{font:800 15px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#0a0f24}
+      .d{font:400 15px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#a9b8dc}
+      .ex{font:italic 500 14px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#7cf3e1}
+      .ico{fill:none;stroke:url(#acc);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+      .arrow{fill:none;stroke:#a78bfa;stroke-width:2;stroke-dasharray:5 6;animation:a 1.2s linear infinite}
+      @keyframes a{to{stroke-dashoffset:-22}}
+    </style>
+  </defs>
+  <rect width="1280" height="330" rx="18" fill="url(#bg)"/>
+
+  <!-- card 1 -->
+  <g transform="translate(30 30)">
+    <rect width="280" height="270" rx="16" fill="url(#card)" stroke="#2dd4bf" stroke-opacity=".25"/>
+    <circle cx="36" cy="38" r="15" fill="url(#acc)"/><text x="36" y="43" text-anchor="middle" class="n">1</text>
+    <g transform="translate(232 40)"><circle r="16" class="ico"/><circle r="6" class="ico"/><path d="M0 -26v6M0 20v6M-26 0h6M20 0h6" class="ico"/></g>
+    <text x="24" y="100" class="t">Discover</text>
+    <text x="24" y="132" class="d">Finds every device around you</text>
+    <text x="24" y="154" class="d">— Wi-Fi, Bluetooth, USB, your</text>
+    <text x="24" y="176" class="d">router, even other PCs.</text>
+    <text x="24" y="236" class="ex">“24 devices found on my LAN”</text>
+  </g>
+  <path class="arrow" d="M316 165 H344"/><path d="M340 159l8 6-8 6" fill="#a78bfa"/>
+
+  <!-- card 2 -->
+  <g transform="translate(350 30)">
+    <rect width="280" height="270" rx="16" fill="url(#card)" stroke="#2dd4bf" stroke-opacity=".25"/>
+    <circle cx="36" cy="38" r="15" fill="url(#acc)"/><text x="36" y="43" text-anchor="middle" class="n">2</text>
+    <g transform="translate(232 40)"><path d="M-14 8a14 14 0 1 1 28 0c0 6-5 8-5 14h-18c0-6-5-8-5-14z" class="ico"/><path d="M-6 26h12" class="ico"/></g>
+    <text x="24" y="100" class="t">Understand</text>
+    <text x="24" y="132" class="d">AI learns what each device</text>
+    <text x="24" y="154" class="d">can really do — and proves it</text>
+    <text x="24" y="176" class="d">before trusting it.</text>
+    <text x="24" y="236" class="ex">“Vacuum: start · pause · dock”</text>
+  </g>
+  <path class="arrow" d="M636 165 H664"/><path d="M660 159l8 6-8 6" fill="#a78bfa"/>
+
+  <!-- card 3 -->
+  <g transform="translate(670 30)">
+    <rect width="280" height="270" rx="16" fill="url(#card)" stroke="#a78bfa" stroke-opacity=".35"/>
+    <circle cx="36" cy="38" r="15" fill="url(#acc)"/><text x="36" y="43" text-anchor="middle" class="n">3</text>
+    <g transform="translate(232 40)"><path d="M0 -20l5 12 13 1-10 9 3 13L0 8l-11 7 3-13-10-9 13-1z" class="ico"/></g>
+    <text x="24" y="100" class="t">Create</text>
+    <text x="24" y="132" class="d">Ask in plain words. The AI</text>
+    <text x="24" y="154" class="d">builds a control that never</text>
+    <text x="24" y="176" class="d">existed, on the screen you pick.</text>
+    <text x="24" y="236" class="ex">“Put vacuum buttons on my TV”</text>
+  </g>
+  <path class="arrow" d="M956 165 H984"/><path d="M980 159l8 6-8 6" fill="#a78bfa"/>
+
+  <!-- card 4 -->
+  <g transform="translate(990 30)">
+    <rect width="260" height="270" rx="16" fill="url(#card)" stroke="#2dd4bf" stroke-opacity=".25"/>
+    <circle cx="36" cy="38" r="15" fill="url(#acc)"/><text x="36" y="43" text-anchor="middle" class="n">4</text>
+    <g transform="translate(212 40)"><path d="M0 -22l18 7v10c0 12-8 20-18 25-10-5-18-13-18-25v-10z" class="ico"/><path d="M-7 1l5 5 10-11" class="ico"/></g>
+    <text x="24" y="100" class="t">Approve &amp; verify</text>
+    <text x="24" y="132" class="d">You approve. OpenBridge acts,</text>
+    <text x="24" y="154" class="d">then checks the result really</text>
+    <text x="24" y="176" class="d">happened. Every run: a receipt.</text>
+    <text x="24" y="236" class="ex">“Done — verified ✓”</text>
+  </g>
+</svg>
