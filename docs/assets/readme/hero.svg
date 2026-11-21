@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" role="img" aria-label="OpenBridge — One AI. Many devices. New possibilities.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" role="img" aria-label="OpenBridge. One AI. Many devices. New possibilities.">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#070b1a"/>
@@ -54,7 +54,7 @@
     <text x="72" y="252" font-size="30" font-weight="600" fill="#e6ecff">One AI. Many devices.</text>
     <text x="72" y="290" font-size="30" font-weight="600" fill="#a78bfa">New possibilities.</text>
     <text x="72" y="346" font-size="17" fill="#9fb3d9">Your TV, watch, phone, router and robot vacuum were never built</text>
-    <text x="72" y="370" font-size="17" fill="#9fb3d9">to work together. OpenBridge makes them — safely, and verified.</text>
+    <text x="72" y="370" font-size="17" fill="#9fb3d9">to work together. OpenBridge makes them cooperate, safely.</text>
   </g>
 
   <!-- Right: device constellation -->

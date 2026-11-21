@@ -30,8 +30,8 @@
     <circle cx="36" cy="38" r="15" fill="url(#acc)"/><text x="36" y="43" text-anchor="middle" class="n">1</text>
     <g transform="translate(232 40)"><circle r="16" class="ico"/><circle r="6" class="ico"/><path d="M0 -26v6M0 20v6M-26 0h6M20 0h6" class="ico"/></g>
     <text x="24" y="100" class="t">Discover</text>
-    <text x="24" y="132" class="d">Finds every device around you</text>
-    <text x="24" y="154" class="d">— Wi-Fi, Bluetooth, USB, your</text>
+    <text x="24" y="132" class="d">Finds every device around you:</text>
+    <text x="24" y="154" class="d">Wi-Fi, Bluetooth, USB, your</text>
     <text x="24" y="176" class="d">router, even other PCs.</text>
     <text x="24" y="236" class="ex">“24 devices found on my LAN”</text>
   </g>
@@ -44,7 +44,7 @@
     <g transform="translate(232 40)"><path d="M-14 8a14 14 0 1 1 28 0c0 6-5 8-5 14h-18c0-6-5-8-5-14z" class="ico"/><path d="M-6 26h12" class="ico"/></g>
     <text x="24" y="100" class="t">Understand</text>
     <text x="24" y="132" class="d">AI learns what each device</text>
-    <text x="24" y="154" class="d">can really do — and proves it</text>
+    <text x="24" y="154" class="d">can really do, and proves it</text>
     <text x="24" y="176" class="d">before trusting it.</text>
     <text x="24" y="236" class="ex">“Vacuum: start · pause · dock”</text>
   </g>
@@ -72,6 +72,6 @@
     <text x="24" y="132" class="d">You approve. OpenBridge acts,</text>
     <text x="24" y="154" class="d">then checks the result really</text>
     <text x="24" y="176" class="d">happened. Every run: a receipt.</text>
-    <text x="24" y="236" class="ex">“Done — verified ✓”</text>
+    <text x="24" y="236" class="ex">“Done, verified ✓”</text>
   </g>
 </svg>

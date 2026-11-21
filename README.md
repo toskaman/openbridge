@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="docs/assets/readme/hero.svg" alt="OpenBridge — One AI. Many devices. New possibilities." width="100%">
+  <img src="docs/assets/readme/hero.svg" alt="OpenBridge. One AI. Many devices. New possibilities." width="100%">
 </p>
 
 <p align="center">
   <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
-  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%20%E2%80%94%20Hardware%20partnership"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-Contact_me-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
+  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-Contact_me-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
   <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
 </p>
 
@@ -18,7 +18,7 @@
 <h3 align="center">Say what you want. Your devices figure out how to do it together.</h3>
 
 <p align="center">
-OpenBridge connects the devices you already own — TV, smartwatch, phone, router, robot vacuum, PCs —<br>
+OpenBridge connects the devices you already own (TV, smartwatch, phone, router, robot vacuum, PCs)<br>
 and lets an AI <b>create brand-new controls</b> between them, on demand.<br>
 Nothing runs without your approval. Every action is <b>checked on the real device</b> afterwards.
 </p>
@@ -33,17 +33,17 @@ Nothing runs without your approval. Every action is <b>checked on the real devic
   <tr>
     <td align="center" width="33%">
       <img src="docs/assets/readme/demo-tv-vacuum.webp" width="260" alt="Saying 'start vacuum' to the TV starts the robot vacuum"><br>
-      <b>“Start the vacuum” — said to the TV</b><br>
+      <b>“Start the vacuum”, said to the TV</b><br>
       <sub>The TV gets vacuum buttons it never had. Press one, the robot starts.</sub>
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/readme/demo-watch-creates-tv-controls.webp" width="260" alt="Asking the watch for TV volume buttons, then using them"><br>
       <b>Your watch becomes a TV remote</b><br>
-      <sub>Ask the watch out loud. Volume buttons appear on it — and they drive the TV.</sub>
+      <sub>Ask the watch out loud. Volume buttons appear on it, and they drive the TV.</sub>
     </td>
     <td align="center" width="33%">
       <img src="docs/assets/readme/demo-return-to-dock.webp" width="260" alt="Pressing Dock on the TV sends the vacuum back to its base"><br>
-      <b>“Go home” — from the couch</b><br>
+      <b>“Go home”, from the couch</b><br>
       <sub>One press on the TV remote sends the robot back to its dock.</sub>
     </td>
   </tr>
@@ -51,17 +51,17 @@ Nothing runs without your approval. Every action is <b>checked on the real devic
     <td align="center">
       <img src="docs/assets/readme/demo-watch-remove-buttons.webp" width="260" alt="Asking the watch to remove its buttons"><br>
       <b>Take it back, just as easily</b><br>
-      <sub>“Remove the buttons” — and the control is withdrawn everywhere.</sub>
+      <sub>“Remove the buttons”, and the control is withdrawn everywhere.</sub>
     </td>
     <td align="center">
       <img src="docs/assets/readme/demo-refused.webp" width="260" alt="OpenBridge refusing an action because the device state is stale"><br>
       <b>It knows when to say no</b><br>
-      <sub>Device state not confirmed fresh? OpenBridge refuses — and says why.</sub>
+      <sub>Device state not confirmed fresh? OpenBridge refuses and says why.</sub>
     </td>
     <td align="center">
       <img src="docs/assets/readme/demo-watch-companion.webp" width="260" alt="The OpenBridge companion on a Galaxy Watch7 exchanging live data"><br>
       <b>Alive on every screen</b><br>
-      <sub>The same companion runs on phone, TV and Galaxy Watch7 — paired and live.</sub>
+      <sub>The same companion runs on phone, TV and Galaxy Watch7, paired and live.</sub>
     </td>
   </tr>
 </table>
@@ -74,13 +74,13 @@ Nothing runs without your approval. Every action is <b>checked on the real devic
 
 ## 💡 The idea, in 30 seconds
 
-Every home and every company is full of devices that **could** help each other but **never will** — because each brand lives in its own app, its own cloud, its own remote.
+Every home and every company is full of devices that **could** help each other but **never will**, because each brand lives in its own app, its own cloud, its own remote.
 
 **OpenBridge is the missing layer between them.** Think of it as a universal translator plus a careful assistant:
 
 - 🔎 It **finds** what's around you and learns what each device can *actually* do.
 - 🧠 You **ask in plain language** (English or French, typed or spoken) from any screen.
-- ✨ The AI **invents the control you need** — even one no manufacturer ever shipped, like vacuum buttons on a TV.
+- ✨ The AI **invents the control you need**, even one no manufacturer ever shipped, like vacuum buttons on a TV.
 - 🛡️ You **approve**, it acts, and then it **checks on the device itself** that it really worked.
 
 <p align="center">
@@ -95,11 +95,11 @@ Every home and every company is full of devices that **could** help each other b
   <tr>
     <td width="50%" valign="top">
       <h4>✨ The AI creates, it doesn't just pick</h4>
-      Most smart-home apps only offer integrations someone pre-built. OpenBridge <b>composes new controls</b> from what your devices can verifiably do — and puts them on whichever screen you choose: TV, watch, phone or PC.
+      Most smart-home apps only offer integrations someone pre-built. OpenBridge <b>composes new controls</b> from what your devices can verifiably do, and puts them on whichever screen you choose: TV, watch, phone or PC.
     </td>
     <td width="50%" valign="top">
       <h4>✅ “Done” means done</h4>
-      Sending a command is not proof. After every action, OpenBridge <b>reads the device back</b> to confirm the change really happened. If it can't confirm, it says <i>unverified</i> — never a fake success.
+      Sending a command is not proof. After every action, OpenBridge <b>reads the device back</b> to confirm the change really happened. If it can't confirm, it says <i>unverified</i>. Never a fake success.
     </td>
   </tr>
   <tr>
@@ -119,14 +119,14 @@ Every home and every company is full of devices that **could** help each other b
     </td>
     <td valign="top">
       <h4>🧾 A receipt for everything</h4>
-      Every run ends with a receipt: what was asked, what was approved, what was done, what was verified. Crash in the middle? It <b>never blindly re-runs</b> an action — it tells you exactly where it stopped.
+      Every run ends with a receipt: what was asked, what was approved, what was done, what was verified. Crash in the middle? It <b>never blindly re-runs</b> an action. It tells you exactly where it stopped.
     </td>
   </tr>
 </table>
 
 ---
 
-## 🧪 Proven on real hardware — not on slides
+## 🧪 Proven on real hardware, not on slides
 
 <p align="center">
   <img src="docs/assets/readme/numbers.svg" alt="2,300+ automated tests · 37 verified device runs · 28 on real hardware · 6 platforms · 0 runtime dependencies" width="100%">
@@ -138,12 +138,12 @@ Every home and every company is full of devices that **could** help each other b
 | ⌚ **Samsung Galaxy Watch7** | Voice requests, controls created & removed on the fly, drives the TV | 🟢 Real hardware |
 | 📱 **Android phones** (Xiaomi, Blackview) | Companion, pairing, Bluetooth relay, device actions | 🟢 Real hardware |
 | 🤖 **Robot vacuum** (Tuya) | Start · pause · dock from the TV or the PC, with state read-back | 🟢 Real hardware |
-| 🌐 **Freebox Delta** (ISP router) | Network inventory, device discovery — read-only by policy | 🟢 Real hardware |
+| 🌐 **Freebox Delta** (ISP router) | Network inventory and device discovery, read-only by policy | 🟢 Real hardware |
 | 💻 **Windows PCs** | Remote agent between PCs, consent-gated jobs | 🟢 Real hardware |
 | 🕰️ **Windows XP · Windows 7 · Linux** | Lightweight agent proven on genuine guest operating systems | 🔵 Virtual machines |
 | 🔧 **ESP32 · Pixel 6** | Native microcontroller agent · Android emulator | 🟣 Official emulators |
 
-Every result is logged in a public [evidence registry](docs/DEVICE_EVIDENCE.json). Anything emulated or simulated is labelled as such — it's never counted as physical proof. Limits are written down too: [known limitations](docs/KNOWN_LIMITATIONS.md).
+Every result is logged in a public [evidence registry](docs/DEVICE_EVIDENCE.json). Anything emulated or simulated is labelled as such and never counted as physical proof. Limits are written down too: [known limitations](docs/KNOWN_LIMITATIONS.md).
 
 <details>
 <summary><b>🖥️ More screenshots</b></summary>
@@ -154,7 +154,7 @@ Every result is logged in a public [evidence registry](docs/DEVICE_EVIDENCE.json
 </p>
 <p align="center">
   <img src="docs/assets/readme/device-fabric.png" width="90%" alt="Device Fabric: what OpenBridge discovered around the PC"><br>
-  <sub>Device Fabric: everything discovered around the PC — and exactly what each device is allowed to do (observe, read, or control with consent).</sub>
+  <sub>Device Fabric: everything discovered around the PC, and exactly what each device is allowed to do (observe, read, or control with consent).</sub>
 </p>
 </details>
 
@@ -166,12 +166,12 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 | Capability | In one sentence |
 |---|---|
-| **Capability transplant** | Give a device a function it never had — then take it back cleanly. |
+| **Capability transplant** | Give a device a function it never had, then take it back cleanly. |
 | **Control migration** | Move a live control from your watch to your TV (and back) without losing permissions. |
-| **Workflow composer** | Chain up to 8 steps across devices — each step reported honestly, failures never hidden. |
-| **Adaptive routing** | If one path to a device dies, use another — without ever executing twice. |
+| **Workflow composer** | Chain up to 8 steps across devices. Each step is reported honestly, failures are never hidden. |
+| **Adaptive routing** | If one path to a device dies, use another, without ever executing twice. |
 | **Device diagnostics** | Ask *“why isn't this working?”* and get an answer based only on observed facts. |
-| **Portable dashboards** | Export a set of controls, move it to another home, re-approve — no permissions inherited. |
+| **Portable dashboards** | Export a set of controls, move it to another home and re-approve. No permissions are inherited. |
 
 **Next integrations on the roadmap:** Matter · Thread · Zigbee · Home Assistant · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
@@ -181,7 +181,7 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 **I'm looking for companies that want their devices to be part of this.**
 
-OpenBridge gets better with every new kind of hardware it meets. If you build or sell connected devices — smart-home products, robot vacuums, TVs and set-top boxes, wearables, routers and ISP boxes, IoT / maker boards, automotive or industrial equipment — let's work together.
+OpenBridge gets better with every new kind of hardware it meets. If you build or sell connected devices (smart-home products, robot vacuums, TVs and set-top boxes, wearables, routers and ISP boxes, IoT / maker boards, automotive or industrial equipment), let's work together.
 
 <table>
   <tr>
@@ -207,7 +207,7 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
 </table>
 
 <p align="center">
-  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%20%E2%80%94%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_toskaman5962@gmail.com-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
+  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_toskaman5962@gmail.com-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
 </p>
 <p align="center"><sub>I reply in English and French. Commercial licensing and integration partnerships are available on request.</sub></p>
 
@@ -215,7 +215,7 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
 <summary><b>🇫🇷 En bref, en français</b></summary>
 <br>
 
-**OpenBridge** relie les appareils que vous possédez déjà — TV, montre, téléphone, box internet, robot aspirateur, PC — et laisse une IA **créer de nouvelles commandes entre eux**, à la demande : des boutons « aspirateur » sur la TV, une télécommande TV sur la montre… Rien ne s'exécute sans votre accord, et chaque action est **vérifiée sur l'appareil réel**. L'IA tourne **en local**, sur votre propre machine.
+**OpenBridge** relie les appareils que vous possédez déjà (TV, montre, téléphone, box internet, robot aspirateur, PC) et laisse une IA **créer de nouvelles commandes entre eux**, à la demande : des boutons « aspirateur » sur la TV, une télécommande TV sur la montre… Rien ne s'exécute sans votre accord, et chaque action est **vérifiée sur l'appareil réel**. L'IA tourne **en local**, sur votre propre machine.
 
 **Vous fabriquez ou distribuez des appareils connectés ?** Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, une **démo filmée** de votre produit, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
@@ -242,29 +242,21 @@ Want the local AI models, the Android / TV / watch companion, or headless use ov
 
 ## 📚 Go deeper
 
-- 🏗️ **[Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)** — how discovery, AI, safety gates and verification fit together
-- 🧪 **[Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md)** — every device tested, and how
-- 🧾 **[Evidence registry](docs/DEVICE_EVIDENCE.json)** · [Release evidence](docs/RELEASE_EVIDENCE.md) — the raw proof behind every claim
-- 🔐 **[Relay security](docs/RELAY_SECURITY.md)** · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md) — pairing, signing, consent, rollback
-- ⚠️ **[Known limitations](docs/KNOWN_LIMITATIONS.md)** — what doesn't work yet, stated upfront
-- 📖 **[All documentation](docs/README.md)** — everything else
-
----|---|
-| 🏗️ [Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md) | How discovery, AI, safety gates and verification fit together |
-| 🧪 [Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md) | Every device tested, and how |
-| 🧾 [Evidence registry](docs/DEVICE_EVIDENCE.json) · [Release evidence](docs/RELEASE_EVIDENCE.md) | The raw proof behind every claim |
-| 🔐 [Relay security](docs/RELAY_SECURITY.md) · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md) | Pairing, signing, consent, rollback |
-| ⚠️ [Known limitations](docs/KNOWN_LIMITATIONS.md) | What doesn't work yet — stated upfront |
-| 📖 [All documentation](docs/README.md) | Everything else |
+- 🏗️ **[Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)**<br><sub>How discovery, AI, safety gates and verification fit together</sub>
+- 🧪 **[Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md)**<br><sub>Every device tested, and how</sub>
+- 🧾 **[Evidence registry](docs/DEVICE_EVIDENCE.json)** · [Release evidence](docs/RELEASE_EVIDENCE.md)<br><sub>The raw proof behind every claim</sub>
+- 🔐 **[Relay security](docs/RELAY_SECURITY.md)** · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md)<br><sub>Pairing, signing, consent, rollback</sub>
+- ⚠️ **[Known limitations](docs/KNOWN_LIMITATIONS.md)**<br><sub>What doesn't work yet, stated upfront</sub>
+- 📖 **[All documentation](docs/README.md)**<br><sub>Everything else</sub>
 
 ---
 
 ## 👋 About me
 
-I'm an autistic independent developer, passionate about hardware, AI and interoperability since childhood. I love finding out how systems work — and making them work together. **OpenBridge is that curiosity, built into a product**, and built solo.
+I'm an autistic independent developer, passionate about hardware, AI and interoperability since childhood. I love finding out how systems work, and making them work together. **OpenBridge is that curiosity, built into a product**, and built solo.
 
 If your devices should talk to each other, [let's talk](mailto:toskaman5962@gmail.com?subject=OpenBridge).
 
 ---
 
-<sub>**License:** source-available under [PolyForm Strict 1.0.0](LICENSE) — free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. For commercial use or partnerships, [get in touch](mailto:toskaman5962@gmail.com?subject=OpenBridge%20%E2%80%94%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>
+<sub>**License:** source-available under [PolyForm Strict 1.0.0](LICENSE): free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. For commercial use or partnerships, [get in touch](mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>
