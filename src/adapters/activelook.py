@@ -74,6 +74,11 @@ def cmd_color(color_id: int) -> bytes:
     return encode_packet(0x3D, bytes([color_id & 0xFF]))
 
 
+def cmd_grey(level: int) -> bytes:
+    """Set active greyscale level (0-15). Level 0 = black / off."""
+    return encode_packet(0x30, bytes([max(0, min(15, level))]))
+
+
 def cmd_text(x: int, y: int, text: str, font: int = 0, color_or_grey: int = 15, rot: int = 0) -> bytes:
     """Draw text at coordinate (x, y)."""
     clean_text = text.encode("utf-8")[:250] + b"\x00"
@@ -694,7 +699,11 @@ class ActiveLookAdapter:
         Displays real-time rolling 2-line subtitles from home audio intercom directly in visual field.
         """
         cmds = bytearray()
-        # Wipe only subtitle box at bottom of screen (y: 170 to 255)
+        # Wipe only subtitle box at bottom of screen to black (y: 165 to 255)
+        if self.is_color:
+            cmds += cmd_color(0)
+        else:
+            cmds += cmd_grey(0)
         cmds += cmd_rectf(0, 165, 303, 255)
 
         border_col = COLOR_RED if is_urgent else COLOR_CYAN

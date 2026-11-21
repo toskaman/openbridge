@@ -257,13 +257,77 @@ The complete 38-scenario benchmark was executed with `run_headless_benchmark("EN
 
 ---
 
-## 8. Summary & GitHub Deployment Architecture
+## 8. OpenBridge Telemetry Event Bus Schema (All 38 Features)
+
+Every single feature can be dispatched programmatically via the `OpenBridgeTelemetryFabric` using standard structured dictionaries:
+
+```python
+from src.adapters.engo_ai_bridge import EngoAIBridge, OpenBridgeTelemetryFabric
+
+# Example: Ingesting an external collision sentry radar event from phone rear camera
+bridge.dispatch_telemetry_event(
+    event_type="collision_sentry",
+    data={"hazard_side": "left", "speed_kmh": 54, "dist_m": 14.5, "ttc_s": 1.1},
+    priority=OpenBridgeTelemetryFabric.PRIO_ACTION_CONFIRMATION
+)
+
+# Example: Critical safety flashover alert preemption from firefighter IoT telemetry
+bridge.dispatch_telemetry_event(
+    event_type="firefighter_mayday",
+    data={"unit_id": "RESCUE-42", "cylinder_bar": 190, "ambient_temp_c": 125, "pass_alarm": True},
+    priority=OpenBridgeTelemetryFabric.PRIO_CRITICAL_SAFETY
+)
+```
+
+### Complete Telemetry Event Directory:
+1. `spatial_radar` — `{"devices": [{"name": str, "bearing_deg": float, "dist_m": float, "state": str}]}`
+2. `eyes_on_target` — `{"target_name": str, "action": str, "oracle_verified": bool, "digest": str}`
+3. `two_phase_countdown` — `{"routine_name": str, "seconds_remaining": int, "max_seconds": int}`
+4. `peripheral_telemetry` — `{"grid_watts": int, "wan_mbps": int, "ping_ms": int, "alert": Optional[str]}`
+5. `workflow_prompter` — `{"step_idx": int, "total_steps": int, "title": str, "instruction": str, "timer_s": int}`
+6. `doorbell_subtitles` — `{"speaker": str, "text": str, "is_urgent": bool}`
+7. `compass_wayfinder` — `{"heading_deg": int, "target_bearing_deg": int, "target_dist_m": float, "target_name": str}`
+8. `security_shield` — `{"threat_type": str, "source_ip": str, "mac_vendor": str, "target_service": str}`
+9. `bio_pacer` — `{"target_spm": int, "current_spm": int, "hr_bpm": int, "hr_zone": int, "advice": str}`
+10. `media_remote` — `{"media_title": str, "artist_or_source": str, "volume_pct": int, "progress_s": int, "total_s": int}`
+11. `silent_morse` — `{"buffer_str": str, "current_morse": str, "suggestion": str}`
+12. `speech_teleprompter` — `{"current_line": str, "next_line": str, "wpm": int, "is_rushing": bool, "elapsed_s": int, "total_s": int}`
+13. `spatial_energy_heatmap` — `{"current_room": str, "room_watts": int, "total_watts": int, "vampire_devices": list}`
+14. `arcade_runner` — `{"player_y": int, "obstacle_x": int, "score": int, "game_over": bool}`
+15. `collision_sentry` — `{"hazard_side": str, "speed_kmh": float, "dist_m": float, "ttc_s": float}`
+16. `executive_briefing` — `{"contact_name": str, "role_title": str, "bullet_points": list, "sentiment_hint": str}`
+17. `biofeedback_stress` — `{"stress_score": int, "hrv_ms": int, "breath_phase": str, "phase_timer_s": int}`
+18. `diy_ar_stud_level` — `{"pitch_deg": float, "roll_deg": float, "is_level": bool, "detected_hazard": Optional[str]}`
+19. `first_responder_cpr` — `{"mode": str, "bpm": int, "compression_count": int, "ccf_pct": int, "cycle_s": int}`
+20. `directional_subtitles` — `{"speaker_name": str, "direction": str, "text_line1": str, "text_line2": str}`
+21. `uav_avionics` — `{"pitch_deg": float, "roll_deg": float, "speed_kmh": float, "alt_agl_m": float, "home_dist_m": float}`
+22. `stealth_rf_sentry` — `{"threat_type": str, "target_id": str, "rssi_dbm": int, "dist_m": float}`
+23. `thermal_arc_flash` — `{"t_max_c": float, "t_ambient_c": float, "delta_t_c": float, "afb_dist_m": float}`
+24. `allergen_nutrition` — `{"product_name": str, "detected_allergens": list, "nutri_score": str}`
+25. `tactical_marine` — `{"awa_deg": float, "aws_knots": float, "sog_knots": float, "cog_deg": int}`
+26. `multilingual_interpreter` — `{"speaker_origin": str, "translated_text": str, "etiquette_tip": str}`
+27. `driver_vigilance` — `{"perclos_pct": float, "microsleep_detected": bool, "nearest_rest_km": float}`
+28. `warehouse_pick` — `{"order_id": str, "sku_code": str, "quantity": int, "aisle_bay_str": str, "shelf_bin_str": str}`
+29. `avalanche_sar` — `{"phase": str, "distance_m": float, "victims_count": int}`
+30. `circadian_chrono` — `{"current_lux": int, "dose_lux_min": int, "caffeine_active_mg": int}`
+31. `firefighter_mayday` — `{"unit_id": str, "cylinder_bar": int, "ambient_temp_c": int, "pass_alarm": bool}`
+32. `ballistic_drop` — `{"range_m": float, "elevation_mrad": float, "windage_mrad": float}`
+33. `surgical_vitals` — `{"patient_id": str, "spo2_pct": int, "hr_bpm": int, "implant_torque_ncm": float}`
+34. `low_vision_echonav` — `{"head_obstacle_dist_m": float, "head_obstacle_type": str, "curb_drop_dist_m": float}`
+35. `neural_voice_assistant` — `{"state_str": str, "partial_transcript": str, "mic_source": str, "vu_level_pct": int}`
+36. `multimodal_vision_hud` — `{"target_label": str, "confidence_pct": int, "bounding_box": tuple, "diagnostic_summary": str}`
+37. `ambient_iot_matrix` — `{"linky_watts": int, "tempo_tomorrow": str, "rain_min": int, "transit_line": str}`
+38. `neural_translation_stream` — `{"speaker_id": str, "source_lang": str, "target_lang": str, "translated_text": str, "azimuth_dir": str}`
+
+---
+
+## 9. Summary & GitHub Deployment Architecture
 
 All 38 features are production-ready, fully backward-compatible, verified with unit and emulator tests, and packaged into the core OpenBridge repository:
-- `src/adapters/activelook.py` — ActiveLook OS 4.2 binary encoder & HUD layout generator.
-- `src/adapters/activelook_emulator.py` — Live Tkinter HUD Canvas & Bumble BLE GATT emulator.
-- `src/adapters/engo_ai_bridge.py` — Neural sensory proxy, audio streaming, VAD, Whisper STT, and telemetry fabric.
+- `src/adapters/activelook.py` — ActiveLook OS 4.2 binary encoder & HUD layout generator (with `cmd_grey` and true-black subtitle box wipe).
+- `src/adapters/activelook_emulator.py` — Live Tkinter HUD Canvas & Bumble BLE GATT emulator (with interactive audio feed, cycle pages, and ambient matrix toolbar buttons).
+- `src/adapters/engo_ai_bridge.py` — Neural sensory proxy, multi-format audio decoding (8/16/24/32-bit), adaptive VAD, streaming STT handover, 10-domain vision proxy, and full 38-feature telemetry fabric.
 - `tests/unit/test_engo_killer_features.py` — Core 34 killer feature verification suite.
 - `tests/unit/test_engo_ai_bridge.py` — AI bridge legacy verification suite.
-- `tests/unit/test_engo_openbridge_neural_integration.py` — New neural expansion verification suite.
+- `tests/unit/test_engo_openbridge_neural_integration.py` — Neural expansion verification suite (18 deep tests passing).
 - `docs/partners/engo/` — Complete technical documentation suite (Documents 01 through 18).

@@ -15,6 +15,9 @@ import unittest
 
 from src.adapters.activelook import (
     ActiveLookAdapter,
+    cmd_clear,
+    cmd_color,
+    cmd_grey,
     COLOR_GREEN,
     COLOR_AMBER,
     COLOR_RED,
@@ -29,7 +32,8 @@ from src.adapters.engo_ai_bridge import (
     AudioChunk,
     StreamingSTTRunner,
     MultimodalVisionProxy,
-    OpenBridgeTelemetryFabric
+    OpenBridgeTelemetryFabric,
+    wrap_text_for_hud
 )
 
 
@@ -46,7 +50,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
             stt_fn=lambda b: "Eteindre le salon et verifier la Freebox"
         )
 
-    # ── 1. Audio Streaming & VAD Tests ────────────────────────────────────────
+    # ── 1. Audio Streaming, Multi-format Decoding & VAD Tests ─────────────────
 
     def test_audio_streaming_vad_and_vu_meter(self):
         proxy = AudioStreamingProxy(sample_rate=16000, vad_threshold_db=-35.0)
@@ -69,11 +73,51 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         vu_speech = proxy.db_to_vu_percent(chunk_speech.db_level)
         self.assertGreater(vu_speech, 50)
 
+    def test_audio_decoding_multi_formats_and_stereo(self):
+        proxy = AudioStreamingProxy(sample_rate=16000)
+
+        # 1. 8-bit unsigned PCM
+        raw_8bit = bytes([128, 200, 50, 128])
+        samples_8bit = proxy.decode_pcm_samples(raw_8bit, bit_depth=8)
+        self.assertEqual(len(samples_8bit), 4)
+        self.assertEqual(samples_8bit[0], 0)
+        self.assertGreater(samples_8bit[1], 0)
+        self.assertLess(samples_8bit[2], 0)
+
+        # 2. 16-bit stereo downmixing
+        stereo_pairs = [1000, 2000, 3000, 4000]
+        raw_stereo = struct.pack("<4h", *stereo_pairs)
+        samples_mono = proxy.decode_pcm_samples(raw_stereo, bit_depth=16, channels=2)
+        self.assertEqual(len(samples_mono), 2)
+        self.assertEqual(samples_mono[0], 1500)
+        self.assertEqual(samples_mono[1], 3500)
+
+        # 3. 24-bit PCM
+        val = 1000000
+        val_bytes = val.to_bytes(3, byteorder="little", signed=True)
+        samples_24bit = proxy.decode_pcm_samples(val_bytes, bit_depth=24)
+        self.assertEqual(len(samples_24bit), 1)
+        self.assertEqual(samples_24bit[0], val >> 8)
+
+        # 4. 32-bit float PCM
+        flt_vals = [0.0, 0.5, -0.5]
+        raw_flt = struct.pack("<3f", *flt_vals)
+        samples_flt = proxy.decode_pcm_samples(raw_flt, bit_depth=32)
+        self.assertEqual(len(samples_flt), 3)
+        self.assertEqual(samples_flt[0], 0)
+        self.assertAlmostEqual(samples_flt[1], int(0.5 * 32767), delta=2)
+
     # ── 2. Streaming STT Runner Partial Hypothesis Tests ──────────────────────
 
-    def test_streaming_stt_partial_token_emission(self):
+    def test_streaming_stt_silence_initial_and_partial_tokens(self):
         runner = StreamingSTTRunner()
         runner.arm_session(target_sentence="Allumer la Freebox du salon")
+
+        # Crucial fix verification: Silent chunk before speech MUST NOT emit first word!
+        chunk_silent = AudioChunk(raw_bytes=b"dummy", rms_energy=10, db_level=-55.0, duration_ms=100, is_speech=False)
+        t_silent, done_silent = runner.process_stream_chunk(chunk_silent)
+        self.assertEqual(t_silent, "")
+        self.assertFalse(done_silent)
 
         chunk_speech = AudioChunk(raw_bytes=b"dummy", rms_energy=2500, db_level=-22.0, duration_ms=100, is_speech=True)
 
@@ -248,6 +292,122 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         self.assertEqual(color_frames[0].data, bytes([COLOR_RED]))
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"CRITICAL" in f.data for f in text_frames))
+
+    def test_text_wrapping_for_hud_long_unbroken_words(self):
+        # Extremely long unbroken technical identifiers must not crash, produce empty lines, or exceed 28 chars
+        long_text = "DECLENCHEMENT_DIFFERENTIEL_DISJONCTEUR_PRINCIPAL_230V_TRIP verifie par OpenBridge."
+        lines = wrap_text_for_hud(long_text, max_chars=28, max_lines=4)
+        self.assertGreater(len(lines), 0)
+        self.assertLessEqual(len(lines), 4)
+        for line in lines:
+            self.assertLessEqual(len(line), 28)
+            self.assertTrue(len(line) > 0, "Line must not be empty string")
+
+    def test_doorbell_subtitles_wipe_black_rectf(self):
+        self.sent_bytes.clear()
+        ok = self.adapter.push_live_subtitles(
+            speaker="Livreur",
+            text="Colis depose devant la porte",
+            is_urgent=False
+        )
+        self.assertTrue(ok)
+        frames = parse_frames(bytes(self.sent_bytes))
+        # Verify color 0 (black) or grey 0 was explicitly set before cmd_rectf
+        color_frames = [f for f in frames if f.cmd == 0x3D or f.cmd == 0x30]
+        self.assertTrue(any(f.data == bytes([0]) for f in color_frames), "Must set black (0) before wiping box")
+        self.assertTrue(any(f.cmd == 0x34 for f in frames))  # rectf
+
+    def test_multimodal_vision_heuristics_all_domains(self):
+        proxy = MultimodalVisionProxy()
+        # QR / Oracle receipt
+        d1 = proxy.analyze_frame(b"img", prompt="Scan ce qr code receipt")
+        self.assertIn("ORACLE RECEIPT", d1.target_label)
+
+        # Vehicle collision threat
+        d2 = proxy.analyze_frame(b"img", prompt="Attention danger vehicule gauche")
+        self.assertIn("VEHICULE", d2.target_label)
+
+        # Driver vigilance
+        d3 = proxy.analyze_frame(b"img", prompt="Surveillance somnolence yeux conducteur")
+        self.assertIn("VIGILANCE", d3.target_label)
+
+        # Warehouse SKU
+        d4 = proxy.analyze_frame(b"img", prompt="Verification colis sku entrepot")
+        self.assertIn("COLIS", d4.target_label)
+
+        # DIY Stud live-wire
+        d5 = proxy.analyze_frame(b"img", prompt="Detecte fil tension dans le mur")
+        self.assertIn("DETECTEUR", d5.target_label)
+
+        # Echonav obstacle
+        d6 = proxy.analyze_frame(b"img", prompt="Scan obstacle hauteur tete trottoir")
+        self.assertIn("OBSTACLE", d6.target_label)
+
+    def test_stop_listening_and_execute_streamed_transcript_handoff(self):
+        self.bridge.handle_glasses_interaction("wave")
+        self.assertEqual(self.bridge.current_mode, "LISTENING")
+        self.bridge.stt_runner.arm_session("Allumer la Freebox du salon")
+
+        # Ingest speech chunk to advance tokens
+        chunk_speech = AudioChunk(raw_bytes=b"dummy", rms_energy=2500, db_level=-22.0, duration_ms=100, is_speech=True)
+        self.bridge.stt_runner.process_stream_chunk(chunk_speech)
+        self.bridge.stt_runner.process_stream_chunk(chunk_speech)
+
+        # Stop listening and verify the recognized transcript was handed to AI
+        res = self.bridge.stop_listening_and_execute()
+        self.assertEqual(res["status"], "AI_ANSWERED")
+        self.assertEqual(res["query"], "Allumer la")
+        self.assertIn("Allumer la", res["answer"])
+
+    def test_telemetry_event_dispatch_all_38_features(self):
+        events_to_test = [
+            ("spatial_radar", {"devices": [{"name": "GATE", "bearing_deg": 30, "dist_m": 5.0, "state": "ok"}]}),
+            ("eyes_on_target", {"target_name": "Salon", "action": "Lock", "oracle_verified": True}),
+            ("two_phase_countdown", {"routine_name": "Sleep", "seconds_remaining": 3}),
+            ("peripheral_telemetry", {"grid_watts": 1500, "wan_mbps": 900, "ping_ms": 7}),
+            ("workflow_prompter", {"step_idx": 2, "total_steps": 4, "title": "Cabler", "instruction": "Clipsez"}),
+            ("doorbell_subtitles", {"speaker": "Postier", "text": "Bonjour"}),
+            ("compass_wayfinder", {"heading_deg": 90, "target_bearing_deg": 100, "target_dist_m": 50.0}),
+            ("security_shield", {"threat_type": "SYN", "source_ip": "192.168.1.50"}),
+            ("bio_pacer", {"target_spm": 175, "current_spm": 170, "hr_bpm": 150}),
+            ("media_remote", {"media_title": "Interstellar", "volume_pct": 50}),
+            ("silent_morse", {"buffer_str": "OUI", "current_morse": ".-"}),
+            ("speech_teleprompter", {"current_line": "Bonjour", "wpm": 120}),
+            ("spatial_energy_heatmap", {"current_room": "Bureau", "room_watts": 450}),
+            ("arcade_runner", {"player_y": 150, "obstacle_x": 100, "score": 20}),
+            ("collision_sentry", {"hazard_side": "right", "speed_kmh": 45, "dist_m": 12.0}),
+            ("executive_briefing", {"contact_name": "Alice", "role_title": "CTO", "bullet_points": ["Review"]}),
+            ("biofeedback_stress", {"stress_score": 40, "hrv_ms": 55}),
+            ("diy_ar_stud_level", {"pitch_deg": 0.0, "roll_deg": 0.0, "is_level": True}),
+            ("first_responder_cpr", {"mode": "cpr", "bpm": 110, "compression_count": 30}),
+            ("directional_subtitles", {"speaker_name": "Bob", "direction": "left", "text_line1": "Salut"}),
+            ("uav_avionics", {"pitch_deg": 2.0, "roll_deg": 0.0, "speed_kmh": 25.0}),
+            ("stealth_rf_sentry", {"threat_type": "airtag", "target_id": "Tag-1", "dist_m": 2.0}),
+            ("thermal_arc_flash", {"t_max_c": 60.0, "t_ambient_c": 20.0, "delta_t_c": 40.0}),
+            ("allergen_nutrition", {"product_name": "Biscuit", "detected_allergens": ["Gluten"]}),
+            ("tactical_marine", {"awa_deg": 40.0, "aws_knots": 15.0, "sog_knots": 8.0}),
+            ("multilingual_interpreter", {"speaker_origin": "Hans", "translated_text": "Guten Tag"}),
+            ("driver_vigilance", {"perclos_pct": 8.0, "microsleep_detected": False}),
+            ("warehouse_pick", {"order_id": "ORD-1", "sku_code": "SKU-99", "quantity": 5}),
+            ("avalanche_sar", {"phase": "COARSE", "distance_m": 15.0}),
+            ("circadian_chrono", {"current_lux": 2500, "dose_lux_min": 150000}),
+            ("firefighter_mayday", {"unit_id": "F-01", "cylinder_bar": 210}),
+            ("ballistic_drop", {"range_m": 600.0, "elevation_mrad": 4.1}),
+            ("surgical_vitals", {"patient_id": "P-9", "spo2_pct": 98, "hr_bpm": 68}),
+            ("low_vision_echonav", {"head_obstacle_dist_m": 2.5, "head_obstacle_type": "BRANCH"}),
+            ("neural_voice_assistant", {"state_str": "ACTIF", "partial_transcript": "Test assistant"}),
+            ("multimodal_vision_hud", {"target_label": "OBJET", "confidence_pct": 95}),
+            ("ambient_iot_matrix", {"linky_watts": 2100, "rain_min": 10}),
+            ("neural_translation_stream", {"speaker_id": "JOHN", "translated_text": "Hello"})
+        ]
+
+        self.assertEqual(len(events_to_test), 38, "Must test all 38 features in telemetry fabric")
+
+        for event_type, payload in events_to_test:
+            self.sent_bytes.clear()
+            ok = self.bridge.dispatch_telemetry_event(event_type=event_type, data=payload, priority=4)
+            self.assertTrue(ok, f"Event {event_type} failed to dispatch")
+            self.assertGreater(len(self.sent_bytes), 0, f"Event {event_type} produced 0 bytes on display")
 
     # ── 7. Advanced Gesture State Machine Tests ───────────────────────────────
 

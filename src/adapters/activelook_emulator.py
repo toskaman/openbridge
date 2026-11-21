@@ -876,10 +876,31 @@ class HUDCanvas:
         def demo_api_transit():
             ai_bridge.push_api_glance("transit_live", {"line": "M14", "destination": "Orly", "eta_minutes": 3})
 
+        def demo_audio_feed():
+            import struct
+            speech_samples = [int(18000 * ((i % 16) / 8.0 - 1.0)) for i in range(320)]
+            speech_pcm = struct.pack(f"<{len(speech_samples)}h", *speech_samples)
+            if ai_bridge.current_mode != "LISTENING":
+                ai_bridge.handle_glasses_interaction("wave")
+            ai_bridge.feed_audio_chunk(speech_pcm)
+
+        def demo_cycle_pages():
+            ai_bridge.handle_glasses_interaction("double_wave")
+
+        def demo_ambient_matrix():
+            ai_bridge.push_ambient_matrix()
+
+        def demo_emergency_mayday():
+            ai_bridge.handle_glasses_interaction("wave_hold")
+
         ai_demos = [
             ("🎙️ Voice AI", demo_ai_voice),
+            ("🔊 Audio Chunk", demo_audio_feed),
             ("👁️ Phone Vision", demo_ai_vision),
             ("🌐 Subtitles", demo_ai_translation),
+            ("🎛️ Ambient 4-Q", demo_ambient_matrix),
+            ("🔄 Cycle Page", demo_cycle_pages),
+            ("🚨 Mayday Beacon", demo_emergency_mayday),
             ("🌧️ Weather", demo_api_weather),
             ("⚡ RTE Tempo", demo_api_rte),
             ("🚇 Transit", demo_api_transit),
@@ -1511,6 +1532,7 @@ def run_headless_benchmark(model: str = "ENGO 3", include_neural: bool = False) 
     active_scenarios = scenarios + (neural_scenarios if include_neural else [])
 
     for name, fn in active_scenarios:
+        hud._cmd_clear()
         before_len = len(sent_bytes)
         before_cmds = hud._cmd_count
         fn()
