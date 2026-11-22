@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>OpenBridge partner brief</title>
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url(fonts/BricolageGrotesque.woff2) format("woff2");font-weight:200 800;font-stretch:75% 100%}
+@font-face{font-family:"Instrument Sans";src:url(fonts/InstrumentSans.woff2) format("woff2");font-weight:400 700;font-stretch:75% 100%}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{width:210mm;height:297mm;font:400 9pt/1.38 "Instrument Sans",sans-serif;color:#1b2340;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:flex;flex-direction:column}
+h1,h2,h3{font-family:"Bricolage Grotesque",sans-serif;margin:0;letter-spacing:-.02em}
+p{margin:0}
+.top{background:radial-gradient(260px 180px at 86% 40%,rgba(124,243,225,.22),transparent 70%),radial-gradient(260px 180px at 96% 75%,rgba(139,92,246,.28),transparent 72%),linear-gradient(135deg,#070b1a,#0d1330 60%,#1a0f33);color:#e8eefc;padding:10mm 15mm 8mm;position:relative}
+.brand{display:flex;align-items:center;gap:8px;font:700 15pt "Bricolage Grotesque";letter-spacing:-.02em}
+.orb{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#b9fff4 35%,#2dd4bf 75%,#7c3aed)}
+.kind{position:absolute;right:15mm;top:11mm;font-size:9.5pt;color:#9fb3d9}
+.top h1{font-size:25pt;font-weight:800;font-stretch:88%;line-height:1;margin-top:6mm;max-width:125mm;letter-spacing:-.03em}
+.top .sub{font-size:10pt;color:#b8c6e6;margin-top:3mm;max-width:140mm}
+.main{flex:none;padding-bottom:6mm;display:grid;grid-template-columns:1fr 1fr;gap:9mm;padding:7mm 15mm 0}
+h2{font-size:12pt;color:#0d1330;margin:0 0 1.8mm}
+.blk+.blk{margin-top:4.6mm}
+.muted{color:#4a5680}
+.figs{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:3mm;margin-top:2mm}
+.figs b{display:block;font:800 15pt "Bricolage Grotesque";color:#0f766e;letter-spacing:-.03em;line-height:1.05}
+.figs span{font-size:8pt;color:#4a5680;line-height:1.25;display:block}
+ul{margin:0;padding:0;list-style:none}
+.dev li{display:flex;justify-content:space-between;gap:4mm;padding:1mm 0;border-bottom:.3mm solid #e3e8f4}
+.dev li span:last-child{white-space:nowrap;font-size:8.4pt}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.g{background:#10b981}.y{background:#eab308}.b{background:#3b82f6}
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:1.5mm}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:7mm 1fr;align-items:start}
+ol.steps li::before{content:counter(s);width:5.2mm;height:5.2mm;border-radius:50%;background:#0d1330;color:#7cf3e1;font:700 8pt "Bricolage Grotesque";display:grid;place-items:center;margin-top:.3mm}
+.gains li{padding:1.2mm 0;border-bottom:.3mm solid #e3e8f4}
+.gains b{color:#0d1330}
+.case{background:#f2f6fd;border-radius:3mm;padding:3.6mm 4.5mm}
+.case .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:2mm;margin-top:2.5mm}
+.case .nums b{display:block;font:800 15pt "Bricolage Grotesque";color:#6d28d9;line-height:1.05}
+.case .nums span{font-size:7.8pt;color:#4a5680;line-height:1.25;display:block}
+.case .st{font-size:8pt;color:#4a5680;margin-top:2.5mm}
+.foot{margin-top:auto;background:#0d1330;color:#e8eefc;padding:6mm 15mm;display:grid;grid-template-columns:1.2fr 1fr;gap:8mm;align-items:center}
+.foot h3{font-size:15pt;font-weight:700}
+.foot .mail{font:700 15pt "Bricolage Grotesque";color:#7cf3e1;margin-top:1mm}
+.foot .links{font-size:8.6pt;color:#b8c6e6;line-height:1.6}
+.foot .links b{color:#fff;font-weight:600}
+</style></head>
+<body>
+<header class="top">
+  <div class="brand"><span class="orb"></span>OpenBridge</div>
+  <div class="kind">Partner brief, November 2026</div>
+  <h1>Give your hardware powers it never shipped with.</h1>
+  <p class="sub">OpenBridge connects the devices people already own and lets an AI build brand-new controls across them, on demand. Every action is approved by the owner and checked on the real device afterwards.</p>
+</header>
+
+<div class="main">
+  <div>
+    <div class="blk">
+      <h2>What OpenBridge is</h2>
+      <p class="muted">A local-first layer that discovers the devices in a home or a company, learns what each one can really do, and composes new controls between them: vacuum buttons on a TV, a TV remote on a watch, alerts in smart glasses. The AI runs on the owner's machine. Nothing runs without approval, and “done” is only reported after the device is read back.</p>
+    </div>
+    <div class="blk">
+      <h2>Proven on real hardware</h2>
+      <div class="figs">
+        <div><b>2,400+</b><span>automated tests</span></div>
+        <div><b>28</b><span>runs on real hardware</span></div>
+        <div><b>6</b><span>platforms, one codebase</span></div>
+        <div><b>0</b><span>runtime dependencies</span></div>
+      </div>
+      <ul class="dev" style="margin-top:2.5mm">
+        <li><span>Android TV, Galaxy Watch7, Android phones</span><span><i class="dot g"></i>Real hardware</span></li>
+        <li><span>Robot vacuum (Tuya), Freebox router, Windows PCs</span><span><i class="dot g"></i>Real hardware</span></li>
+        <li><span>ENGO smart glasses (ActiveLook)</span><span><i class="dot y"></i>Emulator</span></li>
+        <li><span>Windows XP / 7, Linux, ESP32</span><span><i class="dot b"></i>VMs, emulators</span></li>
+      </ul>
+    </div>
+    <div class="blk">
+      <h2>How a partnership works</h2>
+      <ol class="steps">
+        <li><span><b>You send a device to keep</b> and its API or SDK documentation.</span></li>
+        <li><span><b>We build the adapter and an emulator</b> of your product, so work starts at once.</span></li>
+        <li><span><b>Tests and benchmarks run on the real unit</b>, on every release, in CI on three operating systems.</span></li>
+        <li><span><b>You get a verified compatibility report</b> and your brand featured as a hardware partner.</span></li>
+      </ol>
+    </div>
+    <div class="blk">
+      <h2>What we ask</h2>
+      <p class="muted"><b style="color:#0d1330">Hardware to keep:</b> donated units or a permanent loan, never a time-limited one, so tests keep running for the life of the integration. Plus API / SDK access and a technical contact.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="blk">
+      <h2>What your company gains</h2>
+      <ul class="gains">
+        <li><b>New features, without new firmware.</b> Controls, alerts, voice and cross-device flows on top of what your device already exposes.</li>
+        <li><b>Interoperability</b> with TVs, watches, phones, routers, robots and PCs from other brands.</li>
+        <li><b>Complete test suites and benchmarks</b> written for your product and run on the real hardware.</li>
+        <li><b>Wider compatibility:</b> USB, Wi-Fi, BLE or relay, on 6 platforms, even legacy Windows.</li>
+        <li><b>An emulator of your device</b> for your developers, QA and sales demos.</li>
+        <li><b>Expert API / SDK feedback</b> and a <b>public, verified compatibility report.</b></li>
+      </ul>
+    </div>
+    <div class="blk case">
+      <h2>Case study: ENGO smart glasses</h2>
+      <p class="muted">Delivered before the glasses even arrived:</p>
+      <div class="nums">
+        <div><b>38</b><span>HUD features</span></div>
+        <div><b>82</b><span>dedicated tests</span></div>
+        <div><b>19</b><span>technical docs</span></div>
+        <div><b>1</b><span>pro emulator</span></div>
+      </div>
+      <p class="st">The official ActiveLook app drives the emulator over the real protocol. Validated in the emulator; hardware tests start when the pair arrives.</p>
+    </div>
+    <div class="blk">
+      <h2>What stays yours</h2>
+      <p class="muted"><b style="color:#0d1330">Your code and your data.</b> Partners get a commercial licence for their integration. OpenBridge claims no rights over your firmware, SDKs, documents or test data, and we gladly work under your NDA: confidential material never reaches the public repository.</p>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  <div>
+    <h3>Let's give your devices new powers.</h3>
+    <div class="mail"><a href="mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Hardware%20partnership" style="color:inherit;text-decoration:none">info@lepcpro.fr</a></div>
+  </div>
+  <div class="links">
+    <b>Website</b> <a href="https://toskaman.github.io/openbridge/" style="color:inherit;text-decoration:none">toskaman.github.io/openbridge</a><br>
+    <b>Code</b> <a href="https://github.com/toskaman/openbridge" style="color:inherit;text-decoration:none">github.com/toskaman/openbridge</a><br>
+    <b>Demo</b> <a href="https://youtu.be/TZaxCcRmrLQ" style="color:inherit;text-decoration:none">youtu.be/TZaxCcRmrLQ</a><br>
+    Replies in English and French.
+  </div>
+</footer>
+</body></html>

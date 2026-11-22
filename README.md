@@ -6,6 +6,7 @@
   <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-What_you_gain-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
   <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
+  <a href="https://toskaman.github.io/openbridge/"><img src="https://img.shields.io/badge/🌐_Website-openbridge-0d1330?style=for-the-badge" alt="Project website"></a>
 </p>
 
 <p align="center">
@@ -242,9 +243,13 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 
 **What I ask in return:** 📦 **hardware to keep** (donated units or a permanent loan, never a time-limited one, so tests and benchmarks keep running on every release), API / SDK documentation, and a technical contact.
 
+🔐 **Your code and data stay yours.** Partners get a commercial licence for their integration, and I gladly work under your NDA: confidential material never reaches this repository. [Licensing](docs/LICENSING.md#commercial--partner-licensing) · [Security](SECURITY.md) · [Privacy](docs/PRIVACY.md)
+
 <p align="center">
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/📘_Partner_program-What_you_gain-1f2a52?style=for-the-badge" alt="Partner program"></a>
-  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_toskaman5962@gmail.com-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
+  <a href="mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_info@lepcpro.fr-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
+  <a href="site/OpenBridge-Partner-Brief.pdf"><img src="https://img.shields.io/badge/📄_Partner_brief-PDF,_1_page-1f2a52?style=for-the-badge" alt="Partner brief (PDF)"></a>
+  <a href="https://github.com/toskaman/openbridge/discussions/categories/partner-requests"><img src="https://img.shields.io/badge/💬_Partner_requests-Discussions-1f2a52?style=for-the-badge" alt="Partner requests on Discussions"></a>
 </p>
 <p align="center"><sub>I reply in English and French. Commercial licensing and integration partnerships are available on request.</sub></p>
 
@@ -267,7 +272,9 @@ TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enferm�
 
 **Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel à conserver** (don ou prêt permanent, jamais de prêt limité dans le temps, pour que les tests et benchmarks tournent à chaque version) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
-📩 **toskaman5962@gmail.com**
+🔐 **Votre code et vos données restent à vous** : les partenaires reçoivent une licence commerciale pour leur intégration, et je travaille volontiers sous NDA. [Plaquette partenaire (PDF, en anglais)](site/OpenBridge-Partner-Brief.pdf) · [Site du projet](https://toskaman.github.io/openbridge/)
+
+📩 **info@lepcpro.fr**
 </details>
 
 ---
@@ -295,6 +302,8 @@ Want the local AI models, the Android / TV / watch companion, or headless use ov
 - 🧾 **[Evidence registry](docs/DEVICE_EVIDENCE.json)** · [Release evidence](docs/RELEASE_EVIDENCE.md)<br><sub>The raw proof behind every claim</sub>
 - 🔐 **[Relay security](docs/RELAY_SECURITY.md)** · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md)<br><sub>Pairing, signing, consent, rollback</sub>
 - ⚠️ **[Known limitations](docs/KNOWN_LIMITATIONS.md)**<br><sub>What doesn't work yet, stated upfront</sub>
+- 🗺️ **[Roadmap](ROADMAP.md)** · [What's new](CHANGELOG.md)<br><sub>Where OpenBridge is going, and what shipped when</sub>
+- 🔐 **[Security policy](SECURITY.md)** · [Privacy note](docs/PRIVACY.md) · [Commercial & partner licensing](docs/LICENSING.md#commercial--partner-licensing)<br><sub>How to report a vulnerability, what data leaves your machine (nothing by default), how companies can use OpenBridge</sub>
 - 📖 **[All documentation](docs/README.md)**<br><sub>Everything else</sub>
 
 ---
@@ -303,8 +312,8 @@ Want the local AI models, the Android / TV / watch companion, or headless use ov
 
 I'm an autistic independent developer, passionate about hardware, AI and interoperability since childhood. I love finding out how systems work, and making them work together. **OpenBridge is that curiosity, built into a product**, and built solo.
 
-If your devices should talk to each other, [let's talk](mailto:toskaman5962@gmail.com?subject=OpenBridge).
+If your devices should talk to each other, [let's talk](mailto:info@lepcpro.fr?subject=OpenBridge).
 
 ---
 
-<sub>**License:** source-available under [PolyForm Strict 1.0.0](LICENSE): free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. For commercial use or partnerships, [get in touch](mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>
+<sub>**License:** source-available under [PolyForm Strict 1.0.0](LICENSE): free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. **Companies:** partners get a commercial licence for their integration, and their code and data stay theirs ([commercial & partner licensing](docs/LICENSING.md#commercial--partner-licensing)). For any commercial use, [get in touch](mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>

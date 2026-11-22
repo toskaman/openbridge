@@ -1,0 +1,70 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>@font-face{font-family:"Bricolage Grotesque";src:url(fonts/BricolageGrotesque.woff2) format("woff2");font-weight:200 800;font-stretch:75% 100%;font-display:swap}
+@font-face{font-family:"Instrument Sans";src:url(fonts/InstrumentSans.woff2) format("woff2");font-weight:400 700;font-stretch:75% 100%;font-display:swap}
+
+body{margin:0;width:1280px;height:640px;overflow:hidden;background:#070b1a;font-family:"Instrument Sans";color:#e8eefc}
+.bg{position:absolute;inset:0;background:radial-gradient(520px 380px at 80% 46%,rgba(124,243,225,.17),transparent 70%),radial-gradient(520px 360px at 92% 62%,rgba(139,92,246,.2),transparent 72%),linear-gradient(135deg,#070b1a,#0d1330 60%,#1a0f33)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:40px 40px}
+.l{position:absolute;left:72px;top:72px;width:560px}
+.brand{display:flex;align-items:center;gap:14px;font:700 34px "Bricolage Grotesque";letter-spacing:-.02em}
+.orb{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#b9fff4 35%,#2dd4bf 75%,#7c3aed);box-shadow:0 0 24px rgba(45,212,191,.6)}
+h1{font:800 70px/0.98 "Bricolage Grotesque";font-stretch:88%;letter-spacing:-.035em;margin:44px 0 0}
+p{font-size:23px;line-height:1.45;color:#9fb3d9;margin:26px 0 0;max-width:500px}
+.url{position:absolute;left:72px;bottom:56px;font-size:19px;color:#6f80aa}
+.url b{color:#7cf3e1;font-weight:600}
+svg{position:absolute;right:40px;top:70px;width:640px;height:480px}
+svg .say,svg .b1,svg .b2,svg .b3,svg .rcpt{opacity:1} svg .press{opacity:1} svg .zap{opacity:0} svg .led{fill:#2dd4bf}
+</style></head><body><div class="bg"></div><div class="grid"></div>
+<div class="l"><div class="brand"><span class="orb"></span>OpenBridge</div>
+<h1>Give your hardware powers it never shipped with.</h1>
+<p>An AI that builds new controls across your devices. Approved by you, verified on the real device.</p></div>
+<div class="url"><b>Hardware partners welcome</b>&nbsp;&nbsp;github.com/toskaman/openbridge</div>
+<svg  viewBox="0 0 640 480" role="img" aria-label="A request to put vacuum controls on the TV: buttons appear on the TV, Start is pressed, the robot vacuum starts, and a receipt confirms it was done and verified.">
+      <defs>
+        <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#121c45"/><stop offset="1" stop-color="#1a1240"/></linearGradient>
+        <radialGradient id="rb" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#2a3770"/><stop offset="1" stop-color="#111a3d"/></radialGradient>
+      </defs>
+      <!-- signal path TV -> robot -->
+      <path d="M123 214 C 150 330, 360 390, 470 330" fill="none" stroke="#24305e" stroke-width="2" stroke-dasharray="3 7"/>
+      <path class="zap" d="M123 214 C 150 330, 360 390, 470 330" fill="none" stroke="#7cf3e1" stroke-width="4" stroke-linecap="round"/>
+
+      <!-- TV -->
+      <rect x="40" y="70" width="380" height="236" rx="16" fill="#0a1024" stroke="#2a3870" stroke-width="2"/>
+      <rect x="54" y="84" width="352" height="208" rx="8" fill="url(#scr)"/>
+      <text x="74" y="116" fill="#9fb3d9" font-family="Instrument Sans,Segoe UI,sans-serif" font-size="14">Living room TV</text>
+      <text x="74" y="142" fill="#e8eefc" font-family="Bricolage Grotesque,Segoe UI,sans-serif" font-size="20" font-weight="700">Robot vacuum</text>
+      <g font-family="Instrument Sans,Segoe UI,sans-serif" font-size="16" font-weight="600" text-anchor="middle">
+        <g class="b1"><rect x="74" y="168" width="98" height="44" rx="10" fill="#2dd4bf"/><rect class="press" x="70" y="164" width="106" height="52" rx="13" fill="none" stroke="#7cf3e1" stroke-width="3"/><text x="123" y="196" fill="#04121a">Start</text></g>
+        <g class="b2"><rect x="182" y="168" width="98" height="44" rx="10" fill="#1f2a5c" stroke="#3a4b8f"/><text x="231" y="196" fill="#e8eefc">Pause</text></g>
+        <g class="b3"><rect x="290" y="168" width="98" height="44" rx="10" fill="#1f2a5c" stroke="#3a4b8f"/><text x="339" y="196" fill="#e8eefc">Dock</text></g>
+      </g>
+      <text class="b3" x="74" y="262" fill="#6f80aa" font-family="Instrument Sans,Segoe UI,sans-serif" font-size="13">Created on demand by OpenBridge</text>
+      <rect x="200" y="306" width="60" height="10" fill="#0a1024"/>
+      <rect x="160" y="316" width="140" height="8" rx="4" fill="#1a2550"/>
+
+      <!-- voice request -->
+      <g class="say">
+        <rect x="60" y="14" width="300" height="40" rx="20" fill="#1a1240" stroke="#8b5cf6" stroke-opacity=".7"/>
+        <circle cx="84" cy="34" r="8" fill="#a78bfa"/>
+        <text x="102" y="39" fill="#e8eefc" font-family="Instrument Sans,Segoe UI,sans-serif" font-size="15">“Put vacuum controls on the TV”</text>
+      </g>
+
+      <!-- robot vacuum -->
+      <ellipse cx="520" cy="350" rx="70" ry="14" fill="#000" opacity=".35"/>
+      <g class="robot-spin">
+        <circle cx="520" cy="316" r="62" fill="url(#rb)" stroke="#3a4b8f" stroke-width="2"/>
+        <circle cx="520" cy="316" r="40" fill="none" stroke="#24305e" stroke-width="2"/>
+        <rect x="508" y="262" width="24" height="10" rx="5" fill="#24305e"/>
+      </g>
+      <circle class="led" cx="520" cy="316" r="9" fill="#3b4a7a"/>
+      <text x="520" y="406" fill="#9fb3d9" text-anchor="middle" font-family="Instrument Sans,Segoe UI,sans-serif" font-size="13">Robot vacuum</text>
+
+      <!-- receipt -->
+      <g class="rcpt">
+        <rect x="330" y="418" width="290" height="52" rx="14" fill="#0b2a2a" stroke="#2dd4bf" stroke-opacity=".8"/>
+        <circle cx="358" cy="444" r="13" fill="#2dd4bf"/>
+        <path class="tick" d="M351 444 l5 5 l10 -11" fill="none" stroke="#04121a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="382" y="440" fill="#e8eefc" font-family="Instrument Sans,Segoe UI,sans-serif" font-size="15" font-weight="600">Start vacuum: done, verified</text>
+        <text x="382" y="459" fill="#7cf3e1" font-family="Instrument Sans,Segoe UI,sans-serif" font-size="12.5">Read back from the robot: cleaning</text>
+      </g>
+    </svg>
+</body></html>

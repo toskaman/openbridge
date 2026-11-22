@@ -91,8 +91,10 @@ No by default. The AI runs locally on the user's machine; OpenBridge ships no pa
 only if the owner connects one by hand ([details](../AI_PROVIDERS.md)).
 
 **Who owns the integration code?**
-OpenBridge is source-available under [PolyForm Strict 1.0.0](../../LICENSE). Partner-specific licensing
-(for example, shipping the adapter in your own product) is discussed case by case.
+You do, for your side, and your data stays yours. OpenBridge itself is source-available under
+[PolyForm Strict 1.0.0](../../LICENSE); partners get a separate commercial licence for their integration (for example,
+to run it in their own QA or ship the adapter in their product). Details:
+[commercial & partner licensing](../LICENSING.md#commercial--partner-licensing).
 
 **Can our documentation stay confidential?**
 Working under an NDA can be arranged: what you share confidentially stays out of the public repository, and
@@ -101,7 +103,9 @@ only what you approve is published.
 ---
 
 <p align="center">
-  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_Become_a_partner-toskaman5962@gmail.com-2dd4bf?style=for-the-badge" alt="Become a partner"></a>
+  <a href="mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_Become_a_partner-info@lepcpro.fr-2dd4bf?style=for-the-badge" alt="Become a partner"></a>
   <a href="ENGO.md"><img src="https://img.shields.io/badge/Case_study-ENGO_×_OpenBridge-e7f11f?style=for-the-badge&labelColor=1a1a1a" alt="ENGO case study"></a>
+  <a href="../../site/OpenBridge-Partner-Brief.pdf"><img src="https://img.shields.io/badge/📄_Partner_brief-PDF,_1_page-1f2a52?style=for-the-badge" alt="Partner brief (PDF)"></a>
+  <a href="https://toskaman.github.io/openbridge/"><img src="https://img.shields.io/badge/🌐_Website-openbridge-0d1330?style=for-the-badge" alt="Project website"></a>
 </p>
-<p align="center"><sub>Replies in English and French. <a href="../../README.md">Back to the project</a>.</sub></p>
+<p align="center"><sub>Replies in English and French. [Security](../../SECURITY.md) · [Privacy](../PRIVACY.md) · <a href="../../README.md">Back to the project</a>.</sub></p>
