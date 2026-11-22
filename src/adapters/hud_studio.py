@@ -33,7 +33,10 @@ import time
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageOps
+try:  # Pillow is optional: protocol helpers and the control client (--send) work without it
+    from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageOps
+except ImportError:  # pragma: no cover - exercised by the dependency-free CI job
+    Image = ImageChops = ImageDraw = ImageEnhance = ImageFilter = ImageOps = None
 
 from src.adapters import hud_features as hf
 from src.adapters.activelook import ActiveLookAdapter
@@ -1678,6 +1681,10 @@ def main(argv=None):
     if a.send:
         print(json.dumps(send_control(json.loads(a.send), a.control_port), indent=2, ensure_ascii=False))
         return 0
+    if Image is None:
+        print("HUD Studio needs Pillow (optional dependency): python -m pip install -r requirements-optional.txt",
+              file=sys.stderr)
+        return 2
     eng = StudioEngine(model=a.model, phone_port=a.phone_port, control_port=a.control_port)
     eng.start()
     print(f"[HUD Studio {VERSION}] phone link :{a.phone_port}  ·  control API 127.0.0.1:{a.control_port}  ·  {a.model}",

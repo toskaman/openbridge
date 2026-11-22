@@ -17,6 +17,19 @@ jobs:
           python-version: '3.14.4'
       - run: python -m unittest discover -s tests -v
       - run: python -m compileall -q src tests
+  engo-emulator:
+    # HUD renderer tests need Pillow (optional); the dependency-free job above skips them.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.4'
+      - run: python -m pip install "$(grep -i '^pillow==' requirements-optional.txt)"
+      - run: >-
+          python -m unittest -v
+          tests.unit.test_activelook tests.unit.test_engo_killer_features tests.unit.test_engo_ai_bridge
+          tests.unit.test_engo_openbridge_neural_integration tests.unit.test_hud_studio
   browser:
     runs-on: ubuntu-24.04
     steps:

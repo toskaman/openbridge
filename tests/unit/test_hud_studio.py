@@ -11,6 +11,12 @@ from src.adapters import hud_studio as hs
 from src.adapters.activelook_emulator import HUDCanvas, scan_frames
 
 
+
+# The HUD renderer needs Pillow, an optional dependency (requirements-optional.txt). The core suite runs
+# dependency-free in CI, so these tests skip there and run in the dedicated "engo-emulator" job.
+requires_pillow = unittest.skipUnless(__import__('importlib').util.find_spec('PIL') is not None,
+                                      'Pillow required: HUD emulator renderer (requirements-optional.txt)')
+
 def _free_port() -> int:
     s = socket.socket()
     s.bind(("127.0.0.1", 0))
@@ -50,6 +56,7 @@ class CatalogTests(unittest.TestCase):
         for ref in ("F07", "f7", 7, "7", "compass_wayfinder", f7):
             self.assertIs(hf.resolve(ref), f7)
 
+    @requires_pillow
     def test_every_feature_draws_pixels(self):
         hud = HUDCanvas(model="ENGO 3")
         from src.adapters.activelook import ActiveLookAdapter
@@ -65,6 +72,7 @@ class ALooKTests(unittest.TestCase):
         for lid in (7, 10, 11, 12, 13, 21, 43, 46, 49, 73, 75, 178, 180, 182):
             self.assertTrue(alook_layouts.known(lid), lid)
 
+    @requires_pillow
     def test_extended_display_uses_activelook_coordinates(self):
         hud = HUDCanvas(model="ENGO 2")
         # top row (y=153, ActiveLook bottom-right origin) must land in the upper half of the screen
@@ -75,6 +83,7 @@ class ALooKTests(unittest.TestCase):
         self.assertGreaterEqual(box[0], 20)
 
 
+@requires_pillow
 class EngineAndControlTests(unittest.TestCase):
     def setUp(self):
         self.phone_port, self.ctrl_port = _free_port(), _free_port()

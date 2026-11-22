@@ -17,6 +17,12 @@ from src.adapters.activelook import (
 from src.adapters.activelook_emulator import parse_frames, run_headless_benchmark
 
 
+
+# The HUD renderer needs Pillow, an optional dependency (requirements-optional.txt). The core suite runs
+# dependency-free in CI, so these tests skip there and run in the dedicated "engo-emulator" job.
+requires_pillow = unittest.skipUnless(__import__('importlib').util.find_spec('PIL') is not None,
+                                      'Pillow required: HUD emulator renderer (requirements-optional.txt)')
+
 class EngoKillerFeaturesTests(unittest.TestCase):
     def setUp(self):
         self.sent_bytes = bytearray()
@@ -744,6 +750,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         text_duck = [f for f in frames_duck if f.cmd == 0x37]
         self.assertTrue(any(b"BAISSEZ-VOUS" in f.data for f in text_duck))
 
+    @requires_pillow
     def test_headless_benchmark_execution_and_power_bounds(self):
         results = run_headless_benchmark("ENGO 3")
         self.assertEqual(results["model"], "ENGO 3")

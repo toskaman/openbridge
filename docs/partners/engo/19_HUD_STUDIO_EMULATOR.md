@@ -18,6 +18,10 @@ Pixel-exact emulator for ActiveLook® / ENGO MicroOLED glasses (304 × 256), bui
 
 ## Quick start
 
+HUD Studio needs **Pillow**, an optional dependency; the OpenBridge runtime itself stays dependency-free:
+`python -m pip install -r requirements-optional.txt` (or just `pillow`). Without it, the renderer tests
+are skipped and `--send` still works.
+
 ```powershell
 cd Z:\Hackatons\OpenBridge\OpenBridge
 powershell -NoProfile -ExecutionPolicy Bypass -File dev\launch_hud_studio.ps1      # detached, adb reverse included

@@ -8,6 +8,12 @@ from src.adapters.activelook import (
 from src.adapters.activelook_emulator import parse_frames, HUDCanvas
 
 
+
+# The HUD renderer needs Pillow, an optional dependency (requirements-optional.txt). The core suite runs
+# dependency-free in CI, so these tests skip there and run in the dedicated "engo-emulator" job.
+requires_pillow = unittest.skipUnless(__import__('importlib').util.find_spec('PIL') is not None,
+                                      'Pillow required: HUD emulator renderer (requirements-optional.txt)')
+
 class ActiveLookTests(unittest.TestCase):
     def test_clear_frame_exact_binary(self):
         clear_bytes = cmd_clear()
@@ -122,6 +128,7 @@ class ActiveLookTests(unittest.TestCase):
         self.assertEqual(disp_pkt[1], 0x83)
         self.assertIn(b"$$125.4\x00", disp_pkt)
 
+    @requires_pillow
     def test_emulator_layout_and_page_rendering_fidelity(self):
         canvas = HUDCanvas(model="ENGO 3")
         adapter = ActiveLookAdapter(transport=lambda b: canvas.dispatch(b), model="ENGO 3")
@@ -163,6 +170,7 @@ class ActiveLookTests(unittest.TestCase):
         self.assertGreater(fill, 0.0)
         self.assertLess(fill, 15.0)
 
+    @requires_pillow
     def test_active_look_tcp_server_bridge(self):
         import socket, time
         from src.adapters.activelook_emulator import ActiveLookTCPServer, HUDCanvas

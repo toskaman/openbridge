@@ -2,3 +2,5 @@
 bleak==3.0.2
 # Optional Tuya local protocol (MIT). Only for an owner-linked Tuya device (python -m dev.tuya_link).
 tinytuya==1.20.0
+# Optional ENGO / ActiveLook HUD emulator and HUD Studio renderer (MIT-CMU). Runtime stays dependency-free.
+pillow==12.2.0

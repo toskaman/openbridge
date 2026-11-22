@@ -13,6 +13,12 @@ from src.adapters.activelook_emulator import parse_frames, HUDCanvas
 from src.adapters.engo_ai_bridge import EngoAIBridge, PhoneSensoryState
 
 
+
+# The HUD renderer needs Pillow, an optional dependency (requirements-optional.txt). The core suite runs
+# dependency-free in CI, so these tests skip there and run in the dedicated "engo-emulator" job.
+requires_pillow = unittest.skipUnless(__import__('importlib').util.find_spec('PIL') is not None,
+                                      'Pillow required: HUD emulator renderer (requirements-optional.txt)')
+
 class EngoAIBridgeTests(unittest.TestCase):
     def setUp(self):
         self.sent_bytes = bytearray()
@@ -120,6 +126,7 @@ class EngoAIBridgeTests(unittest.TestCase):
         self.assertTrue(any(b"TRANSIT EN DIRECT : M" in f.data for f in text_frames))
         self.assertTrue(any(b"4 MIN" in f.data for f in text_frames))
 
+    @requires_pillow
     def test_optical_power_and_fill_factor_benchmark(self):
         """Verifies that all AI bridge screens adhere to ultra-low MicroOLED power constraints."""
         canvas = HUDCanvas(model="ENGO 3")

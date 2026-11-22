@@ -37,6 +37,12 @@ from src.adapters.engo_ai_bridge import (
 )
 
 
+
+# The HUD renderer needs Pillow, an optional dependency (requirements-optional.txt). The core suite runs
+# dependency-free in CI, so these tests skip there and run in the dedicated "engo-emulator" job.
+requires_pillow = unittest.skipUnless(__import__('importlib').util.find_spec('PIL') is not None,
+                                      'Pillow required: HUD emulator renderer (requirements-optional.txt)')
+
 class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
     def setUp(self):
         self.sent_bytes = bytearray()
@@ -206,6 +212,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
 
     # ── 4. 4-Quadrant Ambient IoT Matrix Tests ─────────────────────────────────
 
+    @requires_pillow
     def test_ambient_iot_matrix_quadrant_layout_and_power(self):
         res = self.bridge.push_ambient_matrix(
             linky_watts=2250,
@@ -440,6 +447,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
 
     # ── 8. Headless Benchmark with 38 Scenarios ───────────────────────────────
 
+    @requires_pillow
     def test_headless_benchmark_with_neural_scenarios(self):
         results = run_headless_benchmark("ENGO 3", include_neural=True)
         self.assertEqual(results["model"], "ENGO 3")
