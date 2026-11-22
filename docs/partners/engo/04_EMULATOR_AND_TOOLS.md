@@ -4,6 +4,9 @@
 **Location:** `src/adapters/activelook_emulator.py`  
 **Document Code:** `ENGO-DOC-04`
 
+> **New:** the default UI is now **HUD Studio**. See [19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md).
+> The window described below remains available with `--classic`. Validated under emulation only; real-hardware tests are pending until the ENGO pair is received.
+
 ---
 
 ## 1. Overview

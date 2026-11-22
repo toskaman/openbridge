@@ -7,6 +7,13 @@
 > **Dossier Spécialisé ENGO & ActiveLook®**  
 > Ce répertoire regroupe l'ensemble des spécifications matérielles, protocolaires, interactives et logicielles pour l'intégration des lunettes intelligentes ENGO (ENGO 1, ENGO 2, ENGO 3, ENGO 3 Titanium) dans OpenBridge.
 
+> [!IMPORTANT]
+> **Statut de validation : émulateur uniquement.** L'intégration a été développée et testée avec l'émulateur
+> [HUD Studio](19_HUD_STUDIO_EMULATOR.md) et l'application officielle ActiveLook (build de développement) sur
+> smartphone Android, **sans lunettes physiques**. Les tests réels sur une paire ENGO (BLE, flow control,
+> layouts firmware « ALooK », optique, capteur de geste, autonomie) **sont en attente de la réception de la
+> paire**, comme les benchmarks matériels annoncés.
+
 ---
 
 ## 🗂️ Sommaire du Dossier
@@ -31,27 +38,29 @@
 | **[16_FRONTIER_INNOVATIONS_V7.md](16_FRONTIER_INNOVATIONS_V7.md)** | **Innovations de Rupture v7.0** | Vigilance conducteur & microsommeil PERCLOS P80, logistique Pick-by-Vision mains libres, recherche DVA avalanche 457 kHz et optimiseur circadien d'exposition lumineuse/caféine. |
 | **[17_APEX_INNOVATIONS_V8.md](17_APEX_INNOVATIONS_V8.md)** | **Innovations de Rupture v8.0 Apex** | Télémétrie pompier SCBA & alerte flashover Mayday, compensateur balistique Mil-Dot & bulle de dévers, monitoring chirurgical stérile & couple moteur, et radar écho basse vision d'obstacles hauts. |
 | **[18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md](18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md)** | **Expansion Neurale & Sensorielle OpenBridge** | Matrice 38 features exhaustive : audio streaming microphone téléphone/PC, VAD, STT Whisper streaming sub-120ms, proxy vision multimodale 50MP, matrice IoT ambiante 4 quadrants et ordonnanceur de priorité télémétrique. |
+| **[19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md)** | **HUD Studio : Émulateur Pro & App Officielle** | Émulateur 304×256 de nouvelle génération (vues Pixels / OLED / Lens, inspecteur de trames, métriques, sessions, PNG/GIF, API de contrôle JSON), banque de layouts ALooK, et application officielle ActiveLook pilotant l'émulateur avec overlay F01–F38. **Validé sous émulateur uniquement.** |
 
 ---
 
 ## 🚀 Démarrage Rapide
 
-### 1. Lancer l'Émulateur Visuel (304 × 256 MicroOLED)
+### 1. Lancer l'Émulateur Visuel : HUD Studio (304 × 256 MicroOLED)
 Vous pouvez immédiatement tester et voir les écrans du HUD sans attendre les lunettes physiques :
 ```bash
-# Rendu graphique interactif avec barres d'outils Démos + IA & Sensory Proxy :
-python -m src.adapters.activelook_emulator
+# HUD Studio (vues Pixels / OLED / Lens, inspecteur, F01–F38, API de contrôle 127.0.0.1:7790) :
+python -m src.adapters.hud_studio --model "ENGO 2"
+# Windows, lancement détaché + adb reverse pour l'application officielle :
+powershell -NoProfile -ExecutionPolicy Bypass -File dev\launch_hud_studio.ps1
 
-# Avec serveur virtuel Bluetooth Low Energy (Bumble sur port TCP 7788) :
+# Ancienne fenêtre + serveur virtuel Bluetooth Low Energy (Bumble sur port TCP 7788) :
 python -m src.adapters.activelook_emulator --ble --port 7788
-
-# Prévisualisation en mode MultiColor ENGO 3 Titanium :
-python -m src.adapters.activelook_emulator --model "ENGO 3 Titanium"
+python -m src.adapters.activelook_emulator --classic --model "ENGO 3 Titanium"
 ```
+Guide complet : [19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md).
 
 ### 2. Exécuter la Suite Complète de Tests Unitaires
 ```bash
-python -m unittest tests/unit/test_activelook.py tests/unit/test_engo_killer_features.py tests/unit/test_engo_ai_bridge.py tests/unit/test_engo_openbridge_neural_integration.py -v
+python -m unittest tests/unit/test_activelook.py tests/unit/test_engo_killer_features.py tests/unit/test_engo_ai_bridge.py tests/unit/test_engo_openbridge_neural_integration.py tests/unit/test_hud_studio.py -v
 ```
 
 ---
@@ -61,11 +70,14 @@ python -m unittest tests/unit/test_activelook.py tests/unit/test_engo_killer_fea
 - **Adaptateur Protocolaire Officiel :** [`src/adapters/activelook.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/src/adapters/activelook.py)
 - **Passerelle IA, Voix & Proxy Sensoriel :** [`src/adapters/engo_ai_bridge.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/src/adapters/engo_ai_bridge.py)
 - **Émulateur Visuel & Serveur BLE Virtuel :** [`src/adapters/activelook_emulator.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/src/adapters/activelook_emulator.py)
-- **Suites de Tests Dédiées (64/64 tests passants) :**
+- **HUD Studio (émulateur pro) :** [`src/adapters/hud_studio.py`](../../../src/adapters/hud_studio.py), catalogue F01–F38 [`src/adapters/hud_features.py`](../../../src/adapters/hud_features.py), banque ALooK [`src/adapters/alook_layouts.py`](../../../src/adapters/alook_layouts.py)
+- **Pont application officielle ActiveLook → émulateur :** [`dev/build_activelook_openbridge.py`](../../../dev/build_activelook_openbridge.py), [`dev/repatch_nosplit_bridge.py`](../../../dev/repatch_nosplit_bridge.py)
+- **Suites de Tests Dédiées (82/82 tests passants, sous émulateur) :**
   - [`tests/unit/test_activelook.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_activelook.py)
   - [`tests/unit/test_engo_killer_features.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_engo_killer_features.py)
   - [`tests/unit/test_engo_ai_bridge.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_engo_ai_bridge.py)
   - [`tests/unit/test_engo_openbridge_neural_integration.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_engo_openbridge_neural_integration.py)
+  - [`tests/unit/test_hud_studio.py`](../../../tests/unit/test_hud_studio.py)
 
 ---
 
