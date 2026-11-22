@@ -590,6 +590,127 @@ def cmd_ai_test(args):
         raise CliError('inference', 'INFERENCE_FAILED', str(e))
 
 
+# ---------------- partner integration kit ----------------
+
+def cmd_partner_new(args):
+    """Scaffold a device integration: adapter, emulator, graph entry, passing tests, checklist."""
+    from src import partner_kit
+    try:
+        return partner_kit.generate(args.name, title=getattr(args, 'title', None), category=getattr(args, 'category', None) or 'device',
+                                    dry_run=bool(getattr(args, 'dry_run', False)))
+    except partner_kit.KitError as e:
+        raise CliError('args', 'PARTNER_KIT', str(e))
+
+
+# ---------------- home assistant bridge ----------------
+
+def _ha_client(args):
+    from src.adapters import home_assistant as HA
+    try:
+        return HA.HomeAssistant.from_config()
+    except HA.HABlocked as e:
+        raise CliError('auth', 'HA_NOT_CONNECTED', str(e))
+
+
+def cmd_ha_connect(args):
+    """Link a Home Assistant instance. The token comes from a prompt (OS vault) or an env var, never from argv."""
+    from src.adapters import home_assistant as HA
+    try:
+        cfg = HA.save_config(getattr(args, 'url', ''), getattr(args, 'token_env', None))
+    except HA.HABlocked as e:
+        raise CliError('args', 'HA_URL_INVALID', str(e))
+    if getattr(args, 'store_token', False):
+        import getpass
+        from src.fabric.credential_vault import Vault, VaultUnavailable
+        try:
+            Vault().put(HA.SECRET_NAME, getpass.getpass('Home Assistant long-lived access token (kept in the OS vault): ').strip())
+        except VaultUnavailable as e:
+            raise CliError('dep', 'VAULT_UNAVAILABLE', '%s; use --token-env instead' % e)
+    out = {'url': cfg['url'], 'token_env': cfg['token_env'], 'file': str(HA.config_path())}
+    try:
+        out['check'] = HA.HomeAssistant.from_config(cfg).ping()
+    except (HA.HABlocked, HA.HAError) as e:
+        out['check'] = {'ok': False, 'reason': str(e)}
+    out['next'] = 'openbridge ha devices'
+    return out
+
+
+def cmd_ha_status(args):
+    from src.adapters import home_assistant as HA
+    cfg = HA.load_config()
+    if not cfg:
+        return {'connected': False, 'next': 'openbridge ha connect --url http://homeassistant.local:8123 --store-token'}
+    try:
+        ha = HA.HomeAssistant.from_config(cfg)
+        ping = ha.ping()
+        states = ha.states()
+    except (HA.HABlocked, HA.HAError) as e:
+        raise CliError('device', 'HA_UNAVAILABLE', str(e))
+    by = {}
+    for s in states:
+        d = HA.domain_of(s['entity_id'])
+        row = by.setdefault(d, {'devices': 0, 'controllable': 0})
+        row['devices'] += 1
+        row['controllable'] += 1 if HA.actions_for(s) else 0
+    return {'connected': True, 'url': cfg['url'], 'home_assistant': ping['message'], 'domains': by,
+            'status': 'IMPLEMENTED_UNVERIFIED: tested against a simulated Home Assistant, not yet on a real instance'}
+
+
+def cmd_ha_devices(args):
+    from src.adapters import home_assistant as HA
+    ha = _ha_client(args)
+    try:
+        states = ha.states()
+    except HA.HAError as e:
+        raise CliError('device', 'HA_UNAVAILABLE', str(e))
+    rows = []
+    for s in states:
+        d = HA.domain_of(s['entity_id'])
+        acts = sorted(HA.actions_for(s))
+        rows.append({'entity': s['entity_id'], 'name': (s.get('attributes') or {}).get('friendly_name', ''),
+                     'category': HA.CATEGORY[d], 'state': s.get('state'), 'actions': acts,
+                     'policy': HA.policy_refusal(d, '*' if d == 'alarm_control_panel' else 'unlock' if d == 'lock' else 'open', s) or ''})
+    return {'devices': rows, 'count': len(rows)}
+
+
+def cmd_ha_do(args):
+    """One action through the same gate as the app: typed primitive, consent, read-back, receipt."""
+    from types import SimpleNamespace
+    from src.adapters import home_assistant as HA
+    from src.fabric.discovery import install_salt
+    from src.fabric.home_assistant_ingest import ingest_home_assistant
+    from src.fabric.registry import Registry
+    from src.runtime.primitives import Executor
+    ha = _ha_client(args)
+    reg = Registry()
+    report = ingest_home_assistant(reg, ha, install_salt())
+    if report.get('status') != 'OK':
+        raise CliError('device', 'HA_UNAVAILABLE', 'Home Assistant unavailable (%s)' % report.get('detail', ''))
+    key = next((k for k, d in reg.devices.items() if d.get('ha_entity') == args.entity), None)
+    if key is None:
+        raise CliError('args', 'HA_UNKNOWN_ENTITY', 'No listed Home Assistant device %r (see `openbridge ha devices`).' % args.entity)
+    prim = 'ha_set' if args.action in ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature') else 'ha_command'
+    params = {'action': args.action}
+    if getattr(args, 'value', None) is not None:
+        params['value'] = args.value
+    ctx = SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(), fabric_adapters=lambda p=None: {'home_assistant': ha})
+    receipt = Executor(ctx).execute(prim, key, params, consent=getattr(args, 'consent', None) == 'ALLOW')
+    if receipt['state'] == 'BLOCKED' and any(e.startswith('CONSENT_REQUIRED') for e in receipt['errors']):
+        raise CliError('permission', 'CONSENT_REQUIRED', 'Re-run with --consent ALLOW to approve this one action.', receipt)
+    return receipt
+
+
+def cmd_ha_disconnect(args):
+    from src.adapters import home_assistant as HA
+    from src.fabric.credential_vault import Vault
+    try:
+        HA.config_path().unlink()
+    except FileNotFoundError:
+        pass
+    Vault().delete(HA.SECRET_NAME)
+    return {'connected': False}
+
+
 # ---------------- devices ----------------
 
 def snapshot_path():
@@ -610,9 +731,9 @@ def snapshot_save(doc):
 
 
 def default_providers(args):
-    raw = getattr(args, 'providers', None) or 'mdns,ssdp,android,tuya'
+    raw = getattr(args, 'providers', None) or 'mdns,ssdp,android,tuya,home_assistant'
     providers = [p.strip() for p in raw.split(',') if p.strip()]
-    allowed = {'mdns', 'ssdp', 'android', 'freebox', 'ble', 'tuya'}
+    allowed = {'mdns', 'ssdp', 'android', 'freebox', 'ble', 'tuya', 'home_assistant'}
     unknown = [p for p in providers if p not in allowed]
     if unknown:
         raise CliError('args', 'BAD_PROVIDERS', 'Unknown providers: %s' % ', '.join(unknown))
@@ -2012,6 +2133,27 @@ def build_parser():
     ai_use.add_argument('name', help='provider name, or "none" to disconnect')
     ai_test = leaf(ai_subs, 'test', cmd_ai_test, 'ai test')
     ai_test.add_argument('name', nargs='?')
+
+    partner = subs.add_parser('partner', help='partner integration kit')
+    partner_subs = partner.add_subparsers(dest='partner_command')
+    partner_new = leaf(partner_subs, 'new', cmd_partner_new, 'partner new')
+    partner_new.add_argument('name', help='device name, e.g. "Acme Lamp"')
+    partner_new.add_argument('--title', default=None, help='display name (defaults to the name)')
+    partner_new.add_argument('--category', default='device', help='short category: lamp, plug, glasses, robot...')
+
+    ha = subs.add_parser('ha', help='Home Assistant bridge')
+    ha_subs = ha.add_subparsers(dest='ha_command')
+    ha_connect = leaf(ha_subs, 'connect', cmd_ha_connect, 'ha connect')
+    ha_connect.add_argument('--url', required=True, help='e.g. http://homeassistant.local:8123')
+    ha_connect.add_argument('--token-env', default=None, help='environment variable holding the long-lived access token')
+    ha_connect.add_argument('--store-token', action='store_true', help='prompt for the token and keep it in the OS vault')
+    leaf(ha_subs, 'status', cmd_ha_status, 'ha status')
+    leaf(ha_subs, 'devices', cmd_ha_devices, 'ha devices')
+    ha_do = leaf(ha_subs, 'do', cmd_ha_do, 'ha do')
+    ha_do.add_argument('entity', help='entity id, e.g. light.living_room')
+    ha_do.add_argument('action', help='turn_on, turn_off, set_brightness, set_volume, set_temperature, play, pause, open, close, stop, lock, start, return_to_base')
+    ha_do.add_argument('--value', type=float, default=None)
+    leaf(ha_subs, 'disconnect', cmd_ha_disconnect, 'ha disconnect')
 
     devices = subs.add_parser('devices')
     device_subs = devices.add_subparsers(dest='devices_command')

@@ -70,3 +70,19 @@ credit/budget flags are gone. Model tiers are `AUTO`, `LOCAL-FAST`,
 (`--store-key`, hidden prompt) or an environment variable (`--api-key-env`),
 never a CLI argument. A provider that is not on this PC needs
 `--consent ALLOW-REMOTE` (alias `ALLOW-CLOUD`). See [AI_PROVIDERS.md](AI_PROVIDERS.md).
+
+## Home Assistant bridge
+
+- `ha connect --url URL [--store-token | --token-env VAR]` — link a Home Assistant instance; the token goes to the OS vault or an environment variable, never to argv.
+- `ha status` — check the link and count devices per domain.
+- `ha devices` — list devices, their allowed actions and policy refusals.
+- `ha do ENTITY ACTION [--value N] --consent ALLOW` — one action through the same gate as the app (consent, read-back, receipt).
+- `ha disconnect` — forget the URL and the stored token.
+
+See [Home Assistant bridge](HOME_ASSISTANT.md).
+
+## Partner integration kit
+
+- `partner new NAME [--category C] [--title T] [--dry-run]` — scaffold an adapter, an emulator, a graph entry, passing tests and a checklist; never overwrites.
+
+See [Integrate your device](INTEGRATE_YOUR_DEVICE.md).

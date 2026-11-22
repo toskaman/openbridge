@@ -11,13 +11,15 @@ Status legend: 🟢 shipped · 🟡 in progress · 🔵 next · ⚪ later / conc
 |---|---|---|
 | 🕶️ | **ENGO smart glasses (ActiveLook):** move from emulator-validated to real-hardware-validated. Run the 38 HUD features, the 82 tests and the latency / battery benchmarks on the physical pair. | 🟡 glasses on their way |
 | 📊 | **Public benchmark reports per device:** latency, success rate, refusal correctness, linked to CI runs. | 🟡 |
+| 🏠 | **Home Assistant bridge:** lights, plugs, thermostats, media players, blinds, locks and robots known to Home Assistant (Matter, Zigbee and Thread included), with consent, read-back and exact Undo. [Guide](docs/HOME_ASSISTANT.md) | 🟡 shipped, real-instance test pending |
+| 🧰 | **Partner integration kit:** `openbridge partner new` scaffolds an adapter, an emulator and passing tests. [Guide](docs/INTEGRATE_YOUR_DEVICE.md) | 🟢 shipped |
 | 🤝 | **Partner program:** one adapter, one emulator and one test suite per partner device, with a verified compatibility report. | 🟡 open |
 
 ## Next
 
 | | Device family | Planned integrations | Status |
 |---|---|---|---|
-| 🏠 | Smart home standards | Matter, Thread, Zigbee, Home Assistant, ESPHome | 🔵 |
+| 🏠 | Smart home standards | Native Matter controller, ESPHome (Matter, Thread and Zigbee devices already work through the Home Assistant bridge) | 🔵 |
 | 🌐 | Networking | OpenWrt, FRITZ!Box, more ISP boxes (read-only by policy first) | 🔵 |
 | 📺 | Screens | More Android TV / Google TV models, set-top boxes, projectors, soundbars | 🔵 |
 | ⌚ | Wearables | More smart glasses and HUDs, rings, fitness sensors, more Wear OS watches | 🔵 |

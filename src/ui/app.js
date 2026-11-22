@@ -422,6 +422,7 @@ function showDevice(device, links) {
   const handle = (device.handles || {}).USB || (device.handles || {}).WIFI;
   if (handle && device.capabilities.some(c => c.name === 'ble_relay')) fabricDetail.append(relayPanel(device, handle));
   if (['phone', 'tv', 'android', 'router', 'computer', 'vacuum', 'watch'].includes(device.category)) fabricDetail.append(diagnosisPanel(device));
+  if (device.capabilities.some(c => c.via === 'HOME_ASSISTANT' && c.name === 'ha_control')) fabricDetail.append(haPanel(device));
   if (device.category === 'vacuum') fabricDetail.append(tuyaPanel(device));
   if (['tv', 'phone', 'watch', 'android'].includes(device.category)) fabricDetail.append(remotePanel(device));
   if (device.category === 'computer') fabricDetail.append(jobPanel(device));
@@ -735,6 +736,48 @@ function tuyaPanel(device) {
     const b = element('button', label, 'secondary'); b.addEventListener('click', () => send(cmd, v)); ctl.append(b);
   }
   box.append(element('h3', 'Robot'), element('p', 'Settings: reversible with exact Undo. Commands: irreversible, fresh consent for each click; manual moves stop by themselves after 1 s.'), setting, value, row, go, undo, ctl, out);
+  return box;
+}
+
+function haPanel(device) {
+  // Home Assistant bridge: only the allowlisted actions for this device; consent per action; read back after.
+  const box = element('div', undefined, 'diagnosis-panel');
+  const cap = device.capabilities.find(c => c.via === 'HOME_ASSISTANT' && c.name === 'ha_control');
+  if (!cap || cap.status === 'BLOCKED') { box.append(element('h3', 'Home Assistant'), element('p', 'Refused by policy: OpenBridge never unlocks a door, never moves a garage door or a gate, and never touches an alarm.')); return box; }
+  const allowed = ((cap.evidence || '').match(/allowed: ([^;]+)/) || [, ''])[1].split(', ').filter(Boolean);
+  const SET = ['turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature'];
+  const VALUE = { set_brightness: ['Brightness %', 1, 100, 50], set_volume: ['Volume %', 0, 100, 30], set_temperature: ['Target °C', 7, 30, 20] };
+  let busy = false;
+  const row = element('label', undefined, 'transaction-consent'); const c = element('input'); c.type = 'checkbox';
+  row.append(c, document.createTextNode(' I approve the next action on this device, once.'));
+  const out = element('p'); out.setAttribute('role', 'status');
+  const undo = element('button', 'Undo exactly', 'secondary'); undo.hidden = true;
+  const lock = s => { busy = s; box.querySelectorAll('button,input').forEach(x => { x.disabled = s; }); };
+  const run = async (action, value) => {
+    if (busy) return;
+    if (!c.checked) { out.textContent = 'Consent required.'; return; }
+    c.checked = false; lock(true);
+    const prim = SET.includes(action) ? 'ha_set' : 'ha_command';
+    try { const r = await postJson('/api/v2/execute', { primitive_id: prim, device_key: device.key, params: value === undefined ? { action } : { action, value }, consent: true });
+      out.textContent = `${action}: ${r.state} · ${r.before} → ${r.after}${r.verified ? ' (read back)' : ''}${r.errors.length ? ' · ' + r.errors.join('; ') : ''}`;
+      undo.hidden = !(prim === 'ha_set' && r.verified);
+    } catch (e) { out.textContent = e.message; } finally { lock(false); }
+  };
+  undo.addEventListener('click', async () => {
+    if (busy) return; lock(true);
+    try { const r = await postJson('/api/v2/execute', { primitive_id: 'ha_undo', device_key: device.key, params: {}, consent: true });
+      out.textContent = `${r.state}: restored ${r.after}${r.verified ? ' (exact)' : ' (NOT exact: check the device)'}`; if (r.verified) undo.hidden = true;
+    } catch (e) { out.textContent = e.message; } finally { lock(false); }
+  });
+  const ctl = element('div');
+  for (const a of allowed) {
+    if (VALUE[a]) {
+      const [label, lo, hi, def] = VALUE[a]; const n = element('input'); n.type = 'number'; n.min = lo; n.max = hi; n.value = def; n.setAttribute('aria-label', label);
+      const b = element('button', label.replace(' %', '').replace(' °C', '') + ': set', 'secondary'); b.addEventListener('click', () => run(a, Number(n.value)));
+      ctl.append(n, b);
+    } else { const b = element('button', a.replace(/_/g, ' '), 'secondary'); b.addEventListener('click', () => run(a)); ctl.append(b); }
+  }
+  box.append(element('h3', 'Home Assistant'), element('p', 'Through your Home Assistant. Changes are read back; on/off, brightness, volume and temperature can be undone exactly.'), row, ctl, undo, out);
   return box;
 }
 

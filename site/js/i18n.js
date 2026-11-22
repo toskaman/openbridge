@@ -71,7 +71,8 @@
     'home.road.x4': 'Plus de TV, d’objets portés et de robots', 'home.road.l1': 'OpenBridge sans PC', 'home.road.l2': 'Bornes de recharge et mobilité', 'home.road.l3': 'Passerelles industrielles',
     'home.road.links': '<a href="https://github.com/toskaman/openbridge/blob/main/ROADMAP.md">Feuille de route complète</a> et <a href="https://github.com/toskaman/openbridge/blob/main/CHANGELOG.md">nouveautés</a> (en anglais).',
     'home.co.h': 'Donnons de nouveaux pouvoirs à vos appareils.', 'home.co.p': 'Parlez-nous de votre produit. Réponse en français ou en anglais.',
-    'home.co.pdf': 'Télécharger la plaquette partenaire (PDF, en anglais)', 'home.co.req': 'Publier une demande de partenariat', 'home.co.gh': 'Voir le code sur GitHub',
+    'home.co.pdf': 'Télécharger la plaquette partenaire (PDF, en anglais)', 'home.co.req': 'Publier une demande de partenariat', 'home.co.gh': 'Voir le code sur GitHub', 'home.co.dl': 'Télécharger pour Windows',
+    'home.r10d': 'Pont Home Assistant', 'home.r10': 'Lumières, prises, thermostats, volets, serrures et robots connus de Home Assistant, Matter compris', 'lvl.simapi': 'API simulée, test réel à venir',
 
     /* try */
     'try.title': 'Essayer OpenBridge dans le navigateur (simulation)',
@@ -81,7 +82,7 @@
     'try.ask': 'Demandez à OpenBridge', 'try.inputlabel': 'Votre demande', 'try.send': 'Envoyer',
     'try.stale': 'Simuler un état d’appareil périmé (pour voir un refus)', 'try.reset': 'Recommencer',
     'try.tvsmall': 'Commandes rapides créées par OpenBridge', 'try.status': 'État', 'try.battery': 'Batterie', 'try.lastread': 'Dernière lecture',
-    'try.receipts': 'Reçus', 'try.real': 'Le voir sur du vrai matériel', 'try.install': 'L’installer sur votre PC',
+    'try.receipts': 'Reçus', 'try.real': 'Le voir sur du vrai matériel', 'try.install': 'Télécharger pour Windows',
     'sim.you': 'Vous',
     'sim.hello': 'J’ai trouvé 3 appareils à proximité : une <b>TV du salon</b>, une <b>montre Galaxy</b> et un <b>robot aspirateur</b>. Que doivent-ils faire ensemble ?',
     'sim.dev.tv': 'TV du salon', 'sim.dev.watch': 'Montre Galaxy', 'sim.dev.robot': 'Robot aspirateur',

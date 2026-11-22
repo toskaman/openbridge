@@ -58,7 +58,7 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('none: read-only',), 'each finding names its source; INFERRED findings state their basis', '',
                      R.NONE.value, ('DEVICE_UNAVAILABLE', 'IDENTITY_CHANGED', 'NOT_READABLE'), 60, 'single-per-device', False),
     ActionDescriptor('bounded_discovery', 'Run one bounded local discovery',
-                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble', 'windows', 'tuya']), maxItems=7)},
+                     {'type': 'object', 'properties': {'providers': _s('array', items=_s('string', enum=['mdns', 'ssdp', 'android', 'freebox', 'ble', 'windows', 'tuya', 'home_assistant']), maxItems=8)},
                       'additionalProperties': False},
                      (), ('no discovery already running',), ('graph replaced by a fresh snapshot',), 'snapshot returned with per-provider status', '',
                      R.NONE.value, ('BUSY',), 60, 'single-global', False),
@@ -139,6 +139,22 @@ PRIMITIVES = {p.primitive_id: p for p in (
                       'required': ['command'], 'additionalProperties': False},
                      ('owner consent for this command',), ('owner-linked Tuya key', 'value in the command allowlist', 'manual moves end with stop after <= 3 s'),
                      ('device acted on the command',), 'status read after the command; momentary commands report verified=null', '',
+                     R.IRREVERSIBLE.value, ('NOT_LINKED', 'BLOCKED'), 30, 'single-per-device', True),
+    ActionDescriptor('ha_set', 'Change one Home Assistant device (on/off, brightness, volume, target temperature) with read-back and exact Undo',
+                     {'type': 'object', 'properties': {'action': _s('string', enum=['turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature']),
+                                                       'value': _s('number')}, 'required': ['action'], 'additionalProperties': False},
+                     ('owner consent', 'Home Assistant connected by the owner'), ('action in the allowlist for this device', 'device available'),
+                     ('entity state equals the requested value',), 'independent state read through the Home Assistant API', 'ha_undo', R.EXACT.value,
+                     ('NOT_LINKED', 'BLOCKED', 'READBACK_MISMATCH'), 30, 'single-per-device', True),
+    ActionDescriptor('ha_undo', 'Restore the Home Assistant device state recorded before the change',
+                     {'type': 'object', 'properties': {}, 'additionalProperties': False},
+                     ('owner consent',), ('a change was recorded',), ('entity state equals the recorded before value',),
+                     'independent state read equals before value', '', R.EXACT.value, ('NOTHING_TO_UNDO', 'RESTORE_NOT_EXACT'), 30, 'single-per-device', True),
+    ActionDescriptor('ha_command', 'Send one command to a Home Assistant device (play, pause, open or close a cover, lock, start or dock a robot)',
+                     {'type': 'object', 'properties': {'action': _s('string', enum=['play', 'pause', 'open', 'close', 'stop', 'lock', 'start', 'return_to_base'])},
+                      'required': ['action'], 'additionalProperties': False},
+                     ('owner consent for this command',), ('action in the allowlist for this device', 'never unlock, never a garage door or an alarm'),
+                     ('device acted on the command',), 'state read after the command; still-moving devices report EXECUTED_UNVERIFIED', '',
                      R.IRREVERSIBLE.value, ('NOT_LINKED', 'BLOCKED'), 30, 'single-per-device', True),
     ActionDescriptor('device_capabilities', 'Measure which typed actions an Android phone, TV or watch supports (read-only probe)',
                      {'type': 'object', 'properties': {}, 'additionalProperties': False},
@@ -417,6 +433,8 @@ class Executor:
             if session is None or session.state() != 'AUTHORIZED':
                 raise PrimitiveError('NOT_READABLE', 'Freebox app not authorized (read-only authorization required)')
             facts = diagnostics.freebox(session)
+        elif dev.get('ha_entity'):
+            facts = [diagnostics.finding(f['name'], f['value'], f['unit'], 'Home Assistant API') for f in self._ha().facts(dev['ha_entity'])]
         elif dev['category'] == 'vacuum':
             facts = [diagnostics.finding(f['name'], f['value'], f['unit'], 'Tuya local protocol') for f in self._tuya().facts()]
         elif any(n == 'windows_diagnostics' for n, _ in dev['capabilities']):
@@ -476,7 +494,7 @@ class Executor:
         if not self.ctx.fabric_lock.acquire(blocking=False):
             raise PrimitiveError('BUSY', 'A discovery is already running')
         try:
-            providers = tuple(params.get('providers') or ('mdns', 'ssdp', 'android', 'freebox', 'tuya'))
+            providers = tuple(params.get('providers') or ('mdns', 'ssdp', 'android', 'freebox', 'tuya', 'home_assistant'))
             snap, reg = discovery.run(self.ctx.fabric_adapters(providers), self.ctx.fabric_salt, providers=providers)
         finally:
             self.ctx.fabric_lock.release()
@@ -657,6 +675,39 @@ class Executor:
         r = visual_readback.readback(lambda: self.ctx.android.screencap(serial), read, broker)
         state = 'VERIFIED' if r['verdict'] == 'CONFIRMED' else 'PARTIAL'
         return state, None, r['verdict'], r['verdict'] == 'CONFIRMED', r
+
+    def _ha(self):
+        ha = (self.ctx.fabric_adapters(('home_assistant',)) or {}).get('home_assistant')
+        if ha is None:
+            raise PrimitiveError('NOT_LINKED', 'Home Assistant not connected (openbridge ha connect)')
+        return ha
+
+    def _ha_entity(self, key):
+        eid = self._device(key).get('ha_entity')
+        if not eid:
+            raise PrimitiveError('BLOCKED', 'not a Home Assistant device')
+        return eid
+
+    def _ha_act(self, key, params):
+        from src.adapters.home_assistant import HABlocked
+        eid = self._ha_entity(key)
+        try:
+            r = self._ha().act(eid, params['action'], params.get('value'))
+        except HABlocked as e:
+            raise PrimitiveError('BLOCKED', str(e)) from None
+        state = 'FAILED' if r['verified'] is False else 'VERIFIED' if r['verified'] else 'EXECUTED_UNVERIFIED'
+        return state, r['before'], r['after'], bool(r['verified']), r
+
+    def _ha_undo(self, key, params):
+        from src.adapters.home_assistant import HABlocked
+        eid = self._ha_entity(key)
+        try:
+            r = self._ha().undo(eid)
+        except HABlocked as e:
+            raise PrimitiveError('NOTHING_TO_UNDO', str(e)) from None
+        if not r['exact']:
+            raise PrimitiveError('RESTORE_NOT_EXACT', 'restored %r, expected the recorded before value' % (r['restored'],))
+        return 'REVERTED', None, r['restored'], True, r
 
     def _tuya(self):
         v = (self.ctx.fabric_adapters(('tuya',)) or {}).get('tuya')
@@ -1087,7 +1138,7 @@ class Executor:
             raise ValueError(f'HASH_MISMATCH: device has {digest[:16]}.., expected {want[:16]}..')
         return 'EXECUTED', None, remote, True, {'remote': remote, 'sha256': want, 'bytes': len(data)}
 
-    RUNNERS = {'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'pc_open_url': _pc_open_url, 'pc_place_file': _pc_place_file, 'pc_wallpaper': _pc_wallpaper, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
+    RUNNERS = {'ha_set': _ha_act, 'ha_command': _ha_act, 'ha_undo': _ha_undo, 'device_capabilities': _device_capabilities, 'device_action': _device_action, 'device_macro': _device_macro, 'tuya_command': _tuya_command, 'pc_job': _pc_job, 'pc_open_url': _pc_open_url, 'pc_place_file': _pc_place_file, 'pc_wallpaper': _pc_wallpaper, 'tuya_setting': _tuya_setting, 'tuya_undo': _tuya_undo, 'visual_readback': _visual, 'diagnostic_probe': _probe, 'diagnostic_report': _report, 'watch_start': _watch_start, 'watch_stop': _watch_stop,'read_facts': _read_facts, 'bounded_discovery': _bounded_discovery, 'relay_ble_scan': _relay_ble_scan,
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,

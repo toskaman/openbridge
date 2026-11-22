@@ -128,6 +128,9 @@ def run(adapters, salt, providers=('mdns', 'ssdp', 'android', 'freebox'), mdns_t
         report['windows'] = ingest_windows(registry, adapters['windows'], salt)
     if 'tuya' in providers and adapters.get('tuya'):
         report['tuya'] = ingest_tuya(registry, adapters['tuya'], salt)
+    if 'home_assistant' in providers and adapters.get('home_assistant'):
+        from src.fabric.home_assistant_ingest import ingest_home_assistant
+        report['home_assistant'] = ingest_home_assistant(registry, adapters['home_assistant'], salt)
     if 'freebox' in providers and adapters.get('freebox'):
         from src.fabric.freebox_ingest import ingest_freebox
         report['freebox'] = ingest_freebox(registry, adapters['freebox'], salt)

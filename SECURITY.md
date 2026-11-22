@@ -40,6 +40,14 @@ own network.
 - Do not access, change or delete other people's data.
 - Give us reasonable time to ship a fix before any public disclosure.
 
+## Automated checks
+
+- **CodeQL** analyses the Python server, the web interface and the Android companion on every change and weekly.
+- **OpenSSF Scorecard** publishes an independent score of the project's security practices.
+- **Signed commits and tags** from the maintainer.
+- **The Windows download** is built in CI, smoke-tested, and published with Sigstore build provenance. Check a download
+  with `gh attestation verify OpenBridge-Windows-x64.zip --repo toskaman/openbridge`.
+
 ## Supported versions
 
 Security fixes land on the `main` branch and in the next release. Older releases and tags are not patched.

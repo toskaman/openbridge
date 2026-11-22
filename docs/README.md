@@ -1,6 +1,8 @@
 # Documentation
 
 > 🧭 **New here?** [Start here](START_HERE.md): a short path for decision-makers, engineers and QA.
+>
+> 🏠 [Home Assistant bridge](HOME_ASSISTANT.md) · 🧰 [Integrate your device](INTEGRATE_YOUR_DEVICE.md)
 
 Start with [project overview and setup](../README.md). Current instructions and historical checkpoints are separated below.
 

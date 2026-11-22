@@ -72,7 +72,7 @@ class VehicleTest(unittest.TestCase):
         from argparse import Namespace
         from src.cli import default_providers
         self.assertEqual(default_providers(Namespace()),
-                         ['mdns', 'ssdp', 'android', 'tuya'])
+                         ['mdns', 'ssdp', 'android', 'tuya', 'home_assistant'])   # HA is skipped unless the owner connected it
 
     def test_tv_resolve_picks_relay_service_view(self):
         tv_plain = {'key': 'dev-a', 'category': 'tv', 'facts': {}, 'capabilities': []}

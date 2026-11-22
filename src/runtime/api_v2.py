@@ -480,11 +480,15 @@ def get(server, path, query):
     if path == '/api/v2/catalog':
         from src.fabric import android_actions as aa
         from src.adapters import tuya_local as tl
+        from src.adapters import home_assistant as ha_bridge
         return 200, {'android': {'actions': aa.ACTIONS, 'keys': sorted(aa.KEYS), 'tv_only_keys': sorted(aa.TV_ONLY),
                                  'settings': {k: {'range': v[2]} for k, v in aa.SETTINGS.items()},
                                  'primitives': ['device_capabilities', 'device_action', 'device_macro']},
                      'tuya_vacuum': {'commands': {k: list(v[1]) for k, v in tl.COMMANDS.items()}, 'settings': {k: list(v[1]) for k, v in tl.WRITABLE.items()},
                                      'primitives': ['tuya_command', 'tuya_setting', 'tuya_undo']},
+                     'home_assistant': {'actions': {d: sorted(a) for d, a in ha_bridge.ACTIONS.items()},
+                                        'refused_by_policy': ['unlock or open a lock', 'garage doors and gates', 'alarm systems'],
+                                        'primitives': ['ha_set', 'ha_command', 'ha_undo']},
                      'windows_pc': {'primitives': ['pc_job'], 'shells': ['cmd', 'powershell']},
                      'note': 'Compose new features with device_macro (Android) or sequences of these primitives; every write needs owner consent.'}
     if path == '/api/v2/watches':

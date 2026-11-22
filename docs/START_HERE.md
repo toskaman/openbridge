@@ -17,7 +17,7 @@ OpenBridge has a lot of documentation. You don't need most of it. Pick the path 
 
 ## 🧭 Decision-makers
 
-1. **See it work.** [Try it in your browser](https://toskaman.github.io/openbridge/try.html) (a labelled simulation, 2 minutes),
+1. **See it work.** [Download it for Windows](https://github.com/toskaman/openbridge/releases/latest) (nothing to install), [try it in your browser](https://toskaman.github.io/openbridge/try.html) (a labelled simulation, 2 minutes),
    then watch the [3-minute demo on real devices](https://youtu.be/TZaxCcRmrLQ).
 2. **Understand what a partner gains.** [Partner program](partners/README.md): new features without new firmware,
    interoperability, tests and benchmarks, an emulator of your device, a verified compatibility report.
@@ -55,6 +55,7 @@ Then read, in this order:
 | The big picture | [Universal device architecture](UNIVERSAL_DEVICE_ARCHITECTURE.md) |
 | How devices are found | [Discovery protocols](DISCOVERY_PROTOCOLS.md) · [Bluetooth, local and remote](BLUETOOTH_LOCAL_AND_REMOTE.md) · [Device identity](DEVICE_IDENTITY_AND_DEDUPLICATION.md) |
 | What a device can do | [Device capabilities](DEVICE_CAPABILITIES.md) · [Capability schema](DEVICE_CAPABILITY_SCHEMA.md) |
+| Add a device | [Integrate your device](INTEGRATE_YOUR_DEVICE.md): `python -m src.cli partner new "Your Device"` · [Home Assistant bridge](HOME_ASSISTANT.md) |
 | Integration examples | [Android TV adapter](ANDROID_TV_ADAPTER.md) · [Freebox](FREEBOX_INTEGRATION.md) · [Routers](ROUTER_ADAPTERS.md) · [Android companion](ANDROID_COMPANION.md) |
 | A full partner integration | [ENGO technical hub](partners/engo/README.md): protocol, opcodes, layouts, emulator |
 | Safety | [Relay security](RELAY_SECURITY.md) (pairing, signing, replay protection) · [Transactions and undo](TRANSACTION_AND_UNDO.md) |

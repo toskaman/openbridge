@@ -12,6 +12,8 @@
 
 <p align="center">
   <a href="https://github.com/toskaman/openbridge/actions/workflows/verify.yml"><img src="https://github.com/toskaman/openbridge/actions/workflows/verify.yml/badge.svg" alt="Verify"></a>
+  <a href="https://github.com/toskaman/openbridge/actions/workflows/codeql.yml"><img src="https://github.com/toskaman/openbridge/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/toskaman/openbridge"><img src="https://api.scorecard.dev/projects/github.com/toskaman/openbridge/badge" alt="OpenSSF Scorecard"></a>
   <img src="https://img.shields.io/badge/platforms-Windows%20·%20Linux%20·%20macOS%20·%20Android%20·%20Android%20TV%20·%20Wear%20OS-0d1330" alt="Platforms">
   <img src="https://img.shields.io/badge/AI-local--first-2dd4bf" alt="Local-first AI">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-a78bfa" alt="License"></a>
@@ -203,7 +205,9 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 **Idea in development (concept only, not integrated):** [OpenBridge without a PC](docs/concepts/PC_LESS_OPENBRIDGE.md): devices use each other directly through a made-to-measure, self-updating client and an OpenBridge server over the internet.
 
-**Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · Matter · Thread · Zigbee · Home Assistant · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
+**New: [Home Assistant bridge](docs/HOME_ASSISTANT.md).** Everything your Home Assistant knows (lights, plugs, thermostats, blinds, locks, robots, including Matter, Zigbee and Thread devices) joins OpenBridge, with consent, read-back and exact Undo on top. OpenBridge never unlocks a door, never moves a garage door and never touches an alarm. Tested against a simulated Home Assistant; real-instance test pending.
+
+**Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · native Matter · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
 ---
 
@@ -241,6 +245,8 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 - 🧪 **Complete test suites and benchmarks** written for your product and run on the real hardware, in CI on three operating systems.
 - 📈 **Wider compatibility:** USB, Wi-Fi, BLE or relay, on 6 platforms, even legacy Windows.
 - 🖥️ **An emulator of your device**, an expert review of your API / SDK, a **public verified compatibility report**, and your brand featured here like ENGO.
+
+**Your engineers can start today:** `python -m src.cli partner new "Your Device"` scaffolds an adapter, an emulator and tests that pass on day one ([guide](docs/INTEGRATE_YOUR_DEVICE.md)).
 
 **What I ask in return:** 📦 **hardware to keep** (donated units or a permanent loan, never a time-limited one, so tests and benchmarks keep running on every release), API / SDK documentation, and a technical contact.
 
@@ -284,7 +290,9 @@ TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enferm�
 
 **No install:** [try the in-browser simulation](https://toskaman.github.io/openbridge/try.html) (labelled as a simulation), or explore the [compatibility](https://toskaman.github.io/openbridge/compatibility.html) and [benchmarks](https://toskaman.github.io/openbridge/benchmarks.html) pages.
 
-**On your PC:** 
+**Windows, nothing to install:** [download OpenBridge for Windows](https://github.com/toskaman/openbridge/releases/latest) (about 15 MB, Python included), unzip, then double-click *Start OpenBridge*.
+
+**From source, on any OS:** 
 Windows, Linux or macOS · Python 3.14 · **no third-party packages to install.**
 
 ```sh
@@ -302,6 +310,8 @@ Want the local AI models, the Android / TV / watch companion, or headless use ov
 ## 📚 Go deeper
 
 - 🧭 **[Start here](docs/START_HERE.md)**<br><sub>A short path for decision-makers, engineers and QA</sub>
+- 🏠 **[Home Assistant bridge](docs/HOME_ASSISTANT.md)**<br><sub>Everything your Home Assistant knows, Matter included, with consent and read-back on top</sub>
+- 🧰 **[Integrate your device](docs/INTEGRATE_YOUR_DEVICE.md)**<br><sub>`partner new` scaffolds an adapter, an emulator and passing tests</sub>
 - 🏗️ **[Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)**<br><sub>How discovery, AI, safety gates and verification fit together</sub>
 - 🧪 **[Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md)**<br><sub>Every device tested, and how</sub>
 - 🧾 **[Evidence registry](docs/DEVICE_EVIDENCE.json)** · [Release evidence](docs/RELEASE_EVIDENCE.md)<br><sub>The raw proof behind every claim</sub>
