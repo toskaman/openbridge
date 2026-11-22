@@ -21,7 +21,7 @@ Then open `http://127.0.0.1:18765` in a browser.
 ## First session
 
 1. Press **Discover my environment** (bounded, read-only look at your network).
-2. Or stay offline: run `python -m src.cli judge demo` for the labeled demo.
+2. Or stay offline: run `python -m src.cli demo` for the labeled demo.
 3. Open a device sheet to see sources, capabilities, and statuses.
 4. To connect a real device, follow the on-screen pairing steps for that device
    kind (ADB Wi-Fi for Android, signed pairing for the Companion app).

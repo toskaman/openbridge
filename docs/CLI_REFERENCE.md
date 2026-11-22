@@ -51,7 +51,7 @@ the preview step prints a `--consent HASH` that must be passed back.
 - `sessions list|inspect ID|undo ID --consent ID`
 - `evidence list|verify ID|export ID`
 - `test smoke|integrations|hardware|models|jury`
-- `judge demo` — scripted read-only demonstration ending in an evidence export.
+- `demo` — scripted read-only demonstration ending in an evidence export, no hardware needed (`judge demo` is the older name and still works).
 - `serve [--port 18765] [--headless]` — foreground server, graceful SIGINT/SIGTERM.
 - `agent start [--port 9876]` — Bridge agent listener, graceful shutdown.
 

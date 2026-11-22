@@ -474,6 +474,25 @@ class JudgeDemoTests(unittest.TestCase):
         self.assertIn('evidence folder: invalid', out['steps'][0]['say'])
 
 
+class DemoCommandTests(unittest.TestCase):
+    """`openbridge demo` is the documented first command; `judge demo` still works."""
+
+    def test_demo_is_a_top_level_command(self):
+        args = cli.build_parser().parse_args(['demo'])
+        self.assertIs(args.func, cli.cmd_demo)
+        self.assertEqual(args.command_name, 'demo')
+
+    def test_judge_demo_still_parses(self):
+        args = cli.build_parser().parse_args(['judge', 'demo'])
+        self.assertIs(args.func, cli.cmd_judge_demo)
+
+    def test_demo_runs_the_same_flow_in_its_own_session(self):
+        with mock.patch.object(cli, 'cmd_judge_demo', return_value={'verdict': 'DEMO_COMPLETE'}) as flow:
+            out = cli.cmd_demo(Namespace(session_id=None))
+        self.assertEqual(out['verdict'], 'DEMO_COMPLETE')
+        self.assertEqual(flow.call_args[0][0].session_id, 'demo')
+
+
 def _fabric_status_intent():
     return {'intent_id': 'int-golden', 'version': 1, 'raw_text': 'How many devices are online',
             'lang': 'en', 'outcome': 'count online devices',

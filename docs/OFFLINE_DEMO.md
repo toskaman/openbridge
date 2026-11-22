@@ -7,13 +7,15 @@ every platform.
 ## Run it
 
 ```sh
-python -m src.cli judge demo
+python -m src.cli demo
 ```
 
 Expected output ends with `DEMO_COMPLETE` plus readiness counts
 (`Ready for the offline demo: n/n required checks passed`). If any required
 check fails you get `DEMO_BLOCKED` with the failing checks named — fix those
 and re-run. Nothing is skipped silently.
+
+`python -m src.cli judge demo` is the older name of the same command and still works.
 
 ## What it exercises
 

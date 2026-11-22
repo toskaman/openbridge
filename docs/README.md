@@ -1,5 +1,7 @@
 # Documentation
 
+> 🧭 **New here?** [Start here](START_HERE.md): a short path for decision-makers, engineers and QA.
+
 Start with [project overview and setup](../README.md). Current instructions and historical checkpoints are separated below.
 
 | Need | Read |

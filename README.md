@@ -6,6 +6,7 @@
   <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-What_you_gain-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
   <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
+  <a href="https://toskaman.github.io/openbridge/try.html"><img src="https://img.shields.io/badge/🎮_Play_with_it-in_your_browser-7c3aed?style=for-the-badge" alt="Try it in your browser"></a>
   <a href="https://toskaman.github.io/openbridge/"><img src="https://img.shields.io/badge/🌐_Website-openbridge-0d1330?style=for-the-badge" alt="Project website"></a>
 </p>
 
@@ -281,13 +282,16 @@ TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enferm�
 
 ## ⚡ Try it in 2 minutes
 
+**No install:** [try the in-browser simulation](https://toskaman.github.io/openbridge/try.html) (labelled as a simulation), or explore the [compatibility](https://toskaman.github.io/openbridge/compatibility.html) and [benchmarks](https://toskaman.github.io/openbridge/benchmarks.html) pages.
+
+**On your PC:** 
 Windows, Linux or macOS · Python 3.14 · **no third-party packages to install.**
 
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
 python -m unittest discover -s tests   # 2,400+ tests, no hardware needed
-python -m src.cli judge demo           # offline demo, no devices required
+python -m src.cli demo                 # offline demo, no devices required
 python -m src.server                   # open http://127.0.0.1:18765
 ```
 
@@ -297,6 +301,7 @@ Want the local AI models, the Android / TV / watch companion, or headless use ov
 
 ## 📚 Go deeper
 
+- 🧭 **[Start here](docs/START_HERE.md)**<br><sub>A short path for decision-makers, engineers and QA</sub>
 - 🏗️ **[Architecture](docs/UNIVERSAL_DEVICE_ARCHITECTURE.md)**<br><sub>How discovery, AI, safety gates and verification fit together</sub>
 - 🧪 **[Hardware test matrix](docs/HARDWARE_TEST_MATRIX.md)**<br><sub>Every device tested, and how</sub>
 - 🧾 **[Evidence registry](docs/DEVICE_EVIDENCE.json)** · [Release evidence](docs/RELEASE_EVIDENCE.md)<br><sub>The raw proof behind every claim</sub>

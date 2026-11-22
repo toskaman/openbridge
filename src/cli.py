@@ -1886,6 +1886,12 @@ def cmd_judge_demo(args):
     return {'steps': steps, 'verdict': verdict}
 
 
+def cmd_demo(args):
+    """Offline demo, no hardware needed (same flow as the older `judge demo`)."""
+    args.session_id = getattr(args, 'session_id', None) or 'demo'
+    return cmd_judge_demo(args)
+
+
 def cmd_serve(args):
     import src.server as server_mod
     port = int(getattr(args, 'port', None) or 18765)
@@ -2151,6 +2157,7 @@ def build_parser():
     judge = subs.add_parser('judge')
     judge_subs = judge.add_subparsers(dest='judge_command')
     leaf(judge_subs, 'demo', cmd_judge_demo, 'judge demo')
+    leaf(subs, 'demo', cmd_demo, 'demo')
 
     serve_parser = leaf(subs, 'serve', cmd_serve, 'serve')
     serve_parser.add_argument('--port', type=int, default=18765)
