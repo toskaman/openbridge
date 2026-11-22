@@ -72,7 +72,7 @@
     'home.road.links': '<a href="https://github.com/toskaman/openbridge/blob/main/ROADMAP.md">Feuille de route complète</a> et <a href="https://github.com/toskaman/openbridge/blob/main/CHANGELOG.md">nouveautés</a> (en anglais).',
     'home.co.h': 'Donnons de nouveaux pouvoirs à vos appareils.', 'home.co.p': 'Parlez-nous de votre produit. Réponse en français ou en anglais.',
     'home.co.pdf': 'Télécharger la plaquette partenaire (PDF, en anglais)', 'home.co.req': 'Publier une demande de partenariat', 'home.co.gh': 'Voir le code sur GitHub', 'home.co.dl': 'Télécharger pour Windows',
-    'home.r10d': 'Pont Home Assistant', 'home.r10': 'Lumières, prises, thermostats, volets, serrures et robots connus de Home Assistant, Matter compris', 'lvl.simapi': 'API simulée, test réel à venir',
+    'home.r10d': 'Pont Home Assistant', 'home.r10': 'Lumières, prises, thermostats, volets, serrures et robots connus de Home Assistant, Matter compris', 'lvl.simapi': 'Vrai Home Assistant, appareils de démo',
 
     /* try */
     'try.title': 'Essayer OpenBridge dans le navigateur (simulation)',

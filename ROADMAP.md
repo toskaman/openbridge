@@ -11,7 +11,7 @@ Status legend: 🟢 shipped · 🟡 in progress · 🔵 next · ⚪ later / conc
 |---|---|---|
 | 🕶️ | **ENGO smart glasses (ActiveLook):** move from emulator-validated to real-hardware-validated. Run the 38 HUD features, the 82 tests and the latency / battery benchmarks on the physical pair. | 🟡 glasses on their way |
 | 📊 | **Public benchmark reports per device:** latency, success rate, refusal correctness, linked to CI runs. | 🟡 |
-| 🏠 | **Home Assistant bridge:** lights, plugs, thermostats, media players, blinds, locks and robots known to Home Assistant (Matter, Zigbee and Thread included), with consent, read-back and exact Undo. [Guide](docs/HOME_ASSISTANT.md) | 🟡 shipped, real-instance test pending |
+| 🏠 | **Home Assistant bridge:** lights, plugs, thermostats, media players, blinds, locks and robots known to Home Assistant (Matter, Zigbee and Thread included), with consent, read-back and exact Undo. [Guide](docs/HOME_ASSISTANT.md) | 🟢 shipped, verified on a real Home Assistant (demo devices) |
 | 🧰 | **Partner integration kit:** `openbridge partner new` scaffolds an adapter, an emulator and passing tests. [Guide](docs/INTEGRATE_YOUR_DEVICE.md) | 🟢 shipped |
 | 🤝 | **Partner program:** one adapter, one emulator and one test suite per partner device, with a verified compatibility report. | 🟡 open |
 

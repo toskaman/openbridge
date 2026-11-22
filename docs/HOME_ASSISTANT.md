@@ -5,9 +5,10 @@ it already knows join OpenBridge at once. That includes Matter, Zigbee and Threa
 OpenBridge adds its own layer on top: consent per action, read-back before saying “done”, exact Undo, receipts, and
 actions that are refused whatever happens.
 
-> **Validation status:** implemented and tested against a simulated Home Assistant API (see
-> [`tests/fabric/test_home_assistant.py`](../tests/fabric/test_home_assistant.py)). Not yet verified on a real
-> Home Assistant instance.
+> **Validation status:** verified on a real Home Assistant instance (official Docker image) with Home Assistant's demo
+> devices: 13/13 checks ([evidence](evidence/home-assistant-real-instance-22nov.md)), plus the automated tests against a
+> simulated API ([`tests/fabric/test_home_assistant.py`](../tests/fabric/test_home_assistant.py)). Physical devices
+> through Home Assistant are not yet tested.
 
 ## Connect
 

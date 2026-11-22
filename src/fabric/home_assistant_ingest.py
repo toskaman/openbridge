@@ -2,7 +2,7 @@
 off the snapshot (like the IGD location) and used only by the primitives that act through the bridge."""
 from src.fabric.contracts import Capability, DeviceObservation, Identifier, Link, now, opaque
 
-EVIDENCE = 'Home Assistant REST API; tested against a simulated Home Assistant, not yet on a real instance'
+EVIDENCE = 'Home Assistant REST API; verified on a real Home Assistant with demo devices, physical devices not yet tested'
 
 
 def ingest_home_assistant(registry, ha, salt):

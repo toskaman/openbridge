@@ -8,7 +8,7 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 - 🏠 **Home Assistant bridge:** everything your Home Assistant knows joins OpenBridge, Matter, Zigbee and Thread
   devices included. Allowlisted actions per device, consent per action, read-back before “done”, exact Undo. OpenBridge
   never unlocks a door, never moves a garage door or a gate, never touches an alarm, and never lists cameras or people.
-  Tested against a simulated Home Assistant; real-instance test pending. [Guide](docs/HOME_ASSISTANT.md)
+  Verified on a real Home Assistant instance with its demo devices (13/13). [Guide](docs/HOME_ASSISTANT.md)
 - 🧰 **Partner integration kit:** `openbridge partner new "Your Device"` writes an adapter, an emulator, a graph entry,
   tests that pass on day one and a checklist. [Guide](docs/INTEGRATE_YOUR_DEVICE.md)
 - 🪟 **Windows download:** a 15 MB zip with Python included; unzip and double-click. Built in CI, smoke-tested and

@@ -13,7 +13,8 @@ Safety, on top of OpenBridge's consent gate:
 - After every call the entity is read back; a result is ``verified`` only when its state matches.
 - Reversible changes (on/off, brightness, volume, target temperature) record the previous value for an exact Undo.
 
-Status: implemented and tested against a simulated Home Assistant API. Not yet verified on a real instance.
+Status: verified on a real Home Assistant instance with its demo devices (docs/evidence/home-assistant-real-instance-22nov.md);
+physical devices through Home Assistant not yet tested.
 """
 import ipaddress
 import json

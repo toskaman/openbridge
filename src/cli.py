@@ -653,7 +653,7 @@ def cmd_ha_status(args):
         row['devices'] += 1
         row['controllable'] += 1 if HA.actions_for(s) else 0
     return {'connected': True, 'url': cfg['url'], 'home_assistant': ping['message'], 'domains': by,
-            'status': 'IMPLEMENTED_UNVERIFIED: tested against a simulated Home Assistant, not yet on a real instance'}
+            'status': 'verified on a real Home Assistant with demo devices; physical devices not yet tested'}
 
 
 def cmd_ha_devices(args):
