@@ -1,5 +1,5 @@
-# Copy this file to .github/workflows/pages.yml to rebuild the website on every change to site/ or the data
-# behind it. Then, once: repository Settings > Pages > Build and deployment > Source: "GitHub Actions".
+# Rebuilds and deploys the project website (site/ plus its generated data) on every relevant change.
+# Build locally with: python scripts/site/build_site.py --out _site
 name: Project website
 on:
   push:
