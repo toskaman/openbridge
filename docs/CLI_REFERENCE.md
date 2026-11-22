@@ -86,3 +86,18 @@ See [Home Assistant bridge](HOME_ASSISTANT.md).
 - `partner new NAME [--category C] [--title T] [--dry-run]` — scaffold an adapter, an emulator, a graph entry, passing tests and a checklist; never overwrites.
 
 See [Integrate your device](INTEGRATE_YOUR_DEVICE.md).
+
+## Learning, new features and links
+
+| Command | What it does |
+|---|---|
+| `openbridge ha soak --cycles N --consent ALLOW [--include-covers] [--seed S]` | Long real test of every allowed action; each change is undone |
+| `openbridge learn report [--summary]` | What OpenBridge learned about each device |
+| `openbridge learn reset --consent ALLOW` | Forget everything learned |
+| `openbridge create suggest [--limit N]` | Cross-device features built from proven capabilities |
+| `openbridge links add --when E --state S --then E --action A [--value V] [--title T] [--cooldown S]` | Propose a link (inactive until approved) |
+| `openbridge links approve ID --consent ALLOW` | Let a link act |
+| `openbridge links list` / `remove ID` | Manage links |
+| `openbridge links watch [--seconds N] [--interval S]` | Run the link engine on live states |
+
+See [Devices that learn and talk to each other](DEVICE_LEARNING.md).

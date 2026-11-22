@@ -207,6 +207,8 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 **New: [Home Assistant bridge](docs/HOME_ASSISTANT.md).** Everything your Home Assistant knows (lights, plugs, thermostats, blinds, locks, robots, including Matter, Zigbee and Thread devices) joins OpenBridge, with consent, read-back and exact Undo on top. OpenBridge never unlocks a door, never moves a garage door and never touches an alarm. Verified on a real Home Assistant instance with its demo devices (13/13); physical devices through Home Assistant not yet tested.
 
+**New: [devices that learn and talk to each other](docs/DEVICE_LEARNING.md).** OpenBridge learns what really works on each device, suggests cross-device features built only from proven actions (Cinema mode, Leaving home...), and lets one device trigger another once you approve it. Soak-tested with 1 480 real actions: 92.8 % verified by read-back ([evidence](docs/evidence/device-learning-soak-22nov.md)).
+
 **Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · native Matter · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
 ---

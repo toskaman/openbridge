@@ -180,6 +180,13 @@ def domain_of(entity_id):
     return entity_id.split('.', 1)[0]
 
 
+FEATURE_BITS = {
+    'media_player': {'set_volume': 4, 'turn_on': 128, 'turn_off': 256, 'play': 16384, 'pause': 1, 'next': 32, 'previous': 16},
+    'climate': {'set_temperature': 1},
+    'vacuum': {'start': 8192, 'pause': 4, 'return_to_base': 16},
+}
+
+
 def actions_for(state):
     """Allowlisted actions for one entity, after policy (sensitive covers have none)."""
     domain = domain_of(state['entity_id'])
@@ -190,6 +197,13 @@ def actions_for(state):
     if domain == 'light' and not any(m in (attrs.get('supported_color_modes') or ['brightness']) for m in
                                      ('brightness', 'color_temp', 'hs', 'xy', 'rgb', 'rgbw', 'rgbww', 'white')):
         acts.pop('set_brightness', None)
+    feats = attrs.get('supported_features')
+    if isinstance(feats, int):
+        # Home Assistant feature bits: offer only what the entity says it supports (avoids HTTP 400).
+        need = FEATURE_BITS.get(domain, {})
+        for act, bit in need.items():
+            if act in acts and not feats & bit:
+                acts.pop(act, None)
     return acts
 
 
@@ -354,6 +368,6 @@ class HomeAssistant:
                        {'entity_id': entity_id, 'temperature': snap['value']})
             ok = lambda s: EXPECT['set_temperature'](s, None, float(snap['value']))
         after, exact = self._wait(entity_id, ok)
-        if exact:
-            self._before.pop(entity_id, None)
+        # One-shot: the Undo is spent either way; `exact` tells whether the old state came back.
+        self._before.pop(entity_id, None)
         return {'entity': entity_id, 'restored': after.get('state'), 'exact': bool(exact)}

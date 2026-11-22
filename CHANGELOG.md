@@ -2,6 +2,17 @@
 
 The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
+## Unreleased
+
+- 🧠 **Devices that learn:** every action updates a per-device profile (success rate, latency, states seen).
+  `openbridge learn report`. [Guide](docs/DEVICE_LEARNING.md)
+- ✨ **New features from what works:** `openbridge create suggest` combines proven capabilities into
+  cross-device features such as Cinema mode or Leaving home.
+- 🔗 **Devices that talk to each other:** `openbridge links add / approve / watch`. Edge-triggered, approved by
+  you, cooldowns and a loop guard, every firing read back.
+- 🧪 **Long soak test:** `openbridge ha soak`. 1 480 actions on a real Home Assistant: 92.8 % verified.
+  Four bugs found and fixed. [Evidence](docs/evidence/device-learning-soak-22nov.md)
+
 ## v0.4.0: 22 November 2026
 
 ### New in this release

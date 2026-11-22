@@ -590,6 +590,196 @@ def cmd_ai_test(args):
         raise CliError('inference', 'INFERENCE_FAILED', str(e))
 
 
+# ---------------- learning, creation and device links (through Home Assistant devices) ----------------
+
+def _ha_fabric(args):
+    """(ha, registry, executor, learner, entity->key) with every receipt fed to the device learner."""
+    from types import SimpleNamespace
+    from src.fabric.discovery import install_salt
+    from src.fabric.home_assistant_ingest import ingest_home_assistant
+    from src.fabric.registry import Registry
+    from src.runtime.device_learning import Learner
+    from src.runtime.primitives import Executor
+    ha = _ha_client(args)
+    reg = Registry()
+    rep_ = ingest_home_assistant(reg, ha, install_salt())
+    if rep_.get('status') != 'OK':
+        raise CliError('device', 'HA_UNAVAILABLE', 'Home Assistant unavailable (%s)' % rep_.get('detail', ''))
+    learner = Learner()
+    ex = Executor(SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(),
+                                  fabric_adapters=lambda p=None: {'home_assistant': ha}))
+    keys = {d['ha_entity']: k for k, d in reg.devices.items() if d.get('ha_entity')}
+    return ha, reg, ex, learner, keys
+
+
+def _learned(learner, reg, receipt, key, action):
+    learner.observe_receipt(dict(receipt, device_key=key), category=reg.devices[key]['category'], action=action)
+
+
+def cmd_ha_soak(args):
+    """Long real test: every controllable device, every allowed action, many cycles; changes are undone."""
+    import random
+    import time as _t
+    from src.adapters import home_assistant as HA
+    if getattr(args, 'consent', None) != 'ALLOW':
+        raise CliError('permission', 'CONSENT_REQUIRED', 'The soak test changes devices (and undoes them). Re-run with --consent ALLOW.')
+    ha, reg, ex, learner, keys = _ha_fabric(args)
+    rng = random.Random(getattr(args, 'seed', 7))
+    values = {'set_brightness': (5, 100), 'set_volume': (0, 100), 'set_temperature': (16, 26)}
+    SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+    stats, t0, reasons, acked = {}, _t.time(), {}, 0
+    plan = []
+    for s in ha.states():
+        for a in HA.actions_for(s):
+            if a in ('open', 'close', 'stop') and not getattr(args, 'include_covers', False):
+                continue
+            plan.append((s['entity_id'], a))
+    for cycle in range(int(getattr(args, 'cycles', 3))):
+        rng.shuffle(plan)
+        for eid, a in plan:
+            key = keys.get(eid)
+            if key is None:
+                continue
+            params = {'action': a}
+            if a in values:
+                lo, hi = values[a]
+                params['value'] = rng.randint(lo, hi)
+            prim = 'ha_set' if a in SET else 'ha_command'
+            r = ex.execute(prim, key, params, consent=True)
+            _learned(learner, reg, r, key, '%s:%s' % (prim, a))
+            row = stats.setdefault(prim + ':' + a, {'runs': 0, 'verified': 0, 'blocked': 0, 'other': 0, 'undo_exact': 0, 'undo_runs': 0})
+            row['runs'] += 1
+            row['verified' if r['verified'] else 'blocked' if r['state'] == 'BLOCKED' else 'other'] += 1
+            if not r['verified']:
+                why = ((r['errors'][0] if r['errors'] else r['state'])[:60] + ' | ' + eid.split('.')[0])
+                reasons[why] = reasons.get(why, 0) + 1
+            if not r['verified'] and r['state'] != 'BLOCKED' and r.get('transaction_id'):
+                # The soak is the owner here: it reads the device back and acknowledges the outcome,
+                # so one demo quirk cannot fill the recovery backlog for the rest of the run.
+                try:
+                    ha.state(eid)
+                    if ex.acknowledge(r['transaction_id']):
+                        acked += 1
+                except Exception:
+                    pass
+            if prim == 'ha_set' and r['verified']:
+                u = ex.execute('ha_undo', key, {}, consent=True)
+                _learned(learner, reg, u, key, 'ha_undo')
+                row['undo_runs'] += 1
+                row['undo_exact'] += 1 if u['state'] == 'REVERTED' else 0
+    total = sum(r['runs'] for r in stats.values())
+    ok = sum(r['verified'] for r in stats.values())
+    undo = sum(r['undo_runs'] for r in stats.values())
+    return {'cycles': int(getattr(args, 'cycles', 3)), 'actions': total, 'verified': ok,
+            'verified_pct': round(100 * ok / max(1, total), 1),
+            'undo_exact_pct': round(100 * sum(r['undo_exact'] for r in stats.values()) / max(1, undo), 1),
+            'duration_s': round(_t.time() - t0, 1), 'by_action': stats,
+            'learned': learner.report()['proven_actions'], 'acknowledged_after_readback': acked,
+            'not_verified_reasons': dict(sorted(reasons.items(), key=lambda kv: -kv[1])[:15])}
+
+
+def cmd_learn_reset(args):
+    from src.runtime.device_learning import Learner
+    if getattr(args, 'consent', None) != 'ALLOW':
+        raise CliError('permission', 'CONSENT_REQUIRED', 'This forgets everything OpenBridge learned. Re-run with --consent ALLOW.')
+    l = Learner()
+    n = len(l.devices)
+    l.devices = {}
+    l._save()
+    return {'forgotten_devices': n}
+
+
+def cmd_learn_report(args):
+    from src.runtime.device_learning import Learner
+    rep_ = Learner().report()
+    if getattr(args, 'summary', False):
+        rep_['devices'] = [{'device': d['device'], 'category': d['category'], 'reliability': d['reliability'],
+                            'proven': sorted(a for a, p in d['actions'].items() if p['proven'])} for d in rep_['devices']]
+    return rep_
+
+
+def cmd_create_suggest(args):
+    from src.runtime.device_learning import suggest_recipes
+    ha, reg, ex, learner, keys = _ha_fabric(args)
+    ideas = suggest_recipes(reg, learner, limit=int(getattr(args, 'limit', 12)))
+    inv = {v: k for k, v in keys.items()}
+    for i in ideas:
+        i['when']['entity'] = inv.get(i['when']['device'])
+        i['then']['entity'] = inv.get(i['then']['device'])
+    return {'ideas': ideas, 'count': len(ideas),
+            'next': 'openbridge links add --when ENTITY --state STATE --then ENTITY --action ACTION [--value N]'}
+
+
+def _links(args, need_fabric=True):
+    from src.runtime.device_links import Links
+    if need_fabric:
+        ha, reg, ex, learner, keys = _ha_fabric(args)
+        return Links(ex, learner=learner), ha, reg, keys
+    return Links(None), None, None, None
+
+
+def cmd_links_add(args):
+    from src.runtime.device_links import LinkError
+    links, ha, reg, keys = _links(args)
+    for e in (args.when, args.then):
+        if e not in keys:
+            raise CliError('args', 'HA_UNKNOWN_ENTITY', 'No listed Home Assistant device %r.' % e)
+    SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+    params = {'action': args.action}
+    if getattr(args, 'value', None) is not None:
+        params['value'] = args.value
+    try:
+        link = links.add(keys[args.when], args.state, keys[args.then], 'ha_set' if args.action in SET else 'ha_command', params,
+                         title=getattr(args, 'title', '') or '%s %s -> %s %s' % (args.when, args.state, args.then, args.action),
+                         cooldown_s=getattr(args, 'cooldown', 30))
+    except LinkError as e:
+        raise CliError('args', 'LINK_INVALID', str(e))
+    return {'link': link, 'next': 'openbridge links approve %s --consent ALLOW' % link['id']}
+
+
+def cmd_links_approve(args):
+    from src.runtime.device_links import LinkError
+    if getattr(args, 'consent', None) != 'ALLOW':
+        raise CliError('permission', 'CONSENT_REQUIRED', 'Approving a link lets it act on its own. Re-run with --consent ALLOW.')
+    links = _links(args, need_fabric=False)[0]
+    try:
+        return {'link': links.approve(args.id)}
+    except LinkError as e:
+        raise CliError('args', 'LINK_UNKNOWN', str(e))
+
+
+def cmd_links_list(args):
+    links = _links(args, need_fabric=False)[0]
+    return {'links': list(links.links.values())}
+
+
+def cmd_links_remove(args):
+    from src.runtime.device_links import LinkError
+    links = _links(args, need_fabric=False)[0]
+    try:
+        links.remove(args.id)
+    except LinkError as e:
+        raise CliError('args', 'LINK_UNKNOWN', str(e))
+    return {'removed': args.id}
+
+
+def cmd_links_watch(args):
+    """Run the link engine on live Home Assistant states for a while; every firing goes through the gate."""
+    import time as _t
+    links, ha, reg, keys = _links(args)
+    end = _t.time() + float(getattr(args, 'seconds', 60))
+    events, ticks = [], 0
+    while _t.time() < end:
+        states = {keys[s['entity_id']]: s.get('state') for s in ha.states() if s['entity_id'] in keys}
+        events += links.tick(states)
+        ticks += 1
+        _t.sleep(float(getattr(args, 'interval', 2)))
+    by = {}
+    for e in events:
+        by[e['result']] = by.get(e['result'], 0) + 1
+    return {'ticks': ticks, 'events': events[-50:], 'by_result': by}
+
+
 # ---------------- partner integration kit ----------------
 
 def cmd_partner_new(args):
@@ -2134,6 +2324,36 @@ def build_parser():
     ai_test = leaf(ai_subs, 'test', cmd_ai_test, 'ai test')
     ai_test.add_argument('name', nargs='?')
 
+    learn = subs.add_parser('learn', help='what OpenBridge learned about each device')
+    learn_subs = learn.add_subparsers(dest='learn_command')
+    lr = leaf(learn_subs, 'report', cmd_learn_report, 'learn report')
+    lr.add_argument('--summary', action='store_true')
+    leaf(learn_subs, 'reset', cmd_learn_reset, 'learn reset')
+
+    create = subs.add_parser('create', help='new cross-device features from proven capabilities')
+    create_subs = create.add_subparsers(dest='create_command')
+    cs = leaf(create_subs, 'suggest', cmd_create_suggest, 'create suggest')
+    cs.add_argument('--limit', type=int, default=12)
+
+    links = subs.add_parser('links', help='devices that talk to each other')
+    links_subs = links.add_subparsers(dest='links_command')
+    la = leaf(links_subs, 'add', cmd_links_add, 'links add')
+    la.add_argument('--when', required=True, help='trigger entity, e.g. media_player.living_room')
+    la.add_argument('--state', required=True, help='trigger state, e.g. playing')
+    la.add_argument('--then', required=True, help='target entity')
+    la.add_argument('--action', required=True)
+    la.add_argument('--value', type=float, default=None)
+    la.add_argument('--title', default='')
+    la.add_argument('--cooldown', type=int, default=30)
+    lap = leaf(links_subs, 'approve', cmd_links_approve, 'links approve')
+    lap.add_argument('id')
+    leaf(links_subs, 'list', cmd_links_list, 'links list')
+    lrm = leaf(links_subs, 'remove', cmd_links_remove, 'links remove')
+    lrm.add_argument('id')
+    lw = leaf(links_subs, 'watch', cmd_links_watch, 'links watch')
+    lw.add_argument('--seconds', type=float, default=60)
+    lw.add_argument('--interval', type=float, default=2)
+
     partner = subs.add_parser('partner', help='partner integration kit')
     partner_subs = partner.add_subparsers(dest='partner_command')
     partner_new = leaf(partner_subs, 'new', cmd_partner_new, 'partner new')
@@ -2154,6 +2374,10 @@ def build_parser():
     ha_do.add_argument('action', help='turn_on, turn_off, set_brightness, set_volume, set_temperature, play, pause, open, close, stop, lock, start, return_to_base')
     ha_do.add_argument('--value', type=float, default=None)
     leaf(ha_subs, 'disconnect', cmd_ha_disconnect, 'ha disconnect')
+    ha_soak = leaf(ha_subs, 'soak', cmd_ha_soak, 'ha soak')
+    ha_soak.add_argument('--cycles', type=int, default=3)
+    ha_soak.add_argument('--seed', type=int, default=7)
+    ha_soak.add_argument('--include-covers', action='store_true')
 
     devices = subs.add_parser('devices')
     device_subs = devices.add_subparsers(dest='devices_command')

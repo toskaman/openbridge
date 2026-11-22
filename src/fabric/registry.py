@@ -3,6 +3,7 @@
 Rules: observations merge into one device only when they share a STRONG identifier of the same kind.
 Weak signals (same IP, same name, randomized MAC) only create a 'possible_same' hint; they never merge
 and never let an action target a different device."""
+import hashlib
 import re
 import threading
 import uuid
@@ -62,7 +63,7 @@ class Registry:
             elif matches:
                 key = matches.pop()
             else:
-                key = self._new(category, label)
+                key = self._new(category, label, stable=strong)
             dev = self.devices[key]
             dev['identifiers'].update(identifiers)
             if CATEGORY_RANK.get(category, 0) > CATEGORY_RANK.get(dev['category'], 0):
@@ -79,10 +80,17 @@ class Registry:
             dev['last_seen'] = now()
             return key
 
-    def _new(self, category, label):
+    def _new(self, category, label, stable=()):
         if len(self.devices) >= MAX_DEVICES:
             raise OverflowError('Device registry limit reached')
-        key = 'dev-' + uuid.uuid4().hex[:12]
+        # A device first seen through strong (already opaque) identifiers gets the same key on every run,
+        # so what OpenBridge learns about it and the links that use it survive restarts.
+        key = None
+        if stable:
+            seed = '|'.join(sorted('%s=%s' % (i.kind, i.value) for i in stable))
+            key = 'dev-' + hashlib.sha256(seed.encode('utf-8')).hexdigest()[:12]
+        if not key or key in self.devices:
+            key = 'dev-' + uuid.uuid4().hex[:12]
         self.devices[key] = {'key': key, 'category': category, 'label': label, 'identifiers': set(),
                              'weak': set(), 'observations': {}, 'capabilities': {}, 'last_seen': now()}
         return key
