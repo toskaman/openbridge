@@ -163,6 +163,43 @@ class ActiveLookTests(unittest.TestCase):
         self.assertGreater(fill, 0.0)
         self.assertLess(fill, 15.0)
 
+    def test_active_look_tcp_server_bridge(self):
+        import socket, time
+        from src.adapters.activelook_emulator import ActiveLookTCPServer, HUDCanvas
+
+        canvas = HUDCanvas(model="ENGO 3")
+        server = ActiveLookTCPServer(canvas, port=7795)
+        server.start()
+
+        time.sleep(0.1)
+
+        # Connect client socket
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect(("127.0.0.1", 7795))
+
+        # Send clear command (0xFF 0x01 0x00 0xAA)
+        client.sendall(bytes([0xFF, 0x01, 0x00, 0xAA]))
+
+        # Send text command "HELLO OPENBRIDGE"
+        text_bytes = "HELLO OPENBRIDGE".encode("utf-8")
+        frame = bytearray([0xFF, 0x37, 6 + len(text_bytes), 0x00, 0x10, 0x00, 0x20, 0x00, 0x01])
+        frame.extend(text_bytes)
+        frame.append(0xAA)
+        client.sendall(bytes(frame))
+
+        time.sleep(0.1)
+
+        # Check command count increased
+        self.assertGreater(canvas._cmd_count, 0)
+
+        # Test broadcast gesture
+        server.broadcast_gesture(0x01)
+        resp = client.recv(1024)
+        self.assertEqual(resp, bytes([0xFF, 0x0A, 0x01, 0x01, 0xAA]))
+
+        client.close()
+        server.stop()
+
 
 if __name__ == "__main__":
     unittest.main()

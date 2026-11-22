@@ -11,3 +11,9 @@ shots/
 TEST_RESULTS/
 
 .xbuild/
+
+# HUD Studio / ActiveLook bridge (local artefacts: captures, extracted third-party bundle, backups)
+captures/
+dev/bundle.v*.check.js
+dev/hud_studio.log
+*.bak-2026*

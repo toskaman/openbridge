@@ -92,14 +92,15 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.adapter.push_peripheral_telemetry(grid_watts=1400, wan_mbps=940, ping_ms=8)
         frames_nom = parse_frames(bytes(self.sent_bytes))
         color_nom = [f for f in frames_nom if f.cmd == 0x3D]
-        self.assertEqual(color_nom[0].data, bytes([COLOR_GREEN]))
+        self.assertEqual(color_nom[0].data, bytes([0x00]))          # status row wiped in black first
+        self.assertEqual(color_nom[-1].data, bytes([COLOR_GREEN]))  # then drawn in the status colour
 
         # High spike load (7400W) -> Red Alert
         self.sent_bytes.clear()
         self.adapter.push_peripheral_telemetry(grid_watts=7400, wan_mbps=940, ping_ms=8, alert="LINKY SURCHARGE")
         frames_spike = parse_frames(bytes(self.sent_bytes))
         color_spike = [f for f in frames_spike if f.cmd == 0x3D]
-        self.assertEqual(color_spike[0].data, bytes([COLOR_RED]))
+        self.assertEqual(color_spike[-1].data, bytes([COLOR_RED]))
         self.assertTrue(any(b"LINKY SURCHARGE" in f.data for f in frames_spike if f.cmd == 0x37))
 
     def test_workflow_prompter_step_advance_and_timer(self):

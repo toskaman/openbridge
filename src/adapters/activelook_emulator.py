@@ -128,38 +128,51 @@ class ActiveLookConfigBank:
     pages: dict[int, ActiveLookPage] = field(default_factory=dict)
 
 
-def parse_frames(buf: bytes) -> list[Frame]:
-    """Extract complete ActiveLook frames from a byte buffer.
+def scan_frames(buf: bytes) -> tuple[list[Frame], int]:
+    """Extract complete ActiveLook frames and return (frames, bytes_consumed).
     Format: 0xFF [CMD:1] [FMT:1] [LEN:1|2] [QueryID:0..15] [Data:n] 0xAA
+    Malformed candidates (impossible LEN, missing 0xAA footer) are skipped one byte at a time so a
+    stray 0xFF can never stall or loop the parser; an incomplete trailing frame is left unconsumed.
     """
     frames: list[Frame] = []
+    n = len(buf)
     i = 0
-    while i < len(buf):
+    consumed = 0
+    while i < n:
         if buf[i] != 0xFF:
             i += 1
+            consumed = i
             continue
-        if i + 3 >= len(buf):
+        if i + 4 > n:
             break
         cmd = buf[i + 1]
         fmt = buf[i + 2]
         len_wide = bool(fmt & 0x20)
         qid_size = (fmt & 0x1E) >> 1
         hdr_size = 3 + (2 if len_wide else 1)
-        if i + hdr_size > len(buf):
+        if i + hdr_size > n:
             break
-        if len_wide:
-            total_len = struct.unpack_from('>H', buf, i + 3)[0]
-        else:
-            total_len = buf[i + 3]
-        # total_len includes SOF(1)+CMD(1)+FMT(1)+LEN(1or2)+data+EOF(1)
-        payload_start = i + hdr_size + qid_size
-        payload_end   = i + total_len - 1  # exclude 0xAA
-        if payload_end > len(buf):
+        total_len = struct.unpack_from('>H', buf, i + 3)[0] if len_wide else buf[i + 3]
+        # total_len includes SOF(1)+CMD(1)+FMT(1)+LEN(1or2)+QueryID+data+EOF(1)
+        if total_len < hdr_size + qid_size + 1:
+            i += 1
+            consumed = i
+            continue
+        if i + total_len > n:
             break
-        data = buf[payload_start:payload_end]
-        frames.append(Frame(cmd=cmd, data=data))
-        i = i + total_len
-    return frames
+        if buf[i + total_len - 1] != 0xAA:
+            i += 1
+            consumed = i
+            continue
+        frames.append(Frame(cmd=cmd, data=bytes(buf[i + hdr_size + qid_size:i + total_len - 1])))
+        i += total_len
+        consumed = i
+    return frames, consumed
+
+
+def parse_frames(buf: bytes) -> list[Frame]:
+    """Extract complete ActiveLook frames from a byte buffer (see scan_frames)."""
+    return scan_frames(buf)[0]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -206,6 +219,7 @@ class HUDCanvas:
         self._last_cmd  = "—"
 
         self._gesture_pending = False
+        self.frame_observer: Optional[Callable[[Frame], None]] = None   # HUD Studio inspector hook
 
     @property
     def active_bank(self) -> ActiveLookConfigBank:
@@ -219,6 +233,9 @@ class HUDCanvas:
         if grey_or_colour is not None:
             if isinstance(grey_or_colour, tuple):
                 return grey_or_colour
+            # ENGO 3 colour firmware: txt/colour bytes 0x00-0x06 are palette indices (COLOR_* in activelook.py)
+            if self._colour_mode and grey_or_colour in COLOUR_MAP and grey_or_colour <= 0x06:
+                return COLOUR_MAP[grey_or_colour]
             # greyscale 0-15
             lv = int(grey_or_colour * 255 / 15)
             if self._colour_mode:
@@ -232,8 +249,12 @@ class HUDCanvas:
     def dispatch(self, raw: bytes):
         """Accept raw BLE bytes, parse, and render."""
         self._buf += raw
-        for frame in parse_frames(bytes(self._buf)):
-            self._buf = bytearray()   # reset on each good parse
+        frames, consumed = scan_frames(bytes(self._buf))
+        if consumed:
+            del self._buf[:consumed]      # keep an incomplete trailing frame for the next chunk
+        if len(self._buf) > 65536:        # never let junk grow without bound
+            self._buf = bytearray()
+        for frame in frames:
             self._dispatch_frame(frame)
         self._cmd_count += 1
         if not self._hold_buffer:
@@ -241,6 +262,11 @@ class HUDCanvas:
 
     def _dispatch_frame(self, f: Frame):
         self._last_cmd = f"0x{f.cmd:02X}"
+        if self.frame_observer is not None:
+            try:
+                self.frame_observer(f)
+            except Exception:
+                pass
         cmd, d = f.cmd, f.data
 
         if   cmd == 0x00:  self._cmd_power(d)
@@ -262,6 +288,8 @@ class HUDCanvas:
         elif cmd == 0x61:  self._cmd_layout_delete(d)
         elif cmd == 0x62:  self._cmd_layout_display(d)
         elif cmd == 0x63:  self._cmd_layout_clear(d)
+        elif cmd == 0x65:  self._cmd_layout_position(d)
+        elif cmd == 0x66:  self._cmd_layout_display_ext(d)
         elif cmd == 0x69:  self._cmd_layout_clear_and_display(d)
         elif cmd == 0x6B:  self._cmd_layout_save(d, is_color=True)
         elif cmd == 0x70:  self._cmd_gauge_display(d)
@@ -338,20 +366,58 @@ class HUDCanvas:
         if len(d) < 7:
             return
         x, y = struct.unpack_from('>hh', d)
-        font_id = d[4]
-        grey_val = d[5]
-        text = d[6:].decode('utf-8', errors='replace').rstrip('\x00')
+        font_id = d[5]                     # d[4] is rotation (not rendered by the emulator)
+        grey_val = d[6]
+        text = d[7:].decode('utf-8', errors='replace').rstrip('\x00')
         col = self._resolve_colour(grey_val)
         self._draw_text_with_ghost(x, y, text, font_id, col)
 
-    def _draw_text_with_ghost(self, x: int, y: int, text: str, font_id: int, col: tuple[int, int, int]):
+    # ActiveLook system fonts are compact (font 1 ≈ 24 px cell, glyphs ≈ 18 px); Bahnschrift is the
+    # closest condensed DIN-style face shipped with Windows. Sizes are glyph pixel heights on the 304×256 panel.
+    _FONT_SIZES = {0: 12, 1: 18, 2: 25, 3: 34, 4: 46, 5: 58}
+    _FONT_FACES = ("bahnschrift.ttf", "Bahnschrift.ttf", "DejaVuSansCondensed.ttf", "arialn.ttf", "arial.ttf",
+                   "DejaVuSans.ttf")
+    _font_cache: dict = {}
+
+    @classmethod
+    def _font(cls, font_id: int):
         from PIL import ImageFont
-        font_sizes = {0: 16, 1: 24, 2: 38, 3: 64, 4: 75, 5: 82}
-        sz = font_sizes.get(font_id, 24)
-        try:
-            fnt = ImageFont.truetype("arial.ttf", sz)
-        except Exception:
-            fnt = ImageFont.load_default()
+        sz = cls._FONT_SIZES.get(font_id, 19)
+        if sz in cls._font_cache:
+            return cls._font_cache[sz]
+        fnt = None
+        for face in cls._FONT_FACES:
+            try:
+                fnt = ImageFont.truetype(face, sz)
+                break
+            except Exception:
+                continue
+        if fnt is None:
+            try:
+                fnt = ImageFont.load_default(size=sz)
+            except TypeError:
+                fnt = ImageFont.load_default()
+        cls._font_cache[sz] = fnt
+        return fnt
+
+    @classmethod
+    def _symbol_font(cls, font_id: int):
+        """Arrows / pictograms (U+2000+) are missing from Bahnschrift: use a symbol face of the same size."""
+        from PIL import ImageFont
+        key = ("sym", cls._FONT_SIZES.get(font_id, 19))
+        if key not in cls._font_cache:
+            fnt = None
+            for face in ("seguisym.ttf", "segoeui.ttf", "DejaVuSans.ttf"):
+                try:
+                    fnt = ImageFont.truetype(face, key[1])
+                    break
+                except Exception:
+                    continue
+            cls._font_cache[key] = fnt or cls._font(font_id)
+        return cls._font_cache[key]
+
+    def _draw_text_with_ghost(self, x: int, y: int, text: str, font_id: int, col: tuple[int, int, int]):
+        fnt = self._font(font_id)
 
         curr_x = x
         for char in text:
@@ -362,8 +428,9 @@ class HUDCanvas:
                 advance = int(fnt.getlength('.')) if hasattr(fnt, 'getlength') else 6
                 curr_x += advance
             else:
-                self._draw.text((curr_x, y), char, fill=col, font=fnt)
-                adv = int(fnt.getlength(char)) if hasattr(fnt, 'getlength') else 14
+                f = self._symbol_font(font_id) if ord(char) >= 0x2000 else fnt
+                self._draw.text((curr_x, y), char, fill=col, font=f)
+                adv = int(f.getlength(char)) if hasattr(f, 'getlength') else 14
                 curr_x += adv
 
     def _dispatch_frame_offset(self, f: Frame, ox: int, oy: int):
@@ -447,6 +514,19 @@ class HUDCanvas:
             )
             self.active_bank.layouts[layout_id] = layout
 
+    def _cmd_layout_position(self, d):
+        """0x65 layoutPosition — u8 id, u16 x, u8 y."""
+        if len(d) >= 4:
+            layout = self.active_bank.layouts.get(d[0])
+            if layout:
+                layout.x, layout.y = struct.unpack_from('>H', d, 1)[0], d[3]
+
+    def _cmd_layout_display_ext(self, d):
+        """0x66 layoutDisplayExtended — u8 id, u16 x, u8 y, str text (one-shot position)."""
+        if len(d) >= 4:
+            x, y = struct.unpack_from('>H', d, 1)[0], d[3]
+            self._cmd_layout_display(bytes([d[0]]) + d[4:], override_origin=(x, y), al_coords=True)
+
     def _cmd_layout_delete(self, d):
         if d:
             layout_id = d[0]
@@ -455,13 +535,20 @@ class HUDCanvas:
             else:
                 self.active_bank.layouts.pop(layout_id, None)
 
-    def _cmd_layout_display(self, d, override_origin: Optional[tuple[int, int]] = None):
+    def _cmd_layout_display(self, d, override_origin: Optional[tuple[int, int]] = None, al_coords: bool = False):
         if not d:
             return
         layout_id = d[0]
         text = d[1:].decode('utf-8', errors='replace').rstrip('\x00') if len(d) > 1 else ""
         layout = self.active_bank.layouts.get(layout_id)
         if not layout:
+            # Built-in firmware "ALooK" bank (official ActiveLook app layouts)
+            from src.adapters import alook_layouts
+            if alook_layouts.render(self, layout_id, text, override_origin if al_coords else None):
+                return
+            if override_origin:
+                self._draw_text_with_ghost(override_origin[0], override_origin[1], text, 1, self._resolve_colour(12))
+                return
             # Fallback for simple slot rendering
             y_pos = 10 + (layout_id % 8) * 30
             self._draw.rectangle([0, y_pos, DISPLAY_W-1, y_pos+22], fill=(0, 0, 0))
@@ -1371,163 +1458,9 @@ def run_headless_benchmark(model: str = "ENGO 3", include_neural: bool = False) 
     adapter = ActiveLookAdapter(transport=transport, model=model)
     benchmarks = {}
 
-    scenarios = [
-        ("spatial_radar", lambda: adapter.push_spatial_radar([
-            {"name": "VAC", "bearing_deg": 220, "dist_m": 2.5, "state": "docking"},
-            {"name": "GATE", "bearing_deg": 35, "dist_m": 7.5, "state": "alert"},
-            {"name": "SOLAR", "bearing_deg": 0, "dist_m": 5.0, "state": "ok"},
-            {"name": "CAR", "bearing_deg": 315, "dist_m": 9.0, "state": "ok"}
-        ])),
-        ("eyes_on_target", lambda: adapter.push_eyes_on_target_receipt(
-            target_name="Salon Lights", action="Extinction & Verrouillage",
-            oracle_verified=True, latency_ms=38, digest="#4f9a12c8-verified"
-        )),
-        ("two_phase_countdown", lambda: adapter.push_two_phase_countdown(
-            routine_name="Bedtime Shutdown", seconds_remaining=4, max_seconds=5
-        )),
-        ("peripheral_telemetry", lambda: adapter.push_peripheral_telemetry(
-            grid_watts=7420, wan_mbps=940, ping_ms=9, alert="LINKY SPIKE > 7kW"
-        )),
-        ("workflow_prompter", lambda: adapter.push_workflow_prompter(
-            step_idx=3, total_steps=7, title="Connect Ribbon Bus",
-            instruction="Insert I2C cable into J2 connector until click", timer_s=145
-        )),
-        ("doorbell_subtitles", lambda: adapter.push_live_subtitles(
-            speaker="Livreur Colis", text="Bonjour, j'ai un paquet pour vous a deposer", is_urgent=True
-        )),
-        ("compass_wayfinder", lambda: adapter.push_compass_wayfinder(
-            heading_deg=285, target_bearing_deg=310, target_dist_m=145.0, target_name="PARKING B3"
-        )),
-        ("security_shield", lambda: adapter.push_smart_home_security_alert(
-            threat_type="SYN Port Scan", source_ip="192.168.1.189",
-            mac_vendor="Raspberry Pi / Rogue", target_service="SSH Port 22"
-        )),
-        ("bio_pacer", lambda: adapter.push_bio_adaptive_pacer(
-            target_spm=180, current_spm=174, hr_bpm=162, hr_zone=4, advice="AUGMENTER FREQUENCE (+6)"
-        )),
-        ("media_remote", lambda: adapter.push_media_remote_hud(
-            media_title="Dune: Part Two", artist_or_source="Kodi Salon (4K HDR)",
-            volume_pct=45, is_playing=True, progress_s=3420, total_s=9960
-        )),
-        ("silent_morse_input", lambda: adapter.push_silent_morse_input(
-            buffer_str="OUI EN ROUTE", current_morse=".-", suggestion="ARRIVE 5 MIN"
-        )),
-        ("speech_teleprompter", lambda: adapter.push_speech_teleprompter(
-            current_line="OpenBridge connecte vos lunettes",
-            next_line="aux modeles d'IA locaux et a vos objets",
-            wpm=138, is_rushing=False, elapsed_s=45, total_s=180
-        )),
-        ("spatial_energy_heatmap", lambda: adapter.push_spatial_energy_heatmap(
-            current_room="Cuisine", room_watts=2150, total_watts=3480,
-            vampire_devices=[{"name": "Four Veille", "watts": 65, "idle_hours": 3}]
-        )),
-        ("arcade_runner", lambda: adapter.push_arcade_game_frame(
-            player_y=160, obstacle_x=180, score=50, game_over=False
-        )),
-        ("collision_sentry", lambda: adapter.push_collision_sentry(
-            hazard_side="left", speed_kmh=52, dist_m=18.5, ttc_s=1.3
-        )),
-        ("executive_briefing", lambda: adapter.push_executive_briefing_glance(
-            contact_name="Sophie Martin", role_title="Directrice R&D",
-            bullet_points=["Partenariat v2", "Budget 85k", "Decision a 17h"],
-            sentiment_hint="VIP"
-        )),
-        ("biofeedback_stress", lambda: adapter.push_biofeedback_stress_guardian(
-            stress_score=68, hrv_ms=42, breath_phase="INSP", phase_timer_s=3
-        )),
-        ("diy_ar_stud_level", lambda: adapter.push_diy_ar_stud_level(
-            pitch_deg=0.1, roll_deg=0.0, is_level=True, detected_hazard="CABLE 230V ACTIF"
-        )),
-        ("first_responder_cpr", lambda: adapter.push_first_responder_triage(
-            mode="cpr", bpm=110, compression_count=22, ccf_pct=86, cycle_s=42
-        )),
-        ("directional_subtitles", lambda: adapter.push_directional_subtitles(
-            speaker_name="Alice", direction="left",
-            text_line1="On lance le test d'autonomie ?",
-            text_line2="Le protocole BLE est stable.",
-            is_translated=False
-        )),
-        ("uav_avionics", lambda: adapter.push_uav_avionics_hud(
-            pitch_deg=4.5, roll_deg=-2.0, heading_deg=45, alt_agl_m=85.0,
-            speed_kmh=48.0, home_dist_m=285.0, home_bearing_rel_deg=-30.0,
-            cell_voltage=3.82, lq_pct=100
-        )),
-        ("stealth_rf_sentry", lambda: adapter.push_stealth_rf_sentry(
-            threat_type="airtag", target_id="Apple AirTag", rssi_dbm=-58, dist_m=1.8
-        )),
-        ("thermal_arc_flash", lambda: adapter.push_thermal_arc_flash_sentry(
-            t_max_c=78.4, t_ambient_c=24.1, delta_t_c=54.3,
-            reticle_xy=(152, 115), afb_dist_m=1.5, is_violating_boundary=False
-        )),
-        ("allergen_nutrition", lambda: adapter.push_allergen_nutrition_scanner(
-            product_name="M&M's Peanut", detected_allergens=["ARACHIDES"],
-            carbs_g=59.0, sugar_g=53.0, sodium_mg=40.0, nutri_score="E"
-        )),
-        ("tactical_marine", lambda: adapter.push_tactical_marine_hud(
-            awa_deg=-42.0, aws_knots=14.5, sog_knots=7.8, cog_deg=218, depth_m=4.8, regatta_sec_left=222
-        )),
-        ("multilingual_whisperer", lambda: adapter.push_multilingual_interpreter(
-            speaker_origin="Tanaka", source_transcript="Getsuyobi wa chotto...",
-            translated_text="Lundi sera un peu difficile...",
-            etiquette_tag="[REFUS INDIRECT]", etiquette_tip="Ne pas insister.",
-            target_country="JAPON"
-        )),
-        ("driver_vigilance", lambda: adapter.push_driver_vigilance_hud(
-            perclos_pct=18.5, microsleep_detected=True, saccade_target="LEFT", nearest_rest_km=4.2
-        )),
-        ("warehouse_pick", lambda: adapter.push_warehouse_pick(
-            order_id="48291", progress_str="04/18", aisle_bay_str="ALLEE 04 - TRAVEE 12",
-            shelf_bin_str="ETAGERE 03 - BAC 02", quantity=12, unit_str="PCS",
-            sku_code="SKU-8842-M8", sku_desc="VIS INOX M8x40", scan_status="VERIFIED"
-        )),
-        ("avalanche_sar", lambda: adapter.push_avalanche_sar_hud(
-            phase="COARSE", distance_m=12.4, tangent_angle_deg=14.0, victims_count=3, turn_180=False
-        )),
-        ("circadian_chrono", lambda: adapter.push_circadian_chrono_optimizer(
-            current_lux=4200, medi_lux=3800, dose_lux_min=222000, target_dose=300000,
-            caffeine_active_mg=68, cutoff_time_str="14:30", sleep_clearance_hrs=4.3, melatonin_warning=False
-        )),
-        ("firefighter_mayday", lambda: adapter.push_firefighter_mayday_hud(
-            unit_id="E42-A", cylinder_bar=220, ambient_temp_c=118, temp_rise_c_per_min=35,
-            exit_bearing_deg=60, pass_alarm=False
-        )),
-        ("ballistic_drop", lambda: adapter.push_ballistic_drop_compensator(
-            range_m=850.0, elevation_mrad=6.4, windage_mrad=-1.2, wind_speed_ms=4.5,
-            wind_angle_deg=90, cant_deg=-0.4
-        )),
-        ("surgical_vitals", lambda: adapter.push_surgical_vitals_hud(
-            patient_id="P-402", spo2_pct=98, hr_bpm=72, map_mmhg=85, etco2_mmhg=38,
-            implant_torque_ncm=32.0
-        )),
-        ("low_vision_echonav", lambda: adapter.push_low_vision_echonav_hud(
-            head_obstacle_dist_m=1.8, head_obstacle_type="BRANCHE / PANNEAU",
-            curb_drop_dist_m=2.2, is_critical_duck=False
-        ))
-    ]
-
-    neural_scenarios = [
-        ("neural_voice_assistant", lambda: adapter.push_neural_voice_assistant_hud(
-            state_str="ECOUTE EN COURS", partial_transcript="Eteindre le salon et verifier la Freebox",
-            mic_source="PHONE BEAMFORMING MIC", vu_level_pct=76, latency_ms=115
-        )),
-        ("multimodal_vision_hud", lambda: adapter.push_multimodal_vision_hud(
-            target_label="DISJONCTEUR #4 (CHAUFFE-EAU)", confidence_pct=96,
-            bounding_box=(60, 60, 244, 150),
-            diagnostic_summary="POSITION BASSE : DECLENCHEMENT",
-            action_recommendation="Verifiez resistance avant de re-armer",
-            source_device="50MP PHONE CAM"
-        )),
-        ("ambient_iot_matrix", lambda: adapter.push_ambient_iot_matrix(
-            linky_watts=1950, tempo_tomorrow="BLANC", rain_min=14, temp_c=16,
-            transit_line="M14", transit_eta_min=2, wan_mbps=940, ping_ms=8
-        )),
-        ("neural_translation_stream", lambda: adapter.push_neural_translation_stream(
-            speaker_id="SPEAKER 01", source_lang="EN", target_lang="FR",
-            live_text="Welcome to the OpenBridge AR ecosystem",
-            translated_text="Bienvenue dans l'ecosysteme de realite augmentee OpenBridge",
-            azimuth_dir="GAUCHE 30°", latency_ms=175
-        ))
-    ]
+    from src.adapters.hud_features import build_scenarios, CORE_COUNT
+    _all = build_scenarios(adapter)
+    scenarios, neural_scenarios = _all[:CORE_COUNT], _all[CORE_COUNT:]
 
     active_scenarios = scenarios + (neural_scenarios if include_neural else [])
 
@@ -1557,12 +1490,98 @@ def run_headless_benchmark(model: str = "ENGO 3", include_neural: bool = False) 
     }
 
 
-def launch_emulator(model: str = "ENGO 3", with_ble_server: bool = False, tcp_port: int = 7788):
+class ActiveLookTCPServer:
+    """Direct TCP stream bridge for Android Companion & official ActiveLook app.
+    Listens for raw ActiveLook binary command streams (0xFF ... 0xAA) and dispatches
+    them to HUDCanvas. Broadcasts optical wave gestures to connected phone clients.
     """
-    Launch the HUD emulator GUI (and optionally a virtual BLE server).
+
+    def __init__(self, hud: HUDCanvas, host: str = "0.0.0.0", port: int = 7789):
+        self.hud = hud
+        self.host = host
+        self.port = port
+        self.clients: list = []
+        self._server_sock = None
+        self._running = False
+        self._thread = None
+
+    def start(self):
+        if self._running:
+            return
+        self._running = True
+        self._thread = threading.Thread(target=self._listen_loop, daemon=True)
+        self._thread.start()
+        print(f"[ActiveLookTCPServer] Listening on {self.host}:{self.port} (raw binary ActiveLook bridge)")
+
+    def stop(self):
+        self._running = False
+        if self._server_sock:
+            try:
+                self._server_sock.close()
+            except Exception:
+                pass
+        for c in list(self.clients):
+            try:
+                c.close()
+            except Exception:
+                pass
+        self.clients.clear()
+
+    def _listen_loop(self):
+        import socket
+        try:
+            self._server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._server_sock.bind((self.host, self.port))
+            self._server_sock.listen(5)
+            while self._running:
+                client_sock, addr = self._server_sock.accept()
+                print(f"[ActiveLookTCPServer] Phone client connected from {addr}")
+                self.clients.append(client_sock)
+                t = threading.Thread(target=self._client_handler, args=(client_sock, addr), daemon=True)
+                t.start()
+        except Exception as e:
+            if self._running:
+                print(f"[ActiveLookTCPServer] Listen error: {e}")
+
+    def _client_handler(self, sock, addr):
+        try:
+            while self._running:
+                data = sock.recv(4096)
+                if not data:
+                    break
+                self.hud.dispatch(data)
+        except Exception:
+            pass
+        finally:
+            if sock in self.clients:
+                self.clients.remove(sock)
+            try:
+                sock.close()
+            except Exception:
+                pass
+            print(f"[ActiveLookTCPServer] Phone client {addr} disconnected")
+
+    def broadcast_gesture(self, gesture_byte: int = 0x01):
+        """Notify connected phone clients of optical gesture event."""
+        msg = bytes([0xFF, 0x0A, 0x01, gesture_byte, 0xAA])
+        for c in list(self.clients):
+            try:
+                c.sendall(msg)
+            except Exception:
+                pass
+
+
+def launch_emulator(model: str = "ENGO 3", with_ble_server: bool = False, tcp_port: int = 7788, tcp_raw_port: int = 7789):
+    """
+    Launch the HUD emulator GUI (and optionally a virtual BLE server + TCP phone bridge).
     Call from __main__ or the OpenBridge CLI.
     """
     hud = HUDCanvas(model=model)
+
+    tcp_srv = ActiveLookTCPServer(hud, port=tcp_raw_port)
+    tcp_srv.start()
+    hud.gesture_callback = lambda d: tcp_srv.broadcast_gesture(d[0] if d else 0x01)
 
     if with_ble_server:
         vengo = VirtualENGO(hud, tcp_port=tcp_port)
@@ -1581,8 +1600,13 @@ def launch_emulator(model: str = "ENGO 3", with_ble_server: bool = False, tcp_po
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="OpenBridge × ENGO HUD Emulator")
-    parser.add_argument("--model", default="ENGO 3", choices=["ENGO 1", "ENGO 2", "ENGO 3", "ENGO 3 Titanium"])
+    parser.add_argument("--model", default="ENGO 2", choices=["ENGO 1", "ENGO 2", "ENGO 3", "ENGO 3 Titanium"])
     parser.add_argument("--ble", action="store_true", help="Start virtual BLE GATT server via Bumble")
     parser.add_argument("--port", type=int, default=7788, help="TCP port for Bumble BLE bridge")
-    args = parser.parse_args()
-    launch_emulator(model=args.model, with_ble_server=args.ble, tcp_port=args.port)
+    parser.add_argument("--classic", action="store_true", help="legacy single-window UI instead of HUD Studio")
+    args, rest = parser.parse_known_args()
+    if args.classic or args.ble:
+        launch_emulator(model=args.model, with_ble_server=args.ble, tcp_port=args.port)
+    else:
+        from src.adapters.hud_studio import main as studio_main
+        studio_main(["--model", args.model] + rest)

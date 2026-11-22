@@ -460,7 +460,7 @@ class ActiveLookAdapter:
         # Header banner
         header_text = f"[{'VERIFIED' if status == 'ok' else 'REFUSED'}] {title}"
         cmds += cmd_rectf(0, 0, 303, 28)
-        cmds += cmd_text(4, 6, header_text, font=0, color_or_grey=0 if self.is_color else 15)
+        cmds += cmd_text(4, 6, header_text, font=0, color_or_grey=0)
         
         # Detail body
         detail_color = color_code if self.is_color else 12
@@ -568,7 +568,7 @@ class ActiveLookAdapter:
         # Banner
         cmds += cmd_rectf(0, 0, 303, 26)
         hdr = "[IN-SITU VERIFIED ✓]" if oracle_verified else "[ACTION REFUSED ✗]"
-        cmds += cmd_text(4, 6, hdr, font=0, color_or_grey=0 if self.is_color else 15)
+        cmds += cmd_text(4, 6, hdr, font=0, color_or_grey=0)
 
         # Target & Action
         cmds += cmd_text(4, 40, f"TARGET : {target_name.upper()[:22]}", font=1, color_or_grey=COLOR_YELLOW if self.is_color else 14)
@@ -602,7 +602,7 @@ class ActiveLookAdapter:
             cmds += cmd_color(phase_color)
 
         cmds += cmd_rectf(0, 0, 303, 26)
-        cmds += cmd_text(4, 6, "[TRANSACTION SAFETY GATE]", font=0, color_or_grey=0 if self.is_color else 15)
+        cmds += cmd_text(4, 6, "[TRANSACTION SAFETY GATE]", font=0, color_or_grey=0)
 
         # Routine label
         cmds += cmd_text(4, 38, f"PENDING : {routine_name[:20]}", font=1, color_or_grey=phase_color if self.is_color else 14)
@@ -627,8 +627,11 @@ class ActiveLookAdapter:
         Draws an ultra-low pixel fill (<3% pixels) telemetry row sitting silently in periphery.
         """
         cmds = bytearray()
-        # Wipe only top status row (y: 0-28) to preserve screen
+        # Wipe only top status row (y: 0-28) to preserve screen: erase in black, not in the active colour
+        cmds += cmd_color(COLOR_OFF) if self.is_color else cmd_grey(0)
         cmds += cmd_rectf(0, 0, 303, 26)
+        if not self.is_color:
+            cmds += cmd_grey(15)
 
         is_alert = alert is not None or grid_watts > 6000 or ping_ms > 100
         if is_alert:
@@ -646,7 +649,7 @@ class ActiveLookAdapter:
         else:
             telemetry_str = f"GRID:{grid_watts}W | FIBER:{wan_mbps}M ({ping_ms}ms)"
 
-        cmds += cmd_text(4, 6, telemetry_str[:38], font=0, color_or_grey=0 if self.is_color else 15)
+        cmds += cmd_text(4, 6, telemetry_str[:38], font=0, color_or_grey=col if self.is_color else 15)
         return self.send(bytes(cmds))
 
     def push_workflow_prompter(self, step_idx: int, total_steps: int, title: str, instruction: str, timer_s: Optional[int] = None) -> bool:
@@ -1167,7 +1170,7 @@ class ActiveLookAdapter:
             cmds += cmd_color(COLOR_RED)
         cmds += cmd_rectf(0, 0, 303, 24)
         hdr = f"⚠️ SENTRY ALERTE [TTC {ttc_s:.1f}s]"
-        cmds += cmd_text(4, 5, hdr[:32], font=0, color_or_grey=0 if self.is_color else 15)
+        cmds += cmd_text(4, 5, hdr[:32], font=0, color_or_grey=0)
 
         # Peripheral Side Visual Brackets
         side = hazard_side.lower()
@@ -1719,9 +1722,9 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rectf(0, 0, 303, 56)
-            cmds += cmd_text(12, 6, "[!] DANGER ALLERGENE MORTEL", font=1, color_or_grey=0 if self.is_color else 15)
+            cmds += cmd_text(12, 6, "[!] DANGER ALLERGENE MORTEL", font=1, color_or_grey=0)
             al_str = ", ".join(detected_allergens).upper()
-            cmds += cmd_text(12, 32, f"DETECTE : {al_str[:22]}", font=1, color_or_grey=0 if self.is_color else 15)
+            cmds += cmd_text(12, 32, f"DETECTE : {al_str[:22]}", font=1, color_or_grey=0)
 
             # Product and Risk Warning
             if self.is_color:
