@@ -3,6 +3,10 @@
 </p>
 
 <p align="center">
+  <img src="docs/assets/readme/interop-demo.svg" alt="Animated demo: a watch, tablet, laptop, phone, fridge, VR headset and smart glasses gain new skills and drive lights, a coffee machine, a smart plug, a TV, another phone, a desktop PC and another VR headset. Devices talk to each other directly, a VR headset controls the whole home, and smart glasses show live battery, distance, CPU and RAM over every device." width="100%">
+</p>
+
+<p align="center">
   <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-What_you_gain-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
   <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
