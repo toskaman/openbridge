@@ -20,6 +20,10 @@ def initial_states():
         return {'entity_id': eid, 'state': state, 'attributes': attrs}
     return {s['entity_id']: s for s in (
         e('light.living_room', 'on', brightness=128, supported_color_modes=['brightness'], friendly_name='Living room'),
+        e('light.desk', 'on', brightness=102, color_mode='color_temp', color_temp_kelvin=2700,
+          supported_color_modes=['color_temp', 'hs'], friendly_name='Desk'),
+        e('light.strip', 'on', brightness=255, color_mode='hs', hs_color=[240.0, 80.0],
+          supported_color_modes=['hs'], friendly_name='Strip'),
         e('switch.coffee', 'off', friendly_name='Coffee machine'),
         e('climate.hall', 'heat', temperature=19.0, min_temp=7, max_temp=30, friendly_name='Hall'),
         e('media_player.tv', 'playing', volume_level=0.2, friendly_name='TV'),
@@ -35,7 +39,7 @@ def initial_states():
 
 
 class FakeHA:
-    states, calls, ignore_calls, redirect = {}, [], False, False
+    states, calls, ignore_calls, redirect, ignore_fields, delays = {}, [], False, False, (), {}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *a):
@@ -80,14 +84,31 @@ class FakeHA:
             s = FakeHA.states.get(body.get('entity_id'))
             if s is None:
                 return self._send(400, {'message': 'bad entity'})
-            if not FakeHA.ignore_calls:
+            if (domain, service) in FakeHA.delays:      # a slow device: the state changes later
+                apply = lambda: FakeHA.apply(s, domain, service, body)
+                threading.Timer(FakeHA.delays[(domain, service)], apply).start()
+            elif not FakeHA.ignore_calls:
+                FakeHA.apply(s, domain, service, body)
+            self._send(200, [s])
+
+    @staticmethod
+    def apply(s, domain, service, body):
+            if True:
                 a = s['attributes']
                 if service == 'turn_on':
                     s['state'] = 'on'
-                    if 'brightness_pct' in body:
+                    if 'brightness_pct' in body and 'brightness' not in FakeHA.ignore_fields:
                         a['brightness'] = round(body['brightness_pct'] * 255 / 100)
+                    elif domain == 'light' and not a.get('brightness'):
+                        a['brightness'] = 255                       # back on at full brightness, as many bulbs do
+                    if 'color_temp_kelvin' in body and 'color' not in FakeHA.ignore_fields:
+                        a['color_mode'], a['color_temp_kelvin'] = 'color_temp', body['color_temp_kelvin']
+                    if 'hs_color' in body and 'color' not in FakeHA.ignore_fields:
+                        a['color_mode'], a['hs_color'] = 'hs', list(body['hs_color'])
                 elif service == 'turn_off':
                     s['state'] = 'off'
+                    if domain == 'light':                           # like Home Assistant: no brightness while off
+                        a['brightness'] = None
                 elif service == 'set_temperature':
                     a['temperature'] = body['temperature']
                 elif service == 'volume_set':
@@ -95,7 +116,6 @@ class FakeHA:
                 else:
                     s['state'] = {'media_play': 'playing', 'media_pause': 'paused', 'open_cover': 'open', 'close_cover': 'closed',
                                   'lock': 'locked', 'start': 'cleaning', 'return_to_base': 'returning'}.get(service, s['state'])
-            self._send(200, [s])
 
 
 class Base(unittest.TestCase):
@@ -112,14 +132,16 @@ class Base(unittest.TestCase):
 
     def setUp(self):
         FakeHA.states, FakeHA.calls, FakeHA.ignore_calls, FakeHA.redirect = initial_states(), [], False, False
+        FakeHA.ignore_fields, FakeHA.delays = (), {}
         HA._sleep = lambda s: None
 
     def tearDown(self):
         import time
         HA._sleep = time.sleep
 
-    def ha(self, token=TOKEN):
-        return HA.HomeAssistant(self.url, token, poll_s=0.01, verify_s=0.2)
+    def ha(self, token=TOKEN, **kw):
+        kw.setdefault('windows', {})
+        return HA.HomeAssistant(self.url, token, poll_s=0.01, verify_s=0.2, **kw)
 
 
 class Configuration(Base):
@@ -127,7 +149,9 @@ class Configuration(Base):
         self.assertEqual(HA.validate_url('http://homeassistant.local:8123/'), 'http://homeassistant.local:8123')
         self.assertEqual(HA.validate_url('http://192.168.1.10:8123'), 'http://192.168.1.10:8123')
         self.assertEqual(HA.validate_url('https://ha.example.com'), 'https://ha.example.com')
-        for bad in ('http://ha.example.com', 'ftp://192.168.1.10', 'http://user:pw@192.168.1.10', 'http://192.168.1.10/?x=1', ''):
+        self.assertEqual(HA.validate_url('http://100.101.102.103:8123'), 'http://100.101.102.103:8123')   # Tailscale
+        self.assertEqual(HA.validate_url('http://homeassistant.tail1234.ts.net:8123'), 'http://homeassistant.tail1234.ts.net:8123')
+        for bad in ('http://ha.example.com', 'http://100.128.0.1:8123', 'ftp://192.168.1.10', 'http://user:pw@192.168.1.10', 'http://192.168.1.10/?x=1', ''):
             with self.subTest(bad=bad), self.assertRaises(HA.HABlocked):
                 HA.validate_url(bad)
 
@@ -214,6 +238,67 @@ class Bridge(Base):
         r = self.ha().act('switch.coffee', 'turn_on')
         self.assertIs(r['verified'], False)
         self.assertEqual(r['after'], 'off')
+
+
+class ExactUndoAndSlowDevices(Base):
+    def test_light_undo_restores_brightness_and_colour_temperature(self):
+        ha = self.ha()
+        self.assertTrue(ha.act('light.desk', 'turn_off')['verified'])
+        u = ha.undo('light.desk')
+        self.assertTrue(u['exact'])
+        a = FakeHA.states['light.desk']['attributes']
+        self.assertEqual((FakeHA.states['light.desk']['state'], round(a['brightness'] * 100 / 255), a['color_temp_kelvin']),
+                         ('on', 40, 2700))
+        self.assertEqual(FakeHA.calls[-1][2], {'entity_id': 'light.desk', 'brightness_pct': 40, 'color_temp_kelvin': 2700})
+
+    def test_light_undo_restores_hue_and_saturation(self):
+        ha = self.ha()
+        self.assertTrue(ha.act('light.strip', 'set_brightness', 30)['verified'])
+        self.assertTrue(ha.undo('light.strip')['exact'])
+        self.assertEqual(FakeHA.states['light.strip']['attributes']['hs_color'], [240.0, 80.0])
+
+    def test_undo_that_loses_the_colour_is_not_called_exact(self):
+        ha = self.ha()
+        self.assertTrue(ha.act('light.desk', 'turn_off')['verified'])
+        FakeHA.ignore_fields = ('brightness',)              # the bulb comes back on, but at 100 %
+        self.assertFalse(ha.undo('light.desk')['exact'])
+
+    def test_media_player_undo_resumes_playback(self):
+        ha = self.ha()
+        self.assertTrue(ha.act('media_player.tv', 'turn_off')['verified'])
+        u = ha.undo('media_player.tv')
+        self.assertTrue(u['exact'])
+        self.assertEqual(FakeHA.states['media_player.tv']['state'], 'playing')
+        self.assertEqual([c[1] for c in FakeHA.calls[-2:]], ['turn_on', 'media_play'])
+
+    def test_read_back_windows(self):
+        ha = HA.HomeAssistant(self.url, TOKEN)
+        self.assertEqual(ha.window('switch.coffee', 'turn_on'), 6.0)
+        self.assertEqual(ha.window('vacuum.robot', 'start'), 20.0)
+        self.assertEqual(ha.window('cover.blinds', 'open'), 60.0)
+        slow = HA.HomeAssistant(self.url, TOKEN, latency_hint=lambda eid, act: 14.0 if eid == 'switch.coffee' else None)
+        self.assertEqual(slow.window('switch.coffee', 'turn_on'), 29.0)      # 2 x learned p95 + 1
+        huge = HA.HomeAssistant(self.url, TOKEN, latency_hint=lambda eid, act: 500)
+        self.assertEqual(huge.window('switch.coffee', 'turn_on'), HA.MAX_VERIFY_S)
+        broken = HA.HomeAssistant(self.url, TOKEN, latency_hint=lambda eid, act: 1 / 0)
+        self.assertEqual(broken.window('switch.coffee', 'turn_on'), 6.0)
+
+    def test_slow_device_is_verified_inside_its_window(self):
+        FakeHA.delays = {('vacuum', 'start'): 0.4}
+        fast = self.ha().act('vacuum.robot', 'start')
+        self.assertIsNot(fast['verified'], True)                          # 0.2 s window: too short
+        FakeHA.states = initial_states()
+        r = self.ha(windows={('vacuum', 'start'): 2.0}).act('vacuum.robot', 'start')
+        self.assertTrue(r['verified'])
+        self.assertEqual(r['window_s'], 2.0)
+
+    def test_confirm_reads_again_later(self):
+        FakeHA.delays = {('switch', 'turn_on'): 0.3}
+        ha = self.ha()
+        self.assertIs(ha.act('switch.coffee', 'turn_on')['verified'], False)
+        import time
+        time.sleep(0.5)
+        self.assertTrue(ha.confirm('switch.coffee', 'turn_on')['verified'])
 
 
 class Fabric(Base):

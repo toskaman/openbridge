@@ -12,6 +12,10 @@ Safety, on top of OpenBridge's consent gate:
   disarming an alarm. Cameras, people and device trackers are not even listed (privacy).
 - After every call the entity is read back; a result is ``verified`` only when its state matches.
 - Reversible changes (on/off, brightness, volume, target temperature) record the previous value for an exact Undo.
+  For lights the Undo restores brightness and colour as well as on/off; for media players it restores
+  playing / paused, not just "on".
+- Slow devices get a longer read-back window (vacuums, locks, covers, media players), stretched further by the
+  latency OpenBridge has learned for that device, so a slow but successful action is not reported as failed.
 
 Status: verified on a real Home Assistant instance with its demo devices (docs/evidence/home-assistant-real-instance-22nov.md);
 physical devices through Home Assistant not yet tested.
@@ -71,6 +75,13 @@ EXPECT = {'turn_on': lambda s, a, v: s.get('state') not in ('off', 'unavailable'
           'stop': lambda s, a, v: s.get('state') in ('open', 'closed', 'stopped'),
           'lock': lambda s, a, v: s.get('state') == 'locked',
           'start': lambda s, a, v: s.get('state') == 'cleaning', 'return_to_base': lambda s, a, v: s.get('state') in ('returning', 'docked')}
+# Read-back window per action (seconds). Slow mechanical or networked devices need more than the 6 s default;
+# the effective window is max(default, this, 2 x learned p95 latency + 1), capped at MAX_VERIFY_S.
+VERIFY_WINDOWS = {('vacuum', 'start'): 20.0, ('vacuum', 'pause'): 15.0, ('vacuum', 'return_to_base'): 30.0,
+                  ('lock', 'lock'): 20.0, ('cover', 'open'): 60.0, ('cover', 'close'): 60.0, ('cover', 'stop'): 10.0,
+                  ('media_player', 'turn_on'): 15.0, ('media_player', 'turn_off'): 15.0, ('media_player', 'play'): 10.0,
+                  ('media_player', 'pause'): 10.0, ('media_player', 'set_volume'): 10.0, ('climate', 'set_temperature'): 10.0}
+MAX_VERIFY_S = 90.0
 # States that mean "the device acted but has not finished": reported as executed, not verified.
 MOVING = {'open': ('opening',), 'close': ('closing',), 'lock': ('locking',), 'start': ('cleaning',)}
 
@@ -87,14 +98,18 @@ def config_path():
     return Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge' / 'home_assistant.json'
 
 
+TAILNET = ipaddress.ip_network('100.64.0.0/10')   # Tailscale / CGNAT range: reachable only inside the private mesh
+
+
 def _host_is_private(host):
-    if host in ('localhost', 'homeassistant') or host.endswith(('.localhost', '.local', '.lan', '.home.arpa')):
+    """Local network, or a WireGuard mesh (Tailscale): plain http is acceptable there, the mesh already encrypts."""
+    if host in ('localhost', 'homeassistant') or host.endswith(('.localhost', '.local', '.lan', '.home.arpa', '.ts.net')):
         return True
     try:
         ip = ipaddress.ip_address(host)
     except ValueError:
         return False
-    return ip.is_loopback or ip.is_private or ip.is_link_local
+    return ip.is_loopback or ip.is_private or ip.is_link_local or (ip.version == 4 and ip in TAILNET)
 
 
 def validate_url(url):
@@ -218,11 +233,15 @@ def policy_refusal(domain, action, state=None):
 
 
 class HomeAssistant:
-    def __init__(self, url, token, http=_http, poll_s=0.5, verify_s=6.0):
+    def __init__(self, url, token, http=_http, poll_s=0.5, verify_s=6.0, windows=None, latency_hint=None):
+        """verify_s: default read-back window. windows: per (domain, action) windows (default VERIFY_WINDOWS).
+        latency_hint(entity_id, action) -> learned p95 latency in seconds, or None."""
         if not token:
             raise HABlocked('No Home Assistant token: run `openbridge ha connect --url ... --store-token`')
         self.url, self._token, self._http = validate_url(url), token, http
         self.poll_s, self.verify_s = poll_s, verify_s
+        self.windows = VERIFY_WINDOWS if windows is None else windows
+        self.latency_hint = latency_hint
         self._before = {}
 
     @classmethod
@@ -295,21 +314,69 @@ class HomeAssistant:
             raise HABlocked('this action takes no value')
         return data
 
+    def window(self, entity_id, action):
+        """Read-back window for one action on one entity, in seconds."""
+        w = max(self.verify_s, float(self.windows.get((domain_of(entity_id), action), 0.0)))
+        hint = None
+        if self.latency_hint is not None:
+            try:
+                hint = self.latency_hint(entity_id, action)
+            except Exception:
+                hint = None
+        if isinstance(hint, (int, float)) and not isinstance(hint, bool) and hint > 0:
+            w = max(w, 2 * float(hint) + 1.0)
+        return min(w, MAX_VERIFY_S)
+
+    @staticmethod
+    def _light_look(state):
+        """What a person sees: on/off, brightness % and colour (colour temperature or hue/saturation)."""
+        attrs = state.get('attributes') or {}
+        look = {'state': state.get('state')}
+        if look['state'] == 'on':
+            if isinstance(attrs.get('brightness'), (int, float)):
+                look['pct'] = round(attrs['brightness'] * 100 / 255)
+            mode = attrs.get('color_mode')
+            if mode == 'color_temp' and isinstance(attrs.get('color_temp_kelvin'), (int, float)):
+                look['kelvin'] = int(attrs['color_temp_kelvin'])
+            elif mode in ('hs', 'xy', 'rgb', 'rgbw', 'rgbww') and isinstance(attrs.get('hs_color'), (list, tuple)) \
+                    and len(attrs['hs_color']) == 2:
+                look['hs'] = [round(float(attrs['hs_color'][0]), 1), round(float(attrs['hs_color'][1]), 1)]
+        return look
+
+    @staticmethod
+    def _same_light(look, state):
+        now = HomeAssistant._light_look(state)
+        if now.get('state') != look.get('state'):
+            return False
+        if 'pct' in look and abs(now.get('pct', -99) - look['pct']) > 2:
+            return False
+        if 'kelvin' in look and abs(now.get('kelvin', -9999) - look['kelvin']) > 100:
+            return False
+        if 'hs' in look:
+            hs = now.get('hs')
+            if not hs or min(abs(hs[0] - look['hs'][0]), 360 - abs(hs[0] - look['hs'][0])) > 3 \
+                    or abs(hs[1] - look['hs'][1]) > 3:
+                return False
+        return True
+
     def _snapshot(self, action, state):
         attrs = state.get('attributes') or {}
+        domain = domain_of(state['entity_id'])
+        if domain == 'light' and action in ('turn_on', 'turn_off', 'set_brightness'):
+            return {'kind': 'light', 'look': self._light_look(state)}
+        if domain == 'media_player' and action in ('turn_on', 'turn_off'):
+            return {'kind': 'media', 'state': state.get('state'),
+                    'features': attrs.get('supported_features') if isinstance(attrs.get('supported_features'), int) else None}
         if action in ('turn_on', 'turn_off'):
             return {'kind': 'onoff', 'state': state.get('state')}
-        if action == 'set_brightness':
-            return {'kind': 'brightness', 'state': state.get('state'),
-                    'pct': round((attrs.get('brightness') or 0) * 100 / 255) if state.get('state') == 'on' else None}
         if action == 'set_volume':
             return {'kind': 'volume', 'pct': round(float(attrs.get('volume_level') or 0) * 100)}
         if action == 'set_temperature' and isinstance(attrs.get('temperature'), (int, float)):
             return {'kind': 'temperature', 'value': attrs.get('temperature')}
         return None
 
-    def _wait(self, entity_id, ok, moving=()):
-        deadline = time.monotonic() + self.verify_s
+    def _wait(self, entity_id, ok, moving=(), window=None):
+        deadline = time.monotonic() + (self.verify_s if window is None else window)
         last = None
         while True:
             last = self.state(entity_id)
@@ -340,34 +407,74 @@ class HomeAssistant:
         data = self._service_data(domain, action, value, before)
         snap = self._snapshot(action, before)
         self._http('POST', '%s/api/services/%s/%s' % (self.url, domain, service), self._token, data)
-        after, verified = self._wait(entity_id, lambda s: EXPECT[action](s, action, value), MOVING.get(action, ()))
+        window = self.window(entity_id, action)
+        t0 = time.monotonic()
+        after, verified = self._wait(entity_id, lambda s: EXPECT[action](s, action, value), MOVING.get(action, ()), window)
         if verified and snap is not None:
             self._before[entity_id] = (domain, snap)
         return {'entity': entity_id, 'action': action, 'value': value, 'before': before.get('state'), 'after': after.get('state'),
-                'verified': verified, 'reversible': snap is not None}
+                'verified': verified, 'reversible': snap is not None, 'window_s': round(window, 1),
+                'readback_s': round(time.monotonic() - t0, 2)}
+
+    def confirm(self, entity_id, action, value=None):
+        """Read the device again after an unverified action (slow devices): True once the expected state is there."""
+        if action not in EXPECT:
+            raise HABlocked('unknown action')
+        s = self.state(entity_id)
+        return {'entity': entity_id, 'action': action, 'state': s.get('state'), 'verified': bool(EXPECT[action](s, action, value))}
+
+    def _post(self, domain, service, data):
+        self._http('POST', '%s/api/services/%s/%s' % (self.url, domain, service), self._token, data)
 
     def undo(self, entity_id):
         if entity_id not in self._before:
             raise HABlocked('nothing to undo for this device')
         domain, snap = self._before[entity_id]
         k = snap['kind']
-        if k == 'onoff' or (k == 'brightness' and snap['state'] != 'on'):
+        window = None
+        if k == 'light':
+            look = snap['look']
+            if look['state'] != 'on':
+                self._post('light', 'turn_off', {'entity_id': entity_id})
+            else:
+                data = {'entity_id': entity_id}
+                if 'pct' in look:
+                    data['brightness_pct'] = max(1, int(look['pct']))
+                if 'kelvin' in look:
+                    data['color_temp_kelvin'] = look['kelvin']
+                elif 'hs' in look:
+                    data['hs_color'] = look['hs']
+                self._post('light', 'turn_on', data)
+            ok = lambda s: self._same_light(look, s)
+        elif k == 'media':
+            target, feats = snap['state'], snap.get('features')
+            window = self.window(entity_id, 'turn_on')
+            if target in ('off', 'standby'):
+                self._post('media_player', 'turn_off', {'entity_id': entity_id})
+                ok = lambda s: s.get('state') in ('off', 'standby')
+            else:
+                self._post('media_player', 'turn_on', {'entity_id': entity_id})
+                follow = {'playing': ('media_play', FEATURE_BITS['media_player']['play']),
+                          'paused': ('media_pause', FEATURE_BITS['media_player']['pause'])}.get(target)
+                if follow and (feats is None or feats & follow[1]):
+                    self._wait(entity_id, lambda s: s.get('state') not in ('off', 'standby'), (), window)
+                    self._post('media_player', follow[0], {'entity_id': entity_id})
+                same = ('on', 'idle') if target in ('on', 'idle') else (target,)
+                ok = lambda s: s.get('state') in same
+        elif k == 'onoff':
             target = snap['state']
             service = 'turn_on' if target == 'on' else 'turn_off'
-            self._http('POST', '%s/api/services/%s/%s' % (self.url, domain, service), self._token, {'entity_id': entity_id})
+            self._post(domain, service, {'entity_id': entity_id})
             ok = lambda s: s.get('state') == target
-        elif k == 'brightness':
-            self._http('POST', '%s/api/services/light/turn_on' % self.url, self._token, {'entity_id': entity_id, 'brightness_pct': snap['pct']})
-            ok = lambda s: EXPECT['set_brightness'](s, None, snap['pct'])
         elif k == 'volume':
-            self._http('POST', '%s/api/services/media_player/volume_set' % self.url, self._token,
-                       {'entity_id': entity_id, 'volume_level': round(snap['pct'] / 100.0, 2)})
+            self._post('media_player', 'volume_set', {'entity_id': entity_id, 'volume_level': round(snap['pct'] / 100.0, 2)})
             ok = lambda s: EXPECT['set_volume'](s, None, snap['pct'])
+            window = self.window(entity_id, 'set_volume')
         else:
-            self._http('POST', '%s/api/services/climate/set_temperature' % self.url, self._token,
-                       {'entity_id': entity_id, 'temperature': snap['value']})
+            self._post('climate', 'set_temperature', {'entity_id': entity_id, 'temperature': snap['value']})
             ok = lambda s: EXPECT['set_temperature'](s, None, float(snap['value']))
-        after, exact = self._wait(entity_id, ok)
+            window = self.window(entity_id, 'set_temperature')
+        after, exact = self._wait(entity_id, ok, (), window)
         # One-shot: the Undo is spent either way; `exact` tells whether the old state came back.
         self._before.pop(entity_id, None)
         return {'entity': entity_id, 'restored': after.get('state'), 'exact': bool(exact)}
