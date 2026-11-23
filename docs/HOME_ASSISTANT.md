@@ -51,6 +51,12 @@ Without `--consent ALLOW` nothing is sent.
 | Robot vacuums | start, pause, return to base | no |
 | Sensors, alarms | read only | n/a |
 
+> **Two paths to a Tuya vacuum.** A Tuya robot exposed both natively and through Home Assistant can be driven two
+> ways: the native `vacuum.*` skills (plus the ENGO glasses `vacuum` grant, both over `tuya_command`) and the Home
+> Assistant skills `home.vacuum_start`, `home.vacuum_pause`, `home.vacuum_dock` (over `ha_command`). Say "vacuum" for
+> the native path, "robot …" for the Home Assistant path. Pick one target per automation or button so two paths never
+> drive the same robot.
+
 ## Slow devices
 
 A command is “done” only when Home Assistant reads the expected state back. Slow devices get a longer read-back

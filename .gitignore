@@ -22,3 +22,9 @@ dev/hud_studio.log
 FRONTIER_LAB/
 dev/*.png
 final-video-SHA256SUMS.txt
+
+# Draft CPace test vectors (downloaded by the owner; see tests/fabric/test_cpace_vectors.py)
+tests/fabric/cpace_draft_vectors.json
+
+# Local benchmark baselines (scripts/verify/bench.py --save)
+bench-baseline.json

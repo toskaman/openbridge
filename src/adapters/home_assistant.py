@@ -25,6 +25,7 @@ import json
 import os
 import re
 import time
+from http.client import HTTPException
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit, quote
@@ -183,6 +184,12 @@ def _http(method, url, token, body=None, timeout=TIMEOUT_S):
         raise HAError('Home Assistant answered HTTP %d' % e.code) from None
     except URLError as e:
         raise HAError('Home Assistant unreachable: %s' % str(e.reason)[:80]) from None
+    except (HAError, HABlocked):
+        raise                                   # e.g. the redirect refusal: already the right error
+    except (OSError, HTTPException) as e:
+        # Truncated bodies, reset links and other wire failures: fail closed as unreachable,
+        # never as a half-read state.
+        raise HAError('Home Assistant gave a broken response: %s' % str(e)[:80]) from None
     if len(raw) > MAX_BYTES:
         raise HAError('Home Assistant response too large')
     try:

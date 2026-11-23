@@ -608,3 +608,51 @@ class MigrateCliTests(unittest.TestCase):
             with self.assertRaises(cli.CliError) as e:
                 cli.cmd_migrate_rollback(args)
         self.assertEqual(e.exception.code, 'SPEC_INVALID')
+
+
+class CreateSuggestSaveTests(unittest.TestCase):
+    IDEAS = [{'title': 'Cinema mode', 'why': 'proven', 'confidence': 'high',
+              'when': {'device': 'dev-tv', 'label': 'TV', 'state': 'playing', 'state_observed': True},
+              'then': {'device': 'dev-light', 'label': 'Lamp', 'primitive': 'ha_set',
+                       'params': {'action': 'set_brightness', 'value': 20}}},
+             {'title': 'Leaving home', 'why': 'proven', 'confidence': 'high',
+              'when': {'device': 'dev-lock', 'label': 'Door', 'state': 'locked', 'state_observed': True},
+              'then': {'device': 'dev-plug', 'label': 'Plug', 'primitive': 'ha_set',
+                       'params': {'action': 'turn_off'}}}]
+    KEYS = {'media_player.tv': 'dev-tv', 'light.lamp': 'dev-light', 'lock.door': 'dev-lock',
+            'switch.plug': 'dev-plug'}
+
+    def run_cmd(self, save):
+        import copy
+        from src.runtime.skill_library import Library
+        lib = Library(None, persist=False)
+        with mock.patch.object(cli, '_ha_fabric', return_value=(None, None, None, None, self.KEYS)), \
+             mock.patch('src.runtime.device_learning.suggest_recipes',
+                        return_value=copy.deepcopy(self.IDEAS)), \
+             mock.patch.object(cli, '_skill_library', return_value=(lib, None, None)):
+            return cli.cmd_create_suggest(Namespace(limit=12, save=save)), lib
+
+    def test_save_all(self):
+        out, lib = self.run_cmd('all')
+        self.assertEqual(out['count'], 2)
+        self.assertEqual(len(out['saved']), 2)
+        for sid in out['saved']:
+            r = lib.recipes[sid]
+            self.assertEqual(r['origin']['kind'], 'suggestion')
+            self.assertIsNone(r['approved'])
+
+    def test_save_one_by_number(self):
+        out, lib = self.run_cmd('2')
+        self.assertEqual(len(out['saved']), 1)
+        self.assertEqual(lib.recipes[out['saved'][0]]['name'], 'Leaving home')
+
+    def test_save_bad_number(self):
+        for bad in ('0', '3', 'x'):
+            with self.assertRaises(cli.CliError) as e:
+                self.run_cmd(bad)
+            self.assertEqual(e.exception.code, 'SUGGESTION_UNKNOWN')
+
+    def test_no_save_by_default(self):
+        out, lib = self.run_cmd(None)
+        self.assertNotIn('saved', out)
+        self.assertEqual(lib.recipes, {})

@@ -123,7 +123,7 @@ class Quality:
         """Count one receipt. Does nothing without consent. device_info: {manufacturer, model, firmware} or None."""
         if not self.enabled:
             return False
-        info = device_info or {}
+        info = device_info if isinstance(device_info, dict) else {}
         key = (_clean(info.get('manufacturer')), _clean(info.get('model')), _clean(info.get('firmware'), 32),
                _clean(category, 20), _clean(action, 40))
         state = receipt.get('state')

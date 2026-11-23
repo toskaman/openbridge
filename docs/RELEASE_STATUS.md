@@ -1,5 +1,9 @@
 # Release status and remaining work
 
+> **Frozen at v0.3.2 (November 2026).** This page is the historical record of the v0.3.x jury releases; it is no
+> longer updated. For what shipped since (v0.4.0, v0.5.0 and later), see the [changelog](../CHANGELOG.md) and the
+> [roadmap](../ROADMAP.md). Test counts and statuses below are history, not current state.
+
 Authoritative checklist, work-reconciled against release tag v0.3.2 (docs-only over v0.3.1: video re-voiced with Meta MMS-TTS; video-link commit on v0.3.0 `a413829`; content freeze `7d74757`, merge #188; previously origin/main `2351308` on 2 November 2026, PR164–177 merged; suite 2378 green locally at `333d14d` + Windows/Ubuntu/macOS/browser CI; clean-room green on main; Android emulator lab 5/5 on main; registry 37 VERIFIED rows: 28 REAL_HARDWARE + 7 FULL_GUEST_OS + 2 OFFICIAL_PLATFORM_EMULATOR; main is PolyForm Strict 1.0.0 since PR #170). Suite-count history: 2115 main-line-era (02-Nov) / 2132 jury-final (03-Nov V5 branch) / 2378 absolute-final (`333d14d`). [Documentation index](README.md) · [Evidence index](RELEASE_EVIDENCE.md) · [Archived checkpoints](archive/RELEASE_CHECKPOINTS.md). Earlier branch names, ports, test counts (1203/1150/864/1245/2055/2096/2115/2132) and pending flags in archived notes are historical.
 
 ## Integrated work

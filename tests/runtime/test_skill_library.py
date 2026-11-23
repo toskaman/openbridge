@@ -148,10 +148,21 @@ class Triggers(Base):
 
     def test_suggestion_becomes_a_recipe(self):
         idea = {'title': 'Cinema mode', 'why': 'TV and lights are proven',
-                'when': {'device': 'dev-tv', 'state': 'playing'},
-                'then': {'device': 'dev-light', 'action': 'set_brightness', 'value': 20}}
+                'when': {'device': 'dev-tv', 'label': 'TV', 'state': 'playing', 'state_observed': True},
+                'then': {'device': 'dev-light', 'label': 'Lamp', 'primitive': 'ha_set',
+                         'params': {'action': 'set_brightness', 'value': 20}}, 'confidence': 'high'}
         r = self.lib.from_suggestion(idea)
         self.assertEqual((r['origin']['kind'], r['steps'][0]['primitive'], r['approved']), ('suggestion', 'ha_set', None))
+        self.assertEqual(r['steps'][0]['params'], {'action': 'set_brightness', 'value': 20})
+
+    def test_suggestion_rejects_foreign_shapes(self):
+        bad = [{'title': 'x'}, {'when': {}, 'then': {}},
+               {'when': {'device': 'd', 'state': 's'},
+                'then': {'device': 'd2', 'primitive': 'pc_job', 'params': {}}},
+               'not an idea', None, []]
+        for idea in bad:
+            with self.assertRaises(SL.SkillError):
+                self.lib.from_suggestion(idea)
 
 
 class Sharing(Base):

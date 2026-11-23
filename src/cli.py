@@ -729,11 +729,28 @@ def cmd_create_suggest(args):
     ha, reg, ex, learner, keys = _ha_fabric(args)
     ideas = suggest_recipes(reg, learner, limit=int(getattr(args, 'limit', 12)))
     inv = {v: k for k, v in keys.items()}
-    for i in ideas:
+    for n, i in enumerate(ideas, 1):
+        i['n'] = n
         i['when']['entity'] = inv.get(i['when']['device'])
         i['then']['entity'] = inv.get(i['then']['device'])
-    return {'ideas': ideas, 'count': len(ideas),
-            'next': 'openbridge links add --when ENTITY --state STATE --then ENTITY --action ACTION [--value N]'}
+    out = {'ideas': ideas, 'count': len(ideas),
+           'next': 'openbridge links add --when ENTITY --state STATE --then ENTITY --action ACTION [--value N]'}
+    want = getattr(args, 'save', None)
+    if want is not None:
+        if want == 'all':
+            chosen = ideas
+        else:
+            try:
+                idx = int(want) - 1
+            except (TypeError, ValueError):
+                idx = -1
+            if not 0 <= idx < len(ideas):
+                raise CliError('args', 'SUGGESTION_UNKNOWN', '--save takes all or one idea number (1-%d)' % len(ideas))
+            chosen = [ideas[idx]]
+        lib = _skill_library(args)[0]
+        out['saved'] = [_skill_call(lib.from_suggestion, i)['id'] for i in chosen]
+        out['next'] = 'openbridge skills list / approve; saved ideas arrive unapproved'
+    return out
 
 
 def _links(args, need_fabric=True):
@@ -1054,7 +1071,9 @@ def cmd_ha_status(args):
 SAY_DOMAINS = {'home.turn_on': ('light', 'switch', 'fan', 'media_player'), 'home.turn_off': ('light', 'switch', 'fan', 'media_player'),
                'home.set_brightness': ('light',), 'home.set_temperature': ('climate',),
                'home.media_play': ('media_player',), 'home.media_pause': ('media_player',), 'home.media_volume': ('media_player',),
-               'home.cover_open': ('cover',), 'home.cover_close': ('cover',), 'home.lock': ('lock',),
+               'home.cover_open': ('cover',), 'home.cover_close': ('cover',), 'home.cover_stop': ('cover',),
+               'home.lock': ('lock',), 'home.vacuum_start': ('vacuum',), 'home.vacuum_dock': ('vacuum',),
+               'home.vacuum_pause': ('vacuum',),
                'home.undo': ('light', 'switch', 'fan', 'media_player', 'climate')}
 GENERIC = {'light', 'lights', 'lamp', 'the', 'smart', 'device', 'speaker', 'thermostat', 'heating', 'plug', 'blinds',
            'shutters', 'curtains', 'door', 'player', 'media'}
@@ -2682,6 +2701,8 @@ def build_parser():
     create_subs = create.add_subparsers(dest='create_command')
     cs = leaf(create_subs, 'suggest', cmd_create_suggest, 'create suggest')
     cs.add_argument('--limit', type=int, default=12)
+    cs.add_argument('--save', nargs='?', const='all', default=None, metavar='N',
+                    help='save ideas as skill proposals: all, or one 1-based number (they arrive unapproved)')
 
     links = subs.add_parser('links', help='devices that talk to each other')
     links_subs = links.add_subparsers(dest='links_command')

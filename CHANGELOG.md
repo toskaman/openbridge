@@ -4,7 +4,31 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
-Nothing yet.
+- ✨ **Skills wired end to end:** saved skills now run in the server (`SkillService`: state ticks from Home Assistant
+  every 15 s, schedules every minute), from the app (Workflows → Saved skills: approve, run, enable / disable,
+  remove) and from buttons on a paired watch, phone or TV (at-most-once per press).
+  `GET /api/v2/library`, `POST /api/v2/library/*`, `POST /api/v2/remote_controls/skills`. [Guide](docs/SKILLS.md)
+- 🔌 **Two new adapters from the kit:** ESPHome lights over the local `web_server` REST API (on/off, brightness,
+  toggle; OTA/restart/config refused) and OpenWrt routers over local LuCI JSON-RPC (uptime, WAN, load, DHCP leases;
+  read-only by policy like the Freebox). Both are emulator-validated with loopback round-trip tests (18 tests);
+  hardware runs are the next step. [ESPHome](docs/partners/esphome_light/README.md) ·
+  [OpenWrt](docs/partners/openwrt_router/README.md)
+- 🧪 **Advanced tests:** chaos-network suite for the Home Assistant client (refused/timeout/truncated/reset links,
+  hostile shapes — all fail closed as `HAError`), adversarial fuzz for every file-driven parser (640 mutated cases;
+  found and fixed 3 untyped-error bugs in skills/packs import), deterministic CPace properties plus a loader for the
+  draft's own vectors, and micro-benchmarks with ceilings in CI (`scripts/verify/bench.py`).
+- 🩹 **Fixes:** the emulator-harness timeout test now passes on Windows (POSIX script path + launch guard), and the
+  local API accepts dict queries without a Python 3.14 deprecation warning.
+- 🗣️ **3 new home skills:** `home.cover_stop` (stop blinds mid-travel), `home.vacuum_start` and `home.vacuum_dock`
+  (robot vacuums through Home Assistant; "robot" in the request picks them, plain "vacuum" keeps the native Tuya
+  skills). Wired into `ha say` domains, FR/EN voice training families and the end-to-end battery.
+- 📦 **New `energy-saver` skill pack:** "Eco evening" (light to 30 %, standby plug off), nightly standby cull at 1:00,
+  "Back to full light". Installs by role, unapproved as always. [Guide](docs/SKILL_PACKS.md)
+- 💡 **`create suggest --save [N]`:** save suggested automations as unapproved skill proposals (all, or one by number).
+  Fixed `from_suggestion` to consume the real `suggest_recipes` shape (it expected a format nothing produced).
+- 🤖 **Vacuum paths unified in docs:** native `vacuum.*` (+ ENGO glasses grant) vs `home.vacuum_start/pause/dock`
+  through Home Assistant — "vacuum" picks native, "robot …" picks HA. New `home.vacuum_pause` completes the HA trio
+  (registry, `ha say`, voice families, battery).
 
 ## v0.5.0: 23 November 2026
 

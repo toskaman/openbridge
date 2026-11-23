@@ -152,16 +152,22 @@ class Library:
             return self.recipes[sid]
 
     def from_suggestion(self, idea):
-        """A `create suggest` idea ({title, when: {device, state}, then: {device, action, value?}}) -> saved proposal."""
-        when, then = idea['when'], idea['then']
-        params = {'action': then['action']}
-        if then.get('value') is not None:
-            params['value'] = then['value']
-        prim = 'ha_set' if then['action'] in ('turn_on', 'turn_off', 'set_brightness', 'set_volume',
-                                              'set_temperature') else 'ha_command'
-        return self.add({'name': idea.get('title') or 'Suggested link', 'description': idea.get('why', '')[:300],
-                         'trigger': {'kind': 'state', 'device': when['device'], 'state': when['state']},
-                         'steps': [{'device': then['device'], 'primitive': prim, 'params': params}]}, 'suggestion')
+        """A `create suggest` idea -> saved proposal (unapproved). Consumes the suggest_recipes shape:
+        {title?, why?, when: {device, state}, then: {device, primitive, params}}."""
+        if not isinstance(idea, dict):
+            raise SkillError('not a suggestion idea')
+        try:
+            when, then = idea['when'], idea['then']
+            trigger = {'kind': 'state', 'device': when['device'], 'state': when['state']}
+            steps = [{'device': then['device'], 'primitive': then['primitive'],
+                      'params': dict(then.get('params') or {})}]
+        except (KeyError, TypeError, AttributeError):
+            raise SkillError('not a suggestion idea') from None
+        if steps[0]['primitive'] not in ALLOWED_PRIMITIVES:
+            raise SkillError('a suggestion cannot use %s' % (steps[0]['primitive'],))
+        title = idea.get('title') or 'Suggested link'
+        return self.add({'name': str(title)[:60], 'description': str(idea.get('why', '') or '')[:300],
+                         'trigger': trigger, 'steps': steps}, 'suggestion')
 
     # ---------- owner decisions ----------
     def _get(self, sid):
@@ -305,15 +311,21 @@ class Library:
         imported, unmapped = [], set()
         for s in bundle['skills'][:MAX_RECIPES]:
             s = json.loads(json.dumps(s))
+            if not isinstance(s, dict):
+                raise SkillError('a skill is an object')
             for st in s.get('steps', []):
+                if not isinstance(st, dict):
+                    raise SkillError('a step is an object')
                 st['device'] = mapping.get(st['device'], st['device'])
             if isinstance(s.get('trigger'), dict) and s['trigger'].get('kind') == 'state':
                 s['trigger']['device'] = mapping.get(s['trigger']['device'], s['trigger']['device'])
             origin = s.get('origin') or {}
             r = self.add(s, 'import', model=origin.get('model'), request=origin.get('request'))
             imported.append(r['id'])
+            devs = bundle.get('devices')
+            devs = devs if isinstance(devs, dict) else {}
             for k in [st['device'] for st in r['steps']] + ([r['trigger']['device']] if r['trigger']['kind'] == 'state' else []):
-                if k not in mapping.values() and k in (bundle.get('devices') or {}):
+                if k not in mapping.values() and k in devs:
                     unmapped.add(k)
         return {'trusted': trusted, 'imported': imported, 'unmapped_devices': sorted(unmapped)}
 

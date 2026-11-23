@@ -52,6 +52,11 @@ OBJECTS = {
               ('curtains', ['curtains', 'drapes'], ['curtains'], ['les rideaux'])],
     'lock': [('front door', ['front door', 'door'], ['front door', 'door'], ["la porte d'entrée", 'la porte']),
              ('back door', ['back door'], ['back door'], ['la porte de derrière', 'la porte du jardin'])],
+    'robot': [('robot vacuum', ['robot vacuum', 'vacuum robot'], ['robot vacuum', 'robot hoover'],
+               ['le robot aspirateur', "l'aspirateur robot"]),
+              ('robovac', ['Robovac', 'cleaning robot'], ['Robovac', 'cleaning robot'],
+               ['le Robovac', 'le robot de ménage']),
+              ('mop robot', ['mop robot', 'mopping robot'], ['mop robot'], ['le robot laveur', 'le robot serpillière'])],
 }
 ROOMLESS = {'lock', 'thermostat_whole'}
 
@@ -171,6 +176,30 @@ FAMILIES = {
         ('en-US', 'Lock {d}'), ('en-US', 'Lock up {d}'), ('en-US', 'Make sure {d} is locked'), ('en-US', 'Bolt {d}'),
         ('en-GB', 'Lock {d}, I\'m off to bed'), ('en-GB', 'Can you lock {d}?'),
         ('fr', 'Verrouille {d}'), ('fr', 'Ferme {d} à clé'), ('fr', 'Tu peux verrouiller {d} ?'), ('fr', 'Boucle {d}')]),
+    'home.cover_stop': ('home.cover_stop', ('cover',), [
+        ('en-US', 'Stop {d}'), ('en-US', 'Stop {d} there'), ('en-US', 'Halt {d}'), ('en-US', 'Freeze {d}'),
+        ('en-US', 'Stop {d} halfway'), ('en-US', 'Hold {d} right there'),
+        ('en-GB', 'Stop {d}, ta'), ('en-GB', 'Hold {d} there'), ('en-GB', 'Leave {d} where they are'),
+        ('fr', 'Stoppe {d}'), ('fr', 'Arrête {d} là'), ('fr', 'Bloque {d} là'), ('fr', 'Fige {d}'),
+        ('fr', 'Laisse {d} comme ça'), ('fr', 'Stoppe {d} à mi-chemin')]),
+    'home.vacuum_start': ('home.vacuum_start', ('robot',), [
+        ('en-US', 'Start {d}'), ('en-US', 'Run {d}'), ('en-US', 'Send {d} cleaning'), ('en-US', 'Get {d} going'),
+        ('en-US', 'Start cleaning with {d}'), ('en-US', 'Set {d} loose'),
+        ('en-GB', 'Set {d} off'), ('en-GB', 'Send {d} round'), ('en-GB', 'Get {d} hoovering'),
+        ('fr', 'Démarre {d}'), ('fr', 'Lance {d}'), ('fr', 'Envoie {d} nettoyer'), ('fr', 'Fais partir {d}'),
+        ('fr', 'Mets {d} en route'), ('fr', 'Au boulot {d}')]),
+    'home.vacuum_pause': ('home.vacuum_pause', ('robot',), [
+        ('en-US', 'Pause {d}'), ('en-US', 'Hold {d}'), ('en-US', 'Pause {d} for a sec'), ('en-US', 'Stop {d} a moment'),
+        ('en-US', 'Tell {d} to wait'), ('en-US', 'Freeze {d} where it is'),
+        ('en-GB', 'Pause {d} a mo'), ('en-GB', 'Hang on, pause {d}'), ('en-GB', 'Give {d} a rest'),
+        ('fr', 'Mets {d} en pause'), ('fr', 'Pause {d}'), ('fr', 'Mets {d} sur pause'), ('fr', 'Fais attendre {d}'),
+        ('fr', 'Stoppe {d} un instant'), ('fr', 'Immobilise {d}')]),
+    'home.vacuum_dock': ('home.vacuum_dock', ('robot',), [
+        ('en-US', 'Send {d} home'), ('en-US', 'Dock {d}'), ('en-US', 'Send {d} back to its dock'),
+        ('en-US', 'Tell {d} to recharge'), ('en-US', 'Bring {d} back'), ('en-US', '{d} back to base'),
+        ('en-GB', 'Send {d} back to base'), ('en-GB', 'Pack {d} off to its dock'), ('en-GB', '{d} home, please'),
+        ('fr', 'Renvoie {d} à sa base'), ('fr', 'Ramène {d}'), ('fr', 'Dis à {d} de recharger'),
+        ('fr', 'Range {d}'), ('fr', 'Rentre {d}'), ('fr', '{d} à la base')]),
     'home.undo': ('home.undo', ('light', 'appliance', 'thermostat'), [
         ('en-US', 'Undo that on {d}'), ('en-US', 'Put {d} back how it was'), ('en-US', 'Revert {d}'),
         ('en-GB', 'Put {d} back as it was'), ('en-GB', 'Undo what you did to {d}'),

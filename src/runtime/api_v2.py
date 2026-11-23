@@ -37,10 +37,13 @@ GET_ROUTES = ('/api/v2/ai/providers', '/api/v2/hardware/facts', '/api/v2/permiss
               '/api/v2/composer/summary',
               '/api/v2/route_intel',
               '/api/v2/dashboards/list',
-              '/api/v2/pc/full-control')
+              '/api/v2/pc/full-control',
+              '/api/v2/library')
 POST_ROUTES = ('/api/v2/ai/providers', '/api/v2/ai/providers/test', '/api/v2/ai/providers/remove', '/api/v2/ai/providers/activate', '/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
               '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
- '/api/v2/pc/full-control',)
+ '/api/v2/pc/full-control',
+ '/api/v2/library/approve', '/api/v2/library/run', '/api/v2/library/enable', '/api/v2/library/remove',
+ '/api/v2/remote_controls/skills')
 
 
 import threading
@@ -48,6 +51,7 @@ _ROUTER_INIT_LOCK = threading.Lock()
 _REMOTE_CONTROL_INIT_LOCK = threading.Lock()
 _HTTP_IDEM_INIT_LOCK = threading.Lock()
 _TRANSPLANT_LOCK = threading.Lock()
+_SKILL_SERVICE_LOCK = threading.Lock()
 
 
 def router(server):
@@ -77,6 +81,21 @@ def substrate(server):
         from src.substrate.kernel import Substrate
         server.v4_substrate = Substrate(server)
     return server.v4_substrate
+
+
+def skill_service(server):
+    with _SKILL_SERVICE_LOCK:
+        if getattr(server, 'skill_service', None) is None:
+            from src.runtime.skill_service import SkillService
+            server.skill_service = svc = SkillService(server)
+            svc.start()
+            close = getattr(server, 'server_close', None)
+            if close is not None:                          # server shutdown stops the tick loop
+                def server_close(*a, **k):
+                    svc.close()
+                    return close(*a, **k)
+                server.server_close = server_close
+        return server.skill_service
 
 
 def executor(server):
@@ -364,14 +383,18 @@ def ai_providers(path, body=None):
 
 
 def get(server, path, query):
-    if len(query) > MAX_QUERY_BYTES:
-        return 414, {'error': 'Query string too long'}
     if path == '/api/v2/ai/providers':
         return ai_providers(path)
-    try:
-        q = parse_qs(query, max_num_fields=MAX_QUERY_FIELDS)
-    except ValueError:
-        return 400, {'error': 'Too many query parameters'}
+    if isinstance(query, dict):
+        # In-process callers (CLI) pass already-parsed params; normalize scalars to parse_qs shape.
+        q = {k: (v if isinstance(v, list) else [v]) for k, v in query.items()}
+    else:
+        if len(query) > MAX_QUERY_BYTES:
+            return 414, {'error': 'Query string too long'}
+        try:
+            q = parse_qs(query, max_num_fields=MAX_QUERY_FIELDS)
+        except ValueError:
+            return 400, {'error': 'Too many query parameters'}
     ex = executor(server)
     if path == '/api/v2/pc/full-control':
         from src.fabric import pc_consent as PC
@@ -444,6 +467,8 @@ def get(server, path, query):
         from src.runtime.routing import SKILLS
         return 200, {'skills': [{'skill_id': k, 'plain': v['plain'], 'targeted': v['targeted'], 'reversibility': v['reversibility'],
                                  'consent': v['consent'], 'input': v['input'], 'policy': router(server).policy(k)} for k, v in SKILLS.items()]}
+    if path == '/api/v2/library':
+        return 200, skill_service(server).state()
     if path == '/api/v2/skill_routes':
         from src.runtime.routing import RouteError
         try:
@@ -1139,6 +1164,15 @@ def post(server, path, body):
             return e.status, {'error': str(e)}
         except RelayError as e:
             return 409, {'error': str(e)}
+    if path == '/api/v2/remote_controls/skills':
+        from src.runtime.remote_controls import RemoteControlError
+        from src.fabric.relay import RelayError
+        try:
+            return 200, remote_controls(server).set_skill_controls(body)
+        except RemoteControlError as e:
+            return e.status, {'error': str(e)}
+        except RelayError as e:
+            return 409, {'error': str(e)}
     if path == '/api/v2/remote_controls/invoke':
         from src.runtime.remote_controls import RemoteControlError
         try:
@@ -1234,6 +1268,28 @@ def post(server, path, body):
         except PC.ConsentError as e:
             return 400, {'error': str(e)}
         return 200, {'device_key': body['device_key'], 'enabled': store.allowed(ident)}
+    if path in ('/api/v2/library/approve', '/api/v2/library/run', '/api/v2/library/enable',
+                '/api/v2/library/remove') and isinstance(body, dict):
+        from src.runtime.skill_library import SkillError
+        if body.get('consent') is not True:
+            return 400, {'error': 'consent: true is required'}
+        svc = skill_service(server)
+        try:
+            if path == '/api/v2/library/approve':
+                return 200, {'skill': svc.lib.approve(body.get('id', ''))}
+            if path == '/api/v2/library/run':
+                return 200, {'run': svc.lib.run(body.get('id', ''), actor='owner:app')}
+            if path == '/api/v2/library/enable':
+                if not isinstance(body.get('enabled'), bool):
+                    return 400, {'error': 'id, enabled: bool and consent: true are required'}
+                svc.lib.set_enabled(body.get('id', ''), body['enabled'])
+                return 200, {'id': body.get('id', ''), 'enabled': body['enabled']}
+            svc.lib.remove(body.get('id', ''))
+            return 200, {'removed': body.get('id', '')}
+        except SkillError as e:
+            if str(e) == 'unknown skill':
+                return 404, {'error': 'unknown skill'}
+            return 400, {'error': str(e)}
     if path != '/api/v2/execute' or not isinstance(body, dict):
         return 404, {'error': 'Operation unavailable'}
     allowed = {'primitive_id', 'device_key', 'params', 'consent', 'idempotency_key'}

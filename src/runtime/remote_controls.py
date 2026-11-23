@@ -59,6 +59,7 @@ class RemoteControls:
         self._last = {}          # (relay_id, control_id) -> last invocation time
         self._recent = {}        # (relay_id, control_id) -> recent request times
         self.suspended = set()   # (relay_id, control_id) suspended after an unusual burst
+        self._skill_done = {}    # (relay_id, request_id) -> outcome: at-most-once for skill buttons (bounded)
         self.history = []        # bounded outcome log (no free text from the device)
         self.layouts = {}        # relay_id -> {revision, acked, display: {control_id: {kind, label, value, source}}}
         self.full_control = {}   # relay_id -> standing owner consent reported by the device (refreshed each poll)
@@ -154,6 +155,51 @@ class RemoteControls:
             shown[f'ui-{digest}-g{gen}'] = {'kind': d['kind'], 'label': d['label'], 'value': '' if d['kind'] == 'status' else None,
                                             'source': by_widget.get(d.get('source'))}
         return self._install(rid, gen, fp, out, shown, revision)
+
+    def set_skill_controls(self, body):
+        """Owner path: show approved manual skill-library recipes as buttons on a paired Companion.
+
+        body: {relay_id, recipe_ids: [...], consent: true}. The control id of a
+        button is the recipe id itself ('skill-XXXXXXXX', as listed by
+        Library.buttons()); a press runs Library.run() with actor
+        'relay:<relay_id>'. Same rails as other controls (generation, relay-key
+        binding, TTL, burst/interval, receipts, signed outcome text). Only
+        manual, enabled, approved recipes can be granted; revoking the recipe's
+        approval or disabling it stops new dispatches (rechecked per press).
+        """
+        if self.closed:
+            raise RemoteControlError(503, 'Remote controls are shut down')
+        if not isinstance(body, dict) or set(body) - {'relay_id', 'recipe_ids', 'consent'} or body.get('consent') is not True:
+            raise RemoteControlError(400, 'relay_id, recipe_ids and consent: true are required')
+        rid = body.get('relay_id')
+        relay = self._relay(rid)
+        from src.runtime.api_v2 import skill_service
+        from src.runtime.skill_library import SkillError
+        try:
+            lib = skill_service(self.server).lib
+        except (OSError, ValueError) as e:
+            raise RemoteControlError(409, 'skill library unavailable: %s' % e) from None
+        ids = body.get('recipe_ids')
+        if not isinstance(ids, list) or not ids or len(ids) > fabric_relay.MAX_CONTROLS:
+            raise RemoteControlError(400, 'recipe_ids: 1 to %d skill ids' % fabric_relay.MAX_CONTROLS)
+        with self._lock:
+            self.generation += 1
+            gen = self.generation
+        fp, out = _key_fp(relay['key']), {}
+        for sid in ids:
+            try:
+                r = lib._get(sid)
+            except SkillError:
+                raise RemoteControlError(400, 'unknown skill %r' % (sid,)) from None
+            if r['trigger']['kind'] != 'manual':
+                raise RemoteControlError(400, '%r is not a manual skill (only buttons can be pressed)' % r['name'])
+            if not r['enabled']:
+                raise RemoteControlError(400, '%r is disabled; enable it first' % r['name'])
+            if not lib.is_approved(r):
+                raise RemoteControlError(400, '%r is not approved (or changed since approval)' % r['name'])
+            out[sid] = {'kind': 'skill', 'skill_id': 'skill:' + sid, 'label': (r['name'] or 'Skill')[:40],
+                        'recipe_id': sid, 'target': None, 'params': {}, 'generation': gen, 'key_fp': fp}
+        return self._install(rid, gen, fp, out)
 
     def _install(self, rid, gen, fp, out, shown=None, revision=None):
         with self._lock:                                 # owner-update order survives delayed network replies
@@ -505,6 +551,8 @@ class RemoteControls:
     def _dispatch(self, rid, req, grant, actor, entry):
         if grant.get('kind') == 'manifest':
             return self._dispatch_manifest(rid, req, grant, entry)
+        if grant.get('kind') == 'skill':
+            return self._dispatch_skill(rid, req, grant, actor, entry)
         from src.runtime.api_v2 import router
         from src.runtime.routing import RouteError
         rt = router(self.server)
@@ -538,6 +586,40 @@ class RemoteControls:
             if e.code == 'DUPLICATE_REQUEST':
                 return 'DUPLICATE', f"{grant['label']}: already done"
             return 'BLOCKED', f"{grant['label']}: {e}"[:80]
+
+    def _dispatch_skill(self, rid, req, grant, actor, entry):
+        """Skill-button path: the press runs one approved Library recipe. Approval and enabled state are
+        rechecked on every press (disabling or editing the recipe stops the button); a re-sent request id
+        is deduplicated (at-most-once). The run itself goes through the Executor: nothing new is trusted."""
+        from src.runtime.api_v2 import skill_service
+        from src.runtime.skill_library import SkillError
+        key = (rid, req['request_id'])
+        with self._lock:
+            if self._current_grant(rid, req['control_id']) is not grant:
+                return 'REVOKED', 'This control is no longer authorized'
+            if key in self._skill_done:
+                return 'DUPLICATE', f"{grant['label']}: already done"
+            self._skill_done[key] = None
+            while len(self._skill_done) > 500:
+                self._skill_done.pop(next(iter(self._skill_done)))
+        lib = skill_service(self.server).lib
+        entry['invocation_id'] = 'skillrun-' + req['request_id']
+        try:
+            rec = lib.run(grant['recipe_id'], actor=actor)
+        except SkillError as e:
+            return 'BLOCKED', f"{grant['label']}: {e}"[:80]
+        entry['skill_run'] = {'skill': rec.get('skill'), 'result': rec.get('result'),
+                              'steps': [{'device': s['device'], 'verified': s['verified']} for s in rec.get('steps', [])]}
+        with self._lock:
+            self._skill_done[key] = rec.get('result')
+        n_ok, n = sum(1 for s in rec.get('steps', []) if s['verified']), len(rec.get('steps', []))
+        if rec['result'] == 'done':
+            return 'VERIFIED', f"{grant['label']}: done, verified"
+        if rec['result'] == 'partial':
+            return 'EXECUTED', f"{grant['label']}: partially done ({n_ok}/{n} verified)"
+        if rec['result'] == 'blocked':
+            return 'BLOCKED', f"{grant['label']}: {rec.get('reason', 'not allowed')}"[:80]
+        return 'FAILED', f"{grant['label']}: failed"
 
     def _dispatch_manifest(self, rid, req, grant, entry):
         """V4 path: the press runs an owner-approved Meta manifest through the substrate kernel (grant re-verified,

@@ -1,0 +1,141 @@
+{
+ "format": "openbridge-skillpack/1",
+ "id": "energy-saver",
+ "version": "1.0.0",
+ "title": {
+  "en": "Energy saver",
+  "fr": "Économies d'énergie"
+ },
+ "description": {
+  "en": "One button dims the lights and cuts standby plugs; standby plugs are cut again every night.",
+  "fr": "Un bouton tamise les lumières et coupe les prises en veille ; re-coupe chaque nuit."
+ },
+ "publisher": {
+  "name": "OpenBridge",
+  "kind": "openbridge",
+  "url": "https://github.com/toskaman/openbridge"
+ },
+ "roles": {
+  "light": {
+   "categories": [
+    "light"
+   ],
+   "label": {
+    "en": "A dimmable light",
+    "fr": "Une lumière graduable"
+   }
+  },
+  "plug": {
+   "categories": [
+    "plug"
+   ],
+   "label": {
+    "en": "A standby plug",
+    "fr": "Une prise en veille"
+   }
+  }
+ },
+ "skills": [
+  {
+   "name": {
+    "en": "Eco evening",
+    "fr": "Soirée éco"
+   },
+   "description": {
+    "en": "Dim the light to 30% and switch the standby plug off.",
+    "fr": "Tamiser à 30 % et couper la prise en veille."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 30
+       }
+      }
+     }
+    },
+    {
+     "device": "@plug",
+     "by_category": {
+      "plug": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "Night standby cull",
+    "fr": "Chasse aux veilles"
+   },
+   "description": {
+    "en": "Every night at 1:00, switch the standby plug off.",
+    "fr": "Chaque nuit à 1h00, couper la prise en veille."
+   },
+   "trigger": {
+    "kind": "time",
+    "at": "01:00",
+    "days": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   "steps": [
+    {
+     "device": "@plug",
+     "by_category": {
+      "plug": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "Back to full light",
+    "fr": "Rallumer normal"
+   },
+   "description": {
+    "en": "Bring the light back to 80%.",
+    "fr": "Remettre la lumière à 80 %."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 80
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

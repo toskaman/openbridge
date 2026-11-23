@@ -25,6 +25,7 @@ for `--map ROLE=ENTITY`. A pack is installed whole or not at all.
 | `quiet-cleaning` | media player, robot vacuum | The robot pauses as soon as the TV or speaker plays |
 | `good-morning` | thermostat, dimmable light, blinds | Weekday and weekend wake-up: heating, soft light, then the blinds open |
 | `good-night` | TV or speaker, light or plug, door lock | One button: TV off, light off, door locked (OpenBridge never unlocks) |
+| `energy-saver` | dimmable light, standby plug | "Eco evening": light to 30 %, plug off; plugs cut again nightly at 1:00; "Back to full light" restores 80 % |
 
 Every pack is in French and English.
 

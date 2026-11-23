@@ -13,9 +13,10 @@ Construction (follows draft-irtf-cfrg-cpace, "CPace255" with SHA-512):
 PRS is the code, CI the relay id, sid the two pairing nonces. The relay key is ISK[:32].
 
 The Java twin is companion/android/src/fr/openbridge/companion/Cpace.java; tests/fabric/test_cpace.py checks
-X25519 against RFC 7748 and both implementations against shared vectors. Not yet checked against the draft's own
-test vectors (the transcript layout may differ in detail); interoperability between our two sides is what the
-pairing needs, and is tested.
+X25519 against RFC 7748 and both implementations against shared vectors. The draft's own test vectors run in
+tests/fabric/test_cpace_vectors.py whenever tests/fabric/cpace_draft_vectors.json is present next to it
+(git-ignored; see that file's docstring for the format); until then, interoperability between our two sides is
+what the pairing needs, and is tested.
 """
 import hashlib
 import hmac

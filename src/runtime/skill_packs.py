@@ -61,13 +61,17 @@ def validate(pack):
     if not isinstance(skills, list) or not 0 < len(skills) <= 12:
         raise PackError('a pack holds 1 to 12 skills')
     for s in skills:
-        refs = [st.get('device') for st in s.get('steps', [])]
+        if not isinstance(s, dict) or not isinstance(s.get('steps'), list):
+            raise PackError('each skill is an object with steps')
+        refs = [st.get('device') if isinstance(st, dict) else None for st in s['steps']]
         if isinstance(s.get('trigger'), dict) and s['trigger'].get('kind') == 'state':
             refs.append(s['trigger'].get('device'))
         for ref in refs:
             if not isinstance(ref, str) or not ref.startswith('@') or ref[1:] not in roles:
                 raise PackError('skill %r refers to an unknown role %r' % (s.get('name'), ref))
         for st in s.get('steps', []):
+            if not isinstance(st, dict):
+                raise PackError('each step is an object with a device and by_category')
             options = st.get('by_category')
             if not isinstance(options, dict) or not options:
                 raise PackError('each step lists what to do per device category (by_category)')

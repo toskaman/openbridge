@@ -29,7 +29,8 @@ HOME = {'dev-tv': {'category': 'media_player', 'label': 'Living room TV'},
 class ShippedPacks(unittest.TestCase):
     def test_every_shipped_pack_is_valid_and_pinned(self):
         packs = P.available()
-        self.assertEqual({p['id'] for p in packs}, {'cinema', 'leaving-home', 'quiet-cleaning', 'good-morning', 'good-night'})
+        self.assertEqual({p['id'] for p in packs}, {'cinema', 'leaving-home', 'quiet-cleaning', 'good-morning', 'good-night',
+                                                     'energy-saver'})
         self.assertEqual(json.loads((P.PACK_DIR / 'INDEX.json').read_text(encoding='utf-8')), P.build_index(),
                          'INDEX.json is stale: review the pack, then regenerate it with build_index()')
 
@@ -82,6 +83,20 @@ class Install(unittest.TestCase):
         self.assertEqual(self.ex.calls, [])
         self.lib.approve(ids[0])
         self.assertEqual(self.lib.run(ids[0])['result'], 'done')
+
+    def test_install_energy_saver(self):
+        pack = P.get('energy-saver')
+        ids = P.install(self.lib, pack, HOME, {'light': 'dev-light', 'plug': 'dev-plug'}, lang='fr')
+        self.assertEqual(len(ids), 3)
+        names = [self.lib.recipes[i]['name'] for i in ids]
+        self.assertEqual(names, ['Soirée éco', 'Chasse aux veilles', 'Rallumer normal'])
+        eco = self.lib.recipes[ids[0]]
+        self.assertEqual(eco['steps'], [{'device': 'dev-light', 'primitive': 'ha_set',
+                                         'params': {'action': 'set_brightness', 'value': 30}},
+                                        {'device': 'dev-plug', 'primitive': 'ha_set',
+                                         'params': {'action': 'turn_off'}}])
+        sched = self.lib.recipes[ids[1]]
+        self.assertEqual(sched['trigger'], {'kind': 'time', 'at': '01:00', 'days': [0, 1, 2, 3, 4, 5, 6]})
 
     def test_same_pack_resolves_per_brand(self):
         pack = P.get('leaving-home')

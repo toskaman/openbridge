@@ -628,7 +628,62 @@
   }
 
   // ---------------- automations ----------------
+  // ---------------- saved skills (model-free recipes) ----------------
+  async function renderSavedSkills() {
+    const box = $('#saved-skills');
+    if (!box) return;
+    box.replaceChildren(h('p', { class: 'muted', text: 'Loading…' }));
+    let lib;
+    try { lib = await api('/api/v2/library'); }
+    catch (e) { box.replaceChildren(h('p', { class: 'bad', text: 'Unavailable: ' + e.message })); return; }
+    const skills = lib.skills || [];
+    box.replaceChildren();
+    if (!skills.length) box.append(empty('No saved skills yet', 'Install a ready-made pack or save a suggestion: openbridge skills install-pack cinema, or openbridge create suggest --save.'));
+    const redo = () => renderSavedSkills();
+    const act = async (path, body, btn) => {
+      const label = btn.textContent;
+      btn.disabled = true;
+      try { await post(path, Object.assign({ consent: true }, body)); }
+      catch (e) { btn.textContent = 'Blocked: ' + e.message; btn.disabled = false; setTimeout(() => { btn.textContent = label; }, 2500); return; }
+      redo();
+    };
+    for (const s of skills) {
+      const pills = [h('span', { class: 'pill ' + (s.approved ? 'available' : 'detected'), text: s.approved ? 'Approved' : 'Needs approval' }), ' ',
+        h('span', { class: 'pill ' + (s.enabled ? 'available' : 'detected'), text: s.enabled ? 'Enabled' : 'Disabled' }), ' ',
+        h('span', { class: 'pill', text: `${s.trigger} · ${s.steps} step(s)` })];
+      if (s.last) pills.push(' ', h('span', { class: 'pill', text: 'last: ' + s.last }));
+      const bar = h('div', {});
+      if (!s.approved) bar.append(h('button', { class: 'ghost small', type: 'button', onclick: e => act('/api/v2/library/approve', { id: s.id }, e.target) }, 'Approve'), ' ');
+      bar.append(h('button', { class: 'ghost small', type: 'button', onclick: e => act('/api/v2/library/run', { id: s.id }, e.target) }, 'Run now'), ' ');
+      bar.append(h('button', { class: 'ghost small', type: 'button', onclick: e => act('/api/v2/library/enable', { id: s.id, enabled: !s.enabled }, e.target) }, s.enabled ? 'Disable' : 'Enable'), ' ');
+      bar.append(h('button', { class: 'ghost small danger', type: 'button', onclick: e => { if (window.confirm(`Remove “${s.name}” permanently?`)) act('/api/v2/library/remove', { id: s.id }, e.target); } }, 'Remove'));
+      box.append(h('div', { class: 'node-row' }, icon('skills'),
+        h('div', {}, h('strong', { text: s.name }), h('small', { text: `${s.id} · ${s.origin} · ${s.runs} run(s)` }), h('div', {}, ...pills)), bar));
+    }
+    const manual = skills.filter(s => s.trigger === 'manual' && s.approved && s.enabled);
+    const online = (st.routes || []).filter(r => r.online);
+    box.append(h('div', { class: 'node-row' }, icon('watch'),
+      h('div', {}, h('strong', { text: 'Buttons on paired devices' }),
+        h('small', { text: manual.length ? `${manual.length} approved button(s) can be shown on a watch, phone or TV.` : 'Approve a manual skill to show it as a button.' }))));
+    if (manual.length) {
+      if (!online.length) box.append(h('p', { class: 'muted', text: 'No paired device online. Pair a Companion to send buttons.' }));
+      else {
+        const sel = h('select', { 'aria-label': 'Device' }, ...online.map(r => h('option', { value: r.relay_id, text: r.relay_device || r.relay_id })));
+        const send = h('button', { class: 'secondary small', type: 'button', text: `Send ${manual.length} button(s)` });
+        send.addEventListener('click', async () => {
+          send.disabled = true;
+          try { await post('/api/v2/remote_controls/skills', { relay_id: sel.value, recipe_ids: manual.map(s => s.id), consent: true }); send.textContent = 'Sent ✓'; }
+          catch (e) { send.textContent = 'Blocked: ' + e.message; }
+          finally { send.disabled = false; setTimeout(redo, 1500); }
+        });
+        box.append(h('div', {}, sel, ' ', send));
+      }
+    }
+    if (lib.last_error) box.append(h('p', { class: 'muted', text: 'Note: ' + lib.last_error }));
+  }
+
   function renderAutomations() {
+    renderSavedSkills();
     const mb = $('#macro-builder'); mb.replaceChildren();
     const devs = st.snap ? st.snap.devices.filter(d => isAndroid(d) && adbLinked(d) && grantOf(d.key) === 'control') : [];
     if (!devs.length) mb.append(empty('No controllable Android device', 'Connect a phone, TV or watch to build sequences.', h('button', { class: 'ghost small', type: 'button', onclick: () => openConnect() }, 'Connect device')));

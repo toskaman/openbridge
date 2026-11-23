@@ -4,9 +4,11 @@ OpenBridge's AI is needed **once**: to turn a sentence into a new feature. After
 is a saved **recipe** that runs with no AI model at all: from the PC, from a button on a paired device, on a schedule,
 or when another device changes state. It can be exported to a file and imported on another install.
 
-> **Status (23 Nov 2026):** the library is implemented and tested (`src/runtime/skill_library.py`), with its command line
-> (`openbridge skills ...`) and [skill packs](SKILL_PACKS.md). Wiring it
-> into the app and the paired devices is the next step (see [Next steps](#next-steps)).
+> **Status (23 Nov 2026):** the library is implemented, tested and wired in: command line (`openbridge skills ...`),
+> [skill packs](SKILL_PACKS.md), app (Workflows → Saved skills: approve, run, enable / disable, remove), buttons on
+> paired devices (approved manual recipes sent to a watch, phone or TV) and the server loop
+> (`src/runtime/skill_service.py`: state ticks from Home Assistant every 15 s, schedules every minute).
+> See [Next steps](#next-steps) for what remains.
 
 ## From a sentence to a skill
 
@@ -46,7 +48,7 @@ Where proposals come from:
 | Where | Today | How |
 |---|---|---|
 | **This PC** | ✅ | `Library.run()`, `tick()` for state triggers, `run_due()` once a minute for schedules |
-| **A button on the watch, phone or TV** | ✅ building block | `Library.buttons()` lists approved manual skills as `{control_id, label}`; the signed remote-controls channel already carries buttons to paired Companions and their presses back. Binding a press to a skill is the next step. |
+| **A button on the watch, phone or TV** | ✅ | `Library.buttons()` lists approved manual skills as `{control_id, label}`; `RemoteControls.set_skill_controls()` sends them over the signed channel and a press runs `Library.run(actor='relay:<id>')`, at-most-once per press. |
 | **Another OpenBridge install** | ✅ | `export()` → signed `openbridge-skills/1` file → `import_bundle()` with a device map; imported skills are unapproved |
 | **From outside the home** | ✅ with a private mesh | see below |
 | **Without any PC** (a phone runs the skills) | concept | [OpenBridge without a PC](concepts/PC_LESS_OPENBRIDGE.md): a recipe is plain data with typed steps, which is what makes it portable to a phone client |
@@ -73,9 +75,13 @@ model, trained on OpenBridge's own commands (French and English, spoken style, t
 
 ## Next steps
 
-1. Done: `openbridge skills list | show | approve | run | remove | export | import`, and ready-made
-   [skill packs](SKILL_PACKS.md) (`skills packs | install-pack`). Still to do: `create suggest --save`.
-2. App: a Skills page (proposals to approve, runs and receipts, enable / disable).
-3. Bind remote-control buttons to skills (`skill-…` control ids → `Library.run(actor='relay:<id>')`).
-4. Feed `tick()` from the Home Assistant / device watchers and call `run_due()` every minute.
+1. Done: `openbridge skills list | show | approve | run | remove | export | import`, ready-made
+   [skill packs](SKILL_PACKS.md) (`skills packs | install-pack`), and `create suggest --save [N]` (all ideas, or one
+   by number, saved as unapproved proposals).
+2. Done: app Skills section (Workflows → Saved skills: proposals to approve, runs and receipts, enable / disable),
+   `GET /api/v2/library`, `POST /api/v2/library/approve|run|enable|remove`.
+3. Done: remote-control buttons bound to skills (`skill-…` control ids → `Library.run(actor='relay:<id>')`,
+   `RemoteControls.set_skill_controls`, `POST /api/v2/remote_controls/skills`, at-most-once per press).
+4. Done: `SkillService` feeds `tick()` from Home Assistant every 15 s and calls `run_due()` every minute; a tick is
+   skipped, never guessed, when the state source is down.
 5. The model proposes recipes, not only single skills (`links.create` and multi-step requests).

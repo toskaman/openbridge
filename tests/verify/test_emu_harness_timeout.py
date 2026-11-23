@@ -74,7 +74,48 @@ def _bash():
 BASH = _bash()
 
 
-@unittest.skipUnless(BASH, "bash with timeout(1) required")
+def _posix(path):
+    """A POSIX shell cannot open a backslash path reliably (a UNC script path
+    launched from a local-temp cwd fails with 127); forward slashes work on
+    every bash, and are a no-op on Linux."""
+    return path.replace("\\", "/")
+
+
+HARNESS_POSIX = _posix(HARNESS)
+
+
+def _harness_launches():
+    """Can the selected bash open the harness script from a local-temp cwd?
+
+    Guards the test's own launch precondition (like the bash+timeout check):
+    without EMU_DEVICE the harness must fail fast at its own line 29, which
+    proves the script itself launched instead of bash reporting 127."""
+    if not BASH:
+        return False
+    tmp = tempfile.mkdtemp(prefix="emu-launch-probe-")
+    try:
+        proc = subprocess.run(
+            [BASH, HARNESS_POSIX],
+            cwd=tmp,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        return proc.returncode == 1 and "EMU_DEVICE" in proc.stderr
+    except (OSError, subprocess.SubprocessError):
+        return False
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+CAN_LAUNCH = _harness_launches()
+
+
+@unittest.skipUnless(
+    CAN_LAUNCH,
+    "bash must be able to open the harness script from a local-temp cwd "
+    "(UNC/backslash script paths fail with 127 under some bash builds)",
+)
 class EmuHarnessFailFastTest(unittest.TestCase):
     def test_evidence_stage_wedge_verdicts_fast(self):
         tmp = tempfile.mkdtemp(prefix="emu-hang-")
@@ -94,7 +135,7 @@ class EmuHarnessFailFastTest(unittest.TestCase):
             start = time.time()
             try:
                 proc = subprocess.run(
-                    [BASH, HARNESS],
+                    [BASH, HARNESS_POSIX],
                     cwd=tmp,
                     env=env,
                     capture_output=True,

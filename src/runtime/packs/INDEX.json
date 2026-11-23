@@ -9,6 +9,13 @@
    "sha256": "ee86fa46bc99728cc85fe12e0c4d90ef84e3d11310d41afd85f2a287f97a5a35"
   },
   {
+   "id": "energy-saver",
+   "version": "1.0.0",
+   "publisher": "OpenBridge",
+   "file": "energy-saver.json",
+   "sha256": "657ae0d79851c79658a24aee0b144c786209500a138df31fe67a35fb4549a69e"
+  },
+  {
    "id": "good-morning",
    "version": "1.0.0",
    "publisher": "OpenBridge",
