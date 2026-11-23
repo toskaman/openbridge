@@ -156,11 +156,21 @@ def uncertain_verb(fixed):
     return bool(_UNCERTAIN_NOUNS_RX.search(fixed))
 
 
-def normalize(transcript, lang_hint=None):
-    """Fold + repair + language for one transcript. Never raises on text."""
+def normalize(transcript, lang_hint=None, vocab=None):
+    """Fold + repair + language for one transcript. Never raises on text.
+
+    vocab: partner product-name repairs (src/ai/partner_voice); None = the installed partner profiles, () = none.
+    Like every repair, they feed matching only and are listed in `repairs`."""
     folded = fold(transcript)
     fixed, repairs = repair(folded)
     lang = lang_or_hint(transcript, lang_hint)
+    if vocab is None:
+        from src.ai import partner_voice
+        vocab = partner_voice.installed_vocab()
+    if vocab:
+        from src.ai import partner_voice
+        fixed, extra = partner_voice.apply(fixed, lang, vocab)
+        repairs = repairs + extra
     return {'folded': folded, 'fixed': fixed, 'lang': lang,
             'lang_raw': detect_lang(transcript), 'repairs': repairs,
             'uncertain_verb': uncertain_verb(fixed), 'tokens': tokens(folded)}

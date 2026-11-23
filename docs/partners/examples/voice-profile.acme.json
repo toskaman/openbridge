@@ -1,0 +1,21 @@
+{
+ "format": "openbridge-voiceprofile/1",
+ "id": "acme-example",
+ "partner": "Acme Robotics (fictional example)",
+ "version": "1.0.0",
+ "languages": ["fr", "en-US", "en-GB", "de"],
+ "products": [
+  {"ref": "acme x5", "kind": "vacuum",
+   "names": {"fr": ["l'Acme X5", "le robot Acme", "l'X5"], "en-US": ["the Acme X5", "the Acme robot"], "en-GB": ["the Acme X5"],
+             "de": ["den Acme X5"]},
+   "misheard": {"fr": ["acne x5", "acmé x cinq", "acme ixe cinq"], "en": ["ack me x5", "acne x five"]}},
+  {"ref": "acme glow", "kind": "light",
+   "names": {"fr": ["la lampe Acme Glow", "la Glow"], "en-US": ["Acme Glow lamp", "Glow lamp"], "en-GB": ["Acme Glow lamp"]},
+   "misheard": {"fr": ["acmé glo"], "en": ["acne glow"]}}
+ ],
+ "phrases": [
+  {"family": "vacuum.start", "dialect": "fr", "template": "Envoie {d} en mission"},
+  {"family": "vacuum.start", "dialect": "en-US", "template": "Send {d} on a mission"},
+  {"family": "home.turn_on", "dialect": "fr", "template": "Fais briller {d}"}
+ ]
+}
