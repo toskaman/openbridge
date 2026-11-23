@@ -1,27 +1,32 @@
-# ActiveLook Moteur de Layouts, Pages, Polices & Mémoire Flash
+# ActiveLook Layout, Page, Font and Flash Memory Engine
 
-> **Spécification d'Implémentation Haute-Fidélité**  
-> Comment ActiveLook élimine le scintillement, divise la bande passante par 10 et gère les profils flash persistants.
-
----
-
-## 1. Pourquoi le Modèle Layout / Page ?
-
-L'envoi de commandes graphiques brutes (`txt`, `rect`, `line`) à 1 Hz pour rafraîchir plusieurs données (vitesse, fréquence cardiaque, puissance, heure) pose 3 problèmes majeurs :
-1. **Saturation de la bande passante BLE :** 4 champs distincts nécessitent ~150 octets par seconde.
-2. **Latence perçue et scintillement :** Chaque commande est traitée séquentiellement par le microcontrôleur.
-3. **Surconsommation radio :** Le module BLE reste en mode émission haute puissance.
-
-ActiveLook résout ce problème en séparant l'interface en deux niveaux hiérarchiques :
-- **Les Layouts (`0x60` / `0x6B`) :** Gabarits persistants stockés en flash (boîte de découpe, position du texte, police, couleur, éléments statiques d'arrière-plan).
-- **Les Pages (`0x80`) :** Assemblages de 1 à 10 layouts sur un même écran.
-- **L'Affichage Multi-Emplacements (`0x83 pageDisplay`) :** Une unique trame BLE de 15 à 30 octets transmettant uniquement les chaînes de texte séparées par des zéros binaires (`\0`).
+> **High-fidelity implementation spec.**
+> How ActiveLook removes flicker, cuts bandwidth by about 10× and manages persistent flash profiles.
+> Implemented in OpenBridge's adapter and the HUD Studio emulator; hardware confirmation pending.
 
 ---
 
-## 2. Structure Binaire d'un Layout (`layoutSave` `0x60` / `0x6B`)
+## 1. Why the layout / page model?
 
-Un Layout est défini par un **en-tête de base fixe de 17 octets**, suivi optionnellement de sous-commandes graphiques vectorielles sérialisées :
+Sending raw drawing commands (`txt`, `rect`, `line`) at 1 Hz to refresh several values (speed, heart rate,
+power, time) causes three major problems:
+1. **BLE bandwidth saturation:** four separate fields need about 150 bytes per second.
+2. **Perceived latency and flicker:** the microcontroller processes each command one after another.
+3. **Radio power drain:** the BLE module stays in high-power transmit mode.
+
+ActiveLook solves this by splitting the interface into two levels:
+- **Layouts (`0x60` / `0x6B`):** persistent templates stored in flash (clipping box, text position, font,
+  colour, static background elements).
+- **Pages (`0x80`):** sets of 1 to 10 layouts on one screen.
+- **Multi-slot display (`0x83 pageDisplay`):** a single 15–30-byte BLE frame that carries only the text
+  strings, separated by binary zeros (`\0`).
+
+---
+
+## 2. Binary structure of a layout (`layoutSave` `0x60` / `0x6B`)
+
+A layout is defined by a **fixed 17-byte base header**, optionally followed by serialised vector drawing
+sub-commands:
 
 ```text
 +----+------+--------+----+---------+----+-----------+-----------+------+-----------+--------+--------+----------+-----------+
@@ -31,90 +36,95 @@ Un Layout est défini par un **en-tête de base fixe de 17 octets**, suivi optio
 0    1      2        4    5         7    8           9           10     11          12       14       15         16
 ```
 
-### Table des Champs de l'En-tête (17 octets) :
-| Offset | Type | Nom | Description |
+### Header fields (17 bytes)
+| Offset | Type | Name | Description |
 | :---: | :--- | :--- | :--- |
-| `0` | `u8` | `id` | Identifiant du layout (`0x00` à `0xFF`). |
-| `1` | `u8` | `size` | Taille en octets des sous-commandes statiques qui suivent (`0` si aucune). |
-| `2..3` | `u16` (BE) | `x` | Coordonnée X supérieure gauche de la zone de découpe (`0` à `303`). |
-| `4` | `u8` | `y` | Coordonnée Y supérieure gauche de la zone de découpe (`0` à `255`). |
-| `5..6` | `u16` (BE) | `width` | Largeur de la zone de découpe en pixels. |
-| `7` | `u8` | `height` | Hauteur de la zone de découpe en pixels. |
-| `8` | `u8` | `foreColor` | Couleur de premier plan (niveaux de gris `0..15` ou palette `0x00..0x50` ENGO 3). |
-| `9` | `u8` | `backColor` | Couleur d'arrière-plan (généralement `0` = noir éteint). |
-| `10` | `u8` | `font` | Identifiant de police utilisée pour le champ texte dynamique (`1..5`). |
-| `11` | `u8` / `bool`| `textValid` | `1` = le layout accepte du texte dynamique, `0` = widget purement graphique. |
-| `12..13`| `u16` (BE) | `textX` | Décalage X du texte relatif à l'origine du layout. |
-| `14` | `u8` | `textY` | Décalage Y du texte relatif à l'origine du layout. |
-| `15` | `u8` | `textRotation` | Mode d'ancrage et d'orientation (`0` = LTR horizontal, `4` = centré). |
-| `16` | `u8` | `textOpacity` | `0` = fond transparent, `1` = fond opaque. |
+| `0` | `u8` | `id` | Layout identifier (`0x00` to `0xFF`). |
+| `1` | `u8` | `size` | Size in bytes of the static sub-commands that follow (`0` if none). |
+| `2..3` | `u16` (BE) | `x` | Top-left X of the clipping area (`0` to `303`). |
+| `4` | `u8` | `y` | Top-left Y of the clipping area (`0` to `255`). |
+| `5..6` | `u16` (BE) | `width` | Clipping-area width in pixels. |
+| `7` | `u8` | `height` | Clipping-area height in pixels. |
+| `8` | `u8` | `foreColor` | Foreground colour (grey levels `0..15`, or palette `0x00..0x50` on ENGO 3). |
+| `9` | `u8` | `backColor` | Background colour (usually `0` = black, pixels off). |
+| `10` | `u8` | `font` | Font ID used for the dynamic text field (`1..5`). |
+| `11` | `u8` / `bool`| `textValid` | `1` = the layout accepts dynamic text, `0` = graphics-only widget. |
+| `12..13`| `u16` (BE) | `textX` | Text X offset relative to the layout origin. |
+| `14` | `u8` | `textY` | Text Y offset relative to the layout origin. |
+| `15` | `u8` | `textRotation` | Anchoring and orientation mode (`0` = horizontal LTR, `4` = centred). |
+| `16` | `u8` | `textOpacity` | `0` = transparent background, `1` = opaque background. |
 
-### Sous-Commandes Sérialisées (Octets 17 à 17 + `size`) :
-Si `size > 0`, l'en-tête est suivi de commandes graphiques statiques (icônes, lignes de séparation, unités) automatiquement rognées à la zone de découpe `(x, y, width, height)`.
+### Serialised sub-commands (bytes 17 to 17 + `size`)
+If `size > 0`, the header is followed by static drawing commands (icons, separator lines, units) that are
+automatically clipped to `(x, y, width, height)`.
 
 ---
 
-## 3. Définition et Affichage d'une Page (`pageSave` & `pageDisplay`)
+## 3. Defining and displaying a page (`pageSave` and `pageDisplay`)
 
-### A. Enregistrement d'une Page (`0x80 pageSave`)
-Une page rassemble jusqu'à 10 layouts sur un même écran avec des coordonnées d'affichage explicites :
-- `Byte 0` : `u8 id` (Identifiant de la page).
-- Séquence de slots (4 octets par slot) :
+### A. Saving a page (`0x80 pageSave`)
+A page brings up to 10 layouts together on one screen, each with explicit display coordinates:
+- `Byte 0`: `u8 id` (page identifier).
+- Sequence of slots (4 bytes per slot):
   `u8 layoutId, u16 x, u8 y`
 
-### B. Affichage Atomique (`0x83 pageDisplay` / `0x86 pageClearAndDisplay`)
-Pour mettre à jour la totalité de l'écran, le central transmet simplement l'ID de la page suivi des textes dynamiques concaténés et séparés par des zéros (`\x00`) :
+### B. Atomic display (`0x83 pageDisplay` / `0x86 pageClearAndDisplay`)
+To refresh the whole screen, the central sends only the page ID followed by the dynamic strings,
+concatenated and separated by zeros (`\x00`):
 `[0xFF] [0x83] [Fmt] [Len] [u8 pageId] [String_Layout1\x00] [String_Layout2\x00] ... [String_LayoutN\x00] [0xAA]`
 
-#### Comportement dans le Firmware :
-1. Pour chaque slot $i$ de la page :
-   - L'origine cible est `(page.x_i, page.y_i)`.
-   - La boîte de découpe `[ox, oy, ox + layout.width, oy + layout.height]` est effacée à `backColor` (noir).
-   - Les sous-commandes statiques du layout sont tracées.
-   - Si `textValid` est vrai et que la chaîne `String_Layout_i` n'est pas vide, elle est dessinée à `(ox + layout.textX, oy + layout.textY)`.
-2. Résultat : Aucun clignotement, aucune transmission de coordonnées ou de polices sur le réseau BLE.
+#### Firmware behaviour
+1. For each slot $i$ of the page:
+   - The target origin is `(page.x_i, page.y_i)`.
+   - The clipping box `[ox, oy, ox + layout.width, oy + layout.height]` is cleared to `backColor` (black).
+   - The layout's static sub-commands are drawn.
+   - If `textValid` is true and `String_Layout_i` is not empty, it is drawn at `(ox + layout.textX, oy + layout.textY)`.
+2. Result: no flicker, and no coordinates or fonts sent over BLE.
 
 ---
 
-## 4. Polices Typographiques Intégrées & Caractères Fantômes
+## 4. Built-in fonts and ghost characters
 
-Les lunettes ENGO utilisent la famille typographique **SourceSansPro SemiBold** bitmap :
+ENGO glasses use the bitmap **SourceSansPro SemiBold** family:
 
-| Identifiant | Hauteur en Pixels | Jeu de Caractères | Usage Typique |
+| ID | Height | Character set | Typical use |
 | :---: | :---: | :--- | :--- |
-| **Font 1** | **24 px** | ASCII complet (`0x20` à `0x7E`) | Étiquettes d'unités ("km/h", "bpm", "w"), états |
-| **Font 2** | **38 px** | ASCII complet (`0x20` à `0x7E`) | Métriques secondaires, écrans 3 et 4 champs |
-| **Font 3** | **64 px** | ASCII complet (`0x20` à `0x7E`) | Métrique principale, fréquence cardiaque, allure |
-| **Font 4** | **75 px** | Chiffres et ponctuation (`0x20` à `0x3B`) | Grands compteurs numériques de vitesse |
-| **Font 5** | **82 px** | Chiffres et ponctuation (`0x20` à `0x3B`) | Affichage plein écran géant 1 seul champ |
+| **Font 1** | **24 px** | Full ASCII (`0x20` to `0x7E`) | Unit labels ("km/h", "bpm", "W"), states |
+| **Font 2** | **38 px** | Full ASCII (`0x20` to `0x7E`) | Secondary metrics, 3- and 4-field screens |
+| **Font 3** | **64 px** | Full ASCII (`0x20` to `0x7E`) | Main metric, heart rate, pace |
+| **Font 4** | **75 px** | Digits and punctuation (`0x20` to `0x3B`) | Large numeric speed counters |
+| **Font 5** | **82 px** | Digits and punctuation (`0x20` to `0x3B`) | Giant full-screen single field |
 
-### Caractères Fantômes d'Alignement Numérique :
-Pour éviter que les nombres oscillent de droite à gauche lors des changements de valeur sans imposer une police à espacement fixe (monospace inesthétique), ActiveLook a introduit deux glyphes invisibles :
-1. **`$` (ASCII `0x24`) :** Dessiné en noir absolu (pixels éteints = invisible). Sa largeur d'avance est **strictement identique au chiffre '0'**.  
-   *Exemple :* `$$5` occupe exactement la même largeur physique que `125`.
-2. **`&` (ASCII `0x26`) :** Dessiné en noir absolu. Sa largeur d'avance est **identique aux signes de ponctuation** ('.', ':', ',').  
-   *Exemple :* Réserve l'espace pour aligner les virgules décimales dans un tableau.
+### Ghost characters for numeric alignment
+To stop numbers from shifting left and right as values change, without forcing a monospace font,
+ActiveLook provides two invisible glyphs:
+1. **`$` (ASCII `0x24`):** drawn in full black (pixels off, invisible). Its advance width is **exactly the
+   width of the digit '0'**.
+   *Example:* `$$5` takes exactly the same physical width as `125`.
+2. **`&` (ASCII `0x26`):** drawn in full black. Its advance width **matches punctuation** ('.', ':', ',').
+   *Example:* reserves space to line up decimal separators in a table.
 
 ---
 
-## 5. Gestionnaire de Flash NOR 3MB & Profils de Configuration
+## 5. 3 MB NOR flash manager and configuration profiles
 
-Le firmware réserve une mémoire flash NOR de **3 mégaoctets** segmentée en **12 conteneurs de configuration** :
+The firmware reserves **3 megabytes** of NOR flash split into **12 configuration containers**:
 
 ```text
 +---------------------------------------------------------------------+
-| Flash NOR 3 MB (Shared Storage Pool)                                |
+| NOR flash 3 MB (shared storage pool)                                |
 | +---------------------+ +---------------------+ +-----------------+ |
 | | Config "ALooK"      | | Config "OpenBridge" | | Config "UserApp"| |
 | | - Layouts 0..30     | | - Layouts 0..15     | | - Layouts       | |
-| | - Fonts 1..5        | | - Custom Fonts      | | - Custom Icons  | |
-| | - Icons & Bitmaps   | | - Bitmaps           | | - Animations    | |
+| | - Fonts 1..5        | | - Custom fonts      | | - Custom icons  | |
+| | - Icons & bitmaps   | | - Bitmaps           | | - Animations    | |
 | +---------------------+ +---------------------+ +-----------------+ |
 +---------------------------------------------------------------------+
 ```
 
-### Commandes de Gestion :
-- `0xD0 cfgWrite` : Ouvre la session d'écriture (`nom[12], version, mot_de_passe`). Requiert un niveau de batterie $\ge 5\%$.
-- `0xD2 cfgSet` : Rend un profil actif en mémoire vive. Charge instantanément les gabarits associés.
-- `0xD6 cfgDeleteLessUsed` : Ramasse-miettes (LRU) automatique éliminant la configuration au compteur d'usage (`usgCnt`) le plus faible en cas de manque d'espace.
-- `0xD7 cfgFreeSpace` : Interroge les octets libres restants.
+### Management commands
+- `0xD0 cfgWrite`: opens a write session (`name[12], version, password`). Requires battery $\ge 5\%$.
+- `0xD2 cfgSet`: makes a profile active in RAM and loads its templates immediately.
+- `0xD6 cfgDeleteLessUsed`: automatic LRU garbage collector that removes the configuration with the lowest
+  usage counter (`usgCnt`) when space runs out.
+- `0xD7 cfgFreeSpace`: returns the remaining free bytes.

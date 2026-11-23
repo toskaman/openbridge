@@ -127,8 +127,8 @@ class EngoKillerFeaturesTests(unittest.TestCase):
 
     def test_doorbell_subtitles_box_clipping(self):
         ok = self.adapter.push_live_subtitles(
-            speaker="Livreur Colis",
-            text="Bonjour, j'ai un colis fragile pour vous a signer",
+            speaker="Parcel courier",
+            text="Hello, I have a fragile parcel for you to sign",
             is_urgent=True
         )
         self.assertTrue(ok)
@@ -139,7 +139,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         rectf_frames = [f for f in frames if f.cmd == 0x34]
         self.assertEqual(len(rectf_frames), 1)
         # Verify text payload
-        self.assertTrue(any(b"LIVREUR COLIS" in f.data for f in frames if f.cmd == 0x37))
+        self.assertTrue(any(b"PARCEL COURIER" in f.data for f in frames if f.cmd == 0x37))
 
     def test_compass_wayfinder_math_and_frames(self):
         # Target at 310 deg, Heading 285 deg -> relative bearing +25 deg (Turn Right)
@@ -157,7 +157,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"PARKING B3" in f.data for f in text_frames))
-        self.assertTrue(any(b"VIRER A DROITE" in f.data for f in text_frames))
+        self.assertTrue(any(b"TURN RIGHT" in f.data for f in text_frames))
 
     def test_smart_home_security_alert_frames(self):
         ok = self.adapter.push_smart_home_security_alert(
@@ -189,7 +189,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"165 BPM" in f.data for f in text_frames))
         self.assertTrue(any(b"ZONE 4" in f.data for f in text_frames))
-        self.assertTrue(any(b"ACCELERER" in f.data for f in text_frames))
+        self.assertTrue(any(b"SPEED UP" in f.data for f in text_frames))
 
     def test_media_remote_hud_progress_and_gauges(self):
         ok = self.adapter.push_media_remote_hud(
@@ -206,7 +206,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertEqual(len(gauge_frames), 2)  # track progress + volume gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"Dune: Part Two" in f.data for f in text_frames))
-        self.assertTrue(any(b"Volume Salon : 45%" in f.data for f in text_frames))
+        self.assertTrue(any(b"Room volume : 45%" in f.data for f in text_frames))
 
     def test_temple_morse_decoder_logic(self):
         decoder = TempleTapMorseDecoder(dot_threshold_s=0.25, letter_pause_s=0.65)
@@ -229,22 +229,22 @@ class EngoKillerFeaturesTests(unittest.TestCase):
 
     def test_silent_morse_input_frames(self):
         ok = self.adapter.push_silent_morse_input(
-            buffer_str="OUI MERCI",
+            buffer_str="YES THANKS",
             current_morse=".-",
-            suggestion="ARRIVE DANS 5 MIN"
+            suggestion="THERE IN 5 MIN"
         )
         self.assertTrue(ok)
         frames = parse_frames(bytes(self.sent_bytes))
         self.assertTrue(any(f.cmd == 0x01 for f in frames))  # clear
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"SAISIE SILENCIEUSE" in f.data for f in text_frames))
-        self.assertTrue(any(b"OUI MERCI_" in f.data for f in text_frames))
-        self.assertTrue(any(b"ARRIVE DANS 5 MIN" in f.data for f in text_frames))
+        self.assertTrue(any(b"SILENT TEMPLE INPUT" in f.data for f in text_frames))
+        self.assertTrue(any(b"YES THANKS_" in f.data for f in text_frames))
+        self.assertTrue(any(b"THERE IN 5 MIN" in f.data for f in text_frames))
 
     def test_speech_teleprompter_frames(self):
         ok = self.adapter.push_speech_teleprompter(
-            current_line="OpenBridge connecte vos lunettes",
-            next_line="aux modeles d'IA locaux et a vos objets",
+            current_line="OpenBridge connects your glasses",
+            next_line="to local AI models and your devices",
             wpm=138,
             is_rushing=False,
             elapsed_s=45,
@@ -255,23 +255,23 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # progress gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"138 WPM" in f.data for f in text_frames))
-        self.assertTrue(any(b"OpenBridge connecte" in f.data for f in text_frames))
-        self.assertTrue(any(b"aux modeles d'IA" in f.data for f in text_frames))
+        self.assertTrue(any(b"OpenBridge connects" in f.data for f in text_frames))
+        self.assertTrue(any(b"to local AI models" in f.data for f in text_frames))
 
     def test_spatial_energy_heatmap_frames(self):
         ok = self.adapter.push_spatial_energy_heatmap(
-            current_room="Cuisine",
+            current_room="Kitchen",
             room_watts=2150,
             total_watts=3480,
-            vampire_devices=[{"name": "Four Veille", "watts": 65, "idle_hours": 3}]
+            vampire_devices=[{"name": "Oven standby", "watts": 65, "idle_hours": 3}]
         )
         self.assertTrue(ok)
         frames = parse_frames(bytes(self.sent_bytes))
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"CUISINE" in f.data for f in text_frames))
-        self.assertTrue(any(b"VEILLE FANTOME" in f.data for f in text_frames))
-        self.assertTrue(any(b"Four Veille" in f.data for f in text_frames))
+        self.assertTrue(any(b"KITCHEN" in f.data for f in text_frames))
+        self.assertTrue(any(b"PHANTOM STANDBY" in f.data for f in text_frames))
+        self.assertTrue(any(b"Oven standby" in f.data for f in text_frames))
 
     def test_arcade_runner_game_physics_and_frames(self):
         game = ActiveLookArcadeEngine(ground_y=190)
@@ -314,16 +314,16 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x34 for f in frames))  # rectf (side bar)
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"SENTRY ALERTE" in f.data for f in text_frames))
+        self.assertTrue(any(b"SENTRY ALERT" in f.data for f in text_frames))
         self.assertTrue(any(b"LEFT" in f.data for f in text_frames))
         self.assertTrue(any(b"18.5 m" in f.data for f in text_frames))
 
     def test_executive_briefing_glance_frames(self):
         ok = self.adapter.push_executive_briefing_glance(
             contact_name="Sophie Martin",
-            role_title="Directrice R&D",
+            role_title="R&D Director",
             bullet_points=[
-                "Partenariat OpenBridge v2",
+                "OpenBridge partnership v2",
                 "Budget 85k EUR",
                 "Validation a 17h"
             ],
@@ -334,8 +334,8 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x33 for f in frames))  # rect frame
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"SOPHIE MARTIN" in f.data for f in text_frames))
-        self.assertTrue(any(b"Directrice R&D" in f.data for f in text_frames))
-        self.assertTrue(any(b"Partenariat OpenBridge v2" in f.data for f in text_frames))
+        self.assertTrue(any(b"R&D Director" in f.data for f in text_frames))
+        self.assertTrue(any(b"OpenBridge partnership v2" in f.data for f in text_frames))
 
     def test_biofeedback_stress_guardian_frames(self):
         ok = self.adapter.push_biofeedback_stress_guardian(
@@ -351,14 +351,14 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"STRESS: 68/100" in f.data for f in text_frames))
         self.assertTrue(any(b"HRV: 42ms" in f.data for f in text_frames))
-        self.assertTrue(any(b"INSPIRER" in f.data for f in text_frames))
+        self.assertTrue(any(b"BREATHE IN" in f.data for f in text_frames))
 
     def test_diy_ar_stud_level_frames(self):
         ok = self.adapter.push_diy_ar_stud_level(
             pitch_deg=0.1,
             roll_deg=0.0,
             is_level=True,
-            detected_hazard="CABLE 230V ACTIF"
+            detected_hazard="LIVE 230V CABLE"
         )
         self.assertTrue(ok)
         frames = parse_frames(bytes(self.sent_bytes))
@@ -366,7 +366,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x35 for f in frames))  # circ reticle
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"0.0\xc2\xb0 LOCKED" in f.data or b"LOCKED" in f.data for f in text_frames))
-        self.assertTrue(any(b"CABLE 230V ACTIF" in f.data for f in text_frames))
+        self.assertTrue(any(b"LIVE 230V CABLE" in f.data for f in text_frames))
 
     def test_first_responder_cpr_and_triage_frames(self):
         # 1. CPR Mode
@@ -392,7 +392,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         frames_tri = parse_frames(bytes(self.sent_bytes))
         text_tri = [f for f in frames_tri if f.cmd == 0x37]
         self.assertTrue(any(b"START TRIAGE" in f.data for f in text_tri))
-        self.assertTrue(any(b"IMMEDIATE / ROUGE" in f.data for f in text_tri))
+        self.assertTrue(any(b"IMMEDIATE / RED" in f.data for f in text_tri))
 
     def test_directional_subtitles_frames(self):
         ok = self.adapter.push_directional_subtitles(
@@ -410,7 +410,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"ALICE" in f.data for f in text_frames))
         self.assertTrue(any(b"Bonjour a tous" in f.data for f in text_frames))
-        self.assertTrue(any(b"FR TRAD" in f.data for f in text_frames))
+        self.assertTrue(any(b"EN TRANSL" in f.data for f in text_frames))
 
     def test_uav_avionics_hud_frames(self):
         ok = self.adapter.push_uav_avionics_hud(
@@ -488,7 +488,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         # 1. Danger Allergen Triggered
         ok_danger = self.adapter.push_allergen_nutrition_scanner(
             product_name="M&M's Peanut",
-            detected_allergens=["ARACHIDES", "SOJA"],
+            detected_allergens=["PEANUTS", "SOY"],
             carbs_g=59.0,
             sugar_g=53.0,
             sodium_mg=40.0,
@@ -498,8 +498,8 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         frames_danger = parse_frames(bytes(self.sent_bytes))
         self.assertTrue(any(f.cmd == 0x34 for f in frames_danger))  # rectf red alert banner
         text_danger = [f for f in frames_danger if f.cmd == 0x37]
-        self.assertTrue(any(b"DANGER ALLERGENE" in f.data for f in text_danger))
-        self.assertTrue(any(b"ARACHIDES" in f.data for f in text_danger))
+        self.assertTrue(any(b"LIFE-THREATENING ALLERGEN" in f.data for f in text_danger))
+        self.assertTrue(any(b"PEANUTS" in f.data for f in text_danger))
 
         # 2. Safe Nutritional Mode
         self.sent_bytes.clear()
@@ -569,7 +569,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # gauge
         self.assertTrue(any(f.cmd == 0x34 for f in frames))  # rectf lateral ticks
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"MICROSOMMEIL" in f.data for f in text_frames))
+        self.assertTrue(any(b"MICROSLEEP" in f.data for f in text_frames))
         self.assertTrue(any(b"AIRE 4.2k" in f.data for f in text_frames))
         self.assertTrue(any(b"FIXER" in f.data for f in text_frames))
 
@@ -593,7 +593,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(b"CMD #48291" in f.data for f in text_frames))
         self.assertTrue(any(b"ALLEE 04" in f.data for f in text_frames))
         self.assertTrue(any(b"x 12 PCS" in f.data for f in text_frames))
-        self.assertTrue(any(b"SKU CONFORME" in f.data for f in text_frames))
+        self.assertTrue(any(b"SKU MATCH" in f.data for f in text_frames))
 
     def test_avalanche_sar_hud_frames(self):
         # 1. Coarse search mode
@@ -609,7 +609,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x01 for f in frames))  # clear
         self.assertTrue(any(f.cmd == 0x32 for f in frames))  # tangent chevron lines
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"DVA SAR" in f.data for f in text_frames))
+        self.assertTrue(any(b"AVALANCHE 457kHz" in f.data for f in text_frames))
         self.assertTrue(any(b"12.4 m" in f.data for f in text_frames))
 
         # 2. Turn 180 alert
@@ -644,7 +644,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"CIRCADIAN CHRONO" in f.data for f in text_frames))
         self.assertTrue(any(b"DOSE LUMIERE : 74%" in f.data for f in text_frames))
-        self.assertTrue(any(b"STOP CAFEINE : 14:30" in f.data for f in text_frames))
+        self.assertTrue(any(b"CAFFEINE CUTOFF : 14:30" in f.data for f in text_frames))
 
     def test_firefighter_mayday_hud_frames(self):
         # 1. Normal SCBA navigation
@@ -661,9 +661,9 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x01 for f in frames))  # clear
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # cylinder air gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"SCBA APPAREIL RESPIRATOIRE" in f.data for f in text_frames))
+        self.assertTrue(any(b"SCBA BREATHING APPARATUS" in f.data for f in text_frames))
         self.assertTrue(any(b"AIR : 220 BAR" in f.data for f in text_frames))
-        self.assertTrue(any(b"CAP 60 DEG" in f.data for f in text_frames))
+        self.assertTrue(any(b"HEADING 60 DEG" in f.data for f in text_frames))
 
         # 2. Mayday / PASS active alert
         self.sent_bytes.clear()
@@ -678,7 +678,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(ok_pass)
         frames_pass = parse_frames(bytes(self.sent_bytes))
         text_pass = [f for f in frames_pass if f.cmd == 0x37]
-        self.assertTrue(any(b"MAYDAY / PASS ACTIF" in f.data for f in text_pass))
+        self.assertTrue(any(b"MAYDAY / PASS ACTIVE" in f.data for f in text_pass))
         self.assertTrue(any(b"FLASHOVER" in f.data for f in text_pass))
 
     def test_ballistic_drop_compensator_frames(self):
@@ -696,7 +696,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x32 for f in frames))  # crosshairs / reticle ticks
         self.assertTrue(any(f.cmd == 0x35 for f in frames))  # dynamic aiming pip
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"BALISTIQUE MIL-DOT" in f.data for f in text_frames))
+        self.assertTrue(any(b"MIL-DOT BALLISTICS" in f.data for f in text_frames))
         self.assertTrue(any(b"850m" in f.data for f in text_frames))
         self.assertTrue(any(b"ELEV: +6.4 MIL" in f.data for f in text_frames))
         self.assertTrue(any(b"DEVERS : -0.4 DEG" in f.data for f in text_frames))
@@ -715,10 +715,10 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x01 for f in frames))  # clear
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # torque gauge
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"BLOC OPERATOIRE [P-402]" in f.data for f in text_frames))
+        self.assertTrue(any(b"OPERATING ROOM [P-402]" in f.data for f in text_frames))
         self.assertTrue(any(b"FC: 72 BPM" in f.data for f in text_frames))
         self.assertTrue(any(b"SpO2: 98%" in f.data for f in text_frames))
-        self.assertTrue(any(b"COUPLE MOTEUR : 32.0 N.cm" in f.data for f in text_frames))
+        self.assertTrue(any(b"MOTOR TORQUE : 32.0 N.cm" in f.data for f in text_frames))
 
     def test_low_vision_echonav_hud_frames(self):
         # 1. Normal obstacle warning
@@ -734,7 +734,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x33 for f in frames))  # wireframe bracket box
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"NAVIGATION BASSE VISION" in f.data for f in text_frames))
-        self.assertTrue(any(b"OBSTACLE HAUT : a 1.8m" in f.data for f in text_frames))
+        self.assertTrue(any(b"OVERHEAD OBSTACLE : 1.8m" in f.data for f in text_frames))
         self.assertTrue(any(b"DESCENTE a 2.2m" in f.data for f in text_frames))
 
         # 2. Critical duck alert
@@ -748,7 +748,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         self.assertTrue(ok_duck)
         frames_duck = parse_frames(bytes(self.sent_bytes))
         text_duck = [f for f in frames_duck if f.cmd == 0x37]
-        self.assertTrue(any(b"BAISSEZ-VOUS" in f.data for f in text_duck))
+        self.assertTrue(any(b"DUCK!" in f.data for f in text_duck))
 
     @requires_pillow
     def test_headless_benchmark_execution_and_power_bounds(self):

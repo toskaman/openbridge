@@ -1,31 +1,34 @@
-# Innovations R&D de Rupture : Saisie Furtive, Téléprompteur Vocal, Heatmap Spatial & Moteur Arcade
+# Breakthrough R&D Concepts: Silent Input, Voice Teleprompter, Spatial Heatmap and Arcade Engine
 
-> **Dossier d'Ingénierie Avancée OpenBridge × ENGO v3.0**  
-> 4 innovations de rupture conçues pour exploiter la surface capacitive des branches, la physique vectorielle MicroOLED et la synchronisation multimodale avec le smartphone.
+> **OpenBridge × ENGO advanced engineering dossier v3.0.**
+> Four concepts that use the capacitive temple surface, MicroOLED vector rendering and multimodal sync with
+> the smartphone.
+>
+> **Status: design concepts, rendered in the emulator.** Not validated on physical glasses.
 
 ---
 
-## 1. Vue d'Ensemble des Innovations v3.0
+## 1. Overview of the v3.0 concepts
 
 ```mermaid
 flowchart TD
-    subgraph INPUT["Saisie Furtive & Contrôle Silencieux"]
-        I1["⌨️ F11: TempleTap Morse Decoder<br/>(Saisie texte sans la voix via micro-taps)"]
+    subgraph INPUT["Silent input and quiet control"]
+        I1["⌨️ F11: TempleTap Morse decoder<br/>(text input without voice, via micro-taps)"]
     end
 
-    subgraph PROD["Prise de Parole & Éloquence"]
-        P1["🎙️ F12: Speech-Synced AR Teleprompter<br/>(Défilement calé sur la voix & cadence WPM)"]
+    subgraph PROD["Public speaking"]
+        P1["🎙️ F12: Speech-synced AR teleprompter<br/>(scrolls with your voice, WPM pacing)"]
     end
 
-    subgraph ECO["Domotique & Détection d'Énergie"]
-        E1["🏠 F13: Spatial Energy Ghost Heatmap<br/>(Détection de veille fantôme & coupure 1-geste)"]
+    subgraph ECO["Smart home and energy"]
+        E1["🏠 F13: Spatial energy ghost heatmap<br/>(phantom standby detection, approve-to-switch-off)"]
     end
 
-    subgraph ENTERTAINMENT["Micro-Loisirs & Moteur Physique"]
-        A1["🎮 F14: MicroOLED Vector Runner<br/>(Jeu d'arcade 60Hz piloté par geste IR)"]
+    subgraph ENTERTAINMENT["Micro-leisure and physics engine"]
+        A1["🎮 F14: MicroOLED vector runner<br/>(60 Hz arcade game driven by IR gesture)"]
     end
 
-    ENGO["ENGO Glasses (MicroOLED 304x256)"] --> INPUT
+    ENGO["ENGO glasses (MicroOLED 304x256)"] --> INPUT
     ENGO --> PROD
     ENGO --> ECO
     ENGO --> ENTERTAINMENT
@@ -33,83 +36,91 @@ flowchart TD
 
 ---
 
-## 2. Spécification Détaillée des 4 Innovations
+## 2. Detailed specification of the four concepts
 
-### ⌨️ F11 : Moteur de Saisie Furtive par Micro-Taps Morse (`push_silent_morse_input`)
-* **Problème résolu :** Les lunettes ENGO n'ont pas de microphone. En réunion confidentielle, en bibliothèque ou dans les transports, l'utilisateur ne peut pas parler à voix haute et ne souhaite pas sortir son smartphone de sa poche.
-* **Architecture Technique :**
-  - **Décodeur Temporel (`TempleTapMorseDecoder`) :** Mesure la durée de contact du doigt sur la branche tactile :
-    - Contact $< 250$ ms = **Point (`·`)**.
-    - Contact $\ge 250$ ms = **Trait (`—`)**.
-    - Pause $> 650$ ms = Validation automatique de la lettre (Morse international A–Z, 0–9).
-    - Double-tap rapide = Validation et envoi du message.
-    - Long tap glissé = Effacement (Backspace).
-  - **Retour Visuel HUD :**
-    - `TEXTE : OUI EN ROUTE_`
-    - `SYMBOLE : [ · — ] ➔ A` (Aperçu en temps réel avant validation).
-    - `SUGGESTION : ARRIVE DANS 5 MIN` (Autocomplétion intelligente par le LLM OpenBridge).
-* **Métriques :** 346 octets BLE, 2,31% de remplissage, **0,37 mW** de consommation (**1 150 heures d'autonomie**).
-
----
-
-### 🎙️ F12 : Téléprompteur Tête Haute & Gardien d'Éloquence (`push_speech_teleprompter`)
-* **Problème résolu :** Lors d'une prise de parole, d'un pitch d'investisseur ou d'un cours magistral, regarder ses fiches ou un pupitre détruit le contact visuel avec l'audience.
-* **Fonctionnement :**
-  1. Le micro du smartphone écoute le flux de parole de l'orateur via Whisper / VAD.
-  2. Les notes défilent automatiquement ligne par ligne dans le HUD au fur et à mesure que les mots sont prononcés.
-  3. **Indicateur de Rythme (WPM : Words Per Minute) :**
-     - $110 \le \text{WPM} \le 165$ : Vert (`✓ 138 WPM (RYTHME OPTIMAL)`).
-     - $\text{WPM} > 165$ : Ambre clignotant (`⚠️ 178 WPM (TROP RAPIDE - RALENTIR)`).
-  4. **Typographie Hiérarchisée :**
-     - Ligne active en grand jaune à fort contraste (`▶ OpenBridge connecte vos lunettes`).
-     - Ligne suivante en police discrète atténuée (`SUIVANT : aux modeles d'IA locaux`).
-     - Jauge de temps restant intégrée sur le budget imparti (ex: 3 minutes).
-* **Métriques :** 294 octets BLE, 6,51% de remplissage, **0,50 mW** de consommation (**857 heures d'autonomie**).
+### ⌨️ F11: Silent Morse micro-tap input engine (`push_silent_morse_input`)
+* **Problem solved:** ENGO glasses have no microphone. In a confidential meeting, a library or public
+  transport, the user cannot speak out loud and does not want to take the phone out of a pocket.
+* **Technical design:**
+  - **Timing decoder (`TempleTapMorseDecoder`):** measures how long the finger touches the temple:
+    - Contact $< 250$ ms = **dot (`·`)**.
+    - Contact $\ge 250$ ms = **dash (`—`)**.
+    - Pause $> 650$ ms = letter accepted automatically (international Morse A–Z, 0–9).
+    - Quick double tap = accept and send the message.
+    - Long sliding tap = delete (backspace).
+  - **HUD feedback:**
+    - `TEXT: YES ON MY WAY_`
+    - `SYMBOL: [ · — ] ➔ A` (live preview before acceptance).
+    - `SUGGESTION: THERE IN 5 MIN` (autocomplete by the local model).
+* **Modelled metrics:** 346 BLE bytes, 2.31 % fill, **0.37 mW** (**1,150 hours** of display).
 
 ---
 
-### 🏠 F13 : Heatmap Énergétique Spatiale & Chasseur de Veille Fantôme (`push_spatial_energy_heatmap`)
-* **Problème résolu :** Comprendre instantanément où part l'électricité dans la maison sans consulter une application mobile surchargée de graphiques.
-* **Comportement Contextuel :**
-  - Grâce aux balises BLE (Freebox, prises Tuya, AP Wi-Fi), OpenBridge détecte la pièce où se trouve l'utilisateur.
-  - Dès qu'il pénètre dans une pièce, le bandeau HUD affiche son empreinte immédiate :
-    - `🏠 [CUISINE] : 2 150 W (TOTAL MAISON: 3 480 W)`.
-  - **Alerte Veille Fantôme Active :**
-    - Si un appareil consomme de l'énergie sans usage depuis plus de 2 heures :
-    - `⚠️ VEILLE FANTOME DETECTEE : Four Veille (65 W - inactif depuis 3h)`.
-    - **Coupure en 1 geste :** `>> [WAVE] COUPER PRISE FOUR` (éteint la prise Tuya correspondante sans contact).
-* **Métriques :** 325 octets BLE, 7,15% de remplissage, **0,51 mW** de consommation (**826 heures d'autonomie**).
+### 🎙️ F12: Heads-up teleprompter and pacing coach (`push_speech_teleprompter`)
+* **Problem solved:** during a talk, an investor pitch or a lecture, looking down at notes or a lectern
+  breaks eye contact with the audience.
+* **How it works:**
+  1. The smartphone microphone follows the speaker's voice (Whisper / VAD).
+  2. Notes scroll line by line on the HUD as the words are spoken.
+  3. **Pace indicator (WPM: words per minute):**
+     - $110 \le \text{WPM} \le 165$: green (`✓ 138 WPM (OPTIMAL PACE)`).
+     - $\text{WPM} > 165$: flashing amber (`⚠️ 178 WPM (TOO FAST - SLOW DOWN)`).
+  4. **Typographic hierarchy:**
+     - Active line large, high-contrast yellow (`▶ OpenBridge connects your glasses`).
+     - Next line in a smaller, dimmed font (`NEXT: to local AI models`).
+     - Built-in remaining-time gauge for the allotted slot (e.g. 3 minutes).
+* **Modelled metrics:** 294 BLE bytes, 6.51 % fill, **0.50 mW** (**857 hours** of display).
 
 ---
 
-### 🎮 F14 : Moteur d'Arcade Vectoriel MicroOLED (`push_arcade_game_frame`)
-* **Problème résolu :** Transformer les moments d'attente (quai de gare, arrêt de bus, file d'attente) en micro-loisir discret et ludique, sans sortir son smartphone.
-* **Moteur Physique Embarqué (`ActiveLookArcadeEngine`) :**
-  - Moteur vectoriel de coureur (Vector Runner) à 60 Hz.
-  - Le joueur est un cercle vectoriel de rayon 8 px sur une ligne de sol (`y = 190`).
-  - **Contrôle sans contact :** Un balayage de la main devant le capteur infrarouge (`wave` `0x01`) applique une impulsion gravitationnelle (`jump_velocity = 12.0`) pour sauter par-dessus les obstacles.
-  - Rendu atomique via `holdFlush(0)` et `holdFlush(1)` garantissant 0% de scintillement.
-  - Score incrémenté à chaque obstacle franchi et écran Game Over avec relance immédiate.
-* **Métriques :** 168 octets par trame, **1,43% de remplissage**, **0,34 mW** de puissance (**1 239 heures de jeu ininterrompu**).
+### 🏠 F13: Spatial energy heatmap and phantom-standby hunter (`push_spatial_energy_heatmap`)
+* **Problem solved:** see at a glance where electricity goes in the home, without opening an app full of charts.
+* **Context-aware behaviour:**
+  - Using BLE beacons (router, Tuya plugs, Wi-Fi access points), OpenBridge estimates which room the user is in.
+  - On entering a room, the HUD banner shows its footprint:
+    - `🏠 [KITCHEN]: 2,150 W (WHOLE HOME: 3,480 W)`.
+  - **Phantom-standby alert:**
+    - If a device has drawn power without being used for more than 2 hours:
+    - `⚠️ PHANTOM STANDBY: oven on standby (65 W, idle for 3 h)`.
+    - **One-gesture follow-up:** `>> [WAVE] ASK TO SWITCH OFF OVEN PLUG`. The wave sends a one-tap approval
+      request to the owner's phone; the Tuya plug is switched off only after approval and its state is read
+      back. The glasses never trigger the action on their own.
+* **Modelled metrics:** 325 BLE bytes, 7.15 % fill, **0.51 mW** (**826 hours** of display).
 
 ---
 
-## 3. Matrice Complète des 14 Scénarios OpenBridge HUD
+### 🎮 F14: MicroOLED vector arcade engine (`push_arcade_game_frame`)
+* **Problem solved:** turn waiting time (train platform, bus stop, queue) into a discreet micro-game without
+  taking out the phone.
+* **On-board physics engine (`ActiveLookArcadeEngine`):**
+  - 60 Hz vector runner engine.
+  - The player is an 8 px vector circle on a ground line (`y = 190`).
+  - **Touchless control:** a hand swipe in front of the infrared sensor (`wave` `0x01`) applies an upward
+    impulse (`jump_velocity = 12.0`) to jump over obstacles.
+  - Atomic rendering with `holdFlush(0)` and `holdFlush(1)`, so nothing flickers.
+  - The score increases with every obstacle cleared; a game-over screen restarts immediately.
+* **Modelled metrics:** 168 bytes per frame, **1.43 % fill**, **0.34 mW** (**1,239 hours** of play).
 
-| Scénario | Catégorie | Remplissage Pixels | Puissance MicroOLED | Autonomie Théorique |
+---
+
+## 3. Full matrix of the 14 OpenBridge HUD scenarios
+
+Modelled from emulator pixel fill rates; not measured on hardware.
+
+| Scenario | Category | Pixel fill | MicroOLED power | Theoretical display time |
 | :--- | :--- | :---: | :---: | :---: |
-| **F01: Radar Spatial Périphérique** | Domotique & IoT | 1,46 % | 0,34 mW | 1 235 h |
-| **F02: Reçu d'Action In-Situ (Oracle)** | Domotique & Sécurité | 12,58 % | 0,68 mW | 627 h |
-| **F03: Two-Phase Wave Abort Gate** | Sécurité Critique | 19,06 % | 0,87 mW | 487 h |
-| **F04: Télémétrie Périphérique Linky** | Énergie & Réseau | 19,06 % | 0,87 mW | 487 h |
-| **F05: Prompteur Atelier / Cuisine** | Productivité | 5,33 % | 0,46 mW | 923 h |
-| **F06: Sous-Titres Interphone** | Sécurité Domicile | 35,98 % | 1,38 mW | 308 h |
-| **F07: AR Compass & Wayfinder Ribbon** | Navigation Plein Air | 6,91 % | 0,51 mW | 838 h |
-| **F08: Intrusion Shield Freebox** | Cybersécurité | 2,99 % | 0,39 mW | 1 090 h |
-| **F09: Bio-Adaptive Cadence Pacer** | Sport & Performance | 7,68 % | 0,53 mW | 801 h |
-| **F10: Télécommande Média Touchless** | Divertissement | 9,70 % | 0,59 mW | 719 h |
-| **F11: Saisie Furtive Micro-Taps Morse** | Saisie Discrète | **2,31 %** | **0,37 mW** | **1 150 h** |
-| **F12: Téléprompteur Vocal Éloquence** | Prise de Parole | **6,51 %** | **0,50 mW** | **857 h** |
-| **F13: Heatmap Énergétique Spatiale** | Énergie & Écologie | **7,15 %** | **0,51 mW** | **826 h** |
-| **F14: Moteur Arcade Vector Runner** | Loisir & Micro-Gaming | **1,43 %** | **0,34 mW** | **1 239 h** |
-| **MOYENNE GLOBALE (14 SCÉNARIOS)** | — | **9,70 %** | **0,57 mW** | **~890 h** |
+| **F01: Peripheral spatial radar** | Smart home and IoT | 1.46 % | 0.34 mW | 1,235 h |
+| **F02: In-situ action receipt (oracle)** | Smart home and safety | 12.58 % | 0.68 mW | 627 h |
+| **F03: Two-phase wave abort gate** | Critical safety | 19.06 % | 0.87 mW | 487 h |
+| **F04: Smart-meter peripheral telemetry** | Energy and network | 19.06 % | 0.87 mW | 487 h |
+| **F05: Workshop / cooking prompter** | Productivity | 5.33 % | 0.46 mW | 923 h |
+| **F06: Intercom subtitles** | Home security | 35.98 % | 1.38 mW | 308 h |
+| **F07: AR compass and wayfinder ribbon** | Outdoor navigation | 6.91 % | 0.51 mW | 838 h |
+| **F08: Network intrusion shield** | Security | 2.99 % | 0.39 mW | 1,090 h |
+| **F09: Bio-adaptive cadence pacer** | Sport and performance | 7.68 % | 0.53 mW | 801 h |
+| **F10: Touchless media remote** | Entertainment | 9.70 % | 0.59 mW | 719 h |
+| **F11: Silent Morse micro-tap input** | Discreet input | **2.31 %** | **0.37 mW** | **1,150 h** |
+| **F12: Voice teleprompter** | Public speaking | **6.51 %** | **0.50 mW** | **857 h** |
+| **F13: Spatial energy heatmap** | Energy and ecology | **7.15 %** | **0.51 mW** | **826 h** |
+| **F14: Vector runner arcade engine** | Leisure and micro-gaming | **1.43 %** | **0.34 mW** | **1,239 h** |
+| **OVERALL AVERAGE (14 SCENARIOS)** | — | **9.70 %** | **0.57 mW** | **~890 h** |

@@ -79,7 +79,7 @@ flowchart TD
     * When tilted: Dynamic angle line `cmd_line` rotating with roll angle.
     * When level (`abs(roll) < 0.5°`): Locks into green verified box: `[0.0° LOCKED ✓]`.
   - In-wall scanner wireframe box:
-    * If metal pipe, electrical wire, or stud is detected: Displays red warning box `⚡ DANGER: CABLE 230V SOUS TENSION` and `⚠️ NE PAS PERCER DANS CET AXE !`.
+    * If metal pipe, electrical wire, or stud is detected: Displays red warning box `⚡ DANGER: LIVE 230V CABLE` and `⚠️ DO NOT DRILL ALONG THIS LINE!`.
     * If clear: Displays calm green confirmation `Scan mur: Zone saine`.
 - **Telemetry & Power:** 361 bytes transferred, 3.46% pixel fill, 0.40 mW power draw (~1,052h battery runtime).
 

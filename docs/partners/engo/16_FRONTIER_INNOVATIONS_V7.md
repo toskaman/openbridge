@@ -93,7 +93,7 @@ flowchart TD
   * **Caffeine Pharmacokinetics:** Models exponential metabolic clearance ($t_{1/2} = 5.0\text{h}$) targeting $<25\text{ mg}$ systemic caffeine at scheduled bedtime.
 - **HUD Symbology:**
   * **Morning Dose Progress Gauge:** Live progress bar (`DOSE LUMIERE: 74% (222k / 300k lx*m)`).
-  * **Caffeine Cutoff Timer:** Displays exact cutoff hour (`STOP CAFEINE : 14:30`) and sleep clearance countdown (`dans 4.3h`).
+  * **Caffeine Cutoff Timer:** Displays exact cutoff hour (`CAFFEINE CUTOFF: 14:30`) and sleep clearance countdown (`in 4.3h`).
   * **Melatonin Suppression Warning:** Pre-sleep red alert box if ambient light exceeds 10 lx: `⚠️ INHIBITION MELATONINE ! (Tamisez ecrans)`.
 - **Telemetry & Power:** 407 bytes transferred, 6.81% pixel fill, 0.50 mW power draw (~842h battery runtime).
 

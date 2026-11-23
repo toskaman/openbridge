@@ -57,7 +57,7 @@ flowchart TD
 ### F24: Real-Time Food Allergen & Nutritional Triage Scanner (`push_allergen_nutrition_scanner`)
 - **Use Case:** Individuals with life-threatening food allergies (anaphylaxis) or chronic medical dietary requirements (type-1 diabetes, renal failure).
 - **Regulatory & Data Architecture:**
-  * **EU Regulation 1169/2011 Annex II:** 14 mandatory declarable allergens (Arachides, Gluten, Lait, Crustacés, Œufs, Poissons, Soja, Fruits à coque, Céleri, Moutarde, Sésame, Sulfites, Lupin, Mollusques).
+  * **EU Regulation 1169/2011 Annex II:** 14 mandatory declarable allergens (peanuts, gluten, milk, crustaceans, eggs, fish, soy, tree nuts, celery, mustard, sesame, sulphites, lupin, molluscs).
   * **Sub-200ms Scan-to-HUD:** ML Kit barcode decoding (35ms) + targeted Open Food Facts API v2 field query (`?fields=code,product_name,allergens_tags,traces_tags,nutriments`) resolving in 65–110ms.
 - **HUD Symbology:**
   * **Lethal Allergen Triggered:** Inverted red danger banner (`cmd_rectf` at top) with `[!] DANGER ALLERGENE MORTEL` + `DETECTE : ARACHIDES` and `⛔ CHOC ANAPHYLACTIQUE`.
@@ -89,8 +89,8 @@ flowchart TD
   * Low-latency streaming translation via Wait-$k$ SimulMT clause chunking (MarianMT / NLLB-200 INT8) yielding sub-450ms translation latency.
   * Contextual Cultural Etiquette Rule Engine: Analyzes conversational silence, lexical politeness tokens, and nonverbal cues to surface discreet advice tags.
     - **Japan:** Detects $>3$s silence $\to$ `[ATTENTE: REFLEXION]` (*Wa* consensus; do not interrupt); detects *"Chotto..."* $\to$ `[REFUS INDIRECT]` (*Soft No*; do not push).
-    - **Germany:** Detects casual small talk $>2$min $\to$ `[DIRECT: ETABLIR ORDRE DU JOUR]` (Low-context culture; state facts and agenda).
-    - **Arab World:** Hand movements / handover $\to$ `[MAIN DROITE UNIQUEMENT]`; Posture check $\to$ `[CACHER LES SEMELLES]`.
+    - **Germany:** Detects casual small talk $>2$min $\to$ `[DIRECT: SET THE AGENDA]` (Low-context culture; state facts and agenda).
+    - **Arab World:** Hand movements / handover $\to$ `[RIGHT HAND ONLY]`; Posture check $\to$ `[HIDE SHOE SOLES]`.
 - **HUD Symbology & Foveal Safety:**
   * **Central Foveal Guard ($y: 24..155$):** 100% black transparent deadband. Never obstructs the partner's eyes, face, or micro-expressions.
   * **Lower-Third Transcript Area ($y: 160..255$):**

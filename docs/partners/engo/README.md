@@ -2,87 +2,92 @@
   <img src="../../assets/readme/partner-engo.svg" width="100%" alt="Official hardware partner: ENGO smart glasses, powered by ActiveLook by Microoled">
 </p>
 
-# ENGO Eyewear × OpenBridge: R&D & Integration Hub
+# ENGO Eyewear × OpenBridge: R&D and Integration Hub
 
-> **Dossier Spécialisé ENGO & ActiveLook®**  
-> Ce répertoire regroupe l'ensemble des spécifications matérielles, protocolaires, interactives et logicielles pour l'intégration des lunettes intelligentes ENGO (ENGO 1, ENGO 2, ENGO 3, ENGO 3 Titanium) dans OpenBridge.
+> **ENGO and ActiveLook® technical dossier.**
+> This folder gathers the hardware, protocol, interaction and software specifications for integrating
+> ENGO smart glasses (ENGO 1, ENGO 2, ENGO 3, ENGO 3 Titanium) into OpenBridge.
 
 > [!IMPORTANT]
-> **Statut de validation : émulateur uniquement.** L'intégration a été développée et testée avec l'émulateur
-> [HUD Studio](19_HUD_STUDIO_EMULATOR.md) et l'application officielle ActiveLook (build de développement) sur
-> smartphone Android, **sans lunettes physiques**. Les tests réels sur une paire ENGO (BLE, flow control,
-> layouts firmware « ALooK », optique, capteur de geste, autonomie) **sont en attente de la réception de la
-> paire**, comme les benchmarks matériels annoncés.
+> **Validation status: emulator only.** The integration was built and tested with the
+> [HUD Studio](19_HUD_STUDIO_EMULATOR.md) emulator and the official ActiveLook app (development build) on an
+> Android smartphone, **without physical glasses**. Real tests on an ENGO pair (BLE, flow control,
+> "ALooK" firmware layouts, optics, gesture sensor, battery life) **are waiting for the pair to arrive**,
+> as are the announced hardware benchmarks.
 
 ---
 
-## 🗂️ Sommaire du Dossier
+## 🗂️ Contents
 
-| Document | Titre | Description |
+| Document | Title | Description |
 | :--- | :--- | :--- |
-| **[01_HARDWARE_SPECS.md](01_HARDWARE_SPECS.md)** | **Spécifications Matérielles** | Teardown complet, comparatif ENGO 1 / 2 / 3 / Titanium, poids, autonomie 24h, MicroOLED 10 000 nits, capteur de geste IR. |
-| **[02_BLE_PROTOCOL_REFERENCE.md](02_BLE_PROTOCOL_REFERENCE.md)** | **Manuel du Protocole BLE** | Référence exhaustive GATT (Service `0783B03E...`), cadrage binaire `0xFF...0xAA`, table des opcodes, gestion du buffer MCU (Flow Control). |
-| **[03_HUD_FEATURES_SPECIFICATION.md](03_HUD_FEATURES_SPECIFICATION.md)** | **Catalogue des Nouvelles Features** | Spécifications des 10+ fonctionnalités (Reçus d'action, Radar aspirateur, Carrousel gestuel, Two-Phase Abort, Synergie tri-device). |
-| **[04_EMULATOR_AND_TOOLS.md](04_EMULATOR_AND_TOOLS.md)** | **Guide de l'Émulateur & Outils** | Utilisation de l'émulateur Tkinter 304×256 et du serveur virtuel BLE Bumble (`src/adapters/activelook_emulator.py`). |
-| **[05_OPENBRIDGE_INTEGRATION_PLAN.md](05_OPENBRIDGE_INTEGRATION_PLAN.md)** | **Plan d'Intégration OpenBridge** | Architecture Fabric, routage hybride Companion / PC, politique de sécurité B2/B3 et contrat `DEVICE_EVIDENCE.json`. |
-| **[06_HUD_VS_SMARTWATCH_ERGONOMICS_BENCHMARK.md](06_HUD_VS_SMARTWATCH_ERGONOMICS_BENCHMARK.md)** | **Benchmark Ergonomie HUD vs Montre** | Analyse quantitative des facteurs humains : latence de regard (0,2s vs 2,5s), physique optique collimatée, 0 mW pixel noir, orientation spatiale egocentrique et patterns UX (Radar Varia, Abort Gate 2PC). |
-| **[07_PHONE_TETHER_AI_AND_API_ARCHITECTURE.md](07_PHONE_TETHER_AI_AND_API_ARCHITECTURE.md)** | **Architecture IA & Proxy Smartphone** | Paradigme Phone-as-Sensory-Proxy : co-pilote vocal touchless (wave -> micro -> LLM), vision multimodale (tap -> caméra 50MP -> HUD), sous-titres traduits en direct et injecteurs d'APIs (Linky, Météo, Transit). |
-| **[08_ACTIVELOOK_FULL_PROTOCOL_AND_OPCODES.md](08_ACTIVELOOK_FULL_PROTOCOL_AND_OPCODES.md)** | **Spécification Binaire & Opcodes v4.x** | Table exhaustive opcodes `0x00`-`0xE3`, cadrage binaire bitmask, gestion flow control 75%, Dialog SUOTA `0xFEF5` et format paramètres. |
-| **[09_REAL_SCRIPTS_TOOLS_AND_WIRESHARK.md](09_REAL_SCRIPTS_TOOLS_AND_WIRESHARK.md)** | **Scripts Réels, Wireshark & Bugs Matériels** | Script Python Bleak complet, disséqueur Wireshark Lua, traces hexadécimales réelles et 10 contournements de bugs de firmware validés. |
-| **[10_LAYOUT_PAGE_ENGINE_AND_FONTS_SPEC.md](10_LAYOUT_PAGE_ENGINE_AND_FONTS_SPEC.md)** | **Moteur Layouts, Pages, Polices & Flash** | En-tête binaire layout 17B, pages multi-emplacements (`pageDisplay`), caractères fantômes d'alignement (`$`, `&`) et mémoire flash NOR 3MB. |
-| **[11_ADVANCED_HUD_FEATURES_CATALOG.md](11_ADVANCED_HUD_FEATURES_CATALOG.md)** | **Catalogue Features Avancées v2.0** | Spécifications des 10 features "Watch-Impossible" : AR Compass ribbon, Intrusion Shield réseau, Bio-Adaptive pacer cardiaque, et Télécommande média touchless. |
-| **[12_NEXTGEN_INNOVATIONS_DEEPDIVE.md](12_NEXTGEN_INNOVATIONS_DEEPDIVE.md)** | **Innovations de Rupture v3.0** | Saisie silencieuse Morse temple-tap, téléprompteur vocal calé sur la parole, heatmap énergétique spatiale et mini-jeu d'arcade vectoriel à 60 Hz. |
-| **[13_BREAKTHROUGH_INNOVATIONS_V4.md](13_BREAKTHROUGH_INNOVATIONS_V4.md)** | **Innovations de Rupture v4.0** | Sentry collision radar péripherique, dossier exécutif réunion discret, tuteur biofeedback cohérence cardiaque (box breathing) et niveau digital AR / scanner de murs. |
-| **[14_REVOLUTIONARY_INNOVATIONS_V5.md](14_REVOLUTIONARY_INNOVATIONS_V5.md)** | **Innovations de Rupture v5.0** | Tuteur RCP 110 BPM & Triage START catastrophe, sous-titres spatiaux 3D sans occlusion faciale, télémétrie avionique drone VLOS et sentinelle furtive anti-AirTag / cyber-attaque. |
-| **[15_MISSION_CRITICAL_INNOVATIONS_V6.md](15_MISSION_CRITICAL_INNOVATIONS_V6.md)** | **Innovations de Rupture v6.0** | Sentinelle thermique industrielle & arc-flash haute tension, scanner d'allergènes mortels & nutrition diabète/rein, navigation marine tactique régate et interprète multilingue avec whisperer d'étiquette culturelle. |
-| **[16_FRONTIER_INNOVATIONS_V7.md](16_FRONTIER_INNOVATIONS_V7.md)** | **Innovations de Rupture v7.0** | Vigilance conducteur & microsommeil PERCLOS P80, logistique Pick-by-Vision mains libres, recherche DVA avalanche 457 kHz et optimiseur circadien d'exposition lumineuse/caféine. |
-| **[17_APEX_INNOVATIONS_V8.md](17_APEX_INNOVATIONS_V8.md)** | **Innovations de Rupture v8.0 Apex** | Télémétrie pompier SCBA & alerte flashover Mayday, compensateur balistique Mil-Dot & bulle de dévers, monitoring chirurgical stérile & couple moteur, et radar écho basse vision d'obstacles hauts. |
-| **[18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md](18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md)** | **Expansion Neurale & Sensorielle OpenBridge** | Matrice 38 features exhaustive : audio streaming microphone téléphone/PC, VAD, STT Whisper streaming sub-120ms, proxy vision multimodale 50MP, matrice IoT ambiante 4 quadrants et ordonnanceur de priorité télémétrique. |
-| **[19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md)** | **HUD Studio : Émulateur Pro & App Officielle** | Émulateur 304×256 de nouvelle génération (vues Pixels / OLED / Lens, inspecteur de trames, métriques, sessions, PNG/GIF, API de contrôle JSON), banque de layouts ALooK, et application officielle ActiveLook pilotant l'émulateur avec overlay F01–F38. **Validé sous émulateur uniquement.** |
+| **[01_HARDWARE_SPECS.md](01_HARDWARE_SPECS.md)** | **Hardware specifications** | Full teardown, ENGO 1 / 2 / 3 / Titanium comparison, weight, 24 h battery, 10,000-nit MicroOLED, IR gesture sensor. |
+| **[02_BLE_PROTOCOL_REFERENCE.md](02_BLE_PROTOCOL_REFERENCE.md)** | **BLE protocol manual** | Complete GATT reference (service `0783B03E...`), `0xFF...0xAA` binary framing, opcode table, MCU buffer management (flow control). |
+| **[03_HUD_FEATURES_SPECIFICATION.md](03_HUD_FEATURES_SPECIFICATION.md)** | **New feature catalogue** | Specifications for 10+ features (action receipts, vacuum radar, gesture carousel, two-phase abort, tri-device synergy). |
+| **[04_EMULATOR_AND_TOOLS.md](04_EMULATOR_AND_TOOLS.md)** | **Emulator and tools guide** | Using the 304×256 Tkinter emulator and the Bumble virtual BLE server (`src/adapters/activelook_emulator.py`). |
+| **[05_OPENBRIDGE_INTEGRATION_PLAN.md](05_OPENBRIDGE_INTEGRATION_PLAN.md)** | **OpenBridge integration plan** | Fabric architecture, hybrid Companion / PC routing, B2/B3 safety policy and the `DEVICE_EVIDENCE.json` contract. |
+| **[06_HUD_VS_SMARTWATCH_ERGONOMICS_BENCHMARK.md](06_HUD_VS_SMARTWATCH_ERGONOMICS_BENCHMARK.md)** | **HUD vs smartwatch ergonomics** | Quantitative human-factors analysis: glance latency (0.2 s vs 2.5 s), collimated optics, 0 mW black pixels, egocentric spatial orientation and UX patterns (Varia-style radar, two-phase abort gate). |
+| **[07_PHONE_TETHER_AI_AND_API_ARCHITECTURE.md](07_PHONE_TETHER_AI_AND_API_ARCHITECTURE.md)** | **AI and phone-proxy architecture** | Phone-as-sensory-proxy: touchless voice co-pilot (wave → mic → LLM), multimodal vision (tap → 50 MP camera → HUD), live translated subtitles and API injectors (smart meter, weather, transit). |
+| **[08_ACTIVELOOK_FULL_PROTOCOL_AND_OPCODES.md](08_ACTIVELOOK_FULL_PROTOCOL_AND_OPCODES.md)** | **Binary spec and opcodes v4.x** | Full `0x00`–`0xE3` opcode table, bitmask framing, 75 % flow control, Dialog SUOTA `0xFEF5` and parameter formats. |
+| **[09_REAL_SCRIPTS_TOOLS_AND_WIRESHARK.md](09_REAL_SCRIPTS_TOOLS_AND_WIRESHARK.md)** | **Scripts, Wireshark and firmware quirks** | Complete Python Bleak script, Lua Wireshark dissector, hex traces and 10 documented firmware workarounds. |
+| **[10_LAYOUT_PAGE_ENGINE_AND_FONTS_SPEC.md](10_LAYOUT_PAGE_ENGINE_AND_FONTS_SPEC.md)** | **Layouts, pages, fonts and flash** | 17-byte layout header, multi-slot pages (`pageDisplay`), alignment ghost characters (`$`, `&`) and the 3 MB NOR flash. |
+| **[11_ADVANCED_HUD_FEATURES_CATALOG.md](11_ADVANCED_HUD_FEATURES_CATALOG.md)** | **Advanced feature catalogue v2.0** | 10 "watch-impossible" features: AR compass ribbon, network intrusion shield, bio-adaptive heart-rate pacer, touchless media remote. |
+| **[12_NEXTGEN_INNOVATIONS_DEEPDIVE.md](12_NEXTGEN_INNOVATIONS_DEEPDIVE.md)** | **Breakthrough concepts v3.0** | Silent Morse temple-tap input, speech-paced teleprompter, spatial energy heatmap and a 60 Hz vector arcade mini-game. |
+| **[13_BREAKTHROUGH_INNOVATIONS_V4.md](13_BREAKTHROUGH_INNOVATIONS_V4.md)** | **Breakthrough concepts v4.0** | Peripheral collision radar, discreet meeting briefing, heart-coherence biofeedback (box breathing) and an AR spirit level / wall scanner. |
+| **[14_REVOLUTIONARY_INNOVATIONS_V5.md](14_REVOLUTIONARY_INNOVATIONS_V5.md)** | **Breakthrough concepts v5.0** | 110 BPM CPR coach and START disaster triage, occlusion-free spatial subtitles, VLOS drone telemetry and an anti-tracker / cyber-attack sentinel. |
+| **[15_MISSION_CRITICAL_INNOVATIONS_V6.md](15_MISSION_CRITICAL_INNOVATIONS_V6.md)** | **Breakthrough concepts v6.0** | Industrial thermal and arc-flash sentinel, allergen and diet scanner, tactical sailing navigation and a multilingual interpreter with cultural cues. |
+| **[16_FRONTIER_INNOVATIONS_V7.md](16_FRONTIER_INNOVATIONS_V7.md)** | **Breakthrough concepts v7.0** | Driver vigilance and PERCLOS P80 micro-sleep, hands-free pick-by-vision logistics, 457 kHz avalanche-transceiver search and a circadian light/caffeine optimiser. |
+| **[17_APEX_INNOVATIONS_V8.md](17_APEX_INNOVATIONS_V8.md)** | **Breakthrough concepts v8.0** | Firefighter SCBA telemetry and flashover alert, ballistic and cant compensator, sterile surgical monitoring and torque, low-vision overhead-obstacle echo radar. |
+| **[18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md](18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md)** | **OpenBridge neural and sensory expansion** | 38-feature matrix: phone/PC microphone streaming, VAD, sub-120 ms streaming STT, 50 MP multimodal vision proxy, four-quadrant ambient IoT matrix and telemetry priority scheduler. |
+| **[19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md)** | **HUD Studio: pro emulator and official app** | Next-generation 304×256 emulator (Pixels / OLED / Lens views, frame inspector, metrics, sessions, PNG/GIF, JSON control API), ALooK layout bank, and the official ActiveLook app driving the emulator with the F01–F38 overlay. **Validated in the emulator only.** |
+
+> Documents 11–18 are **design concepts** for discussion with ENGO: they describe what the display
+> could do and how OpenBridge would feed it. They are not claims of shipped or hardware-validated features.
 
 ---
 
-## 🚀 Démarrage Rapide
+## 🚀 Quick start
 
-### 1. Lancer l'Émulateur Visuel : HUD Studio (304 × 256 MicroOLED)
-Vous pouvez immédiatement tester et voir les écrans du HUD sans attendre les lunettes physiques :
+### 1. Launch the visual emulator: HUD Studio (304 × 256 MicroOLED)
+See the HUD screens right away, without waiting for physical glasses:
 ```bash
-# HUD Studio (vues Pixels / OLED / Lens, inspecteur, F01–F38, API de contrôle 127.0.0.1:7790) :
+# HUD Studio (Pixels / OLED / Lens views, inspector, F01–F38, control API on 127.0.0.1:7790):
 python -m src.adapters.hud_studio --model "ENGO 2"
-# Windows, lancement détaché + adb reverse pour l'application officielle :
+# Windows, detached launch + adb reverse for the official app:
 powershell -NoProfile -ExecutionPolicy Bypass -File dev\launch_hud_studio.ps1
 
-# Ancienne fenêtre + serveur virtuel Bluetooth Low Energy (Bumble sur port TCP 7788) :
+# Legacy window + virtual Bluetooth Low Energy server (Bumble on TCP port 7788):
 python -m src.adapters.activelook_emulator --ble --port 7788
 python -m src.adapters.activelook_emulator --classic --model "ENGO 3 Titanium"
 ```
-Guide complet : [19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md).
+Full guide: [19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md).
 
-### 2. Exécuter la Suite Complète de Tests Unitaires
+### 2. Run the dedicated test suites (82 tests, emulator only)
 ```bash
 python -m unittest tests/unit/test_activelook.py tests/unit/test_engo_killer_features.py tests/unit/test_engo_ai_bridge.py tests/unit/test_engo_openbridge_neural_integration.py tests/unit/test_hud_studio.py -v
 ```
 
 ---
 
-## 📦 Composants de Code Développés
+## 📦 Code delivered
 
-- **Adaptateur Protocolaire Officiel :** [`src/adapters/activelook.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/src/adapters/activelook.py)
-- **Passerelle IA, Voix & Proxy Sensoriel :** [`src/adapters/engo_ai_bridge.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/src/adapters/engo_ai_bridge.py)
-- **Émulateur Visuel & Serveur BLE Virtuel :** [`src/adapters/activelook_emulator.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/src/adapters/activelook_emulator.py)
-- **HUD Studio (émulateur pro) :** [`src/adapters/hud_studio.py`](../../../src/adapters/hud_studio.py), catalogue F01–F38 [`src/adapters/hud_features.py`](../../../src/adapters/hud_features.py), banque ALooK [`src/adapters/alook_layouts.py`](../../../src/adapters/alook_layouts.py)
-- **Pont application officielle ActiveLook → émulateur :** [`dev/build_activelook_openbridge.py`](../../../dev/build_activelook_openbridge.py), [`dev/repatch_nosplit_bridge.py`](../../../dev/repatch_nosplit_bridge.py)
-- **Suites de Tests Dédiées (82/82 tests passants, sous émulateur) :**
-  - [`tests/unit/test_activelook.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_activelook.py)
-  - [`tests/unit/test_engo_killer_features.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_engo_killer_features.py)
-  - [`tests/unit/test_engo_ai_bridge.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_engo_ai_bridge.py)
-  - [`tests/unit/test_engo_openbridge_neural_integration.py`](file:///z:/Hackatons/OpenBridge/OpenBridge/tests/unit/test_engo_openbridge_neural_integration.py)
+- **Protocol adapter:** [`src/adapters/activelook.py`](../../../src/adapters/activelook.py)
+- **AI, voice and sensory-proxy bridge:** [`src/adapters/engo_ai_bridge.py`](../../../src/adapters/engo_ai_bridge.py)
+- **Visual emulator and virtual BLE server:** [`src/adapters/activelook_emulator.py`](../../../src/adapters/activelook_emulator.py)
+- **HUD Studio (pro emulator):** [`src/adapters/hud_studio.py`](../../../src/adapters/hud_studio.py), F01–F38 catalogue [`src/adapters/hud_features.py`](../../../src/adapters/hud_features.py), ALooK bank [`src/adapters/alook_layouts.py`](../../../src/adapters/alook_layouts.py)
+- **Official ActiveLook app → emulator bridge:** [`dev/build_activelook_openbridge.py`](../../../dev/build_activelook_openbridge.py), [`dev/repatch_nosplit_bridge.py`](../../../dev/repatch_nosplit_bridge.py)
+- **Dedicated test suites (82/82 passing, emulator only):**
+  - [`tests/unit/test_activelook.py`](../../../tests/unit/test_activelook.py)
+  - [`tests/unit/test_engo_killer_features.py`](../../../tests/unit/test_engo_killer_features.py)
+  - [`tests/unit/test_engo_ai_bridge.py`](../../../tests/unit/test_engo_ai_bridge.py)
+  - [`tests/unit/test_engo_openbridge_neural_integration.py`](../../../tests/unit/test_engo_openbridge_neural_integration.py)
   - [`tests/unit/test_hud_studio.py`](../../../tests/unit/test_hud_studio.py)
 
 ---
 
-## 🔗 Liens Externes & Partenaires
+## 🔗 External links
 
-- Boutique officielle : [engoeyewear.com](https://www.engoeyewear.com) / [fr.engoeyewear.com](https://fr.engoeyewear.com)
-- Plateforme technologique : [activelook.net](https://www.activelook.net)
-- Dépôt officiel GitHub : [ActiveLook Organization](https://github.com/ActiveLook)
+- Official store: [engoeyewear.com](https://www.engoeyewear.com) / [fr.engoeyewear.com](https://fr.engoeyewear.com)
+- Display platform: [activelook.net](https://www.activelook.net)
+- Official GitHub: [ActiveLook organization](https://github.com/ActiveLook)
+- Partner page: [ENGO × OpenBridge](../ENGO.md)

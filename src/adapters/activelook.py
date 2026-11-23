@@ -760,13 +760,13 @@ class ActiveLookAdapter:
 
         # Center target indicator & direction chevron
         if abs(rel_bearing) <= 15:
-            nav_msg = "▲ TOUT DROIT (SUR CIBLE)"
+            nav_msg = "▲ STRAIGHT AHEAD (ON TARGET)"
             nav_col = COLOR_GREEN
         elif rel_bearing > 15:
-            nav_msg = f"▶ VIRER A DROITE (+{rel_bearing}°)"
+            nav_msg = f"▶ TURN RIGHT (+{rel_bearing}°)"
             nav_col = COLOR_AMBER
         else:
-            nav_msg = f"◀ VIRER A GAUCHE ({rel_bearing}°)"
+            nav_msg = f"◀ TURN LEFT ({rel_bearing}°)"
             nav_col = COLOR_AMBER
 
         if self.is_color:
@@ -793,7 +793,7 @@ class ActiveLookAdapter:
         arrival_pct = max(0, min(100, int((1.0 - min(target_dist_m, 1000.0) / 1000.0) * 100)))
         cmds += cmd_gauge(0, arrival_pct)
 
-        cmds += cmd_text(4, 230, ">> [WAVE] FERMER WAYFINDER", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 230, ">> [WAVE] CLOSE WAYFINDER", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_smart_home_security_alert(
@@ -820,13 +820,13 @@ class ActiveLookAdapter:
         # Threat details
         if self.is_color:
             cmds += cmd_color(COLOR_AMBER)
-        cmds += cmd_text(4, 42, f"MENACE : {threat_type[:24]}", font=1, color_or_grey=COLOR_AMBER if self.is_color else 15)
+        cmds += cmd_text(4, 42, f"THREAT : {threat_type[:24]}", font=1, color_or_grey=COLOR_AMBER if self.is_color else 15)
 
         if self.is_color:
             cmds += cmd_color(COLOR_YELLOW)
         cmds += cmd_text(4, 75, f"IP Source  : {source_ip}", font=0, color_or_grey=14)
         cmds += cmd_text(4, 98, f"Constructeur: {mac_vendor[:20]}", font=0, color_or_grey=14)
-        cmds += cmd_text(4, 121, f"Cible      : {target_service[:20]}", font=0, color_or_grey=14)
+        cmds += cmd_text(4, 121, f"Target     : {target_service[:20]}", font=0, color_or_grey=14)
 
         # Action prompt
         if self.is_color:
@@ -855,13 +855,13 @@ class ActiveLookAdapter:
             zone_desc = "ZONE 5: MAXIMAL"
         elif hr_zone == 4:
             hr_col = COLOR_AMBER
-            zone_desc = "ZONE 4: SEUIL LACTIQUE"
+            zone_desc = "ZONE 4: LACTATE THRESHOLD"
         elif hr_zone == 3:
             hr_col = COLOR_GREEN
-            zone_desc = "ZONE 3: AEROBIE"
+            zone_desc = "ZONE 3: AEROBIC"
         else:
             hr_col = COLOR_CYAN
-            zone_desc = f"ZONE {hr_zone}: RECUPERATION"
+            zone_desc = f"ZONE {hr_zone}: RECOVERY"
 
         # Header with Heart Rate
         if self.is_color:
@@ -875,16 +875,16 @@ class ActiveLookAdapter:
             cad_msg = "PARFAIT (CADENCE OPTIMALE)"
             cad_col = COLOR_GREEN
         elif spm_delta < -2:
-            cad_msg = f"▲ ACCELERER (+{abs(spm_delta)} SPM)"
+            cad_msg = f"▲ SPEED UP (+{abs(spm_delta)} SPM)"
             cad_col = COLOR_AMBER
         else:
-            cad_msg = f"▼ RALENTIR (-{spm_delta} SPM)"
+            cad_msg = f"▼ SLOW DOWN (-{spm_delta} SPM)"
             cad_col = COLOR_AMBER
 
         if self.is_color:
             cmds += cmd_color(cad_col)
         cmds += cmd_text(4, 42, f"CADENCE: {current_spm} SPM", font=2, color_or_grey=cad_col if self.is_color else 15)
-        cmds += cmd_text(4, 85, f"CIBLE: {target_spm} SPM | {cad_msg}", font=0, color_or_grey=14)
+        cmds += cmd_text(4, 85, f"TARGET: {target_spm} SPM | {cad_msg}", font=0, color_or_grey=14)
 
         # Visual metronome pacing gauge (centered at 50%)
         gauge_val = max(0, min(100, 50 + spm_delta * 5))
@@ -893,9 +893,9 @@ class ActiveLookAdapter:
         # Advice
         if self.is_color:
             cmds += cmd_color(COLOR_YELLOW)
-        cmds += cmd_text(4, 125, f"CONSEIL: {advice[:26]}", font=1, color_or_grey=COLOR_YELLOW if self.is_color else 15)
+        cmds += cmd_text(4, 125, f"TIP: {advice[:26]}", font=1, color_or_grey=COLOR_YELLOW if self.is_color else 15)
 
-        cmds += cmd_text(4, 230, ">> [WAVE] MASQUER CADENCE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 230, ">> [WAVE] HIDE CADENCE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_media_remote_hud(
@@ -915,7 +915,7 @@ class ActiveLookAdapter:
 
         # Top banner
         status_icon = "▶" if is_playing else "⏸"
-        status_text = "EN LECTURE" if is_playing else "PAUSE"
+        status_text = "PLAYING" if is_playing else "PAUSE"
         if self.is_color:
             cmds += cmd_color(COLOR_GREEN if is_playing else COLOR_AMBER)
         cmds += cmd_line(0, 26, 303, 26)
@@ -941,7 +941,7 @@ class ActiveLookAdapter:
         cmds += cmd_gauge(0, pct)
 
         # Volume status (Gauge 1)
-        cmds += cmd_text(4, 145, f"Volume Salon : {volume_pct}%", font=0, color_or_grey=14)
+        cmds += cmd_text(4, 145, f"Room volume : {volume_pct}%", font=0, color_or_grey=14)
         cmds += cmd_gauge(1, max(0, min(100, volume_pct)))
 
         # Controls Hint
@@ -961,7 +961,7 @@ class ActiveLookAdapter:
         if self.is_color:
             cmds += cmd_color(COLOR_CYAN)
         cmds += cmd_line(0, 26, 303, 26)
-        cmds += cmd_text(4, 6, "⌨️ SAISIE SILENCIEUSE TEMPLE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 15)
+        cmds += cmd_text(4, 6, "⌨️ SILENT TEMPLE INPUT", font=0, color_or_grey=COLOR_CYAN if self.is_color else 15)
 
         # Committed text buffer
         if self.is_color:
@@ -972,7 +972,7 @@ class ActiveLookAdapter:
         # Current Morse Symbol & Pending Character
         morse_disp = current_morse.replace(".", "·").replace("-", "—")
         char_preview = MORSE_MAP.get(current_morse, "")
-        symbol_str = f"SYMBOLE: [ {morse_disp} ] ➔ {char_preview}" if current_morse else "SYMBOLE: [ EN ATTENTE TAP ]"
+        symbol_str = f"SYMBOLE: [ {morse_disp} ] ➔ {char_preview}" if current_morse else "SYMBOL: [ WAITING FOR TAP ]"
 
         if self.is_color:
             cmds += cmd_color(COLOR_GREEN if char_preview else COLOR_AMBER)
@@ -1010,13 +1010,13 @@ class ActiveLookAdapter:
         # Cadence status & WPM Indicator
         if is_rushing or wpm > 165:
             cad_col = COLOR_AMBER
-            cad_status = f"⚠️ {wpm} WPM (TROP RAPIDE)"
+            cad_status = f"⚠️ {wpm} WPM (TOO FAST)"
         elif wpm < 110:
             cad_col = COLOR_CYAN
-            cad_status = f"ℹ {wpm} WPM (RYTHME LENT)"
+            cad_status = f"ℹ {wpm} WPM (SLOW PACE)"
         else:
             cad_col = COLOR_GREEN
-            cad_status = f"✓ {wpm} WPM (RYTHME OPTIMAL)"
+            cad_status = f"✓ {wpm} WPM (OPTIMAL PACE)"
 
         # Header with timing
         m_el, s_el = divmod(max(0, elapsed_s), 60)
@@ -1042,12 +1042,12 @@ class ActiveLookAdapter:
         # Next line preview (Dimmed peripheral font)
         if self.is_color:
             cmds += cmd_color(COLOR_CYAN)
-        cmds += cmd_text(4, 115, "SUIVANT :", font=0, color_or_grey=8)
+        cmds += cmd_text(4, 115, "NEXT :", font=0, color_or_grey=8)
         cmds += cmd_text(4, 135, next_line[:32], font=0, color_or_grey=10)
         if len(next_line) > 32:
             cmds += cmd_text(4, 155, next_line[32:64], font=0, color_or_grey=10)
 
-        cmds += cmd_text(4, 230, ">> [WAVE] LIGNE SUIVANTE | [TAP] PAUSE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 230, ">> [WAVE] NEXT LINE | [TAP] PAUSE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_spatial_energy_heatmap(
@@ -1084,16 +1084,16 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(0, 42, 303, 115)
-            cmds += cmd_text(4, 48, f"⚠️ VEILLE FANTOME DETECTEE !", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
-            cmds += cmd_text(4, 75, f"Appareil : {v_name[:20]} ({v_watts} W)", font=0, color_or_grey=14)
-            cmds += cmd_text(4, 95, f"Inactif depuis : {v_idle} heures", font=0, color_or_grey=14)
+            cmds += cmd_text(4, 48, f"⚠️ PHANTOM STANDBY DETECTED!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(4, 75, f"Device : {v_name[:20]} ({v_watts} W)", font=0, color_or_grey=14)
+            cmds += cmd_text(4, 95, f"Idle for : {v_idle} hours", font=0, color_or_grey=14)
 
             # Wave action to cut plug
-            cmds += cmd_text(4, 215, f">> [WAVE] COUPER PRISE : {v_name[:14].upper()}", font=0, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(4, 215, f">> [WAVE] ASK TO SWITCH OFF : {v_name[:14].upper()}", font=0, color_or_grey=COLOR_RED if self.is_color else 15)
         else:
             if self.is_color:
                 cmds += cmd_color(COLOR_GREEN)
-            cmds += cmd_text(4, 55, "TOUS APPAREILS EN VEILLE OPTIMALE", font=1, color_or_grey=COLOR_GREEN if self.is_color else 15)
+            cmds += cmd_text(4, 55, "ALL DEVICES IN OPTIMAL STANDBY", font=1, color_or_grey=COLOR_GREEN if self.is_color else 15)
             cmds += cmd_text(4, 85, "Aucune deperdition electrique detectee", font=0, color_or_grey=14)
             cmds += cmd_text(4, 215, ">> [WAVE] RETOUR AMBIANT", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
 
@@ -1169,7 +1169,7 @@ class ActiveLookAdapter:
         if self.is_color:
             cmds += cmd_color(COLOR_RED)
         cmds += cmd_rectf(0, 0, 303, 24)
-        hdr = f"⚠️ SENTRY ALERTE [TTC {ttc_s:.1f}s]"
+        hdr = f"⚠️ SENTRY ALERT [TTC {ttc_s:.1f}s]"
         cmds += cmd_text(4, 5, hdr[:32], font=0, color_or_grey=0)
 
         # Peripheral Side Visual Brackets
@@ -1198,8 +1198,8 @@ class ActiveLookAdapter:
             cmds += cmd_color(COLOR_YELLOW)
         cmds += cmd_rect(24, 40, 279, 155)
         cmds += cmd_text(30, 48, f"VEHICULE APROCHANT : {hazard_side.upper()}", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
-        cmds += cmd_text(30, 78, f"Distance : {dist_m:.1f} m  |  Vitesse : {speed_kmh} km/h", font=0, color_or_grey=14)
-        cmds += cmd_text(30, 98, f"Impact estime dans : {ttc_s:.1f} secondes", font=0, color_or_grey=COLOR_RED if self.is_color else 14)
+        cmds += cmd_text(30, 78, f"Distance : {dist_m:.1f} m  |  Speed : {speed_kmh} km/h", font=0, color_or_grey=14)
+        cmds += cmd_text(30, 98, f"Estimated impact in : {ttc_s:.1f} seconds", font=0, color_or_grey=COLOR_RED if self.is_color else 14)
 
         # Proximity Gauge (0-100%, closer = higher)
         pct = max(0, min(100, int((1.0 - min(50.0, dist_m) / 50.0) * 100)))
@@ -1246,7 +1246,7 @@ class ActiveLookAdapter:
                 cmds += cmd_text(16, y + 18, f"  {clean_pt[28:56]}", font=0, color_or_grey=12)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] DOSSIER SUIVANT / MASQUER", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 232, ">> [WAVE] NEXT BRIEF / HIDE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_biofeedback_stress_guardian(
@@ -1278,7 +1278,7 @@ class ActiveLookAdapter:
         phase_up = breath_phase.upper()
         
         if "INSP" in phase_up:
-            phase_label = "INSPIRER"
+            phase_label = "BREATHE IN"
             radius = 18 + int(max(1, min(4, phase_timer_s)) * 10)  # 28 to 58
             ring_col = COLOR_CYAN
         elif "HOLD" in phase_up or "BLOQ" in phase_up:
@@ -1286,7 +1286,7 @@ class ActiveLookAdapter:
             radius = 58
             ring_col = COLOR_AMBER
         elif "EXP" in phase_up:
-            phase_label = "EXPIRER"
+            phase_label = "BREATHE OUT"
             radius = max(18, 58 - int(max(1, min(4, phase_timer_s)) * 10))
             ring_col = COLOR_GREEN
         else: # REST / PAUSE
@@ -1309,7 +1309,7 @@ class ActiveLookAdapter:
         cmds += cmd_text(cx - 45, cy + 64, f"{phase_label} ({phase_timer_s}s)", font=1, color_or_grey=ring_col if self.is_color else 15)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] STOP COHERENCE CARDIAQUE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 232, ">> [WAVE] STOP HEART COHERENCE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_diy_ar_stud_level(
@@ -1328,7 +1328,7 @@ class ActiveLookAdapter:
         # Header
         if self.is_color:
             cmds += cmd_color(COLOR_GREEN if is_level else COLOR_YELLOW)
-        cmds += cmd_text(4, 6, "AR NIVEAU DIGITAL & SCANNER MUR", font=0, color_or_grey=COLOR_GREEN if is_level else 15)
+        cmds += cmd_text(4, 6, "AR SPIRIT LEVEL & WALL SCANNER", font=0, color_or_grey=COLOR_GREEN if is_level else 15)
         cmds += cmd_text(4, 26, f"PITCH: {pitch_deg:+.1f}° | ROLL: {roll_deg:+.1f}°", font=0, color_or_grey=12)
         cmds += cmd_line(0, 42, 303, 42)
 
@@ -1364,11 +1364,11 @@ class ActiveLookAdapter:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(10, 160, 293, 215)
             cmds += cmd_text(16, 168, f"⚡ DANGER : {detected_hazard.upper()[:24]}", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
-            cmds += cmd_text(16, 194, "⚠️ NE PAS PERCER DANS CET AXE !", font=0, color_or_grey=COLOR_RED if self.is_color else 14)
+            cmds += cmd_text(16, 194, "⚠️ DO NOT DRILL ALONG THIS LINE!", font=0, color_or_grey=COLOR_RED if self.is_color else 14)
         else:
             if self.is_color:
                 cmds += cmd_color(COLOR_GREEN)
-            cmds += cmd_text(30, 180, "Scan mur : Zone saine (aucun reseau)", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
+            cmds += cmd_text(30, 180, "Wall scan : clear (no cables or pipes)", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
 
         # Footer
         cmds += cmd_text(4, 232, ">> [WAVE] TARE ZERO RELATIF", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
@@ -1395,16 +1395,16 @@ class ActiveLookAdapter:
             level = (triage_level or "IMMEDIATE").upper()
             if "IMM" in level or "RED" in level:
                 col = COLOR_RED
-                badge = "[ ! IMMEDIATE / ROUGE ! ]"
+                badge = "[ ! IMMEDIATE / RED ! ]"
             elif "DEL" in level or "YEL" in level:
                 col = COLOR_AMBER
-                badge = "[ || DELAYED / JAUNE || ]"
+                badge = "[ || DELAYED / YELLOW || ]"
             elif "MIN" in level or "GRN" in level:
                 col = COLOR_GREEN
-                badge = "[ ✓ MINOR / VERT ]"
+                badge = "[ ✓ MINOR / GREEN ]"
             else:
                 col = COLOR_WHITE
-                badge = "[ † EXPECTANT / NOIR ]"
+                badge = "[ † EXPECTANT / BLACK ]"
 
             if self.is_color:
                 cmds += cmd_color(col)
@@ -1417,12 +1417,12 @@ class ActiveLookAdapter:
 
             # Diagnostic Step & Question
             prompt_str = step_prompt or "RESPIRATIONS: >30 BPM OU ABSENTES"
-            cmds += cmd_text(12, 105, f"Etape : {prompt_str[:28]}", font=0, color_or_grey=14)
+            cmds += cmd_text(12, 105, f"Step : {prompt_str[:28]}", font=0, color_or_grey=14)
             cmds += cmd_text(12, 128, "Protocole : Degager voies / Tourniquet", font=0, color_or_grey=12)
 
             # Total tally
-            cmds += cmd_text(12, 160, "Triage MCI : 2 ROUGE | 4 JAUNE | 9 VERT", font=0, color_or_grey=8)
-            cmds += cmd_text(4, 232, ">> [WAVE] ETAPE RPM SUIVANTE / VALIDER", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+            cmds += cmd_text(12, 160, "MCI triage : 2 RED | 4 YELLOW | 9 GREEN", font=0, color_or_grey=8)
+            cmds += cmd_text(4, 232, ">> [WAVE] NEXT RPM STEP / CONFIRM", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
 
         else:
             # CPR Visual Metronome Mode (100-120 BPM, 50% duty cycle)
@@ -1447,7 +1447,7 @@ class ActiveLookAdapter:
             cmds += cmd_text(12, 155, f"CCF: {ccf_pct}% (OBJECTIF >80%)", font=0, color_or_grey=COLOR_GREEN if ccf_pct >= 80 else COLOR_AMBER)
             cmds += cmd_gauge(0, ccf_pct)
 
-            cmds += cmd_text(4, 232, ">> [WAVE] VERIFIER POULS / RYTHME (2 MIN)", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+            cmds += cmd_text(4, 232, ">> [WAVE] CHECK PULSE / RHYTHM (2 MIN)", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
 
         return self.send(bytes(cmds))
 
@@ -1486,7 +1486,7 @@ class ActiveLookAdapter:
 
         # Translated badge if applicable
         if is_translated:
-            cmds += cmd_text(220, 168, "[FR TRAD]", font=0, color_or_grey=COLOR_CYAN if self.is_color else 10)
+            cmds += cmd_text(220, 168, "[EN TRANSL]", font=0, color_or_grey=COLOR_CYAN if self.is_color else 10)
 
         # Rolling transcription lines
         if text_line1:
@@ -1495,7 +1495,7 @@ class ActiveLookAdapter:
             cmds += cmd_text(8, 214, text_line2[:34], font=0, color_or_grey=14)
 
         # Footer
-        cmds += cmd_text(4, 238, ">> [WAVE] FERMER SOUS-TITRES", font=0, color_or_grey=8)
+        cmds += cmd_text(4, 238, ">> [WAVE] CLOSE SUBTITLES", font=0, color_or_grey=8)
         return self.send(bytes(cmds))
 
     def push_uav_avionics_hud(
@@ -1589,15 +1589,15 @@ class ActiveLookAdapter:
             cmds += cmd_text(18, 6, "⚠️ RF THREAT: DEAUTH FLOOD", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
             cmds += cmd_line(18, 28, 285, 28)
 
-            cmds += cmd_text(18, 38, f"Cible : {target_id[:24]}", font=0, color_or_grey=14)
+            cmds += cmd_text(18, 38, f"Target : {target_id[:24]}", font=0, color_or_grey=14)
             cmds += cmd_text(18, 60, "Debit : 84 trames/s [ATTAQUE CRITIQUE]", font=0, color_or_grey=COLOR_RED if self.is_color else 15)
             cmds += cmd_text(18, 85, "Vecteur : Capture WPA handshake / Evil Twin", font=0, color_or_grey=12)
-            cmds += cmd_text(18, 110, "Conseil : Basculer sur 4G/5G cellulaire", font=0, color_or_grey=12)
+            cmds += cmd_text(18, 110, "Advice : switch to 4G/5G cellular", font=0, color_or_grey=12)
 
             cmds += cmd_rect(14, 135, 289, 175)
             cmds += cmd_text(24, 148, "[!] PROTECTION PMF 802.11w REQUISE", font=0, color_or_grey=COLOR_YELLOW if self.is_color else 14)
 
-            cmds += cmd_text(4, 232, ">> [WAVE] MASQUER ALERTE & SAUVER PCAP", font=0, color_or_grey=8)
+            cmds += cmd_text(4, 232, ">> [WAVE] HIDE ALERT & SAVE PCAP", font=0, color_or_grey=8)
 
         else:
             # BLE Tracking Beacon Seeker (AirTag / SmartTag)
@@ -1608,8 +1608,8 @@ class ActiveLookAdapter:
             cmds += cmd_line(0, 24, 303, 24)
 
             # Target & RSSI Readout
-            cmds += cmd_text(8, 34, f"CIBLE: {target_id.upper()[:22]}", font=1, color_or_grey=COLOR_YELLOW if self.is_color else 15)
-            cmds += cmd_text(8, 64, f"Signal : {rssi_dbm} dBm  |  Dist est. : {dist_m:.1f} m", font=0, color_or_grey=14)
+            cmds += cmd_text(8, 34, f"TARGET: {target_id.upper()[:22]}", font=1, color_or_grey=COLOR_YELLOW if self.is_color else 15)
+            cmds += cmd_text(8, 64, f"Signal : {rssi_dbm} dBm  |  Est. dist : {dist_m:.1f} m", font=0, color_or_grey=14)
 
             # Hot-Cold Seeker Bar Meter
             # Map RSSI (-95 to -35 dBm) to 0..100%
@@ -1617,8 +1617,8 @@ class ActiveLookAdapter:
             cmds += cmd_text(8, 92, "RADAR DIRECTIONNEL (BLINDAGE CORPS) :", font=0, color_or_grey=10)
             cmds += cmd_gauge(0, pct)
 
-            cmds += cmd_text(30, 140, "Pivotez a 360° pour trouver l'axe", font=0, color_or_grey=12)
-            cmds += cmd_text(30, 160, "Signal max = Balise face a vous", font=0, color_or_grey=COLOR_GREEN if self.is_color else 10)
+            cmds += cmd_text(30, 140, "Turn 360° to find the bearing", font=0, color_or_grey=12)
+            cmds += cmd_text(30, 160, "Strongest signal = beacon ahead", font=0, color_or_grey=COLOR_GREEN if self.is_color else 10)
 
             cmds += cmd_text(4, 232, ">> [WAVE] ACTIVER BIPPER AIRTAG / SILENCE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
 
@@ -1693,8 +1693,8 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(10, 155, 293, 205)
-            cmds += cmd_text(16, 162, f"⚠️ DANGER : LIMITE ARC-FLASH VIOLEE !", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
-            cmds += cmd_text(16, 186, f"Distance securite requise : {afb_dist_m:.1f} m", font=0, color_or_grey=14)
+            cmds += cmd_text(16, 162, f"⚠️ DANGER : ARC-FLASH BOUNDARY CROSSED!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(16, 186, f"Required safety distance : {afb_dist_m:.1f} m", font=0, color_or_grey=14)
         else:
             cmds += cmd_text(16, 175, f"Limite Arc-Flash (NFPA 70E) : {afb_dist_m:.1f} m ✓ OK", font=0, color_or_grey=COLOR_GREEN if self.is_color else 10)
 
@@ -1722,14 +1722,14 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rectf(0, 0, 303, 56)
-            cmds += cmd_text(12, 6, "[!] DANGER ALLERGENE MORTEL", font=1, color_or_grey=0)
+            cmds += cmd_text(12, 6, "[!] LIFE-THREATENING ALLERGEN", font=1, color_or_grey=0)
             al_str = ", ".join(detected_allergens).upper()
             cmds += cmd_text(12, 32, f"DETECTE : {al_str[:22]}", font=1, color_or_grey=0)
 
             # Product and Risk Warning
             if self.is_color:
                 cmds += cmd_color(COLOR_AMBER)
-            cmds += cmd_text(4, 68, f"PRODUIT : {product_name[:24]}", font=0, color_or_grey=15)
+            cmds += cmd_text(4, 68, f"PRODUCT : {product_name[:24]}", font=0, color_or_grey=15)
             cmds += cmd_text(4, 92, "STATUT  : ⛔ CHOC ANAPHYLACTIQUE", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
 
             # Nutrition summary
@@ -1742,7 +1742,7 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_GREEN)
             cmds += cmd_text(4, 6, "[✓ ALLERGENES : AUCUN DETECTE]", font=0, color_or_grey=COLOR_GREEN if self.is_color else 15)
-            cmds += cmd_text(4, 26, f"PRODUIT : {product_name[:26]}", font=1, color_or_grey=15)
+            cmds += cmd_text(4, 26, f"PRODUCT : {product_name[:26]}", font=1, color_or_grey=15)
             cmds += cmd_line(0, 52, 303, 52)
 
             # 2-Column Diabetic & Renal Triage
@@ -1759,7 +1759,7 @@ class ActiveLookAdapter:
             cmds += cmd_text(4, 155, f"SCORE SANTE : NUTRI-SCORE {nutri_score.upper()} (CONFORME ✓)", font=0, color_or_grey=COLOR_GREEN if self.is_color else 10)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] FERMER SCAN ALIMENTAIRE", font=0, color_or_grey=8)
+        cmds += cmd_text(4, 232, ">> [WAVE] CLOSE FOOD SCAN", font=0, color_or_grey=8)
         return self.send(bytes(cmds))
 
     def push_tactical_marine_hud(
@@ -1829,13 +1829,13 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(148, 130, 298, 175)
-            cmds += cmd_text(154, 138, f"⚠️ BAS FOND : {depth_m:.1f} m !", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(154, 138, f"⚠️ SHALLOWS : {depth_m:.1f} m!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
             cmds += cmd_text(154, 160, "RISQUE TALONNEMENT", font=0, color_or_grey=14)
         else:
             cmds += cmd_text(148, 140, f"FONDS: {depth_m:.1f} m (SECURITE ✓)", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] SYNCHRO CHRONO REGATE (REGLE 26)", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 232, ">> [WAVE] SYNC RACE TIMER (RULE 26)", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_multilingual_interpreter(
@@ -1843,8 +1843,8 @@ class ActiveLookAdapter:
         speaker_origin: str,
         source_transcript: str,
         translated_text: str,
-        etiquette_tag: str = "[CONSEIL]",
-        etiquette_tip: str = "Rester attentif et courtois.",
+        etiquette_tag: str = "[TIP]",
+        etiquette_tip: str = "Stay attentive and polite.",
         target_country: str = "JAPON"
     ) -> bool:
         """Killer Feature 26: Live Multilingual Interpreter & Cultural Etiquette Whisperer.
@@ -1879,7 +1879,7 @@ class ActiveLookAdapter:
         cmds += cmd_text(4, 217, f"💡 {etiquette_tip[:36]}", font=0, color_or_grey=COLOR_AMBER if self.is_color else 14)
 
         # Footer
-        cmds += cmd_text(4, 236, ">> [WAVE] PROCHAIN TOUR DE PAROLE", font=0, color_or_grey=8)
+        cmds += cmd_text(4, 236, ">> [WAVE] NEXT SPEAKER TURN", font=0, color_or_grey=8)
         return self.send(bytes(cmds))
 
     def push_driver_vigilance_hud(
@@ -1899,7 +1899,7 @@ class ActiveLookAdapter:
         # Severity triage
         if microsleep_detected or perclos_pct >= 20.0:
             col = COLOR_RED
-            hdr = "⚠️ ALERTE MICROSOMMEIL !"
+            hdr = "⚠️ MICROSLEEP ALERT!"
         elif perclos_pct >= 12.0:
             col = COLOR_AMBER
             hdr = "⚠️ FATIGUE DETECTEE (PERCLOS)"
@@ -1946,7 +1946,7 @@ class ActiveLookAdapter:
                 cmds += cmd_text(20, 105, "Surveillance clignements active", font=0, color_or_grey=12)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] SNOOZE / TEST SACCADE VERIFIE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 232, ">> [WAVE] SNOOZE / SACCADE TEST PASSED", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_warehouse_pick(
@@ -1958,7 +1958,7 @@ class ActiveLookAdapter:
         quantity: int,
         unit_str: str = "PCS",
         sku_code: str = "SKU-8842-M8",
-        sku_desc: str = "VIS INOX M8x40",
+        sku_desc: str = "STAINLESS SCREW M8x40",
         scan_status: str = "VERIFIED"
     ) -> bool:
         """Killer Feature 28: Warehouse Logistics & Pick-by-Vision HUD.
@@ -1990,13 +1990,13 @@ class ActiveLookAdapter:
         status_up = scan_status.upper()
         if "VERIF" in status_up or "OK" in status_up:
             col_v = COLOR_GREEN
-            txt_v = "[ ✓ SKU CONFORME - BAC 02 ]"
+            txt_v = "[ ✓ SKU MATCH - BIN 02 ]"
         elif "MIS" in status_up or "ERR" in status_up:
             col_v = COLOR_RED
-            txt_v = "[ ⛔ ERREUR SKU: SCANNE 8840 ]"
+            txt_v = "[ ⛔ SKU ERROR: SCANNED 8840 ]"
         else:
             col_v = COLOR_AMBER
-            txt_v = "[ EN ATTENTE SCAN CODE-BARRES ]"
+            txt_v = "[ WAITING FOR BARCODE SCAN ]"
 
         if self.is_color:
             cmds += cmd_color(col_v)
@@ -2004,7 +2004,7 @@ class ActiveLookAdapter:
         cmds += cmd_text(12, 175, txt_v, font=1, color_or_grey=col_v if self.is_color else 15)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] VALIDER BAC SUIVANT", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 232, ">> [WAVE] CONFIRM NEXT BIN", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_avalanche_sar_hud(
@@ -2026,7 +2026,7 @@ class ActiveLookAdapter:
         # Header
         if self.is_color:
             cmds += cmd_color(COLOR_AMBER)
-        cmds += cmd_text(4, 4, f"[DVA SAR 457kHz] {victims_count} VICTIME(S)", font=0, color_or_grey=COLOR_AMBER if self.is_color else 15)
+        cmds += cmd_text(4, 4, f"[AVALANCHE 457kHz] {victims_count} VICTIM(S)", font=0, color_or_grey=COLOR_AMBER if self.is_color else 15)
         # 1 Hz pulse indicator dot
         cmds += cmd_circf(290, 10, 3)
         cmds += cmd_line(0, 22, 303, 22)
@@ -2036,7 +2036,7 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_text(20, 80, "↩ DEMI-TOUR (180°)", font=2, color_or_grey=COLOR_RED if self.is_color else 15)
-            cmds += cmd_text(20, 130, "LIGNE DE FLUX INVERSEE !", font=1, color_or_grey=COLOR_RED if self.is_color else 14)
+            cmds += cmd_text(20, 130, "FLOW LINE REVERSED!", font=1, color_or_grey=COLOR_RED if self.is_color else 14)
 
         elif "FINE" in phase_up:
             # Fine Search Orthogonal Bracket (<3m)
@@ -2071,10 +2071,10 @@ class ActiveLookAdapter:
             cmds += cmd_circf(cx, cy, 3)
 
             cmds += cmd_text(115, 130, f"{distance_m:.1f} m", font=2, color_or_grey=COLOR_YELLOW if self.is_color else 15)
-            cmds += cmd_text(105, 175, f"CAP : {tangent_angle_deg:+.0f}°", font=0, color_or_grey=12)
+            cmds += cmd_text(105, 175, f"HEADING : {tangent_angle_deg:+.0f}°", font=0, color_or_grey=12)
 
         # Footer
-        cmds += cmd_text(4, 232, ">> [WAVE] MARQUER VICTIME (ISSO EXCLUSION)", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 232, ">> [WAVE] MARK VICTIM (EXCLUDE SIGNAL)", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_circadian_chrono_optimizer(
@@ -2107,14 +2107,14 @@ class ActiveLookAdapter:
             cmds += cmd_color(COLOR_GREEN)
         cmds += cmd_text(4, 28, f"DOSE LUMIERE : {pct}% ({dose_lux_min // 1000}k / {target_dose // 1000}k lx*m)", font=0, color_or_grey=COLOR_GREEN if self.is_color else 15)
         cmds += cmd_gauge(0, pct)
-        cmds += cmd_text(4, 70, f"mEDI : {medi_lux} lx (Capteur : {current_lux} lx)", font=0, color_or_grey=12)
+        cmds += cmd_text(4, 70, f"mEDI : {medi_lux} lx (sensor : {current_lux} lx)", font=0, color_or_grey=12)
 
         # Caffeine Pharmacokinetics
         cmds += cmd_line(0, 95, 303, 95)
         if self.is_color:
             cmds += cmd_color(COLOR_AMBER)
-        cmds += cmd_text(4, 102, f"STOP CAFEINE : {cutoff_time_str} | ACTIF: {caffeine_active_mg}mg", font=1, color_or_grey=COLOR_AMBER if self.is_color else 15)
-        cmds += cmd_text(4, 130, f"Elimination sommeil : dans {sleep_clearance_hrs:.1f}h (<25mg)", font=0, color_or_grey=14)
+        cmds += cmd_text(4, 102, f"CAFFEINE CUTOFF : {cutoff_time_str} | ACTIVE: {caffeine_active_mg}mg", font=1, color_or_grey=COLOR_AMBER if self.is_color else 15)
+        cmds += cmd_text(4, 130, f"Sleep-safe level : in {sleep_clearance_hrs:.1f}h (<25mg)", font=0, color_or_grey=14)
 
         # Melatonin Evening Alert
         if melatonin_warning:
@@ -2153,11 +2153,11 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(0, 0, 303, 26)
-            cmds += cmd_text(6, 4, f"MAYDAY / PASS ACTIF [{unit_id}]", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(6, 4, f"MAYDAY / PASS ACTIVE [{unit_id}]", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
         else:
             if self.is_color:
                 cmds += cmd_color(COLOR_AMBER)
-            cmds += cmd_text(4, 4, f"SCBA APPAREIL RESPIRATOIRE [{unit_id}]", font=0, color_or_grey=COLOR_AMBER if self.is_color else 15)
+            cmds += cmd_text(4, 4, f"SCBA BREATHING APPARATUS [{unit_id}]", font=0, color_or_grey=COLOR_AMBER if self.is_color else 15)
         cmds += cmd_line(0, 26, 303, 26)
 
         # SCBA Cylinder Air & NFPA 1404 Rule of Thirds
@@ -2166,7 +2166,7 @@ class ActiveLookAdapter:
         air_color = COLOR_GREEN if cylinder_bar >= 200 else (COLOR_AMBER if cylinder_bar >= 100 else COLOR_RED)
         if self.is_color:
             cmds += cmd_color(air_color)
-        status_air = "TRAVAIL" if cylinder_bar >= 200 else ("REPLI" if cylinder_bar >= 100 else "RESERVE URGENCE")
+        status_air = "TRAVAIL" if cylinder_bar >= 200 else ("REPLI" if cylinder_bar >= 100 else "EMERGENCY RESERVE")
         cmds += cmd_text(4, 32, f"AIR : {cylinder_bar} BAR ({rem_min} min) - {status_air}", font=1, color_or_grey=air_color if self.is_color else 15)
         cmds += cmd_gauge(0, air_pct)
 
@@ -2178,15 +2178,15 @@ class ActiveLookAdapter:
             cmds += cmd_color(temp_color)
         cmds += cmd_text(4, 102, f"THERMIQUE : {ambient_temp_c}C (dT/dt : +{temp_rise_c_per_min}C/min)", font=1, color_or_grey=temp_color if self.is_color else 15)
         if flashover_risk:
-            cmds += cmd_text(4, 128, "ALERTE FLASHOVER / EMBRASEMENT GENERALISE!", font=0, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(4, 128, "FLASHOVER ALERT / FULL ROOM IGNITION!", font=0, color_or_grey=COLOR_RED if self.is_color else 15)
         else:
-            cmds += cmd_text(4, 128, "Stabilite thermique cabine : dans les normes", font=0, color_or_grey=12)
+            cmds += cmd_text(4, 128, "Thermal stability : within limits", font=0, color_or_grey=12)
 
         # Exit Vector Navigation (Zero-visibility egress)
         cmds += cmd_line(0, 150, 303, 150)
         if self.is_color:
             cmds += cmd_color(COLOR_CYAN)
-        cmds += cmd_text(4, 156, f"GUIDE EVACUATION (LIGNE DE VIE) : CAP {exit_bearing_deg} DEG", font=0, color_or_grey=COLOR_CYAN if self.is_color else 14)
+        cmds += cmd_text(4, 156, f"EVACUATION GUIDE (LIFELINE) : HEADING {exit_bearing_deg} DEG", font=0, color_or_grey=COLOR_CYAN if self.is_color else 14)
 
         # Draw tactical arrow at right (x=250, y=185)
         rad = math.radians(exit_bearing_deg - 90)
@@ -2195,8 +2195,8 @@ class ActiveLookAdapter:
         cmds += cmd_circ(cx, cy, 24)
         cmds += cmd_line(cx, cy, cx + dx, cy + dy)
         cmds += cmd_circf(cx + dx, cy + dy, 3)
-        cmds += cmd_text(16, 182, "Suivre ligne de vie vers SAS nord", font=0, color_or_grey=13)
-        cmds += cmd_text(16, 202, "Distance estimee sortie : ~24m", font=0, color_or_grey=11)
+        cmds += cmd_text(16, 182, "Follow the lifeline to the north airlock", font=0, color_or_grey=13)
+        cmds += cmd_text(16, 202, "Estimated distance to exit : ~24m", font=0, color_or_grey=11)
 
         # Footer
         cmds += cmd_text(4, 234, ">> [WAVE] ACQUITTER ALARME | [TEMPLE] DETRESSE MAYDAY", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
@@ -2221,13 +2221,13 @@ class ActiveLookAdapter:
         # Header with Range & Ambient Crosswind
         if self.is_color:
             cmds += cmd_color(COLOR_AMBER)
-        cmds += cmd_text(4, 4, f"BALISTIQUE MIL-DOT | DISTANCE : {range_m:.0f}m", font=1, color_or_grey=COLOR_AMBER if self.is_color else 15)
+        cmds += cmd_text(4, 4, f"MIL-DOT BALLISTICS | RANGE : {range_m:.0f}m", font=1, color_or_grey=COLOR_AMBER if self.is_color else 15)
         cmds += cmd_line(0, 24, 303, 24)
 
         # Wind & Atmospheric status
         wind_dir = "D" if windage_mrad > 0 else "G"
         moa_elev = elevation_mrad * 3.4377
-        cmds += cmd_text(4, 28, f"VENT: {wind_speed_ms:.1f}m/s @ {wind_angle_deg} DEG | CORR: {abs(windage_mrad):.1f} MIL {wind_dir}", font=0, color_or_grey=14)
+        cmds += cmd_text(4, 28, f"WIND: {wind_speed_ms:.1f}m/s @ {wind_angle_deg} DEG | CORR: {abs(windage_mrad):.1f} MIL {wind_dir}", font=0, color_or_grey=14)
 
         # Central Optical Reticle (Scope Crosshairs with optical foveal transparent center)
         cx, cy = 152, 115
@@ -2271,10 +2271,10 @@ class ActiveLookAdapter:
         if abs(cant_deg) > 0.5:
             cmds += cmd_text(215, 188, "INCLINE !", font=0, color_or_grey=COLOR_RED if self.is_color else 15)
         else:
-            cmds += cmd_text(215, 188, "NIVEAU OK", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
+            cmds += cmd_text(215, 188, "LEVEL OK", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
 
         # Footer
-        cmds += cmd_text(4, 234, ">> [WAVE] PROCHAIN PROFIL BALISTIQUE | [TAP] ZERO REF", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 234, ">> [WAVE] NEXT BALLISTIC PROFILE | [TAP] ZERO REF", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_surgical_vitals_hud(
@@ -2296,7 +2296,7 @@ class ActiveLookAdapter:
         # Header
         if self.is_color:
             cmds += cmd_color(COLOR_CYAN)
-        cmds += cmd_text(4, 4, f"BLOC OPERATOIRE [{patient_id}] - MONITORING STERILE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 15)
+        cmds += cmd_text(4, 4, f"OPERATING ROOM [{patient_id}] - STERILE MONITORING", font=0, color_or_grey=COLOR_CYAN if self.is_color else 15)
         cmds += cmd_line(0, 22, 303, 22)
 
         # Vital Signs Grid (2x2)
@@ -2305,7 +2305,7 @@ class ActiveLookAdapter:
         if self.is_color:
             cmds += cmd_color(hr_color)
         cmds += cmd_text(8, 28, f"FC: {hr_bpm} BPM", font=1, color_or_grey=hr_color if self.is_color else 15)
-        cmds += cmd_text(8, 52, "Rythme sinusal regulier", font=0, color_or_grey=12)
+        cmds += cmd_text(8, 52, "Regular sinus rhythm", font=0, color_or_grey=12)
 
         spo2_alert = spo2_pct < 94
         spo2_color = COLOR_RED if spo2_alert else COLOR_GREEN
@@ -2340,14 +2340,14 @@ class ActiveLookAdapter:
         torque_color = COLOR_RED if torque_alert else (COLOR_GREEN if torque_sweet_spot else COLOR_AMBER)
         if self.is_color:
             cmds += cmd_color(torque_color)
-        status_torque = "RISQUE OSTEONECROSE" if torque_alert else ("COUPLE OPTIMAL" if torque_sweet_spot else "EN COURS")
-        cmds += cmd_text(4, 132, f"COUPLE MOTEUR : {implant_torque_ncm:.1f} N.cm ({status_torque})", font=1, color_or_grey=torque_color if self.is_color else 15)
+        status_torque = "RISQUE OSTEONECROSE" if torque_alert else ("OPTIMAL TORQUE" if torque_sweet_spot else "IN PROGRESS")
+        cmds += cmd_text(4, 132, f"MOTOR TORQUE : {implant_torque_ncm:.1f} N.cm ({status_torque})", font=1, color_or_grey=torque_color if self.is_color else 15)
         cmds += cmd_gauge(0, torque_pct)
-        cmds += cmd_text(4, 172, "Cible implantaire : 30 - 35 N.cm (Arret auto a 40 N.cm)", font=0, color_or_grey=13)
+        cmds += cmd_text(4, 172, "Implant target : 30 - 35 N.cm (auto stop at 40 N.cm)", font=0, color_or_grey=13)
 
         # Operating Field Gaze Center Note (Foveal transparent deadband 120x120 preserved)
         cmds += cmd_line(0, 196, 303, 196)
-        cmds += cmd_text(8, 204, "Champ visuel central 100% sterile & degage", font=0, color_or_grey=10)
+        cmds += cmd_text(8, 204, "Central field of view 100% sterile and clear", font=0, color_or_grey=10)
 
         # Footer
         cmds += cmd_text(4, 234, ">> [WAVE SANS CONTACT] CHANGER VUE | [TEMPLE] SAISIR TRACE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
@@ -2372,7 +2372,7 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(0, 0, 303, 30)
-            cmds += cmd_text(6, 6, "ATTENTION TETE ! BAISSEZ-VOUS !", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(6, 6, "MIND YOUR HEAD! DUCK!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
         else:
             if self.is_color:
                 cmds += cmd_color(COLOR_CYAN)
@@ -2384,7 +2384,7 @@ class ActiveLookAdapter:
             hazard_color = COLOR_RED if (head_obstacle_dist_m < 1.5 or is_critical_duck) else COLOR_AMBER
             if self.is_color:
                 cmds += cmd_color(hazard_color)
-            cmds += cmd_text(6, 38, f"OBSTACLE HAUT : a {head_obstacle_dist_m:.1f}m", font=1, color_or_grey=hazard_color if self.is_color else 15)
+            cmds += cmd_text(6, 38, f"OVERHEAD OBSTACLE : {head_obstacle_dist_m:.1f}m", font=1, color_or_grey=hazard_color if self.is_color else 15)
             cmds += cmd_text(6, 62, f"Type detecte : {head_obstacle_type}", font=0, color_or_grey=14)
 
             # High-contrast bracket overlay in upper visual field
@@ -2394,11 +2394,11 @@ class ActiveLookAdapter:
             cmds += cmd_line(bx1, by1 - 5, bx1, by1 + 5)
             cmds += cmd_line(bx2 - 10, by1, bx2 + 10, by1)
             cmds += cmd_line(bx2, by1 - 5, bx2, by1 + 5)
-            cmds += cmd_text(85, 105, "[ DANGER HAUTEUR ]", font=1, color_or_grey=hazard_color if self.is_color else 15)
+            cmds += cmd_text(85, 105, "[ OVERHEAD HAZARD ]", font=1, color_or_grey=hazard_color if self.is_color else 15)
         else:
             if self.is_color:
                 cmds += cmd_color(COLOR_GREEN)
-            cmds += cmd_text(6, 38, "HAUTEUR TETE : AUCUN OBSTACLE DETECTE", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
+            cmds += cmd_text(6, 38, "HEAD HEIGHT : NO OBSTACLE DETECTED", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
             cmds += cmd_text(6, 60, "Corridor aerien libre (> 2.5m)", font=0, color_or_grey=10)
 
         # Ground / Curb Drop-Off Alert (Negative Obstacle)
@@ -2412,20 +2412,20 @@ class ActiveLookAdapter:
             cmds += cmd_line(30, 190, 274, 190)
             cmds += cmd_line(30, 190, 45, 205)
             cmds += cmd_line(274, 190, 259, 205)
-            cmds += cmd_text(60, 195, "v BORD TROTTOIR / BORDURE SOL v", font=0, color_or_grey=curb_color if self.is_color else 13)
+            cmds += cmd_text(60, 195, "v CURB / GROUND EDGE v", font=0, color_or_grey=curb_color if self.is_color else 13)
         else:
             if self.is_color:
                 cmds += cmd_color(COLOR_GREEN)
             cmds += cmd_text(6, 162, "SOL CONTINU : Trottoir regulier", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
 
         # Footer with Sonar Sync
-        cmds += cmd_text(4, 234, ">> [WAVE] BASCULER BIP SONORE | [TAP] RE-CALIBRER SOL", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 234, ">> [WAVE] TOGGLE BEEP | [TAP] RECALIBRATE GROUND", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_neural_voice_assistant_hud(
         self,
-        state_str: str = "ECOUTE STREAMING",
-        partial_transcript: str = "Allumer les lumieres du salon",
+        state_str: str = "STREAMING LISTEN",
+        partial_transcript: str = "Turn on the living room lights",
         mic_source: str = "PHONE BEAMFORMING MIC",
         vu_level_pct: int = 72,
         latency_ms: int = 120,
@@ -2462,7 +2462,7 @@ class ActiveLookAdapter:
         cmds += cmd_line(0, 72, 303, 72)
         if self.is_color:
             cmds += cmd_color(COLOR_YELLOW)
-        cmds += cmd_text(4, 78, "TRANSCRIPTION EN DIRECT (WHISPER) :", font=0, color_or_grey=COLOR_CYAN if self.is_color else 10)
+        cmds += cmd_text(4, 78, "LIVE TRANSCRIPT (WHISPER) :", font=0, color_or_grey=COLOR_CYAN if self.is_color else 10)
 
         # Multi-line word wrap for transcript
         words = partial_transcript.split()
@@ -2485,16 +2485,16 @@ class ActiveLookAdapter:
         # Prompt hint & wave control
         cmds += cmd_line(0, 210, 303, 210)
         cmds += cmd_text(4, 216, "OpenBridge Neural Pipeline: Local Llama 3.2", font=0, color_or_grey=10)
-        cmds += cmd_text(4, 234, ">> [WAVE] VALIDER & ENVOYER | [DOUBLE TAP] ANNULER", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 234, ">> [WAVE] CONFIRM & SEND | [DOUBLE TAP] CANCEL", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_multimodal_vision_hud(
         self,
-        target_label: str = "DISJONCTEUR #4 (CHAUFFE-EAU)",
+        target_label: str = "BREAKER #4 (WATER HEATER)",
         confidence_pct: int = 96,
         bounding_box: Optional[tuple[int, int, int, int]] = (60, 60, 244, 150),
         diagnostic_summary: str = "POSITION BASSE : DECLENCHEMENT THERMIQUE",
-        action_recommendation: str = "Verifiez la resistance avant reenclenchement",
+        action_recommendation: str = "Check the heating element before resetting",
         source_device: str = "SMARTPHONE 50MP CAM"
     ) -> bool:
         """Killer Feature 36 / Neural Expansion: Sight-Through-Phone Optical Reticle HUD.
@@ -2514,7 +2514,7 @@ class ActiveLookAdapter:
         # Target label
         if self.is_color:
             cmds += cmd_color(COLOR_GREEN)
-        cmds += cmd_text(4, 30, f"CIBLE: {target_label[:28]}", font=1, color_or_grey=COLOR_GREEN if self.is_color else 15)
+        cmds += cmd_text(4, 30, f"TARGET: {target_label[:28]}", font=1, color_or_grey=COLOR_GREEN if self.is_color else 15)
 
         # Optical Reticle / Bounding box
         if bounding_box:
@@ -2536,12 +2536,12 @@ class ActiveLookAdapter:
         # Diagnostic findings
         cmds += cmd_line(0, 160, 303, 160)
         if self.is_color:
-            cmds += cmd_color(COLOR_RED if "DECLENCHEMENT" in diagnostic_summary or "DANGER" in diagnostic_summary else COLOR_AMBER)
+            cmds += cmd_color(COLOR_RED if any(k in diagnostic_summary.upper() for k in ("DECLENCHEMENT", "TRIPPED", "DANGER")) else COLOR_AMBER)
         cmds += cmd_text(4, 166, diagnostic_summary[:32], font=1, color_or_grey=15)
         cmds += cmd_text(4, 190, action_recommendation[:34], font=0, color_or_grey=14)
 
         # Footer
-        cmds += cmd_text(4, 234, ">> [WAVE] FERMER VISION | [TAP] NOUVELLE CAPTURE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 234, ">> [WAVE] CLOSE VISION | [TAP] NEW CAPTURE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def push_ambient_iot_matrix(
@@ -2577,22 +2577,22 @@ class ActiveLookAdapter:
         if self.is_color:
             cmds += cmd_color(tempo_col)
         cmds += cmd_text(6, 30, f"⚡ LINKY: {linky_watts} W", font=1, color_or_grey=tempo_col if self.is_color else 15)
-        cmds += cmd_text(6, 56, f"Demain: {tempo_tomorrow}", font=0, color_or_grey=tempo_col if self.is_color else 14)
+        cmds += cmd_text(6, 56, f"Tomorrow: {tempo_tomorrow}", font=0, color_or_grey=tempo_col if self.is_color else 14)
         cmds += cmd_text(6, 78, "HC: 22h00 - 06h00", font=0, color_or_grey=10)
 
         # Quadrant 2 (Top-Right): Weather Radar & Rain
         rain_col = COLOR_RED if rain_min <= 10 else (COLOR_AMBER if rain_min <= 20 else COLOR_CYAN)
         if self.is_color:
             cmds += cmd_color(rain_col)
-        cmds += cmd_text(158, 30, f"🌧 PLUIE: {rain_min}m", font=1, color_or_grey=rain_col if self.is_color else 15)
+        cmds += cmd_text(158, 30, f"🌧 RAIN: {rain_min}m", font=1, color_or_grey=rain_col if self.is_color else 15)
         cmds += cmd_text(158, 56, f"Temp: {temp_c}°C Ext", font=0, color_or_grey=14)
         cmds += cmd_text(158, 78, "Radar: Averse imminente", font=0, color_or_grey=10)
 
         # Quadrant 3 (Bottom-Left): Public Transit Real-Time
         if self.is_color:
             cmds += cmd_color(COLOR_GREEN)
-        cmds += cmd_text(6, 132, f"🚇 {transit_line}: DANS {transit_eta_min}m", font=1, color_or_grey=COLOR_GREEN if self.is_color else 15)
-        cmds += cmd_text(6, 158, "Direction Chatelet", font=0, color_or_grey=14)
+        cmds += cmd_text(6, 132, f"🚇 {transit_line}: IN {transit_eta_min}m", font=1, color_or_grey=COLOR_GREEN if self.is_color else 15)
+        cmds += cmd_text(6, 158, "To Chatelet", font=0, color_or_grey=14)
         cmds += cmd_text(6, 180, "Trafic: 100% Fluide", font=0, color_or_grey=10)
 
         # Quadrant 4 (Bottom-Right): Network & Freebox WAN
@@ -2614,8 +2614,8 @@ class ActiveLookAdapter:
         source_lang: str = "EN",
         target_lang: str = "FR",
         live_text: str = "Can you show me the OpenBridge glasses demo?",
-        translated_text: str = "Pouvez-vous me montrer la demo des lunettes OpenBridge ?",
-        azimuth_dir: str = "GAUCHE 45°",
+        translated_text: str = "Can you show me the OpenBridge glasses demo?",
+        azimuth_dir: str = "LEFT 45°",
         latency_ms: int = 165
     ) -> bool:
         """Killer Feature 38 / Neural Expansion: Spatial Directional Speech Translation Stream.
@@ -2641,7 +2641,7 @@ class ActiveLookAdapter:
         cmds += cmd_rect(0, 140, 303, 225)
         if self.is_color:
             cmds += cmd_color(COLOR_GREEN)
-        cmds += cmd_text(6, 148, f"➔ [{target_lang.upper()} TRADUCTION IA] :", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
+        cmds += cmd_text(6, 148, f"➔ [{target_lang.upper()} AI TRANSLATION] :", font=0, color_or_grey=COLOR_GREEN if self.is_color else 12)
 
         # Word wrap translated text
         words = translated_text.split()
@@ -2662,7 +2662,7 @@ class ActiveLookAdapter:
             cmds += cmd_text(6, 168 + i * 20, line, font=1, color_or_grey=15)
 
         # Footer
-        cmds += cmd_text(4, 234, ">> [WAVE] FERMER SOUS-TITRES | [TAP] PAUSE ECOUTE", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
+        cmds += cmd_text(4, 234, ">> [WAVE] CLOSE SUBTITLES | [TAP] PAUSE LISTENING", font=0, color_or_grey=COLOR_CYAN if self.is_color else 8)
         return self.send(bytes(cmds))
 
     def discover(self) -> Dict[str, Any]:

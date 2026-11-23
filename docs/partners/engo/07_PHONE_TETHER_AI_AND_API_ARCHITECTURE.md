@@ -1,136 +1,148 @@
-# ENGO × OpenBridge: Phone-as-Sensory-Proxy & AI Integration Architecture
+# ENGO × OpenBridge: Phone-as-Sensory-Proxy and AI Integration Architecture
 
-> **Architecture Technique Officielle**  
-> Comment connecter une IA multimodale, la reconnaissance vocale et des APIs temps réel sur des lunettes sans microphone ni caméra (ENGO 1, ENGO 2, ENGO 3, ENGO 3 Titanium).
+> **Technical architecture.**
+> How to bring multimodal AI, speech recognition and real-time APIs to glasses that have no microphone and
+> no camera (ENGO 1, ENGO 2, ENGO 3, ENGO 3 Titanium).
+>
+> **Status: design, validated in the emulator only.** No physical pair has been tested yet.
 
 ---
 
-## 1. La Réalité Matérielle : Zéro Capteur Audio/Optique Embarqué
+## 1. The hardware reality: no audio or optical sensors on board
 
-Les lunettes intelligentes **ENGO Eyewear** (technologie ActiveLook® par MicroOLED) possèdent des spécifications optiques et biomécaniques inégalées :
-- **Poids plume :** 28,9 g (Titanium) à 36 g (Standard).
-- **Autonomie record :** 20 à 24 heures d'utilisation active continue.
-- **Affichage collimaté :** MicroOLED 304×256 pixels, luminance crête 10 000 nits, focalisé à l'infini (3 mètres).
-- **Capteurs embarqués :** Capteur optique infrarouge de proximité (swipe sans contact) et surface capacitive sur la branche.
+**ENGO Eyewear** smart glasses (ActiveLook® technology by Microoled) have outstanding optical and
+biomechanical specifications:
+- **Featherweight:** 28.9 g (Titanium) to 36 g (Standard).
+- **Long battery life:** 20 to 24 hours of continuous active use.
+- **Collimated display:** 304×256-pixel MicroOLED, 10,000-nit peak luminance, focused at infinity (3 m).
+- **On-board sensors:** infrared proximity sensor (touchless swipe) and a capacitive surface on the temple.
 
 > [!IMPORTANT]
-> **ENGO n'intègre NI microphone, NI haut-parleur, NI caméra.**  
-> C'est précisément l'absence de ces composants énergivores qui leur permet de peser moins de 36 grammes et de tenir plus de 20 heures sans recharge. Pour les transformer en lunettes de réalité augmentée IA de science-fiction, OpenBridge applique le paradigme du **Phone-as-Sensory-Proxy**.
+> **ENGO has NO microphone, NO speaker and NO camera.**
+> Leaving out these power-hungry parts is exactly what keeps the glasses under 36 grams and above 20 hours
+> per charge. To turn them into AI-assisted glasses, OpenBridge applies the **phone-as-sensory-proxy** pattern.
 
 ---
 
-## 2. Le Paradigme "Phone-as-Sensory-Proxy"
+## 2. The "phone-as-sensory-proxy" pattern
 
-L'utilisateur porte ses lunettes ENGO sur le visage et garde son smartphone dans sa poche, sur un support de guidon de vélo ou un harnais torse.
+The user wears the ENGO glasses and keeps the smartphone in a pocket, on a bike mount or on a chest harness.
 
 ```mermaid
 flowchart LR
-    subgraph SENSE["Sensory Inputs (User)"]
-        WAVE["👋 Geste Devant Oeil<br/>(Capteur IR Optique)"]
-        TAP["👆 Tap Branche Lunette<br/>(Tactile Capacitif)"]
-        VOICE["🗣️ Voix Utilisateur / Interlocuteur"]
-        SCENE["🏙️ Environnement Visuel"]
+    subgraph SENSE["Sensory inputs (user)"]
+        WAVE["👋 Hand wave in front of the eye<br/>(IR optical sensor)"]
+        TAP["👆 Tap on the temple<br/>(capacitive touch)"]
+        VOICE["🗣️ User or speaker voice"]
+        SCENE["🏙️ Visual surroundings"]
     end
 
-    subgraph ENGO["ENGO Glasses (36g)"]
-        HUD["MicroOLED 304x256<br/>Affichage HUD 10k nits"]
+    subgraph ENGO["ENGO glasses (36 g)"]
+        HUD["MicroOLED 304x256<br/>10k-nit HUD"]
         MCU["Cortex-M4 + BLE 5.4"]
     end
 
-    subgraph PHONE["Smartphone (Sensory Proxy)"]
-        MIC["🎙️ Micro Beamforming<br/>(Whisper STT / VAD)"]
-        CAM["📷 Caméra 50MP<br/>(Vision Proxy)"]
-        GPS["📍 GNSS Double Fréquence<br/>(Cap & Vitesse)"]
-        RELAY["OpenBridge Companion<br/>(Relay B2/B3)"]
+    subgraph PHONE["Smartphone (sensory proxy)"]
+        MIC["🎙️ Beamforming mic<br/>(Whisper STT / VAD)"]
+        CAM["📷 50 MP camera<br/>(vision proxy)"]
+        GPS["📍 Dual-frequency GNSS<br/>(heading and speed)"]
+        RELAY["OpenBridge Companion<br/>(B2/B3 relay)"]
     end
 
-    subgraph BRAIN["OpenBridge Brain / Cloud"]
-        LLM["🧠 LLM (Llama 3.2 / Gemini)"]
-        VISION["👁️ Vision Multimodale"]
-        APIS["🌐 APIs Temps Réel<br/>(RTE Linky, Météo, Transit)"]
+    subgraph BRAIN["OpenBridge brain"]
+        LLM["🧠 Local LLM (Llama 3.2)<br/>or your connected AI"]
+        VISION["👁️ Multimodal vision"]
+        APIS["🌐 Real-time APIs<br/>(smart meter, weather, transit)"]
     end
 
-    WAVE -->|0x01 BLE Swipe| MCU
-    TAP -->|0x02 BLE Tap| MCU
-    MCU -->|GATT Notify ...5CBB| RELAY
-    
-    VOICE -->|Audio HD| MIC
-    SCENE -->|Optique| CAM
+    WAVE -->|0x01 BLE swipe| MCU
+    TAP -->|0x02 BLE tap| MCU
+    MCU -->|GATT notify ...5CBB| RELAY
+
+    VOICE -->|HD audio| MIC
+    SCENE -->|Optics| CAM
 
     RELAY -->|WebSocket / USB ADB| BRAIN
-    BRAIN -->|Tokens IA / Reçus| RELAY
-    RELAY -->|ActiveLook Binary 0xFF..0xAA| MCU
-    MCU -->|Frame OLED| HUD
+    BRAIN -->|AI tokens / receipts| RELAY
+    RELAY -->|ActiveLook binary 0xFF..0xAA| MCU
+    MCU -->|OLED frame| HUD
 ```
 
-### Rôles du Smartphone :
-1. **Microphone Beamforming :** Écoute directionnelle avec annulation de bruit active pour le modèle Speech-to-Text Whisper.
-2. **Caméra Multimodale :** Capture haute résolution (50MP) déclenchée à la demande pour l'analyse visuelle multimodale.
-3. **Passerelle Réseau Haute Vitesse :** Connexion 5G / Wi-Fi 6 vers le cerveau OpenBridge (local sur PC ou cloud).
+### What the smartphone does
+1. **Beamforming microphone:** directional listening with active noise reduction for Whisper speech-to-text.
+2. **Multimodal camera:** on-demand high-resolution capture (50 MP) for visual analysis.
+3. **High-speed network gateway:** 5G / Wi-Fi 6 link to the OpenBridge brain (local on the PC, or the AI the
+   owner connected; OpenBridge ships no paid model, see [AI_PROVIDERS.md](../../AI_PROVIDERS.md)).
 
 ---
 
-## 3. Les 4 Fonctionnalités IA & APIs Impossibles sur Montre
+## 3. Four AI and API features a watch cannot offer
 
-### 🎙️ Fonctionnalité A : Mind's Eye — Co-Pilote Vocal IA Touchless
-*Problème résolu : Consulter une IA tout en ayant les mains prises (vélo, bricolage, cuisine, chirurgie).*
-- **Cycle d'interaction 3 phases :**
-  1. **Phase 1 (Wake) :** Un simple geste de la main devant le front (`wave` IR) active instantanément le micro du smartphone. L'écran HUD affiche un bandeau discret : `🎙 PHONE MIC LISTENING... Parlez naturellement...`.
-  2. **Phase 2 (Exécution) :** Dès la fin de la parole (ou par un second `wave`), l'audio est transcrit par Whisper et envoyé au LLM (Llama 3.2 local ou Gemini). La réponse synthétique est projetée dans le HUD sous forme de carte à fort contraste.
-  3. **Phase 3 (Dismiss) :** Un troisième `wave` efface l'écran et restaure la vision ambiante transparente.
+### 🎙️ Feature A: Mind's Eye, a touchless AI voice co-pilot
+*Problem solved: ask an AI while your hands are busy (cycling, DIY, cooking, surgery).*
+- **Three-phase interaction:**
+  1. **Phase 1 (wake):** a simple hand wave in front of the forehead (IR `wave`) turns on the phone's
+     microphone. The HUD shows a discreet banner: `🎙 PHONE MIC LISTENING... Speak naturally...`.
+  2. **Phase 2 (run):** when speech ends (or on a second `wave`), the audio is transcribed by Whisper and sent
+     to the model (local Llama 3.2 or the owner's connected AI). The short answer is shown on the HUD as a
+     high-contrast card.
+  3. **Phase 3 (dismiss):** a third `wave` clears the screen and restores clear ambient vision.
 
-### 👁️ Fonctionnalité B : Sight-Through-Phone — Scanner de Vision Multimodale
-*Problème résolu : Diagnostiquer un tableau électrique, une panne mécanique ou traduire un texte sans quitter des yeux son travail.*
-- **Déclenchement :** Double tap sur la branche de la lunette.
-- Le smartphone capture instantanément un instantané optique haute définition.
-- Le modèle de vision multimodale OpenBridge localise le composant cible et injecte son diagnostic dans le champ visuel :
-  - `👁️ [DISJONCTEUR #4] DIAGNOSTIC VISION : Position BASSE (Chauffe-eau déclenché).`
+### 👁️ Feature B: Sight-Through-Phone, a multimodal vision scanner
+*Problem solved: diagnose a breaker panel, a mechanical fault or translate a sign without taking your eyes off the job.*
+- **Trigger:** double tap on the temple.
+- The smartphone captures a high-definition snapshot.
+- The multimodal vision model locates the target component and puts its diagnosis in the field of view:
+  - `👁️ [BREAKER #4] VISION DIAGNOSIS: position DOWN (water heater tripped).`
 
-### 🌐 Fonctionnalité C : The Silent Interpreter — Sous-Titres de Traduction en Temps Réel
-*Problème résolu : Comprendre un interlocuteur étranger sans regarder un écran de smartphone ni porter d'écouteurs traducteurs isolants.*
-- Le smartphone capte la parole étrangère ambiante (ex: Anglais, Espagnol).
-- Le moteur de streaming Whisper + Traduction génère le texte français avec une latence < 300 ms.
-- La lunette affiche les sous-titres dans la zone inférieure collimatée (`stream_live_translation`), préservant le contact visuel direct avec l'interlocuteur.
+### 🌐 Feature C: The Silent Interpreter, live translated subtitles
+*Problem solved: understand someone speaking another language without looking at a phone or wearing isolating translation earbuds.*
+- The smartphone picks up the foreign speech nearby (e.g. English, Spanish).
+- The streaming Whisper + translation engine produces text in the user's language with < 300 ms latency.
+- The glasses show the subtitles in the lower collimated area (`stream_live_translation`), so the user keeps
+  direct eye contact with the speaker.
 
-### ⚡ Fonctionnalité D : Injecteur d'APIs Périphériques Temps Réel
-1. **RTE Tempo & Linky :**
-   - Alerte visuelle de couleur : Jour de pointe Blanc ou Rouge pour demain (`⚡ RTE TEMPO : DEMAIN ROUGE`).
-   - Puissance instantanée appelée en Watts avec jauge visuelle dynamique.
-2. **Radar de Précipitations Météo :**
-   - Alerte pluie imminente : `🌧️ PLUIE DANS : 10 MINUTES | Temp: 13°C | Vent: 28 km/h`.
-   - Jauge d'imminence visuelle (0 à 100%).
-3. **Transit Urbain en Direct :**
-   - Prochain métro / bus en temps réel : `🚇 M14 Direction Orly : PROCHAIN 3 MIN ⬆`.
+### ⚡ Feature D: Real-time peripheral API injector
+1. **Electricity tariff and smart meter (e.g. RTE Tempo / Linky in France):**
+   - Colour alert for tomorrow's peak-price day (`⚡ RTE TEMPO: TOMORROW RED`).
+   - Live power draw in watts with a dynamic gauge.
+2. **Rain radar:**
+   - Imminent rain alert: `🌧️ RAIN IN: 10 MINUTES | Temp: 13°C | Wind: 28 km/h`.
+   - Visual imminence gauge (0 to 100 %).
+3. **Live public transit:**
+   - Next metro / bus in real time: `🚇 M14 to Orly: NEXT IN 3 MIN ⬆`.
 
 ---
 
-## 4. Métriques Optiques et Consommation Énergétique
+## 4. Optical and power metrics (modelled)
 
-Contrairement aux écrans AMOLED de montres connectées qui allument des millions de sous-pixels (consommation 50 à 120 mW), l'architecture OpenBridge pour MicroOLED ActiveLook maintient une sobriété extrême :
+Smartwatch AMOLED screens light millions of sub-pixels (50 to 120 mW). OpenBridge's layouts for the
+ActiveLook MicroOLED stay extremely frugal. Figures below are **computed from pixel fill rates in the
+emulator**, not measured on hardware:
 
-| Scénario HUD | Octets Transférés | Taux de Remplissage Pixels | Puissance MicroOLED | Autonomie Théorique Affichage |
+| HUD scenario | Bytes sent | Pixel fill rate | MicroOLED power | Theoretical display time |
 | :--- | :---: | :---: | :---: | :---: |
-| **Radar Spatial Périphérique** | 340 o | **1,47 %** | **0,34 mW** | **1 235 heures** |
-| **Co-Pilote Vocal IA (Réponse)** | 218 o | **3,29 %** | **0,45 mW** | **944 heures** |
-| **Télémétrie Périphérique Linky** | 67 o | **18,50 %** | **0,86 mW** | **497 heures** |
-| **Reçu Eyes-On-Target** | 274 o | **12,47 %** | **0,67 mW** | **630 heures** |
-| **Prompteur d'Atelier (Étape)** | 236 o | **5,25 %** | **0,46 mW** | **928 heures** |
-| **Sous-Titres Traduction Directe** | 184 o | **7,82 %** | **0,53 mW** | **801 heures** |
+| **Peripheral spatial radar** | 340 B | **1.47 %** | **0.34 mW** | **1,235 h** |
+| **AI voice co-pilot (answer)** | 218 B | **3.29 %** | **0.45 mW** | **944 h** |
+| **Smart-meter telemetry** | 67 B | **18.50 %** | **0.86 mW** | **497 h** |
+| **Eyes-on-target receipt** | 274 B | **12.47 %** | **0.67 mW** | **630 h** |
+| **Workshop prompter (step)** | 236 B | **5.25 %** | **0.46 mW** | **928 h** |
+| **Live translated subtitles** | 184 B | **7.82 %** | **0.53 mW** | **801 h** |
 
 ---
 
-## 5. Guide d'Utilisation dans l'Émulateur
+## 5. Using it in the emulator
 
-L'émulateur interactif intègre désormais une barre d'outils dédiée **AI/Sensory** :
+The interactive emulator has a dedicated **AI/Sensory** toolbar:
 ```bash
-# Lancer l'émulateur avec la barre IA et les démos interactives :
+# Launch the emulator with the AI toolbar and interactive demos:
 python -m src.adapters.activelook_emulator
 ```
 
-Boutons disponibles dans l'interface :
-- `🎙️ Voice AI` : Simule l'activation vocale touchless via geste wave.
-- `👁️ Phone Vision` : Déclenche le scan multimodale via tap sur la branche.
-- `🌐 Subtitles` : Affiche le flux de traduction sous-titrée en direct.
-- `🌧️ Weather` : Injecte l'alerte radar de précipitations.
-- `⚡ RTE Tempo` : Affiche la couleur du jour RTE et la consommation live.
-- `🚇 Transit` : Simule l'affichage du prochain train/métro.
+Buttons available:
+- `🎙️ Voice AI`: simulates touchless voice activation with a wave gesture.
+- `👁️ Phone Vision`: triggers the multimodal scan with a temple tap.
+- `🌐 Subtitles`: shows the live translated subtitle stream.
+- `🌧️ Weather`: injects the rain-radar alert.
+- `⚡ RTE Tempo`: shows the tariff colour of the day and live consumption.
+- `🚇 Transit`: simulates the next train / metro display.

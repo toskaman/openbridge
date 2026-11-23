@@ -86,9 +86,9 @@ flowchart TD
   * Traditional long white canes only scan the ground and lower torso ($<0.8\text{m}$).
   * Over 88% of blind individuals experience head/face collisions with overhanging signs, tree branches, truck mirrors, and construction scaffolding.
 - **ActiveLook High-Contrast Echo Symbology:**
-  * **Upper Hazard Warning:** Draws bold wireframe bracket (`[ DANGER HAUTEUR ]`) with distance readout (`à 1.8m`) and obstacle classification.
-  * **Emergency Duck Banner:** If collision risk is under 1.2m, triggers full-screen high-contrast banner: `🚨 ATTENTION TÊTE ! BAISSEZ-VOUS !`.
-  * **Negative Obstacle Detection:** Scans for sudden drop-offs, subway stairs, and curb drop-downs (`DESCENTE à 2.2m`).
+  * **Upper Hazard Warning:** Draws bold wireframe bracket (`[ OVERHEAD HAZARD ]`) with distance readout (`at 1.8m`) and obstacle classification.
+  * **Emergency Duck Banner:** If collision risk is under 1.2m, triggers full-screen high-contrast banner: `🚨 MIND YOUR HEAD! DUCK!`.
+  * **Negative Obstacle Detection:** Scans for sudden drop-offs, subway stairs, and curb drop-downs (`DROP AT 2.2m`).
   * **Acoustic/Haptic Sonar Bridge:** Wave gesture toggles complementary binaural audio clicks synchronized with visual distance.
 - **Telemetry & Power:** 285 bytes transferred, 5.92% pixel fill, 0.51 mW power draw (~833h battery runtime).
 

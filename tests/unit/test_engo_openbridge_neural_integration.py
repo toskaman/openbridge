@@ -168,7 +168,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         frames = parse_frames(bytes(self.sent_bytes))
         # Verify speech ticker text and audio VU-meter gauge/rect
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"ECOUTE" in f.data or b"CO-PILOT" in f.data for f in text_frames))
+        self.assertTrue(any(b"LISTEN" in f.data or b"CO-PILOT" in f.data for f in text_frames))
 
     # ── 3. Multimodal Vision Proxy Tests ──────────────────────────────────────
 
@@ -177,23 +177,23 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
 
         # Detection 1: Electrical panel
         det_panel = proxy.analyze_frame(b"frame", prompt="Regarde ce disjoncteur")
-        self.assertIn("DISJONCTEUR", det_panel.target_label)
-        self.assertIn("DECLENCHEMENT", det_panel.diagnostic)
+        self.assertIn("BREAKER", det_panel.target_label)
+        self.assertIn("TRIP", det_panel.diagnostic)
         self.assertEqual(det_panel.bounding_box, (60, 60, 244, 150))
         self.assertEqual(det_panel.confidence_pct, 96)
 
         # Detection 2: Appliance error code
         det_app = proxy.analyze_frame(b"frame", prompt="Quel est le code erreur ?")
-        self.assertIn("LAVE-LINGE", det_app.target_label)
+        self.assertIn("WASHER", det_app.target_label)
         self.assertIn("E18", det_app.diagnostic)
 
         # Detection 3: Allergen nutritional scan
         det_nutri = proxy.analyze_frame(b"frame", prompt="Scan cet aliment et ses allergenes")
-        self.assertIn("ARACHIDES", det_nutri.diagnostic)
+        self.assertIn("PEANUTS", det_nutri.diagnostic)
 
     def test_push_multimodal_vision_hud_rendering(self):
         ok = self.adapter.push_multimodal_vision_hud(
-            target_label="DISJONCTEUR #4",
+            target_label="BREAKER #4",
             confidence_pct=96,
             bounding_box=(60, 60, 244, 150),
             diagnostic_summary="POSITION BASSE : DECLENCHEMENT",
@@ -207,7 +207,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         self.assertTrue(any(f.cmd == 0x33 for f in frames))  # outline rect
         self.assertTrue(any(f.cmd == 0x32 for f in frames))  # reticle lines
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"CIBLE: DISJONCTEUR #4" in f.data for f in text_frames))
+        self.assertTrue(any(b"TARGET: BREAKER #4" in f.data for f in text_frames))
         self.assertTrue(any(b"DECLENCHEMENT" in f.data for f in text_frames))
 
     # ── 4. 4-Quadrant Ambient IoT Matrix Tests ─────────────────────────────────
@@ -231,8 +231,8 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"LINKY: 2250 W" in f.data for f in text_frames))
         self.assertTrue(any(b"ROUGE" in f.data for f in text_frames))
-        self.assertTrue(any(b"PLUIE: 8m" in f.data for f in text_frames))
-        self.assertTrue(any(b"M14: DANS 2m" in f.data for f in text_frames))
+        self.assertTrue(any(b"RAIN: 8m" in f.data for f in text_frames))
+        self.assertTrue(any(b"M14: IN 2m" in f.data for f in text_frames))
         self.assertTrue(any(b"FIBRE: 940M" in f.data for f in text_frames))
 
         # Optical benchmark
@@ -260,7 +260,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"ORATEUR 02 [DROITE 60" in f.data for f in text_frames))
         self.assertTrue(any(b"La batterie dure" in f.data for f in text_frames))
-        self.assertTrue(any(b"TRADUCTION IA" in f.data for f in text_frames))
+        self.assertTrue(any(b"AI TRANSLATION" in f.data for f in text_frames))
 
     # ── 6. OpenBridge Telemetry Priority Fabric Tests ─────────────────────────
 
@@ -332,7 +332,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
 
         # Vehicle collision threat
         d2 = proxy.analyze_frame(b"img", prompt="Attention danger vehicule gauche")
-        self.assertIn("VEHICULE", d2.target_label)
+        self.assertIn("VEHICLE", d2.target_label)
 
         # Driver vigilance
         d3 = proxy.analyze_frame(b"img", prompt="Surveillance somnolence yeux conducteur")
@@ -340,11 +340,11 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
 
         # Warehouse SKU
         d4 = proxy.analyze_frame(b"img", prompt="Verification colis sku entrepot")
-        self.assertIn("COLIS", d4.target_label)
+        self.assertIn("PARCEL", d4.target_label)
 
         # DIY Stud live-wire
         d5 = proxy.analyze_frame(b"img", prompt="Detecte fil tension dans le mur")
-        self.assertIn("DETECTEUR", d5.target_label)
+        self.assertIn("DETECTOR", d5.target_label)
 
         # Echonav obstacle
         d6 = proxy.analyze_frame(b"img", prompt="Scan obstacle hauteur tete trottoir")
@@ -438,7 +438,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
         self.assertEqual(res_emer["status"], "EMERGENCY_TRIGGERED")
         frames = parse_frames(bytes(self.sent_bytes))
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"ALERTE MAYDAY" in f.data for f in text_frames))
+        self.assertTrue(any(b"MAYDAY ALERT" in f.data for f in text_frames))
 
         # Triple tap -> Audio readback
         res_audio = self.bridge.handle_glasses_interaction("triple_tap")

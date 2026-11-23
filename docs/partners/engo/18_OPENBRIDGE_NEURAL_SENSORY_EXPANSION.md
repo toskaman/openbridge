@@ -97,7 +97,7 @@ Every single ActiveLook feature across all 8 generations is augmented by OpenBri
 | **F34** | **Low-Vision Echo-Radar**| Head hazard bracket, curb drop warning | Phone solid-state LiDAR / ultrasonic distance | Blind navigation obstacle detector & audio sonar | Single Wave audio | 0.51 mW (5.9% fill) |
 | **F35** | **Neural Voice Co-Pilot** | Live VU waveform bar, partial transcript ticker | Phone beamforming mic + Voice Activity Detection | Streaming Whisper STT + Local LLaMA 3.2 3B | Single Wave toggle| 0.52 mW (6.3% fill) |
 | **F36** | **Multimodal Vision Proxy**| Collimated AR reticle, target bounding box, QA | Phone 50MP camera capture | Gemini 1.5 Pro / YOLOv8 circuit breaker & OCR analyzer| Double Tap | 0.50 mW (6.0% fill) |
-| **F37** | **Ambient IoT Matrix** | 4-Quadrant grid: Linky watts, rain, transit, WAN | Phone connectivity & background fetchers | Freebox OS + RTE Linky + Météo France + Transit APIs | Temple Tap | 0.48 mW (5.5% fill) |
+| **F37** | **Ambient IoT Matrix** | 4-Quadrant grid: Linky watts, rain, transit, WAN | Phone connectivity & background fetchers | Freebox OS + RTE Linky + weather + Transit APIs | Temple Tap | 0.48 mW (5.5% fill) |
 | **F38** | **Spatial Translation** | Speaker tag, azimuth indicator, French subtitles | Phone multi-mic beamforming array | Whisper diarization + streaming low-latency translation | Auto on speech | 0.49 mW (5.7% fill) |
 
 ---
@@ -121,11 +121,11 @@ sequenceDiagram
     Glasses->>Phone: BLE GATT Notify (0x01 Wave)
     Phone->>Glasses: HUD: "🎙 PHONE MIC LISTENING..."
     Phone->>Phone: Enable beamforming mic & VAD
-    User->>Phone: "Éteindre le salon et vérifier la Freebox"
+    User->>Phone: "Turn off the living room and check the router"
     loop Streaming Audio Chunks (100ms)
         Phone->>Core: 16-bit 16kHz PCM chunks
         Core->>Core: Streaming Whisper incremental hypothesis
-        Core->>Phone: Partial token: "Éteindre le salon..."
+        Core->>Phone: Partial token: "Turn off the living..."
         Phone->>Glasses: Live speech ticker + VU meter update
     end
     User->>Phone: (Silence detected by VAD > 400ms)
@@ -133,7 +133,7 @@ sequenceDiagram
     Core->>Core: Local LLaMA 3.2 3B intent & action execution
     Core->>Phone: Formatted HUD card (Max 28 chars/line)
     Phone->>Glasses: ActiveLook binary frame (0xFF 0x37 ... 0xAA)
-    Glasses->>User: MicroOLED crisp projection: "✨ [LLM] Salon éteint | Freebox 940M"
+    Glasses->>User: MicroOLED crisp projection: "✨ [LLM] Living room off | Fibre 940M"
 ```
 
 ### Voice Activity Detection (VAD) & Energy Computation
@@ -173,7 +173,7 @@ The `push_ambient_iot_matrix` organizes the user's connected physical world into
 | Demain: BLANC (HC 22h-06h)    | Temp: 16°C Ext                |
 | Conso live nominale           | Radar: Averse imminente       |
 +───────────────────────────────┼───────────────────────────────+
-| 🚇 M14: DANS 2m               | 📶 FIBRE: 940M                |
+| 🚇 M14: IN 2m                 | 📶 FIBRE: 940M                |
 | Direction Chatelet            | Ping: 8 ms (LAN/WAN)          |
 | Trafic: 100% Fluide           | Freebox: Connectee            |
 +───────────────────────────────┴───────────────────────────────+

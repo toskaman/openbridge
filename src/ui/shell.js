@@ -280,6 +280,42 @@
     box.append(sv);
   }
   function empty(title, text, action) { return h('div', { class: 'empty' }, h('strong', { text: title }), h('p', { text }), action || null); }
+  const FAMILIES = [['i-tv', 'TVs and set-top boxes'], ['i-watch', 'Wear OS watches'], ['i-phone', 'Android phones'], ['i-router', 'Routers and ISP boxes'], ['i-vacuum', 'Robot vacuums'], ['i-pc', 'Windows, Linux and macOS PCs'], ['i-ble', 'Bluetooth devices'], ['i-media', 'Smart glasses (HUD)']];
+  function icon(id) { const sv = s('svg', { 'aria-hidden': 'true' }); sv.append(s('use', { href: '#' + id })); return sv; }
+  function emptyDevices() {
+    return h('div', { class: 'empty-rich' },
+      h('h3', { text: 'Nothing discovered yet' }),
+      h('p', { text: 'OpenBridge only looks when you ask. Discovery is bounded, read-only and stays on your local network. Here is what it can work with:' }),
+      h('div', { class: 'empty-families' }, ...FAMILIES.map(([i, t]) => h('span', { class: 'empty-family' }, icon(i), t))),
+      h('div', { class: 'hero-actions' },
+        h('button', { class: 'primary', type: 'button', onclick: () => $('#fabric-discover').click() }, 'Run a read-only discovery'),
+        h('a', { class: 'button ghost', href: '#/replay' }, 'Try the offline demo ', h('span', { class: 'tag sim', text: 'SIMULATED' })),
+        h('button', { class: 'ghost', type: 'button', dataset: { action: 'connect' } }, 'Connect a device')),
+      h('small', { text: 'Nothing is changed during discovery. Controlling a device always needs your explicit approval.' }));
+  }
+  function ghostGraph(svg) {
+    // Empty state: a faint preview of the map that discovery will draw.
+    const g = s('g', { class: 'g-empty-wrap' });
+    const cx = 500, cy = 270, sats = ['i-tv', 'i-watch', 'i-phone', 'i-router', 'i-vacuum', 'i-ble'];
+    sats.forEach((id, k) => {
+      const a = -Math.PI / 2 + k * (2 * Math.PI / sats.length), x = cx + Math.cos(a) * 180, y = cy + Math.sin(a) * 130;
+      g.append(s('line', { x1: cx, y1: cy, x2: x, y2: y, stroke: '#38DBCD', 'stroke-opacity': '.18', 'stroke-width': '1.5', 'stroke-dasharray': '4 7' }));
+      g.append(s('circle', { cx: x, cy: y, r: '26', fill: '#111a3d', stroke: '#B7A3FF', 'stroke-opacity': '.25' }));
+      g.append(s('use', { href: '#' + id, x: x - 12, y: y - 12, width: '24', height: '24', color: '#8997AD', opacity: '.7' }));
+    });
+    g.append(s('circle', { cx, cy, r: '38', fill: '#13214a', stroke: '#38DBCD', 'stroke-opacity': '.5', 'stroke-width': '1.5' }));
+    g.append(s('use', { href: '#i-pc', x: cx - 14, y: cy - 16, width: '28', height: '28', color: '#c7fff6' }));
+    g.append(s('text', { x: cx, y: cy + 58, 'text-anchor': 'middle', class: 'g-empty', style: 'fill:#AEBBD0' }, 'This PC'));
+    g.append(s('text', { x: cx, y: 500, 'text-anchor': 'middle', class: 'g-empty', style: 'font-size:19px;font-weight:700;fill:#F4F7FC' }, 'Your device map appears here'));
+    g.append(s('text', { x: cx, y: 526, 'text-anchor': 'middle', class: 'g-empty' }, 'Run a read-only discovery: each device, its links and its capabilities will be drawn here.'));
+    svg.append(g);
+    const btn = s('g', { class: 'g-empty-cta', role: 'button', tabindex: '0', style: 'cursor:pointer' });
+    btn.append(s('rect', { x: cx - 92, y: 548, width: '184', height: '34', rx: '17', fill: '#38DBCD' }));
+    btn.append(s('text', { x: cx, y: 570, 'text-anchor': 'middle', style: 'font:700 13px var(--font)', fill: '#06121b' }, 'Discover devices'));
+    btn.addEventListener('click', discoverAndOpen);
+    btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); discoverAndOpen(); } });
+    svg.append(btn);
+  }
   function discoverAndOpen() { go('devices'); setTimeout(() => $('#fabric-discover').click(), 30); }
 
   // ---------------- devices ----------------
@@ -309,7 +345,7 @@
     const counts = {};
     for (const d of sn ? sn.devices : []) { const k = groupOf(d); counts[k] = (counts[k] || 0) + 1; }
     groups.replaceChildren(...[['all', 'All'], ['connected', 'Connected'], ['phones', 'Phones & watches'], ['screens', 'TVs & media'], ['home', 'Home & network'], ['bluetooth', 'Bluetooth'], ['other', 'Other']].filter(([k]) => k === 'all' || k === 'connected' || counts[k]).map(([k, t]) => h('button', { type: 'button', class: 'seg-btn' + (st.group === k ? ' active' : ''), 'aria-pressed': st.group === k ? 'true' : 'false', onclick: () => { st.group = k; renderDevices(); } }, t)));
-    if (!sn) { grid.append(empty('Nothing discovered yet', 'Press “Discover my environment”. OpenBridge does a bounded, read-only look at your network and connected devices.', null)); return; }
+    if (!sn) { grid.append(emptyDevices()); return; }
     const q = st.filter.toLowerCase();
     const shown = sn.devices.filter(d => STATUS_FILTER[st.status](grantOf(d.key)) && (st.group === 'all' || (st.group === 'connected' ? grantOf(d.key) === 'control' || grantOf(d.key) === 'read' : groupOf(d) === st.group))
       && (!q || [label(d), catLabel(d.category), ...deviceCaps(d).map(c => c.name)].join(' ').toLowerCase().includes(q)));
@@ -529,7 +565,7 @@
     const list = $('#graph-list');
     const { nodes, edges } = graphModel();
     const byId = new Map(nodes.map(n => [n.id, n]));
-    if (!nodes.length) { svg.append(s('text', { x: '500', y: '300', 'text-anchor': 'middle', class: 'g-empty' }, 'Run discovery in My Devices to draw your device fabric')); }
+    if (!nodes.length) ghostGraph(svg);
     const defs = s('defs');
     const lg = s('linearGradient', { id: 'edge-skill', x1: '0', x2: '1' }); lg.append(s('stop', { offset: '0', 'stop-color': '#22d3ee' }), s('stop', { offset: '1', 'stop-color': '#a78bfa' })); defs.append(lg); svg.append(defs);
     const eg = s('g', { class: 'edges' }), ng = s('g', { class: 'nodes' });

@@ -101,7 +101,7 @@ class EngoAIBridgeTests(unittest.TestCase):
         frames = parse_frames(bytes(self.sent_bytes))
         text_frames = [f for f in frames if f.cmd == 0x37]
         self.assertTrue(any(b"RADAR PRECIPITATIONS" in f.data for f in text_frames))
-        self.assertTrue(any(b"PLUIE DANS : 10 MINUTES" in f.data for f in text_frames))
+        self.assertTrue(any(b"RAIN IN : 10 MINUTES" in f.data for f in text_frames))
         self.assertTrue(any(f.cmd == 0x70 for f in frames))  # gauge
 
     def test_dynamic_api_linky_rte_tempo(self):
@@ -112,7 +112,7 @@ class EngoAIBridgeTests(unittest.TestCase):
         self.assertTrue(ok)
         frames = parse_frames(bytes(self.sent_bytes))
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"RTE TEMPO : DEMAIN ROUGE" in f.data for f in text_frames))
+        self.assertTrue(any(b"RTE TEMPO : TOMORROW ROUGE" in f.data for f in text_frames))
         self.assertTrue(any(b"3200 W" in f.data for f in text_frames))
 
     def test_dynamic_api_transit_live(self):
@@ -123,7 +123,7 @@ class EngoAIBridgeTests(unittest.TestCase):
         self.assertTrue(ok)
         frames = parse_frames(bytes(self.sent_bytes))
         text_frames = [f for f in frames if f.cmd == 0x37]
-        self.assertTrue(any(b"TRANSIT EN DIRECT : M" in f.data for f in text_frames))
+        self.assertTrue(any(b"LIVE TRANSIT : M" in f.data for f in text_frames))
         self.assertTrue(any(b"4 MIN" in f.data for f in text_frames))
 
     @requires_pillow

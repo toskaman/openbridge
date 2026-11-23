@@ -48,7 +48,7 @@ FEATURES: list[Feature] = [
     Feature('F13', 'spatial_energy_heatmap', 'Energy Ghost Heatmap', 'home', '♨'),
     Feature('F14', 'arcade_runner', 'Vector Runner Arcade', 'sport', '🎮'),
     Feature('F15', 'collision_sentry', 'Collision Sentry', 'safety', '⚠'),
-    Feature('F16', 'executive_briefing', 'Executive Dossier', 'pro', '👤'),
+    Feature('F16', 'executive_briefing', 'Executive Brief', 'pro', '👤'),
     Feature('F17', 'biofeedback_stress', 'Biofeedback Stress', 'sport', '🧘'),
     Feature('F18', 'diy_ar_stud_level', 'AR Stud & Inclinometer', 'pro', '📐'),
     Feature('F19', 'first_responder_cpr', 'CPR & Triage Pacer', 'safety', '✚'),
@@ -102,7 +102,7 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
             {"name": "CAR", "bearing_deg": 315, "dist_m": 9.0, "state": "ok"}
         ])),
         ("eyes_on_target", lambda: adapter.push_eyes_on_target_receipt(
-            target_name="Salon Lights", action="Extinction & Verrouillage",
+            target_name="Living Room Lights", action="Off & Locked",
             oracle_verified=True, latency_ms=38, digest="#4f9a12c8-verified"
         )),
         ("two_phase_countdown", lambda: adapter.push_two_phase_countdown(
@@ -116,7 +116,7 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
             instruction="Insert I2C cable into J2 connector until click", timer_s=145
         )),
         ("doorbell_subtitles", lambda: adapter.push_live_subtitles(
-            speaker="Livreur Colis", text="Bonjour, j'ai un paquet pour vous a deposer", is_urgent=True
+            speaker="Parcel courier", text="Hello, I have a parcel to drop off for you", is_urgent=True
         )),
         ("compass_wayfinder", lambda: adapter.push_compass_wayfinder(
             heading_deg=285, target_bearing_deg=310, target_dist_m=145.0, target_name="PARKING B3"
@@ -126,23 +126,23 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
             mac_vendor="Raspberry Pi / Rogue", target_service="SSH Port 22"
         )),
         ("bio_pacer", lambda: adapter.push_bio_adaptive_pacer(
-            target_spm=180, current_spm=174, hr_bpm=162, hr_zone=4, advice="AUGMENTER FREQUENCE (+6)"
+            target_spm=180, current_spm=174, hr_bpm=162, hr_zone=4, advice="SHORTER STEPS (+6)"
         )),
         ("media_remote", lambda: adapter.push_media_remote_hud(
-            media_title="Dune: Part Two", artist_or_source="Kodi Salon (4K HDR)",
+            media_title="Dune: Part Two", artist_or_source="Living Room Kodi (4K HDR)",
             volume_pct=45, is_playing=True, progress_s=3420, total_s=9960
         )),
         ("silent_morse_input", lambda: adapter.push_silent_morse_input(
-            buffer_str="OUI EN ROUTE", current_morse=".-", suggestion="ARRIVE 5 MIN"
+            buffer_str="YES ON MY WAY", current_morse=".-", suggestion="ARRIVE 5 MIN"
         )),
         ("speech_teleprompter", lambda: adapter.push_speech_teleprompter(
-            current_line="OpenBridge connecte vos lunettes",
-            next_line="aux modeles d'IA locaux et a vos objets",
+            current_line="OpenBridge connects your glasses",
+            next_line="to local AI models and your devices",
             wpm=138, is_rushing=False, elapsed_s=45, total_s=180
         )),
         ("spatial_energy_heatmap", lambda: adapter.push_spatial_energy_heatmap(
-            current_room="Cuisine", room_watts=2150, total_watts=3480,
-            vampire_devices=[{"name": "Four Veille", "watts": 65, "idle_hours": 3}]
+            current_room="Kitchen", room_watts=2150, total_watts=3480,
+            vampire_devices=[{"name": "Oven standby", "watts": 65, "idle_hours": 3}]
         )),
         ("arcade_runner", lambda: adapter.push_arcade_game_frame(
             player_y=160, obstacle_x=180, score=50, game_over=False
@@ -151,23 +151,23 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
             hazard_side="left", speed_kmh=52, dist_m=18.5, ttc_s=1.3
         )),
         ("executive_briefing", lambda: adapter.push_executive_briefing_glance(
-            contact_name="Sophie Martin", role_title="Directrice R&D",
-            bullet_points=["Partenariat v2", "Budget 85k", "Decision a 17h"],
+            contact_name="Sophie Martin", role_title="R&D Director",
+            bullet_points=["Partnership v2", "Budget 85k", "Decision a 17h"],
             sentiment_hint="VIP"
         )),
         ("biofeedback_stress", lambda: adapter.push_biofeedback_stress_guardian(
             stress_score=68, hrv_ms=42, breath_phase="INSP", phase_timer_s=3
         )),
         ("diy_ar_stud_level", lambda: adapter.push_diy_ar_stud_level(
-            pitch_deg=0.1, roll_deg=0.0, is_level=True, detected_hazard="CABLE 230V ACTIF"
+            pitch_deg=0.1, roll_deg=0.0, is_level=True, detected_hazard="LIVE 230V CABLE"
         )),
         ("first_responder_cpr", lambda: adapter.push_first_responder_triage(
             mode="cpr", bpm=110, compression_count=22, ccf_pct=86, cycle_s=42
         )),
         ("directional_subtitles", lambda: adapter.push_directional_subtitles(
             speaker_name="Alice", direction="left",
-            text_line1="On lance le test d'autonomie ?",
-            text_line2="Le protocole BLE est stable.",
+            text_line1="Shall we start the battery test?",
+            text_line2="The BLE protocol is stable.",
             is_translated=False
         )),
         ("uav_avionics", lambda: adapter.push_uav_avionics_hud(
@@ -183,7 +183,7 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
             reticle_xy=(152, 115), afb_dist_m=1.5, is_violating_boundary=False
         )),
         ("allergen_nutrition", lambda: adapter.push_allergen_nutrition_scanner(
-            product_name="M&M's Peanut", detected_allergens=["ARACHIDES"],
+            product_name="M&M's Peanut", detected_allergens=["PEANUTS"],
             carbs_g=59.0, sugar_g=53.0, sodium_mg=40.0, nutri_score="E"
         )),
         ("tactical_marine", lambda: adapter.push_tactical_marine_hud(
@@ -191,17 +191,17 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
         )),
         ("multilingual_whisperer", lambda: adapter.push_multilingual_interpreter(
             speaker_origin="Tanaka", source_transcript="Getsuyobi wa chotto...",
-            translated_text="Lundi sera un peu difficile...",
-            etiquette_tag="[REFUS INDIRECT]", etiquette_tip="Ne pas insister.",
+            translated_text="Monday might be a little difficult...",
+            etiquette_tag="[REFUS INDIRECT]", etiquette_tip="Do not insist.",
             target_country="JAPON"
         )),
         ("driver_vigilance", lambda: adapter.push_driver_vigilance_hud(
             perclos_pct=18.5, microsleep_detected=True, saccade_target="LEFT", nearest_rest_km=4.2
         )),
         ("warehouse_pick", lambda: adapter.push_warehouse_pick(
-            order_id="48291", progress_str="04/18", aisle_bay_str="ALLEE 04 - TRAVEE 12",
-            shelf_bin_str="ETAGERE 03 - BAC 02", quantity=12, unit_str="PCS",
-            sku_code="SKU-8842-M8", sku_desc="VIS INOX M8x40", scan_status="VERIFIED"
+            order_id="48291", progress_str="04/18", aisle_bay_str="AISLE 04 - BAY 12",
+            shelf_bin_str="SHELF 03 - BIN 02", quantity=12, unit_str="PCS",
+            sku_code="SKU-8842-M8", sku_desc="STAINLESS SCREW M8x40", scan_status="VERIFIED"
         )),
         ("avalanche_sar", lambda: adapter.push_avalanche_sar_hud(
             phase="COARSE", distance_m=12.4, tangent_angle_deg=14.0, victims_count=3, turn_180=False
@@ -230,14 +230,14 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
 
     neural_scenarios = [
         ("neural_voice_assistant", lambda: adapter.push_neural_voice_assistant_hud(
-            state_str="ECOUTE EN COURS", partial_transcript="Eteindre le salon et verifier la Freebox",
+            state_str="LISTENING", partial_transcript="Turn off the living room and check the router",
             mic_source="PHONE BEAMFORMING MIC", vu_level_pct=76, latency_ms=115
         )),
         ("multimodal_vision_hud", lambda: adapter.push_multimodal_vision_hud(
-            target_label="DISJONCTEUR #4 (CHAUFFE-EAU)", confidence_pct=96,
+            target_label="BREAKER #4 (WATER HEATER)", confidence_pct=96,
             bounding_box=(60, 60, 244, 150),
             diagnostic_summary="POSITION BASSE : DECLENCHEMENT",
-            action_recommendation="Verifiez resistance avant de re-armer",
+            action_recommendation="Check the heating element before resetting",
             source_device="50MP PHONE CAM"
         )),
         ("ambient_iot_matrix", lambda: adapter.push_ambient_iot_matrix(
@@ -247,8 +247,8 @@ def build_scenarios(adapter) -> list[tuple[str, Callable[[], object]]]:
         ("neural_translation_stream", lambda: adapter.push_neural_translation_stream(
             speaker_id="SPEAKER 01", source_lang="EN", target_lang="FR",
             live_text="Welcome to the OpenBridge AR ecosystem",
-            translated_text="Bienvenue dans l'ecosysteme de realite augmentee OpenBridge",
-            azimuth_dir="GAUCHE 30°", latency_ms=175
+            translated_text="Welcome to the OpenBridge augmented reality ecosystem",
+            azimuth_dir="LEFT 30°", latency_ms=175
         ))
     ]
     return scenarios + neural_scenarios

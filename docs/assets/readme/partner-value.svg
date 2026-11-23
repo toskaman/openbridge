@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" width="1280" height="520" role="img" aria-label="What a partnership with OpenBridge brings: new features, interoperability, tests and benchmarks, wider compatibility. ENGO case study: 38 HUD features, 82 dedicated tests, a pro HUD emulator and 19 technical documents, before the glasses arrived." xmlns:c2pa="http://c2pa.org/manifest">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b1a"/>
+      <stop offset="0.6" stop-color="#0d1330"/>
+      <stop offset="1" stop-color="#1a0f33"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.6" stop-color="#c7fff6"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="num" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7cf3e1"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#121b40"/>
+      <stop offset="1" stop-color="#0c1230"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="engo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e7f11f" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0.10"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2dd4bf" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+    <style>
+      .kick{font:700 13px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#7cf3e1;letter-spacing:.22em}
+      .h1{font:800 34px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:url(#title)}
+      .ct{font:700 20px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#ffffff}
+      .cb{font:400 14.5px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#a9b8dc}
+      .ico{fill:none;stroke:#c7fff6;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+      .v{font:800 40px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:url(#num)}
+      .l{font:500 14px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#c9d4ef}
+      .tag{font:700 12px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#e7f11f;letter-spacing:.16em}
+      .foot{font:400 12.5px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#7f8fb8}
+      .sep{stroke:#ffffff;stroke-opacity:.09}
+      .glow{animation:breathe 4s ease-in-out infinite}
+      @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+    </style>
+  </defs>
+
+  <rect width="1280" height="520" rx="22" fill="url(#bg)"/>
+  <rect width="1280" height="520" rx="22" fill="url(#grid)"/>
+
+  <text x="640" y="54" text-anchor="middle" class="kick">PARTNER WITH OPENBRIDGE</text>
+  <text x="640" y="96" text-anchor="middle" class="h1">Send us a device. Get back an ecosystem.</text>
+
+  <!-- Card 1: new features -->
+  <g transform="translate(40 128)">
+    <rect width="280" height="196" rx="16" fill="url(#card)" stroke="url(#edge)" stroke-width="1.4"/>
+    <circle cx="44" cy="44" r="30" fill="url(#halo)" class="glow"/>
+    <path class="ico" d="M44 26l4.6 11.4L60 42l-11.4 4.6L44 58l-4.6-11.4L28 42l11.4-4.6z"/>
+    <path class="ico" d="M66 24l1.8 4.2L72 30l-4.2 1.8L66 36l-1.8-4.2L60 30l4.2-1.8z"/>
+    <text x="24" y="104" class="ct">New features</text>
+    <text x="24" y="132" class="cb">Your device gains abilities you</text>
+    <text x="24" y="152" class="cb">never shipped: AI-made controls,</text>
+    <text x="24" y="172" class="cb">alerts, voice, cross-device flows.</text>
+  </g>
+
+  <!-- Card 2: interoperability -->
+  <g transform="translate(340 128)">
+    <rect width="280" height="196" rx="16" fill="url(#card)" stroke="url(#edge)" stroke-width="1.4"/>
+    <circle cx="44" cy="44" r="30" fill="url(#halo)" class="glow"/>
+    <circle class="ico" cx="30" cy="54" r="7"/><circle class="ico" cx="58" cy="54" r="7"/><circle class="ico" cx="44" cy="30" r="7"/>
+    <path class="ico" d="M37 54h14M34 48l6-12M54 48l-6-12"/>
+    <text x="24" y="104" class="ct">Interoperability</text>
+    <text x="24" y="132" class="cb">Talks to TVs, watches, phones,</text>
+    <text x="24" y="152" class="cb">routers, robots and PCs from</text>
+    <text x="24" y="172" class="cb">other brands, under user consent.</text>
+  </g>
+
+  <!-- Card 3: tests and benchmarks -->
+  <g transform="translate(640 128)">
+    <rect width="280" height="196" rx="16" fill="url(#card)" stroke="url(#edge)" stroke-width="1.4"/>
+    <circle cx="44" cy="44" r="30" fill="url(#halo)" class="glow"/>
+    <path class="ico" d="M26 60V48M36 60V38M46 60V44M56 60V30"/>
+    <path class="ico" d="M60 24l4 4 8-9"/>
+    <text x="24" y="104" class="ct">Tests and benchmarks</text>
+    <text x="24" y="132" class="cb">Hundreds of automated tests and</text>
+    <text x="24" y="152" class="cb">benchmarks for your product, plus</text>
+    <text x="24" y="172" class="cb">a public compatibility report.</text>
+  </g>
+
+  <!-- Card 4: compatibility -->
+  <g transform="translate(940 128)">
+    <rect width="280" height="196" rx="16" fill="url(#card)" stroke="url(#edge)" stroke-width="1.4"/>
+    <circle cx="44" cy="44" r="30" fill="url(#halo)" class="glow"/>
+    <path class="ico" d="M44 24l20 10-20 10-20-10z"/>
+    <path class="ico" d="M24 44l20 10 20-10M24 54l20 10 20-10"/>
+    <text x="24" y="104" class="ct">Wider compatibility</text>
+    <text x="24" y="132" class="cb">Reached over USB, Wi-Fi, BLE or</text>
+    <text x="24" y="152" class="cb">a relay device, on 6 platforms,</text>
+    <text x="24" y="172" class="cb">even on legacy Windows machines.</text>
+  </g>
+
+  <!-- ENGO case study -->
+  <g transform="translate(40 348)">
+    <rect width="1200" height="140" rx="16" fill="url(#engo)" stroke="#e7f11f" stroke-opacity="0.35" stroke-width="1.2"/>
+    <text x="28" y="34" class="tag">CASE STUDY · ENGO SMART GLASSES · BEFORE THE HARDWARE EVEN ARRIVED</text>
+    <g text-anchor="middle">
+      <text x="150" y="88" class="v">38</text><text x="150" y="114" class="l">HUD features designed</text>
+      <line x1="300" y1="56" x2="300" y2="122" class="sep"/>
+      <text x="450" y="88" class="v">82</text><text x="450" y="114" class="l">dedicated automated tests</text>
+      <line x1="600" y1="56" x2="600" y2="122" class="sep"/>
+      <text x="750" y="88" class="v">1</text><text x="750" y="114" class="l">pro HUD emulator (HUD Studio)</text>
+      <line x1="900" y1="56" x2="900" y2="122" class="sep"/>
+      <text x="1050" y="88" class="v">19</text><text x="1050" y="114" class="l">technical documents</text>
+    </g>
+  </g>
+  <text x="640" y="508" text-anchor="middle" class="foot">ENGO work validated in the emulator with the official ActiveLook app; hardware tests start when the glasses arrive.</text>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTozNzNlMzkxZC0zMmI5LTQ5OTctYTFiNi1iNDYxZjU0ZTEyOTYAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaDe2uSZGmK0qEC5igW+srUAAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDoxYmE1NjMzMS02YmExLTRjOTUtOTdlOC1jNWRlN2M1MGViZWZscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoGi62zSEX6VKnrTv+Wa3g4wAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggCKBbQI+7qaCgtnzCxvdsx7kwAlPP/jlQMd1vlw7n48CkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaBVvkd66hlHu6fTBdp49FtIAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYINLEZG0SCG9/N3OezmDfTMUxvhwMOXGvM6bouUmbLzwVZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GRxJZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjM3M2UzOTFkLTMyYjktNDk5Ny1hMWI2LWI0NjFmNTRlMTI5Ni9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOmU3NGNiOWU5LWMyZmQtNDQzMy1hNDIzLWJhZmZhZjM0ODJkNnJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCAIoFtAj7upoKC2fMLG92zHuTACU8/+OVAx3W+XDufjwKJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggP47FEgMD9D8hlVo9zKiw8AqTjwS83VgXAxBi+TtE53qiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgglmmz4LS86o8T4KbDzroeoIVPAM9CsEGJCcnBE3Z1Nip0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQOw/ixkjG8+1rlvvQWZlCSzwvWSToRJpJr/pARf6uRMA/WuhlhsqgeVRE+pz1A39OfAsWeftuE6qKnMHwZW3ge8=</c2pa:manifest></metadata></svg>

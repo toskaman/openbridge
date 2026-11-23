@@ -742,7 +742,7 @@ class HUDCanvas:
             self._cmd_txt(struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'WAN: OK    OpenBridge      BATT: 88%')
             self._colour = COLOUR_MAP[0x05]  # yellow
             self._cmd_txt(struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'[VACUUM] ROBOT: DOCKING')
-            self._cmd_txt(struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'BATT: 78%  |  BIN: FULL  |  ZONE: SALON')
+            self._cmd_txt(struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'BATT: 78%  |  BIN: FULL  |  ZONE: LIVING')
             self._colour = COLOUR_MAP[0x02]  # amber
             self._cmd_txt(struct.pack('>hh', 4, 95) + bytes([0, 0, 10]) + b'ETA: 2min 30s')
             self._colour = COLOUR_MAP[0x04]  # cyan
@@ -837,7 +837,7 @@ class HUDCanvas:
 
         def demo_eyes_on_target():
             adapter.push_eyes_on_target_receipt(
-                target_name="Salon Lights",
+                target_name="Living Room Lights",
                 action="Extinction & Verrouillage",
                 oracle_verified=True,
                 latency_ms=38,
@@ -870,8 +870,8 @@ class HUDCanvas:
 
         def demo_doorbell_subtitles():
             adapter.push_live_subtitles(
-                speaker="Livreur Colis",
-                text="Bonjour, j'ai un paquet pour vous a deposer",
+                speaker="Parcel courier",
+                text="Hello, I have a parcel to drop off for you",
                 is_urgent=True
             )
 
@@ -914,13 +914,13 @@ class HUDCanvas:
                 current_spm=174,
                 hr_bpm=162,
                 hr_zone=4,
-                advice="AUGMENTER FREQUENCE (+6)"
+                advice="SHORTER STEPS (+6)"
             )
 
         def demo_media():
             adapter.push_media_remote_hud(
                 media_title="Dune: Part Two",
-                artist_or_source="Kodi Salon (4K HDR)",
+                artist_or_source="Living Room Kodi (4K HDR)",
                 volume_pct=45,
                 is_playing=True,
                 progress_s=3420,
@@ -1003,15 +1003,15 @@ class HUDCanvas:
 
         def demo_morse():
             adapter.push_silent_morse_input(
-                buffer_str="OUI JE SUIS EN ROUTE",
+                buffer_str="YES I AM ON MY WAY",
                 current_morse=".-",
-                suggestion="ARRIVE DANS 5 MIN"
+                suggestion="THERE IN 5 MIN"
             )
 
         def demo_teleprompter():
             adapter.push_speech_teleprompter(
-                current_line="OpenBridge connecte vos lunettes",
-                next_line="aux modeles d'IA locaux et a vos objets",
+                current_line="OpenBridge connects your glasses",
+                next_line="to local AI models and your devices",
                 wpm=138,
                 is_rushing=False,
                 elapsed_s=45,
@@ -1020,10 +1020,10 @@ class HUDCanvas:
 
         def demo_heatmap():
             adapter.push_spatial_energy_heatmap(
-                current_room="Cuisine",
+                current_room="Kitchen",
                 room_watts=2150,
                 total_watts=3480,
-                vampire_devices=[{"name": "Four Veille", "watts": 65, "idle_hours": 3}]
+                vampire_devices=[{"name": "Oven standby", "watts": 65, "idle_hours": 3}]
             )
 
         def demo_arcade():
@@ -1060,11 +1060,11 @@ class HUDCanvas:
         def demo_briefing():
             adapter.push_executive_briefing_glance(
                 contact_name="Sophie Martin",
-                role_title="Directrice R&D ENGO",
+                role_title="R&D Director ENGO",
                 bullet_points=[
-                    "Objectif : Partenariat OpenBridge v2",
+                    "Goal : OpenBridge partnership v2",
                     "Budget alloue : 85k EUR materiel",
-                    "Decideur final : Valider avant 17h"
+                    "Final decision maker : confirm before 5 pm"
                 ],
                 sentiment_hint="PARTENAIRE"
             )
@@ -1082,14 +1082,14 @@ class HUDCanvas:
                 pitch_deg=0.1,
                 roll_deg=0.0,
                 is_level=True,
-                detected_hazard="CABLE 230V SOUS TENSION"
+                detected_hazard="LIVE 230V CABLE"
             )
 
         v4_demos = [
             ("⚠️ Sentry Radar", demo_sentry),
-            ("👤 Dossier Exec", demo_briefing),
+            ("👤 Exec Brief", demo_briefing),
             ("🧘 Coherence Bio", demo_bio_stress),
-            ("📐 Niveau & Scanner", demo_ar_stud),
+            ("📐 Level & Scanner", demo_ar_stud),
         ]
         for label, fn in v4_demos:
             tk.Button(demo_v4, text=label, command=fn,
@@ -1113,8 +1113,8 @@ class HUDCanvas:
             adapter.push_directional_subtitles(
                 speaker_name="Alice (R&D)",
                 direction="left",
-                text_line1="On lance le test d'autonomie ?",
-                text_line2="Le protocole BLE est stable a 100%.",
+                text_line1="Shall we start the battery test?",
+                text_line2="The BLE protocol is 100% stable.",
                 is_translated=False
             )
 
@@ -1168,7 +1168,7 @@ class HUDCanvas:
         def demo_allergen():
             adapter.push_allergen_nutrition_scanner(
                 product_name="M&M's Peanut 250g",
-                detected_allergens=["ARACHIDES", "SOJA"],
+                detected_allergens=["PEANUTS", "SOJA"],
                 carbs_g=59.0,
                 sugar_g=53.0,
                 sodium_mg=40.0,
@@ -1189,15 +1189,15 @@ class HUDCanvas:
             adapter.push_multilingual_interpreter(
                 speaker_origin="Tanaka (Tokyo)",
                 source_transcript="Getsuyobi wa chotto...",
-                translated_text="Lundi sera un peu difficile...",
+                translated_text="Monday might be a little difficult...",
                 etiquette_tag="[REFUS INDIRECT]",
-                etiquette_tip="Politesse japonaise. Ne pas insister.",
+                etiquette_tip="Japanese etiquette. Do not insist.",
                 target_country="JAPON"
             )
 
         v6_demos = [
             ("🔥 Thermique & Arc", demo_thermal),
-            ("🥜 Alerte Allergene", demo_allergen),
+            ("🥜 Allergen Alert", demo_allergen),
             ("⛵ Tactique Marine", demo_marine),
             ("🌐 Interprete Culture", demo_whisperer),
         ]
@@ -1222,12 +1222,12 @@ class HUDCanvas:
             adapter.push_warehouse_pick(
                 order_id="48291",
                 progress_str="04/18",
-                aisle_bay_str="ALLEE 04 - TRAVEE 12",
-                shelf_bin_str="ETAGERE 03 (GOLDEN) - BAC 02",
+                aisle_bay_str="AISLE 04 - BAY 12",
+                shelf_bin_str="SHELF 03 (GOLDEN) - BIN 02",
                 quantity=12,
                 unit_str="PCS",
                 sku_code="SKU-8842-M8",
-                sku_desc="VIS INOX M8x40",
+                sku_desc="STAINLESS SCREW M8x40",
                 scan_status="VERIFIED"
             )
 
@@ -1308,7 +1308,7 @@ class HUDCanvas:
         v8_demos = [
             ("🚒 Pompier SCBA", demo_firefighter),
             ("🎯 Balistique Mil-Dot", demo_ballistics),
-            ("🩺 Chirurgie Stérile", demo_surgical),
+            ("🩺 Sterile Surgery", demo_surgical),
             ("🦯 Radar Basse Vision", demo_low_vision),
         ]
         for label, fn in v8_demos:

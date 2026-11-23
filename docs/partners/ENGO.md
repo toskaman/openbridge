@@ -37,8 +37,8 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 3. **Alerts and confirmations.** Refusals, offline devices and “Done, verified” receipts pushed to the display.
 4. **Display only, by design.** The glasses show information; they never trigger privileged actions on their own. Every action still goes through approval and read-back.
 
-👉 **Accéder au dossier technique dédié : [Dossier Spécialisé ENGO × OpenBridge (Hub R&D)](engo/README.md)**  
-*(Spécifications matérielles détaillées, manuel du protocole BLE, guide de l'émulateur, catalogue des 10+ features et architecture d'intégration)*
+👉 **Open the dedicated technical dossier: [ENGO × OpenBridge R&D Hub](engo/README.md)**  
+*(Detailed hardware specifications, BLE protocol manual, emulator guide, catalogue of 10+ features and integration architecture)*
 
 ## Progress
 
@@ -56,6 +56,7 @@ Every step will be logged in the [evidence registry](../DEVICE_EVIDENCE.json) on
 
 - ENGO glasses: [engoeyewear.com](https://www.engoeyewear.com)
 - ActiveLook platform: [activelook.net](https://www.activelook.net)
+- Partner program: [what a partnership brings](README.md)
 - OpenBridge: [back to the project](../../README.md)
 
 <sub>ENGO, ActiveLook and Microoled names and logos are trademarks of their respective owners and are shown here as part of the hardware partnership.</sub>

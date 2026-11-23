@@ -289,14 +289,14 @@ class StreamingSTTRunner:
     """Simulates real-time streaming speech-to-text with partial word hypotheses."""
 
     def __init__(self, final_stt_fn: Optional[Callable[[bytes], str]] = None):
-        self.final_stt_fn = final_stt_fn or (lambda b: "Allumer les lumieres du bureau")
+        self.final_stt_fn = final_stt_fn or (lambda b: "Turn on the office lights")
         self.partial_tokens: List[str] = []
         self.current_token_idx: int = 0
         self.is_final: bool = False
 
     def arm_session(self, target_sentence: Optional[str] = None):
         """Prepares a new utterance session."""
-        sentence = target_sentence or "Eteindre le salon et verifier la Freebox"
+        sentence = target_sentence or "Turn off the living room and check the router"
         self.partial_tokens = sentence.split()
         self.current_token_idx = 0
         self.is_final = False
@@ -343,102 +343,102 @@ class MultimodalVisionProxy:
         prompt_lower = prompt.lower()
         if "disjoncteur" in prompt_lower or "panneau" in prompt_lower or "tableau" in prompt_lower or "electric" in prompt_lower:
             return VisionDetection(
-                target_label="DISJONCTEUR #4 (CHAUFFE-EAU)",
+                target_label="BREAKER #4 (WATER HEATER)",
                 confidence_pct=96,
                 bounding_box=(60, 60, 244, 150),
-                diagnostic="POSITION BASSE : DECLENCHEMENT THERMIQUE",
-                action_hint="Verifiez la resistance avant reenclenchement"
+                diagnostic="POSITION DOWN : THERMAL TRIP",
+                action_hint="Check the heating element before resetting"
             )
         elif "qr" in prompt_lower or "oracle" in prompt_lower or "receipt" in prompt_lower or "audit" in prompt_lower:
             return VisionDetection(
                 target_label="ORACLE RECEIPT #4F9A",
                 confidence_pct=99,
                 bounding_box=(70, 70, 234, 170),
-                diagnostic="ETAT PHYSIQUE VERIFIE : VERROUILLE",
-                action_hint="Preuve in-situ enregistree sur le registre"
+                diagnostic="PHYSICAL STATE VERIFIED : LOCKED",
+                action_hint="In-situ proof saved to the evidence registry"
             )
         elif "erreur" in prompt_lower or "panne" in prompt_lower or "lave" in prompt_lower or "defect" in prompt_lower:
             return VisionDetection(
-                target_label="LAVE-LINGE BOSCH SERIE 6",
+                target_label="BOSCH SERIES 6 WASHER",
                 confidence_pct=98,
                 bounding_box=(40, 50, 264, 140),
-                diagnostic="CODE ERREUR E18 : FILTRE POMPE BLOQUE",
-                action_hint="Devissez le filtre de vidange en bas a droite"
+                diagnostic="ERROR E18 : PUMP FILTER BLOCKED",
+                action_hint="Unscrew the drain filter, bottom right"
             )
         elif "aliment" in prompt_lower or "ingredient" in prompt_lower or "nutri" in prompt_lower or "allergen" in prompt_lower:
             return VisionDetection(
-                target_label="BARRE CEREALES CHOCOLAT",
+                target_label="CHOCOLATE CEREAL BAR",
                 confidence_pct=94,
                 bounding_box=(50, 55, 254, 145),
-                diagnostic="ALLERGENES : ARACHIDES, SOJA, GLUTEN",
-                action_hint="Nutri-Score D | Sucres: 28g / 100g"
+                diagnostic="ALLERGENS : PEANUTS, SOY, GLUTEN",
+                action_hint="Nutri-Score D | Sugar: 28g / 100g"
             )
         elif "qr" in prompt_lower or "oracle" in prompt_lower or "receipt" in prompt_lower or "audit" in prompt_lower:
             return VisionDetection(
                 target_label="ORACLE RECEIPT #4F9A",
                 confidence_pct=99,
                 bounding_box=(70, 70, 234, 170),
-                diagnostic="ETAT PHYSIQUE VERIFIE : VERROUILLE",
-                action_hint="Preuve in-situ enregistree sur le registre"
+                diagnostic="PHYSICAL STATE VERIFIED : LOCKED",
+                action_hint="In-situ proof saved to the evidence registry"
             )
         elif "danger" in prompt_lower or "collision" in prompt_lower or "vehicule" in prompt_lower or "angle" in prompt_lower:
             return VisionDetection(
-                target_label="VEHICULE ANGLE MORT GAUCHE",
+                target_label="VEHICLE IN LEFT BLIND SPOT",
                 confidence_pct=97,
                 bounding_box=(30, 40, 180, 190),
-                diagnostic="VITESSE: 54 km/h | TTC: 1.2s",
-                action_hint="Alerte imminente : Maintenir trajectoire"
+                diagnostic="SPEED: 54 km/h | TTC: 1.2s",
+                action_hint="Imminent alert : hold your line"
             )
         elif "somnolence" in prompt_lower or "yeux" in prompt_lower or "conducteur" in prompt_lower or "fatigue" in prompt_lower:
             return VisionDetection(
-                target_label="VIGILANCE CONDUCTEUR",
+                target_label="DRIVER VIGILANCE",
                 confidence_pct=95,
                 bounding_box=(80, 60, 224, 160),
-                diagnostic="PERCLOS: 19% | MICROSOMMEIL DETECTE",
-                action_hint="Aire de repos conseillee a 3.8 km"
+                diagnostic="PERCLOS: 19% | MICROSLEEP DETECTED",
+                action_hint="Rest area advised in 3.8 km"
             )
         elif "sku" in prompt_lower or "colis" in prompt_lower or "entrepot" in prompt_lower or "barcode" in prompt_lower:
             return VisionDetection(
-                target_label="COLIS SKU-8842-M8",
+                target_label="PARCEL SKU-8842-M8",
                 confidence_pct=98,
                 bounding_box=(45, 50, 259, 155),
-                diagnostic="ALLEE 04 - TRAVEE 12 | QTE: 12 PCS",
-                action_hint="Scanne et valide pour preparation commande"
+                diagnostic="AISLE 04 - BAY 12 | QTY: 12 PCS",
+                action_hint="Scanned and confirmed for order picking"
             )
         elif "stud" in prompt_lower or "fil" in prompt_lower or "tension" in prompt_lower or "mur" in prompt_lower:
             return VisionDetection(
-                target_label="DETECTEUR MATERIAUX & CABLES",
+                target_label="MATERIAL & CABLE DETECTOR",
                 confidence_pct=93,
                 bounding_box=(65, 55, 239, 145),
-                diagnostic="CABLE SOUS TENSION 230V A 2.5 CM",
-                action_hint="Perçage interdit dans cette zone"
+                diagnostic="LIVE 230V CABLE AT 2.5 CM",
+                action_hint="Do not drill in this area"
             )
         elif "obstacle" in prompt_lower or "trottoir" in prompt_lower or "marche" in prompt_lower or "echonav" in prompt_lower:
             return VisionDetection(
-                target_label="OBSTACLE HAUT DETECTE",
+                target_label="OVERHEAD OBSTACLE DETECTED",
                 confidence_pct=96,
                 bounding_box=(50, 40, 254, 130),
-                diagnostic="BRANCHE A HAUTEUR DE TETE (1.75M)",
-                action_hint="Baisser la tete / devier a droite"
+                diagnostic="BRANCH AT HEAD HEIGHT (1.75M)",
+                action_hint="Duck / step to the right"
             )
         
         # Default smart detection
         if self.custom_vision_fn:
             res_str = self.custom_vision_fn(frame_bytes, prompt)
             return VisionDetection(
-                target_label="OBJET RECONNU",
+                target_label="OBJECT RECOGNISED",
                 confidence_pct=92,
                 bounding_box=(55, 60, 249, 145),
                 diagnostic=res_str[:32],
-                action_hint="Analyse vision validee par OpenBridge"
+                action_hint="Vision analysis checked by OpenBridge"
             )
 
         return VisionDetection(
-            target_label="EQUIPEMENT DETECTE",
+            target_label="EQUIPMENT DETECTED",
             confidence_pct=91,
             bounding_box=(50, 60, 254, 145),
-            diagnostic="Tous parametres nominaux",
-            action_hint="Geste wave pour fermer la vue"
+            diagnostic="All parameters nominal",
+            action_hint="Wave to close the view"
         )
 
 
@@ -506,7 +506,7 @@ class EngoAIBridge:
         self.phone_state = PhoneSensoryState()
         self.ai_inference_fn = ai_inference_fn or self._default_mock_llm
         self.vision_inference_fn = vision_inference_fn or self._default_mock_vision
-        self.stt_fn = stt_fn or (lambda b: "Bonjour, quel est le statut de l'aspirateur ?")
+        self.stt_fn = stt_fn or (lambda b: "Hello, what is the vacuum status?")
         
         # Operational sub-engines
         self.audio_proxy = AudioStreamingProxy()
@@ -527,20 +527,20 @@ class EngoAIBridge:
         """Deterministic mock AI reasoning if no external model is bound."""
         prompt_lower = prompt.lower()
         if "aspirateur" in prompt_lower or "vacuum" in prompt_lower:
-            return "Aspirateur Tuya: en charge au dock (Batterie 78%, Bac propre)."
+            return "Tuya vacuum: charging on the dock (battery 78%, bin clean)."
         elif "météo" in prompt_lower or "weather" in prompt_lower or "pluie" in prompt_lower:
-            return "Pluie imminente dans 12 min. Température 14°C, vent 22 km/h."
+            return "Rain in 12 min. 14 C, wind 22 km/h."
         elif "freebox" in prompt_lower or "wifi" in prompt_lower or "débit" in prompt_lower:
-            return "Freebox Pop: Débit 940 Mbps, 12 appareils connectés, ping 8ms."
+            return "Freebox Pop: 940 Mbps, 12 devices online, ping 8 ms."
         elif "edf" in prompt_lower or "linky" in prompt_lower or "électricité" in prompt_lower:
-            return "Linky: 1.4 kW en cours. Heures Creuses à 22h00. Demain: BLANC."
+            return "Smart meter: 1.4 kW now. Off-peak from 22:00. Tomorrow: WHITE day."
         elif "qui es-tu" in prompt_lower or "who are you" in prompt_lower:
-            return "OpenBridge Neural HUD. L'IA connectée à vos appareils et vos yeux."
-        return f"AI Synthèse: {prompt[:30]} validé. Tous systèmes nominaux."
+            return "OpenBridge Neural HUD. AI linked to your devices and your eyes."
+        return f"AI summary: {prompt[:30]} done. All systems nominal."
 
     def _default_mock_vision(self, image_data: bytes, prompt: str) -> str:
         """Deterministic mock multimodal vision reasoning."""
-        return "Disjoncteur #4 identifié : Position BASSE (Chauffe-eau déclenché)."
+        return "Breaker #4 found: position DOWN (water heater tripped)."
 
     # ── Master Gesture Dispatcher from Glasses ─────────────────────────────────
 
@@ -644,7 +644,7 @@ class EngoAIBridge:
     ) -> bool:
         """Draws streaming live transcript ticker and dynamic audio VU-meter."""
         return self.adapter.push_neural_voice_assistant_hud(
-            state_str="ECOUTE ACTIVE",
+            state_str="LISTENING",
             partial_transcript=partial_transcript,
             mic_source=self.phone_state.active_mic_source.upper(),
             vu_level_pct=vu_level_pct,
@@ -709,7 +709,7 @@ class EngoAIBridge:
         # Footer
         if self.adapter.is_color:
             cmds += cmd_color(COLOR_CYAN)
-        cmds += cmd_text(4, 230, ">> [WAVE] FERMER L'IA", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
+        cmds += cmd_text(4, 230, ">> [WAVE] CLOSE AI", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
 
         return self.adapter.send(bytes(cmds))
 
@@ -726,8 +726,8 @@ class EngoAIBridge:
             cmds += cmd_color(COLOR_AMBER)
         cmds += cmd_line(0, 26, 303, 26)
         cmds += cmd_text(4, 6, "📷 CAMERA TELEPHONE ACTIVE...", font=0, color_or_grey=COLOR_AMBER if self.adapter.is_color else 15)
-        cmds += cmd_text(4, 50, "Capture de l'image via le smartphone", font=0, color_or_grey=14)
-        cmds += cmd_text(4, 75, "Analyse multimodale en cours...", font=1, color_or_grey=COLOR_AMBER if self.adapter.is_color else 15)
+        cmds += cmd_text(4, 50, "Capturing the image with the phone", font=0, color_or_grey=14)
+        cmds += cmd_text(4, 75, "Multimodal analysis in progress...", font=1, color_or_grey=COLOR_AMBER if self.adapter.is_color else 15)
         self.adapter.send(bytes(cmds))
 
         # 2. Simulate phone capturing image via ADB / Companion
@@ -744,14 +744,14 @@ class EngoAIBridge:
         self.stream_vision_insight(
             title="ANALYSE VISUELLE",
             insight=vision_result,
-            device_target="TABLEAU ÉLECTRIQUE"
+            device_target="BREAKER PANEL"
         )
         return {
             "status": "VISION_COMPLETED",
             "result": vision_result
         }
 
-    def stream_vision_insight(self, title: str, insight: str, device_target: str = "DETECTÉ") -> bool:
+    def stream_vision_insight(self, title: str, insight: str, device_target: str = "DETECTED") -> bool:
         """Projects computer vision diagnostics onto the MicroOLED screen."""
         cmds = bytearray()
         cmds += cmd_clear()
@@ -772,7 +772,7 @@ class EngoAIBridge:
             cmds += cmd_text(4, 64 + i * 22, line, font=1, color_or_grey=15)
 
         # Footer
-        cmds += cmd_text(4, 230, ">> [WAVE] FERMER VISION", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
+        cmds += cmd_text(4, 230, ">> [WAVE] CLOSE VISION", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
         return self.adapter.send(bytes(cmds))
 
     # ── Feature 3: The Silent Interpreter (Live Translation Subtitles) ─────────
@@ -800,7 +800,7 @@ class EngoAIBridge:
         if line2:
             cmds += cmd_text(6, 210, line2, font=0, color_or_grey=15)
 
-        cmds += cmd_text(6, 236, ">> [WAVE] FERMER SOUS-TITRES", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
+        cmds += cmd_text(6, 236, ">> [WAVE] CLOSE SUBTITLES", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
         return self.adapter.send(bytes(cmds))
 
     # ── Feature 4: Live Dynamic API HUD Injector & Ambient Matrix ──────────────
@@ -849,7 +849,7 @@ class EngoAIBridge:
             ok = self.push_api_glance("transit_live", {"line": "M14", "destination": "Chatelet", "eta_minutes": 2})
             return {"status": "PAGE_RENDERED", "page": page_name, "success": ok}
         elif page_name == "freebox_telemetry":
-            ok = self.stream_ai_response("FREEBOX STATUT", "Fibre 940 Mbps, 14 appareils, ping 6ms.")
+            ok = self.stream_ai_response("ROUTER STATUS", "Fibre 940 Mbps, 14 devices, ping 6 ms.")
             return {"status": "PAGE_RENDERED", "page": page_name, "success": ok}
 
         return {"status": "PAGE_CYCLE_COMPLETED", "page_idx": self.active_page_idx}
@@ -869,8 +869,8 @@ class EngoAIBridge:
             cmds += cmd_line(0, 26, 303, 26)
             cmds += cmd_text(4, 6, "🌧️ METEO : RADAR PRECIPITATIONS", font=0, color_or_grey=COLOR_AMBER if rain_min <= 15 and self.adapter.is_color else 15)
 
-            cmds += cmd_text(4, 45, f"PLUIE DANS : {rain_min} MINUTES", font=1, color_or_grey=COLOR_RED if rain_min <= 10 else COLOR_AMBER if self.adapter.is_color else 15)
-            cmds += cmd_text(4, 75, f"Temp: {temp_c}°C | Vent: {wind_kmh} km/h", font=0, color_or_grey=14)
+            cmds += cmd_text(4, 45, f"RAIN IN : {rain_min} MINUTES", font=1, color_or_grey=COLOR_RED if rain_min <= 10 else COLOR_AMBER if self.adapter.is_color else 15)
+            cmds += cmd_text(4, 75, f"Temp: {temp_c}°C | Wind: {wind_kmh} km/h", font=0, color_or_grey=14)
             cmds += cmd_gauge(0, max(0, min(100, 100 - rain_min * 2)))
 
         elif api_type == "linky_rte_tempo":
@@ -882,10 +882,10 @@ class EngoAIBridge:
             if self.adapter.is_color:
                 cmds += cmd_color(tempo_col)
             cmds += cmd_line(0, 26, 303, 26)
-            cmds += cmd_text(4, 6, f"⚡ RTE TEMPO : DEMAIN {color_tomorrow}", font=0, color_or_grey=tempo_col if self.adapter.is_color else 15)
+            cmds += cmd_text(4, 6, f"⚡ RTE TEMPO : TOMORROW {color_tomorrow}", font=0, color_or_grey=tempo_col if self.adapter.is_color else 15)
 
             cmds += cmd_text(4, 45, f"Aujourd'hui : {color_today} (HC 22h-06h)", font=0, color_or_grey=14)
-            cmds += cmd_text(4, 72, f"Conso live  : {instant_watts} W", font=1, color_or_grey=tempo_col if self.adapter.is_color else 15)
+            cmds += cmd_text(4, 72, f"Live draw   : {instant_watts} W", font=1, color_or_grey=tempo_col if self.adapter.is_color else 15)
             cmds += cmd_gauge(0, min(100, int(instant_watts / 90.0)))
 
         elif api_type == "transit_live":
@@ -896,10 +896,10 @@ class EngoAIBridge:
             if self.adapter.is_color:
                 cmds += cmd_color(COLOR_CYAN)
             cmds += cmd_line(0, 26, 303, 26)
-            cmds += cmd_text(4, 6, f"🚇 TRANSIT EN DIRECT : {line}", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 15)
+            cmds += cmd_text(4, 6, f"🚇 LIVE TRANSIT : {line}", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 15)
 
-            cmds += cmd_text(4, 45, f"Direction : {dest[:22]}", font=0, color_or_grey=14)
-            cmds += cmd_text(4, 72, f"PROCHAIN : {eta_m} MIN ⬆", font=2, color_or_grey=COLOR_GREEN if self.adapter.is_color else 15)
+            cmds += cmd_text(4, 45, f"To : {dest[:22]}", font=0, color_or_grey=14)
+            cmds += cmd_text(4, 72, f"NEXT : {eta_m} MIN ⬆", font=2, color_or_grey=COLOR_GREEN if self.adapter.is_color else 15)
 
         cmds += cmd_text(4, 230, ">> [WAVE] RETOUR AMBIANT", font=0, color_or_grey=COLOR_CYAN if self.adapter.is_color else 8)
         return self.adapter.send(bytes(cmds))
@@ -915,10 +915,10 @@ class EngoAIBridge:
             if self.adapter.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(0, 0, 303, 255)
-            cmds += cmd_text(10, 30, "🚨 ALERTE MAYDAY DECLENCHEE", font=1, color_or_grey=COLOR_RED if self.adapter.is_color else 15)
-            cmds += cmd_text(10, 70, "Signalement GPS transmis au telephone", font=0, color_or_grey=14)
+            cmds += cmd_text(10, 30, "🚨 MAYDAY ALERT TRIGGERED", font=1, color_or_grey=COLOR_RED if self.adapter.is_color else 15)
+            cmds += cmd_text(10, 70, "GPS position sent to the phone", font=0, color_or_grey=14)
             cmds += cmd_text(10, 100, "Position : 48.8566 N, 2.3522 E", font=0, color_or_grey=12)
-            cmds += cmd_text(10, 220, ">> [WAVE] ANNULER L'ALERTE", font=0, color_or_grey=COLOR_GREEN if self.adapter.is_color else 10)
+            cmds += cmd_text(10, 220, ">> [WAVE] CANCEL THE ALERT", font=0, color_or_grey=COLOR_GREEN if self.adapter.is_color else 10)
             self.adapter.send(bytes(cmds))
             return {"status": "EMERGENCY_TRIGGERED", "action": action}
         else:
@@ -929,7 +929,7 @@ class EngoAIBridge:
 
     def trigger_audio_readback(self) -> Dict[str, Any]:
         """Triple tap handler: initiates text-to-speech audio readback through the smartphone."""
-        content = self.last_ai_response or "Tous systèmes nominaux. Aucun avertissement en cours."
+        content = self.last_ai_response or "All systems nominal. No active warnings."
         return {
             "status": "AUDIO_READBACK_DISPATCHED",
             "device": "phone_speaker_or_earbuds",
@@ -961,8 +961,8 @@ class EngoAIBridge:
             return self.adapter.push_spatial_radar(p.get("devices", []))
         elif e_type == "eyes_on_target":
             return self.adapter.push_eyes_on_target_receipt(
-                target_name=p.get("target_name", "Appareil"),
-                action=p.get("action", "Commande"),
+                target_name=p.get("target_name", "Device"),
+                action=p.get("action", "Command"),
                 oracle_verified=p.get("oracle_verified", True),
                 latency_ms=p.get("latency_ms", 35),
                 digest=p.get("digest", "#verified")
@@ -984,14 +984,14 @@ class EngoAIBridge:
             return self.adapter.push_workflow_prompter(
                 step_idx=p.get("step_idx", 1),
                 total_steps=p.get("total_steps", 5),
-                title=p.get("title", "Etape"),
+                title=p.get("title", "Step"),
                 instruction=p.get("instruction", "Instruction"),
                 timer_s=p.get("timer_s", 60)
             )
         elif e_type == "doorbell_subtitles":
             return self.adapter.push_live_subtitles(
                 speaker=p.get("speaker", "Interphone"),
-                text=p.get("text", "Bonjour"),
+                text=p.get("text", "Hello"),
                 is_urgent=p.get("is_urgent", False)
             )
         elif e_type == "compass_wayfinder":
@@ -999,7 +999,7 @@ class EngoAIBridge:
                 heading_deg=p.get("heading_deg", 0),
                 target_bearing_deg=p.get("target_bearing_deg", 45),
                 target_dist_m=p.get("target_dist_m", 100.0),
-                target_name=p.get("target_name", "CIBLE")
+                target_name=p.get("target_name", "TARGET")
             )
         elif e_type == "security_shield":
             return self.adapter.push_smart_home_security_alert(
@@ -1042,7 +1042,7 @@ class EngoAIBridge:
             )
         elif e_type == "spatial_energy_heatmap":
             return self.adapter.push_spatial_energy_heatmap(
-                current_room=p.get("current_room", "Maison"),
+                current_room=p.get("current_room", "Home"),
                 room_watts=p.get("room_watts", 1200),
                 total_watts=p.get("total_watts", 2500),
                 vampire_devices=p.get("vampire_devices", [])
@@ -1092,7 +1092,7 @@ class EngoAIBridge:
             )
         elif e_type == "directional_subtitles":
             return self.adapter.push_directional_subtitles(
-                speaker_name=p.get("speaker_name", "Interlocuteur"),
+                speaker_name=p.get("speaker_name", "Speaker"),
                 direction=p.get("direction", "center"),
                 text_line1=p.get("text_line1", ""),
                 text_line2=p.get("text_line2", ""),
@@ -1128,7 +1128,7 @@ class EngoAIBridge:
             )
         elif e_type == "allergen_nutrition":
             return self.adapter.push_allergen_nutrition_scanner(
-                product_name=p.get("product_name", "Produit"),
+                product_name=p.get("product_name", "Product"),
                 detected_allergens=p.get("detected_allergens", []),
                 carbs_g=p.get("carbs_g", 0.0),
                 sugar_g=p.get("sugar_g", 0.0),
@@ -1227,7 +1227,7 @@ class EngoAIBridge:
             )
         elif e_type == "neural_voice_assistant":
             return self.adapter.push_neural_voice_assistant_hud(
-                state_str=p.get("state_str", "ECOUTE ACTIVE"),
+                state_str=p.get("state_str", "LISTENING"),
                 partial_transcript=p.get("partial_transcript", ""),
                 mic_source=p.get("mic_source", "PHONE MIC"),
                 vu_level_pct=p.get("vu_level_pct", 50),
@@ -1236,7 +1236,7 @@ class EngoAIBridge:
             )
         elif e_type == "multimodal_vision_hud":
             return self.adapter.push_multimodal_vision_hud(
-                target_label=p.get("target_label", "CIBLE"),
+                target_label=p.get("target_label", "TARGET"),
                 confidence_pct=p.get("confidence_pct", 90),
                 bounding_box=p.get("bounding_box", (50, 50, 250, 150)),
                 diagnostic_summary=p.get("diagnostic_summary", "Diagnostic"),

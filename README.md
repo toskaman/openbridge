@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
-  <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-Contact_me-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
+  <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-What_you_gain-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
   <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
 </p>
 
@@ -137,7 +137,7 @@ Every home and every company is full of devices that **could** help each other b
 ## 🧪 Proven on real hardware, not on slides
 
 <p align="center">
-  <img src="docs/assets/readme/numbers.svg" alt="2,300+ automated tests · 37 verified device runs · 28 on real hardware · 6 platforms · 0 runtime dependencies" width="100%">
+  <img src="docs/assets/readme/numbers.svg" alt="2,400+ automated tests · 37 verified device runs · 28 on real hardware · 6 platforms · 0 runtime dependencies" width="100%">
 </p>
 
 | Device | What OpenBridge does with it | Proof level |
@@ -147,7 +147,7 @@ Every home and every company is full of devices that **could** help each other b
 | 📱 **Android phones** (Xiaomi, Blackview) | Companion, pairing, Bluetooth relay, device actions | 🟢 Real hardware |
 | 🤖 **Robot vacuum** (Tuya) | Start · pause · dock from the TV or the PC, with state read-back | 🟢 Real hardware |
 | 🌐 **Freebox Delta** (ISP router) | Network inventory and device discovery, read-only by policy | 🟢 Real hardware |
-| 🕶️ **ENGO smart glasses** (ActiveLook) | Live status, alerts and confirmations on a heads-up display | 🟡 Integration in progress |
+| 🕶️ **ENGO smart glasses** (ActiveLook) | 38 HUD features, pro emulator, official app bridge; glasses on their way | 🟡 Emulator-validated |
 | 💻 **Windows PCs** | Remote agent between PCs, consent-gated jobs | 🟢 Real hardware |
 | 🕰️ **Windows XP · Windows 7 · Linux** | Lightweight agent proven on genuine guest operating systems | 🔵 Virtual machines |
 | 🔧 **ESP32 · Pixel 6** | Native microcontroller agent · Android emulator | 🟣 Official emulators |
@@ -211,34 +211,22 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 **ENGO took the first step. Your devices could be next.**
 
-OpenBridge gets better with every new kind of hardware it meets. If you build or sell connected devices (smart-home products, robot vacuums, TVs and set-top boxes, wearables, routers and ISP boxes, IoT / maker boards, automotive or industrial equipment), let's work together.
+<p align="center">
+  <a href="docs/partners/README.md"><img src="docs/assets/readme/partner-value.svg" width="100%" alt="Partner with OpenBridge: new features, interoperability, tests and benchmarks, wider compatibility. ENGO case study: 38 HUD features, 82 tests, a pro emulator and 19 technical documents before the hardware arrived."></a>
+</p>
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <h4>What I'm asking for</h4>
-      <ul>
-        <li>📦 <b>Test hardware</b> (loan or sample units)</li>
-        <li>📚 Access to <b>APIs, SDKs or developer documentation</b></li>
-        <li>🧑‍💻 A technical contact for integration questions</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h4>What you get</h4>
-      <ul>
-        <li>🔌 A <b>native OpenBridge integration</b> of your device</li>
-        <li>🛠️ <b>Custom scripts</b> written specifically for your product</li>
-        <li>✨ <b>New features</b> that make your device work with everything around it</li>
-        <li>🧪 <b>Hundreds, even thousands, of tests and benchmarks</b>, run on the real hardware</li>
-        <li>🐞 Code improvements and detailed <b>feedback on your API / SDK</b> from a real-world integrator</li>
-        <li>🧾 A <b>public, verified compatibility report</b></li>
-        <li>⭐ Your brand featured as a <b>hardware partner</b> on this page, like ENGO</li>
-      </ul>
-    </td>
-  </tr>
-</table>
+If you build or sell connected devices (smart-home products, robot vacuums, TVs and set-top boxes, wearables, routers and ISP boxes, IoT / maker boards, automotive or industrial equipment), OpenBridge turns your product into a citizen of every home it enters:
+
+- ✨ **New features** your device never shipped: AI-made controls, alerts, voice, cross-device flows.
+- 🔌 **Interoperability** with TVs, watches, phones, routers, robots and PCs from other brands.
+- 🧪 **Complete test suites and benchmarks** written for your product and run on the real hardware, in CI on three operating systems.
+- 📈 **Wider compatibility:** USB, Wi-Fi, BLE or relay, on 6 platforms, even legacy Windows.
+- 🖥️ **An emulator of your device**, an expert review of your API / SDK, a **public verified compatibility report**, and your brand featured here like ENGO.
+
+**What I ask in return:** 📦 **hardware to keep** (donated units or a permanent loan, never a time-limited one, so tests and benchmarks keep running on every release), API / SDK documentation, and a technical contact.
 
 <p align="center">
+  <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/📘_Partner_program-What_you_gain-1f2a52?style=for-the-badge" alt="Partner program"></a>
   <a href="mailto:toskaman5962@gmail.com?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_toskaman5962@gmail.com-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
 </p>
 <p align="center"><sub>I reply in English and French. Commercial licensing and integration partnerships are available on request.</sub></p>
@@ -251,7 +239,7 @@ OpenBridge gets better with every new kind of hardware it meets. If you build or
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
 
-**Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel de test** (prêt ou échantillons) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
+**Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel à conserver** (don ou prêt permanent, jamais de prêt limité dans le temps, pour que les tests et benchmarks tournent à chaque version) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
 📩 **toskaman5962@gmail.com**
 </details>
@@ -265,7 +253,7 @@ Windows, Linux or macOS · Python 3.14 · **no third-party packages to install.*
 ```sh
 git clone https://github.com/toskaman/openbridge.git
 cd openbridge
-python -m unittest discover -s tests   # 2,300+ tests, no hardware needed
+python -m unittest discover -s tests   # 2,400+ tests, no hardware needed
 python -m src.cli judge demo           # offline demo, no devices required
 python -m src.server                   # open http://127.0.0.1:18765
 ```
