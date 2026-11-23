@@ -1,12 +1,16 @@
 """OpenBridge relay protocol v1 (PC side) and relay manager.
 
 A relay (Android phone/TV companion, ESPHome proxy, ...) is enrolled once with a short pairing code shown on the relay;
-both sides derive a per-relay key. Every command is HMAC-SHA256 signed, carries a nonce and an expiry, and names one
+both sides derive a per-relay key. Since 23 Nov 2026 the key comes from CPace (src/fabric/cpace.py), a
+password-authenticated key exchange: the recorded pairing exchange no longer lets anyone test the 6-digit code
+offline. Companions that predate it still pair with the legacy PBKDF2 derivation (pairing reports 'legacy-v1'),
+unless OPENBRIDGE_PAIRING_REQUIRE_PAKE=1 refuses them. Every command is HMAC-SHA256 signed, carries a nonce and an expiry, and names one
 operation from a closed set. Scans are bounded (<= 15 s, <= 200 observations). Installing a companion grants nothing
 by itself: the relay must report the Android permission as granted and the owner must have enabled the capability."""
 import hashlib
 import hmac
 import json
+import os
 import re
 import secrets
 import threading
@@ -42,6 +46,39 @@ class RelayError(RuntimeError):
     pass
 
 
+PAKE = 'cpace1'
+HEX64 = re.compile(r'^[0-9a-f]{64}$')
+
+
+def require_pake():
+    """True when legacy (PBKDF2) pairing is refused: OPENBRIDGE_PAIRING_REQUIRE_PAKE=1."""
+    return os.environ.get('OPENBRIDGE_PAIRING_REQUIRE_PAKE', '') == '1'
+
+
+def pake_offered(hello):
+    """The relay's CPace share (hex) when its pairing hello offers CPace, else None (legacy relay)."""
+    if isinstance(hello, dict) and hello.get('pake') == PAKE and isinstance(hello.get('pake_share'), str) \
+            and HEX64.match(hello['pake_share']):
+        return hello['pake_share']
+    return None
+
+
+def pake_key(pairing_code, relay_id, relay_nonce, pc_nonce, relay_share):
+    """CPace initiator side: (32-byte relay key, our share in hex). The code never leaves this PC."""
+    from src.fabric import cpace
+    if not (isinstance(pairing_code, str) and pairing_code.isdigit() and len(pairing_code) == 6):
+        raise RelayError('Pairing code must be the 6 digits shown on the relay')
+    sid = (relay_nonce + pc_nonce).encode('ascii')
+    g = cpace.generator(pairing_code.encode('ascii'), relay_id.encode('ascii'), sid)
+    y, ya = cpace.share(g)
+    yb = bytes.fromhex(relay_share)
+    try:
+        isk = cpace.isk(y, yb, sid, ya, yb)
+    except cpace.CPaceError as e:
+        raise RelayError('Pairing refused: %s' % e) from None
+    return isk[:32], ya.hex()
+
+
 def derive_key(pairing_code, relay_nonce, pc_nonce):
     if not (isinstance(pairing_code, str) and pairing_code.isdigit() and len(pairing_code) == 6):
         raise RelayError('Pairing code must be the 6 digits shown on the relay')
@@ -53,7 +90,8 @@ def sign(key, message):
     return hmac.new(key, body, hashlib.sha256).hexdigest()
 
 
-def command(key, relay_id, op, params=None, now=None):
+def command(key, relay_id, op, params=None, now=None, extra=None):
+    """Signed command. extra: additional signed envelope fields (only 'pake_share', on the first pairing command)."""
     if op not in OPERATIONS:
         raise RelayError('Unknown relay operation')
     params = dict(params or {})
@@ -89,6 +127,10 @@ def command(key, relay_id, op, params=None, now=None):
     now = int(now if now is not None else time.time())
     msg = {'protocol': PROTOCOL, 'relay_id': relay_id, 'op': op, 'params': params, 'nonce': secrets.token_hex(12),
            'issued_at': now, 'expires_at': now + COMMAND_TTL}
+    for k, v in (extra or {}).items():
+        if k != 'pake_share' or not isinstance(v, str) or not HEX64.match(v):
+            raise RelayError('Unknown envelope field')
+        msg[k] = v
     return {**msg, 'mac': sign(key, msg)}
 
 
@@ -502,7 +544,7 @@ def pair(send, code_reader):
     caller can tell a dead link from a refusing device. Pairing holds no manager state itself; the caller
     enrolls the returned (relay_id, key, declared) triple, and enroll is atomic (see RelayManager.enroll)."""
     pc_nonce = secrets.token_hex(16)
-    hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
+    hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce, 'pake': [PAKE]})
     if not isinstance(hello, dict):
         raise RelayError('Not an OpenBridge relay (pairing hello is not an object)')
     if hello.get('protocol') != PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
@@ -510,7 +552,15 @@ def pair(send, code_reader):
     rid = hello.get('relay_id')
     if not isinstance(rid, str) or not RELAY_ID.match(rid):
         raise RelayError('Relay omitted a valid relay id')
-    key = derive_key(code_reader(), hello['relay_nonce'], pc_nonce)
-    reply = send(None, command(key, rid, 'discover_capabilities'))
+    share = pake_offered(hello)
+    if share is None and require_pake():
+        raise RelayError('This Companion is too old for secure pairing; update it, then pair again')
+    if share is not None:
+        key, mine = pake_key(code_reader(), rid, hello['relay_nonce'], pc_nonce, share)
+        first = command(key, rid, 'discover_capabilities', extra={'pake_share': mine})
+    else:
+        key = derive_key(code_reader(), hello['relay_nonce'], pc_nonce)
+        first = command(key, rid, 'discover_capabilities')
+    reply = send(None, first)
     declared = verify(key, reply, None).get('params', {})
     return rid, key, declared
