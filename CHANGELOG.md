@@ -30,6 +30,19 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 - ­ƒñû **Vacuum paths unified in docs:** native `vacuum.*` (+ ENGO glasses grant) vs `home.vacuum_start/pause/dock`
   through Home Assistant ÔÇö "vacuum" picks native, "robot ÔÇª" picks HA. New `home.vacuum_pause` completes the HA trio
   (registry, `ha say`, voice families, battery).
+- 🔌 **FRITZ!Box adapter from the kit:** local TR-064 SOAP (digest auth), uptime, WAN, hosts, Wi-Fi clients,
+  model and firmware; read-only by policy. Emulator-validated with loopback round-trip tests (8 tests).
+  [Guide](docs/partners/fritzbox_router/README.md)
+- 🔐 **BridgeWindows v5 sealed-transport core:** pure-Python XChaCha20-Poly1305 + HKDF + PSK-confirmed X25519
+  handshake and record layer (`src/fabric/sealed.py`, 19 tests), verified byte-for-byte against libsodium,
+  `cryptography` and PyCryptodome; C backend auto-used when installed (same wire bytes). C agent, negotiation
+  and live proofs remain; v4 stays the shipping transport.
+- 🧱 **Matter phase 0:** TLV codec with hand-derived vectors, fuzz and an official-vector loader
+  (`src/fabric/matter_tlv.py`), plus the phased controller plan (PASE/CASE → commissioning → clusters).
+  [Plan](docs/MATTER_PLAN.md)
+- 🗺️ **Companion platforms surveyed:** what a port needs (protocol checklist) and verdicts for 10 OS families —
+  Linux tray first, one web kit for Tizen + webOS TVs, Swift core for iOS + macOS, AAOS variant, Playdate
+  prototype; HarmonyOS phones blocked, KaiOS thin-client only. [Plan](docs/COMPANION_PLATFORMS.md)
 
 
 

@@ -20,9 +20,10 @@ Status legend: 🟢 shipped · 🟡 in progress · 🔵 next · ⚪ later / conc
 | | Device family | Planned integrations | Status |
 |---|---|---|---|
 | 🏠 | Smart home standards | Native Matter controller (ESPHome lights: adapter written, emulator-validated, hardware pending; Matter, Thread and Zigbee devices already work through the Home Assistant bridge) | 🔵 |
-| 🌐 | Networking | FRITZ!Box, more ISP boxes (OpenWrt: read-only adapter written, emulator-validated, hardware pending) | 🔵 |
-| 📺 | Screens | More Android TV / Google TV models, set-top boxes, projectors, soundbars | 🔵 |
+| 🌐 | Networking | More ISP boxes (OpenWrt and FRITZ!Box: read-only adapters written, emulator-validated, hardware pending) | 🔵 |
+| 📺 | Screens | Tizen + webOS TV companions (one web kit), more Android TV / Google TV models, set-top boxes, projectors, soundbars. [Platform plan](docs/COMPANION_PLATFORMS.md) | 🔵 |
 | ⌚ | Wearables | More smart glasses and HUDs, rings, fitness sensors, more Wear OS watches | 🔵 |
+| 📱 | Companion OSes | Linux tray client first, then the Swift core (iOS + macOS), AAOS variant, Playdate prototype. [Platform plan](docs/COMPANION_PLATFORMS.md) | 🔵 |
 | 🤖 | Robots | More robot vacuum and mop brands, lawn mowers, pool robots | 🔵 |
 
 Already built and tested, waiting for more real hardware: capability transplant, control migration, workflow

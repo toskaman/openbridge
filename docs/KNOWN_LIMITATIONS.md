@@ -2,7 +2,7 @@
 
 - Physical phone evidence covers Xiaomi Android 14 and Blackview BV9300 Pro; action support differs by vendor. Xiaomi input/settings writes remain denied in the recorded sweep, while the Blackview action sweep passed. See [device results](DEVICE_CAPABILITIES.md).
 - BLE is verified through the phone and TV relays only; this PC has no Bluetooth adapter. Android TV evidence comes from one TV (Android 11).
-- FRITZ!Box and a native Matter controller are not implemented. ESPHome lights and OpenWrt routers have written adapters (emulator-validated with loopback round-trip tests, hardware runs pending). Home Assistant is (v0.4.0): Matter, Thread and Zigbee devices paired in Home Assistant are reachable through it, verified with Home Assistant demo devices only ([guide](HOME_ASSISTANT.md)).
+- A native Matter controller is not implemented. ESPHome lights, OpenWrt routers and FRITZ!Box routers have written adapters (emulator-validated with loopback round-trip tests, hardware runs pending). Home Assistant is (v0.4.0): Matter, Thread and Zigbee devices paired in Home Assistant are reachable through it, verified with Home Assistant demo devices only ([guide](HOME_ASSISTANT.md)).
 - Router/box configuration is read-only by policy.
 - A physical USB cable pull was verified during revert on the owned Xiaomi phone, followed by quarantine and exact recovery after reconnect. This does not prove cable loss during every write phase or on other devices; see the [evidence ledger](../EVIDENCE_LEDGER.md).
 - Identity merging is conservative: the same device may appear twice with a "possible duplicate" hint rather than be merged.
@@ -19,7 +19,7 @@ The current v4 adapter uses mutual HMAC challenge-response and session-MAC envel
 - Voice STT now has a **VRAM admission** check: with less than 5 GB free on the GPU the worker loads the model on the CPU, and a CUDA out-of-memory during the GPU load also falls back to the CPU (`tests/runtime/test_stt_vram_admission.py`). Residual: no idle TTL.
 - The T3 generated-panel gap (31 Oct, no refusal channel) is **fixed** since Campaign Two S4.7 (`8894ab30`): a model reply is a proposal, a clarification or a refusal, and a refusal carrying a patch is rejected whole (`tests/forge/test_model_refusal.py`).
 - Home Assistant: exact Undo now restores brightness and colour for lights and playing / paused for media players; slow devices get longer read-back windows ([evidence](evidence/home-assistant-undo-readback-23nov.md): Undo exact 100 %, read-back 95.9 % on demo devices). Physical devices through Home Assistant remain untested.
-- BridgeWindows v5 sealed transport: still a design; v4 stays authenticated-but-plaintext (trusted home LAN only).
+- BridgeWindows v5 sealed transport: the Python core is implemented (`src/fabric/sealed.py`, oracle-verified); the C agent side, negotiation and live-link proofs are still missing, so v4 stays authenticated-but-plaintext (trusted home LAN only).
 - Dedicated command model: training in progress; general-purpose models are used meanwhile (see the release notes).
 
 ## Corrected 1–2 Nov (supersedes stale rows below, history preserved)

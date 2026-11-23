@@ -93,8 +93,10 @@ def scan_file(path):
     for i, tok in enumerate(sig):
         if tok.type != tokenize.NAME or tok.string not in TARGETS:
             continue
+        if i and sig[i - 1].string in ('def', 'class'):
+            continue  # a definition named open (e.g. NaCl-style Session.open), not a call
         if i + 1 >= len(sig) or sig[i + 1].string != '(':
-            continue  # not a call (def, attribute, import)
+            continue  # not a call (attribute, import)
         callee = _callee(sig, i)
         call = _call_tokens(sig, i + 1)
         has_encoding = any(t.type == tokenize.NAME and t.string == 'encoding'
@@ -155,6 +157,13 @@ class Utf8ReadRegression(unittest.TestCase):
                 violations.append('%s:%d: %s (%s)'
                                   % (path.relative_to(ROOT), line, callee, reason))
         self.assertEqual(violations, [])
+
+    def test_def_named_open_is_not_a_call(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 's.py'
+            p.write_text('class S:\n    def open(self, frame):\n        return frame\n', encoding='utf-8')
+            self.assertEqual(scan_file(p), [])
 
 
 if __name__ == '__main__':
