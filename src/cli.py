@@ -430,6 +430,20 @@ def cmd_doctor(args):
 
 # ---------------- models ----------------
 
+def official_model_status():
+    """OpenBridge's own command model: installed, and the pinned version (digest)?"""
+    from src.ai import own_model
+    from src.runtime.nl_router import OllamaIntentTransport
+    up, models = tags_probe(own_model.ENDPOINT)
+    present = own_model.MODEL_ID in models
+    pinned = present and OllamaIntentTransport(own_model.MODEL_ID, own_model.ENDPOINT, digest=own_model.MODEL_DIGEST).ready()
+    return {'model': own_model.MODEL_ID, 'version': own_model.VERSION, 'base': own_model.BASE,
+            'languages': list(own_model.LANGUAGES), 'endpoint': own_model.ENDPOINT, 'reachable': up,
+            'installed': present, 'pinned_digest_match': bool(pinned),
+            'role': 'understands requests (ask, the app, Companion voice, ha say); Llama 3.2 3B takes over when absent',
+            'install': None if present else 'see docs/AI_TRAINING.md (build the adapter, then `ollama create openbridge-intent`)'}
+
+
 def cmd_models_list(args):
     from src.ai import registry
     avail = local_availability()
@@ -437,7 +451,8 @@ def cmd_models_list(args):
         manifest = [{'model_id': m, 'endpoint': e} for m, e in sorted(registry.load())]
     except registry.RegistryInvalid:
         manifest = []
-    return {'pinned': sorted(registry.META_MODELS), 'manifest': manifest,
+    return {'official_command_model': official_model_status(),
+            'pinned': sorted(registry.BUILT_IN_MODELS), 'manifest': manifest,
             'paid_models_built_in': False, 'connected_ai': connected_ai(),
             'availability': {'local_fast': avail['local_fast'],
                              'local_quality': avail['local_quality'],
@@ -447,7 +462,7 @@ def cmd_models_list(args):
 def cmd_models_status(args):
     from src.ai.router import TIERS
     avail = local_availability()
-    return {'tiers': list(TIERS),
+    return {'tiers': list(TIERS), 'official_command_model': official_model_status(),
             'availability': {'local_fast': avail['local_fast'],
                              'local_quality': avail['local_quality'],
                              'custom': connected_ai() is not None},
@@ -1358,11 +1373,12 @@ def cmd_ask(args):
         except cmdmod.CommandError as e:
             raise CliError('args', 'PARSE_FAILED', str(e))
         intent = parsed.get('intent', parsed) if isinstance(parsed, dict) else parsed
+        understood_by = ((intent.get('provenance') or {}).get('model_id')) if isinstance(intent, dict) else None
         if not isinstance(intent, dict) or intent.get('status') != 'resolved':
             status = intent.get('status', 'unknown') if isinstance(intent, dict) else 'unknown'
             ambiguities = intent.get('ambiguities', []) if isinstance(intent, dict) else []
             return {'approval_required': False, 'resolved': False, 'status': status,
-                    'ambiguities': ambiguities,
+                    'ambiguities': ambiguities, 'understood_by': understood_by,
                     'need': 'a local model (LOCAL-FAST/QUALITY) or your connected AI (`openbridge ai add`) to resolve'}
         try:
             preview = cmdmod.approve(server, intent)
@@ -1379,7 +1395,7 @@ def cmd_ask(args):
             return rid
 
         pending_mutate(_add)
-        return {'approval_required': True, 'request_id': rid,
+        return {'approval_required': True, 'request_id': rid, 'understood_by': understood_by,
                 'consent': preview_hash(preview), 'preview': preview,
                 'next': 'approvals approve %s --consent %s' % (rid, preview_hash(preview))}
     with Core() as server:
@@ -1388,7 +1404,7 @@ def cmd_ask(args):
             result = cmdmod.execute(server, intent, True, preview)
         except cmdmod.CommandError as e:
             raise CliError('permission', 'EXECUTE_BLOCKED', str(e))
-    return {'approval_required': False, 'preview': preview, 'result': result}
+    return {'approval_required': False, 'preview': preview, 'result': result, 'understood_by': understood_by}
 
 
 # ---------------- capabilities ----------------
@@ -2762,7 +2778,8 @@ def build_parser():
     ha_say = leaf(ha_subs, 'say', cmd_ha_say, 'ha say')
     ha_say.add_argument('text', help='a request in English or French, e.g. "dim the kitchen lights to 30%%"')
     ha_say.add_argument('--lang', default='auto', choices=['auto', 'en', 'fr'])
-    ha_say.add_argument('--intent-model', dest='intent_model', default='openbridge-intent', help='Ollama model that understands OpenBridge commands')
+    ha_say.add_argument('--intent-model', dest='intent_model', default='openbridge-intent:latest',
+                        help="Ollama model that understands OpenBridge commands (default: OpenBridge's own model)")
     ha_say.add_argument('--endpoint', default='http://127.0.0.1:11434')
     ha_soak = leaf(ha_subs, 'soak', cmd_ha_soak, 'ha soak')
     ha_soak.add_argument('--cycles', type=int, default=3)
