@@ -92,7 +92,7 @@ def _unit(name, prop):
     unit = prop.get('x-unit')
     if isinstance(unit, str):
         return unit[:8]
-    return '%' if re.search(r'percent|_pct$', name) else ''
+    return '%' if 'percent' in name or name.endswith('_pct') else ''
 
 
 def _props(doc, schema):

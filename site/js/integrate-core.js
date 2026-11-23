@@ -69,7 +69,7 @@
 
   function unit(name, prop) {
     if (typeof prop['x-unit'] === 'string') return prop['x-unit'].slice(0, 8);
-    return /percent|_pct$/.test(name) ? '%' : '';
+    return /percent/.test(name) || /_pct$/.test(name) ? '%' : '';
   }
 
   function props(doc, schema) {
