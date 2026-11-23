@@ -119,7 +119,9 @@
       const top = el('span', undefined, 'tier-top');
       top.append(el('strong', o.name), el('span', o.cost, 'tier-cost ' + o.cls));
       const model = o.q === 'auto' ? o.sub : o.q === 'high' ? (info.configured ? `${info.provider} · ${String(info.model || '').split(':')[0]}${info.execution === 'local' ? '' : ' · remote'}` : 'Connect in Settings')
-        : `${(info.model || o.sub).split(':')[0]}${ready === false ? ' · not ready' : ''}`;
+        : o.q === 'low' && info.official && info.official_ready === false && info.fallback
+          ? `${String(info.fallback.model).split(':')[0]} (OpenBridge model not installed)${ready === false ? ' · not ready' : ''}`
+          : `${(info.model || o.sub).split(':')[0]}${ready === false ? ' · not ready' : ''}`;
       b.append(top, el('span', model, 'tier-sub'));
       b.title = o.q === 'auto' ? 'Uses the free local models first; your connected AI only when allowed.'
         : o.q === 'high' ? (info.configured ? `Connected AI ${info.provider} · ${info.model} · ${info.endpoint}` : 'No AI connected: Settings → Connected AI')

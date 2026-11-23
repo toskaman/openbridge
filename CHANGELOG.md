@@ -4,7 +4,13 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
-Nothing yet.
+- 🧠 **OpenBridge's own model is now the official one, everywhere:** `openbridge ask`, the app's command box and
+  the Companions' voice understand requests with `openbridge-intent` (v3) first, and fall back to the general
+  Llama 3.2 3B only when it is not installed. Each answer says which model understood it; `openbridge models list`
+  checks the install against the pinned digest. [Details](docs/AI_TRAINING.md#the-official-model-everywhere-a-request-is-understood)
+- 🗑️ **« Sors les poubelles » no longer empties the robot vacuum:** a robot-vacuum or TV command whose request never
+  names the device is now asked back instead of run, whatever the model. New training data for chores (French, US
+  and UK English) for the next model version. [Details](docs/AI_TRAINING.md#honest-limits)
 
 ## v0.5.0: 23 November 2026
 

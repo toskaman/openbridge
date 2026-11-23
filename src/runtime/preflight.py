@@ -18,7 +18,9 @@ PINS = {  # package: (version, licence, purpose, required)
 }
 from src.ai.local_meta import MODEL_DIGEST as _LLAMA
 from src.ai.glimmer import GLIMMER_DIGEST as _GLIMMER
+from src.ai import own_model as _OWN
 MODELS = {  # endpoint port: (model, full pinned digest, purpose)
+    11434: (_OWN.MODEL_ID, _OWN.MODEL_DIGEST, "OpenBridge's own command model (official; Llama 3.2 3B + LoRA)"),
     11437: ('llama3.2:3b-instruct-q4_K_M', _LLAMA, 'local Meta planner/reviewer (CPU)'),
     11438: ('muse-glimmer:30b-q4_K_M', _GLIMMER, 'local Meta open-weight model (GPU/CPU)'),
 }

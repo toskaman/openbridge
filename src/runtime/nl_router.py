@@ -1,5 +1,9 @@
 """Command Center P0: NL quality router (Low local -> Medium local -> High = your connected AI).
 
+The Low tier understands requests with OpenBridge's own command model (src/ai/own_model.py) and falls back to the
+pinned Llama 3.2 3B when it is not installed (PreferredTransport); TIERS keeps the general models, which also serve
+planning (`propose`, `plan-text`, `compose-text`).
+
 Low/Medium endpoints MUST stay members of config/runtime_models.json (tested). High is the
 model or API the owner connected by hand (src/ai/custom_provider.py); no paid model is built in.
 The router never invents: malformed model output, unknown skills and low confidence become
@@ -134,6 +138,43 @@ class OllamaIntentTransport:
             raise TransportError(f'local parse failed: {type(e).__name__}') from None
 
 
+class PreferredTransport:
+    """OpenBridge's own command model first, the general model when it is absent or fails.
+
+    `answered_by` names the model that produced the last reply, for the intent's provenance and the receipt.
+    The fallback is tried only after the preferred model failed or is not installed, never in addition to a
+    usable reply, so one request costs at most one call per model."""
+
+    def __init__(self, preferred, fallback):
+        self.preferred, self.fallback = preferred, fallback
+        self.model_id = preferred.model_id
+        self.endpoint = preferred.endpoint
+        self.answered_by = None
+
+    @property
+    def last_ok(self):
+        for t in (self.preferred, self.fallback):
+            if getattr(t, 'last_ok', None) is not None:
+                return t.last_ok
+        return None
+
+    def ready(self):
+        return bool(self.preferred.ready() or self.fallback.ready())
+
+    def __call__(self, prompt):
+        self.answered_by = None
+        if self.preferred.ready():
+            try:
+                out = self.preferred(prompt)
+                self.answered_by = self.preferred.model_id
+                return out
+            except TransportError:
+                pass
+        out = self.fallback(prompt)
+        self.answered_by = self.fallback.model_id
+        return out
+
+
 def build_prompt(text, lang):
     lines = ['You map a user request to ONE registered OpenBridge skill.',
              'Reply with ONLY a JSON object with exactly these keys: outcome (string),',
@@ -217,6 +258,58 @@ def _fallback_candidate(text, reply, out):
         return cand
     except (S.SkillError, ValueError, TypeError, AttributeError):
         return None
+
+
+# Skills that act on one fixed kind of device must be asked about that device. A request that never names it
+# ("sors les poubelles" -> empty the vacuum's dust bin) is the model hesitating: OpenBridge asks before going on.
+# Typos are tolerated (similarity >= 0.8 on words of 4+ letters); measured on the training generator, 99.8 % of the
+# vacuum requests and 99.3 % of the TV requests still go straight through.
+_DEVICE_WORDS = {
+    'vacuum': ('aspirateur', 'aspi', 'robot', 'robots', 'vacuum', 'hoover', 'roomba', 'menage', 'nettoyage', 'nettoie',
+               'nettoyer', 'clean', 'cleaning', 'poussiere', 'dust', 'dustbin', 'bac', 'base', 'dock', 'charge', 'recharge',
+               'recharger', 'charger', 'balai', 'sol', 'floor', 'floors', 'autovidage', 'selfempty'),
+    'tv': ('tv', 'tele', 'teles', 'television', 'televiseur', 'telly', 'ecran', 'screen', 'volume', 'son', 'sound',
+           'youtube', 'netflix', 'prime', 'disney', 'spotify', 'twitch', 'plex', 'vlc', 'kodi', 'canal', 'mycanal', 'app',
+           'appli', 'application', 'louder', 'plus', 'moins', 'fort'),
+}
+_DEVICE_NAMES = {'vacuum': ('le robot aspirateur', 'the robot vacuum'), 'tv': ('la télé', 'the TV')}
+
+
+def _skill_family(sid):
+    if sid.startswith('vacuum.'):
+        return 'vacuum'
+    if sid.startswith(('tv_', 'app_')):
+        return 'tv'
+    return None
+
+
+def mentions_device(family, text):
+    import difflib
+    from src.ai.voice_normalize import fold
+    toks = fold(text).split()
+    words = _DEVICE_WORDS[family]
+    for t in toks + [a + b for a, b in zip(toks, toks[1:])]:
+        for w in words:
+            if t == w or (len(w) >= 4 and len(t) >= 4 and difflib.SequenceMatcher(None, t, w).ratio() >= 0.8):
+                return True
+    return False
+
+
+def _hesitation_guard(resolved):
+    """A resolved fixed-device skill whose request never names the device becomes a question, never an action.
+
+    Fresh requests only: a follow-up ("pause it") takes its device from the conversation (nl_followup)."""
+    if resolved.get('status') != 'resolved':
+        return resolved
+    fam = _skill_family(resolved.get('skill_id') or '')
+    if fam is None or mentions_device(fam, resolved.get('raw_text') or ''):
+        return resolved
+    fr = resolved.get('lang') == 'fr'
+    name = _DEVICE_NAMES[fam][0 if fr else 1]
+    q = ('Vous parlez de %s ? Votre demande ne le mentionne pas : dites-le pour que je continue.' % name) if fr \
+        else ('Do you mean %s? Your request does not mention it: say so and I will go on.' % name)
+    return dict(resolved, status='needs_clarification', clarifying_question=q,
+                ambiguities=['device not mentioned: %s (model proposed %s)' % (fam, resolved['skill_id'])])
 
 
 def _interpret(doc, reply, parser, model_id):
@@ -334,7 +427,8 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
             return dict(doc, status='escalation_required', ambiguities=[str(e)])
         if reply is skip:
             continue
-        out = _interpret(doc, reply, parser, TIERS[tier][0] if tier in TIERS else getattr(transport, 'model_id', None))
+        out = _hesitation_guard(_interpret(doc, reply, parser, getattr(transport, 'answered_by', None)
+                                           or (TIERS[tier][0] if tier in TIERS else getattr(transport, 'model_id', None))))
         if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities']:
             cand = _fallback_candidate(text, reply, out)
             if cand is not None:
@@ -358,7 +452,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
             except TransportError:
                 pass
             else:
-                out = _interpret(doc, reply, 'cloud', getattr(cloud_transport, 'model_id', None))
+                out = _hesitation_guard(_interpret(doc, reply, 'cloud', getattr(cloud_transport, 'model_id', None)))
                 if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities']:
                     cand = _fallback_candidate(text, reply, out)
                     if cand is not None:
