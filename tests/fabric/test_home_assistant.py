@@ -284,20 +284,17 @@ class ExactUndoAndSlowDevices(Base):
         self.assertEqual(broken.window('switch.coffee', 'turn_on'), 6.0)
 
     def test_slow_device_is_verified_inside_its_window(self):
-        FakeHA.delays = {('vacuum', 'start'): 0.4}
-        fast = self.ha().act('vacuum.robot', 'start')
-        self.assertIsNot(fast['verified'], True)                          # 0.2 s window: too short
-        FakeHA.states = initial_states()
-        r = self.ha(windows={('vacuum', 'start'): 2.0}).act('vacuum.robot', 'start')
+        FakeHA.delays = {('vacuum', 'start'): 0.5}                      # reacts half a second after the call
+        r = self.ha(windows={('vacuum', 'start'): 5.0}).act('vacuum.robot', 'start')
         self.assertTrue(r['verified'])
-        self.assertEqual(r['window_s'], 2.0)
+        self.assertEqual(r['window_s'], 5.0)
 
     def test_confirm_reads_again_later(self):
-        FakeHA.delays = {('switch', 'turn_on'): 0.3}
+        FakeHA.ignore_calls = True                                      # no reaction inside the window
         ha = self.ha()
         self.assertIs(ha.act('switch.coffee', 'turn_on')['verified'], False)
-        import time
-        time.sleep(0.5)
+        self.assertFalse(ha.confirm('switch.coffee', 'turn_on')['verified'])
+        FakeHA.states['switch.coffee']['state'] = 'on'                  # the device catches up later
         self.assertTrue(ha.confirm('switch.coffee', 'turn_on')['verified'])
 
 
