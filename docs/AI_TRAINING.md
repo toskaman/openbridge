@@ -4,6 +4,23 @@ OpenBridge understands requests with a small local model trained for it: **Llama
 running on the owner's own GPU. It never acts by itself: every reply goes through the router gate
 (`src/runtime/nl_router.py`), a registered skill, the typed primitive, consent, and a read-back.
 
+## The official model, everywhere a request is understood
+
+Since 23 November 2026, `openbridge-intent:latest` is declared in [config/runtime_models.json](../config/runtime_models.json)
+as the **official command model** (digest-pinned like the other built-in models, `src/ai/own_model.py`). It is tried
+first by every path that turns words into a skill:
+
+| Path | Before | Now |
+|---|---|---|
+| `openbridge ask`, the app's command box, `/api/v2/command` | Llama 3.2 3B (general) | **openbridge-intent**, then Llama 3.2 3B if absent |
+| Voice and text from the Companions (phone, TV, watch) | Llama 3.2 3B | **openbridge-intent**, then Llama 3.2 3B |
+| `openbridge ha say` | openbridge-intent | openbridge-intent |
+| Planning, advice, generated UI (`propose`, `plan-text`, `compose-text`) | Llama 3.2 3B / Glimmer | unchanged: the command model only maps requests to skills |
+
+Every answer says which model understood it (`understood_by` in `ask`, `provenance.model_id` in the intent). When the
+command model is not installed, or answers something unusable, the general model takes over once; nothing is guessed.
+`openbridge models list` shows whether it is installed and matches the pinned digest.
+
 ## What it understands (v3, 23 November 2026)
 
 - **Three dialects:** French, US English and UK English ("pop the kettle on", "the big light", "lounge", "telly").
@@ -56,14 +73,19 @@ v1 (12 skills only) on its own test set: 96.6 %. Base Llama 3.2 3B before traini
 
 - **French held-out phrasing is the weak spot:** 81.8 % vs 98.7 % in English on the held-out templates. Typical
   misses: rare slang ("boucle la porte"), "son de l'Echo à 32" read as play instead of volume, "sors les poubelles"
-  read as emptying the vacuum's dustbin. Those wrong actions are the next thing to fix (more data, and a
-  confirmation step for low-margin replies).
+  read as emptying the vacuum's dustbin. On 17 hand-written chore requests ("sors les poubelles stp", "take the
+  trash out please"), v3 is right only **47.1 %** of the time. Two fixes:
+  - **A confirmation when the model hesitates** (in place now, every model): a robot-vacuum or TV skill whose request
+    never names the device ("sors les poubelles" → empty the robot's bin) is asked back ("Vous parlez du robot
+    aspirateur ?") instead of run. Typos are tolerated; on the training generator, fewer than 1 % of real vacuum and
+    TV requests are asked back. Follow-ups ("pause it") keep their device from the conversation.
+  - **v4 data** (`make_dataset_v4.py`): about 70 chore phrasings in French, US and UK English (bins, dishes, laundry,
+    pets, plants...), all "no registered skill does this", next to every vacuum command that names the robot;
+    hand-written chore requests held out (`chores_novel`). Retraining from the v3 adapter: see Results when done.
 - **Ollama import:** Ollama 0.40 on Windows cannot import merged safetensors without the MLX runtime, so the model
   goes through a GGUF conversion with llama.cpp (`convert_hf_to_gguf.py --outtype q8_0`), then
   `ollama create openbridge-intent`. `dev/ai_training/serve_hf.py` serves the adapter directly when that is not
   possible (same scores, 6.5 s).
-- **Not yet the default model of the app:** `openbridge ha say` uses it; the router's pinned low tier
-  (`config/runtime_models.json`) still points to the stock Llama 3.2 3B until the digest is pinned.
 - **Demo devices only:** the real test used Home Assistant's demo integration, not physical bulbs or plugs yet.
 - **`home.undo` across two separate `ha say` calls** has nothing to undo yet (the Undo snapshot lives in memory).
 

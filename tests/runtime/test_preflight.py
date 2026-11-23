@@ -17,9 +17,9 @@ class Preflight(unittest.TestCase):
             raise OSError()
         self.assertTrue(all(x['status'] == 'OPTIONAL_ABSENT' and not x['required'] for x in p.models(down)))
 
-    def test_only_meta_models_pinned(self):
-        from src.ai.registry import META_MODELS
-        self.assertTrue({m for m, _, _ in p.MODELS.values()} <= META_MODELS)
+    def test_only_built_in_models_pinned(self):
+        from src.ai.registry import BUILT_IN_MODELS
+        self.assertTrue({m for m, _, _ in p.MODELS.values()} <= BUILT_IN_MODELS)
 
     def test_ready_depends_on_required_only(self):
         res = p.run_all(lambda url: (_ for _ in ()).throw(OSError()))

@@ -8,7 +8,6 @@
 </p>
 
 <p align="center">
-  <a href="https://youtu.be/TZaxCcRmrLQ"><img src="https://img.shields.io/badge/▶_Watch_the_demo-3_min-7c3aed?style=for-the-badge" alt="Watch the demo"></a>
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/🤝_Become_a_hardware_partner-What_you_gain-2dd4bf?style=for-the-badge" alt="Become a hardware partner"></a>
   <a href="#-try-it-in-2-minutes"><img src="https://img.shields.io/badge/⚡_Try_it-2_minutes-1f2a52?style=for-the-badge" alt="Try it"></a>
   <a href="https://toskaman.github.io/openbridge/try.html"><img src="https://img.shields.io/badge/🎮_Play_with_it-in_your_browser-7c3aed?style=for-the-badge" alt="Try it in your browser"></a>
@@ -18,10 +17,6 @@
 <p align="center">
   <a href="https://github.com/toskaman/openbridge/actions/workflows/verify.yml"><img src="https://github.com/toskaman/openbridge/actions/workflows/verify.yml/badge.svg" alt="Verify"></a>
   <a href="https://github.com/toskaman/openbridge/actions/workflows/codeql.yml"><img src="https://github.com/toskaman/openbridge/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/toskaman/openbridge"><img src="https://api.scorecard.dev/projects/github.com/toskaman/openbridge/badge" alt="OpenSSF Scorecard"></a>
-  <img src="https://img.shields.io/badge/platforms-Windows%20·%20Linux%20·%20macOS%20·%20Android%20·%20Android%20TV%20·%20Wear%20OS-0d1330" alt="Platforms">
-  <img src="https://img.shields.io/badge/AI-local--first-2dd4bf" alt="Local-first AI">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-a78bfa" alt="License"></a>
 </p>
 
 <h1 align="center">Give your hardware powers it never shipped with.</h1>
@@ -61,7 +56,9 @@ complete test suites and benchmarks on your real hardware, and an emulator of yo
 
 ## 🎬 See it in action
 
-> Real devices. Real living room. No mock-ups. Every clip below was filmed with a phone pointed at the actual hardware.
+> **An older demonstration** (filmed late October and early November 2026, before the Home Assistant bridge, OpenBridge's own AI model and
+> everything added since). Real devices, real living room, no mock-ups: every clip below was filmed with a phone
+> pointed at the actual hardware.
 
 <table>
   <tr>
@@ -101,7 +98,8 @@ complete test suites and benchmarks on your real hardware, and an emulator of yo
 </table>
 
 <p align="center">
-  <a href="https://youtu.be/TZaxCcRmrLQ"><img src="docs/assets/readme/demo-poster.jpg" width="85%" alt="Watch the full OpenBridge demo"></a>
+  <a href="https://youtu.be/TZaxCcRmrLQ"><img src="docs/assets/readme/demo-poster.jpg" width="85%" alt="The full OpenBridge demo (older demonstration, November 2026)"></a>
+  <br><sub><i>Older demonstration (November 2026).</i></sub>
 </p>
 
 ---
@@ -215,6 +213,8 @@ These capabilities are **implemented and covered by automated tests**. What they
 **New: [devices that learn and talk to each other](docs/DEVICE_LEARNING.md).** OpenBridge learns what really works on each device, suggests cross-device features built only from proven actions (Cinema mode, Leaving home...), and lets one device trigger another once you approve it. Soak-tested with 1 480 real actions: 92.8 % verified by read-back ([evidence](docs/evidence/device-learning-soak-22nov.md)).
 
 **New: talk to your home.** `openbridge ha say "dim the kitchen lights to 30%"`, in French, US or UK English: OpenBridge's own local model understands, the gate checks, Home Assistant acts and the result is read back. 47 / 47 spoken requests understood on a real Home Assistant ([how it was trained, and its limits](docs/AI_TRAINING.md)).
+
+**New: your messages, TV and vacuum on ENGO glasses.** Discord, Telegram and SMS slide into view; a wave moves through a TV remote, the vacuum and voice commands spoken into the phone. Nothing acts before a one-time grant on the PC ([ENGO glasses](docs/GLASSES.md)).
 
 **Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · native Matter · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 

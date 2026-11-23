@@ -44,7 +44,8 @@ def resolved(skill_id, outcome, targets):
 
 
 def prior_doc(skill_id, targets, lang='en'):
-    return N.parse('prior turn', lang, 'low',
+    # The prior request names its device, as a real one does (the router asks back otherwise).
+    return N.parse('prior turn about the vacuum and the tv', lang, 'low',
                    FakeTransport(resolved(skill_id, 'prior turn', targets)), None)
 
 
@@ -224,11 +225,20 @@ class ParseWithContext(unittest.TestCase):
 
     def test_none_prior_delegates(self):
         reply = resolved('vacuum.pause', 'pause cleaning', VAC_PRIOR)
-        doc = F.parse_with_context('pause it', 'en', 'low',
+        doc = F.parse_with_context('pause the vacuum', 'en', 'low',
                                    FakeTransport(dict(reply)), None,
                                    devices=DEVICES)
         self.assertEqual(doc['status'], 'resolved')
         self.assertEqual(doc['skill_id'], 'vacuum.pause')
+
+    def test_none_prior_and_no_device_named_asks_back(self):
+        # "pause it" with no conversation: the model may guess the vacuum, OpenBridge asks instead.
+        reply = resolved('vacuum.pause', 'pause cleaning', VAC_PRIOR)
+        doc = F.parse_with_context('pause it', 'en', 'low',
+                                   FakeTransport(dict(reply)), None,
+                                   devices=DEVICES)
+        self.assertEqual(doc['status'], 'needs_clarification')
+        self.assertIn('robot vacuum', doc['clarifying_question'])
 
 
 class CorpusEndToEnd(unittest.TestCase):

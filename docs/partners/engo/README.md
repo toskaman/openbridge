@@ -41,6 +41,21 @@
 | **[18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md](18_OPENBRIDGE_NEURAL_SENSORY_EXPANSION.md)** | **OpenBridge neural and sensory expansion** | 38-feature matrix: phone/PC microphone streaming, VAD, sub-120 ms streaming STT, 50 MP multimodal vision proxy, four-quadrant ambient IoT matrix and telemetry priority scheduler. |
 | **[19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md)** | **HUD Studio: pro emulator and official app** | Next-generation 304×256 emulator (Pixels / OLED / Lens views, frame inspector, metrics, sessions, PNG/GIF, JSON control API), ALooK layout bank, and the official ActiveLook app driving the emulator with the F01–F38 overlay. **Validated in the emulator only.** |
 
+### Product specification and delivery (20–25)
+
+| Document | Title | Description |
+| :--- | :--- | :--- |
+| **[20_OPENBRIDGE_MASTER_PRODUCT_SPEC.md](20_OPENBRIDGE_MASTER_PRODUCT_SPEC.md)** | **Master product specification (FR)** | Internal reference: architecture, transport, bilingual UI, every feature family (running, cycling, navigation, sensors, home, safety), data contracts and acceptance criteria. |
+| **[21_FEATURE_TRACEABILITY_MATRIX.md](21_FEATURE_TRACEABILITY_MATRIX.md)** | **Feature traceability matrix** | Generated from [`feature_registry.json`](feature_registry.json): 334 features, each with status, code, tests, evidence category and limits. `python dev/engo_feature_matrix.py --check` keeps it in sync. |
+| **[22_REAL_HARDWARE_VALIDATION_REPORT.md](22_REAL_HARDWARE_VALIDATION_REPORT.md)** | **Real-hardware validation report** | Procedure and empty report for the first ENGO 3 Photochromic session: calibration, GATT, MTU, flow control, gestures, latency, battery. **Not run yet.** |
+| **[23_MANUFACTURER_IMPLEMENTATION_PACKAGE.md](23_MANUFACTURER_IMPLEMENTATION_PACKAGE.md)** | **Manufacturer implementation package (FR / EN)** | The document for ENGO / Microoled: what OpenBridge does, factual status, questions and requests, pre-send checklist. |
+| **[24_API_AND_DATA_CONTRACTS.md](24_API_AND_DATA_CONTRACTS.md)** | **API and data contracts** | Observation and HUD event schemas, priorities, TTLs, BLE sensor characteristics, transport rules, Companion ops, settings keys, languages. |
+| **[25_RELEASE_AND_COMPATIBILITY_MATRIX.md](25_RELEASE_AND_COMPATIBILITY_MATRIX.md)** | **Release and compatibility matrix** | Glasses models, firmware, OpenBridge parts and phones, with the evidence level of each. |
+
+Before sending anything to ENGO, go through the checklist at the end of document 23: factual status, commit and
+versions, emulator and real evidence kept apart, licences, no secrets or personal data, and no firmware support
+claimed without ENGO's confirmation.
+
 > Documents 11–18 are **design concepts** for discussion with ENGO: they describe what the display
 > could do and how OpenBridge would feed it. They are not claims of shipped or hardware-validated features.
 

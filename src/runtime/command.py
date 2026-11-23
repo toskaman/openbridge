@@ -90,12 +90,16 @@ def _devices(server):
 
 
 def _low(server):
+    """OpenBridge's own command model, with the pinned general Llama 3.2 3B as fallback."""
     t = getattr(server, 'command_low', None)
     if t is None:
+        from src.ai import own_model
         from src.ai.local_meta import MODEL_DIGEST
-        from src.runtime.nl_router import OllamaIntentTransport, TIERS
+        from src.runtime.nl_router import OllamaIntentTransport, PreferredTransport, TIERS
         model, endpoint = TIERS['low']
-        t = server.command_low = OllamaIntentTransport(model, endpoint, digest=MODEL_DIGEST)
+        t = server.command_low = PreferredTransport(
+            OllamaIntentTransport(own_model.MODEL_ID, own_model.ENDPOINT, digest=own_model.MODEL_DIGEST),
+            OllamaIntentTransport(model, endpoint, digest=MODEL_DIGEST))
     return t
 
 
@@ -155,10 +159,18 @@ def tiers(server):
             ready = bool(t.ready())
             last = getattr(t, 'last_ok', None)
         except Exception:
-            ready, last = False, None
+            t, ready, last = None, False, None
         out[quality] = {'model': model, 'endpoint': endpoint, 'ready': ready,
                         'last_inference': 'ok' if last is True else ('failed' if last is False else 'unknown'),
                         'estimate_usd': 0.0}
+        pref = getattr(t, 'preferred', None)
+        if pref is not None:      # the Low tier: OpenBridge's own model first, the general model as fallback
+            try:
+                own_ready = bool(pref.ready())
+            except Exception:
+                own_ready = False
+            out[quality].update(model=pref.model_id, endpoint=pref.endpoint, official=True, official_ready=own_ready,
+                                fallback={'model': model, 'endpoint': endpoint})
     entry = _provider()
     out['high'] = {'model': entry['model'] if entry else None,
                    'endpoint': custom_provider.endpoint(entry) if entry else None,

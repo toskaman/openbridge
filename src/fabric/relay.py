@@ -19,7 +19,7 @@ import time
 PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
               'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
-              'get_commands', 'report_command', 'update_status')
+              'get_commands', 'report_command', 'update_status', 'get_notifications')
 MAX_CONTROLS, MAX_REQUESTS = 12, 16
 CONTROL_KINDS = ('button', 'confirm', 'status', 'label')   # layout v2; a missing kind means 'button' (v1 devices)
 MAX_STATUS_TEXT, MAX_LAYOUT_REVISION = 40, 100000

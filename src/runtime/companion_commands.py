@@ -21,6 +21,7 @@ class CompanionCommands:
         self.pending = {}    # request_id -> {relay_id, text, lang, intent}
         self._order = []
         self._lock = threading.Lock()
+        self.listeners = []  # fn(relay_id, text, intent): e.g. the glasses hub showing and running voice commands
 
     def _send(self, rid, op, params=None):
         r = self.server.relays.relays[rid]
@@ -109,6 +110,11 @@ class CompanionCommands:
                     while len(self._order) > MAX_PENDING:
                         self.pending.pop(self._order.pop(0), None)
                 new += 1
+                for fn in list(self.listeners):
+                    try:
+                        fn(rid, text, doc)
+                    except Exception:  # noqa: BLE001 - a listener never breaks the command path
+                        pass
                 try:
                     self._send(rid, 'report_command',
                                {'request_id': c['request_id'], 'status': doc['status'],

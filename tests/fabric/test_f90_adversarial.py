@@ -272,7 +272,7 @@ def f_resolved(skill_id, outcome, targets):
 
 
 def f_prior_doc(skill_id, targets, lang='en'):
-    return N.parse('prior turn', lang, 'low',
+    return N.parse('prior turn about the vacuum and the tv', lang, 'low',  # names its device, as a real request does
                    FakeTransport(f_resolved(skill_id, 'prior turn', targets)),
                    None)
 
