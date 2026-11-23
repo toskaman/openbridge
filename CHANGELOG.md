@@ -4,6 +4,12 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- 🕶️ **ENGO glasses hub:** `openbridge glasses run` puts messages (Discord, Telegram, SMS, Messages), a TV remote
+  (volume, apps, arrows, play/pause, sleep/wake), the robot vacuum and voice commands from the phone's mic on ENGO
+  glasses, in a new line-icon design. One wave: next; two: open; three: back. Nothing acts before a one-time grant
+  on the PC; every action is a typed primitive through the gate. Companion: notification access and
+  `get_notifications`. Verified end to end in HUD Studio; real glasses next. [Guide](docs/GLASSES.md)
+
 - 🧠 **OpenBridge's own model is now the official one, everywhere:** `openbridge ask`, the app's command box and
   the Companions' voice understand requests with `openbridge-intent` (v3) first, and fall back to the general
   Llama 3.2 3B only when it is not installed. Each answer says which model understood it; `openbridge models list`

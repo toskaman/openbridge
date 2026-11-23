@@ -214,6 +214,8 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 **New: talk to your home.** `openbridge ha say "dim the kitchen lights to 30%"`, in French, US or UK English: OpenBridge's own local model understands, the gate checks, Home Assistant acts and the result is read back. 47 / 47 spoken requests understood on a real Home Assistant ([how it was trained, and its limits](docs/AI_TRAINING.md)).
 
+**New: your messages, TV and vacuum on ENGO glasses.** Discord, Telegram and SMS slide into view; a wave moves through a TV remote, the vacuum and voice commands spoken into the phone. Nothing acts before a one-time grant on the PC ([ENGO glasses](docs/GLASSES.md)).
+
 **Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · native Matter · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
 ---

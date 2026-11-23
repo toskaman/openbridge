@@ -78,7 +78,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private LinearLayout systemBody, checklist;
     private TextView systemToggle, statusLine;
     private boolean systemOpen, systemTouched;
-    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background;
+    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background, messages;
     private boolean setupRunning;
     private long backgroundLastTap;
     private ScrollView scroll;
@@ -258,7 +258,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         unpair = button("Remove pairing", PillIcon.UNLINK, ERR, STYLE_DANGER);
         fullctl = button("Full control", PillIcon.FLOWS, WARN, STYLE_TOGGLE);
         background = button("Background relay", PillIcon.BOLT, CYAN, STYLE_TOGGLE);
-        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, background, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
+        messages = button("Messages on my glasses", PillIcon.SPARK, CYAN, STYLE_NORMAL);
+        messages.setOnClickListener(v -> {
+            // Android asks the owner directly; OpenBridge cannot grant this to itself.
+            startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+            log("Allow \"OpenBridge glasses messages\" to show Discord, Telegram and SMS on your glasses");
+        });
+        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, background, messages, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
         statusLine = text("Starting…", 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
 
