@@ -625,7 +625,7 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             url = urls[0]
             send = fabric_relay.failover_transport(urls) if transport_factory is fabric_relay.http_transport else transport_factory(url)
             pc_nonce = secrets.token_hex(16)
-            hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce})
+            hello = send(None, {'op': 'pair_request', 'pc_nonce': pc_nonce, 'pake': [fabric_relay.PAKE]})
             if not isinstance(hello, dict):  # mirrors R.pair: every malformed hello is RelayError, never KeyError/AttributeError
                 raise fabric_relay.RelayError('Not an OpenBridge Companion (pairing hello is not an object)')
             if hello.get('protocol') != fabric_relay.PROTOCOL or not isinstance(hello.get('relay_nonce'), str):
@@ -633,12 +633,19 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
             rid = hello.get('relay_id')
             if not isinstance(rid, str) or not fabric_relay.RELAY_ID.match(rid):
                 raise fabric_relay.RelayError('Relay omitted a valid relay id')
+            pake = fabric_relay.pake_offered(hello)
+            if pake is None and fabric_relay.require_pake():
+                raise fabric_relay.RelayError('This Companion is too old for secure pairing; update it, then pair again')
             with server.relay_pending_lock:
                 now = time.monotonic()
                 for h in [h for h, p in server.relay_pending.items() if now - p['started_at'] > PAIRING_TTL]:
                     del server.relay_pending[h]
                 server.relay_pending[handle] = {'send': send, 'url': url, 'urls': urls, 'hello': hello, 'pc_nonce': pc_nonce, 'handle': handle, 'started_at': now}
-            return {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': rid, 'declared': hello.get('declared', {})}
+            out = {'state': 'CODE_SHOWN_ON_DEVICE', 'relay_id': rid, 'declared': hello.get('declared', {}),
+                   'pairing': 'cpace' if pake else 'legacy-v1'}
+            if not pake:
+                out['warning'] = 'This Companion uses the old pairing; update it so the pairing cannot be attacked offline.'
+            return out
         if path == '/api/relay-pair-confirm':
             handle = body.get('device_id')
             code = body.get('code')
@@ -652,9 +659,15 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                     del server.relay_pending[handle]
                     raise fabric_relay.RelayError('Pairing code expired; start pairing again')
             try:
-                key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
                 rid = pending['hello']['relay_id']
-                reply = pending['send'](None, fabric_relay.command(key, rid, 'discover_capabilities'))
+                share = fabric_relay.pake_offered(pending['hello'])
+                if share is not None:   # CPace: nothing on the wire allows an offline guess of the code
+                    key, mine = fabric_relay.pake_key(code, rid, pending['hello']['relay_nonce'], pending['pc_nonce'], share)
+                    first = fabric_relay.command(key, rid, 'discover_capabilities', extra={'pake_share': mine})
+                else:
+                    key = fabric_relay.derive_key(code, pending['hello']['relay_nonce'], pending['pc_nonce'])
+                    first = fabric_relay.command(key, rid, 'discover_capabilities')
+                reply = pending['send'](None, first)
                 declared = fabric_relay.verify(key, reply, None).get('params', {})
             except fabric_relay.RelayError:     # wrong code or refused proof: count it; transport errors (OSError/
                 with server.relay_pending_lock:  # TimeoutError) propagate uncounted so a flaky link cannot burn a pairing
@@ -688,7 +701,8 @@ def create_server(port=18765, model_broker=None, demo_engine=None, agent_dir=Non
                                         server.relays.relays[rid].get('aead'))
             with server.relay_pending_lock:
                 server.relay_pending.pop(handle, None)
-            return {'state': 'PAIRED', 'relay_id': rid, 'declared': declared, 'eligible_for_ble': rid in server.relays.eligible('ble_scan')}
+            return {'state': 'PAIRED', 'relay_id': rid, 'declared': declared, 'eligible_for_ble': rid in server.relays.eligible('ble_scan'),
+                    'pairing': 'cpace' if fabric_relay.pake_offered(pending['hello']) else 'legacy-v1'}
         if path == '/api/relay-scan':
             rid = body.get('relay_id')
             relay = server.relays.relays.get(rid)

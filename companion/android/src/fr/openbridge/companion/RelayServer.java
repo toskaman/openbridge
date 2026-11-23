@@ -131,6 +131,8 @@ final class RelayServer {
     private NsdManager.RegistrationListener nsdListener;
     private android.net.wifi.WifiManager.MulticastLock multicastLock;
     private String pendingCode, pendingRelayNonce, pendingPcNonce;
+    /** CPace state of the pending pairing (null: the PC asked for legacy PBKDF2 pairing). */
+    private byte[] pendingPakeScalar, pendingPakeShare;
     private long pendingUntil;
     private int failedPairing;
     private long lastPairRequest;
@@ -595,8 +597,20 @@ final class RelayServer {
         if (!pcNonce.matches("[0-9a-f]{16,64}")) throw new SecurityException("bad nonce");
         pendingCode = String.format("%06d", random.nextInt(1_000_000));
         pendingRelayNonce = hex(bytes(16)); pendingPcNonce = pcNonce; pendingUntil = System.currentTimeMillis() + 120_000;
+        JSONObject hello = new JSONObject().put("protocol", PROTOCOL).put("relay_id", relayId()).put("relay_nonce", pendingRelayNonce).put("declared", status());
+        pendingPakeScalar = null; pendingPakeShare = null;
+        JSONArray offered = msg.optJSONArray("pake");
+        boolean cpace = false;
+        for (int i = 0; offered != null && i < offered.length(); i++) cpace |= PAKE.equals(offered.optString(i));
+        if (cpace) {
+            // CPace: our share goes out now; it reveals nothing about the code shown on screen.
+            byte[] g = Cpace.generator(pendingCode.getBytes(StandardCharsets.US_ASCII), relayId().getBytes(StandardCharsets.US_ASCII), pakeSid());
+            pendingPakeScalar = Cpace.randomScalar();
+            pendingPakeShare = Cpace.x25519(pendingPakeScalar, g);
+            hello.put("pake", PAKE).put("pake_share", hex(pendingPakeShare));
+        }
         ui.code(pendingCode);
-        return new JSONObject().put("protocol", PROTOCOL).put("relay_id", relayId()).put("relay_nonce", pendingRelayNonce).put("declared", status());
+        return hello;
     }
 
     private byte[] key() {
@@ -624,14 +638,24 @@ final class RelayServer {
     /** First signed command after pair_request proves the PC knows the code shown on this screen. */
     private synchronized JSONObject confirmPairing(JSONObject msg) throws Exception {
         if (pendingCode == null || System.currentTimeMillis() > pendingUntil) return null;
-        byte[] k = derive(pendingCode, pendingRelayNonce, pendingPcNonce);
+        byte[] k;
+        if (pendingPakeScalar != null) {
+            // The PC asked for CPace: a legacy (PBKDF2) proof is refused for this pairing (no downgrade).
+            String theirs = msg.optString("pake_share");
+            if (!theirs.matches("[0-9a-f]{64}")) { failedPairing++; return null; }
+            byte[] ya = unhex(theirs);
+            try { k = java.util.Arrays.copyOf(Cpace.isk(pendingPakeScalar, ya, pakeSid(), ya, pendingPakeShare), 32); }
+            catch (SecurityException e) { failedPairing++; return null; }
+        } else {
+            k = derive(pendingCode, pendingRelayNonce, pendingPcNonce);
+        }
         JSONObject body;
         try { body = verify(k, msg); } catch (SecurityException e) { failedPairing++; return null; }
         // Pairing with the on-screen code is the owner's consent: scans are enabled right away (pausable in the app).
         // A1: a fresh pairing must never inherit a stale full_control grant (process death / key loss / re-pair
         // without unpair would otherwise restore full control with no fresh consent). The owner re-allows it
         // explicitly in the app (toggleFullControl dialog); unpair() already clears the same pref.
-        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).putBoolean("full_control", false).apply(); pendingCode = null; failedPairing = 0; ui.code(null);
+        prefs.edit().putString("key", hex(k)).putBoolean("owner_enabled", true).putBoolean("require_aead", false).putBoolean("full_control", false).apply(); pendingCode = null; pendingPakeScalar = null; pendingPakeShare = null; failedPairing = 0; ui.code(null);
         synchronized (seen) { seen.clear(); replies.clear(); }   // fresh pairing = fresh message space
         ui.status("Paired with OpenBridge. Bluetooth scans are available while this app is open.");
         return body;
@@ -686,6 +710,9 @@ final class RelayServer {
         JSONArray out = new JSONArray(); synchronized (found) { for (JSONObject o : found.values()) out.put(o); }
         return out;
     }
+
+    static final String PAKE = "cpace1";
+    private byte[] pakeSid() { return (pendingRelayNonce + pendingPcNonce).getBytes(StandardCharsets.US_ASCII); }
 
     static byte[] derive(String code, String relayNonce, String pcNonce) throws Exception {
         PBEKeySpec spec = new PBEKeySpec(code.toCharArray(), (relayNonce + pcNonce).getBytes(StandardCharsets.UTF_8), 200_000, 256);

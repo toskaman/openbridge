@@ -4,6 +4,7 @@
 
 <p align="center">
   <img src="docs/assets/readme/interop-demo.svg" alt="Animated demo: a watch, tablet, laptop, phone, fridge, VR headset and smart glasses gain new skills and drive lights, a coffee machine, a smart plug, a TV, another phone, a desktop PC and another VR headset. Devices talk to each other directly, a VR headset controls the whole home, and smart glasses show live battery, distance, CPU and RAM over every device." width="100%">
+  <br><sub><i>What OpenBridge is built for. Some scenes are concept previews (VR control room, fridge, coffee machine, file drop to a Linux PC); what is verified today on real hardware is listed in <a href="#-proven-on-real-hardware-not-on-slides">Proven on real hardware</a>.</i></sub>
 </p>
 
 <p align="center">

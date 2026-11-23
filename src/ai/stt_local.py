@@ -13,13 +13,18 @@ instead of spawn-crashing in a loop.
 Model lookup: $HF_HOME, else $OB_STT_HOME, else D:\\OBModels\\hf, else the
 default HuggingFace cache. Set OB_STT_LOCAL=0 to disable the local path.
 
-Residual: no VRAM admission check (a CUDA OOM now kills the worker only, which is
-the containment); no idle TTL (a warm worker holds its RAM like the old in-process
-backend did).
+VRAM admission (23 Nov 2026): before spawning, free GPU memory is read with nvidia-smi. With less than
+MIN_FREE_VRAM_MB free (another model holds the GPU), the worker loads the model on the CPU instead of
+failing; a CUDA out-of-memory during the GPU load also falls back to the CPU. Without nvidia-smi the old
+behaviour stands (GPU if torch sees one).
+
+Residual: no idle TTL (a warm worker holds its RAM like the old in-process backend did).
 """
 import atexit
 import multiprocessing
 import os
+import shutil
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -29,6 +34,8 @@ from src.ai.voice_stt import MAX_SECONDS, RATE, STTBlocked
 MODEL_ID = 'facebook/mms-1b-all'
 LANG_CODE = {'fr': 'fra', 'en': 'eng'}
 MIN_FREE_RAM_MB = 6 * 1024     # mms-1b-all weights (~4 GB fp32) + torch working set, with margin
+MIN_FREE_VRAM_MB = 5 * 1024    # same weights on the GPU + activations for a 15 s clip
+DEVICE_ENV = 'OB_STT_DEVICE'    # how the parent tells the spawned worker where to load the model ('cpu' or 'auto')
 WORKER_TIMEOUT_S = 300         # cold multi-GB load + 15 s of inference, worst case
 WORKER_MAX_FAILURES = 3        # consecutive worker failures before a cooldown (no spawn-crash loop)
 WORKER_COOLDOWN_S = 60
@@ -101,13 +108,39 @@ def _free_ram_mb():
     return None
 
 
-def _load_backend(snapshot):
+def _free_vram_mb():
+    """Free memory of the emptiest NVIDIA GPU in MiB, or None when unknown (no nvidia-smi, error).
+
+    Runs nvidia-smi rather than importing torch: the control server must never load torch."""
+    exe = shutil.which('nvidia-smi')
+    if not exe:
+        return None
+    try:
+        out = subprocess.run([exe, '--query-gpu=memory.free', '--format=csv,noheader,nounits'],
+                             capture_output=True, text=True, timeout=5, check=False).stdout
+        values = [int(v.strip()) for v in out.splitlines() if v.strip().isdigit()]
+        return max(values) if values else None
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+
+
+def choose_device():
+    """'cpu' when the GPU is known to be too full for the model, else 'auto' (GPU if torch sees one)."""
+    free = _free_vram_mb()
+    return 'cpu' if free is not None and free < MIN_FREE_VRAM_MB else 'auto'
+
+
+def _load_backend(snapshot, device='auto'):
     """Worker-side only: load the model + one processor per language. Never runs in the server."""
     import torch
     from transformers import AutoProcessor, Wav2Vec2ForCTC
     model = Wav2Vec2ForCTC.from_pretrained(str(snapshot), target_lang=LANG_CODE['fr'], local_files_only=True)
-    if torch.cuda.is_available():
-        model = model.to('cuda')
+    if device != 'cpu' and torch.cuda.is_available():
+        try:
+            model = model.to('cuda')
+        except torch.cuda.OutOfMemoryError:     # the GPU filled up since admission: stay on the CPU
+            model = model.to('cpu')
+            torch.cuda.empty_cache()
     model.eval()
     # One processor per language: set_target_lang does not reload the decode vocab.
     processors = {lang: AutoProcessor.from_pretrained(str(snapshot), target_lang=code, local_files_only=True)
@@ -139,6 +172,7 @@ def _run_inference(backend, language, pcm16):
 
 def _worker_main(conn, snapshot):
     """Worker entry (top-level for spawn pickling): lazy-load once, serve transcriptions."""
+    device = os.environ.get(DEVICE_ENV, 'auto')
     backend = None
     try:
         while True:
@@ -148,7 +182,7 @@ def _worker_main(conn, snapshot):
                 return
             if backend is None:
                 try:
-                    backend = _load_backend(snapshot)
+                    backend = _load_backend(snapshot, device)
                 except Exception as error:  # noqa: BLE001 - unloadable install: report once, exit, no retry loop
                     try:
                         conn.send(('fatal', f'local STT model failed to load ({type(error).__name__})'))
@@ -178,12 +212,25 @@ class _WorkerGone(STTBlocked):
     """Transport/timeout/death/fatal: the worker must be discarded (and counts toward cooldown)."""
 
 
+_env_lock = threading.Lock()
+
+
 class _Worker:
-    def __init__(self, snapshot):
+    def __init__(self, snapshot, device=None):
         self.snapshot = snapshot
+        self.device = choose_device() if device is None else device    # VRAM admission
         self.parent, child = _ctx.Pipe(duplex=True)
         self.proc = _ctx.Process(target=_worker_target, args=(child, str(snapshot)), daemon=True)
-        self.proc.start()
+        with _env_lock:      # the spawned child inherits the environment at start: pass the device that way
+            old = os.environ.get(DEVICE_ENV)
+            os.environ[DEVICE_ENV] = self.device
+            try:
+                self.proc.start()
+            finally:
+                if old is None:
+                    os.environ.pop(DEVICE_ENV, None)
+                else:
+                    os.environ[DEVICE_ENV] = old
         child.close()
 
     def alive(self):

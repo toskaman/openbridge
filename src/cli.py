@@ -609,6 +609,13 @@ def _ha_fabric(args):
     ex = Executor(SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(),
                                   fabric_adapters=lambda p=None: {'home_assistant': ha}))
     keys = {d['ha_entity']: k for k, d in reg.devices.items() if d.get('ha_entity')}
+    set_actions = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+
+    def latency_hint(entity_id, action):
+        # Learned p95 latency of this action on this device stretches its read-back window (slow devices).
+        prof = learner.action_profile(keys.get(entity_id), ('ha_set:' if action in set_actions else 'ha_command:') + action)
+        return (prof or {}).get('latency_p95_s')
+    ha.latency_hint = latency_hint
     return ha, reg, ex, learner, keys
 
 
@@ -629,7 +636,10 @@ def cmd_ha_soak(args):
     SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
     stats, t0, reasons, acked = {}, _t.time(), {}, 0
     plan = []
+    only = set(getattr(args, 'entity', None) or ())
     for s in ha.states():
+        if only and s['entity_id'] not in only:
+            continue                      # real homes: test only the devices the owner listed
         for a in HA.actions_for(s):
             if a in ('open', 'close', 'stop') and not getattr(args, 'include_covers', False):
                 continue
@@ -657,7 +667,8 @@ def cmd_ha_soak(args):
                 # The soak is the owner here: it reads the device back and acknowledges the outcome,
                 # so one demo quirk cannot fill the recovery backlog for the rest of the run.
                 try:
-                    ha.state(eid)
+                    if ha.confirm(eid, a, params.get('value'))['verified']:
+                        row['verified_late'] = row.get('verified_late', 0) + 1
                     if ex.acknowledge(r['transaction_id']):
                         acked += 1
                 except Exception:
@@ -675,6 +686,7 @@ def cmd_ha_soak(args):
             'undo_exact_pct': round(100 * sum(r['undo_exact'] for r in stats.values()) / max(1, undo), 1),
             'duration_s': round(_t.time() - t0, 1), 'by_action': stats,
             'learned': learner.report()['proven_actions'], 'acknowledged_after_readback': acked,
+            'verified_late': sum(r.get('verified_late', 0) for r in stats.values()),
             'not_verified_reasons': dict(sorted(reasons.items(), key=lambda kv: -kv[1])[:15])}
 
 
@@ -2378,6 +2390,8 @@ def build_parser():
     ha_soak.add_argument('--cycles', type=int, default=3)
     ha_soak.add_argument('--seed', type=int, default=7)
     ha_soak.add_argument('--include-covers', action='store_true')
+    ha_soak.add_argument('--entity', action='append', default=[],
+                         help='only test this entity (repeat); recommended on a real home, e.g. --entity light.desk')
 
     devices = subs.add_parser('devices')
     device_subs = devices.add_subparsers(dest='devices_command')
