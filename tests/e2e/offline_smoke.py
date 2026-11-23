@@ -33,8 +33,8 @@ def main():
                     page.get_by_role('button',name='Inspect evidence').click()
                     page.get_by_text('Inspection complete.',exact=False).wait_for()
                     assert page.get_by_role('button',name='Request Meta advice').is_disabled()
-                    page.get_by_role('button',name='View recorded Meta proof').click()
-                    page.get_by_text('RECORDED RUN',exact=False).wait_for()
+                    assert page.get_by_role('button',name='View recorded Meta proof').count()==0   # paid tier removed
+                    expect(page.get_by_text('No paid model is built in',exact=False).first).to_be_attached()
                     page.goto(url+'/#/activity')   # simulated Change & Undo sandbox lives in Activity & Recovery
                     page.locator('#demo-consent').check()
                     page.get_by_role('button',name='Run simulated change').click()
@@ -57,7 +57,7 @@ def main():
                 browser.close()
         finally:
             server.shutdown();server.server_close();worker.join(timeout=5)
-    print('Offline browser checks passed at 390/768/1440/3440: demo, recorded proof, reload/Undo, missing ADB/gateway. Zero physical or model calls.')
+    print('Offline browser checks passed at 390/768/1440/3440: demo, no paid model, reload/Undo, missing ADB/gateway. Zero physical or model calls.')
 
 
 if __name__=='__main__':

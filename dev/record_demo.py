@@ -59,10 +59,8 @@ def main():
                 scene('real-android','A real, authorized USB phone. These facts are read from Android; private device identifiers stay hidden.')
                 hold(33)
                 page.get_by_role('radio',name='Simulated demo').check()
-                page.get_by_role('button',name='View recorded Meta proof').click()
-                page.get_by_text('RECORDED RUN',exact=False).wait_for()
-                page.locator('#recorded-proof-result').scroll_into_view_if_needed()
-                scene('recorded-meta','Meta Muse Spark 1.3: a real recorded runtime-core inference on synthetic facts. Viewing this proof makes no new API call.')
+                page.locator('#meta-result').scroll_into_view_if_needed()
+                scene('local-meta','Local Meta Llama reviews approved facts on this PC, for free. No paid model is built in.')
                 hold(49)
                 scene('meta-boundaries','The model result carries evidence references and uncertainty. Physical device data stays local; default cloud requests are blocked.')
                 hold(65)
@@ -108,7 +106,7 @@ def main():
             server.shutdown();server.server_close();worker.join(timeout=5)
     manifest={'source_revision':revision,'capture':'Actual headless app browser session; no desktop input',
               'language':'English','audio':'Intentionally silent; burned-in English captions',
-              'claims':'Real read-only Android and gateway; recorded Meta proof; simulated recovery; recorded blocked physical write',
+              'claims':'Real read-only Android and gateway; local-only Meta review; simulated recovery; recorded blocked physical write',
               'raw_video':str(video_path),'scenes':scenes,'physical_write_requests_during_capture':0,'model_requests_during_capture':0}
     (output/'capture-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     print(f'Capture complete: {output}',flush=True)

@@ -25,9 +25,7 @@ def main():
             page.screenshot(path=str(artifacts / f'{width}-after.png'), full_page=True)
             assert page.locator('html').get_attribute('lang') == 'en'
             assert page.get_by_role('button', name='Request Meta advice').is_disabled()
-            page.get_by_role('button',name='View recorded Meta proof').click()
-            page.get_by_text('RECORDED RUN',exact=False).wait_for()
-            assert 'no live request was made' in page.locator('#recorded-proof-result').inner_text()
+            assert page.get_by_role('button',name='View recorded Meta proof').count() == 0   # paid tier removed
             page.goto('http://127.0.0.1:18765/#/activity')   # simulated sandbox lives in Activity & Recovery
             page.locator('#demo-consent').check()
             change=page.get_by_role('button',name='Run simulated change')
