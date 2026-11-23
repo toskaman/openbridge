@@ -15,13 +15,30 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-a78bfa" alt="License"></a>
 </p>
 
-<h3 align="center">Say what you want. Your devices figure out how to do it together.</h3>
+<h1 align="center">Give your hardware powers it never shipped with.</h1>
+
+<h3 align="center">Break the walls between your devices. Say what you want, and they work it out together.</h3>
 
 <p align="center">
-OpenBridge connects the devices you already own (TV, smartwatch, phone, router, robot vacuum, PCs)<br>
-and lets an AI <b>create brand-new controls</b> between them, on demand.<br>
-Nothing runs without your approval. Every action is <b>checked on the real device</b> afterwards.
+Your TV, your watch, your phone, your router, your robot vacuum, your PC: each one is locked inside its own app, its own remote, its own brand.<br>
+<b>OpenBridge breaks those walls.</b> Ask out loud, and an AI builds <b>brand-new controls across them</b>, on demand:<br>
+vacuum buttons on your TV, a TV remote on your watch, a “go home” button for the robot, right from the couch.
 </p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="33%">🔓<br><b>Break the walls</b><br><sub>Any brand, any screen. TVs, wearables, phones, routers, robots and PCs finally speak one language.</sub></td>
+    <td align="center" width="33%">✨<br><b>Unlock new features</b><br><sub>Controls, alerts and voice flows your devices were never sold with, created the moment you ask.</sub></td>
+    <td align="center" width="33%">🛡️<br><b>Stay in control</b><br><sub>Nothing runs without your approval. Every action is checked on the real device afterwards. Local-first AI.</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+<b>You build connected devices?</b> Give your customers features you never had to write: interoperability with every other brand,<br>
+complete test suites and benchmarks on your real hardware, and an emulator of your product. <a href="#-become-the-next-partner"><b>See what partners gain →</b></a>
+</p>
+
+<p align="center"><sub>🇫🇷 <a href="#fr">Lire en français</a></sub></p>
 
 <p align="center">
   <sub><b>HARDWARE PARTNER</b></sub>
@@ -231,11 +248,20 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 </p>
 <p align="center"><sub>I reply in English and French. Commercial licensing and integration partnerships are available on request.</sub></p>
 
+<a id="fr"></a>
+
 <details>
 <summary><b>🇫🇷 En bref, en français</b></summary>
 <br>
 
-**OpenBridge** relie les appareils que vous possédez déjà (TV, montre, téléphone, box internet, robot aspirateur, PC) et laisse une IA **créer de nouvelles commandes entre eux**, à la demande : des boutons « aspirateur » sur la TV, une télécommande TV sur la montre… Rien ne s'exécute sans votre accord, et chaque action est **vérifiée sur l'appareil réel**. L'IA tourne **en local**, sur votre propre machine.
+**Donnez à votre matériel des pouvoirs qu'il n'a jamais eus.**<br>
+**Brisez les murs entre vos appareils. Dites ce que vous voulez, ils s'organisent ensemble.**
+
+TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enfermé dans son appli, sa télécommande, sa marque. **OpenBridge brise ces murs.** Demandez à voix haute, et une IA **crée de nouvelles commandes entre eux**, à la demande : des boutons « aspirateur » sur la TV, une télécommande TV sur la montre, un bouton « retour à la base » pour le robot, depuis le canapé.
+
+- 🔓 **Brisez les murs** : toutes les marques, tous les écrans. TV, objets connectés portés, téléphones, box, robots et PC parlent enfin la même langue.
+- ✨ **Débloquez de nouvelles fonctionnalités** : des commandes, des alertes et des parcours vocaux que vos appareils n'avaient pas à l'achat, créés dès que vous les demandez.
+- 🛡️ **Gardez le contrôle** : rien ne s'exécute sans votre accord, chaque action est **vérifiée sur l'appareil réel**, et l'IA tourne **en local**, sur votre propre machine.
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
 
