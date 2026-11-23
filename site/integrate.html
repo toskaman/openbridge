@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="int.title">Bring your device, leave with an integration: OpenBridge</title>
+<meta name="description" content="Drop your device's OpenAPI description: get an OpenBridge adapter, an emulator and passing tests, generated in your browser. Nothing is uploaded.">
+<meta property="og:title" content="Bring your device, leave with an integration">
+<meta property="og:description" content="From your API description to an adapter, an emulator and passing tests, in your browser.">
+<meta property="og:image" content="https://toskaman.github.io/openbridge/social-preview.png">
+<meta name="theme-color" content="#070b1a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='22' fill='%232dd4bf'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/site.css">
+<style>
+.int{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:28px;padding-bottom:72px;align-items:start}
+@media (max-width:900px){.int{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
+.box h2{font-size:1.3rem;margin-bottom:12px}
+.drop{border:1.5px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);cursor:pointer}
+.drop.over{border-color:var(--teal);color:var(--text)}
+.box textarea{width:100%;min-height:150px;margin-top:12px;background:var(--night);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:.85rem/1.45 ui-monospace,Consolas,monospace;box-sizing:border-box}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.row label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:.9rem;flex:1;min-width:160px}
+.row input{background:var(--night);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit}
+.err{color:#fca5a5;margin-top:12px;min-height:1.4em}
+.map td,.map th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:.92rem}
+.map code{color:var(--mint)}
+.map td:nth-child(3) code{white-space:nowrap}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.78rem;border:1px solid var(--line)}
+.tag.set{color:var(--mint)}.tag.cmd{color:var(--lilac)}.tag.no{color:#fca5a5}.tag.read{color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 8px}
+.tabs button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font:.85rem var(--body);cursor:pointer}
+.tabs button[aria-selected=true]{color:#04121a;background:var(--teal);border-color:var(--teal)}
+pre.code{background:var(--night);border:1px solid var(--line);border-radius:12px;padding:14px;max-height:520px;overflow:auto;font:.8rem/1.5 ui-monospace,Consolas,monospace;color:var(--text);white-space:pre}
+.skipped{color:var(--muted);font-size:.9rem;margin:8px 0 0;padding-left:20px}
+.muted{color:var(--muted)}
+</style>
+</head>
+<body data-page="integrate">
+<a class="skip" href="#main" data-i18n="nav.skip">Skip to content</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="./"><span class="orb" aria-hidden="true"></span>OpenBridge</a>
+    <ul>
+      <li><a href="try.html" data-page="try" data-i18n="nav.try">Try it</a></li>
+      <li><a href="integrate.html" data-page="integrate" data-i18n="nav.integrate">Integrate</a></li>
+      <li><a href="compatibility.html" data-page="compat" data-i18n="nav.compat">Compatibility</a></li>
+      <li><a href="benchmarks.html" data-page="bench" data-i18n="nav.bench">Benchmarks</a></li>
+      <li><a href="https://github.com/toskaman/openbridge">GitHub</a></li>
+    </ul>
+    <button class="lang" type="button" data-lang-toggle aria-label="Français / English"><b>EN</b> / FR</button>
+    <a class="btn btn-main" href="./#contact" data-i18n="nav.cta">Become a partner</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="page-head" style="padding-bottom:28px">
+  <div class="wrap">
+    <h1 data-i18n="int.h1">Bring your device, leave with an integration.</h1>
+    <p class="lede" data-i18n="int.p">Drop your device's OpenAPI description. You get an OpenBridge adapter (typed settings with read-back and exact Undo, commands, refusals), an emulator of your device and tests that pass on day one. Generated here, in your browser: nothing is uploaded.</p>
+  </div>
+</section>
+
+<section style="padding:0">
+  <div class="wrap int">
+    <div class="box">
+      <h2 data-i18n="int.in">1. Your API description</h2>
+      <div class="drop" id="drop" tabindex="0" role="button" data-i18n="int.drop">Drop an OpenAPI 3 file (JSON) here, or click to choose one</div>
+      <input type="file" id="file" accept=".json,application/json" hidden>
+      <label for="src" class="sr" data-i18n="int.paste">Or paste it</label>
+      <textarea id="src" spellcheck="false" placeholder='{"openapi": "3.0.3", ...}'></textarea>
+      <div class="row">
+        <label><span data-i18n="int.name">Device name</span><input id="name" value="Acme Glow" autocomplete="off"></label>
+        <label><span data-i18n="int.cat">Category</span><input id="cat" value="lamp" autocomplete="off"></label>
+      </div>
+      <div class="row">
+        <button class="btn btn-main" id="go" type="button" data-i18n="int.go">Generate the integration</button>
+        <button class="btn btn-ghost" id="example" type="button" data-i18n="int.example">Load the example</button>
+      </div>
+      <p class="err" id="err" role="alert"></p>
+      <p class="muted" style="font-size:.9rem" data-i18n="int.rules">The rules are fixed and published: a bounded field the device also reports becomes a setting (read back, exact Undo); a POST with no body or a field it does not report becomes a command; anything about firmware, updates, resets, unlocking or passwords is always refused; the rest is listed with the reason. Same result as <code>openbridge partner new NAME --from-openapi FILE</code>.</p>
+    </div>
+
+    <div class="box" id="out" hidden>
+      <h2 data-i18n="int.out">2. What OpenBridge will do with it</h2>
+      <table class="map"><thead><tr><th data-i18n="int.th.what">What</th><th data-i18n="int.th.name">Name</th><th data-i18n="int.th.ep">Endpoint</th><th data-i18n="int.th.allowed">Allowed</th></tr></thead><tbody id="map"></tbody></table>
+      <ul class="skipped" id="skipped"></ul>
+      <h2 style="margin-top:22px" data-i18n="int.files">3. Your files</h2>
+      <div class="row"><button class="btn btn-main" id="zip" type="button" data-i18n="int.zip">Download all (.zip)</button><button class="btn btn-ghost" id="one" type="button" data-i18n="int.one">Download this file</button></div>
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <pre class="code" id="code" tabindex="0"></pre>
+      <p class="muted" style="font-size:.9rem" data-i18n="int.next">Unzip at the root of your OpenBridge folder and run <code>python -m unittest tests.partners.test_SLUG -v</code>. The generated code is Apache-2.0 and yours to extend. Then send us the README: a partner engineer reviews the mapping with you.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span data-i18n="foot.by">OpenBridge, built by an independent developer.</span>
+    <nav aria-label="Project">
+      <a href="try.html" data-i18n="nav.try">Try it</a>
+      <a href="compatibility.html" data-i18n="nav.compat">Compatibility</a>
+      <a href="benchmarks.html" data-i18n="nav.bench">Benchmarks</a>
+      <a href="https://github.com/toskaman/openbridge/blob/main/docs/INTEGRATE_YOUR_DEVICE.md" data-i18n="int.guide">Integration guide</a>
+      <a href="https://github.com/toskaman/openbridge/blob/main/docs/partners/PLANS.md" data-i18n="int.plans">Plans</a>
+      <a href="https://github.com/toskaman/openbridge/blob/main/docs/PRIVACY.md" data-i18n="foot.privacy">Privacy</a>
+      <a href="https://github.com/toskaman/openbridge/blob/main/docs/LICENSING.md" data-i18n="foot.licensing">Licensing</a>
+    </nav>
+    <span data-i18n="foot.notrack">Core source-available under PolyForm Strict 1.0.0; integration kit under Apache 2.0. No trackers on this site. The video loads from YouTube only when you press play.</span>
+  </div>
+</footer>
+<script src="js/i18n.js"></script>
+<script src="js/integrate-core.js"></script>
+<script src="js/integrate.js"></script>
+</body>
+</html>

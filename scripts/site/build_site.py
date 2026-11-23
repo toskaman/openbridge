@@ -67,7 +67,12 @@ def compatibility():
                          for e in r.get('evidence', [])],
         })
     out = sorted(devices.values(), key=lambda d: (d['level'] != 'real', d['category'], d['name']))
+    import sys
+    sys.path.insert(0, str(ROOT / 'scripts' / 'verify'))
+    import verified_label
     for d in out:
+        v = verified_label.assess(records, d['id'])
+        d['verified'] = {'earned': v['earned'], 'valid_until': v['valid_until'], 'reasons': v['reasons']}
         d['runs'].sort(key=lambda x: x['date'], reverse=True)
         d['last'] = d['runs'][0]['date']
         d['name'] = d['runs'][0]['alias']  # the most recent description of the device
@@ -108,6 +113,19 @@ def benchmarks():
     }
 
 
+def integrate_kit():
+    """Templates and rules of the integration kit, for the in-browser generator (site/integrate.html)."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from src import partner_kit as kit
+    from src import partner_kit_api as api
+    return {'source': 'src/partner_kit.py and src/partner_kit_api.py (Apache-2.0)',
+            'templates': {'adapter': kit.ADAPTER_API + kit.ADAPTER[kit.ADAPTER.index('def _refusal'):],
+                          'emulator': kit.EMULATOR_API, 'ingest': kit.INGEST, 'tests': kit.TESTS_API, 'readme': kit.README_API},
+            'py_header': kit.PY_HEADER, 'md_footer': kit.MD_FOOTER, 'dangerous': api.DANGEROUS.pattern, 'secret': api.SECRET.pattern,
+            'max_span': api.MAX_SPAN, 'reserved': sorted(kit.RESERVED)}
+
+
 def build(out):
     out = Path(out)
     if out.exists():
@@ -117,7 +135,8 @@ def build(out):
         shutil.copytree(ROOT / 'docs' / 'assets' / sub, out / 'assets' / sub, dirs_exist_ok=True)
     shutil.copy2(ROOT / 'docs' / 'partners' / 'engo' / 'img' / 'hud_studio_overview.png', out / 'assets')
     (out / 'data').mkdir(exist_ok=True)
-    for name, data in (('compatibility', compatibility()), ('benchmarks', benchmarks())):
+    shutil.copy2(ROOT / 'docs' / 'partners' / 'examples' / 'openapi.acme-glow.json', out / 'data' / 'openapi-example.json')
+    for name, data in (('compatibility', compatibility()), ('benchmarks', benchmarks()), ('integrate-kit', integrate_kit())):
         (out / 'data' / (name + '.json')).write_text(json.dumps(data, indent=1, ensure_ascii=False), encoding='utf-8')
     (out / '.nojekyll').write_text('', encoding='utf-8')
     return out

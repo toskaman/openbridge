@@ -1,0 +1,43 @@
+{
+ "openapi": "3.0.3",
+ "info": {"title": "Acme Glow lamp local API (fictional example)", "version": "1.2.0"},
+ "servers": [{"url": "http://192.168.1.50/api/v1"}],
+ "paths": {
+  "/state": {
+   "get": {"summary": "Current state",
+    "responses": {"200": {"description": "state", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/State"}}}}}},
+   "patch": {"summary": "Change the lamp",
+    "requestBody": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Change"}}}},
+    "responses": {"204": {"description": "changed"}}}
+  },
+  "/info": {
+   "get": {"responses": {"200": {"description": "info", "content": {"application/json": {"schema": {"type": "object",
+     "properties": {"model": {"type": "string"}, "serial": {"type": "string"}}}}}}}}
+  },
+  "/identify": {"post": {"summary": "Blink three times", "responses": {"204": {"description": "ok"}}}},
+  "/scene": {"post": {"requestBody": {"content": {"application/json": {"schema": {"type": "object",
+     "properties": {"scene": {"type": "string", "enum": ["reading", "relax", "night"]}}}}}},
+     "responses": {"204": {"description": "ok"}}}},
+  "/firmware/update": {"post": {"summary": "Start an OTA update", "responses": {"202": {"description": "started"}}}},
+  "/schedules/{id}": {"put": {"requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+     "responses": {"204": {"description": "ok"}}}}
+ },
+ "components": {"schemas": {
+  "State": {"type": "object", "properties": {
+   "power": {"type": "boolean", "default": false},
+   "brightnessPercent": {"type": "integer", "minimum": 1, "maximum": 100, "example": 60},
+   "colorTemp": {"type": "integer", "minimum": 2200, "maximum": 6500, "x-unit": "K", "example": 2700},
+   "effect": {"type": "string", "enum": ["none", "candle", "breathe"]},
+   "label": {"type": "string"},
+   "firmwareVersion": {"type": "string", "example": "1.2.0"},
+   "wifi": {"type": "object", "properties": {"rssi": {"type": "integer"}}}
+  }},
+  "Change": {"type": "object", "properties": {
+   "power": {"type": "boolean"},
+   "brightnessPercent": {"type": "integer", "minimum": 1, "maximum": 100},
+   "colorTemp": {"type": "integer", "minimum": 2200, "maximum": 6500},
+   "effect": {"type": "string", "enum": ["none", "candle", "breathe"]},
+   "label": {"type": "string", "maxLength": 32}
+  }}
+ }}
+}

@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts' / 'site'))
 import build_site  # noqa: E402
 
-PAGES = ('index.html', 'try.html', 'compatibility.html', 'benchmarks.html')
+PAGES = ('index.html', 'try.html', 'compatibility.html', 'benchmarks.html', 'integrate.html')
 
 
 class SiteBuildTests(unittest.TestCase):
@@ -26,6 +26,7 @@ class SiteBuildTests(unittest.TestCase):
 
     def test_pages_and_assets_are_present(self):
         for name in PAGES + ('OpenBridge-Partner-Brief.pdf', 'social-preview.png', 'css/site.css', 'js/i18n.js',
+                             'js/integrate-core.js', 'data/integrate-kit.json', 'data/openapi-example.json',
                              'assets/readme/demo-poster.jpg', 'assets/hud_studio_overview.png', '.nojekyll'):
             self.assertTrue((self.out / name).is_file(), name)
 

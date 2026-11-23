@@ -10,6 +10,9 @@ Generated, ready to run:
 - tests/partners/test_<slug>.py     tests that pass on day one against the emulator, and keep passing on real hardware
 - docs/partners/<slug>/README.md    the integration checklist and validation status
 
+With `--from-openapi FILE`, the settings, commands, refusals, emulator state and tests come from the device's
+OpenAPI 3 description (see partner_kit_api.py); the browser page site/integrate.html does the same with no install.
+
 Nothing is overwritten: the command refuses if any target file already exists. Standard library only.
 """
 import re
@@ -268,7 +271,240 @@ python -m unittest tests.partners.test_{slug} -v
 '''
 
 
-def plan(name, title=None, category='device', root=None):
+# ---------- from an API description (`openbridge partner new NAME --from-openapi FILE`) ----------
+
+ADAPTER_API = '''\"\"\"{title}: OpenBridge adapter generated from the device's API description
+(`openbridge partner new --from-openapi`). Every setting and command below comes from that description; review
+them, tighten the ranges to what the device really accepts, and add refusals to POLICY.
+Every write is typed and allowlisted, read back from the device, and undoable exactly when it is reversible.
+
+Status: emulator only. Record real-hardware runs in docs/DEVICE_EVIDENCE.json before claiming support.
+\"\"\"
+import json
+from urllib.request import ProxyHandler, Request, build_opener
+
+# Facts the device reports -> unit shown to the owner.
+{read_block}
+# Reversible settings -> allowed values (read back, exact Undo).
+{writable_block}
+# Momentary commands -> allowed values (None: no value). Irreversible: consent per command.
+{commands_block}
+# Refused whatever the consent, with the reason shown to the owner.
+{policy_block}
+
+BASE_URL = {base_url}  # the device's address: override with {cls}Transport(base_url=...)
+READ_PATH = {read_path}
+# OpenBridge name -> name in the device's JSON
+{read_keys}
+# name -> (method, path, body key)
+{write_routes}
+{command_routes}
+MAX_BYTES = 1048576
+
+
+class {cls}Blocked(PermissionError):
+    \"\"\"Refused before anything was sent.\"\"\"
+
+
+class {cls}Transport:
+    \"\"\"HTTP link generated from the API description. http(method, url, body) can be replaced for tests.\"\"\"
+
+    def __init__(self, base_url=BASE_URL, token=None, timeout=5.0, http=None):
+        self.base_url, self.token, self.timeout = (base_url or '').rstrip('/'), token, timeout
+        self._http = http or self._urllib
+
+    def _urllib(self, method, url, body):
+        data = json.dumps(body).encode() if body is not None else None
+        headers = {{'Accept': 'application/json', 'Content-Type': 'application/json'}}
+        if self.token:
+            headers['Authorization'] = 'Bearer ' + self.token
+        with build_opener(ProxyHandler({{}})).open(Request(url, data=data, method=method, headers=headers),
+                                                  timeout=self.timeout) as resp:
+            raw = resp.read(MAX_BYTES + 1)
+        if len(raw) > MAX_BYTES:
+            raise {cls}Blocked('the device answer is too large')
+        return json.loads(raw.decode('utf-8')) if raw else None
+
+    def read(self):
+        state = self._http('GET', self.base_url + READ_PATH, None)
+        state = state if isinstance(state, dict) else {{}}
+        return {{name: state[key] for name, key in READ_KEYS.items() if key in state}}
+
+    def write(self, name, value):
+        method, path, key = WRITE_ROUTES[name]
+        self._http(method, self.base_url + path, {{key: value}})
+
+    def command(self, name, value=None):
+        method, path, key = COMMAND_ROUTES[name]
+        self._http(method, self.base_url + path, {{key: value}} if key else None)
+
+
+'''
+
+EMULATOR_API = '''\"\"\"{title}: emulator generated from the API description. It speaks the same three-method transport as the
+real device, starting from the defaults and examples the description gives. Make it faithful: copy the device's real
+delays and quirks here as you learn them.\"\"\"
+import copy
+
+{state_block}
+
+
+class {cls}Emulator:
+    def __init__(self, **state):
+        self.state = copy.deepcopy(STATE)
+        self.state.update(state)
+        self.history = []          # every write and command, for tests and demos
+        self.drop_writes = False   # simulate a device that acknowledges but does not change
+
+    def read(self):
+        return copy.deepcopy(self.state)
+
+    def write(self, name, value):
+        self.history.append(('write', name, value))
+        if not self.drop_writes:
+            self.state[name] = value
+
+    def command(self, name, value=None):
+        self.history.append(('command', name, value))
+
+
+if __name__ == '__main__':
+    print('{title} emulator state:', {cls}Emulator().read())
+'''
+
+TESTS_API = '''\"\"\"{title}: tests generated from the API description. They pass against the emulator on day one and cover
+every setting, command and refusal the description gave; run them again with the real transport before recording
+hardware evidence.\"\"\"
+import json
+import unittest
+
+from src.adapters.{slug} import (COMMAND_ROUTES, COMMANDS, POLICY, READ, READ_KEYS, READ_PATH, WRITABLE, WRITE_ROUTES,
+                                 {cls}, {cls}Blocked, {cls}Transport)
+from src.adapters.{slug}_emulator import {cls}Emulator
+from src.fabric.{slug}_ingest import ingest_{slug}
+from src.fabric.registry import Registry
+
+
+def other(values, current):
+    return next((v for v in values if v != current), None)
+
+
+def invalid(values):
+    return values.stop if isinstance(values, range) else '__not_allowed__'
+
+
+class {cls}Tests(unittest.TestCase):
+    def setUp(self):
+        self.emu = {cls}Emulator()
+        self.dev = {cls}(self.emu)
+
+    def test_facts(self):
+        self.assertEqual({{f['name'] for f in self.dev.facts()}}, set(READ))
+
+    def test_every_setting_is_read_back_and_undone_exactly(self):
+        for name, values in WRITABLE.items():
+            value = other(values, self.emu.state[name])
+            if value is None:
+                continue
+            with self.subTest(setting=name):
+                before = self.emu.state[name]
+                r = self.dev.set_reversible(name, value)
+                self.assertEqual((r['before'], r['after'], r['verified']), (before, value, True))
+                self.assertTrue(self.dev.undo(name)['exact'])
+                self.assertEqual(self.emu.state[name], before)
+
+    def test_refusals_happen_before_anything_is_sent(self):
+        for name, values in WRITABLE.items():
+            with self.subTest(setting=name), self.assertRaises({cls}Blocked):
+                self.dev.set_reversible(name, invalid(values))
+        for name, _ in POLICY:
+            with self.subTest(policy=name), self.assertRaises({cls}Blocked):
+                self.dev.set_reversible(name, 'x')
+            with self.subTest(policy=name), self.assertRaises({cls}Blocked):
+                self.dev.command(name)
+        with self.assertRaises({cls}Blocked):
+            self.dev.command('self_destruct')
+        self.assertEqual(self.emu.history, [])
+
+    def test_a_device_that_ignores_a_write_is_never_reported_done(self):
+        changes = [(n, other(v, self.emu.state[n])) for n, v in WRITABLE.items() if other(v, self.emu.state[n]) is not None]
+        if not changes:
+            self.skipTest('no setting to change')
+        self.emu.drop_writes = True
+        self.assertFalse(self.dev.set_reversible(*changes[0])['verified'])
+
+    def test_commands_are_momentary_and_irreversible(self):
+        for name, values in COMMANDS.items():
+            with self.subTest(command=name):
+                r = self.dev.command(name, None if values is None else next(iter(values)))
+                self.assertEqual((r['verified'], r['reversible']), (None, False))
+
+    def test_transport_calls_the_described_endpoints(self):
+        calls = []
+        state = {{key: self.emu.state[name] for name, key in READ_KEYS.items()}}
+
+        def http(method, url, body):
+            calls.append((method, url, body))
+            return state if method == 'GET' else None
+        t = {cls}Transport(base_url='http://device.test', http=http)
+        self.assertEqual(set(t.read()), set(READ))
+        self.assertEqual(calls[-1], ('GET', 'http://device.test' + READ_PATH, None))
+        for name, (method, path, key) in WRITE_ROUTES.items():
+            t.write(name, self.emu.state[name])
+            self.assertEqual(calls[-1], (method, 'http://device.test' + path, {{key: self.emu.state[name]}}))
+        for name, (method, path, key) in COMMAND_ROUTES.items():
+            t.command(name, None if COMMANDS[name] is None else next(iter(COMMANDS[name])))
+            self.assertEqual(calls[-1][:2], (method, 'http://device.test' + path))
+
+    def test_graph_entry_is_pseudonymized_and_labelled_emulated(self):
+        reg = Registry()
+        self.assertEqual(ingest_{slug}(reg, self.dev, b'salt', 'SERIAL-1234')['status'], 'OK')
+        snap = reg.snapshot()
+        self.assertNotIn('SERIAL-1234', json.dumps(snap))
+        self.assertEqual({{c['status'] for d in snap['devices'] for c in d['capabilities']}}, {{'SIMULATED_VERIFIED'}})
+
+
+if __name__ == '__main__':
+    unittest.main()
+'''
+
+README_API = '''# {title} × OpenBridge
+
+> **Validation status: emulator only.** Generated from the device's API description; hardware tests start when a
+> unit is on the bench.
+
+Generated by `openbridge partner new {slug} --from-openapi`. Follow
+[Integrate your device](../../INTEGRATE_YOUR_DEVICE.md#from-an-api-description) for the details.
+
+## What was mapped
+
+| What | Endpoint | How OpenBridge uses it |
+|---|---|---|
+{endpoints_md}
+
+## What was left out (and why)
+
+{skipped_md}
+
+## Checklist
+
+| Step | Where | Status |
+|---|---|---|
+| Review the mapped settings, ranges and refusals | `src/adapters/{slug}.py` | ⬜ |
+| Emulator, faithful to the real device | `src/adapters/{slug}_emulator.py` | ⬜ copy real delays and quirks |
+| Tests against the emulator | `tests/partners/test_{slug}.py` | ✅ passing |
+| Primitives (consent, receipts, Undo) in the app | `src/runtime/primitives.py` | ⬜ see the guide, step 6 |
+| Tests and benchmarks on the real unit | `{cls}Transport(base_url=...)` | ⬜ |
+| Evidence recorded | `docs/DEVICE_EVIDENCE.json` | ⬜ only real-hardware runs count |
+
+```sh
+python -m unittest tests.partners.test_{slug} -v
+```
+'''
+
+
+def plan(name, title=None, category='device', root=None, spec=None):
+    """(slug, {path: text}). spec: a device spec from partner_kit_api.api_spec (an OpenAPI description)."""
     slug = slugify(name)
     root = Path(root or ROOT)
     title = (title or name or slug).strip()[:60] or slug
@@ -276,18 +512,25 @@ def plan(name, title=None, category='device', root=None):
         raise KitError('category must be a short lowercase word, e.g. lamp, plug, glasses')
     v = {'slug': slug, 'cls': class_name(slug), 'title': title.replace('"', "'"), 'category': category,
          'source': slug.upper()}
+    if spec is None:
+        texts = (ADAPTER, EMULATOR, TESTS, README)
+    else:
+        from src import partner_kit_api
+        v.update(partner_kit_api.template_values(spec))
+        texts = (ADAPTER_API + ADAPTER[ADAPTER.index('def _refusal'):], EMULATOR_API, TESTS_API, README_API)
+    adapter, emulator, tests, readme = texts
     files = {
-        root / 'src' / 'adapters' / (slug + '.py'): ADAPTER.format(**v),
-        root / 'src' / 'adapters' / (slug + '_emulator.py'): EMULATOR.format(**v),
+        root / 'src' / 'adapters' / (slug + '.py'): adapter.format(**v),
+        root / 'src' / 'adapters' / (slug + '_emulator.py'): emulator.format(**v),
         root / 'src' / 'fabric' / (slug + '_ingest.py'): INGEST.format(**v),
-        root / 'tests' / 'partners' / ('test_%s.py' % slug): TESTS.format(**v),
-        root / 'docs' / 'partners' / slug / 'README.md': README.format(**v),
+        root / 'tests' / 'partners' / ('test_%s.py' % slug): tests.format(**v),
+        root / 'docs' / 'partners' / slug / 'README.md': readme.format(**v),
     }
     return slug, files
 
 
-def generate(name, title=None, category='device', root=None, dry_run=False):
-    slug, files = plan(name, title, category, root)
+def generate(name, title=None, category='device', root=None, dry_run=False, spec=None):
+    slug, files = plan(name, title, category, root, spec)
     root = Path(root or ROOT)
     existing = [str(p.relative_to(root)) for p in files if p.exists()]
     if existing:
@@ -303,4 +546,6 @@ def generate(name, title=None, category='device', root=None, dry_run=False):
             init.write_text('', encoding='utf-8')
     return {'device': slug, 'written': not dry_run, 'files': [str(p.relative_to(root)).replace('\\', '/') for p in files],
             'next': ['python -m unittest tests.partners.test_%s -v' % slug,
-                     'fill the TODO blocks in src/adapters/%s.py, then follow docs/INTEGRATE_YOUR_DEVICE.md' % slug]}
+                     ('fill the TODO blocks in src/adapters/%s.py, then follow docs/INTEGRATE_YOUR_DEVICE.md' if spec is None else
+                      'review the mapped settings and refusals in src/adapters/%s.py (and docs/partners/%s/README.md)')
+                     % ((slug,) if spec is None else (slug, slug))]}
