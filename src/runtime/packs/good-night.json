@@ -1,0 +1,109 @@
+{
+ "format": "openbridge-skillpack/1",
+ "id": "good-night",
+ "version": "1.0.0",
+ "title": {
+  "en": "Good night",
+  "fr": "Bonne nuit"
+ },
+ "description": {
+  "en": "One button at bedtime: TV off, light off, door locked. OpenBridge never unlocks.",
+  "fr": "Un bouton au coucher : TV éteinte, lumière éteinte, porte verrouillée. OpenBridge ne déverrouille jamais."
+ },
+ "publisher": {
+  "name": "OpenBridge",
+  "kind": "openbridge",
+  "url": "https://github.com/toskaman/openbridge"
+ },
+ "roles": {
+  "media": {
+   "categories": [
+    "media_player",
+    "tv"
+   ],
+   "label": {
+    "en": "A TV or speaker",
+    "fr": "Une TV ou enceinte"
+   }
+  },
+  "light": {
+   "categories": [
+    "light",
+    "plug"
+   ],
+   "label": {
+    "en": "A light (or a lamp on a smart plug)",
+    "fr": "Une lumière (ou une lampe sur prise connectée)"
+   }
+  },
+  "lock": {
+   "categories": [
+    "lock"
+   ],
+   "label": {
+    "en": "A door lock (lock only, never unlock)",
+    "fr": "Une serrure (verrouiller seulement, jamais déverrouiller)"
+   }
+  }
+ },
+ "skills": [
+  {
+   "name": {
+    "en": "Good night",
+    "fr": "Bonne nuit"
+   },
+   "description": {
+    "en": "TV off, light off, then lock the door (last: a lock cannot be undone by OpenBridge).",
+    "fr": "TV éteinte, lumière éteinte, puis porte verrouillée (en dernier : OpenBridge ne l'annule pas)."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@media",
+     "by_category": {
+      "media_player": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      },
+      "tv": {
+       "primitive": "tv_sleep",
+       "params": {}
+      }
+     }
+    },
+    {
+     "device": "@light",
+     "by_category": {
+      "plug": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      },
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      }
+     }
+    },
+    {
+     "device": "@lock",
+     "by_category": {
+      "lock": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "lock"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -81,3 +81,8 @@ python dev/ai_training/evaluate.py --backend ollama --model openbridge-intent --
     --split home_novel --out result.json
 openbridge ha say "dim the kitchen lights to 30%" --consent ALLOW
 ```
+
+## Partner adapters
+
+A partner adapter adds one brand's product names and phrasings to this model, from a partner voice profile:
+see [A voice model adapted to each partner](PARTNER_VOICE_MODEL.md).

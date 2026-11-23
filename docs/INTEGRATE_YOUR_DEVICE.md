@@ -46,6 +46,33 @@ This writes five files and never overwrites anything (add `--dry-run` to only li
 | `tests/partners/test_acme_lamp.py` | Tests that pass on the emulator and must keep passing on the real unit |
 | `docs/partners/acme_lamp/README.md` | Your integration checklist and validation status |
 
+### From an API description
+
+If your device has an HTTP API described in OpenAPI 3 (JSON), start from it instead: the settings, commands,
+refusals, emulator state and tests are generated from the description.
+
+```sh
+python -m src.cli partner new "Acme Glow" --category lamp --from-openapi acme-glow-openapi.json
+python -m unittest tests.partners.test_acme_glow -v      # 7 tests: every setting, command and refusal
+```
+
+No install needed: the [Integrate page](https://toskaman.github.io/openbridge/integrate.html) does the same in your
+browser and gives you a zip; the description never leaves the page. Both apply the same published rules
+(`src/partner_kit_api.py`), and a test checks that they write identical files:
+
+| In the description | Becomes |
+|---|---|
+| A GET returning a JSON object (a "state" or "status" path first) | `READ`: the facts shown to the owner |
+| A bounded field (enum, boolean, or minimum and maximum) in a PUT/PATCH/POST body that `READ` also reports | `WRITABLE`: a setting, read back, with exact Undo |
+| A POST with no body, or a bounded field that `READ` does not report | `COMMANDS`: momentary, consent per command |
+| A name or path about firmware, OTA, update, reset, reboot, unlock, password, Wi-Fi, delete… | `POLICY`: always refused |
+| A field that looks like a secret (password, token, key) | not even read |
+| Anything else (unbounded strings, path parameters, nested objects) | listed in the README with the reason |
+
+The example used by the page and the tests is
+[partners/examples/openapi.acme-glow.json](partners/examples/openapi.acme-glow.json). Review the result like any
+generated code: tighten the ranges to what the device really accepts and add refusals; then continue at step 3.
+
 ## 2. Describe the device
 
 In the adapter, fill the four tables:

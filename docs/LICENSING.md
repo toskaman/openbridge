@@ -7,6 +7,7 @@ OpenBridge has **two licences, with a clear line between them**, plus written li
 | **The OpenBridge core**: everything in this repository not listed in the next row (runtime, gate, adapters, fabric, apps, UI, AI tooling, docs) | [PolyForm Strict 1.0.0](../LICENSE) | Read, run and test it for **noncommercial** purposes. No modification, redistribution or derivative works. |
 | **The integration kit**: [`src/partner_kit.py`](../src/partner_kit.py), every file it generates with `openbridge partner new` (they carry `SPDX-License-Identifier: Apache-2.0`), and the integration guide [`INTEGRATE_YOUR_DEVICE.md`](INTEGRATE_YOUR_DEVICE.md) | [Apache License 2.0](../LICENSES/Apache-2.0.txt) | Use, modify and redistribute, commercially too, keeping the notices. |
 | **Your own code**: firmware, SDKs, apps, and the code you write in or around the generated files | **Yours** | Your licence: proprietary, MIT, Apache 2.0... OpenBridge claims no rights over it. |
+| **A company trying OpenBridge**: the core, for 90 days, internally | [OpenBridge Evaluation Licence 1.0](../LICENSES/OpenBridge-Evaluation-1.0.md), free, no signature | Install, run and test with your own products, labs and CI; modify internally. No production use, no distribution. |
 
 ## What this means for a partner
 
@@ -28,6 +29,12 @@ OpenBridge has **two licences, with a clear line between them**, plus written li
 - Third-party dependencies, SDKs, model weights and services keep their own terms: see the
   [third-party inventory](../THIRD_PARTY.md).
 - No licence above grants trademark or branding rights in the OpenBridge name, logo or identity.
+
+## Plans at a glance
+
+Community (free, noncommercial), **Evaluation (free, 90 days, for companies)**, Partner and OEM: what each includes is
+on one page, [Plans](partners/PLANS.md). A source-available option that turns each release into Apache 2.0 after two
+years is [under consideration](LICENSING_FSL_OPTION.md); it is not applied.
 
 ## Commercial & partner licensing
 

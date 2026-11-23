@@ -616,7 +616,21 @@ def _ha_fabric(args):
         prof = learner.action_profile(keys.get(entity_id), ('ha_set:' if action in set_actions else 'ha_command:') + action)
         return (prof or {}).get('latency_p95_s')
     ha.latency_hint = latency_hint
+    _quality_listener(ha, learner, keys)
     return ha, reg, ex, learner, keys
+
+
+def _quality_listener(ha, learner, keys):
+    """If the owner turned quality reports on, count each receipt by device model and firmware (no names, no ids)."""
+    from src.runtime.quality_reports import Quality
+    q = Quality()
+    if not q.enabled:
+        return None
+    info = ha.device_info(list(keys))
+    entity_of = {k: e for e, k in keys.items()}
+    learner.listeners.append(lambda receipt, category, action:
+                             q.observe(info.get(entity_of.get(receipt.get('device_key'))), category, action, receipt))
+    return q
 
 
 def _learned(learner, reg, receipt, key, action):
@@ -792,16 +806,193 @@ def cmd_links_watch(args):
     return {'ticks': ticks, 'events': events[-50:], 'by_result': by}
 
 
+# ---------------- skill library and skill packs (no AI model needed to run) ----------------
+
+def _skill_library(args, need_fabric=False):
+    from src.runtime.skill_library import Library
+    if need_fabric:
+        ha, reg, ex, learner, keys = _ha_fabric(args)
+        return Library(ex, learner=learner), reg, keys
+    return Library(None), None, None
+
+
+def _skill_call(fn, *a):
+    from src.runtime.skill_library import SkillError
+    from src.runtime.skill_packs import PackError
+    try:
+        return fn(*a)
+    except (SkillError, PackError) as e:
+        raise CliError('args', 'SKILL_INVALID', str(e))
+
+
+def cmd_skills_list(args):
+    return {'skills': _skill_library(args)[0].summary()}
+
+
+def cmd_skills_show(args):
+    lib = _skill_library(args)[0]
+    r = _skill_call(lib._get, args.id)
+    return {'skill': dict(r, approved=lib.is_approved(r))}
+
+
+def cmd_skills_approve(args):
+    if getattr(args, 'consent', None) != 'ALLOW':
+        raise CliError('permission', 'CONSENT_REQUIRED',
+                       'Approving a skill lets it act (on a button, a schedule or a device change). Re-run with --consent ALLOW.')
+    return {'skill': _skill_call(_skill_library(args)[0].approve, args.id)}
+
+
+def cmd_skills_run(args):
+    lib = _skill_library(args, need_fabric=True)[0]
+    return {'run': _skill_call(lib.run, args.id)}
+
+
+def cmd_skills_remove(args):
+    _skill_call(_skill_library(args)[0].remove, args.id)
+    return {'removed': args.id}
+
+
+def cmd_skills_export(args):
+    import json as _json
+    lib = _skill_library(args)[0]
+    lib._save()                       # keeps this install's signing key, so its own files import as trusted
+    bundle = _skill_call(lib.export, args.ids or None)
+    Path(args.out).write_text(_json.dumps(bundle, indent=1), encoding='utf-8')
+    return {'file': args.out, 'skills': len(bundle['skills']), 'note': 'approvals are never exported'}
+
+
+def cmd_skills_import(args):
+    import json as _json
+    try:
+        bundle = _json.loads(Path(args.file).read_text(encoding='utf-8'))
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'SKILL_INVALID', 'cannot read %s: %s' % (args.file, e))
+    return _skill_call(_skill_library(args)[0].import_bundle, bundle)
+
+
+def cmd_skills_packs(args):
+    from src.runtime import skill_packs as P
+    return {'packs': [P.summary(p, args.lang) for p in P.available()]}
+
+
+def cmd_skills_pack_show(args):
+    from src.runtime import skill_packs as P
+    return {'pack': P.summary(_skill_call(P.get, args.id), args.lang)}
+
+
+def cmd_skills_pack_check(args):
+    from src.runtime import skill_packs as P
+    try:
+        return {'pack': P.check_file(args.file)}
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'PACK_INVALID', str(e))
+
+
+def cmd_skills_install_pack(args):
+    """Install a pack on this home's devices: roles -> Home Assistant entities. The skills arrive unapproved."""
+    from src.runtime import skill_packs as P
+    pack = _skill_call(P.get, args.id)
+    lib, reg, keys = _skill_library(args, need_fabric=True)
+    devices = {k: {'category': d.get('category'), 'label': d.get('label')} for k, d in reg.devices.items()}
+    given = {}
+    for item in args.map or []:
+        role, _, entity = item.partition('=')
+        if role not in pack['roles'] or entity not in keys:
+            raise CliError('args', 'PACK_MAP', 'Use --map ROLE=ENTITY with a role of this pack (%s) and a listed entity.'
+                           % ', '.join(pack['roles']))
+        given[role] = keys[entity]
+    mapping, missing, ambiguous = P.auto_map(pack, devices, given)
+    if missing or ambiguous:
+        by_key = {v: k for k, v in keys.items()}
+        raise CliError('args', 'PACK_ROLES', 'Choose a device for each role with --map ROLE=ENTITY. Missing: %s. To choose: %s'
+                       % (', '.join(missing) or 'none',
+                          '; '.join('%s = %s' % (r, ' | '.join(by_key.get(k, k) for k in c)) for r, c in ambiguous.items()) or 'none'))
+    ids = _skill_call(P.install, lib, pack, devices, mapping, args.lang)
+    return {'installed': ids, 'pack': pack['id'],
+            'next': 'review each skill with `openbridge skills show ID`, then `openbridge skills approve ID --consent ALLOW`'}
+
+
+# ---------------- quality reports (off unless the owner turns them on; never sent) ----------------
+
+def cmd_quality_status(args):
+    from src.runtime.quality_reports import Quality
+    q = Quality()
+    return {'enabled': q.enabled, 'consent': q.consent, 'months': sorted(q.months),
+            'kept': 'counts per manufacturer, model, firmware, category and action, on this PC only'}
+
+
+def cmd_quality_enable(args):
+    from src.runtime.quality_reports import Quality
+    if getattr(args, 'consent', None) != 'ALLOW':
+        raise CliError('permission', 'CONSENT_REQUIRED',
+                       'Quality reports count, per device model and firmware, how often actions succeed. Nothing is sent; '
+                       'you choose whether to export and share a month. Re-run with --consent ALLOW.')
+    return {'consent': Quality().enable()}
+
+
+def cmd_quality_disable(args):
+    from src.runtime.quality_reports import Quality
+    return {'consent': Quality().disable(forget=args.forget), 'forgotten': bool(args.forget)}
+
+
+def _quality_out(report, args):
+    from src.runtime import quality_reports as QR
+    if getattr(args, 'markdown', None):
+        Path(args.markdown).write_text(QR.markdown(report), encoding='utf-8')
+    return {'report': report, 'markdown': getattr(args, 'markdown', None)}
+
+
+def cmd_quality_report(args):
+    from src.runtime.quality_reports import Quality, QualityError
+    try:
+        return _quality_out(Quality().report(args.month), args)
+    except QualityError as e:
+        raise CliError('args', 'QUALITY_INVALID', str(e))
+
+
+def cmd_quality_export(args):
+    import json as _json
+    from src.runtime.quality_reports import Quality, QualityError
+    try:
+        doc = Quality().export(args.month)
+    except QualityError as e:
+        raise CliError('args', 'QUALITY_INVALID', str(e))
+    Path(args.out).write_text(_json.dumps(doc, indent=1), encoding='utf-8')
+    return {'file': args.out, 'month': doc['month'], 'rows': len(doc['rows']), 'contains': doc['contains']}
+
+
+def cmd_quality_merge(args):
+    """For a device maker: merge the exports owners chose to send into one report with firmware regressions."""
+    import json as _json
+    from src.runtime import quality_reports as QR
+    try:
+        docs = [_json.loads(Path(f).read_text(encoding='utf-8')) for f in args.files]
+        return _quality_out(QR.build_report(docs), args)
+    except (OSError, ValueError) as e:
+        raise CliError('args', 'QUALITY_INVALID', str(e))
+
+
 # ---------------- partner integration kit ----------------
 
 def cmd_partner_new(args):
     """Scaffold a device integration: adapter, emulator, graph entry, passing tests, checklist."""
-    from src import partner_kit
+    from src import partner_kit, partner_kit_api
+    spec = None
+    if getattr(args, 'from_openapi', None):
+        try:
+            spec = partner_kit_api.api_spec(json.loads(Path(args.from_openapi).read_text(encoding='utf-8')))
+        except (OSError, ValueError) as e:      # SpecError is a ValueError, like a JSON error
+            raise CliError('args', 'PARTNER_KIT', 'cannot use %s: %s' % (args.from_openapi, e))
     try:
-        return partner_kit.generate(args.name, title=getattr(args, 'title', None), category=getattr(args, 'category', None) or 'device',
-                                    dry_run=bool(getattr(args, 'dry_run', False)))
+        out = partner_kit.generate(args.name, title=getattr(args, 'title', None) or (spec or {}).get('title'),
+                                   category=getattr(args, 'category', None) or 'device',
+                                   dry_run=bool(getattr(args, 'dry_run', False)), spec=spec)
     except partner_kit.KitError as e:
         raise CliError('args', 'PARTNER_KIT', str(e))
+    if spec is not None:
+        out['mapped'] = {'read': sorted(spec['read']['fields']), 'settings': sorted(spec['writable']),
+                         'commands': sorted(spec['commands']), 'refused': sorted(spec['policy']), 'skipped': spec['skipped']}
+    return out
 
 
 # ---------------- home assistant bridge ----------------
@@ -2511,12 +2702,49 @@ def build_parser():
     lw.add_argument('--seconds', type=float, default=60)
     lw.add_argument('--interval', type=float, default=2)
 
+    skills = subs.add_parser('skills', help='saved features that run with no AI model, and ready-made skill packs')
+    skills_subs = skills.add_subparsers(dest='skills_command')
+    leaf(skills_subs, 'list', cmd_skills_list, 'skills list')
+    for name, func in (('show', cmd_skills_show), ('approve', cmd_skills_approve), ('run', cmd_skills_run),
+                       ('remove', cmd_skills_remove)):
+        leaf(skills_subs, name, func, 'skills ' + name).add_argument('id')
+    sex = leaf(skills_subs, 'export', cmd_skills_export, 'skills export')
+    sex.add_argument('ids', nargs='*')
+    sex.add_argument('--out', required=True)
+    leaf(skills_subs, 'import', cmd_skills_import, 'skills import').add_argument('file')
+    leaf(skills_subs, 'packs', cmd_skills_packs, 'skills packs').add_argument('--lang', default='en', choices=['en', 'fr'])
+    sps = leaf(skills_subs, 'pack-show', cmd_skills_pack_show, 'skills pack-show')
+    sps.add_argument('id')
+    sps.add_argument('--lang', default='en', choices=['en', 'fr'])
+    leaf(skills_subs, 'pack-check', cmd_skills_pack_check, 'skills pack-check').add_argument('file')
+    sip = leaf(skills_subs, 'install-pack', cmd_skills_install_pack, 'skills install-pack')
+    sip.add_argument('id')
+    sip.add_argument('--map', action='append', help='ROLE=ENTITY, e.g. robot=vacuum.kitchen (repeat per role)')
+    sip.add_argument('--lang', default='en', choices=['en', 'fr'])
+
+    quality = subs.add_parser('quality', help='quality reports by device model and firmware (opt-in, never sent)')
+    quality_subs = quality.add_subparsers(dest='quality_command')
+    leaf(quality_subs, 'status', cmd_quality_status, 'quality status')
+    leaf(quality_subs, 'enable', cmd_quality_enable, 'quality enable')
+    leaf(quality_subs, 'disable', cmd_quality_disable, 'quality disable').add_argument('--forget', action='store_true')
+    qrep = leaf(quality_subs, 'report', cmd_quality_report, 'quality report')
+    qrep.add_argument('--month', default=None, help='YYYY-MM (default: this month)')
+    qrep.add_argument('--markdown', default=None, help='also write the report as Markdown to this file')
+    qex = leaf(quality_subs, 'export', cmd_quality_export, 'quality export')
+    qex.add_argument('--month', default=None)
+    qex.add_argument('--out', required=True)
+    qm = leaf(quality_subs, 'merge', cmd_quality_merge, 'quality merge')
+    qm.add_argument('files', nargs='+')
+    qm.add_argument('--markdown', default=None)
+
     partner = subs.add_parser('partner', help='partner integration kit')
     partner_subs = partner.add_subparsers(dest='partner_command')
     partner_new = leaf(partner_subs, 'new', cmd_partner_new, 'partner new')
     partner_new.add_argument('name', help='device name, e.g. "Acme Lamp"')
     partner_new.add_argument('--title', default=None, help='display name (defaults to the name)')
     partner_new.add_argument('--category', default='device', help='short category: lamp, plug, glasses, robot...')
+    partner_new.add_argument('--from-openapi', default=None, metavar='FILE',
+                             help="generate from the device's OpenAPI 3 description (JSON): settings, commands, emulator, tests")
 
     ha = subs.add_parser('ha', help='Home Assistant bridge')
     ha_subs = ha.add_subparsers(dest='ha_command')

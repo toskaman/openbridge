@@ -4,6 +4,9 @@ This is the outline of the written licence offered to hardware partners. It is a
 by itself: the binding terms are those of the agreement both parties sign. It should be reviewed by counsel before
 signature. [Version française plus bas](#version-française).
 
+Before an agreement, a company can test OpenBridge for free for 90 days under the
+[evaluation licence](../../LICENSES/OpenBridge-Evaluation-1.0.md). Plans side by side: [Plans](PLANS.md).
+
 ## 1. Parties and scope
 
 - **Licensor:** the OpenBridge author (contact: info@lepcpro.fr).

@@ -284,6 +284,27 @@ class HomeAssistant:
             raise HAError('unexpected state answer')
         return s
 
+    def device_info(self, entity_ids):
+        """{entity_id: {manufacturer, model, firmware}} from Home Assistant's device registry (template API).
+
+        Used only for quality reports the owner turned on. Entity ids are validated, so the template holds no
+        free text. Returns {} if Home Assistant refuses templates."""
+        ids = [e for e in entity_ids if ENTITY_ID.fullmatch(e or '')][:MAX_ENTITIES]
+        if not ids:
+            return {}
+        tpl = ('[{%- for e in ' + json.dumps(ids) + ' -%}'
+               '[{{ e | tojson }},{{ device_attr(e, "manufacturer") | tojson }},{{ device_attr(e, "model") | tojson }},'
+               '{{ device_attr(e, "sw_version") | tojson }}]{{ "," if not loop.last }}{%- endfor -%}]')
+        try:
+            rows = self._http('POST', self.url + '/api/template', self._token, {'template': tpl})
+        except (HAError, HABlocked):
+            return {}
+        out = {}
+        for r in rows if isinstance(rows, list) else []:
+            if isinstance(r, list) and len(r) == 4 and r[0] in ids:
+                out[r[0]] = {'manufacturer': r[1], 'model': r[2], 'firmware': r[3]}
+        return out
+
     def facts(self, entity_id):
         s = self.state(entity_id)
         attrs = s.get('attributes') or {}

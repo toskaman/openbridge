@@ -1,0 +1,62 @@
+# A voice model adapted to each partner
+
+People say product names that no general model knows ("lance l'Acme X5", "switch the Glow lamp on"), and
+speech-to-text mishears them ("acmé x cinq"). A **partner voice profile** teaches OpenBridge a partner's vocabulary
+and phrasings, in the partner's languages, and everything stays offline: no audio and no text leave the home.
+
+## What a profile changes
+
+| Layer | Without a profile | With a profile |
+|---|---|---|
+| Speech-to-text (local MMS model) | "lance acmé x cinq" | same transcript, kept as heard for display and audit |
+| Transcript repair (`voice_normalize`) | no match | "lance acme x5", the repair is listed (`acmé x cinq -> acme x5 (acme)`) |
+| Intent model (`openbridge-intent`, Llama 3.2 3B + LoRA) | general home model | optional partner adapter trained on the partner's names and phrasings |
+| Safety | | unchanged: a request that matches only thanks to a repair is asked back ("did you mean the Acme X5?"), never run directly |
+
+## The profile
+
+A JSON file, format `openbridge-voiceprofile/1`. A complete example (fictional brand) is in
+[partners/examples/voice-profile.acme.json](partners/examples/voice-profile.acme.json).
+
+- `products`: each with a canonical `ref`, a `kind` (light, appliance, thermostat, speaker, cover, lock, vacuum),
+  the `names` people use per dialect (`fr`, `en-US`, `en-GB`, or any other language code) and the `misheard`
+  variants measured on real recordings.
+- `phrases`: the partner's own ways of asking (`"Envoie {d} en mission"` for starting a cleaning), attached to an
+  existing request family. They add phrasings, never new actions: what a device can do is still decided by its
+  typed skills and the policy.
+- `languages`: the dialects the partner needs.
+
+Checks on loading: a misheard variant can be neither an everyday word nor part of the product name itself, so a
+profile can never rewrite ordinary speech.
+
+## Languages
+
+| Language | Speech-to-text | Intent model | What a new language needs |
+|---|---|---|---|
+| French | ready | ready | nothing |
+| English (US, UK) | ready | ready | nothing |
+| Other (de, es, it, nl…) | the local model has an adapter per language, not yet enabled or measured | not trained | enable the adapter, record and measure commands, write templates, train the partner adapter |
+
+`partner_voice.coverage(profile)` prints this table for a given profile.
+
+## Training a partner adapter
+
+```
+python dev/ai_training/make_partner_dataset.py --profile acme.json --base-data E:/OpenBridgeAI/data_v3 --out E:/OpenBridgeAI/data_acme
+python dev/ai_training/train_lora.py --base <llama-3.2-3b-instruct> --init-adapter E:/OpenBridgeAI/runs/llama3b_v3/adapter \
+    --data E:/OpenBridgeAI/data_acme --out E:/OpenBridgeAI/adapter_acme --epochs 1
+python dev/ai_training/evaluate.py --backend hf --model <llama-3.2-3b-instruct> --adapter E:/OpenBridgeAI/adapter_acme \
+    --data E:/OpenBridgeAI/data_acme --split partner_test --out E:/OpenBridgeAI/eval_acme.json
+```
+
+The generator renders every request family that fits each product (about 700 lines for the example), holds whole
+templates out for the partner test set, and mixes in a replay slice of the base training set so the adapter keeps
+the rest of the home. Training takes one to three hours on one GPU. The adapter is published only if it does at
+least as well as the base model on the base test sets and better on the partner test set; the evaluation report goes
+with it.
+
+## What the partner provides, what they get
+
+The partner provides product names, 20 to 50 recorded commands per language (to measure mishearings), and their
+usual phrasings. They get the profile, the measured accuracy before and after, and, on a partner plan, the adapter
+and its evaluation report (see [Plans](partners/PLANS.md)).

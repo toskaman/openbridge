@@ -4,11 +4,26 @@
   var FR = {
     /* nav & footer */
     'nav.skip': 'Aller au contenu', 'nav.try': 'Essayer', 'nav.compat': 'Compatibilité', 'nav.bench': 'Benchmarks',
-    'nav.partners': 'Partenaires', 'nav.cta': 'Devenir partenaire',
+    'nav.partners': 'Partenaires', 'nav.cta': 'Devenir partenaire', 'nav.integrate': 'Intégrer',
     'foot.by': 'OpenBridge, conçu par un développeur indépendant.', 'foot.start': 'Par où commencer',
     'foot.security': 'Sécurité', 'foot.privacy': 'Confidentialité', 'foot.licensing': 'Licences', 'foot.new': 'Nouveautés', 'foot.roadmap': 'Feuille de route',
     'foot.notrack': 'Cœur consultable sous licence PolyForm Strict 1.0.0 ; kit d\'intégration sous Apache 2.0. Aucun traceur sur ce site. La vidéo ne se charge depuis YouTube que si vous appuyez sur lecture.',
     'lvl.real': 'Matériel réel', 'lvl.vm': 'Machines virtuelles', 'lvl.off': 'Émulateurs officiels', 'lvl.emu': 'Émulateur, matériel à venir', 'lvl.emuwait': 'Émulateur, lunettes en route',
+
+    /* integrate */
+    'int.title': 'Venez avec votre appareil, repartez avec une intégration : OpenBridge',
+    'int.h1': 'Venez avec votre appareil, repartez avec une intégration.',
+    'int.p': 'Déposez la description OpenAPI de votre appareil. Vous obtenez un adaptateur OpenBridge (réglages typés relus sur l’appareil avec annulation exacte, commandes, refus), un émulateur de votre appareil et des tests qui passent dès le premier jour. Tout est généré ici, dans votre navigateur : rien n’est envoyé.',
+    'int.in': '1. Votre description d’API', 'int.drop': 'Déposez ici un fichier OpenAPI 3 (JSON), ou cliquez pour en choisir un',
+    'int.paste': 'Ou collez-la', 'int.name': 'Nom de l’appareil', 'int.cat': 'Catégorie', 'int.go': 'Générer l’intégration',
+    'int.example': 'Charger l’exemple',
+    'int.rules': 'Les règles sont fixes et publiques : un champ borné que l’appareil renvoie aussi devient un réglage (relu, annulation exacte) ; un POST sans corps, ou un champ qu’il ne renvoie pas, devient une commande ; tout ce qui touche au firmware, aux mises à jour, aux réinitialisations, au déverrouillage ou aux mots de passe est toujours refusé ; le reste est listé avec la raison. Même résultat que <code>openbridge partner new NOM --from-openapi FICHIER</code>.',
+    'int.out': '2. Ce qu’OpenBridge en fera', 'int.th.what': 'Quoi', 'int.th.name': 'Nom', 'int.th.ep': 'Point d’accès', 'int.th.allowed': 'Autorisé',
+    'int.files': '3. Vos fichiers', 'int.zip': 'Tout télécharger (.zip)', 'int.one': 'Télécharger ce fichier',
+    'int.next': 'Décompressez à la racine de votre dossier OpenBridge et lancez <code>python -m unittest tests.partners.test_SLUG -v</code>. Le code généré est sous Apache-2.0 et vous appartient. Envoyez-nous ensuite le README : un ingénieur partenaire relit le mapping avec vous.',
+    'int.guide': 'Guide d’intégration', 'int.plans': 'Formules',
+    'int.k.read': 'Lu', 'int.k.set': 'Réglage', 'int.k.cmd': 'Commande', 'int.k.no': 'Refusé', 'int.k.skip': 'Écarté :',
+    'int.e.json': 'Ce n’est pas du JSON valide. Descriptions YAML : convertissez-les d’abord en JSON.',
 
     /* home */
     'home.title': 'OpenBridge : donnez à votre matériel des pouvoirs qu’il n’a jamais eus',

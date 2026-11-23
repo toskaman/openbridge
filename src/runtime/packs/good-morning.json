@@ -1,0 +1,162 @@
+{
+ "format": "openbridge-skillpack/1",
+ "id": "good-morning",
+ "version": "1.0.0",
+ "title": {
+  "en": "Good morning",
+  "fr": "Bonjour"
+ },
+ "description": {
+  "en": "Weekday wake-up: the heating goes up, the light comes on softly, then the blinds open.",
+  "fr": "Réveil en semaine : le chauffage monte, la lumière s'allume doucement, puis les volets s'ouvrent."
+ },
+ "publisher": {
+  "name": "OpenBridge",
+  "kind": "openbridge",
+  "url": "https://github.com/toskaman/openbridge"
+ },
+ "roles": {
+  "thermostat": {
+   "categories": [
+    "thermostat"
+   ],
+   "label": {
+    "en": "A thermostat",
+    "fr": "Un thermostat"
+   }
+  },
+  "light": {
+   "categories": [
+    "light"
+   ],
+   "label": {
+    "en": "A dimmable light",
+    "fr": "Une lumière réglable"
+   }
+  },
+  "cover": {
+   "categories": [
+    "cover"
+   ],
+   "label": {
+    "en": "Blinds, shutters or curtains",
+    "fr": "Volets, stores ou rideaux"
+   }
+  }
+ },
+ "skills": [
+  {
+   "name": {
+    "en": "Weekday wake-up",
+    "fr": "Réveil en semaine"
+   },
+   "description": {
+    "en": "07:00 Monday to Friday.",
+    "fr": "7 h 00 du lundi au vendredi."
+   },
+   "trigger": {
+    "kind": "time",
+    "at": "07:00",
+    "days": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ]
+   },
+   "steps": [
+    {
+     "device": "@thermostat",
+     "by_category": {
+      "thermostat": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_temperature",
+        "value": 20
+       }
+      }
+     }
+    },
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 40
+       }
+      }
+     }
+    },
+    {
+     "device": "@cover",
+     "by_category": {
+      "cover": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "open"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "Weekend wake-up",
+    "fr": "Réveil le week-end"
+   },
+   "description": {
+    "en": "09:00 on Saturday and Sunday.",
+    "fr": "9 h 00 le samedi et le dimanche."
+   },
+   "trigger": {
+    "kind": "time",
+    "at": "09:00",
+    "days": [
+     5,
+     6
+    ]
+   },
+   "steps": [
+    {
+     "device": "@thermostat",
+     "by_category": {
+      "thermostat": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_temperature",
+        "value": 20
+       }
+      }
+     }
+    },
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 30
+       }
+      }
+     }
+    },
+    {
+     "device": "@cover",
+     "by_category": {
+      "cover": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "open"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

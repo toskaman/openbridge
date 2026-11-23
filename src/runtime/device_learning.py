@@ -37,6 +37,7 @@ class Learner:
         self.persist = persist
         self._lock = threading.Lock()
         self.devices = {}
+        self.listeners = []      # callables (receipt, category, action), e.g. quality reports the owner turned on
         if persist:
             try:
                 self.devices = json.loads(self.path.read_text(encoding='utf-8')).get('devices', {})
@@ -70,7 +71,13 @@ class Learner:
                 if isinstance(v, str) and len(v) <= 40:
                     dev['states_seen'][v] = dev['states_seen'].get(v, 0) + 1
             dev['last_seen'] = time.time()
+            category = dev.get('category', category)
         self._save()
+        for listener in self.listeners:
+            try:
+                listener(receipt, category, action)
+            except Exception:       # a report must never break the action that was just done
+                pass
 
     def observe_value(self, key, name, value):
         """Record a numeric reading (battery, temperature, volume...) to learn the device's real range."""
