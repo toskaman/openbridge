@@ -2688,6 +2688,9 @@ def build_parser():
     ai_test = leaf(ai_subs, 'test', cmd_ai_test, 'ai test')
     ai_test.add_argument('name', nargs='?')
 
+    from src.glasses.cli import register as register_glasses
+    register_glasses(subs, leaf)
+
     learn = subs.add_parser('learn', help='what OpenBridge learned about each device')
     learn_subs = learn.add_subparsers(dest='learn_command')
     lr = leaf(learn_subs, 'report', cmd_learn_report, 'learn report')

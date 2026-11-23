@@ -567,6 +567,8 @@ final class RelayServer {
                 ui.commandResult(text.length() > 160 ? text.substring(0, 160) : text, voice); break;
             }
             case "revoke_access": unpair(); break;
+            case "get_notifications":     // messages for the glasses; empty unless the owner granted notification access
+                params.put("notifications", NotifListener.accessGranted(ctx) ? NotifListener.drain() : new JSONArray()); break;
             default: throw new SecurityException("unknown op");
         }
         return signed(key, cmd.getString("relay_id"), params);
@@ -579,6 +581,7 @@ final class RelayServer {
         if (bleHardware()) caps.put("ble_scan");
         caps.put("remote_controls");
         caps.put("command_submit");
+        if (NotifListener.accessGranted(ctx)) caps.put("notifications");
         caps.put(Aead.VERSION);
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)

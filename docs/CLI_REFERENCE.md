@@ -113,3 +113,15 @@ See [Integrate your device](INTEGRATE_YOUR_DEVICE.md).
 | `openbridge quality merge FILE... [--markdown FILE]` | For a device maker: merge the files owners sent into a monthly report |
 
 See [Devices that learn and talk to each other](DEVICE_LEARNING.md), [Skills](SKILLS.md) and [Skill packs](SKILL_PACKS.md).
+
+## Glasses
+
+| Command | What it does |
+|---|---|
+| `openbridge glasses run --link studio\|ble\|none [--glasses "ENGO 3"] [--seconds N] [--offline]` | Run the glasses hub: menus, messages from the phone, TV, vacuum, voice |
+| `openbridge glasses grant --allow tv_remote,tv_apps,tv_power,vacuum --consent ALLOW` / `revoke` | What the glasses may run on a gesture or a voice command |
+| `openbridge glasses set [--rotate on\|off] [--privacy full\|sender\|off] [--apps ...]` | Display orientation, message privacy, allowed apps |
+| `openbridge glasses preview [--out DIR] [--glasses MODEL]` | Every screen as PNG and a contact sheet |
+| `openbridge glasses press EVENT` / `notify --app A --from F --text T` / `say TEXT` / `status` | Drive a running hub |
+
+See [ENGO glasses](GLASSES.md).
