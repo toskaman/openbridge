@@ -4,6 +4,37 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+Nothing yet.
+
+## v0.5.0: 23 November 2026
+
+> **A demo release**, like the previous ones: it is not yet the final version with OpenBridge's dedicated model wired
+> into every part of the app. Supported until three months after 0.6.0 ([support policy](docs/SUPPORT.md)).
+
+### For companies
+- 🆓 **Free 90-day evaluation licence** for any company: install it, test it with your products, in your lab and CI,
+  no signature needed. [Evaluation licence](LICENSES/OpenBridge-Evaluation-1.0.md) · [Plans](docs/partners/PLANS.md)
+  (Community, Evaluation, Partner, OEM) · a [source-available option](docs/LICENSING_FSL_OPTION.md) under study.
+- 🧰 **Bring your device, leave with an integration:** `openbridge partner new NAME --from-openapi FILE`, or the
+  [Integrate page](https://toskaman.github.io/openbridge/integrate.html) in the browser, turns an OpenAPI description
+  into an adapter, an emulator and passing tests. The page and the command line write byte-identical files (tested).
+- 📦 **Skill packs:** ready-made cross-brand features (Cinema, Leaving home, Quiet cleaning, Good morning, Good night)
+  installed by role on your own devices, in French and English, always waiting for your approval. Partner packs
+  follow the same format. `openbridge skills packs / install-pack`. [Guide](docs/SKILL_PACKS.md)
+- 🗣️ **A voice model per partner:** a voice profile teaches OpenBridge a brand's product names, phrasings and
+  mishearings, offline; a generator writes the training lines for a partner adapter. [Guide](docs/PARTNER_VOICE_MODEL.md)
+- 📈 **Quality reports, opt-in:** success rate and latency per device model and firmware, firmware regressions flagged
+  across homes. Off by default, nothing identifying, never sent by OpenBridge. [Guide](docs/QUALITY_REPORTS.md)
+- ✅ **Verified by OpenBridge:** a label earned from public real-hardware evidence only, never sold, renewed by new runs.
+  [Rules](docs/partners/VERIFIED.md) · [neutral benchmark](docs/partners/BENCHMARK.md) ·
+  [API audits](docs/partners/AUDIT.md) · [co-marketing](docs/partners/CO_MARKETING.md)
+- 🧩 **`openbridge skills ...`** to list, approve, run, export and import saved skills from the command line.
+
+### Release quality
+- 📜 [Support policy](docs/SUPPORT.md), [GDPR page](docs/GDPR.md), and a **CycloneDX SBOM** attached to every
+  Windows download, attested with Sigstore like the download itself.
+
+### Also in this release
 - ⚖️ **Licensing made explicit for partners:** the OpenBridge core stays under PolyForm Strict 1.0.0; the integration
   kit (`openbridge partner new` and every file it generates, plus the integration guide) is now **Apache 2.0**, and a
   partner's own code stays under the partner's licence. A [partner licence term sheet](docs/partners/PARTNER_LICENSE.md)

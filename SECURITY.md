@@ -50,7 +50,10 @@ own network.
 
 ## Supported versions
 
-Security fixes land on the `main` branch and in the next release. Older releases and tags are not patched.
+Security fixes land on the `main` branch first, then in a patch release of the supported versions listed in the
+[support policy](docs/SUPPORT.md) (today: 0.5.x; critical fixes for 0.4.x until 23 February 2027). Each release
+download comes with a Sigstore build attestation and a CycloneDX SBOM (`OpenBridge-Windows-x64.cdx.json`, also
+attested).
 
 ## Security design, in short
 
