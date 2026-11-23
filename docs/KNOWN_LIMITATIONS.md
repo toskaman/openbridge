@@ -2,7 +2,7 @@
 
 - Physical phone evidence covers Xiaomi Android 14 and Blackview BV9300 Pro; action support differs by vendor. Xiaomi input/settings writes remain denied in the recorded sweep, while the Blackview action sweep passed. See [device results](DEVICE_CAPABILITIES.md).
 - BLE is verified through the phone and TV relays only; this PC has no Bluetooth adapter. Android TV evidence comes from one TV (Android 11).
-- OpenWrt, FRITZ!Box, Home Assistant, ESPHome, Matter, Thread and Zigbee adapters are not implemented.
+- OpenWrt, FRITZ!Box and ESPHome adapters, and a native Matter controller, are not implemented. Home Assistant is (v0.4.0): Matter, Thread and Zigbee devices paired in Home Assistant are reachable through it, verified with Home Assistant demo devices only ([guide](HOME_ASSISTANT.md)).
 - Router/box configuration is read-only by policy.
 - A physical USB cable pull was verified during revert on the owned Xiaomi phone, followed by quarantine and exact recovery after reconnect. This does not prove cable loss during every write phase or on other devices; see the [evidence ledger](../EVIDENCE_LEDGER.md).
 - Identity merging is conservative: the same device may appear twice with a "possible duplicate" hint rather than be merged.
@@ -12,6 +12,15 @@
 BridgeWindows diagnostics use read-only allowlisted methods. A separate consent-gated `pc_job` primitive now permits arbitrary owner-typed commands; these jobs cannot be undone. This exception must not be described as read-only.
 
 The current v4 adapter uses mutual HMAC challenge-response and session-MAC envelopes; it does not transmit the pre-shared key. Payloads are authenticated, not encrypted. Keep the link on a trusted LAN. OpenBridge still accepts one agent at a time; the separate bridge's multi-PC support is not yet ported. The adapter is off unless the server is started with `--windows-bridge`.
+
+## Corrected 23 Nov (supersedes stale rows below, history preserved)
+
+- Relay pairing now uses **CPace** (password-authenticated key exchange on X25519, `src/fabric/cpace.py` + Companion `Cpace.java`, Companion 0.13.0): a recorded pairing no longer allows an offline guess of the 6-digit code. Companions older than 0.13.0 still pair with the legacy PBKDF2 derivation and the pairing reports `legacy-v1` with a warning; `OPENBRIDGE_PAIRING_REQUIRE_PAKE=1` refuses them. Residual: the new Companion must be rebuilt and reinstalled on each device (not yet done on the owner's phone, TV and watch); CPace is checked against RFC 7748 X25519 vectors and Java/Python agreement, not yet against the CPace draft's own test vectors.
+- Voice STT now has a **VRAM admission** check: with less than 5 GB free on the GPU the worker loads the model on the CPU, and a CUDA out-of-memory during the GPU load also falls back to the CPU (`tests/runtime/test_stt_vram_admission.py`). Residual: no idle TTL.
+- The T3 generated-panel gap (31 Oct, no refusal channel) is **fixed** since Campaign Two S4.7 (`8894ab30`): a model reply is a proposal, a clarification or a refusal, and a refusal carrying a patch is rejected whole (`tests/forge/test_model_refusal.py`).
+- Home Assistant: exact Undo now restores brightness and colour for lights and playing / paused for media players; slow devices get longer read-back windows ([evidence](evidence/home-assistant-undo-readback-23nov.md): Undo exact 100 %, read-back 95.9 % on demo devices). Physical devices through Home Assistant remain untested.
+- BridgeWindows v5 sealed transport: still a design; v4 stays authenticated-but-plaintext (trusted home LAN only).
+- Dedicated command model: training in progress; general-purpose models are used meanwhile (see the release notes).
 
 ## Corrected 1–2 Nov (supersedes stale rows below, history preserved)
 

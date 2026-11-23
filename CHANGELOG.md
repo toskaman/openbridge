@@ -12,6 +12,20 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
   you, cooldowns and a loop guard, every firing read back.
 - 🧪 **Long soak test:** `openbridge ha soak`. 1 480 actions on a real Home Assistant: 92.8 % verified.
   Four bugs found and fixed. [Evidence](docs/evidence/device-learning-soak-22nov.md)
+- 🧩 **Skill library:** features created by the AI (or suggested, or written by hand) are saved as recipes that run
+  with **no AI model**: manual, on a device state change, or on a schedule; exportable to a signed file, importable
+  elsewhere (always re-approved). [Guide](docs/SKILLS.md)
+- ↩️ **Exact Undo, really exact:** lights come back with their brightness and colour, media players playing or paused.
+  Slow devices (vacuums, locks, blinds, media players) get longer read-back windows, stretched by the latency
+  OpenBridge has learned. On the real Home Assistant (demo devices): Undo exact 84.3 % → **100 %**, verified
+  92.8 % → **95.9 %**. [Evidence](docs/evidence/home-assistant-undo-readback-23nov.md)
+- 🏠 **`ha soak --entity`** to test only the devices you choose on a real home, plus a
+  [procedure](docs/HOME_ASSISTANT.md#test-with-your-real-devices) for Zigbee and Matter bulbs and plugs.
+- 🔐 **CPace pairing:** a recorded pairing no longer lets anyone guess the 6-digit code offline (Companion 0.13.0;
+  older Companions still pair, with a warning). Voice recognition checks free GPU memory and falls back to the CPU.
+- 🌐 **Tailscale-friendly:** devices and Home Assistant reached through a WireGuard mesh count as local.
+  [How to use OpenBridge from outside](docs/SKILLS.md#using-openbridge-over-the-internet)
+- 🧠 **Dedicated model, v2 data:** 2 433 training examples and an independent test set written by hand, never trained on.
 
 ## v0.4.0: 22 November 2026
 

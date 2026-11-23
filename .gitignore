@@ -17,3 +17,8 @@ captures/
 dev/bundle.v*.check.js
 dev/hud_studio.log
 *.bak-2026*
+
+# Local research lab output (1.8 GB of captures, VMs and videos) and scratch previews
+FRONTIER_LAB/
+dev/*.png
+final-video-SHA256SUMS.txt
