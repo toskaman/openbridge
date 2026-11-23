@@ -1,5 +1,23 @@
-"""Command Center P0 (SIMULATED_VERIFIED: intent/registry/router/cost-guard unit tests, fake transports)."""
+"""Command Center P0 (SIMULATED_VERIFIED: intent/registry/router/connected-AI unit tests, fake transports)."""
+import os
+import tempfile
 import unittest
+
+_PRIOR_PROVIDERS = None
+
+
+def setUpModule():
+    # Hermetic: never read the owner's real connected-AI file.
+    global _PRIOR_PROVIDERS
+    _PRIOR_PROVIDERS = os.environ.get('OPENBRIDGE_AI_PROVIDERS')
+    os.environ['OPENBRIDGE_AI_PROVIDERS'] = os.path.join(tempfile.mkdtemp(), 'none.json')
+
+
+def tearDownModule():
+    if _PRIOR_PROVIDERS is None:
+        os.environ.pop('OPENBRIDGE_AI_PROVIDERS', None)
+    else:
+        os.environ['OPENBRIDGE_AI_PROVIDERS'] = _PRIOR_PROVIDERS
 
 from src.runtime.intent import (
     INTENT_VERSION, new_intent, validate_intent, IntentError,
@@ -125,8 +143,8 @@ class FakeTransport:
         return self.reply
 
 
-def cloud_response(content):
-    return {'id': 'req-1', 'model': 'muse-spark-1.3',
+def openai_response(content, model='my-model'):
+    return {'id': 'req-1', 'model': model,
             'usage': {'prompt_tokens': 100, 'completion_tokens': 50},
             'choices': [{'message': {'content': content}}]}
 
@@ -144,7 +162,8 @@ class NLRouter(unittest.TestCase):
         from src.runtime.nl_router import TIERS
         manifest = json.load(open('config/runtime_models.json', encoding='utf-8'))
         declared = {(e['model_id'], e['endpoint']) for e in manifest['model_calls']}
-        for quality in ('low', 'medium', 'high'):
+        self.assertEqual(set(TIERS), {'low', 'medium'})  # no paid tier is built in
+        for quality in ('low', 'medium'):
             self.assertIn(TIERS[quality], declared, quality)
 
     def test_valid_local_reply_resolves_intent(self):
@@ -178,7 +197,7 @@ class NLRouter(unittest.TestCase):
                   FakeTransport(error=TransportError('down')), cloud, cloud_allowed=False)
         self.assertEqual(d['status'], 'escalation_required')
         self.assertEqual(cloud.calls, [])
-        self.assertTrue(any('cloud' in a.lower() for a in d['ambiguities']))
+        self.assertTrue(any('connected ai' in a.lower() for a in d['ambiguities']))
 
     def test_auto_uses_cloud_only_with_consent(self):
         from src.runtime.nl_router import parse, TransportError
@@ -239,66 +258,6 @@ class NLRouter(unittest.TestCase):
         # Direct-resolution examples must outnumber the clarification example,
         # else small models over-ask (observed live with Llama 3B).
         self.assertGreater(p.count('"confidence": 0.9'), p.count('clarifying_question": "'))
-
-
-class CostGuard(unittest.TestCase):
-    def test_estimates_match_broker_reservation(self):
-        from src.ai.broker import RESERVATION_MICRO_USD
-        from src.runtime.cost_guard import estimate_usd
-        self.assertEqual(estimate_usd('low'), 0.0)
-        self.assertEqual(estimate_usd('medium'), 0.0)
-        self.assertEqual(estimate_usd('high'), RESERVATION_MICRO_USD / 1_000_000)
-
-    def test_cloud_needs_consent_and_kill_switch(self):
-        from src.runtime.cost_guard import require_cloud, CostBlocked
-        require_cloud(True, cloud_enabled=True)
-        with self.assertRaises(CostBlocked):
-            require_cloud(False, cloud_enabled=True)
-        with self.assertRaises(CostBlocked):
-            require_cloud(True, cloud_enabled=False)
-
-    def test_budget_blocks_over_ceiling(self):
-        import tempfile, os
-        from src.runtime.cost_guard import check_budget, reserve, CostBlocked
-        db = os.path.join(tempfile.mkdtemp(), 'b.sqlite')
-        check_budget(db, 'obs-1', 200_000, 100_000)
-        reserve(db, 'obs-1', 100_000)
-        check_budget(db, 'obs-1', 200_000, 100_000)
-        reserve(db, 'obs-1', 100_000)
-        with self.assertRaises(CostBlocked):
-            check_budget(db, 'obs-1', 200_000, 100_000)
-
-    def test_atomic_admit_never_overshoots(self):
-        import tempfile, os, sqlite3, threading
-        from src.runtime.cost_guard import admit, CostBlocked
-        db = os.path.join(tempfile.mkdtemp(), 'b.sqlite')
-        barrier = threading.Barrier(10)
-        won = []
-        def worker():
-            barrier.wait()
-            try:
-                admit(db, 'obs-1', 200_000, 100_000)
-                won.append(True)
-            except CostBlocked:
-                pass
-        ts = [threading.Thread(target=worker) for _ in range(10)]
-        [t.start() for t in ts]
-        [t.join() for t in ts]
-        self.assertEqual(len(won), 2)
-        con = sqlite3.connect(db)
-        total = con.execute('SELECT COALESCE(SUM(reserved),0) FROM reservations').fetchone()[0]
-        con.close()
-        self.assertEqual(total, 200_000)
-
-    def test_budget_uses_broker_reservations_table(self):
-        import tempfile, os, sqlite3
-        from src.runtime.cost_guard import reserve
-        db = os.path.join(tempfile.mkdtemp(), 'b.sqlite')
-        reserve(db, 'obs-9', 50_000)
-        con = sqlite3.connect(db)
-        row = con.execute('SELECT observation, reserved FROM reservations').fetchone()
-        con.close()
-        self.assertEqual(row, ('obs-9', 50_000))
 
 
 def vacuum_intent(**kw):
@@ -562,27 +521,73 @@ class CommandService(unittest.TestCase):
         self.assertEqual(len(invokes), 1)
 
 
-class CloudTransport(unittest.TestCase):
-    def test_valid_cloud_reply_parses_with_usage(self):
+class _NoVault:
+    available = False
+
+    def get(self, name):
+        return None
+
+
+def provider_entry(**kw):
+    e = {'name': 'lab', 'kind': 'openai', 'base_url': 'http://127.0.0.1:1234/v1', 'model': 'my-model'}
+    e.update(kw)
+    return e
+
+
+def declared_providers(entry):
+    from src.ai import custom_provider
+    path = os.path.join(tempfile.mkdtemp(), 'ai_providers.json')
+    custom_provider.add(entry, path=path)
+    return path
+
+
+class ConnectedAITransport(unittest.TestCase):
+    """High tier = the AI the owner connected by hand (no paid model is built in)."""
+
+    def test_valid_reply_parses_with_usage(self):
         import json
-        from src.runtime.nl_router import CloudIntentTransport
-        t = CloudIntentTransport('muse-spark-1.3', 'https://api.meta.ai/v1/chat/completions',
-                                 send=lambda p: cloud_response(json.dumps(good_reply())))
+        from src.runtime.nl_router import CustomIntentTransport
+        e, sent = provider_entry(), []
+        def send(url, payload, headers, timeout):
+            sent.append((url, payload, headers))
+            return openai_response(json.dumps(good_reply()))
+        t = CustomIntentTransport(e, send=send, vault=_NoVault(), providers_path=declared_providers(e))
         self.assertEqual(t('prompt'), good_reply())
         self.assertEqual(t.last_usage['usage']['prompt_tokens'], 100)
-        self.assertIn('estimated_cost_usd', t.last_usage)
+        self.assertEqual(t.last_usage['provider'], 'lab')
+        self.assertEqual(t.execution, 'local')
+        self.assertEqual(sent[0][0], 'http://127.0.0.1:1234/v1/chat/completions')
+        self.assertEqual(sent[0][1]['model'], 'my-model')
+        self.assertNotIn('Authorization', sent[0][2])
 
-    def test_wrong_model_identity_rejected(self):
-        from src.runtime.nl_router import CloudIntentTransport, TransportError
-        r = cloud_response('{}'); r['model'] = 'evil-1'
-        t = CloudIntentTransport('muse-spark-1.3', 'e', send=lambda p: r)
+    def test_undeclared_provider_never_sends(self):
+        from src.runtime.nl_router import CustomIntentTransport, TransportError
+        sent = []
+        t = CustomIntentTransport(provider_entry(), send=lambda *a: sent.append(a),
+                                  vault=_NoVault(),
+                                  providers_path=declared_providers(provider_entry(name='other', model='other')))
         with self.assertRaises(TransportError):
             t('prompt')
+        self.assertEqual(sent, [])
+
+    def test_non_json_reply_rejected(self):
+        from src.runtime.nl_router import CustomIntentTransport, TransportError
+        e = provider_entry()
+        t = CustomIntentTransport(e, send=lambda *a: openai_response('sorry, I cannot'),
+                                  vault=_NoVault(), providers_path=declared_providers(e))
+        with self.assertRaises(TransportError):
+            t('prompt')
+
+    def test_remote_provider_is_flagged_remote(self):
+        from src.runtime.nl_router import CustomIntentTransport
+        t = CustomIntentTransport(provider_entry(base_url='https://llm.example.com/v1'),
+                                  send=lambda *a: None, vault=_NoVault())
+        self.assertEqual(t.execution, 'remote')
 
     def test_before_cloud_gate_blocks_without_calling(self):
         from src.runtime.nl_router import parse, TransportError
         def gate():
-            raise TransportError('cloud budget exhausted')
+            raise TransportError('connected AI not authorized')
         cloud = FakeTransport(good_reply())
         d = parse('Start my vacuum', 'en', 'auto',
                   FakeTransport(error=TransportError('down')), cloud,
@@ -591,10 +596,10 @@ class CloudTransport(unittest.TestCase):
         self.assertEqual(cloud.calls, [])
 
     def test_high_sends_cloud_at_most_once(self):
-        # N4 finding: a non-terminal first cloud reply must not trigger a second reserve + send.
+        # A non-terminal first reply from the connected AI must not trigger a second send.
         from src.runtime.nl_router import parse, TransportError
         gates = []
-        bad = dict(good_reply(), targets=[], status='draft') if isinstance(good_reply(), dict) else {}
+        bad = dict(good_reply(), targets=[], status='draft')
         for cloud in (FakeTransport(bad), FakeTransport(error=TransportError('down'))):
             gates.clear()
             parse('Start my vacuum', 'en', 'high', None, cloud, cloud_allowed=True,
@@ -605,7 +610,6 @@ class CloudTransport(unittest.TestCase):
 
 def api_server():
     srv = FakeServer()
-    srv.model_broker = None
     srv.command_cloud_enabled = True
     srv.command_low = FakeTransport(good_reply())
     srv.command_medium = FakeTransport(good_reply())
@@ -613,44 +617,52 @@ def api_server():
     return srv
 
 
-def stub_broker(reserve_error=None, sender=None):
-    import json
-    from types import SimpleNamespace
-    calls = []
-    def _reserve():
-        calls.append(True)
-        if reserve_error is not None:
-            raise reserve_error
-    sends = []
-    def _send(payload):
-        sends.append(payload)
-        return sender(payload) if sender else cloud_response(json.dumps(good_reply()))
-    b = SimpleNamespace(transport=_send,
-                        permit=SimpleNamespace(observation_id='obs-1'),
-                        budget_path='/tmp/never.sqlite', _reserve=_reserve)
-    b.calls, b.sends = calls, sends
-    return b
+class ConnectedAIGate(unittest.TestCase):
+    def test_high_without_connected_ai_is_409(self):
+        from src.runtime.command import parse_request, CommandError
+        with self.assertRaises(CommandError) as cm:
+            parse_request(api_server(), {'text': 'Start my vacuum', 'quality': 'high', 'cloud_consent': True})
+        self.assertEqual(cm.exception.status, 409)
 
-
-class BrokerGate(unittest.TestCase):
-    def test_stale_credit_blocks_before_any_send(self):
-        from src.ai.broker import ModelBlocked
-        from src.runtime.command import parse_request
+    def test_kill_switch_blocks_high(self):
+        from src.runtime.command import parse_request, CommandError
         srv = api_server()
-        srv.model_broker = stub_broker(ModelBlocked('Promotional-credit observation expired or invalid'))
-        out = parse_request(srv, {'text': 'Start my vacuum', 'quality': 'high', 'cloud_consent': True})
-        self.assertEqual(out['intent']['status'], 'escalation_required')
-        self.assertTrue(any('expired' in a for a in out['intent']['ambiguities']))
-        self.assertEqual(srv.model_broker.sends, [])
+        srv.command_cloud = FakeTransport(good_reply())
+        srv.command_cloud_enabled = False
+        with self.assertRaises(CommandError):
+            parse_request(srv, {'text': 'Start my vacuum', 'quality': 'high', 'cloud_consent': True})
+        self.assertEqual(srv.command_cloud.calls, [])
 
-    def test_gate_delegates_reservation_to_broker_once(self):
-        from src.runtime.command import parse_request
+    def test_remote_ai_needs_consent_then_sends_once(self):
+        from src.runtime.command import parse_request, CommandError
         srv = api_server()
-        srv.model_broker = stub_broker()
+        srv.command_cloud = FakeTransport(good_reply())
+        with self.assertRaises(CommandError):
+            parse_request(srv, {'text': 'Start my vacuum', 'quality': 'high'})
         out = parse_request(srv, {'text': 'Start my vacuum', 'quality': 'high', 'cloud_consent': True})
         self.assertEqual(out['intent']['status'], 'resolved')
-        self.assertEqual(len(srv.model_broker.calls), 1)
-        self.assertEqual(len(srv.model_broker.sends), 1)
+        self.assertTrue(out['cloud_used'])
+        self.assertIsNone(out['estimate_usd'])
+        self.assertEqual(len(srv.command_cloud.calls), 1)
+
+    def test_local_connected_ai_serves_auto_without_consent(self):
+        import json
+        from unittest import mock
+        from src.ai import custom_provider
+        from src.runtime.command import parse_request
+        from src.runtime.nl_router import TransportError
+        e = provider_entry()
+        srv = api_server()
+        srv.command_low = FakeTransport(error=TransportError('down'))
+        srv.command_medium = FakeTransport(error=TransportError('down'))
+        reply = openai_response(json.dumps(good_reply()))
+        with mock.patch.dict(os.environ, {'OPENBRIDGE_AI_PROVIDERS': declared_providers(e)}), \
+                mock.patch.object(custom_provider.ProviderTransport, '_http', lambda self, *a: reply), \
+                mock.patch.object(custom_provider, 'api_key', lambda entry, vault=None: None):
+            out = parse_request(srv, {'text': 'Start my vacuum', 'quality': 'auto'})
+        self.assertEqual(out['intent']['status'], 'resolved')
+        self.assertTrue(out['cloud_used'])
+        self.assertEqual(out['provider'], 'lab')
 
 
 class CommandAPI(unittest.TestCase):
@@ -661,7 +673,8 @@ class CommandAPI(unittest.TestCase):
         self.assertTrue(body['low']['ready'])
         self.assertEqual(body['low']['model'], 'llama3.2:3b-instruct-q4_K_M')
         self.assertFalse(body['high']['configured'])
-        self.assertEqual(body['high']['estimate_usd'], 0.10)
+        self.assertIsNone(body['high']['provider'])
+        self.assertIsNone(body['high']['estimate_usd'])  # OpenBridge bills nothing
 
     def test_tiers_reports_last_inference_outcome(self):
         from src.runtime.api_v2 import get

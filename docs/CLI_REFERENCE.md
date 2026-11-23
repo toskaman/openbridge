@@ -36,7 +36,8 @@ the preview step prints a `--consent HASH` that must be passed back.
 ## Commands
 
 - `version` `doctor` `init`
-- `models list|status|test [--provider local|meta-cloud] [--deep] [--spend]|benchmark`
+- `models list|status|test [--provider local|custom] [--deep]|benchmark`
+- `ai list|add --name N --base-url URL --model M [--kind openai|ollama] [--api-key-env VAR|--store-key] [--timeout-s S] [--max-tokens T] [--json-mode] [--no-activate]|use NAME|test NAME [--consent ALLOW-REMOTE]|remove NAME` — connect your own AI/API by hand ([guide](AI_PROVIDERS.md)).
 - `devices discover [--providers mdns,ssdp,android,freebox,ble]|list|inspect ID|pair ID|status`
 - `ask "TEXT" [--prior intent.json]` — resolves via the skill router; writes return an approval request. `--prior` resolves follow-ups ("pause it") against the prior turn.
 - `routes list --target T|dispatch --target T [--op OP] [--params JSON] [--capability C] [--relay ID]|simulate-loss --target T --lost-relay R` — relay-route enumeration and at-most-once dispatch.
@@ -60,10 +61,12 @@ the preview step prints a `--consent HASH` that must be passed back.
 instead of a fresh in-process core. Use it when the GUI and the CLI must
 share live state (pending approvals, running workflows).
 
-## Paid cloud
+## Connected AI (no paid model built in)
 
-Without `OPENBRIDGE_META_KEY` (OS secret store or environment, never a CLI
-argument), cloud commands report `CLOUD_API_KEY_MISSING`. Spend is disabled
-unless `OPENBRIDGE_CLI_BUDGET_USD` is set, and every paid call needs
-`--spend --consent SPEND-APPROVED` plus budget headroom. Estimates are
-pre-authorized; actuals reconcile afterwards.
+OpenBridge ships no paid model; the former hosted tier, `--spend` and the
+credit/budget flags are gone. Model tiers are `AUTO`, `LOCAL-FAST`,
+`LOCAL-QUALITY` and `CUSTOM` (the AI you connected with `ai add`; the old
+`CLOUD-*` names map to `CUSTOM`). Keys go to the OS secret store
+(`--store-key`, hidden prompt) or an environment variable (`--api-key-env`),
+never a CLI argument. A provider that is not on this PC needs
+`--consent ALLOW-REMOTE` (alias `ALLOW-CLOUD`). See [AI_PROVIDERS.md](AI_PROVIDERS.md).

@@ -1,18 +1,16 @@
-"""Meta model tiers with auditable AUTO routing.
+"""Model tiers with auditable AUTO routing.
 
-Tiers: LOCAL-FAST (Llama 3.2 3B), LOCAL-QUALITY (Glimmer 30B),
-CLOUD-HIGH (Spark 1.3), CLOUD-MAX (strongest eligible cloud config),
-AUTO (auditable, privacy-gated). An explicit tier never reroutes:
-missing availability raises instead of silently switching local<->paid.
-Reasons never carry user text.
+Tiers: LOCAL-FAST (Llama 3.2 3B), LOCAL-QUALITY (Muse Glimmer 30B), CUSTOM (a model or API the
+owner connected by hand, see src/ai/custom_provider.py), AUTO (auditable, privacy-gated).
+No paid model is built in. An explicit tier never reroutes: missing availability raises instead
+of silently switching. A CUSTOM provider that is not on this PC needs explicit consent
+(``needs_cloud_consent``: the request would leave the PC). Reasons never carry user text.
 """
 from src.ai.local_meta import MODEL_ID as LLAMA_ID
 from src.ai.glimmer import GLIMMER_ID
-from src.ai.broker import MODEL_ID as SPARK_ID
 
-TIERS = ('LOCAL-FAST', 'LOCAL-QUALITY', 'CLOUD-HIGH', 'CLOUD-MAX', 'AUTO')
-TIER_MODELS = {'LOCAL-FAST': LLAMA_ID, 'LOCAL-QUALITY': GLIMMER_ID,
-               'CLOUD-HIGH': SPARK_ID, 'CLOUD-MAX': SPARK_ID}
+TIERS = ('LOCAL-FAST', 'LOCAL-QUALITY', 'CUSTOM', 'AUTO')
+TIER_MODELS = {'LOCAL-FAST': LLAMA_ID, 'LOCAL-QUALITY': GLIMMER_ID}
 COMPLEX_TASKS = {'orchestration', 'synthesis', 'diagnosis', 'planning'}
 
 
@@ -25,7 +23,17 @@ def _reasons(tier, task, availability, privacy):
             'tier=%s' % tier, 'privacy=%s' % privacy,
             'local_fast=%s' % bool(availability.get('local_fast')),
             'local_quality=%s' % bool(availability.get('local_quality')),
-            'cloud=%s' % bool(availability.get('cloud'))]
+            'custom=%s' % bool(availability.get('custom'))]
+
+
+def _decision(tier, task, availability, privacy):
+    if tier == 'CUSTOM':
+        model = availability.get('custom_model')
+        remote = availability.get('custom_execution', 'remote') != 'local'
+    else:
+        model, remote = TIER_MODELS[tier], False
+    return {'tier': tier, 'model_id': model, 'needs_cloud_consent': remote,
+            'reasons': _reasons(tier, task, availability, privacy)}
 
 
 def route(tier, task, availability, privacy='local-only', user_text=''):
@@ -33,29 +41,30 @@ def route(tier, task, availability, privacy='local-only', user_text=''):
         raise RoutingError('Unknown tier: %r' % (tier,))
     if tier == 'AUTO':
         return _auto(task, availability, privacy)
-    model = TIER_MODELS[tier]
-    needs_cloud = tier.startswith('CLOUD')
-    key = {'LOCAL-FAST': 'local_fast', 'LOCAL-QUALITY': 'local_quality'}.get(tier, 'cloud')
+    key = {'LOCAL-FAST': 'local_fast', 'LOCAL-QUALITY': 'local_quality', 'CUSTOM': 'custom'}[tier]
     if not availability.get(key):
-        code = 'CLOUD_MODEL_UNAVAILABLE' if needs_cloud else 'MODEL_NOT_FOUND'
-        raise RoutingError('%s: %s unavailable for explicit tier %s' % (code, model, tier))
-    return {'tier': tier, 'model_id': model, 'needs_cloud_consent': needs_cloud,
-            'reasons': _reasons(tier, task, availability, privacy)}
+        code = 'CUSTOM_PROVIDER_MISSING' if tier == 'CUSTOM' else 'MODEL_NOT_FOUND'
+        raise RoutingError('%s: no model available for explicit tier %s' % (code, tier))
+    return _decision(tier, task, availability, privacy)
+
+
+def _custom_allowed(availability, privacy):
+    if not availability.get('custom'):
+        return False
+    return availability.get('custom_execution') == 'local' or privacy == 'allow-cloud'
 
 
 def _auto(task, availability, privacy):
-    if task in COMPLEX_TASKS and privacy == 'allow-cloud' and availability.get('cloud'):
-        tier = 'CLOUD-HIGH'
-    elif task in COMPLEX_TASKS and availability.get('local_quality'):
+    if task in COMPLEX_TASKS and availability.get('local_quality'):
         tier = 'LOCAL-QUALITY'
+    elif task in COMPLEX_TASKS and _custom_allowed(availability, privacy):
+        tier = 'CUSTOM'
     elif availability.get('local_fast'):
         tier = 'LOCAL-FAST'
     elif availability.get('local_quality'):
         tier = 'LOCAL-QUALITY'
-    elif availability.get('cloud') and privacy == 'allow-cloud':
-        tier = 'CLOUD-HIGH'
+    elif _custom_allowed(availability, privacy):
+        tier = 'CUSTOM'
     else:
         raise RoutingError('MODEL_NOT_FOUND: no tier available under privacy=%s' % privacy)
-    needs_cloud = tier.startswith('CLOUD')
-    return {'tier': tier, 'model_id': TIER_MODELS[tier], 'needs_cloud_consent': needs_cloud,
-            'reasons': _reasons(tier, task, availability, privacy)}
+    return _decision(tier, task, availability, privacy)

@@ -18,7 +18,7 @@
   const M = global.OBMotion;
   if (!M) return;
   const MODEL = new Set(['/api/v2/command/parse', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/recommend', '/api/fabric-advise',
-    '/api/agent-plan', '/api/v2/cloud/confirm', '/api/v2/capabilities/followup', '/api/v2/diagnose']);
+    '/api/agent-plan', '/api/v2/capabilities/followup', '/api/v2/diagnose']);
   const EXEC = new Set(['/api/v2/execute', '/api/v2/command/execute', '/api/v2/skill_invoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls/invoke',
     '/api/v2/workflows/run', '/api/agent-execute', '/api/agent-undo', '/api/agent-recover', '/api/session-restore', '/api/demo-transaction']);
   const SIMULATED = new Set(['/api/demo-transaction']);

@@ -57,13 +57,15 @@ network. See [OFFLINE_DEMO.md](OFFLINE_DEMO.md).
 - Missing models are always reported as explicit diagnostics, never as
   silent failures.
 
-## Cloud calls blocked
+## Connected AI not used
 
-Hosted Meta calls need all of: the key in the OS secret store as
-`OPENBRIDGE_META_KEY` (never a CLI argument or a file), a spend cap via
-`OPENBRIDGE_CLI_BUDGET_USD`, and per-call `--spend --consent SPEND-APPROVED`.
-Without them the call is refused by design. Preflight with
-`openbridge models test --provider meta-cloud`.
+No paid model is built in. Pro / `CUSTOM` needs an AI you connected by hand
+(`openbridge ai add …` or Settings → Connected AI). Check it with
+`openbridge ai list` and `openbridge ai test NAME` (add
+`--consent ALLOW-REMOTE` when it is not on this PC). `http://` is refused for
+public hosts (use https), the key must be in the OS secret store or the
+variable named by `--api-key-env`, and redirects are refused by design. See
+[AI_PROVIDERS.md](AI_PROVIDERS.md).
 
 ## Android / adb issues
 

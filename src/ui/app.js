@@ -6,7 +6,7 @@ let csrfToken;
 let generation = 0;
 let metaSessionConfigured = false;
 let metaLocal = false;
-let runtimeMetaModel = 'muse-spark-1.3';
+let runtimeMetaModel = 'llama3.2:3b-instruct-q4_K_M';
 let inspectedDevice = null;
 let metaPending = false;
 const metaButton = document.querySelector('#meta-advice');
@@ -153,21 +153,12 @@ request('/api/model-status').then(state => {
   metaLocal = state.inference_mode === 'local';
   agentEnabled = state.agent_enabled === true;
   if (agentEnabled) document.querySelector('#agent-result').textContent = 'Agent ready. Inspect an authorized Android phone, choose a goal, then ask Meta for a plan.';
-  runtimeMetaModel = state.model_id || 'muse-spark-1.3';
+  runtimeMetaModel = state.model_id || 'llama3.2:3b-instruct-q4_K_M';
   syncMetaControl();
   document.querySelector('#model-state').textContent = metaSessionConfigured
-    ? metaLocal ? (runtimeMetaModel.startsWith('muse-glimmer') ? 'Meta Muse Glimmer (open weights) · local GPU/CPU · $0 provider credits' : 'Built with Llama · local CPU · $0 provider credits') : 'Meta Muse Spark 1.3 · supervised requests only · credit checks enforced'
-    : 'Runtime model: disabled · credit verification required';
-}).catch(() => { document.querySelector('#model-state').textContent = 'Model state unavailable. Cloud requests blocked.'; });
-
-document.querySelector('#recorded-meta-proof').addEventListener('click', async () => {
-  const target=document.querySelector('#recorded-proof-result');
-  try {
-    const proof=await request('/api/model-proof');
-    const receipt=proof.receipt;
-    target.textContent=`RECORDED RUN — ${receipt.recorded_at_utc} · ${receipt.model_id}. ${receipt.proposal.summary} Limits: ${receipt.proposal.uncertainty} Estimated cost: $${receipt.estimated_cost_usd.toFixed(6)}. This displays a previous runtime-core call; no live request was made.`;
-  } catch (error) { target.textContent=`Recorded proof unavailable: ${error.message}`; }
-});
+    ? (runtimeMetaModel.startsWith('muse-glimmer') ? 'Meta Muse Glimmer (open weights) · local GPU/CPU · free' : 'Built with Llama · local CPU · free')
+    : 'Local model: not started (start OpenBridge with --local-meta) · no paid model is built in';
+}).catch(() => { document.querySelector('#model-state').textContent = 'Model state unavailable.'; });
 
 metaButton.addEventListener('click', async () => {
   syncMetaControl();
@@ -178,7 +169,7 @@ metaButton.addEventListener('click', async () => {
   const resultPanel = document.querySelector('#meta-result');
   metaButton.disabled = true;
   metaPending = true;
-  resultPanel.textContent = metaLocal ? `Requesting local Meta ${runtimeMetaModel} review… Numeric facts stay on this PC.` : 'Requesting Meta Muse Spark 1.3 advice on synthetic facts…';
+  resultPanel.textContent = `Requesting local Meta ${runtimeMetaModel} review… Numeric facts stay on this PC.`;
   try {
     if (!csrfToken) csrfToken = (await request('/api/session')).csrf_token;
     const result = await request('/api/recommend', {
@@ -186,7 +177,7 @@ metaButton.addEventListener('click', async () => {
       body: JSON.stringify({ source: selectedSource, device_id: deviceId }),
     });
     if (version !== generation) return;
-    resultPanel.textContent = `${result.model_id}: ${result.proposal.summary} Evidence: ${result.proposal.evidence_refs.join(', ')}. Limits: ${result.proposal.uncertainty} Estimated cost: $${result.estimated_cost_usd.toFixed(6)}. No device action performed.`;
+    resultPanel.textContent = `${result.model_id}: ${result.proposal.summary} Evidence: ${result.proposal.evidence_refs.join(', ')}. Limits: ${result.proposal.uncertainty} Cost: $0 (local). No device action performed.`;
   } catch (error) {
     if (version === generation) resultPanel.textContent = `Meta request blocked or failed: ${error.message}`;
   } finally { metaPending = false; syncMetaControl(); }
@@ -436,12 +427,11 @@ function showDevice(device, links) {
   if (device.category === 'computer') fabricDetail.append(jobPanel(device));
 }
 function diagnosisPanel(device) {
-  // V4-01 timeline + hypotheses, V4-05 privacy-preserving cloud review. Read-only; nothing here changes a device.
+  // V4-01 timeline + hypotheses. Read-only; nothing here changes a device.
   const box = element('div', undefined, 'diagnosis-panel');
   const out = element('div', undefined, 'diagnosis-out');
   const probe = element('button', 'Re-measure (read-only, 3 × 10 s)', 'secondary');
   const why = element('button', 'Why did it disconnect?', 'secondary');
-  const cloud = element('button', 'Prepare Meta cloud review…', 'secondary');
   const showHyp = (a) => {
     out.replaceChildren();
     if (a.verdict !== 'HYPOTHESES') { out.append(element('p', 'Unknown: not enough data. No link loss, Wi-Fi-off or WAN-down entry for this device in the timeline yet.')); return; }
@@ -466,31 +456,7 @@ function diagnosisPanel(device) {
       out.prepend(element('p', `${r.result.reads.filter(x => x.verified).length}/${r.result.reads.length} reads verified · receipt ${r.transaction_id}`));
     } catch (e) { out.replaceChildren(element('p', e.message)); } finally { probe.disabled = false; }
   });
-  cloud.addEventListener('click', async () => {
-    try {
-      const pv = await postJson('/api/v2/cloud/preview', { device_key: device.key });
-      const split = element('div', undefined, 'payload-split');
-      const left = element('div'); left.append(element('h4', 'Local projection (stays here)'), element('pre', JSON.stringify(pv.local_projection, null, 1)));
-      const right = element('div'); right.append(element('h4', `Outgoing to ${pv.model} · ${pv.bytes} bytes · sha256 ${pv.sha256.slice(0, 12)}…`), element('pre', pv.outgoing_payload));
-      split.append(left, right);
-      const diff = element('ul'); for (const d of pv.diff) diff.append(element('li', `${d.action} ${d.kind} at ${d.path}`));
-      const cats = element('ul'); for (const c of pv.categories_shared) cats.append(element('li', c));
-      const consentRow = element('label', undefined, 'transaction-consent'); const consent = element('input'); consent.type = 'checkbox';
-      consentRow.append(consent, document.createTextNode(' I reviewed these exact bytes and agree to send them once to Meta.'));
-      const send = element('button', pv.live_available ? 'Send exactly these bytes' : 'Meta cloud unavailable (no key / credit permit)', 'secondary');
-      send.disabled = true; consent.addEventListener('change', () => { send.disabled = !consent.checked || !pv.live_available; });
-      const res = element('p'); res.setAttribute('role', 'status');
-      send.addEventListener('click', async () => {
-        send.disabled = true;
-        try {
-          const r = await postJson('/api/v2/cloud/confirm', { preview_id: pv.preview_id, sha256: pv.sha256, consent: true });
-          res.textContent = `LIVE ${r.model} · ranking: ${r.answer.ranking.join(' > ')} · ${r.answer.summary} · uncertainty: ${r.answer.uncertainty} · next read-only check: ${r.answer.next_read_only_check}`;
-        } catch (e) { res.textContent = e.message; }
-      });
-      out.replaceChildren(element('p', pv.disclosure), element('h4', 'Categories shared'), cats, split, element('h4', 'What was removed or aliased'), diff, consentRow, send, res);
-    } catch (e) { out.replaceChildren(element('p', e.message)); }
-  });
-  box.append(element('h3', 'Diagnose across transports'), why, probe, cloud, out);
+  box.append(element('h3', 'Diagnose across transports'), why, probe, out);
   return box;
 }
 async function postJson(path, body) {

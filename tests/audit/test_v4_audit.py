@@ -21,14 +21,6 @@ class AuditTool(unittest.TestCase):
         self.assertEqual(result['single_effect_gate'],result['mock_effects']==1)
         self.assertEqual(result['actual_hardware_calls'],0)
 
-    def test_credit_probe_uses_no_provider_and_reports_original_vs_minted(self):
-        with patch.object(socket,'socket',side_effect=AssertionError('network refused')):
-            result=audit.probe_explanation_credit_policy()
-        self.assertTrue(result['expired_original_rejected'])
-        self.assertEqual(result['actual_provider_calls'],0)
-        self.assertEqual(result['guard_pass'],not(result['minted_next_slot_accepted'] or result['reservation_total_usd']>.20 or result['new_output_ledger_accepted']))
-
-class ExistingBoundaries(unittest.TestCase):
     def test_untrusted_expansions_are_refused(self):
         original=manifest(1000)
         for key,value in [('operation','execute_shell'),('command','adb shell'),('recipients',['other']),('origin','meta_generated'),('permissions',['control'])]:

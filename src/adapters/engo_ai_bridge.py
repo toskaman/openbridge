@@ -679,7 +679,7 @@ class EngoAIBridge:
         self.current_mode = "STREAMING_AI"
         return {"status": "AI_ANSWERED", "query": transcript, "answer": ai_reply}
 
-    def stream_ai_response(self, title: str, answer: str, query: str = "", model_tag: str = "GEMINI / LLM") -> bool:
+    def stream_ai_response(self, title: str, answer: str, query: str = "", model_tag: str = "LLM") -> bool:
         """Renders an AI answer cleanly formatted for 304x256 MicroOLED."""
         cmds = bytearray()
         cmds += cmd_clear()

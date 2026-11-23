@@ -6,7 +6,7 @@ from src.runtime.readiness import OPTIONAL, REQUIRED, STATUSES, collect, plain_l
 
 def probes_all_ready():
     return {'core': 'READY', 'os': 'READY', 'local_fast': 'READY',
-            'local_quality': 'READY', 'cloud': 'READY', 'devices': 'READY',
+            'local_quality': 'READY', 'custom_ai': 'READY', 'devices': 'READY',
             'evidence': 'READY', 'storage': 'READY'}
 
 
@@ -22,10 +22,10 @@ class ReadinessTests(unittest.TestCase):
 
     def test_one_missing_blocks_global_but_keeps_per_feature(self):
         probes = probes_all_ready()
-        probes['cloud'] = 'MISSING'
+        probes['custom_ai'] = 'MISSING'
         report = collect(probes)
         self.assertNotEqual(report['global'], 'READY')
-        self.assertEqual(report['features']['cloud'], 'MISSING')
+        self.assertEqual(report['features']['custom_ai'], 'MISSING')
         self.assertEqual(report['features']['core'], 'READY')
 
     def test_unknown_probe_value_is_invalid(self):
@@ -48,12 +48,12 @@ class RequiredOptionalSplitTests(unittest.TestCase):
     def test_required_ready_despite_optional_missing(self):
         probes = {name: 'READY' for name in REQUIRED}
         probes.update({'local_fast': 'MODEL_NOT_FOUND', 'local_quality': 'MODEL_NOT_FOUND',
-                       'cloud': 'MISSING', 'devices': 'MISSING'})
+                       'custom_ai': 'MISSING', 'devices': 'MISSING'})
         report = collect(probes, required=REQUIRED)
         self.assertEqual(report['global'], 'READY')
         self.assertEqual(report['overall'], 'BLOCKED')
         self.assertTrue(all(v == 'READY' for v in report['required'].values()))
-        self.assertEqual(report['optional']['cloud'], 'MISSING')
+        self.assertEqual(report['optional']['custom_ai'], 'MISSING')
 
     def test_required_failure_blocks(self):
         probes = {name: 'READY' for name in REQUIRED}
@@ -69,7 +69,7 @@ class RequiredOptionalSplitTests(unittest.TestCase):
         self.assertEqual(report['required']['os'], 'NOT_TESTED')
 
     def test_plain_lines_are_plain_language(self):
-        self.assertEqual(plain_line('cloud', 'MISSING'), 'Meta cloud key: missing')
+        self.assertEqual(plain_line('custom_ai', 'MISSING'), 'connected AI (manual): missing')
         self.assertEqual(plain_line('local_fast', 'MODEL_NOT_FOUND'),
                          'local fast model (Llama 3B): model not installed')
         self.assertEqual(plain_line('mystery_probe', 'SOME_STATUS'),

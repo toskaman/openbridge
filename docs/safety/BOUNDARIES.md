@@ -1,6 +1,8 @@
 # Safety and model boundaries
 
-RuntimeModelBroker pins Meta Muse Spark 1.3 to the official Meta HTTPS endpoint. A supervised call through this application core succeeded on 26 October 2026 using synthetic fixture facts; docs/runtime-meta-receipt.json records the returned identity, request ID, token use and estimated cost. The live browser inference endpoint is implemented and tested with controlled responses, but no live browser-to-provider session is claimed.
+**Current (2026-11-22): no paid model is built in.** Model calls go only to the pinned local Meta models (loopback Ollama) or to the exact (model, endpoint) pair the owner connected by hand ([AI_PROVIDERS.md](../AI_PROVIDERS.md)); anything else is refused before a byte is sent. A provider that is not on this PC needs explicit consent per request; keys stay in the OS secret store or an environment variable, never in a file or on the command line. The two paragraphs below describe the former hosted tier and are kept as history.
+
+*History:* RuntimeModelBroker pinned Meta Muse Spark 1.3 to the official Meta HTTPS endpoint. A supervised call through this application core succeeded on 26 October 2026 using synthetic fixture facts; docs/runtime-meta-receipt.json records the returned identity, request ID, token use and estimated cost. The live browser inference endpoint is implemented and tested with controlled responses, but no live browser-to-provider session is claimed.
 
 Default startup has no credential or free-credit permit and makes no cloud calls. A short-lived supervised credit observation is required for explicit requests. Unknown models, malformed proposals, unknown evidence, expired observations and exhausted durable allowances fail closed. See FREE_CREDITS.md for limits and account-wide verification limitations.
 

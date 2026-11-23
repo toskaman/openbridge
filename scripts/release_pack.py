@@ -163,11 +163,11 @@ def build_evidence(staging, args):
             reqs.append('## %s\n\n```\n%s\n```\n' % (name, origin.read_text(encoding='utf-8')))
     (staging / 'REQUIREMENTS.md').write_text('# Requirements\n\n' + '\n'.join(reqs), encoding='utf-8')
     (staging / 'MODELS_AND_PROVIDERS.md').write_text(
-        '# Models and providers\n\nRuntime is Meta-only (config/runtime_models.json):\n'
+        '# Models and providers\n\nNo paid model is built in. Local Meta models (config/runtime_models.json):\n'
         '- llama3.2:3b-instruct-q4_K_M on http://127.0.0.1:11437 (LOCAL-FAST)\n'
         '- muse-glimmer:30b-q4_K_M on http://127.0.0.1:11438 (LOCAL-QUALITY)\n'
-        '- muse-spark-1.3 on https://api.meta.ai/v1 (CLOUD-HIGH/MAX, key + consent)\n'
-        'Tiers and routing: src/ai/router.py. Budget guard: src/ai/cloud_budget.py.\n',
+        '- CUSTOM: an AI the owner connects by hand (docs/AI_PROVIDERS.md)\n'
+        'Tiers and routing: src/ai/router.py. Connected AI: src/ai/custom_provider.py.\n',
         encoding='utf-8')
     (staging / 'LOCAL_MODEL_SETUP.md').write_text(
         '# Local model setup\n\n1. Install Ollama.\n'

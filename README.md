@@ -117,7 +117,7 @@ Every home and every company is full of devices that **could** help each other b
     </td>
     <td valign="top">
       <h4>🔒 Private by default</h4>
-      The AI runs <b>locally on your own machine</b>. Cloud AI is optional, only with your explicit consent, inside a hard budget. Your home doesn't have to leave your home.
+      The AI runs <b>locally on your own machine</b>, for free. No paid model is built in: if you want another AI, <a href="docs/AI_PROVIDERS.md">connect your own AI or API</a> by hand (LM Studio, Ollama, llama.cpp, OpenRouter…), used only with your consent. Your home doesn't have to leave your home.
     </td>
   </tr>
   <tr>
@@ -181,6 +181,8 @@ These capabilities are **implemented and covered by automated tests**. What they
 | **Adaptive routing** | If one path to a device dies, use another, without ever executing twice. |
 | **Device diagnostics** | Ask *“why isn't this working?”* and get an answer based only on observed facts. |
 | **Portable dashboards** | Export a set of controls, move it to another home and re-approve. No permissions are inherited. |
+
+**Idea in development (concept only, not integrated):** [OpenBridge without a PC](docs/concepts/PC_LESS_OPENBRIDGE.md): devices use each other directly through a made-to-measure, self-updating client and an OpenBridge server over the internet.
 
 **Next integrations on the roadmap:** [ENGO / ActiveLook HUD glasses](docs/partners/ENGO.md) (hardware on its way) · Matter · Thread · Zigbee · Home Assistant · ESPHome · OpenWrt · FRITZ!Box · more TVs, wearables, robots and EV / automotive interfaces.
 
@@ -268,7 +270,7 @@ python -m src.cli judge demo           # offline demo, no devices required
 python -m src.server                   # open http://127.0.0.1:18765
 ```
 
-Want the local AI models, the Android / TV / watch companion, or headless use over SSH? → **[Quickstart](docs/QUICKSTART.md)** · [CLI reference](docs/CLI_REFERENCE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+Want the local AI models, the Android / TV / watch companion, or headless use over SSH? → **[Quickstart](docs/QUICKSTART.md)** · [Connect your own AI](docs/AI_PROVIDERS.md) · [CLI reference](docs/CLI_REFERENCE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ---
 

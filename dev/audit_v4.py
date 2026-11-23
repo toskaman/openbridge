@@ -71,61 +71,20 @@ def probe_command_concurrency():
                 'single_effect_gate':len(effects)==1,'actual_hardware_calls':0,
                 'note':'Actual Executor used; V4-S1 atomic claim joins the second request onto the first dispatch (one effect, one transaction).'}
 
-def _permit_factory(clock):
-    # The runner no longer defines permit_for (permit is built inline in main),
-    # so build runner-shaped legacy permits directly: slot 0 is the canonical
-    # observation, other slots cycle 4 derived ids. This probes the BROKER's
-    # legacy enforcement (freshness, per-observation ceiling, ledger
-    # independence), not runner wiring; the evaluation-allowance path needs a
-    # dedicated audit pass (out of scope for this CI repair).
-    from src.ai.broker import CreditPermit
-    class Clock:
-        @staticmethod
-        def now(tz=None):return clock['now']
-    def permit_for(slot):
-        obs='audit-one-observation' if slot==0 else 'audit-derived-%d'%(slot%4)
-        return CreditPermit(observation_id=obs,verified_at=clock['now'],
-                            free_balance_usd=100,session_budget_usd=0.20)
-    return permit_for,Clock
-
-def probe_explanation_credit_policy():
-    from src.ai import broker
-    clock={'now':datetime(2026,10,28,12,tzinfo=timezone.utc)}
-    factory,Clock=_permit_factory(clock);original=factory(0)
-    with tempfile.TemporaryDirectory(prefix='openbridge-v4-credit-') as d,patch.object(broker,'datetime',Clock):
-        path=Path(d)/'freshness.sqlite';broker.RuntimeModelBroker(path,original)._reserve()
-        clock['now']+=timedelta(seconds=601);rejected=False
-        try:broker.RuntimeModelBroker(path,original)._reserve()
-        except broker.ModelBlocked:rejected=True
-        renewed=factory(2);accepted=False
-        try:broker.RuntimeModelBroker(path,renewed)._reserve();accepted=True
-        except broker.ModelBlocked:pass
-        factory,_=_permit_factory(clock);shared=Path(d)/'run-a.sqlite'
-        for i in range(8):broker.RuntimeModelBroker(shared,factory(i))._reserve()
-        with closing(sqlite3.connect(shared)) as db:total=db.execute('select sum(reserved) from reservations').fetchone()[0]/1000000
-        alternate=False
-        try:broker.RuntimeModelBroker(Path(d)/'run-b.sqlite',factory(0))._reserve();alternate=True
-        except broker.ModelBlocked:pass
-        return {'evidence':'SIMULATED','observation_age_s':601,'expired_original_rejected':rejected,
-                'minted_next_slot_accepted':accepted,'reservation_total_usd':total,'derived_observation_ids':4,
-                'new_output_ledger_accepted':alternate,'guard_pass':not(accepted or total>.20 or alternate),
-                'actual_provider_calls':0,'actual_spend_usd':0,
-                'note':'Tests enforcement properties only; does not assert historical account charges exceeded owner authorization.'}
-
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
     if args.output.exists():raise FileExistsError('Audit receipts are never overwritten')
     paths=['src/runtime/command.py','src/runtime/skills.py','src/runtime/fabric_status.py','src/runtime/primitives.py',
-           'src/forge/planner.py','src/forge/planner_v2.py','src/forge/compiler.py','dev/run_explain_eval.py','src/ai/broker.py']
+           'src/forge/planner.py','src/forge/planner_v2.py','src/forge/compiler.py']
     subprocess.run(['git','diff','--exit-code',BASELINE,'--',*paths],cwd=ROOT,check=True)
     hashes={p:hashlib.sha256(subprocess.check_output(['git','show',BASELINE+':'+p],cwd=ROOT)).hexdigest() for p in paths}
     report={'baseline_revision':BASELINE,'auditor_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
             'recorded_at_utc':datetime.now(timezone.utc).isoformat(),'source_blob_sha256':hashes,'registry':registry_snapshot(),
-            'command_concurrency':probe_command_concurrency(),'explanation_credit_policy':probe_explanation_credit_policy(),
+            'command_concurrency':probe_command_concurrency(),
             'actual_hardware_calls':0,'actual_provider_calls':0,'actual_spend_usd':0,
             'security_release_gate':'BLOCKED','v4_runtime_novel_adapter':'NOT_ESTABLISHED','heldout_hardware_gold':'NOT_FROZEN',
             'scope':'Independent development probes; not physical acceptance or held-out model performance.'}
-    report['security_release_gate']='BLOCKED' if not (report['command_concurrency']['single_effect_gate'] and report['explanation_credit_policy']['guard_pass']) else 'PASS_FOR_EXECUTED_PROBES_ONLY'
+    report['security_release_gate']='BLOCKED' if not report['command_concurrency']['single_effect_gate'] else 'PASS_FOR_EXECUTED_PROBES_ONLY'
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with args.output.open('xb') as handle:handle.write((json.dumps(report,indent=2)+'\n').encode())
     print(json.dumps({'output':str(args.output),'security_release_gate':report['security_release_gate'],

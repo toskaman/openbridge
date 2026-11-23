@@ -109,30 +109,44 @@ def _medium(server):
     return t
 
 
-def _broker(server):
-    b = getattr(server, 'model_broker', None)
-    if b is None or not callable(getattr(b, 'transport', None)):
-        return None
-    if not hasattr(b, 'permit') or not hasattr(b, 'budget_path'):
-        return None
-    return b
+def _provider():
+    """The owner's active connected AI (src/ai/custom_provider.py), or None."""
+    from src.ai import custom_provider
+    return custom_provider.active()
 
 
 def _cloud(server):
+    """Transport for the High tier = the owner's connected provider. Rebuilt when it changes.
+
+    A transport injected on the server without an ``entry`` (tests, embedding) is used as-is
+    and treated as remote (explicit consent required)."""
     t = getattr(server, 'command_cloud', None)
-    if t is None:
-        b = _broker(server)
-        if b is None:
-            return None
-        from src.runtime.nl_router import CloudIntentTransport, TIERS
-        model, endpoint = TIERS['high']
-        t = server.command_cloud = CloudIntentTransport(model, endpoint, b.transport)
+    if t is not None and getattr(t, 'entry', None) is None:
+        return t
+    entry = _provider()
+    if entry is None:
+        server.command_cloud = None
+        return None
+    t = getattr(server, 'command_cloud', None)
+    if t is None or getattr(t, 'entry', None) != entry:
+        from src.runtime.nl_router import CustomIntentTransport
+        t = server.command_cloud = CustomIntentTransport(entry)
     return t
 
 
+def _require_consent(consent, enabled, transport):
+    """A connected provider that is not on this PC needs explicit consent per request."""
+    if not enabled:
+        raise CommandError(409, 'the connected AI is disabled by the kill switch')
+    if transport is None:
+        raise CommandError(409, 'no AI is connected: add one with `openbridge ai add` or in Settings')
+    if getattr(transport, 'execution', 'remote') != 'local' and consent is not True:
+        raise CommandError(409, 'the connected AI runs outside this PC: explicit consent is required')
+
+
 def tiers(server):
+    from src.ai import custom_provider
     from src.runtime.nl_router import TIERS
-    from src.runtime.cost_guard import estimate_usd
     out = {}
     for quality, get in (('low', _low), ('medium', _medium)):
         model, endpoint = TIERS[quality]
@@ -144,17 +158,21 @@ def tiers(server):
             ready, last = False, None
         out[quality] = {'model': model, 'endpoint': endpoint, 'ready': ready,
                         'last_inference': 'ok' if last is True else ('failed' if last is False else 'unknown'),
-                        'estimate_usd': estimate_usd(quality)}
-    model, endpoint = TIERS['high']
-    out['high'] = {'model': model, 'endpoint': endpoint,
-                   'configured': _broker(server) is not None,
+                        'estimate_usd': 0.0}
+    entry = _provider()
+    out['high'] = {'model': entry['model'] if entry else None,
+                   'endpoint': custom_provider.endpoint(entry) if entry else None,
+                   'provider': entry['name'] if entry else None,
+                   'kind': entry['kind'] if entry else None,
+                   'execution': custom_provider.execution(entry) if entry else None,
+                   'configured': entry is not None,
                    'enabled': getattr(server, 'command_cloud_enabled', True) is True,
-                   'estimate_usd': estimate_usd('high')}
+                   # OpenBridge bills nothing; a hosted provider is paid by its owner directly.
+                   'estimate_usd': None}
     return out
 
 
 def parse_request(server, body):
-    from src.runtime import cost_guard as C
     from src.runtime import nl_router as N
     if not isinstance(body, dict):
         raise CommandError(400, 'request body must be an object')
@@ -169,30 +187,22 @@ def parse_request(server, body):
     if quality not in ('low', 'medium', 'high', 'auto'):
         raise CommandError(400, 'quality must be low|medium|high|auto')
     enabled = getattr(server, 'command_cloud_enabled', True) is True
-    if quality == 'high':
-        try:
-            C.require_cloud(consent, enabled)
-        except C.CostBlocked as e:
-            raise CommandError(409, str(e)) from None
-        if _broker(server) is None:
-            raise CommandError(409, 'cloud is not configured on this server')
     cloud = _cloud(server)
+    if quality == 'high':
+        _require_consent(consent, enabled, cloud)
+    local_provider = cloud is not None and getattr(cloud, 'execution', 'remote') == 'local'
+    allowed = enabled and cloud is not None and (consent is True or local_provider)
 
     def gate():
-        C.require_cloud(consent, enabled)
-        b = _broker(server)
-        if b is None:
-            raise C.CostBlocked('cloud is not configured on this server')
-        from src.ai.broker import ModelBlocked
         try:
-            b._reserve()   # shared guard: freshness, finite balances, allowance, atomic insert
-        except ModelBlocked as e:
-            raise C.CostBlocked(str(e)) from None
+            _require_consent(consent, enabled, cloud)
+        except CommandError as e:
+            raise ValueError(str(e)) from None
 
     prior = body.get('prior')
     if prior is None:
         doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
-                      cloud_allowed=consent is True and enabled and cloud is not None,
+                      cloud_allowed=allowed,
                       before_cloud=gate if quality in ('high', 'auto') else None)
     else:
         # Follow-up turn: deterministic context resolution first, existing router
@@ -208,13 +218,14 @@ def parse_request(server, body):
         doc = F.parse_with_context(text.strip(), lang, quality, _low(server), prior,
                                    cloud_transport=cloud,
                                    medium_transport=_medium(server),
-                                   cloud_allowed=consent is True and enabled and cloud is not None,
+                                   cloud_allowed=allowed,
                                    before_cloud=gate if quality in ('high', 'auto') else None,
                                    devices=devices)
-    out = {'intent': doc, 'cloud_used': doc['provenance']['parser'] == 'cloud',
-           'estimate_usd': C.estimate_usd(quality) if quality != 'auto'
-           else (C.estimate_usd('high') if doc['provenance']['parser'] == 'cloud' else 0.0)}
-    if out['cloud_used'] and getattr(cloud, 'last_usage', None):
+    used = doc['provenance']['parser'] == 'cloud'
+    out = {'intent': doc, 'cloud_used': used,
+           'provider': (getattr(cloud, 'entry', None) or {}).get('name') if used else None,
+           'estimate_usd': None if used else 0.0}
+    if used and getattr(cloud, 'last_usage', None):
         out['usage'] = cloud.last_usage
     return out
 

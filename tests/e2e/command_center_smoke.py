@@ -9,8 +9,10 @@ TIERS = {'low': {'model': 'llama3.2:3b-instruct-q4_K_M', 'endpoint': 'http://127
                  'ready': True, 'estimate_usd': 0.0},
          'medium': {'model': 'muse-glimmer:30b-q4_K_M', 'endpoint': 'http://127.0.0.1:11438',
                     'ready': False, 'estimate_usd': 0.0},
-         'high': {'model': 'muse-spark-1.3', 'endpoint': 'https://api.meta.ai/v1/chat/completions',
-                  'configured': False, 'enabled': True, 'estimate_usd': 0.10}}
+         # High = the AI the owner connected by hand (no paid model is built in); here a remote one.
+         'high': {'model': 'my-model', 'endpoint': 'https://llm.example.test/v1/chat/completions',
+                  'provider': 'mylab', 'kind': 'openai', 'execution': 'remote',
+                  'configured': True, 'enabled': True, 'estimate_usd': None}}
 INTENT = {'intent_id': 'int-smoke1', 'version': 1, 'raw_text': 'Scan for bluetooth devices',
           'lang': 'en', 'outcome': 'scan nearby', 'targets': [{'kind': 'device', 'ref': 'tv'}],
           'skill_id': 'ble_scan_room', 'params': {}, 'confidence': 1.0, 'ambiguities': [],
@@ -58,18 +60,20 @@ def main():
                 page.goto(f'http://127.0.0.1:{server.server_port}/#/home', wait_until='networkidle')
                 panel = page.locator('#ask-openbridge')
                 expect(panel).to_be_visible()
-                # V2.1: one compact AI-quality choice; free (local) vs paid (cloud) is explicit on each option.
+                # V2.1: one compact AI-quality choice; free (local) vs the owner's connected AI is explicit.
                 expect(panel.get_by_text('AI quality')).to_be_visible()
                 expect(panel.locator('.ask-tier .tier-cost.free')).to_have_count(3)
-                expect(panel.locator('.ask-tier .tier-cost.paid')).to_have_count(1)
-                assert panel.get_by_role('checkbox').count() == 0, 'cloud consent must not show before it is needed'
+                expect(panel.locator('.ask-tier .tier-cost.byo')).to_have_count(1)
+                expect(panel.locator('.ask-tier .tier-cost.paid')).to_have_count(0)   # no paid model built in
+                panel.get_by_role('radio', name=re.compile('^Fast')).click()
+                assert panel.get_by_role('checkbox').count() == 0, 'consent must not show before it is needed'
                 panel.get_by_role('radio', name=re.compile('^Pro')).click()
-                expect(panel.get_by_role('checkbox')).to_be_visible()      # shown only once the paid cloud tier is chosen
-                panel.get_by_role('radio', name=re.compile('^Auto')).click()
+                expect(panel.get_by_role('checkbox')).to_be_visible()      # shown once a remote connected AI could be used
+                panel.get_by_role('radio', name=re.compile('^Fast')).click()
                 expect(panel.get_by_role('checkbox')).to_have_count(0)
                 body = panel.inner_text()
                 assert 'Envoyer' not in body and 'Qualité' not in body, 'UI must stay English'
-                assert 'llama3.2' in body and '~$0.10' in body
+                assert 'llama3.2' in body and 'mylab' in body and '$0.10' not in body
                 panel.get_by_role('button', name='Check devices').click()
                 expect(panel.get_by_text('Start my vacuum').first).to_be_visible()
                 expect(panel.get_by_text('resolved · vacuum.start')).to_be_visible()

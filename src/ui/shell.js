@@ -892,7 +892,7 @@
     st.selected = device.key; renderInspectorHead(device); setTab('controls'); $('#device-inspector').classList.add('open');
   };
   // Runtime status pill.
-  api('/api/model-status').then(m => { st.model = m; $('#runtime-dot').className = 'dot ' + (m.inference_available ? 'ok' : ''); $('#mode-pill').textContent = m.inference_mode === 'local' ? 'Local Meta' : m.inference_mode === 'cloud' ? 'Cloud on request' : 'Local'; if (current === 'automations') renderAutomations(); if (current === 'skills') renderSkills(); }).catch(() => {});
+  api('/api/model-status').then(m => { st.model = m; $('#runtime-dot').className = 'dot ' + (m.inference_available ? 'ok' : ''); $('#mode-pill').textContent = m.inference_mode === 'local' ? 'Local Meta' : m.connected_ai ? 'Local + your AI' : 'Local'; if (current === 'automations') renderAutomations(); if (current === 'skills') renderSkills(); }).catch(() => {});
   window.addEventListener('hashchange', route);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) pollEvents(); });
   setInterval(pollEvents, 8000);

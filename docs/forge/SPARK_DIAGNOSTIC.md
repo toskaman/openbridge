@@ -1,5 +1,7 @@
 # Muse Spark cross-device diagnostic
 
+> **Retired (2026-11-22).** OpenBridge no longer ships any paid model: the hosted Meta Muse Spark tier, its promotional-credit permit, ledger and budget were removed. To use a hosted AI, connect your own provider by hand: see [AI_PROVIDERS.md](../AI_PROVIDERS.md). This page is kept as a historical record of how the former tier was bounded.
+
 This experimental command uses the Meta Model API (`muse-spark-1.3`) to synthesize hypotheses and ordered owner checks from a fixed synthetic USB/Wi-Fi/BLE scenario. USB inspection succeeds, TV Wi-Fi is reachable, TV relay permission is unavailable, and phone BLE evidence is stale. Transport reachability must not become permission or fresh observation evidence.
 
 The existing fixed-priority advisor selects one step; this diagnostic asks for a cross-transport explanation, alternative hypotheses with evidence references, and owner-check dependencies. This is a richer output contract, not proof that static code cannot solve the scenario. No superiority score has been measured.

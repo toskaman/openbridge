@@ -4,7 +4,9 @@ GET /api/devices defaults to the synthetic fixture. Explicit source=android read
 
 POST /api/inspect accepts source (demo, android or freebox) and device_id. The existing Host, Origin, CSRF, input-size and JSON checks apply. Physical-source failure never returns a simulated success. Android handles are process-local opaque values; Freebox responses exclude its unique ID, private domain and custom name.
 
-GET /api/model-status reports whether a supervised session was configured. Automatic cloud calls stay disabled. A configured session can still be refused by expiry or budget checks at request time.
+**Current:** GET /api/model-status reports the local model state (`inference_mode` local|blocked, `paid_models_built_in: false`, `connected_ai`). POST /api/recommend uses the local model only (409 when it is not started). GET /api/model-proof was removed with the paid tier. Connected-AI routes: see [AI_PROVIDERS.md](../AI_PROVIDERS.md). The rest of this section is history.
+
+*History:* GET /api/model-status reported whether a supervised session was configured. Automatic cloud calls stay disabled. A configured session can still be refused by expiry or budget checks at request time.
 
 POST /api/recommend accepts only source=demo and device_id=demo-android. The server supplies the fixture facts itself; callers cannot supply arbitrary prompts, identifiers or physical data. The Meta broker pins muse-spark-1.3 and validates returned identity, schema and evidence references. Missing or expired free-credit verification returns 409 without a model call. Physical sources return 400.
 

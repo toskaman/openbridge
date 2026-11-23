@@ -1,7 +1,7 @@
 'use strict';
-/* Settings (UI V2): visual effects, motion, layout and the motion test harness.
+/* Settings (UI V2): connected AI (manual), visual effects, motion, layout and the motion test harness.
    Preferences are per-viewer conveniences kept in this browser (localStorage, try/catch). Nothing here changes a
-   device, a permission or the runtime. The harness is labelled TEST everywhere and never touches the network. */
+   device or a permission; the Connected AI card only edits the owner's provider list. The harness is labelled TEST everywhere and never touches the network. */
 (function (global) {
   function h(tag, props, ...kids) {
     const n = document.createElement(tag);
@@ -34,6 +34,109 @@
     input.checked = checked;
     input.addEventListener('change', () => onChange(input.checked));
     return h('label', { class: 'toggle-row', for: id }, input, h('span', {}, h('strong', { text }), h('small', { text: sub })));
+  }
+
+  /* Connected AI (manual). OpenBridge ships no paid model: local Meta Llama stays the default and is free.
+     The owner may connect any OpenAI-compatible server or an Ollama server by hand. The API key goes to this PC's
+     secret store through the local server and is never sent back to the page. Built once and kept across re-renders. */
+  const PRESETS = [
+    ['LM Studio', { kind: 'openai', base_url: 'http://127.0.0.1:1234/v1', name: 'lmstudio' }],
+    ['Ollama', { kind: 'ollama', base_url: 'http://127.0.0.1:11434', name: 'ollama' }],
+    ['llama.cpp', { kind: 'openai', base_url: 'http://127.0.0.1:8080/v1', name: 'llamacpp' }],
+    ['OpenRouter', { kind: 'openai', base_url: 'https://openrouter.ai/api/v1', name: 'openrouter' }],
+  ];
+  let csrf = null;
+  async function call(path, body) {
+    const opt = { cache: 'no-store' };
+    if (body !== undefined) {
+      if (!csrf) csrf = (await (await fetch('/api/session', { cache: 'no-store' })).json()).csrf_token;
+      Object.assign(opt, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify(body) });
+    }
+    const r = await fetch(path, opt);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    return data;
+  }
+  let aiCard = null;
+  function aiSection() {
+    if (aiCard) return aiCard;
+    const status = h('p', { class: 'muted small', role: 'status', 'aria-live': 'polite', text: 'Loading connected AI…' });
+    const list = h('div', { class: 'ai-list' });
+    const field = (id, label, input, hint) => h('label', { class: 'ai-field', for: id }, h('span', { text: label }), input, hint ? h('small', { text: hint }) : null);
+    const name = h('input', { id: 'ai-name', maxlength: '32', placeholder: 'lmstudio', autocomplete: 'off', spellcheck: 'false' });
+    const kind = h('select', { id: 'ai-kind' }, h('option', { value: 'openai', text: 'OpenAI-compatible (/chat/completions)' }), h('option', { value: 'ollama', text: 'Ollama (/api/chat)' }));
+    const base = h('input', { id: 'ai-base', placeholder: 'http://127.0.0.1:1234/v1', autocomplete: 'off', spellcheck: 'false' });
+    const model = h('input', { id: 'ai-model', placeholder: 'model id, e.g. qwen2.5-7b-instruct', autocomplete: 'off', spellcheck: 'false' });
+    const key = h('input', { id: 'ai-key', type: 'password', placeholder: 'optional, stored in this PC’s secret store', autocomplete: 'off' });
+    const env = h('input', { id: 'ai-env', placeholder: 'or an environment variable, e.g. OPENROUTER_API_KEY', autocomplete: 'off', spellcheck: 'false' });
+    const json = h('input', { type: 'checkbox', id: 'ai-json' });
+    const activate = h('input', { type: 'checkbox', id: 'ai-activate' }); activate.checked = true;
+    const presets = h('div', { class: 'row wrap ai-presets' }, h('span', { class: 'muted small', text: 'Presets:' }), ...PRESETS.map(([label, p]) => h('button', {
+      class: 'ghost small', type: 'button', onclick: () => { name.value = name.value || p.name; kind.value = p.kind; base.value = p.base_url; model.focus(); },
+    }, label)));
+    const save = h('button', { class: 'primary small', type: 'button' }, 'Connect');
+    save.addEventListener('click', async () => {
+      const body = { name: name.value.trim().toLowerCase(), kind: kind.value, base_url: base.value.trim(), model: model.value.trim(), json_mode: json.checked, activate: activate.checked };
+      if (env.value.trim()) body.api_key_env = env.value.trim();
+      if (key.value) body.api_key = key.value;
+      save.disabled = true; status.textContent = 'Saving…';
+      try {
+        const r = await call('/api/v2/ai/providers', body);
+        key.value = '';
+        status.textContent = `Connected ${r.provider.name} (${r.provider.execution === 'local' ? 'on this PC' : 'outside this PC'})${r.active === r.provider.name ? ' · active' : ''}. Press Test to check it answers.`;
+        await refresh(false);
+      } catch (e) { status.textContent = `Not saved: ${e.message}`; } finally { save.disabled = false; }
+    });
+    const form = h('div', { class: 'ai-form' }, presets,
+      field('ai-name', 'Name', name, 'Lowercase letters, digits and “-”.'), field('ai-kind', 'API type', kind),
+      field('ai-base', 'Base URL', base, 'https:// for anything outside your network; http:// only for this PC or your LAN.'),
+      field('ai-model', 'Model', model), field('ai-key', 'API key', key), field('ai-env', 'Key from environment', env),
+      h('label', { class: 'toggle-row', for: 'ai-json' }, json, h('span', {}, h('strong', { text: 'JSON mode' }), h('small', { text: 'Ask for response_format=json_object (only if the server supports it).' }))),
+      h('label', { class: 'toggle-row', for: 'ai-activate' }, activate, h('span', {}, h('strong', { text: 'Use it for Pro requests' }), h('small', { text: 'Makes it the active connected AI in Ask → AI quality → Pro.' }))),
+      h('div', { class: 'row' }, save));
+    async function act(path, body, label) {
+      status.textContent = `${label}…`;
+      try { const r = await call(path, body); await refresh(false); return r; } catch (e) { status.textContent = `${label} failed: ${e.message}`; return null; }
+    }
+    function row(p, active) {
+      const remote = p.execution !== 'local';
+      const consentId = `ai-consent-${p.name}`;
+      const consent = h('input', { type: 'checkbox', id: consentId });
+      const test = h('button', { class: 'ghost small', type: 'button' }, 'Test');
+      test.addEventListener('click', async () => {
+        if (remote && !consent.checked) { status.textContent = `${p.name} runs outside this PC: tick “allow one test sentence” first.`; return; }
+        test.disabled = true; status.textContent = `Testing ${p.name}…`;
+        try {
+          const r = await call('/api/v2/ai/providers/test', { name: p.name, consent: remote ? true : undefined });
+          status.textContent = r.ok ? `${p.name} answered “${String(r.reply).slice(0, 40)}” in ${r.seconds}s (${r.reported_model || r.model}).` : `${p.name} answered, but not with OK: “${String(r.reply).slice(0, 60)}”.`;
+        } catch (e) { status.textContent = `Test failed: ${e.message}`; } finally { test.disabled = false; }
+      });
+      return h('div', { class: 'ai-row' + (active ? ' active' : '') },
+        h('div', { class: 'ai-row-main' },
+          h('strong', { text: p.name }), ' ',
+          h('span', { class: 'tag ' + (remote ? 'warn' : 'ok'), text: remote ? 'outside this PC' : 'local' }), ' ',
+          active ? h('span', { class: 'tag ok', text: 'active' }) : null,
+          h('small', { class: 'muted ai-row-sub', text: `${p.kind} · ${p.model} · ${p.endpoint} · key ${p.has_key ? 'stored' : p.api_key_env ? 'from $' + p.api_key_env : 'none'}` })),
+        h('div', { class: 'row wrap' },
+          active ? h('button', { class: 'ghost small', type: 'button', onclick: () => act('/api/v2/ai/providers/activate', { name: null }, 'Deactivating') }, 'Stop using')
+            : h('button', { class: 'ghost small', type: 'button', onclick: () => act('/api/v2/ai/providers/activate', { name: p.name }, 'Activating') }, 'Use'),
+          test,
+          h('button', { class: 'ghost small danger', type: 'button', onclick: () => act('/api/v2/ai/providers/remove', { name: p.name }, 'Removing') }, 'Remove'),
+          remote ? h('label', { class: 'muted small ai-consent', for: consentId }, consent, ' allow one test sentence') : null));
+    }
+    async function refresh(announce = true) {
+      try {
+        const d = await call('/api/v2/ai/providers');
+        list.replaceChildren(...(d.providers.length ? d.providers.map(p => row(p, p.name === d.active))
+          : [h('p', { class: 'muted small', text: 'No AI connected. Ask works with the free local models; Pro stays off until you connect one.' })]));
+        if (announce) status.textContent = d.active ? `Active: ${d.active}.` : 'No connected AI is active.';
+      } catch (e) { status.textContent = `Connected AI unavailable: ${e.message}`; }
+    }
+    aiCard = h('section', { class: 'panel ai-card', 'aria-labelledby': 'set-ai-title' }, h('h2', { id: 'set-ai-title', text: 'Connected AI' }),
+      h('p', { class: 'muted', text: 'OpenBridge ships no paid model: Fast and Smart run on this PC for free. To use another AI for Pro requests, connect it by hand: any OpenAI-compatible server (LM Studio, llama.cpp, vLLM, OpenRouter…) or an Ollama server. Keys are kept in this PC’s secret store and never shown again. A hosted provider bills you directly.' }),
+      list, status, h('details', { class: 'ai-add' }, h('summary', { text: 'Connect an AI / API' }), form));
+    refresh();
+    return aiCard;
   }
 
   function render() {
@@ -69,7 +172,7 @@
         h('button', { class: 'ghost small lg-in-btn', type: 'button', onclick: () => M && M.signal('transport_inbound', { origin: 'test', label: 'harness', bytes: 2048, corr: 'test-in-' + Date.now() }) }, '↓ IN comet (emerald)'),
         h('button', { class: 'ghost small', type: 'button', onclick: () => M && M.signal('oracle_success', { origin: 'test', text: 'harness pulse' }) }, 'Verified pulse')),
       h('p', { class: 'muted small', 'data-flow-counts': '' }));
-    root.replaceChildren(h('div', { class: 'settings-grid' }, motion, layout, harness));
+    root.replaceChildren(h('div', { class: 'settings-grid' }, aiSection(), motion, layout, harness));
     if (M) M.mount(document.getElementById('settings-orb'), { sector: [-Math.PI, Math.PI] });
   }
   global.OBViews = global.OBViews || {};

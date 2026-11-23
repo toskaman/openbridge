@@ -833,3 +833,25 @@ body.ui-v2 .ask-result{margin:0;padding:14px 16px;border-radius:14px;border:1px 
 .target-device.tv .watch-face{grid-template-columns:1fr;width:100%;max-width:100%}
 .target-device.tv .watch-row{width:100%}.target-device.tv .watch-btn{flex:1;min-width:0}
 .target-device.phone{width:min(100%,190px);aspect-ratio:9/16;border-radius:26px}
+
+/* Settings → Connected AI (manual) */
+.ai-card .ai-list{display:grid;gap:8px;margin:10px 0}
+.ai-row{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--v2-line);border-radius:var(--v2-r2)}
+.ai-row.active{border-color:rgba(52,211,153,.45);box-shadow:0 0 0 1px rgba(52,211,153,.2) inset}
+.ai-row-sub{display:block;margin-top:4px;overflow-wrap:anywhere;font-family:var(--mono);font-size:11px}
+.ai-consent{display:inline-flex;gap:6px;align-items:center}
+.ai-add summary{cursor:pointer;font-weight:600;margin:6px 0}
+.ai-form{display:grid;gap:10px;margin-top:8px}
+.ai-field{display:grid;gap:4px}
+.ai-field span{font-size:12px;font-weight:600;color:var(--v2-fg-2,var(--text-2))}
+.ai-field small{color:var(--v2-fg-3);font-size:11px}
+.ai-field input,.ai-field select{width:100%;min-height:36px}
+.ai-presets{gap:6px;align-items:center}
+button.danger{color:var(--bad)}
+.tier-cost.byo{color:#c4b5fd;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.4)}
+.ask-tier.byo.active{border-color:#8b5cf6;box-shadow:0 0 0 1px #8b5cf6 inset,0 6px 20px rgba(139,92,246,.16);background:rgba(36,26,58,.55)}
+.settings-grid .ai-card{grid-column:1/-1}
+.ai-card .ai-list{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.ai-form{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));column-gap:14px}
+.ai-form>.ai-presets,.ai-form>.toggle-row,.ai-form>.row{grid-column:1/-1}
+.ai-field{align-content:start}

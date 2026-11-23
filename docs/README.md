@@ -5,14 +5,15 @@ Start with [project overview and setup](../README.md). Current instructions and 
 | Need | Read |
 |---|---|
 | Delivery and next tasks | [Release status and remaining work](RELEASE_STATUS.md) |
-| First run | [Quickstart](QUICKSTART.md) |
+| First run | [Quickstart](QUICKSTART.md), [connect your own AI / API](AI_PROVIDERS.md) |
+| Ideas in development (not integrated) | [OpenBridge without a PC](concepts/PC_LESS_OPENBRIDGE.md) |
 | Demo for judges | [Jury start here](jury/JURY_START_HERE.md), [showcase page](showcase/index.html), [final storyboard](jury/DEMO_STORYBOARD_FINAL.md), [physical runbook](jury/DEMO_PHYSICAL_RUNBOOK.md) |
 | Architecture | [Universal device architecture](UNIVERSAL_DEVICE_ARCHITECTURE.md) |
 | Proof | [Evidence index](RELEASE_EVIDENCE.md), [chronological ledger](../EVIDENCE_LEDGER.md), [hardware matrix](HARDWARE_TEST_MATRIX.md), [claim ↔ evidence matrix](jury/CLAIM_EVIDENCE_MATRIX.md) |
 | Scope and risks | [Known limitations](KNOWN_LIMITATIONS.md), [device scope](../DEVICE_SCOPE.md), [risk register](../RISK_REGISTER.md) |
 | API and contracts | [HTTP API](api/HTTP.md), [runtime contract](coordination/DEVICE_CAPABILITY_CONTRACT_V1.md), [routing contract](contracts/B2_SKILL_ROUTING_CONTRACT.md) |
 | Forge | [Guide](forge/README.md), [publication contract](forge/VERIFIED_PUBLICATION.md), [architecture](forge/CAPABILITY_FORGE_ARCHITECTURE.md) |
-| Security and recovery | [Relay security](RELAY_SECURITY.md), [boundaries](safety/BOUNDARIES.md), [free-credit policy](safety/FREE_CREDITS.md), [persistence](runtime/PERSISTENCE.md) |
+| Security and recovery | [Relay security](RELAY_SECURITY.md), [boundaries](safety/BOUNDARIES.md), [free-credit policy (retired)](safety/FREE_CREDITS.md), [persistence](runtime/PERSISTENCE.md) |
 | Models and results | [Model evaluation index](MODEL_USAGE_AND_EVALUATION.md), [routing results](evaluation/routing-v1/RESULTS.md), [Forge v2 results](forge/evaluation-v2/RESULTS.md) |
 | Explanation-stage preparation | [Draft freeze guide](evaluation/routing-v1/explain/FREEZE_GUIDE.md) |
 | Submission | [Worksheet](release/SUBMISSION_EVIDENCE.md), [jury rehearsal](release/JURY_REHEARSAL.md) |

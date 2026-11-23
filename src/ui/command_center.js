@@ -12,9 +12,9 @@
     ask: 'Ask', placeholder: 'What should your devices do? e.g. Start my vacuum',
     quality: 'AI quality',
     requestLang: 'Request', local: 'local', cloud: 'cloud', ready: 'ready', notReady: 'not ready',
-    notConfigured: 'cloud not configured', disabled: 'cloud disabled',
-    consent: 'I allow cloud calls for this request (at most $0.10 each, kill switch on).',
-    estimate: 'estimate', cost: 'cost', needConsent: 'Cloud consent is required for High quality.',
+    notConfigured: 'no AI connected', disabled: 'connected AI disabled',
+    consent: 'I allow my connected AI for this request (kill switch on; OpenBridge bills nothing).',
+    estimate: 'estimate', cost: 'cost', needConsent: 'Your connected AI runs outside this PC: consent is required for Pro.',
     stUnderstand: 'Understanding request', stDevices: 'Identifying devices',
     stSkills: 'Checking available skills', stPreview: 'Preview ready',
     stApproval: 'Awaiting approval', stExecute: 'Executing', stVerified: 'Verification completed',
@@ -30,7 +30,7 @@
     partial: 'Partial success', failed: 'Failed',
     modelSettings: 'Model settings', modelReady: 'Local · model ready', modelOff: 'Meta model unavailable',
     modelChecking: 'Checking model…', modelHint: 'Devices stay usable without a model; start OpenBridge with --local-meta to enable requests.',
-    cloudNeeded: 'This request may send the approved request text to Meta cloud. Review the cost estimate before continuing.',
+    cloudNeeded: 'This request may send the request text to the AI you connected, outside this PC. A hosted provider bills you directly.',
   };
   const motion = (type, extra) => document.dispatchEvent(new CustomEvent('ob:motion', { detail: Object.assign({ type }, extra || {}) }));
   let reqLang = (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en';
@@ -69,15 +69,15 @@
     if (cls) n.className = cls;
     return n;
   }
-  function fmtUsd(v) { return v === 0 ? '$0.00' : `~$${Number(v).toFixed(2)}`; }
 
-  /* AI quality: one compact choice. Low and Medium are both free and run on this PC; High is Meta cloud and paid.
+  /* AI quality: one compact choice. Low and Medium are free and run on this PC; High (Pro) is the AI the owner
+     connected by hand in Settings → Connected AI. No paid model is built in.
      The real model ids, readiness and estimates still come from /api/v2/command/tiers (shown on each option). */
   const QUALITY = [
     { q: 'auto', name: 'Auto', cost: 'Free', sub: 'Local first', cls: 'free' },
     { q: 'low', name: 'Fast', cost: 'Free', sub: 'On this PC', cls: 'free' },
     { q: 'medium', name: 'Smart', cost: 'Free', sub: 'On this PC', cls: 'free' },
-    { q: 'high', name: 'Pro', cost: 'Paid', sub: 'Meta cloud', cls: 'paid' },
+    { q: 'high', name: 'Pro', cost: 'Your AI', sub: 'Connected AI', cls: 'byo' },
   ];
   function tierReady(q) {
     if (!tiers) return null;
@@ -86,9 +86,10 @@
     return q === 'high' ? !!(i.configured && i.enabled) : !!i.ready;
   }
   function cloudPossible() {
-    if (quality === 'high') return true;
+    // Consent only when the request could reach a connected AI that runs outside this PC.
     const hi = tiers && tiers.high;
-    return quality === 'auto' && !!(hi && hi.configured && hi.enabled);
+    if (quality === 'high') return !(hi && hi.configured && hi.execution === 'local');
+    return quality === 'auto' && !!(hi && hi.configured && hi.enabled && hi.execution !== 'local');
   }
   function modelLine() {
     const line = el('p', undefined, 'ask-model');
@@ -117,10 +118,11 @@
       b.setAttribute('aria-checked', quality === o.q ? 'true' : 'false');
       const top = el('span', undefined, 'tier-top');
       top.append(el('strong', o.name), el('span', o.cost, 'tier-cost ' + o.cls));
-      const model = o.q === 'auto' ? o.sub : o.q === 'high' ? `${info.estimate_usd ? fmtUsd(info.estimate_usd) + ' / request' : 'Meta cloud'}${ready === false ? ' · not set up' : ''}`
+      const model = o.q === 'auto' ? o.sub : o.q === 'high' ? (info.configured ? `${info.provider} · ${String(info.model || '').split(':')[0]}${info.execution === 'local' ? '' : ' · remote'}` : 'Connect in Settings')
         : `${(info.model || o.sub).split(':')[0]}${ready === false ? ' · not ready' : ''}`;
       b.append(top, el('span', model, 'tier-sub'));
-      b.title = o.q === 'auto' ? 'Uses the free local models first; the paid cloud tier only with your explicit approval.'
+      b.title = o.q === 'auto' ? 'Uses the free local models first; your connected AI only when allowed.'
+        : o.q === 'high' ? (info.configured ? `Connected AI ${info.provider} · ${info.model} · ${info.endpoint}` : 'No AI connected: Settings → Connected AI')
         : `${o.cost} · ${o.sub}${info.model ? ' · ' + info.model : ''}${ready === false ? ' · not ready' : ''}`;
       b.onclick = () => { quality = o.q; render(); };
       box.append(b);
@@ -181,7 +183,7 @@
     root.append(sug);
 
     root.append(qualityPicker());
-    // Cloud approval only when this request could actually use the paid cloud tier; never assumed.
+    // Approval only when this request could actually reach a connected AI outside this PC; never assumed.
     if (cloudPossible()) {
       const consentRow = el('label', undefined, 'ask-consent');
       const cb = document.createElement('input');
@@ -449,8 +451,9 @@
       kv(box, 'devices', prev.device_keys.join(', '));
       kv(box, 'model', (d.provenance || {}).model_id || '?');
       if (prev.route) kv(box, 'evidence', `route ${prev.route.selected_route_id} (${prev.route.rule})`);
-      kv(box, 'cost', parsed.cloud_used && parsed.usage
-        ? `$${Number(parsed.usage.estimated_cost_usd).toFixed(4)} (${parsed.usage.usage.prompt_tokens}+${parsed.usage.usage.completion_tokens} tok)`
+      const u = parsed.usage && parsed.usage.usage;
+      kv(box, 'cost', parsed.cloud_used
+        ? `connected AI ${parsed.provider || ''} · billed by your provider${u ? ` (${u.prompt_tokens}+${u.completion_tokens} tok)` : ''}`
         : '$0.00 · ' + t('local'));
       stage('stApproval');
       motion('proposal_ready', { text: 'Preview ready · nothing has run yet' });

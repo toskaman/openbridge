@@ -1,6 +1,7 @@
 """Release gate (prep kit JURY_RELEASE_GATES / RUNTIME_META_ONLY_TEST_MATRIX): a runtime network trace, not only a
 static scan. Every outgoing TCP connection attempted by each model path is recorded at the socket layer (and then
-refused, so no real traffic leaves CI). Allowed destinations: the Meta Model API and the pinned local Meta servers."""
+refused, so no real traffic leaves CI). Built-in model paths may only reach the pinned local Meta servers on this PC:
+no paid / hosted model is built in. A provider the owner connects by hand reaches exactly the host it declared."""
 import socket
 import unittest
 from datetime import datetime, timezone
@@ -8,7 +9,7 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 from unittest import mock
 
-ALLOWED = {('api.meta.ai', 443), ('127.0.0.1', 11437), ('127.0.0.1', 11438), ('127.0.0.1', 11439)}
+ALLOWED = {('127.0.0.1', 11437), ('127.0.0.1', 11438), ('127.0.0.1', 11439)}
 
 
 class Trace:
@@ -36,19 +37,31 @@ class Trace:
             p.stop()
 
 
+class _NoVault:
+    available = False
+
+    def get(self, name):
+        return None
+
+
 class MetaOnlyNetworkTrace(unittest.TestCase):
     def assert_only_meta(self, seen):
         self.assertTrue(seen, 'the model path made no connection attempt; trace proves nothing')
         bad = [d for d in seen if d not in ALLOWED]
         self.assertEqual(bad, [], f'non-Meta destination(s): {bad}')
 
-    def test_hosted_broker_contacts_only_meta_api(self):
-        from src.ai.broker import RuntimeModelBroker, MetaTransport, CreditPermit, ModelBlocked
-        with TemporaryDirectory() as d, Trace() as t:
-            b = RuntimeModelBroker(Path(d) / 'b.sqlite', CreditPermit('trace', datetime.now(timezone.utc), 150, 0.20), MetaTransport('test-key'))
-            with self.assertRaises(ModelBlocked):
-                b.recommend({'battery_percent': 50})
-        self.assert_only_meta(t.seen)
+    def test_no_hosted_broker_remains(self):
+        from src.ai import broker
+        for name in ('RuntimeModelBroker', 'MetaTransport', 'CreditPermit', 'MODEL_ID', 'ENDPOINT'):
+            self.assertFalse(hasattr(broker, name), name)
+
+    def test_connected_provider_contacts_only_its_declared_host(self):
+        from src.ai import custom_provider
+        entry = {'name': 'mine', 'kind': 'openai', 'base_url': 'https://llm.example-owner.test/v1', 'model': 'm'}
+        with Trace() as t:
+            with self.assertRaises(custom_provider.ProviderError):
+                custom_provider.ProviderTransport(entry, vault=_NoVault()).chat([{'role': 'user', 'content': 'hi'}])
+        self.assertEqual(t.seen, [('llm.example-owner.test', 443)])
 
     def test_local_llama_and_glimmer_contact_only_local_meta_servers(self):
         from src.ai.local_meta import LocalMetaBroker

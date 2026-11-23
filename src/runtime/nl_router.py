@@ -1,10 +1,12 @@
-"""Command Center P0: NL quality router (Low local -> Medium local -> High cloud).
+"""Command Center P0: NL quality router (Low local -> Medium local -> High = your connected AI).
 
-Tier endpoints MUST stay members of config/runtime_models.json (tested). The
-router never invents: malformed model output, unknown skills and low confidence
-become unsupported/escalation_required, never a guessed command. Cloud is used
-only with an explicit cloud_allowed consent; local failures alone never trigger
-a paid call.
+Low/Medium endpoints MUST stay members of config/runtime_models.json (tested). High is the
+model or API the owner connected by hand (src/ai/custom_provider.py); no paid model is built in.
+The router never invents: malformed model output, unknown skills and low confidence become
+unsupported/escalation_required, never a guessed command. A connected provider that is not on
+this PC is used only with an explicit cloud_allowed consent; local failures alone never send
+text off the PC. (The parser label stays "cloud" in intents for compatibility: it means
+"the owner's connected provider".)
 """
 import re
 
@@ -28,8 +30,16 @@ def _word_hit(keyword, hay):
     return rx.search(hay) is not None
 
 TIERS = {'low': ('llama3.2:3b-instruct-q4_K_M', 'http://127.0.0.1:11437'),
-         'medium': ('muse-glimmer:30b-q4_K_M', 'http://127.0.0.1:11438'),
-         'high': ('muse-spark-1.3', 'https://api.meta.ai/v1/chat/completions')}
+         'medium': ('muse-glimmer:30b-q4_K_M', 'http://127.0.0.1:11438')}
+
+
+def high_tier(providers_path=None):
+    """(model, endpoint) of the owner's active connected provider, or (None, None)."""
+    from src.ai import custom_provider
+    entry = custom_provider.active(providers_path)
+    if entry is None:
+        return None, None
+    return entry['model'], custom_provider.endpoint(entry)
 MIN_CONFIDENCE = 0.5
 
 
@@ -251,53 +261,40 @@ def _interpret(doc, reply, parser, model_id):
     return resolved
 
 
-class CloudIntentTransport:
-    """Strict NL-parse transport over the Meta Model API.
+class CustomIntentTransport:
+    """Strict NL-parse transport over the owner's connected provider.
 
-    Reuses a caller-supplied sender (the broker's MetaTransport in production).
-    Model identity, usage bounds and per-call cost ceiling mirror the advisory
-    broker; last usage is kept on self.last_usage for receipts.
+    The provider must have been connected by hand (registry check on every call). Replies must
+    be a single JSON object; anything else becomes TransportError (-> escalation_required).
+    Provider-reported token usage, when present, is kept on self.last_usage for receipts.
     """
 
-    def __init__(self, model_id, endpoint, send):
-        self.model_id, self.endpoint, self._send = model_id, endpoint, send
+    def __init__(self, entry, send=None, vault=None, providers_path=None):
+        from src.ai import custom_provider
+        self.entry = entry
+        self.execution = custom_provider.execution(entry)
+        self._t = custom_provider.ProviderTransport(entry, send=send, vault=vault)
+        self.model_id, self.endpoint = self._t.model_id, self._t.endpoint
+        self._providers_path = providers_path
         self.last_usage = None
 
+    def ready(self):
+        return True
+
     def __call__(self, prompt):
-        import json
-        from src.ai import registry
+        from src.ai import custom_provider, registry
         try:
-            registry.require(self.model_id, self.endpoint)
+            registry.require(self.model_id, self.endpoint, providers_path=self._providers_path)
         except registry.RegistryInvalid as e:
             raise TransportError(str(e)) from None
-        payload = {'model': self.model_id, 'max_completion_tokens': 4000,
-                   'messages': [{'role': 'developer', 'content':
-                                 'Reply with ONLY a JSON object matching the requested schema.'},
-                                {'role': 'user', 'content': prompt}]}
         try:
-            r = self._send(payload)
-            if r.get('model') != self.model_id:
-                raise TransportError('returned model identity is not approved')
-            usage = r['usage']
-            for f in ('prompt_tokens', 'completion_tokens'):
-                if type(usage[f]) is not int or not 0 <= usage[f] <= 100_000:
-                    raise TransportError('invalid provider usage')
-            content = r['choices'][0]['message'].get('content')
-            if not isinstance(content, str) or not content.strip() or len(content) > 16384:
-                raise TransportError('model returned no usable content')
-            out = json.loads(content)
-            if not isinstance(out, dict):
-                raise TransportError('reply is not an object')
-            estimate = (usage['prompt_tokens'] * 1.25 + usage['completion_tokens'] * 4.25) / 1_000_000
-            if estimate > 0.10:
-                raise TransportError('provider usage exceeded per-call ceiling')
-            self.last_usage = {'usage': dict(usage), 'estimated_cost_usd': estimate,
-                               'request_id': r.get('id')}
-            return out
-        except TransportError:
-            raise
-        except Exception as e:
-            raise TransportError(f'cloud parse failed: {type(e).__name__}') from None
+            out, raw = self._t.chat_json(prompt)
+        except custom_provider.ProviderError as e:
+            raise TransportError('connected provider: %s' % e) from None
+        usage = raw.get('usage') if isinstance(raw, dict) else None
+        self.last_usage = {'usage': dict(usage), 'provider': self.entry['name']} \
+            if isinstance(usage, dict) else {'provider': self.entry['name']}
+        return out
 
 
 def parse(text, lang, quality, local_transport, cloud_transport=None,
@@ -313,7 +310,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
                      ('medium', medium_transport, 'local')] if medium_transport
             else [('low', local_transport, 'local')]}[quality]
     skip = object()
-    cloud_sent = [False]   # at most ONE paid cloud send per parse (N4 double-reserve finding)
+    cloud_sent = [False]   # at most ONE send to the connected provider per parse
 
     def gated(tier, transport, parser):
         if transport is None:
@@ -337,7 +334,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
             return dict(doc, status='escalation_required', ambiguities=[str(e)])
         if reply is skip:
             continue
-        out = _interpret(doc, reply, parser, TIERS[tier][0])
+        out = _interpret(doc, reply, parser, TIERS[tier][0] if tier in TIERS else getattr(transport, 'model_id', None))
         if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities']:
             cand = _fallback_candidate(text, reply, out)
             if cand is not None:
@@ -346,7 +343,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
             return out
         doc = out
     if quality in ('high', 'auto') and cloud_sent[0]:
-        # The plan already spent its single cloud attempt; never reserve and send again.
+        # The plan already spent its single connected-provider attempt; never send again.
         return dict(doc, status='escalation_required',
                     ambiguities=list(doc.get('ambiguities') or []) + ['cloud reply was not usable; not retried'])
     if quality in ('high', 'auto'):
@@ -361,7 +358,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
             except TransportError:
                 pass
             else:
-                out = _interpret(doc, reply, 'cloud', TIERS['high'][0])
+                out = _interpret(doc, reply, 'cloud', getattr(cloud_transport, 'model_id', None))
                 if out['status'] == 'unsupported' and 'no registered skill matches' in out['ambiguities']:
                     cand = _fallback_candidate(text, reply, out)
                     if cand is not None:
@@ -372,7 +369,7 @@ def parse(text, lang, quality, local_transport, cloud_transport=None,
         else:
             return dict(doc, status='escalation_required',
                         ambiguities=list(doc.get('ambiguities') or [])
-                        + ['cloud needs explicit authorization'])
+                        + ['the connected AI needs explicit authorization (or none is connected)'])
     if doc['status'] == 'draft':
         doc = dict(doc, status='escalation_required',
                    ambiguities=['all local tiers failed'])

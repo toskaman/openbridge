@@ -289,19 +289,17 @@ class TranscribeRouting(unittest.TestCase):
         import base64
         body = {'audio_b64': base64.b64encode(PCM).decode(), 'language': 'fr'}
         with mock.patch.object(stt_local, 'available', return_value=True), \
-                mock.patch.object(stt_local, 'transcribe_pcm', return_value={'transcript': 'x', 'backend': 'local-mms'}) as t, \
-                mock.patch.object(voice_stt, 'transcribe', side_effect=AssertionError('cloud must not run')):
+                mock.patch.object(stt_local, 'transcribe_pcm', return_value={'transcript': 'x', 'backend': 'local-mms'}) as t:
             code, doc = api_v2.voice(FakeServer({}), '/api/v2/voice/transcribe', body)
         self.assertEqual((code, doc['backend']), (200, 'local-mms'))
         t.assert_called_once_with(PCM, 'fr')
 
     def test_no_cloud_fallback_without_local(self):
-        # Sol audit: no silent cloud STT (would need consent + fresh reservation).
+        # No hosted STT exists any more (paid client removed): local or type it.
         import base64
+        self.assertFalse(hasattr(voice_stt, 'transcribe'))
         body = {'audio_b64': base64.b64encode(PCM).decode()}
-        with mock.patch.object(stt_local, 'available', return_value=False), \
-                mock.patch.object(voice_stt, 'transcribe',
-                                  side_effect=AssertionError('cloud must not run')):
+        with mock.patch.object(stt_local, 'available', return_value=False):
             code, doc = api_v2.voice(FakeServer({}), '/api/v2/voice/transcribe', body)
         self.assertEqual(code, 409)
         self.assertEqual(doc['fallback'], 'type the command instead')

@@ -5,7 +5,7 @@ values become INVALID, never READY.
 
 REQUIRED vs OPTIONAL: the offline judge demo only needs the core, a
 supported OS, and a writable evidence store with free space. Local
-models, the cloud key and adb-backed devices are OPTIONAL extras whose
+models, a manually connected AI and adb-backed devices are OPTIONAL extras whose
 absence must not block the demo verdict (judge-C W2).
 """
 STATUSES = ('READY', 'MISSING', 'INVALID', 'INCOMPATIBLE', 'BLOCKED', 'PERMISSION_REQUIRED',
@@ -13,11 +13,11 @@ STATUSES = ('READY', 'MISSING', 'INVALID', 'INCOMPATIBLE', 'BLOCKED', 'PERMISSIO
             'NOT_TESTED')
 
 REQUIRED = ('core', 'os', 'evidence', 'storage')
-OPTIONAL = ('local_fast', 'local_quality', 'cloud', 'devices')
+OPTIONAL = ('local_fast', 'local_quality', 'custom_ai', 'devices')
 
 LABELS = {'core': 'app core', 'os': 'operating system', 'evidence': 'evidence folder',
           'storage': 'disk space', 'local_fast': 'local fast model (Llama 3B)',
-          'local_quality': 'local quality model (Glimmer 30B)', 'cloud': 'Meta cloud key',
+          'local_quality': 'local quality model (Glimmer 30B)', 'custom_ai': 'connected AI (manual)',
           'devices': 'Android tools (adb)'}
 WORDS = {'READY': 'ready', 'MISSING': 'missing', 'INVALID': 'invalid',
          'INCOMPATIBLE': 'incompatible', 'BLOCKED': 'blocked',
@@ -28,7 +28,7 @@ WORDS = {'READY': 'ready', 'MISSING': 'missing', 'INVALID': 'invalid',
 
 
 def plain_line(name, status):
-    """One plain-language readiness line, e.g. 'Meta cloud key: missing'."""
+    """One plain-language readiness line, e.g. 'connected AI (manual): missing'."""
     label = LABELS.get(name, str(name).replace('_', ' '))
     return '%s: %s' % (label, WORDS.get(status, str(status).lower().replace('_', ' ')))
 

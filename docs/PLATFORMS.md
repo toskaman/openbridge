@@ -49,6 +49,7 @@ labeled EMULATOR wherever it appears and never presented as hardware proof.
 Local Meta models run wherever Ollama runs (all three desktop platforms).
 Glimmer 30B needs roughly 14 GB of VRAM for GPU offload and host-specific
 tuning (see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)); Llama 3.2 3B runs on
-CPU. Hosted Muse Spark calls work from any platform once the key and budget
-are configured. Model digests are pinned in `config/runtime_models.json` and
+CPU. No paid model is built in; an AI you connect by hand
+([AI_PROVIDERS.md](AI_PROVIDERS.md)) works from any platform (OS secret store
+on Windows, environment variable elsewhere). Model digests are pinned in `config/runtime_models.json` and
 verified before any inference on every platform.

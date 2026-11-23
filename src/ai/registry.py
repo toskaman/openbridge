@@ -1,10 +1,15 @@
-"""Fail-closed runtime model registry: every model the app can call must be an explicitly pinned Meta model."""
+"""Fail-closed runtime model registry.
+
+Built-in models are pinned, free, local Meta open-weight models served by Ollama on this PC.
+Anything else must have been connected explicitly by the owner (src/ai/custom_provider.py);
+no paid model is built in and no unknown endpoint is ever called.
+"""
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
 
-META_MODELS={'muse-spark-1.3','llama3.2:3b-instruct-q4_K_M','muse-glimmer:30b-q4_K_M'}
-ALLOWED_HOSTS={'api.meta.ai','127.0.0.1'}
+META_MODELS={'llama3.2:3b-instruct-q4_K_M','muse-glimmer:30b-q4_K_M'}
+ALLOWED_HOSTS={'127.0.0.1'}
 MANIFEST=Path(__file__).resolve().parents[2]/'config'/'runtime_models.json'
 
 
@@ -20,12 +25,17 @@ def load(path=MANIFEST):
         raise RegistryInvalid('Runtime model manifest malformed')
     for entry in calls:
         model=entry.get('model_id');host=urlsplit(entry.get('endpoint','')).hostname
-        if model not in META_MODELS:raise RegistryInvalid(f'Non-Meta or unknown runtime model rejected: {model!r}')
+        if model not in META_MODELS:raise RegistryInvalid(f'Unknown built-in runtime model rejected: {model!r}')
         if host not in ALLOWED_HOSTS:raise RegistryInvalid(f'Unapproved runtime model endpoint rejected: {host!r}')
-        if host=='127.0.0.1' and entry.get('execution')!='local':raise RegistryInvalid('Loopback endpoint must be local execution')
+        if entry.get('execution')!='local':raise RegistryInvalid('Built-in models must run locally')
     return {(e['model_id'],e['endpoint']) for e in calls}
 
 
-def require(model_id,endpoint,path=MANIFEST):
-    if (model_id,endpoint) not in load(path):
-        raise RegistryInvalid(f'Model {model_id!r} at {endpoint!r} is not declared in the runtime manifest')
+def require(model_id,endpoint,path=MANIFEST,providers_path=None):
+    """Accept a pinned built-in local model, or a provider the owner connected by hand."""
+    if (model_id,endpoint) in load(path):
+        return
+    from src.ai import custom_provider
+    if custom_provider.declared(model_id,endpoint,providers_path):
+        return
+    raise RegistryInvalid(f'Model {model_id!r} at {endpoint!r} is not declared (neither built in nor connected by the owner)')

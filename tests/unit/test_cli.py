@@ -39,7 +39,8 @@ class CliTests(unittest.TestCase):
         code, out, _ = run(['--json', 'models', 'list'])
         self.assertEqual(code, 0)
         doc = json.loads(out)  # raises if polluted
-        self.assertIn('muse-spark-1.3', doc['data']['pinned'])
+        self.assertNotIn('muse-spark-1.3', doc['data']['pinned'])
+        self.assertIs(doc['data']['paid_models_built_in'], False)
 
     def test_cli_error_exit_names_are_valid(self):
         # fail() indexes EXIT[exc.exit_name] with no fallback: an unknown
@@ -65,12 +66,37 @@ class CliTests(unittest.TestCase):
         doc = json.loads(out)
         self.assertEqual(doc['data']['provider'], 'local')
 
-    def test_models_test_cloud_never_spends_without_consent(self):
+    def test_paid_meta_cloud_provider_is_gone(self):
         code, out, _ = run(['--json', 'models', 'test', '--provider', 'meta-cloud'])
         doc = json.loads(out)
-        self.assertFalse(doc['data'].get('spent', False))
-        if not doc['ok']:
-            self.assertTrue(doc['error']['code'].startswith('CLOUD_'))
+        self.assertFalse(doc['ok'])
+        self.assertEqual(doc['error']['code'], 'BAD_PROVIDER')
+
+    def test_ai_connect_list_use_remove_hermetic(self):
+        import os, tempfile
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.dict(os.environ, {'OPENBRIDGE_AI_PROVIDERS': os.path.join(d, 'p.json')}):
+            code, out, _ = run(['--json', 'ai', 'add', '--name', 'lmstudio', '--base-url', 'http://127.0.0.1:1234/v1',
+                                '--model', 'qwen2.5-7b-instruct'])
+            self.assertEqual(code, 0, out)
+            added = json.loads(out)['data']
+            self.assertEqual(added['active'], 'lmstudio')
+            self.assertEqual(added['provider']['execution'], 'local')
+            self.assertNotIn('api_key', added['provider'])
+            code, out, _ = run(['--json', 'ai', 'add', '--name', 'router', '--base-url', 'https://openrouter.ai/api/v1',
+                                '--model', 'some/model', '--api-key-env', 'MY_ROUTER_KEY', '--no-activate'])
+            self.assertEqual(code, 0, out)
+            listed = json.loads(run(['--json', 'ai', 'list'])[1])['data']
+            self.assertEqual([p['name'] for p in listed['providers']], ['lmstudio', 'router'])
+            self.assertEqual(listed['active'], 'lmstudio')
+            # a remote provider is never contacted without explicit consent
+            code, out, _ = run(['--json', 'ai', 'test', 'router'])
+            self.assertEqual(json.loads(out)['error']['code'], 'CONSENT_REQUIRED')
+            # plain http to an internet host is refused
+            code, out, _ = run(['--json', 'ai', 'add', '--name', 'bad', '--base-url', 'http://example.com/v1', '--model', 'x'])
+            self.assertEqual(json.loads(out)['error']['code'], 'PROVIDER_INVALID')
+            self.assertEqual(json.loads(run(['--json', 'ai', 'use', 'none'])[1])['data']['active'], None)
+            self.assertTrue(json.loads(run(['--json', 'ai', 'remove', 'router'])[1])['data']['removed'])
 
     def test_devices_list_hermetic(self):
         code, out, _ = run(['--json', 'devices', 'list'])
@@ -426,7 +452,7 @@ class JudgeDemoTests(unittest.TestCase):
     def test_optional_missing_still_completes_with_plain_lines(self):
         out = self.demo({'core': 'READY', 'os': 'READY', 'evidence': 'READY',
                          'storage': 'READY', 'local_fast': 'MODEL_NOT_FOUND',
-                         'local_quality': 'MODEL_NOT_FOUND', 'cloud': 'MISSING',
+                         'local_quality': 'MODEL_NOT_FOUND', 'custom_ai': 'MISSING',
                          'devices': 'MISSING'})
         self.assertEqual(out['verdict'], 'DEMO_COMPLETE')
         doctor = out['steps'][0]
@@ -435,13 +461,13 @@ class JudgeDemoTests(unittest.TestCase):
         for step in out['steps']:
             self.assertTrue(step['say'], step['step'])
         self.assertIn('4/4 required checks passed', doctor['say'])
-        self.assertIn('Meta cloud key: missing', doctor['say'])
+        self.assertIn('connected AI (manual): missing', doctor['say'])
         self.assertIn('continues without them', doctor['say'])
 
     def test_required_failure_blocks_verdict(self):
         out = self.demo({'core': 'READY', 'os': 'READY', 'evidence': 'INVALID',
                          'storage': 'READY', 'local_fast': 'READY',
-                         'local_quality': 'READY', 'cloud': 'READY', 'devices': 'READY'})
+                         'local_quality': 'READY', 'custom_ai': 'READY', 'devices': 'READY'})
         self.assertEqual(out['verdict'], 'DEMO_BLOCKED')
         self.assertEqual(out['steps'][0]['required'], 'BLOCKED')
         self.assertIn('Demo blocked', out['steps'][0]['say'])

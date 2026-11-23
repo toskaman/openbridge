@@ -2,8 +2,8 @@
 refusals and French/English parity. No model calls: every transport is faked.
 
 (1) Negative paths: empty / oversize / non-UTF8 / gibberish input never
-    dispatches, ends in clarification/refusal, and leaves the cloud budget
-    untouched (no reservation, no send, no spend).
+    dispatches, ends in clarification/refusal, and never calls the connected
+    AI (no send).
 (2) Forced-choice refusals: ambiguous commands surface needs_clarification
     (or a typed refusal at the plan/command layers) instead of silently
     running a default action.
@@ -13,7 +13,6 @@ refusals and French/English parity. No model calls: every transport is faked.
 """
 import unittest
 
-from src.ai import cloud_budget as CB
 from src.ai import voice_intent as VI
 from src.fabric import relay as R
 from src.runtime import command as CMD
@@ -51,12 +50,6 @@ def resolved(skill_id, outcome, targets, params=None):
             'clarifying_question': None}
 
 
-def budget():
-    return CB.Budget({'enabled': True, 'per_request_usd': 0.20,
-                      'per_session_usd': 1.00, 'per_day_usd': 3.00,
-                      'total_usd': 3.00, 'allowed_models': ['muse-spark-1.3']})
-
-
 class SpyExecutor:
     def __init__(self):
         self.calls = []
@@ -91,7 +84,6 @@ class SpyServer:
         self.command_medium = FakeTransport(local_reply)
         self.command_cloud = FakeTransport(local_reply)
         self.command_cloud_enabled = True
-        self.model_broker = None
         devices = {'dev-vac1': {'key': 'dev-vac1', 'category': 'vacuum',
                                 'label': 'Roborock'},
                    'dev-tv1': {'key': 'dev-tv1', 'category': 'tv',
@@ -175,7 +167,7 @@ class NegativePaths(unittest.TestCase):
         with self.assertRaises(CMD.CommandError):
             CMD.approve(SpyServer(abstain('x')), doc)
 
-    def test_gibberish_never_dispatches_and_budget_stays_intact(self):
+    def test_gibberish_never_dispatches_nor_calls_connected_ai(self):
         events = []
         for text in GIBBERISH:
             events.append(('abstain', text, abstain(text)))
@@ -195,8 +187,6 @@ class NegativePaths(unittest.TestCase):
         for name, text, reply in events:
             with self.subTest(case=name):
                 srv = SpyServer(reply)
-                before = budget()
-                snap = before.state()
                 doc = CMD.parse_request(
                     srv, {'text': text, 'quality': 'low'})['intent']
                 self.assertIn(doc['status'], ('unsupported', 'escalation_required',
@@ -208,8 +198,6 @@ class NegativePaths(unittest.TestCase):
                 self.assertEqual(srv.runtime_executor.calls, [], name)
                 self.assertEqual(srv.skill_router.calls, [], name)
                 self.assertEqual(srv.command_cloud.calls, [], name)
-                self.assertEqual(before.state(), snap, name)
-                self.assertEqual(before.pending_estimate, 0.0, name)
 
     def test_gibberish_auto_never_touches_cloud_without_consent(self):
         srv = SpyServer(N.TransportError('local down'))
@@ -217,7 +205,7 @@ class NegativePaths(unittest.TestCase):
             srv, {'text': GIBBERISH[0], 'quality': 'auto'})['intent']
         self.assertEqual(doc['status'], 'escalation_required')
         self.assertEqual(srv.command_cloud.calls, [])
-        self.assertTrue(any('cloud' in a.lower() for a in doc['ambiguities']))
+        self.assertTrue(any('connected ai' in a.lower() for a in doc['ambiguities']))
 
 
 class ForcedChoiceRefusal(unittest.TestCase):

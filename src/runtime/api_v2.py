@@ -11,7 +11,7 @@ from src.runtime.contract import to_json, DeviceIdentity, RelayRoute, EvidenceFa
 MAX_QUERY_BYTES = 8192
 MAX_QUERY_FIELDS = 100
 
-GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/permissions/state', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
+GET_ROUTES = ('/api/v2/ai/providers', '/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/permissions/state', '/api/v2/contract', '/api/v2/workflows/receipts', '/api/v2/primitives/catalog', '/api/v2/facts/signed', '/api/v2/manifests/receipts', '/api/v2/remote_controls', '/api/v2/skills', '/api/v2/skill_routes',
               '/api/v2/graph',
               '/api/v2/capabilities',
               '/api/v2/facts',
@@ -38,8 +38,8 @@ GET_ROUTES = ('/api/v2/hardware/facts', '/api/v2/permissions/catalog', '/api/v2/
               '/api/v2/route_intel',
               '/api/v2/dashboards/list',
               '/api/v2/pc/full-control')
-POST_ROUTES = ('/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
-              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/cloud/preview', '/api/v2/cloud/confirm', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
+POST_ROUTES = ('/api/v2/ai/providers', '/api/v2/ai/providers/test', '/api/v2/ai/providers/remove', '/api/v2/ai/providers/activate', '/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
+              '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
  '/api/v2/pc/full-control',)
 
 
@@ -323,9 +323,51 @@ def _pc_identity(server, device_key):
     return None
 
 
+def ai_providers(path, body=None):
+    """Manually connected AI (src/ai/custom_provider.py). Keys go to the OS vault, never back out."""
+    from src.ai import custom_provider as CP
+    try:
+        if body is None:
+            doc = CP.load()
+            return 200, {'active': doc['active'], 'paid_models_built_in': False,
+                         'providers': [CP.public_view(e) for e in doc['providers']],
+                         'kinds': list(CP.KINDS)}
+        if not isinstance(body, dict):
+            return 400, {'error': 'body must be an object'}
+        if path == '/api/v2/ai/providers':
+            allowed = {'name', 'kind', 'base_url', 'model', 'api_key_env', 'timeout_s', 'max_tokens',
+                       'json_mode', 'api_key', 'activate'}
+            if set(body) - allowed:
+                return 400, {'error': 'unexpected fields: %s' % ', '.join(sorted(set(body) - allowed))}
+            secret = body.get('api_key')
+            entry = {k: v for k, v in body.items() if k not in ('api_key', 'activate')}
+            clean = CP.validate(entry)
+            if secret:
+                CP.store_key(clean['name'], secret)
+            CP.add(clean, activate=body.get('activate', True) is not False)
+            return 200, {'provider': CP.public_view(clean), 'active': CP.load()['active']}
+        name = body.get('name')
+        if path == '/api/v2/ai/providers/activate':
+            CP.set_active(name if name else None)
+            return 200, {'active': CP.load()['active']}
+        entry = CP.get(str(name or ''))
+        if entry is None:
+            return 404, {'error': 'unknown provider'}
+        if path == '/api/v2/ai/providers/remove':
+            return 200, {'removed': CP.remove(entry['name'])}
+        if CP.execution(entry) != 'local' and body.get('consent') is not True:
+            return 409, {'error': 'this provider is outside this PC: the test sends one fixed sentence '
+                                  '("Reply with exactly: OK"); confirm with consent: true'}
+        return 200, CP.test(entry)
+    except CP.ProviderError as e:
+        return 400, {'error': str(e)}
+
+
 def get(server, path, query):
     if len(query) > MAX_QUERY_BYTES:
         return 414, {'error': 'Query string too long'}
+    if path == '/api/v2/ai/providers':
+        return ai_providers(path)
     try:
         q = parse_qs(query, max_num_fields=MAX_QUERY_FIELDS)
     except ValueError:
@@ -588,49 +630,6 @@ def get(server, path, query):
     return 404, {'error': 'Not found'}
 
 
-def escalation(server):
-    if getattr(server, 'cloud_escalation', None) is None:
-        from src.ai.cloud_escalation import CloudEscalation
-        b = getattr(server, 'model_broker', None)
-        server.cloud_escalation = CloudEscalation(b if callable(getattr(b, '_reserve', None)) else None)
-    return server.cloud_escalation
-
-
-def cloud(server, path, body):
-    from src.ai.broker import ModelBlocked
-    from src.runtime import hypotheses
-    from src.runtime.redact import LeakDetected
-    esc = escalation(server)
-    try:
-        if path == '/api/v2/cloud/preview':
-            if set(body) - {'device_key', 'window_s'} or not isinstance(body.get('device_key'), str):
-                return 400, {'error': 'device_key required; no other fields'}
-            w = body.get('window_s', hypotheses.DEFAULT_WINDOW_S)
-            if isinstance(w, bool) or not isinstance(w, int) or not 10 <= w <= 600:
-                return 400, {'error': 'window_s out of range'}
-            rows = executor(server).timeline().rows(limit=4000)
-            return 200, esc.preview(hypotheses.analyze(rows, body['device_key'], w), rows)
-        if set(body) - {'preview_id', 'sha256', 'consent'}:
-            return 400, {'error': 'Unexpected fields'}
-        return 200, esc.confirm(str(body.get('preview_id', ''))[:40], str(body.get('sha256', ''))[:64], body.get('consent'))
-    except LeakDetected as e:
-        return 409, {'error': 'Blocked: ' + str(e), 'state': 'BLOCKED_LEAK'}
-    except ModelBlocked as e:
-        return 409, {'error': str(e), 'state': 'BLOCKED'}
-
-
-def _meta_key():
-    import os
-    k = os.environ.get('MODEL_API_KEY')
-    if not k:
-        try:
-            from src.fabric.credential_vault import Vault
-            k = Vault().get('meta-api-key')
-        except Exception:
-            k = None
-    return k
-
-
 def voice(server, path, body):
     from src.ai import voice_intent, voice_stt
     if path == '/api/v2/voice/intent':
@@ -648,9 +647,7 @@ def voice(server, path, body):
         pcm = base64.b64decode(body['audio_b64'], validate=True)
     except (binascii.Error, ValueError):
         return 400, {'error': 'invalid audio'}
-    # Local-only (Sol audit): on-device Meta STT costs nothing and keeps audio home.
-    # No silent cloud fallback — a cloud call would need explicit owner consent plus a
-    # fresh credit reservation, which this endpoint does not take.
+    # Local-only: on-device STT costs nothing and keeps audio home. There is no cloud STT.
     from src.ai import stt_local
     try:
         if not stt_local.available():
@@ -664,7 +661,7 @@ def voice(server, path, body):
     except voice_stt.STTBlocked as e:
         return 409, {'error': str(e), 'fallback': 'type the command instead'}
     except OSError as e:
-        return 503, {'error': f'Meta STT unreachable ({type(e).__name__})', 'fallback': 'type the command instead'}
+        return 503, {'error': f'local STT unavailable ({type(e).__name__})', 'fallback': 'type the command instead'}
 
 
 def apk_portal(server, body):
@@ -798,6 +795,8 @@ def _perm_sdk(runner):
 
 
 def post(server, path, body):
+    if path.startswith('/api/v2/ai/providers'):
+        return ai_providers(path, body if body is not None else {})
     if path in ('/api/v2/permissions/open', '/api/v2/permissions/recheck') and isinstance(body, dict):
         from src.fabric import permissions as P
         if server.fabric_snapshot is None:
@@ -1201,8 +1200,6 @@ def post(server, path, body):
         return apk_portal(server, body)
     if path.startswith('/api/v2/voice/') and isinstance(body, dict):
         return voice(server, path, body)
-    if path in ('/api/v2/cloud/preview', '/api/v2/cloud/confirm') and isinstance(body, dict):
-        return cloud(server, path, body)
     if path == '/api/v2/recovery/acknowledge' and isinstance(body, dict):
         from src.fabric.session import SessionError
         if set(body) - {'transaction_id', 'consent'} or not isinstance(body.get('transaction_id'), str) or body.get('consent') is not True:

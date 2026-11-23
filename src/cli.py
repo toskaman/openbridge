@@ -203,9 +203,21 @@ def tags_probe(endpoint, timeout=3):
         return False, []
 
 
-def cloud_key():
-    key = os.environ.get('OPENBRIDGE_META_KEY')
-    return key or None
+def connected_ai():
+    """The owner's active manually connected AI (public view, no secret), or None."""
+    from src.ai import custom_provider
+    try:
+        return custom_provider.public_view(custom_provider.active())
+    except Exception:
+        return None
+
+
+def custom_availability(avail=None):
+    entry = connected_ai()
+    out = dict(avail or {})
+    out.update({'custom': entry is not None, 'custom_model': entry['model'] if entry else None,
+                'custom_execution': entry['execution'] if entry else None})
+    return out
 
 
 def local_availability():
@@ -223,18 +235,35 @@ def local_availability():
 
 
 class OllamaClient:
-    """Minimal pinned chat client implementing the forge generate() contract."""
+    """Minimal pinned chat client implementing the forge generate() contract.
+
+    LOCAL-* tiers use the pinned local models; CUSTOM uses the owner's connected AI."""
 
     def __init__(self, temperature=0):
         self.temperature = temperature
+
+    def _generate_custom(self, prompt, opts):
+        from src.ai import custom_provider
+        entry = custom_provider.active()
+        if entry is None:
+            return False, {'status': 'CUSTOM_PROVIDER_MISSING', 'reason': 'connect an AI with `openbridge ai add`'}
+        try:
+            text, raw = custom_provider.ProviderTransport(entry).chat(
+                [{'role': 'user', 'content': prompt}], json_mode=False)
+        except custom_provider.ProviderError as e:
+            return False, {'status': 'INFERENCE_FAILED', 'reason': str(e)[:160]}
+        usage = raw.get('usage', {}) if isinstance(raw, dict) else {}
+        return True, {'text': text, 'model': entry['model'], 'usage': usage if isinstance(usage, dict) else {}}
 
     def generate(self, tier, prompt, opts):
         from src.ai.local_meta import MODEL_ID as LLAMA_ID
         from src.ai.glimmer import GLIMMER_ID
         avail = local_availability()
+        if tier == 'CUSTOM':
+            return self._generate_custom(prompt, opts)
         model = {'LOCAL-FAST': LLAMA_ID, 'LOCAL-QUALITY': GLIMMER_ID}.get(tier)
         if model is None:
-            return False, {'status': 'TIER_REJECTED', 'reason': 'cloud tiers need consent flow'}
+            return False, {'status': 'TIER_REJECTED', 'reason': 'unknown tier'}
         endpoint = avail['endpoints'][tier]
         if not avail['reachable'][tier]:
             return False, {'status': 'MODEL_NOT_FOUND', 'reason': endpoint + ' unreachable'}
@@ -375,7 +404,7 @@ def cmd_doctor(args):
     probes['os'] = 'READY' if platform.system() in ('Windows', 'Linux', 'Darwin') else 'INCOMPATIBLE'
     probes['local_fast'] = 'READY' if avail['local_fast'] else 'MODEL_NOT_FOUND'
     probes['local_quality'] = 'READY' if avail['local_quality'] else 'MODEL_NOT_FOUND'
-    probes['cloud'] = 'AUTH_REQUIRED' if cloud_key() else 'MISSING'
+    probes['custom_ai'] = 'READY' if connected_ai() else 'MISSING'
     probes['devices'] = 'READY' if shutil.which('adb') else 'MISSING'
     try:
         dest = evidence_dir(args)
@@ -401,18 +430,6 @@ def cmd_doctor(args):
 
 # ---------------- models ----------------
 
-def default_budget():
-    from src.ai.cloud_budget import Budget
-    total = os.environ.get('OPENBRIDGE_CLI_BUDGET_USD')
-    try:
-        total = float(total) if total else 0.0
-    except ValueError:
-        total = 0.0
-    return Budget({'enabled': bool(total and cloud_key()), 'per_request_usd': 0.20,
-                   'per_session_usd': 1.00, 'per_day_usd': 3.00, 'total_usd': total,
-                   'allowed_models': ['muse-spark-1.3'], 'retries': 1})
-
-
 def cmd_models_list(args):
     from src.ai import registry
     avail = local_availability()
@@ -421,9 +438,10 @@ def cmd_models_list(args):
     except registry.RegistryInvalid:
         manifest = []
     return {'pinned': sorted(registry.META_MODELS), 'manifest': manifest,
+            'paid_models_built_in': False, 'connected_ai': connected_ai(),
             'availability': {'local_fast': avail['local_fast'],
                              'local_quality': avail['local_quality'],
-                             'cloud_key': bool(cloud_key())}}
+                             'custom': connected_ai() is not None}}
 
 
 def cmd_models_status(args):
@@ -432,8 +450,8 @@ def cmd_models_status(args):
     return {'tiers': list(TIERS),
             'availability': {'local_fast': avail['local_fast'],
                              'local_quality': avail['local_quality'],
-                             'cloud_key': bool(cloud_key())},
-            'budget': default_budget().state()}
+                             'custom': connected_ai() is not None},
+            'connected_ai': connected_ai()}
 
 
 def _tiny_chat(endpoint, model, prompt, timeout):
@@ -453,10 +471,11 @@ def _tiny_chat(endpoint, model, prompt, timeout):
 
 def cmd_models_test(args):
     from src.ai.local_meta import MODEL_ID as LLAMA_ID
-    from src.ai.cloud_budget import BudgetBlocked
-    provider = getattr(args, 'provider', 'local')
-    if provider == 'meta-cloud':
-        return _cloud_preflight(args)
+    provider = getattr(args, 'provider', 'local') or 'local'
+    if provider in ('custom', 'connected'):
+        return cmd_ai_test(args)
+    if provider != 'local':
+        raise CliError('args', 'BAD_PROVIDER', 'provider must be local or custom (no paid model is built in)')
     avail = local_availability()
     ep = avail['endpoints']['LOCAL-FAST']
     up, models = tags_probe(ep)
@@ -473,54 +492,6 @@ def cmd_models_test(args):
     if not up:
         raise CliError('inference', 'MODEL_NOT_FOUND', 'Local endpoint %s unreachable.' % ep,
                        data=data)
-    return data
-
-
-def _cloud_preflight(args):
-    from src.ai.cloud_budget import CODES
-    from src.ai.broker import MODEL_ID as SPARK_ID, ENDPOINT
-    key = cloud_key()
-    budget = default_budget()
-    data = {'provider': 'meta-cloud', 'model': SPARK_ID, 'endpoint': ENDPOINT,
-            'spent': False, 'key': bool(key), 'budget': budget.state()}
-    if not key:
-        raise CliError('auth', 'CLOUD_API_KEY_MISSING',
-                       'No cloud key. Set OPENBRIDGE_META_KEY via your OS secret store; '
-                       'never pass it as a CLI argument.', data=data)
-    if getattr(args, 'spend', False):
-        return _cloud_spend(args, budget, SPARK_ID, data)
-    try:
-        auth = budget.authorize(SPARK_ID, 0.02)
-    except Exception as e:
-        code = getattr(e, 'code', 'CLOUD_BUDGET_BLOCKED')
-        raise CliError('permission', code, 'Spend pre-authorization refused: %s' % e)
-    data['preauth_estimate_usd'] = auth['estimate_usd']
-    data['next'] = 're-run with --spend --consent SPEND-APPROVED to execute one tiny completion'
-    return data
-
-
-def _cloud_spend(args, budget, model, data):
-    from src.ai.broker import ENDPOINT, MetaTransport
-    if getattr(args, 'consent', None) != 'SPEND-APPROVED':
-        raise CliError('permission', 'CONSENT_REQUIRED',
-                       'Paid inference needs explicit consent: re-run with --consent SPEND-APPROVED.')
-    try:
-        budget.authorize(model, 0.02)
-    except Exception as e:
-        raise CliError('permission', getattr(e, 'code', 'CLOUD_BUDGET_BLOCKED'), str(e))
-    try:
-        transport = MetaTransport(cloud_key())
-        t0 = time.monotonic()
-        raw = transport({'model': model, 'max_tokens': 16,
-                         'messages': [{'role': 'user', 'content': 'Reply with exactly: OK'}]})
-        elapsed = time.monotonic() - t0
-    except Exception as e:
-        raise CliError('inference', 'CLOUD_AUTH_FAILED', 'Cloud call failed: %s' % e)
-    choices = raw.get('choices', [{}]) if isinstance(raw, dict) else [{}]
-    text = ((choices[0].get('message') or {}).get('content', ''))
-    data.update({'spent': True, 'seconds': round(elapsed, 2), 'reply': str(text)[:200],
-                 'usage': raw.get('usage', {}) if isinstance(raw, dict) else {},
-                 'reconciled': budget.record_spend(model, 0.02)})
     return data
 
 
@@ -545,9 +516,78 @@ def cmd_models_benchmark(args):
             continue
         rows.append({'tier': tier, 'status': 'READY', 'endpoint': ep, 'n': 3,
                      'seconds': samples, 'mean_s': round(sum(samples) / len(samples), 2)})
-    rows.append({'tier': 'CLOUD-HIGH', 'status': 'SKIPPED',
-                 'reason': 'no spend without explicit --spend consent'})
+    rows.append({'tier': 'CUSTOM', 'status': 'SKIPPED',
+                 'reason': 'your connected AI is never benchmarked automatically: use `openbridge ai test`'})
     return {'rows': rows, 'note': 'n=3 tiny generations; not statistically meaningful'}
+
+
+# ---------------- ai (manually connected providers) ----------------
+
+def cmd_ai_list(args):
+    from src.ai import custom_provider as CP
+    try:
+        doc = CP.load()
+    except CP.ProviderError as e:
+        raise CliError('args', 'PROVIDERS_INVALID', str(e))
+    return {'active': doc['active'], 'paid_models_built_in': False, 'file': str(CP.default_path()),
+            'providers': [CP.public_view(e) for e in doc['providers']]}
+
+
+def cmd_ai_add(args):
+    """Connect a model/API by hand. The key comes from a prompt (OS vault) or an env var, never from argv."""
+    from src.ai import custom_provider as CP
+    entry = {'name': getattr(args, 'name', None) or '', 'kind': getattr(args, 'kind', None) or 'openai',
+             'base_url': getattr(args, 'base_url', None) or '', 'model': getattr(args, 'model', None) or '',
+             'api_key_env': getattr(args, 'api_key_env', None),
+             'timeout_s': getattr(args, 'timeout_s', None) or CP.DEFAULT_TIMEOUT_S,
+             'max_tokens': getattr(args, 'max_tokens', None) or CP.DEFAULT_MAX_TOKENS,
+             'json_mode': bool(getattr(args, 'json_mode', False))}
+    try:
+        clean = CP.validate(entry)
+        if getattr(args, 'store_key', False):
+            import getpass
+            CP.store_key(clean['name'], getpass.getpass('API key for %s (kept in the OS vault): ' % clean['name']))
+        CP.add(clean, activate=not getattr(args, 'no_activate', False))
+    except CP.ProviderError as e:
+        raise CliError('args', 'PROVIDER_INVALID', str(e))
+    view = CP.public_view(clean)
+    return {'provider': view, 'active': CP.load()['active'],
+            'next': 'openbridge ai test %s%s' % (clean['name'], '' if view['execution'] == 'local'
+                                                 else ' --consent ALLOW-REMOTE')}
+
+
+def cmd_ai_remove(args):
+    from src.ai import custom_provider as CP
+    name = getattr(args, 'name', '')
+    if CP.get(name) is None:
+        raise CliError('args', 'UNKNOWN_PROVIDER', 'No connected AI named %r.' % name)
+    return {'removed': CP.remove(name), 'active': CP.load()['active']}
+
+
+def cmd_ai_use(args):
+    from src.ai import custom_provider as CP
+    name = getattr(args, 'name', None)
+    try:
+        CP.set_active(None if name in (None, '', 'none') else name)
+    except CP.ProviderError as e:
+        raise CliError('args', 'UNKNOWN_PROVIDER', str(e))
+    return {'active': CP.load()['active']}
+
+
+def cmd_ai_test(args):
+    from src.ai import custom_provider as CP
+    name = getattr(args, 'name', None)
+    entry = CP.get(name) if name else CP.active()
+    if entry is None:
+        raise CliError('args', 'CUSTOM_PROVIDER_MISSING', 'No connected AI: add one with `openbridge ai add`.')
+    if CP.execution(entry) != 'local' and getattr(args, 'consent', None) not in ('ALLOW-REMOTE', 'ALLOW-CLOUD'):
+        raise CliError('permission', 'CONSENT_REQUIRED',
+                       '%s is outside this PC; the test sends one fixed sentence. Re-run with --consent ALLOW-REMOTE.'
+                       % entry['name'])
+    try:
+        return CP.test(entry)
+    except CP.ProviderError as e:
+        raise CliError('inference', 'INFERENCE_FAILED', str(e))
 
 
 # ---------------- devices ----------------
@@ -664,7 +704,7 @@ def cmd_ask(args):
             ambiguities = intent.get('ambiguities', []) if isinstance(intent, dict) else []
             return {'approval_required': False, 'resolved': False, 'status': status,
                     'ambiguities': ambiguities,
-                    'need': 'a Meta model (LOCAL-FAST/QUALITY) or explicit cloud consent to resolve'}
+                    'need': 'a local model (LOCAL-FAST/QUALITY) or your connected AI (`openbridge ai add`) to resolve'}
         try:
             preview = cmdmod.approve(server, intent)
         except cmdmod.CommandError as e:
@@ -722,19 +762,21 @@ def cmd_capabilities_generate(args):
     if not intent_text.strip() or not target.strip():
         raise CliError('args', 'MISSING_INPUT', 'generate needs --intent and --target.')
     tier = (getattr(args, 'model', None) or 'AUTO').upper().replace('_', '-')
-    if tier not in ('AUTO', 'LOCAL-FAST', 'LOCAL-QUALITY', 'CLOUD-HIGH', 'CLOUD-MAX'):
+    if tier in ('CLOUD-HIGH', 'CLOUD-MAX'):
+        tier = 'CUSTOM'
+    if tier not in ('AUTO', 'LOCAL-FAST', 'LOCAL-QUALITY', 'CUSTOM'):
         tier = 'AUTO'
     avail = local_availability()
-    availability = {'local_fast': avail['local_fast'], 'local_quality': avail['local_quality'],
-                    'cloud': bool(cloud_key())}
-    privacy = 'allow-cloud' if getattr(args, 'consent', None) == 'ALLOW-CLOUD' else 'local-only'
+    availability = custom_availability({'local_fast': avail['local_fast'],
+                                        'local_quality': avail['local_quality']})
+    privacy = 'allow-cloud' if getattr(args, 'consent', None) in ('ALLOW-REMOTE', 'ALLOW-CLOUD') else 'local-only'
     try:
         decision = route(tier, 'synthesis', availability, privacy=privacy, user_text=intent_text)
     except RoutingError as e:
         raise CliError('inference', 'ROUTING_BLOCKED', str(e))
     if decision['needs_cloud_consent']:
         raise CliError('permission', 'CONSENT_REQUIRED',
-                       'Cloud synthesis needs --consent ALLOW-CLOUD plus a configured budget.')
+                       'Your connected AI is outside this PC: re-run with --consent ALLOW-REMOTE.')
     from src.forge.v4_synthesize import validate_candidate, SynthError
     bundle = build_bundle(snapshot_load().get('devices', []), sorted(PRIMITIVES))
     prompt = synth.build_prompt(bundle, intent_text, sorted(PRIMITIVES), target)
@@ -1780,9 +1822,11 @@ def cmd_test_models(args):
     rows.append(_row('local_fast', avail['local_fast'], str(avail['endpoints']['LOCAL-FAST'])))
     rows.append(_row('local_quality', avail['local_quality'],
                      str(avail['endpoints']['LOCAL-QUALITY'])))
-    rows.append(_row('cloud_key', bool(cloud_key()), 'present' if cloud_key() else 'CLOUD_API_KEY_MISSING'))
-    if not (avail['local_fast'] or avail['local_quality'] or cloud_key()):
-        raise CliError('inference', 'NO_MODELS', 'No local model and no cloud key.')
+    ai = connected_ai()
+    rows.append(_row('connected_ai', ai is not None,
+                     ('%s (%s, %s)' % (ai['name'], ai['model'], ai['execution'])) if ai else 'CUSTOM_PROVIDER_MISSING'))
+    if not (avail['local_fast'] or avail['local_quality'] or ai):
+        raise CliError('inference', 'NO_MODELS', 'No local model and no connected AI.')
     return {'rows': rows}
 
 
@@ -1940,8 +1984,28 @@ def build_parser():
     leaf(model_subs, 'status', cmd_models_status, 'models status')
     test_parser = leaf(model_subs, 'test', cmd_models_test, 'models test')
     test_parser.add_argument('--deep', action='store_true')
-    test_parser.add_argument('--spend', action='store_true')
     leaf(model_subs, 'benchmark', cmd_models_benchmark, 'models benchmark')
+
+    ai = subs.add_parser('ai', help='connect your own model or API by hand (no paid model is built in)')
+    ai_subs = ai.add_subparsers(dest='ai_command')
+    leaf(ai_subs, 'list', cmd_ai_list, 'ai list')
+    ai_add = leaf(ai_subs, 'add', cmd_ai_add, 'ai add')
+    ai_add.add_argument('--name', required=True, help='short id, e.g. lmstudio, openrouter')
+    ai_add.add_argument('--kind', choices=['openai', 'ollama'], default='openai',
+                        help='openai = any OpenAI-compatible /chat/completions server; ollama = /api/chat')
+    ai_add.add_argument('--base-url', required=True, help='e.g. http://127.0.0.1:1234/v1 or https://openrouter.ai/api/v1')
+    ai_add.add_argument('--api-key-env', default=None, help='name of the environment variable holding the key')
+    ai_add.add_argument('--store-key', action='store_true', help='prompt for the key and keep it in the OS vault')
+    ai_add.add_argument('--timeout-s', type=int, default=None)
+    ai_add.add_argument('--max-tokens', type=int, default=None)
+    ai_add.add_argument('--json-mode', action='store_true', help='send response_format=json_object (if supported)')
+    ai_add.add_argument('--no-activate', action='store_true')
+    ai_rm = leaf(ai_subs, 'remove', cmd_ai_remove, 'ai remove')
+    ai_rm.add_argument('name')
+    ai_use = leaf(ai_subs, 'use', cmd_ai_use, 'ai use')
+    ai_use.add_argument('name', help='provider name, or "none" to disconnect')
+    ai_test = leaf(ai_subs, 'test', cmd_ai_test, 'ai test')
+    ai_test.add_argument('name', nargs='?')
 
     devices = subs.add_parser('devices')
     device_subs = devices.add_subparsers(dest='devices_command')

@@ -1,6 +1,6 @@
 """Blocked socket/DNS traces of actual model HTTP transport paths.
 
-No packets reach a provider/model, and every key/credit permit is synthetic.
+No packets reach a provider/model. No paid/hosted model path exists any more.
 This is Python in-process transport coverage, not subprocess or OS egress control.
 """
 from contextlib import closing
@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from src.ai.broker import CreditPermit, MetaTransport, ModelBlocked
+from src.ai.broker import ModelBlocked
 from src.ai.glimmer import GlimmerBroker
 from src.ai.local_meta import LocalMetaBroker, local_request
 from src.ai.registry import RegistryInvalid, require
@@ -20,7 +20,6 @@ from src.forge.compiler import ForgeError
 from src.forge.fixtures import manifest
 from src.forge.local_models import IsolatedGlimmerCPU
 from src.forge.planner_v2 import SchemaConstrainedPlanner
-from src.forge.spark_diagnostic import SparkDiagnostic
 from tests.unit.test_meta_only_network_trace import ALLOWED, Trace
 
 
@@ -87,21 +86,6 @@ class ModelNetworkPathTests(unittest.TestCase):
                         with self.assertRaisesRegex(ForgeError, 'META_UNAVAILABLE'):
                             getattr(SchemaConstrainedPlanner(broker), operation)()
             self.assertEqual(trace.seen, [])
-
-    def test_spark_diagnostic_real_meta_transport_and_retained_fake_reservation(self):
-        with TemporaryDirectory() as directory, Trace() as trace:
-            budget = Path(directory) / 'synthetic-test-budget.sqlite'
-            permit = CreditPermit('fake-transport-trace', datetime.now(timezone.utc), 150, .10)
-            broker = SparkDiagnostic(budget, permit, MetaTransport('fake-key-never-transmitted'))
-            with self.assertRaisesRegex(ModelBlocked, 'Diagnostic failed; reservation retained'):
-                broker.diagnose('blocked_relay')
-            self.assert_endpoint(trace.seen, ('api.meta.ai', 443))
-            # No automatic retry; a second explicit attempt is blocked by the fake local allowance.
-            with self.assertRaisesRegex(ModelBlocked, 'budget exhausted'):
-                broker.diagnose('blocked_relay')
-            self.assert_endpoint(trace.seen, ('api.meta.ai', 443))
-            with closing(sqlite3.connect(budget)) as database:
-                self.assertEqual(database.execute('SELECT SUM(reserved) FROM reservations').fetchone()[0], 100000)
 
     def test_undeclared_endpoint_and_non_meta_config_fail_before_transport(self):
         with TemporaryDirectory() as directory, Trace() as trace:

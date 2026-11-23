@@ -163,7 +163,6 @@ class F90WorkerConstants(unittest.TestCase):
         self.assertEqual(CC.MAX_PENDING, 64)
         self.assertEqual(D.MAX_REPORT, 150)
         self.assertLessEqual(D.MAX_REPORT, R.MAX_COMMAND_REPORT)
-        self.assertEqual(inspect.signature(stt.transcribe).parameters['max_events'].default, 400)
 
 
 # ---------------------------------------------------------------------------
@@ -499,94 +498,6 @@ class F90InterruptedCompanion(unittest.TestCase):
         self.assertEqual(doc['fallback'], 'type the command instead')
 
 
-class _ScriptedSock:
-    """Fake Meta realtime ASR server with a scripted post-endStream event list."""
-
-    def __init__(self, events):
-        self.buf, self.sent, self.events, self.stage = b'', b'', list(events), 0
-        self.recvs = 0
-
-    def _push(self, e):
-        d = json.dumps(e).encode()
-        self.buf += bytes([0x81, 126]) + struct.pack('>H', len(d)) + d
-
-    def _push_close(self):
-        self.buf += bytes([0x88, 0x00])
-
-    def _parse(self):
-        s, i, out = self.sent, self.sent.index(b'\r\n\r\n') + 4, []
-        while i + 2 <= len(s):
-            op, n = s[i] & 0x0f, s[i + 1] & 0x7f
-            j = i + 2
-            if n == 126:
-                n, = struct.unpack('>H', s[j:j + 2]); j += 2
-            elif n == 127:
-                n, = struct.unpack('>Q', s[j:j + 8]); j += 8
-            if j + 4 + n > len(s):
-                break
-            m = s[j:j + 4]
-            out.append((op, bytes(b ^ m[k % 4] for k, b in enumerate(s[j + 4:j + 4 + n]))))
-            i = j + 4 + n
-        return out
-
-    def sendall(self, data):
-        self.sent += data
-        if self.stage == 0 and b'\r\n\r\n' in self.sent:
-            self.buf += b'HTTP/1.1 101 Switching Protocols\r\n\r\n'
-            self.stage = 1
-            return
-        texts = [json.loads(p) for op, p in self._parse() if op == 1]
-        if self.stage == 1 and texts:
-            self._push({'sessionId': 'f90-s'})
-            self.stage = 2
-        if self.stage == 2 and any(t.get('type') == 'endStream' for t in texts):
-            for e in self.events:
-                if e == 'CLOSE':
-                    self._push_close()
-                else:
-                    self._push(e)
-            self.stage = 3
-
-    def recv(self, n):
-        self.recvs += 1
-        if not self.buf:
-            raise AssertionError('client read past scripted events (unbounded wait)')
-        d, self.buf = self.buf[:n], self.buf[n:]
-        return d
-
-    def close(self):
-        pass
-
-
-class F90InterruptedCloudSession(unittest.TestCase):
-    """Cloud STT: an interrupted session raises STTBlocked; a partial transcript
-    is never returned as final (no phantom command source)."""
-
-    def test_close_mid_stream_raises_never_partial(self):
-        sock = _ScriptedSock([{'type': 'transcript', 'transcript': 'allume la', 'final': False},
-                              'CLOSE'])
-        with self.assertRaises(stt.STTBlocked):
-            stt.transcribe(CLIP_A, 'k', 'fr', connect=lambda a, timeout: sock, pace=False)
-
-    def test_error_event_raises(self):
-        sock = _ScriptedSock([{'type': 'error', 'message': 'quota exceeded'}])
-        with self.assertRaisesRegex(stt.STTBlocked, 'quota'):
-            stt.transcribe(CLIP_A, 'k', 'fr', connect=lambda a, timeout: sock, pace=False)
-
-    def test_endless_partials_bounded_by_max_events(self):
-        sock = _ScriptedSock([{'type': 'transcript', 'transcript': 'still going', 'final': False}] * 6)
-        with self.assertRaisesRegex(stt.STTBlocked, 'no final transcript'):
-            stt.transcribe(CLIP_A, 'k', 'fr', connect=lambda a, timeout: sock,
-                          max_events=5, pace=False)
-        self.assertLess(sock.recvs, 60)   # bounded wait, no infinite partial loop
-
-    def test_final_after_partial_still_returned(self):
-        sock = _ScriptedSock([{'type': 'transcript', 'transcript': 'allume la', 'final': False},
-                              {'type': 'transcript', 'transcript': 'allume la lampe', 'final': True}])
-        doc = stt.transcribe(CLIP_A, 'k', 'fr', connect=lambda a, timeout: sock, pace=False)
-        self.assertEqual(doc['transcript'], 'allume la lampe')
-
-
 # ---------------------------------------------------------------------------
 # §5  Queue-during-transcription bounds
 # ---------------------------------------------------------------------------
@@ -644,8 +555,6 @@ class F90QueueBounds(unittest.TestCase):
         too_big = b'\x00\x00' * (15 * 16000 + 1)             # 15 s + one frame
         with self.assertRaises(stt.STTBlocked):
             stt_local.transcribe_pcm(too_big, 'fr')
-        with self.assertRaises(stt.STTBlocked):
-            stt.transcribe(too_big, 'k', connect=lambda a, timeout: None, pace=False)
         self.assertIsNone(stt_local._worker)                 # rejected before any spawn
 
 

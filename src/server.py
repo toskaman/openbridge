@@ -11,13 +11,12 @@ import subprocess
 import os
 import sqlite3
 import queue
-from datetime import datetime
 from urllib.parse import urlsplit, parse_qs
 from src.adapters.android import AndroidAdapter
 from src.adapters.freebox import FreeboxAdapter
 from src.adapters.simulated import discover
 from src.core.policy import inspect_device
-from src.ai.broker import RuntimeModelBroker, MetaTransport, CreditPermit, ModelBlocked
+from src.ai.broker import ModelBlocked
 from src.core.transactions import TransactionEngine, TransactionBlocked
 from src.adapters.simulated_setting import SimulatedSetting
 from src.adapters.android_events import AndroidEventMonitor
@@ -212,17 +211,22 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(400, {'error': 'Unknown inventory source'})
             return self.reply(200, {'devices': discover(), 'status': 'SIMULATED'})
         if path == '/api/model-status':
+            from src.ai import custom_provider
             broker=self.server.model_broker
             local=broker is not None and getattr(broker,'local_only',False) is True
-            available=broker is not None and (not local or broker.ready())
-            return self.reply(200, {'cloud_inference_enabled': False,
-                                   'supervised_session_configured': broker is not None and not local,
-                                   'inference_available':available,'inference_mode':'local' if local else 'cloud' if broker else 'blocked',
-                                   'model_id':broker.model_id if local else 'muse-spark-1.3',
-                                   'status': 'LOCAL_META_READY' if local and available else 'LOCAL_META_UNAVAILABLE' if local else 'SUPERVISED_ONLY' if broker else 'CREDIT_VERIFICATION_REQUIRED',
-                                   'detail': 'Automatic cloud calls disabled. Explicit supervised requests require fresh verified free credits.',
+            available=local and broker.ready()
+            try:
+                connected=custom_provider.public_view(custom_provider.active())
+            except Exception:
+                connected=None
+            return self.reply(200, {'cloud_inference_enabled': False, 'paid_models_built_in': False,
+                                   'inference_available':available,'inference_mode':'local' if local else 'blocked',
+                                   'model_id':broker.model_id if local else None,
+                                   'status': 'LOCAL_META_READY' if available else 'LOCAL_META_UNAVAILABLE' if local else 'LOCAL_MODEL_DISABLED',
+                                   'detail': 'No paid model is built in. Local models run on this PC; '
+                                             'you can connect your own AI by hand (Settings or `openbridge ai add`).',
                                    'agent_enabled': self.server.agent is not None,
-                                   'development_design_model': 'muse-spark-1.3'})
+                                   'connected_ai': connected})
         if path == '/api/session-changes':
             from src.fabric.session import SessionError
             try:
@@ -236,17 +240,6 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/fabric':
             snap=self.server.fabric_snapshot
             return self.reply(200, snap if snap else {'schema_version':1,'devices':[],'links':[],'possible_duplicates':[],'providers':{},'status':'NOT_RUN'})
-        if path == '/api/model-proof':
-            try:
-                receipt_path=UI.parents[1] / 'docs' / 'runtime-meta-receipt.json'
-                if receipt_path.stat().st_size > 16384:
-                    raise ValueError('Oversized proof')
-                receipt=json.loads(receipt_path.read_text(encoding='utf-8-sig'))
-                if receipt.get('model_id') != 'muse-spark-1.3' or receipt.get('source') != 'SIMULATED':
-                    raise ValueError('Invalid proof identity')
-                return self.reply(200, {'evidence_kind':'RECORDED_RUNTIME_CORE_CALL','live_request':False,'receipt':receipt})
-            except (OSError,ValueError,AttributeError):
-                return self.reply(404, {'error':'No verified recorded model proof available'})
         if path == '/api/demo-replay':
             from src.runtime.demo_replay import serve_bundle
             return self.reply(*serve_bundle())
@@ -470,10 +463,12 @@ class Handler(BaseHTTPRequestHandler):
                     facts=discover()[0]['facts'];evidence_source='SIMULATED'
                 else:
                     raise ValueError('Physical facts may only use the explicitly enabled local Meta provider')
-                if self.server.model_broker is None:
-                    return self.reply(409, {'error': 'Supervised free-credit verification required; no model called'})
+                if not local:
+                    return self.reply(409, {'error': 'Model reviews use the local model only: start with --local-meta'})
+                if not broker.ready():
+                    return self.reply(409,{'error':'Pinned local Meta model unavailable; no cloud fallback'})
                 try:
-                    result = broker.recommend(facts,source=evidence_source) if local else broker.recommend(facts)
+                    result = broker.recommend(facts,source=evidence_source)
                     return self.reply(200, result)
                 except ModelBlocked as error:
                     return self.reply(409, {'error': str(error)})
@@ -813,21 +808,6 @@ def main():
     if args.local_meta:
         broker=GlimmerBroker() if args.glimmer else LocalMetaBroker()
         registry.require(broker.model_id,broker.endpoint)
-    elif os.environ.get('OPENBRIDGE_CREDIT_VERIFIED_AT'):
-        try:
-            api_key = os.environ.get('MODEL_API_KEY')
-            if not api_key:
-                from src.fabric.credential_vault import Vault
-                api_key = Vault().get('meta-api-key')        # owner stores it in the OS vault
-            if not api_key:
-                raise KeyError('no Meta API key in env or vault')
-            permit = CreditPermit(os.environ['OPENBRIDGE_CREDIT_OBSERVATION_ID'],
-                                  datetime.fromisoformat(os.environ['OPENBRIDGE_CREDIT_VERIFIED_AT']),
-                                  float(os.environ['OPENBRIDGE_FREE_CREDITS_USD']), 0.20)
-            private_root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
-            broker = RuntimeModelBroker(private_root / 'runtime-budget.sqlite', permit, MetaTransport(api_key))
-        except (KeyError,ValueError):
-            print('Supervised credit configuration invalid; runtime models disabled.', flush=True)
     private_root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
     demo_engine=None
     try:

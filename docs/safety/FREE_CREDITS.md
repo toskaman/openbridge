@@ -1,5 +1,7 @@
 # Free-credit-only operation
 
+> **Retired (2026-11-22).** OpenBridge no longer ships any paid model: the hosted Meta Muse Spark tier, its promotional-credit permit, ledger and budget were removed. To use a hosted AI, connect your own provider by hand: see [AI_PROVIDERS.md](../AI_PROVIDERS.md). This page is kept as a historical record of how the former tier was bounded.
+
 The participant permits promotional Meta credits only, with an absolute $150 ceiling and no paid fallback. The Meta dashboard was observed with $150 in active free credits before the development design request. That request's estimated token cost is $0.01219975.
 
 Meta's spending alerts do not impose a provider hard cap. Billing data can also be delayed. This prototype therefore defaults to no cloud inference. There is no public UI control that enables billing, adds a payment method or changes a credit permit.

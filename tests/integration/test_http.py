@@ -92,15 +92,14 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertFalse(json.loads(body)['cloud_inference_enabled'])
 
-    def test_recorded_model_proof_is_explicitly_historical(self):
-        code, body, _ = self.request('GET','/api/model-proof')
-        self.assertEqual(code,200)
-        proof=json.loads(body)
-        self.assertEqual(proof['evidence_kind'],'RECORDED_RUNTIME_CORE_CALL')
-        self.assertFalse(proof['live_request'])
-        self.assertEqual(proof['receipt']['model_id'],'muse-spark-1.3')
+    def test_no_paid_model_is_built_in(self):
+        code, body, _ = self.request('GET', '/api/model-status')
+        self.assertEqual(code, 200)
+        self.assertFalse(json.loads(body)['paid_models_built_in'])
+        code, _, _ = self.request('GET', '/api/model-proof')
+        self.assertEqual(code, 404)
 
-    def test_reasoning_requires_credit_permit(self):
+    def test_reasoning_requires_local_model(self):
         code, body, _ = self.request('POST', '/api/recommend', '{"source":"demo","device_id":"demo-android"}', self.session_headers())
         self.assertEqual(code, 409)
         self.assertIn('error', json.loads(body))
