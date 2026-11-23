@@ -91,6 +91,7 @@ See [Integrate your device](INTEGRATE_YOUR_DEVICE.md).
 
 | Command | What it does |
 |---|---|
+| `openbridge ha say "TEXT" [--consent ALLOW] [--lang auto|en|fr] [--intent-model M] [--endpoint URL]` | Plain-language request (French, US or UK English) understood by OpenBridge's own model, checked by the gate, run on Home Assistant and read back; without `--consent ALLOW` it only shows the plan. Links are created unapproved |
 | `openbridge ha soak --cycles N --consent ALLOW [--include-covers] [--seed S]` | Long real test of every allowed action; each change is undone |
 | `openbridge learn report [--summary]` | What OpenBridge learned about each device |
 | `openbridge learn reset --consent ALLOW` | Forget everything learned |

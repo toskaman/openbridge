@@ -40,6 +40,8 @@ def main(argv=None):
     ap.add_argument('--rank', type=int, default=16)
     ap.add_argument('--accum', type=int, default=8)
     ap.add_argument('--max-len', type=int, default=2560)
+    ap.add_argument('--init-adapter', default=None, help='continue training an existing LoRA adapter')
+    ap.add_argument('--max-minutes', type=float, default=0, help='stop (and save) after this long')
     ap.add_argument('--limit', type=int, default=0, help='train on the first N examples only (smoke runs)')
     a = ap.parse_args(argv)
 
@@ -61,8 +63,12 @@ def main(argv=None):
     model = AutoModelForCausalLM.from_pretrained(a.base, dtype=torch.bfloat16, device_map={'': 0})
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
-    model = get_peft_model(model, LoraConfig(r=a.rank, lora_alpha=2 * a.rank, lora_dropout=0.05, task_type='CAUSAL_LM',
-                                             target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj', 'gate_proj', 'up_proj', 'down_proj']))
+    if a.init_adapter:
+        from peft import PeftModel
+        model = PeftModel.from_pretrained(model, a.init_adapter, is_trainable=True)
+    else:
+        model = get_peft_model(model, LoraConfig(r=a.rank, lora_alpha=2 * a.rank, lora_dropout=0.05, task_type='CAUSAL_LM',
+                                                 target_modules=['q_proj', 'k_proj', 'v_proj', 'o_proj', 'gate_proj', 'up_proj', 'down_proj']))
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
     total_steps = math.ceil(len(data) * a.epochs / a.accum)
@@ -96,6 +102,9 @@ def main(argv=None):
                 print(json.dumps(row), flush=True)
                 log.append(row)
                 running = 0.0
+            if a.max_minutes and time.time() - t0 > a.max_minutes * 60:
+                print(json.dumps({'stopped_early_at_step': step, 'of': total_steps}), flush=True)
+                break
     model.save_pretrained(out / 'adapter')
     tok.save_pretrained(out / 'adapter')
     meta = {'base': a.base, 'examples': len(data), 'epochs': a.epochs, 'lr': a.lr, 'rank': a.rank, 'accum': a.accum,

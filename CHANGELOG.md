@@ -26,6 +26,12 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 - 🌐 **Tailscale-friendly:** devices and Home Assistant reached through a WireGuard mesh count as local.
   [How to use OpenBridge from outside](docs/SKILLS.md#using-openbridge-over-the-internet)
 - 🧠 **Dedicated model, v2 data:** 2 433 training examples and an independent test set written by hand, never trained on.
+- 🗣️ **Talk to your home: `openbridge ha say "..."`** in French, US English or UK English. OpenBridge's own model
+  (Llama 3.2 3B, trained on 30 kinds of home devices) understands, the gate checks, Home Assistant acts, the
+  result is read back. 13 new skills: on/off, brightness, temperature, play/pause/volume, blinds, lock, undo, plus
+  **creating a new device link by voice**, suggesting features and reporting what was learned. Hand-written home
+  requests: **100 %** (Llama 3.1 8B: 16.7 %); 47 / 47 spoken requests understood on a real Home Assistant, 30 / 30
+  actions verified, a link created by voice fired for real; about 1 s per request through Ollama. [Details and limits](docs/AI_TRAINING.md)
 
 ## v0.4.0: 22 November 2026
 

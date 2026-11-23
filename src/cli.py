@@ -858,6 +858,151 @@ def cmd_ha_status(args):
             'status': 'verified on a real Home Assistant with demo devices; physical devices not yet tested'}
 
 
+# ---------------- natural language on the home: `openbridge ha say "..."` ----------------
+
+SAY_DOMAINS = {'home.turn_on': ('light', 'switch', 'fan', 'media_player'), 'home.turn_off': ('light', 'switch', 'fan', 'media_player'),
+               'home.set_brightness': ('light',), 'home.set_temperature': ('climate',),
+               'home.media_play': ('media_player',), 'home.media_pause': ('media_player',), 'home.media_volume': ('media_player',),
+               'home.cover_open': ('cover',), 'home.cover_close': ('cover',), 'home.lock': ('lock',),
+               'home.undo': ('light', 'switch', 'fan', 'media_player', 'climate')}
+GENERIC = {'light', 'lights', 'lamp', 'the', 'smart', 'device', 'speaker', 'thermostat', 'heating', 'plug', 'blinds',
+           'shutters', 'curtains', 'door', 'player', 'media'}
+REF_DOMAIN = {'tv': ('media_player',), 'speaker': ('media_player',), 'sonos': ('media_player',), 'vacuum': ('vacuum',),
+              'front door': ('lock',), 'back door': ('lock',), 'heating': ('climate',), 'thermostat': ('climate',),
+              'blinds': ('cover',), 'shutters': ('cover',), 'curtains': ('cover',)}
+
+
+def _words_of(text):
+    return set(''.join(c if c.isalnum() else ' ' for c in (text or '').lower()).split())
+
+
+def _match_entities(states, target, domains):
+    """HA entities for one router target: a category ("all the lights") or the best name match within the allowed domains."""
+    pool = [s for s in states if s['entity_id'].split('.', 1)[0] in domains]
+    if target.get('kind') == 'category':
+        cat = {'light': 'light', 'plug': 'switch', 'fan': 'fan'}.get(target.get('ref'))
+        return [s['entity_id'] for s in pool if s['entity_id'].startswith((cat or '-') + '.')][:16]
+    want = _words_of(target.get('ref'))
+    best, score = [], 0
+    for s in pool:
+        name = _words_of((s.get('attributes') or {}).get('friendly_name')) | _words_of(s['entity_id'].split('.', 1)[1].replace('_', ' '))
+        near = lambda w: any(w == n or (min(len(w), len(n)) >= 3 and (w.startswith(n) or n.startswith(w))) for n in name)
+        hit = sum(2 for w in want - GENERIC if near(w)) + sum(1 for w in want & GENERIC if near(w))
+        if hit > score:
+            best, score = [s['entity_id']], hit
+        elif hit == score and hit:
+            best.append(s['entity_id'])
+    if score == 0 and pool and (not want or want <= GENERIC | {'tv', 'vacuum', 'air', 'conditioning', 'smart', 'front', 'back'}):
+        # "the TV", "the heating": the household's default device of that kind (first by id), never a random one.
+        return sorted((s['entity_id'] for s in pool), key=lambda e: ('living' not in e and 'tv' not in e, e))[:1]
+    return best[:1] if score else []
+
+
+def _ollama_intent(model, prompt, endpoint, timeout=120):
+    from urllib.request import Request, urlopen
+    from src.runtime import nl_router as NR
+    body = {'model': model, 'stream': False, 'format': NR.INTENT_SCHEMA, 'keep_alive': '15m',
+            'options': {'temperature': 0, 'num_ctx': 4096},
+            'messages': [{'role': 'system', 'content': 'Reply in English only as compact JSON matching the schema.'},
+                         {'role': 'user', 'content': prompt}]}
+    req = Request(endpoint.rstrip('/') + '/api/chat', data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
+    with urlopen(req, timeout=timeout) as r:
+        return json.loads(json.loads(r.read())['message']['content'])
+
+
+def cmd_ha_say(args):
+    """Say it in plain English or French: OpenBridge's own model understands, the gate checks, Home Assistant acts."""
+    import time as _t
+    from src.runtime import intent as I
+    from src.runtime import nl_router as NR
+    from src.runtime import skills as S
+    text, lang = args.text, getattr(args, 'lang', None) or 'auto'
+    if lang == 'auto':
+        fr = _words_of(text) & {'le', 'la', 'les', 'de', 'du', 'des', 'allume', 'eteins', 'mets', 'ferme', 'ouvre', 'quand', 'stp',
+                                'baisse', 'monte', 'coupe', 'propose', 'appareils', 'lumiere', 'porte', 'chauffage', 'verrouille'}
+        lang = 'fr' if fr else 'en'
+    t0 = _t.perf_counter()
+    try:
+        reply = _ollama_intent(args.intent_model, NR.build_prompt(text, lang), args.endpoint)
+    except Exception as e:
+        raise CliError('inference', 'MODEL_UNAVAILABLE', '%s: %s' % (type(e).__name__, str(e)[:160]))
+    doc = NR._interpret(I.new_intent(text, lang), reply, 'local', args.intent_model)
+    out = {'text': text, 'lang': lang, 'understood_in_s': round(_t.perf_counter() - t0, 2),
+           'intent': {k: doc.get(k) for k in ('status', 'skill_id', 'targets', 'params', 'clarifying_question', 'ambiguities')}}
+    if doc['status'] != 'resolved':
+        out['done'] = False
+        return out
+    sid = doc['skill_id']
+    if sid == 'learn.report':
+        from src.runtime.device_learning import Learner
+        rep_ = Learner().report()
+        out.update(done=True, result={'devices': len(rep_['devices']), 'proven_actions': rep_['proven_actions']})
+        return out
+    if not sid.startswith(('home.', 'links.', 'create.')):
+        out.update(done=False, note='understood; this skill runs through `openbridge ask` / the app, not the home bridge')
+        return out
+    ha, reg, ex, learner, keys = _ha_fabric(args)
+    if sid == 'create.suggest':
+        from src.runtime.device_learning import suggest_recipes
+        inv = {v: k for k, v in keys.items()}
+        ideas = suggest_recipes(reg, learner, limit=5)
+        out.update(done=True, result=[{'title': i['title'], 'when': inv.get(i['when']['device']), 'then': inv.get(i['then']['device'])}
+                                      for i in ideas])
+        return out
+    states = ha.states()
+    if sid == 'links.create':
+        tg = doc['targets']
+        p = doc['params']
+        if len(tg) != 2 or not p.get('when_state') or not p.get('then_action'):
+            out.update(done=False, note='a link needs a trigger device, a state, a target device and an action')
+            return out
+        trig = _match_entities(states, tg[0], REF_DOMAIN.get(tg[0]['ref'], ('media_player', 'light', 'switch', 'lock', 'vacuum', 'cover', 'climate', 'fan')))
+        action = p['then_action']
+        tdom = {'set_brightness': ('light',), 'pause': ('media_player',), 'play': ('media_player',),
+                'open': ('cover',), 'close': ('cover',)}.get(action, ('light', 'switch', 'fan', 'media_player'))
+        tgt = _match_entities(states, tg[1], tdom)
+        if not trig or not tgt:
+            out.update(done=False, note='no Home Assistant device matches %r / %r' % (tg[0]['ref'], tg[1]['ref']))
+            return out
+        from src.runtime.device_links import Links, LinkError
+        params = {'action': action}
+        if p.get('value') is not None:
+            params['value'] = p['value']
+        SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+        try:
+            link = Links(ex, learner=learner).add(keys[trig[0]], p['when_state'], keys[tgt[0]], 'ha_set' if action in SET else 'ha_command',
+                                                 params, title=text[:80])
+        except LinkError as e:
+            out.update(done=False, note=str(e))
+            return out
+        out.update(done=True, result={'link': link['id'], 'when': trig[0], 'state': p['when_state'], 'then': tgt[0], 'params': params,
+                                      'approved': False, 'next': 'openbridge links approve %s --consent ALLOW' % link['id']})
+        return out
+    from src.adapters import home_assistant as HA
+    action = S.get(sid)['params'].get('action')
+    if action:   # only devices that really support this action (e.g. a single target temperature, not a range)
+        states = [s for s in states if action in HA.actions_for(s)]
+    ents = []
+    for t in doc['targets'] or [{'kind': 'device', 'ref': ''}]:
+        ents += [e for e in _match_entities(states, t, SAY_DOMAINS[sid]) if e not in ents]
+    if not ents:
+        out.update(done=False, note='no Home Assistant device matches %s' % [t.get('ref') for t in doc['targets']])
+        return out
+    plan = S.resolve(sid, doc['params'])
+    out['plan'] = {'primitive': plan['primitive_id'], 'params': plan['params'], 'entities': ents}
+    if getattr(args, 'consent', None) != 'ALLOW':
+        out.update(done=False, note='understood; add --consent ALLOW to act')
+        return out
+    receipts = []
+    for e in ents:
+        r = ex.execute(plan['primitive_id'], keys[e], dict(plan['params']), consent=True)
+        _learned(learner, reg, r, keys[e], '%s:%s' % (plan['primitive_id'], plan['params'].get('action', 'undo')))
+        receipts.append({'entity': e, 'state': r['state'], 'verified': r['verified'], 'before': r['before'], 'after': r['after'],
+                         'errors': r['errors'][:1]})
+    out.update(done=all(r['verified'] or r['state'] == 'REVERTED' for r in receipts), receipts=receipts)
+    return out
+
+
 def cmd_ha_devices(args):
     from src.adapters import home_assistant as HA
     ha = _ha_client(args)
@@ -2386,6 +2531,11 @@ def build_parser():
     ha_do.add_argument('action', help='turn_on, turn_off, set_brightness, set_volume, set_temperature, play, pause, open, close, stop, lock, start, return_to_base')
     ha_do.add_argument('--value', type=float, default=None)
     leaf(ha_subs, 'disconnect', cmd_ha_disconnect, 'ha disconnect')
+    ha_say = leaf(ha_subs, 'say', cmd_ha_say, 'ha say')
+    ha_say.add_argument('text', help='a request in English or French, e.g. "dim the kitchen lights to 30%%"')
+    ha_say.add_argument('--lang', default='auto', choices=['auto', 'en', 'fr'])
+    ha_say.add_argument('--intent-model', dest='intent_model', default='openbridge-intent', help='Ollama model that understands OpenBridge commands')
+    ha_say.add_argument('--endpoint', default='http://127.0.0.1:11434')
     ha_soak = leaf(ha_subs, 'soak', cmd_ha_soak, 'ha soak')
     ha_soak.add_argument('--cycles', type=int, default=3)
     ha_soak.add_argument('--seed', type=int, default=7)
