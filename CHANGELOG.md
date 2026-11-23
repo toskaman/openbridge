@@ -4,6 +4,20 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- 🏃 **Sport on the glasses:** running and cycling dashboards, interval workouts (`--workout 6x400@4:15`), a Ghost
+  of a previous session and GPX navigation (next turn, distance left, off-route, arrival). Standard Bluetooth sensors
+  are decoded: heart rate, running and cycling speed and cadence, power, smart trainers. Tested on simulated data
+  and in HUD Studio; real outings come with the glasses. [Guide](docs/GLASSES.md#sport)
+- 🇫🇷 🇬🇧 **Français / English:** Settings → Language on the glasses, `openbridge glasses set --lang fr|en|auto`,
+  an optional separate glasses language (`--hud-lang`) and units (`--units`); the Companion app has the same switch.
+  The PC web interface is still English-only.
+- 📶 **Steadier Bluetooth to the glasses:** writes sized to the link, no writing while the glasses ask to pause,
+  stale screens dropped instead of queued, bounded reconnection, and one OpenBridge process at a time
+  (`--takeover` to switch). Unit-tested; to measure on the real pair.
+- 📋 **ENGO dossier 20–25:** master product spec, a 334-feature traceability matrix generated from a registry (0
+  validated on real hardware yet, by design), the real-hardware validation procedure, the manufacturer package,
+  the data contracts and the compatibility matrix. [ENGO folder](docs/partners/engo/README.md)
+
 - 🕶️ **ENGO glasses hub:** `openbridge glasses run` puts messages (Discord, Telegram, SMS, Messages), a TV remote
   (volume, apps, arrows, play/pause, sleep/wake), the robot vacuum and voice commands from the phone's mic on ENGO
   glasses, in a new line-icon design. One wave: next; two: open; three: back. Nothing acts before a one-time grant

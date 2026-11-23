@@ -97,6 +97,7 @@ class MenuTests(unittest.TestCase):
 
     def test_tv_remote_returns_typed_key_actions(self):
         self.m.handle('next')
+        self.m.handle('next')
         self.m.handle('ok')
         self.assertIsInstance(self.m.screen, ui.TVHub)
         self.m.screen.focus = 2
@@ -125,7 +126,7 @@ class HubTests(unittest.TestCase):
     def hub(self, grant=('tv_remote', 'tv_apps', 'vacuum'), ex=None):
         self.c = Clock()
         return G.Hub(executor=ex or FakeExecutor(), devices={'tv': 'dev-tv', 'vacuum': 'dev-vac'},
-                     settings={'grant': list(grant)}, clock=self.c)
+                     settings={'grant': list(grant), 'language': 'en'}, clock=self.c)
 
     def test_grant_is_exact(self):
         cov = lambda a, g=('tv_remote', 'tv_apps', 'vacuum'): G.grant_covers(g, a)

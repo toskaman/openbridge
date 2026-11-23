@@ -78,7 +78,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private LinearLayout systemBody, checklist;
     private TextView systemToggle, statusLine;
     private boolean systemOpen, systemTouched;
-    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background, messages;
+    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background, messages, language;
     private boolean setupRunning;
     private long backgroundLastTap;
     private ScrollView scroll;
@@ -103,6 +103,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     @Override protected void onCreate(Bundle b) {
         super.onCreate(b);
+        L.init(this);                                   // Settings > Language / Langue: Auto, Français, English
         tv = getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         watch = getPackageManager().hasSystemFeature("android.hardware.type.watch");
         relay = RelayServer.get(this, this);
@@ -114,7 +115,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         LinearLayout titles = new LinearLayout(this); titles.setOrientation(LinearLayout.VERTICAL);
         TextView brand = text("OPENBRIDGE", 11, true, CYAN); brand.setLetterSpacing(0.35f);
         titles.addView(brand);
-        titles.addView(text("Companion", tv ? 26 : watch ? 20 : 22, false, TEXT, "sans-serif-light"));
+        titles.addView(text(L.t("Companion"), tv ? 26 : watch ? 20 : 22, false, TEXT, "sans-serif-light"));
         chip = text("", 12, true, MUTED); chip.setPadding(dp(12), dp(6), dp(14), dp(6)); chip.setLetterSpacing(0.08f);
         if (watch) {
             // 240dp round screen: titles and status chip stacked and centered, never side by side.
@@ -142,7 +143,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         // ---- input bar -------------------------------------------------------------------------------
         LinearLayout bar = new LinearLayout(this); bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setPadding(dp(watch ? 12 : 18), dp(6), dp(watch ? 4 : 6), dp(6)); bar.setBackground(round(GLASS_HI, GLASS_LINE, 32));
-        commandInput = new EditText(this); commandInput.setHint(watch ? "Ask OpenBridge…" : "Ask OpenBridge…  e.g. Start my vacuum");
+        commandInput = new EditText(this); commandInput.setHint(watch ? L.t("Ask OpenBridge…") : L.t("Ask OpenBridge…  e.g. Start my vacuum"));
         commandInput.setTextColor(TEXT); commandInput.setHintTextColor(FAINT); commandInput.setBackground(null);
         commandInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, tv ? 19 : watch ? 14 : 16); commandInput.setSingleLine(true);
         commandInput.setImeOptions(EditorInfo.IME_ACTION_SEND);
@@ -179,13 +180,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             if (tv0 == flowIn) { if (watch) lp0.topMargin = dp(6); else lp0.leftMargin = dp(8); }
             legend.addView(tv0, lp0);
         }
-        flowsBtn = button("View flows", PillIcon.FLOWS, FlowOverlayView.C_OUT, STYLE_TOGGLE);
+        flowsBtn = button(L.t("View flows"), PillIcon.FLOWS, FlowOverlayView.C_OUT, STYLE_TOGGLE);
         flowsBtn.setOnClickListener(v -> {
             boolean on = !flows.showFlows();
             flows.setShowFlows(on);
             getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("show_flows", on).apply();
             setToggle(flowsBtn, on);
-            log(on ? "Flow view on" : "Flow view off");
+            log(on ? L.t("Flow view on") : L.t("Flow view off"));
         });
         LinearLayout flowRow = new LinearLayout(this); flowRow.setOrientation(LinearLayout.VERTICAL); flowRow.setGravity(Gravity.CENTER_HORIZONTAL);
         flowRow.setPadding(0, dp(12), 0, 0);
@@ -201,40 +202,40 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         // ---- pairing code ----------------------------------------------------------------------------
         codeCard = card(); codeCard.setGravity(Gravity.CENTER_HORIZONTAL); codeCard.setVisibility(View.GONE);
         codeCard.setBackground(round(Color.argb(30, 255, 183, 77), Color.argb(120, 255, 183, 77), 22));
-        TextView codeHint = text("ENTER THIS CODE IN OPENBRIDGE ON YOUR PC", 11, true, WARN); codeHint.setGravity(Gravity.CENTER); codeHint.setLetterSpacing(0.2f);
+        TextView codeHint = text(L.t("ENTER THIS CODE IN OPENBRIDGE ON YOUR PC"), 11, true, WARN); codeHint.setGravity(Gravity.CENTER); codeHint.setLetterSpacing(0.2f);
         code = text("", tv ? 64 : 52, false, TEXT, "sans-serif-thin"); code.setGravity(Gravity.CENTER); code.setLetterSpacing(0.18f);
         codeCard.addView(codeHint); codeCard.addView(code);
 
         // ---- controls --------------------------------------------------------------------------------
         controlsCard = card(); controlsCard.setVisibility(View.GONE);
-        controlsCard.addView(sectionTitle("QUICK CONTROLS", "hold to send"));
+        controlsCard.addView(sectionTitle(L.t("QUICK CONTROLS"), L.t("hold to send")));
         controlsBox = new LinearLayout(this); controlsBox.setOrientation(LinearLayout.VERTICAL); controlsCard.addView(controlsBox);
         resultText = text("", 13, false, OK); resultText.setPadding(dp(2), dp(4), 0, 0); controlsCard.addView(resultText);
 
         // ---- live info -------------------------------------------------------------------------------
         LinearLayout live = card();
-        live.addView(sectionTitle("LIVE", null));
+        live.addView(sectionTitle(L.t("LIVE"), null));
         TextView[] t;
         if (watch) {
             // Round 240dp screens: one full-width tile per row, no hyphenated values.
             LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL);
-            t = tile(col, "LINK"); linkValue = t[0]; linkDot = t[1];
-            t = tile(col, "BLUETOOTH"); btValue = t[0]; btDot = t[1];
-            t = tile(col, "SCANS"); scanValue = t[0]; scanDot = t[1];
-            t = tile(col, "CONTROLS"); ctrlValue = t[0]; ctrlDot = t[1];
+            t = tile(col, L.t("LINK")); linkValue = t[0]; linkDot = t[1];
+            t = tile(col, L.t("BLUETOOTH")); btValue = t[0]; btDot = t[1];
+            t = tile(col, L.t("SCANS")); scanValue = t[0]; scanDot = t[1];
+            t = tile(col, L.t("CONTROLS")); ctrlValue = t[0]; ctrlDot = t[1];
             live.addView(col);
         } else {
             LinearLayout r1 = new LinearLayout(this), r2 = new LinearLayout(this);
-            t = tile(r1, "LINK"); linkValue = t[0]; linkDot = t[1];
-            t = tile(r1, "BLUETOOTH"); btValue = t[0]; btDot = t[1];
-            t = tile(r2, "SCANS"); scanValue = t[0]; scanDot = t[1];
-            t = tile(r2, "CONTROLS"); ctrlValue = t[0]; ctrlDot = t[1];
+            t = tile(r1, L.t("LINK")); linkValue = t[0]; linkDot = t[1];
+            t = tile(r1, L.t("BLUETOOTH")); btValue = t[0]; btDot = t[1];
+            t = tile(r2, L.t("SCANS")); scanValue = t[0]; scanDot = t[1];
+            t = tile(r2, L.t("CONTROLS")); ctrlValue = t[0]; ctrlDot = t[1];
             live.addView(r1); live.addView(spacer(8)); live.addView(r2);
         }
         deviceLine = text("", 12, false, FAINT); deviceLine.setPadding(dp(2), dp(12), 0, 0); live.addView(deviceLine);
 
         LinearLayout activity = card();
-        activity.addView(sectionTitle("ACTIVITY", null));
+        activity.addView(sectionTitle(L.t("ACTIVITY"), null));
         feed = new LinearLayout(this); feed.setOrientation(LinearLayout.VERTICAL); activity.addView(feed);
 
         // ---- system & permissions (collapsible) ------------------------------------------------------
@@ -242,30 +243,32 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         LinearLayout sysHead = new LinearLayout(this); sysHead.setGravity(Gravity.CENTER_VERTICAL);
         sysHead.setFocusable(true); sysHead.setClickable(true); sysHead.setPadding(0, dp(2), 0, dp(2));
         sysHead.setBackground(focusOnly(14));
-        TextView sysTitle = text("SYSTEM & PERMISSIONS", 11, true, MUTED); sysTitle.setLetterSpacing(0.2f);
+        TextView sysTitle = text(L.t("SYSTEM & PERMISSIONS"), 11, true, MUTED); sysTitle.setLetterSpacing(0.2f);
         sysHead.addView(sysTitle, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-        systemToggle = text("Show", 13, true, CYAN); sysHead.addView(systemToggle);
+        systemToggle = text(L.t("Show"), 13, true, CYAN); sysHead.addView(systemToggle);
         sysHead.setOnClickListener(v -> { systemTouched = true; systemOpen = !systemOpen; renderSystem(); });
         system.addView(sysHead);
         systemBody = new LinearLayout(this); systemBody.setOrientation(LinearLayout.VERTICAL);
         checklist = new LinearLayout(this); checklist.setOrientation(LinearLayout.VERTICAL); systemBody.addView(checklist);
         systemBody.addView(spacer(8));
-        setup = button("Set up everything", PillIcon.SPARK, CYAN, STYLE_PRIMARY);
-        bluetooth = button("Turn on Bluetooth", PillIcon.BLUETOOTH, CYAN, STYLE_NORMAL);
+        setup = button(L.t("Set up everything"), PillIcon.SPARK, CYAN, STYLE_PRIMARY);
+        bluetooth = button(L.t("Turn on Bluetooth"), PillIcon.BLUETOOTH, CYAN, STYLE_NORMAL);
         location = button("Turn on location (needed by Android " + Build.VERSION.RELEASE + ")", PillIcon.PIN, CYAN, STYLE_NORMAL);
-        permission = button("Allow Bluetooth scanning", PillIcon.SHIELD, CYAN, STYLE_NORMAL);
-        enable = button("Bluetooth scans", PillIcon.HOLD, OK, STYLE_TOGGLE);
-        unpair = button("Remove pairing", PillIcon.UNLINK, ERR, STYLE_DANGER);
-        fullctl = button("Full control", PillIcon.FLOWS, WARN, STYLE_TOGGLE);
-        background = button("Background relay", PillIcon.BOLT, CYAN, STYLE_TOGGLE);
-        messages = button("Messages on my glasses", PillIcon.SPARK, CYAN, STYLE_NORMAL);
+        permission = button(L.t("Allow Bluetooth scanning"), PillIcon.SHIELD, CYAN, STYLE_NORMAL);
+        enable = button(L.t("Bluetooth scans"), PillIcon.HOLD, OK, STYLE_TOGGLE);
+        unpair = button(L.t("Remove pairing"), PillIcon.UNLINK, ERR, STYLE_DANGER);
+        fullctl = button(L.t("Full control"), PillIcon.FLOWS, WARN, STYLE_TOGGLE);
+        background = button(L.t("Background relay"), PillIcon.BOLT, CYAN, STYLE_TOGGLE);
+        messages = button(L.t("Messages on my glasses"), PillIcon.SPARK, CYAN, STYLE_NORMAL);
         messages.setOnClickListener(v -> {
             // Android asks the owner directly; OpenBridge cannot grant this to itself.
             startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
             log("Allow \"OpenBridge glasses messages\" to show Discord, Telegram and SMS on your glasses");
         });
-        for (Button x : new Button[]{setup, bluetooth, location, permission, enable, fullctl, background, messages, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
-        statusLine = text("Starting…", 12, false, FAINT); systemBody.addView(statusLine);
+        language = button(L.label(this), PillIcon.SPARK, CYAN, STYLE_NORMAL);
+        language.setOnClickListener(v -> { L.cycle(this); recreate(); });     // applied at once, no restart
+        for (Button x : new Button[]{language, setup, bluetooth, location, permission, enable, fullctl, background, messages, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
+        statusLine = text(L.t("Starting…"), 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
 
         TextView footer = text("Scans run only while this app is open, only on a signed request from your paired PC, and never use location data. "
@@ -308,7 +311,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         bluetooth.setOnClickListener(v -> turnOnBluetooth());
         location.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)));
         permission.setOnClickListener(v -> requestScanPermission());
-        enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); log(relay.ownerEnabled() ? "Scans resumed" : "Scans paused by you"); refresh(); });
+        enable.setOnClickListener(v -> { relay.setOwnerEnabled(!relay.ownerEnabled()); log(relay.ownerEnabled() ? L.t("Scans resumed") : L.t("Scans paused by you")); refresh(); });
         unpair.setOnClickListener(v -> { relay.unpair(); refresh(); });
         fullctl.setOnClickListener(v -> toggleFullControl());
         background.setOnClickListener(v -> {
@@ -316,16 +319,16 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             if (now - backgroundLastTap < 1000) return;   // one tap = one toggle; extra taps while the service converges are dropped
             backgroundLastTap = now;
             boolean willRun;
-            if (RelayService.running(this)) { RelayService.stop(this); relay.start(); log("Background relay stopped"); willRun = false; }
-            else { RelayService.start(this); log("Background relay started"); willRun = true; }
+            if (RelayService.running(this)) { RelayService.stop(this); relay.start(); log(L.t("Background relay stopped")); willRun = false; }
+            else { RelayService.start(this); log(L.t("Background relay started")); willRun = true; }
             setToggle(background, willRun);
             background.setContentDescription("Background relay, " + (willRun ? "on" : "off"));
             h.postDelayed(this::refresh, 600);            // re-render once the service state has converged
         });
 
         relay.start(); RelayService.start(this); refresh(); controls(relay.controls());
-        setCaption(relay.paired() ? "Hi. Ask me anything — type, or tap the orb to talk." : "Open OpenBridge on your PC to pair this device.");
-        log("Companion started");
+        setCaption(relay.paired() ? L.t("Hi. Ask me anything — type, or tap the orb to talk.") : L.t("Open OpenBridge on your PC to pair this device."));
+        log(L.t("Companion started"));
         try {
             tts = new TextToSpeech(this, st -> {
                 if (st != TextToSpeech.SUCCESS) { tts = null; return; }
@@ -366,26 +369,26 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private void updateOrb() {
         int s; String label; int color;
         boolean thinking = System.currentTimeMillis() < thinkingUntil;
-        if (recording) { s = VoiceOrbView.LISTENING; label = "LISTENING"; color = CYAN; }
-        else if (speaking) { s = VoiceOrbView.SPEAKING; label = "SPEAKING"; color = MAGENTA; }
-        else if (thinking || scanning) { s = VoiceOrbView.THINKING; label = scanning && !thinking ? "SCANNING NEARBY" : "THINKING"; color = VIOLET; }
-        else if (codeShown) { s = VoiceOrbView.ALERT; label = "PAIRING"; color = WARN; }
-        else if (relayFailed) { s = VoiceOrbView.OFFLINE; label = "OFFLINE"; color = MUTED; }
+        if (recording) { s = VoiceOrbView.LISTENING; label = L.t("LISTENING"); color = CYAN; }
+        else if (speaking) { s = VoiceOrbView.SPEAKING; label = L.t("SPEAKING"); color = MAGENTA; }
+        else if (thinking || scanning) { s = VoiceOrbView.THINKING; label = scanning && !thinking ? L.t("SCANNING NEARBY") : L.t("THINKING"); color = VIOLET; }
+        else if (codeShown) { s = VoiceOrbView.ALERT; label = L.t("PAIRING"); color = WARN; }
+        else if (relayFailed) { s = VoiceOrbView.OFFLINE; label = L.t("OFFLINE"); color = MUTED; }
         else if (flows != null && relay.paired() && (flows.activity(FlowOverlayView.OUT) > 0.22f || flows.activity(FlowOverlayView.IN) > 0.22f)) {
             boolean o = flows.activity(FlowOverlayView.OUT) > 0.22f, i = flows.activity(FlowOverlayView.IN) > 0.22f;
             s = o ? VoiceOrbView.SPEAKING : VoiceOrbView.LISTENING;
-            label = o && i ? "EXCHANGING" : o ? "SENDING" : "RECEIVING";
+            label = o && i ? L.t("EXCHANGING") : o ? L.t("SENDING") : L.t("RECEIVING");
             color = o && i ? Color.rgb(255, 210, 122) : o ? FlowOverlayView.C_OUT : FlowOverlayView.C_IN;
         }
-        else { s = VoiceOrbView.IDLE; label = relay.paired() ? "READY" : "WAITING FOR YOUR PC"; color = relay.paired() ? CYAN : MUTED; }
+        else { s = VoiceOrbView.IDLE; label = relay.paired() ? L.t("READY") : L.t("WAITING FOR YOUR PC"); color = relay.paired() ? CYAN : MUTED; }
         orb.setState(s);
         stateLabel.setText(label); stateLabel.setTextColor(color);
         mic.setGlyph(recording ? GlyphButton.STOP : GlyphButton.MIC); mic.setActive(recording);
         if (!thinking && thinkingUntil != 0) {
             // The PC never answered: stop showing a stale "working on it" once we are READY again.
             thinkingUntil = 0;
-            setCaption(relay.paired() ? "Hi. Ask me anything — type, or tap the orb to talk." : "Open OpenBridge on your PC to pair this device.");
-            log("No answer from the PC — timed out.");
+            setCaption(relay.paired() ? L.t("Hi. Ask me anything — type, or tap the orb to talk.") : L.t("Open OpenBridge on your PC to pair this device."));
+            log(L.t("No answer from the PC — timed out."));
         }
     }
 
@@ -441,7 +444,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         reports back; this device speaks the report. Sound never leaves this flow except to the paired PC. */
     private void toggleRecord() {
         if (recording) { stopRecord(false); return; }
-        if (!relay.paired()) { commandResult.setText("Pair with your PC first."); orb.pulse(); return; }
+        if (!relay.paired()) { commandResult.setText(L.t("Pair with your PC first.")); orb.pulse(); return; }
         if (tts != null && speaking) { try { tts.stop(); } catch (Exception ignored) { } speaking = false; }
         if (checkSelfPermission("android.permission.RECORD_AUDIO") != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{"android.permission.RECORD_AUDIO"}, VOICE_PERM); return;
@@ -451,18 +454,18 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     private void startRecord() {
         int min = AudioRecord.getMinBufferSize(VOICE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        if (min <= 0) { commandResult.setText("Voice recording is not supported on this device."); return; }
+        if (min <= 0) { commandResult.setText(L.t("Voice recording is not supported on this device.")); return; }
         try {
             recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, VOICE_RATE, AudioFormat.CHANNEL_IN_MONO,
                     AudioFormat.ENCODING_PCM_16BIT, Math.max(min * 2, VOICE_RATE * 2));
             if (recorder.getState() != AudioRecord.STATE_INITIALIZED) throw new IllegalStateException("init");
-        } catch (Exception e) { commandResult.setText("Microphone unavailable."); recorder = null; return; }
+        } catch (Exception e) { commandResult.setText(L.t("Microphone unavailable.")); recorder = null; return; }
         final int cap = VOICE_RATE * 2 * VOICE_MAX_S;
         final ByteArrayOutputStream pcm = new ByteArrayOutputStream(cap);
         recording = true;
         updateOrb();
-        setCaption("I'm listening…");
-        commandResult.setText("Tap the orb or Stop to send (15 s max).");
+        setCaption(L.t("I'm listening…"));
+        commandResult.setText(L.t("Tap the orb or Stop to send (15 s max)."));
         recordThread = new Thread(() -> {
             short[] buf = new short[VOICE_RATE / 20];              // 50 ms chunks: the orb follows your voice closely
             byte[] raw = new byte[buf.length * 2];
@@ -491,7 +494,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         recording = false;
         dropClip = cancel;
         updateOrb();
-        if (cancel) commandResult.setText("Voice cancelled.");
+        if (cancel) commandResult.setText(L.t("Voice cancelled."));
     }
 
     private void stopRecord(byte[] clip, boolean capped) {
@@ -499,12 +502,12 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         releaseRecorder();
         updateOrb();
         if (dropClip) { dropClip = false; return; }
-        if (clip == null || clip.length < 16000) { commandResult.setText("Too short — hold a little longer."); setCaption("I didn't catch that."); return; }
+        if (clip == null || clip.length < 16000) { commandResult.setText(L.t("Too short — hold a little longer.")); setCaption(L.t("I didn't catch that.")); return; }
         String s = relay.submitVoice(clip);
         commandResult.setText((capped ? "15 s limit — " : "") + s);
         if (s != null && s.startsWith("Sent")) {
             log("You spoke (" + (clip.length / (VOICE_RATE * 2)) + " s)");
-            setCaption("Got it — working on it…");
+            setCaption(L.t("Got it — working on it…"));
             thinkingUntil = System.currentTimeMillis() + 25_000;
             orb.pulse(); updateOrb();
         }
@@ -536,14 +539,14 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             return;
         }
         BluetoothAdapter a = ((android.bluetooth.BluetoothManager) getSystemService(BLUETOOTH_SERVICE)).getAdapter();
-        if (a == null) { status("No Bluetooth adapter on this device."); return; }
+        if (a == null) { status(L.t("No Bluetooth adapter on this device.")); return; }
         if (Build.VERSION.SDK_INT < 33) {
             // Owner tapped the button: documented direct enable (Android 12 and older), no extra screen.
             if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{"android.permission.BLUETOOTH_CONNECT"}, 2); return;
             }
             try {
-                if (a.enable()) { status("Turning Bluetooth on…"); h.postDelayed(() -> { refresh(); nextSetupStep(); }, 2500); return; }
+                if (a.enable()) { status(L.t("Turning Bluetooth on…")); h.postDelayed(() -> { refresh(); nextSetupStep(); }, 2500); return; }
             } catch (SecurityException ignored) { }
         }
         if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission("android.permission.BLUETOOTH_CONNECT") != PackageManager.PERMISSION_GRANTED) {
@@ -554,18 +557,18 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         Intent settings = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
         if (settings.resolveActivity(getPackageManager()) != null) { setupRunning = false; startActivity(settings); return; }
         setupRunning = false;
-        status(tv ? "Turn Bluetooth on in Settings > Remotes & Accessories, then come back." : "Turn Bluetooth on from the quick settings panel, then come back.");
+        status(tv ? L.t("Turn Bluetooth on in Settings > Remotes & Accessories, then come back.") : L.t("Turn Bluetooth on from the quick settings panel, then come back."));
     }
 
     /** Standing consent for PC-initiated control. Turning it on shows a warning first; turning it off is instant. */
     private void toggleFullControl() {
-        if (!relay.paired()) { commandResult.setText("Pair with your PC first."); Toast.makeText(this, "Pair with your PC first.", Toast.LENGTH_LONG).show(); log("Full control needs pairing first"); orb.pulse(); return; }
-        if (relay.fullControl()) { relay.setFullControl(false); log("Full control revoked on this device"); refresh(); return; }
+        if (!relay.paired()) { commandResult.setText(L.t("Pair with your PC first.")); Toast.makeText(this, L.t("Pair with your PC first."), Toast.LENGTH_LONG).show(); log("Full control needs pairing first"); orb.pulse(); return; }
+        if (relay.fullControl()) { relay.setFullControl(false); log(L.t("Full control revoked on this device")); refresh(); return; }
         new android.app.AlertDialog.Builder(this)
-                .setTitle("Allow full control?")
+                .setTitle(L.t("Allow full control?"))
                 .setMessage("OpenBridge on your PC will be able to send ALL commands to this device's controls without asking you each time. Only allow this on your own devices. You can revoke it here at any moment.")
-                .setNegativeButton("Cancel", (d, w) -> { })
-                .setPositiveButton("Allow", (d, w) -> { relay.setFullControl(true); log("Full control allowed on this device"); orb.pulse(); refresh(); })
+                .setNegativeButton(L.t("Cancel"), (d, w) -> { })
+                .setPositiveButton(L.t("Allow"), (d, w) -> { relay.setFullControl(true); log(L.t("Full control allowed on this device")); orb.pulse(); refresh(); })
                 .show();
     }
 
@@ -574,7 +577,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         android.content.SharedPreferences ui = getSharedPreferences("ui", MODE_PRIVATE);
         if (ui.getBoolean("asked_" + perm, false) && !shouldShowRequestPermissionRationale(perm)) {
             // Android will not show the dialog again ("Don't ask again"): open this app's permission page instead.
-            status("Android blocked the request dialog. Allow the permission on the page that just opened.");
+            status(L.t("Android blocked the request dialog. Allow the permission on the page that just opened."));
             startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:" + getPackageName())));
             setupRunning = false; return;
         }
@@ -586,7 +589,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         boolean granted = g.length > 0 && g[0] == PackageManager.PERMISSION_GRANTED;
         if (r == 2 && granted) { turnOnBluetooth(); return; }
         if (r == VOICE_PERM) {
-            if (granted) startRecord(); else commandResult.setText("Microphone declined — type instead.");
+            if (granted) startRecord(); else commandResult.setText(L.t("Microphone declined — type instead."));
             return;
         }
         if (!granted) setupRunning = false;     // owner declined: stop asking
@@ -610,44 +613,44 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                     paired = relay.paired(), enabled = relay.ownerEnabled();
 
             // Header chip
-            String chipText = paired ? "PAIRED" : codeShown ? "PAIRING" : "NOT PAIRED";
+            String chipText = paired ? L.t("PAIRED") : codeShown ? L.t("PAIRING") : L.t("NOT PAIRED");
             int chipColor = paired ? OK : codeShown ? WARN : MUTED;
             chip.setText("●  " + chipText); chip.setTextColor(chipColor);
             chip.setBackground(round(Color.argb(28, Color.red(chipColor), Color.green(chipColor), Color.blue(chipColor)),
                     Color.argb(90, Color.red(chipColor), Color.green(chipColor), Color.blue(chipColor)), 20));
 
             // Live tiles
-            setTile(linkValue, linkDot, paired ? "Paired" : codeShown ? "Pairing…" : relayFailed ? "Offline" : "Not paired",
+            setTile(linkValue, linkDot, paired ? L.t("Paired") : codeShown ? L.t("Pairing…") : relayFailed ? L.t("Offline") : L.t("Not paired"),
                     paired ? OK : codeShown ? WARN : relayFailed ? WARN : MUTED);
-            setTile(btValue, btDot, !ble ? "No BLE" : on ? "On" : "Off", !ble ? MUTED : on ? OK : WARN);
-            setTile(scanValue, scanDot, !paired || !ble ? "—" : scanning ? "Scanning" : enabled ? "Allowed" : "Paused",
+            setTile(btValue, btDot, !ble ? L.t("No BLE") : on ? L.t("On") : L.t("Off"), !ble ? MUTED : on ? OK : WARN);
+            setTile(scanValue, scanDot, !paired || !ble ? "—" : scanning ? L.t("Scanning") : enabled ? L.t("Allowed") : L.t("Paused"),
                     scanning ? VIOLET : paired && ble && enabled ? OK : MUTED);
             int n = relay.controls().length();
-            setTile(ctrlValue, ctrlDot, n == 0 ? "None" : n + (n == 1 ? " control" : " controls"), n > 0 ? CYAN : MUTED);
+            setTile(ctrlValue, ctrlDot, n == 0 ? L.t("None") : n + (n == 1 ? " control" : " controls"), n > 0 ? CYAN : MUTED);
             String id = relay.relayId();
             deviceLine.setText((tv ? "Android TV" : watch ? "Watch" : "Phone") + " · Android " + Build.VERSION.RELEASE + " · " + id.substring(0, Math.min(14, id.length())) + " · port " + RelayServer.PORT);
 
             // Checklist
             checklist.removeAllViews();
-            row("Bluetooth LE hardware", ble, ble ? "Available" : "Not present");
-            if (!relay.bluetoothServiceEnabled()) row("System Bluetooth app", false, "Disabled in Settings");
-            row("Bluetooth", on, on ? "On" : "Off");
-            if (Build.VERSION.SDK_INT < 31) row("Location services", loc, loc ? "On" : "Off (Android 11 and older)");
-            row("Scan permission", perm, perm ? "Granted" : "Not granted yet");
-            row("Paired with a PC", paired, paired ? "Yes" : "Not yet");
-            if (paired) row("Scans", enabled, enabled ? "While this app is open" : "Paused by you");
-            if (paired) row("Full control", relay.fullControl(), relay.fullControl() ? "Allowed — the PC may act without asking" : "Off");
+            row(L.t("Bluetooth LE hardware"), ble, ble ? L.t("Available") : L.t("Not present"));
+            if (!relay.bluetoothServiceEnabled()) row(L.t("System Bluetooth app"), false, L.t("Disabled in Settings"));
+            row("Bluetooth", on, on ? L.t("On") : L.t("Off"));
+            if (Build.VERSION.SDK_INT < 31) row(L.t("Location services"), loc, loc ? L.t("On") : L.t("Off (Android 11 and older)"));
+            row(L.t("Scan permission"), perm, perm ? L.t("Granted") : L.t("Not granted yet"));
+            row(L.t("Paired with a PC"), paired, paired ? L.t("Yes") : L.t("Not yet"));
+            if (paired) row(L.t("Scans"), enabled, enabled ? L.t("While this app is open") : L.t("Paused by you"));
+            if (paired) row(L.t("Full control"), relay.fullControl(), relay.fullControl() ? L.t("Allowed — the PC may act without asking") : L.t("Off"));
             boolean ready = !ble || (on && loc && perm);
             setup.setVisibility(ble && !ready ? View.VISIBLE : View.GONE);
             bluetooth.setVisibility(ble && !on ? View.VISIBLE : View.GONE);
             location.setVisibility(ble && !loc ? View.VISIBLE : View.GONE);
             permission.setVisibility(ble && !perm ? View.VISIBLE : View.GONE);
-            enable.setText("Bluetooth scans"); setToggle(enable, enabled);
+            enable.setText(L.t("Bluetooth scans")); setToggle(enable, enabled);
             enable.setVisibility((ready || paired) ? View.VISIBLE : View.GONE);
-            fullctl.setText("Full control"); setToggle(fullctl, relay.fullControl());
+            fullctl.setText(L.t("Full control")); setToggle(fullctl, relay.fullControl());
             fullctl.setVisibility((ready || paired) ? View.VISIBLE : View.GONE);
             boolean bg = RelayService.running(this);
-            background.setText("Background relay"); setToggle(background, bg);
+            background.setText(L.t("Background relay")); setToggle(background, bg);
             background.setContentDescription("Background relay, " + (bg ? "on" : "off"));
             unpair.setVisibility((ready || paired) ? View.VISIBLE : View.GONE);
             unpair.setEnabled(paired);
@@ -664,7 +667,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
 
     private void renderSystem() {
         systemBody.setVisibility(systemOpen ? View.VISIBLE : View.GONE);
-        systemToggle.setText(systemOpen ? "Hide" : "Show");
+        systemToggle.setText(systemOpen ? L.t("Hide") : L.t("Show"));
     }
 
     private void row(String label, boolean ok, String value) {
@@ -715,16 +718,16 @@ public class MainActivity extends Activity implements RelayServer.Ui {
                     }
                     return false;                                   // keep the normal click / long-click handling
                 });
-                b.setOnClickListener(v -> resultText.setText(confirm ? "Hold, then confirm" : "Hold the button to send"));
+                b.setOnClickListener(v -> resultText.setText(confirm ? L.t("Hold, then confirm") : L.t("Hold the button to send")));
                 b.setOnLongClickListener(v -> {
                     org.json.JSONObject touch = down[0];
                     try { if (touch != null) { touch.put("down_ms", android.os.SystemClock.uptimeMillis() - touch.getLong("t")); touch.remove("t"); } } catch (Exception ignored) { }
                     down[0] = null;
                     if (confirm) {                                  // the PC refuses a confirm control without this step
                         new android.app.AlertDialog.Builder(this)
-                                .setTitle("Confirm")
+                                .setTitle(L.t("Confirm"))
                                 .setMessage("Run \"" + label + "\" now?")
-                                .setNegativeButton("Cancel", (d, w) -> resultText.setText("Cancelled"))
+                                .setNegativeButton(L.t("Cancel"), (d, w) -> resultText.setText(L.t("Cancelled")))
                                 .setPositiveButton("Run", (d, w) -> sendPress(id, label, "confirm", touch))
                                 .show();
                         return true;
@@ -748,7 +751,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             resultText.setText(s);
             if (s.startsWith("Sent")) { log("Pressed " + label); thinkingUntil = System.currentTimeMillis() + 20_000; orb.pulse(); updateOrb(); }
         }
-        renderBusy();                                               // feedback on the button itself: "Sending…", disabled
+        renderBusy();                                               // feedback on the button itself: L.t("Sending…"), disabled
     }
 
     @Override public void result(String text) {
@@ -774,13 +777,13 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         });
     }
 
-    /** One press in flight per control: the button shows "Sending…" and ignores presses until the PC answers or 20 s pass. */
+    /** One press in flight per control: the button shows L.t("Sending…") and ignores presses until the PC answers or 20 s pass. */
     private void renderBusy() {
         for (int i = 0; i < controlsBox.getChildCount(); i++) {
             View v = controlsBox.getChildAt(i);
             if (!(v instanceof Button) || !(v.getTag() instanceof String[])) continue;
             String[] tag = (String[]) v.getTag(); boolean busy = relay.busy(tag[0]);
-            ((Button) v).setText(busy ? "Sending…" : tag[1]); v.setEnabled(!busy);
+            ((Button) v).setText(busy ? L.t("Sending…") : tag[1]); v.setEnabled(!busy);
         }
     }
 
@@ -796,8 +799,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         flowIn.setText("↓ IN  " + flows.messages(FlowOverlayView.IN) + " msgs  ·  " + FlowOverlayView.human(Math.round(flows.bytesPerSecond(FlowOverlayView.IN))) + "/s");
         float ao = flows.activity(FlowOverlayView.OUT), ai = flows.activity(FlowOverlayView.IN);
         flowOut.setAlpha(0.55f + 0.45f * Math.min(1f, ao)); flowIn.setAlpha(0.55f + 0.45f * Math.min(1f, ai));
-        if (ao > 0.02f || ai > 0.02f || "SENDING".contentEquals(stateLabel.getText()) || "RECEIVING".contentEquals(stateLabel.getText())
-                || "EXCHANGING".contentEquals(stateLabel.getText())) updateOrb();
+        if (ao > 0.02f || ai > 0.02f || L.t("SENDING").contentEquals(stateLabel.getText()) || L.t("RECEIVING").contentEquals(stateLabel.getText())
+                || L.t("EXCHANGING").contentEquals(stateLabel.getText())) updateOrb();
     }
 
     /** Content + touch-transparent flow layer on top (comets may cross the whole screen). */
@@ -831,8 +834,8 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             code.setText(c == null ? "" : c.substring(0, 3) + " " + c.substring(3));
             code.setContentDescription(c == null ? null : "Pairing code " + c);
             if (c != null) {
-                log("Pairing requested by a PC");
-                setCaption("Enter the code shown below on your PC.");
+                log(L.t("Pairing requested by a PC"));
+                setCaption(L.t("Enter the code shown below on your PC."));
                 orb.pulse();
                 if (scroll != null) scroll.post(() -> scroll.smoothScrollTo(0, tv ? 0 : Math.max(0, codeCard.getTop() - dp(120))));
             }
