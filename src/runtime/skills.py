@@ -43,6 +43,67 @@ def _tuya(skill_id, display_name, command, risk_level, keywords):
             'keywords': keywords}
 
 
+HA_REF = 'docs/evidence/device-learning-soak-22nov.md (real Home Assistant, demo devices, read-back verified)'
+
+
+def _home(skill_id, display_name, description, primitive_id, action, targets, param_names, risk_level, keywords):
+    """Home Assistant devices (lights, plugs, fans, heating, speakers, blinds, locks) through the typed gate."""
+    return {'skill_id': skill_id, 'version': 1, 'display_name': display_name, 'description': description,
+            'capability_id': 'home.' + (action or 'undo'), 'targets': targets, 'permissions': ['ha:' + (action or 'undo')],
+            'risk_level': risk_level, 'idempotent': action not in ('play', 'pause', 'open', 'close'),
+            'verification': 'claimed', 'verification_ref': HA_REF, 'provenance': 'builtin',
+            'primitive_id': primitive_id, 'param_names': param_names,
+            'params': {'action': action} if action else {}, 'keywords': keywords}
+
+
+_HOME = (
+    _home('home.turn_on', 'Switch a device on', 'Switch on a light, plug, fan, speaker or appliance', 'ha_set', 'turn_on',
+          ['light', 'plug', 'fan', 'media_player', 'appliance'], (), 'low',
+          ('turn on', 'switch on', 'allume', 'light', 'lamp', 'plug', 'lumiere', 'lampe', 'prise')),
+    _home('home.turn_off', 'Switch a device off', 'Switch off a light, plug, fan, speaker or appliance', 'ha_set', 'turn_off',
+          ['light', 'plug', 'fan', 'media_player', 'appliance'], (), 'low',
+          ('turn off', 'switch off', 'eteins', 'coupe', 'light', 'lamp', 'plug', 'lumiere', 'lampe', 'prise')),
+    _home('home.set_brightness', 'Set light brightness', 'Set a light to a brightness percentage (value 1-100)', 'ha_set',
+          'set_brightness', ['light'], ('value',), 'low', ('brightness', 'dim', 'luminosite', 'tamise', 'percent')),
+    _home('home.set_temperature', 'Set heating temperature', 'Set a thermostat, heater or AC target temperature in C (value 7-30)',
+          'ha_set', 'set_temperature', ['thermostat'], ('value',), 'medium',
+          ('temperature', 'heating', 'thermostat', 'chauffage', 'degres', 'radiateur', 'clim')),
+    _home('home.media_play', 'Play media', 'Resume or start playback on a speaker or media player (not the TV volume)',
+          'ha_command', 'play', ['media_player'], (), 'low', ('play', 'resume', 'music', 'lecture', 'musique', 'reprends')),
+    _home('home.media_pause', 'Pause media', 'Pause playback on a speaker or media player', 'ha_command', 'pause',
+          ['media_player'], (), 'low', ('pause', 'music', 'musique', 'speaker', 'enceinte')),
+    _home('home.media_volume', 'Set speaker volume', 'Set a speaker or media player volume (value 0-100); TV volume uses tv_volume_set',
+          'ha_set', 'set_volume', ['media_player'], ('value',), 'low', ('speaker', 'enceinte', 'volume', 'sonos', 'soundbar')),
+    _home('home.cover_open', 'Open blinds', 'Open blinds, shutters or curtains (never a garage door or gate)', 'ha_command',
+          'open', ['cover'], (), 'medium', ('open', 'blinds', 'shutters', 'curtains', 'ouvre', 'volets', 'stores', 'rideaux')),
+    _home('home.cover_close', 'Close blinds', 'Close blinds, shutters or curtains (never a garage door or gate)', 'ha_command',
+          'close', ['cover'], (), 'medium', ('close', 'blinds', 'shutters', 'curtains', 'ferme', 'volets', 'stores', 'rideaux')),
+    _home('home.lock', 'Lock a door', 'Lock a door lock (OpenBridge never unlocks)', 'ha_command', 'lock', ['lock'], (), 'medium',
+          ('lock', 'verrouille', 'ferme a cle', 'door', 'porte')),
+    _home('home.undo', 'Undo the last change', 'Put a device back exactly as it was before the last change', 'ha_undo', None,
+          ['any'], (), 'low', ('undo', 'annule', 'revert', 'remets comme avant', 'put it back')),
+    {'skill_id': 'links.create', 'version': 1, 'display_name': 'Create a device link',
+     'description': ('Create a new automation: WHEN device 1 reaches when_state THEN device 2 does then_action (optional value). '
+                     'targets = [trigger device, target device]. Inactive until the owner approves it.'),
+     'capability_id': 'links.create', 'targets': ['any'], 'permissions': ['links:propose'], 'risk_level': 'medium',
+     'idempotent': False, 'verification': 'claimed',
+     'verification_ref': 'docs/evidence/device-learning-soak-22nov.md (link fired once, verified)',
+     'provenance': 'builtin', 'primitive_id': 'links.propose', 'param_names': ('when_state', 'then_action', 'value'),
+     'params': {}, 'keywords': ('when', 'whenever', 'quand', 'lorsque', 'automation', 'automatise', 'link', 'each time', 'chaque fois')},
+    {'skill_id': 'create.suggest', 'version': 1, 'display_name': 'Suggest new features',
+     'description': 'Suggest new cross-device features built from what the devices have proven they can do (read-only)',
+     'capability_id': 'create.suggest', 'targets': ['fabric'], 'permissions': [], 'risk_level': 'low', 'idempotent': True,
+     'verification': 'claimed', 'verification_ref': 'docs/evidence/device-learning-soak-22nov.md (10 suggestions)',
+     'provenance': 'builtin', 'primitive_id': 'create_suggest', 'param_names': (), 'params': {},
+     'keywords': ('suggest', 'ideas', 'idees', 'propose', 'feature', 'fonctionnalite', 'together', 'ensemble')},
+    {'skill_id': 'learn.report', 'version': 1, 'display_name': 'What OpenBridge learned',
+     'description': 'Report what OpenBridge learned about each device: reliable actions, success rate, latency (read-only)',
+     'capability_id': 'learn.report', 'targets': ['fabric'], 'permissions': [], 'risk_level': 'low', 'idempotent': True,
+     'verification': 'claimed', 'verification_ref': 'docs/evidence/device-learning-soak-22nov.md (87 proven actions)',
+     'provenance': 'builtin', 'primitive_id': 'learn_report', 'param_names': (), 'params': {},
+     'keywords': ('learned', 'appris', 'reliable', 'fiable', 'reliability', 'fiabilite')},
+)
+
 _REGISTRY = {}
 for _c in (
     _b2('ble_scan_room', 'Scan nearby Bluetooth', 'ble.scan', ['relay'],
@@ -92,7 +153,7 @@ for _c in (
      'param_names': (), 'params': {},
      'keywords': ('fabric', 'status', 'how many', 'devices', 'online', 'count', 'summary',
                   'combien', 'appareils', 'etat', 'resume')},
-):
+) + _HOME:
     _REGISTRY[_c['skill_id']] = _c
 del _c
 
