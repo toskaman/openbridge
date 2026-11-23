@@ -24,6 +24,8 @@ import time
 from pathlib import Path
 
 from src.glasses import ui
+from src.glasses.events import Scheduler
+from src.glasses.i18n import resolve, t
 from src.glasses.notifications import DEFAULT_ALLOWED, Inbox
 
 # What a grant can cover. Each maps to the exact primitive + params pattern it allows.
@@ -117,33 +119,51 @@ class StudioLink:
 class BleLink:
     """Real ENGO glasses over Bluetooth LE from this PC (optional dependency: bleak).
 
-    Writes go to the RX characteristic in chunks no larger than the negotiated MTU, pausing while the glasses'
-    flow-control characteristic says their queue is above 75 %. Gesture notifications become waves."""
-    MTU_CHUNK = 128
+    Uses the transport core (src.glasses.transport): MTU-sized writes, no write while the glasses report PAUSE, newest
+    screen wins, bounded queue; reconnects with a bounded back-off; holds the single-controller lock so the phone and
+    the PC never drive the glasses at the same time (takeover=True is the owner's explicit switch)."""
 
-    def __init__(self, on_gesture, address=None, name_hint='ENGO'):
+    def __init__(self, on_gesture, address=None, name_hint='ENGO', takeover=False, on_status=None):
         import asyncio
+        import os
         from src.adapters import activelook as AL
-        self.AL, self.on_gesture = AL, on_gesture
+        from src.glasses.transport import Backoff, ControllerLock, Transport
+        self.AL, self.on_gesture, self.on_status = AL, on_gesture, on_status or (lambda *a: None)
+        self.lock = ControllerLock('pc:%d' % os.getpid())
+        ok, holder = self.lock.acquire(takeover=takeover)
+        if not ok:
+            raise OSError('the glasses are driven by %s; use --takeover to switch to this PC' % holder.get('owner'))
+        self._pending = []
+        self._tlock = threading.Lock()
+        self.tr = Transport(self._pending.append)
+        self.backoff = Backoff()
         self.loop = asyncio.new_event_loop()
-        self.paused = threading.Event()
-        self.q = queue.Queue()
         self.ready = threading.Event()
         self.error = None
+        self.state = 'CONNECTING'
         threading.Thread(target=self._run, args=(address, name_hint), daemon=True).start()
         if not self.ready.wait(30):
             raise OSError(self.error or 'glasses not found over Bluetooth')
-        if self.error:
+        if self.error and self.state != 'READY':
             raise OSError(self.error)
 
     def _run(self, address, name_hint):
         import asyncio
         asyncio.set_event_loop(self.loop)
-        try:
-            self.loop.run_until_complete(self._main(address, name_hint))
-        except Exception as e:                       # noqa: BLE001 - reported to the caller
-            self.error = '%s: %s' % (type(e).__name__, e)
-            self.ready.set()
+        while True:
+            try:
+                self.loop.run_until_complete(self._main(address, name_hint))
+                self.backoff.reset()
+            except Exception as e:                   # noqa: BLE001 - reported, then a bounded retry
+                self.error = '%s: %s' % (type(e).__name__, e)
+            self.state = 'DISCONNECTED'
+            self.on_status(self.state, self.error)
+            delay = self.backoff.next_delay()
+            if delay is None:
+                self.ready.set()
+                return
+            time.sleep(delay)
+            self.state = 'CONNECTING'
 
     async def _main(self, address, name_hint):
         import asyncio
@@ -156,31 +176,36 @@ class BleLink:
                 raise OSError('no ENGO glasses advertising nearby (are they on, and not connected to a phone?)')
             address = dev.address
         async with BleakClient(address) as c:
-            chunk = max(20, min(self.MTU_CHUNK, (getattr(c, 'mtu_size', 23) or 23) - 3))
-
-            def flow(_, data):
-                if data:
-                    (self.paused.set if data[0] == 0x02 else self.paused.clear)()
-
-            await c.start_notify(self.AL.FLOW_CHAR_UUID, flow)
+            with self._tlock:
+                self.tr.set_mtu(getattr(c, 'mtu_size', 23) or 23)
+                self.tr.paused = False
+            await c.start_notify(self.AL.FLOW_CHAR_UUID, lambda _, d: d and self._flow(d[0]))
             await c.start_notify(self.AL.GESTURE_CHAR_UUID, lambda _, d: self.on_gesture())
+            self.state = 'READY'
             self.ready.set()
+            self.on_status(self.state, None)
+            beat = 0.0
             while c.is_connected:
-                try:
-                    data = self.q.get_nowait()
-                except queue.Empty:
-                    await asyncio.sleep(0.02)
-                    continue
-                for i in range(0, len(data), chunk):
-                    while self.paused.is_set():
-                        await asyncio.sleep(0.02)
-                    await c.write_gatt_char(self.AL.RX_CHAR_UUID, data[i:i + chunk], response=False)
+                with self._tlock:
+                    self.tr.pump(budget=8)
+                    chunks, self._pending[:] = list(self._pending), []
+                for ch in chunks:
+                    await c.write_gatt_char(self.AL.RX_CHAR_UUID, ch, response=False)
+                if time.time() - beat > 5:
+                    self.lock.beat()
+                    beat = time.time()
+                await asyncio.sleep(0.01 if chunks else 0.03)
+
+    def _flow(self, status):
+        with self._tlock:
+            self.tr.on_flow(status)
 
     def write(self, data: bytes):
-        self.q.put(data)
+        with self._tlock:
+            self.tr.submit(data, 'screen')
 
     def close(self):
-        pass
+        self.lock.release()
 
 
 class NullLink:
@@ -201,10 +226,14 @@ class Hub:
                  understand=None):
         """executor: object with execute(primitive, device_key, params, consent) -> receipt (the OpenBridge gate).
         devices: {'tv': key, 'vacuum': key}. understand(text) -> (skill_id, params) or None (voice)."""
+        self.persist = settings is None
         self.settings = settings if settings is not None else load_settings()
         self.inbox = Inbox(allowed=self.settings.get('apps') or DEFAULT_ALLOWED,
                            privacy=self.settings.get('privacy', 'full'), clock=clock)
-        self.ctx = ui.Context(inbox=self.inbox, clock=clock)
+        app_lang, hud_lang = resolve(self.settings)
+        self.ctx = ui.Context(inbox=self.inbox, clock=clock, lang=hud_lang, units=self.settings.get('units', 'metric'))
+        self.scheduler = Scheduler(clock=clock)
+        self.sport = None                 # live.SportEngine once a sport session starts
         self.menu = ui.Menu(self.ctx)
         self.gestures = ui.GestureDecoder()
         self.link = link or NullLink()
@@ -216,6 +245,19 @@ class Hub:
         self._last_frame = b''
         self._draw = threading.Lock()
         self.ctx.linked = bool(self.executor)
+
+    # ---- sport
+    def start_sport(self, sport='run', route=None, workout=None, ghost=None, max_hr=None):
+        from src.glasses.live import SportEngine
+        self.sport = SportEngine(sport, clock=self.clock, scheduler=self.scheduler, max_hr=max_hr,
+                                 units=self.ctx.units, lang=self.ctx.lang)
+        if route is not None:
+            self.sport.set_route(route)
+        if workout is not None:
+            self.sport.set_workout(workout)
+        if ghost is not None:
+            self.sport.set_ghost(ghost)
+        return self.sport
 
     # ---- inputs
     def wave(self):
@@ -232,26 +274,42 @@ class Hub:
         return item
 
     # ---- actions
+    def tr(self, key, **kw):
+        return t(key, self.ctx.lang, **kw)
+
     def run(self, action: ui.Action):
         if action.kind == 'voice':
-            self.ctx.voice = {'state': 'idle', 'text': '', 'result': 'Hold the mic button in the OpenBridge app'}
+            self.ctx.voice = {'state': 'idle', 'text': '', 'result': self.tr('voice.idle')}
+            return None
+        if action.kind == 'ack':
+            self.scheduler.ack()
+            return None
+        if action.kind == 'setting':                  # changed from the glasses Settings screen
+            self.settings.update(action.params)
+            if self.persist:
+                save_settings(self.settings)
             return None
         if not grant_covers(self.settings.get('grant'), action):
-            return self._outcome(False, 'Not allowed: openbridge glasses grant', action)
+            return self._outcome(False, self.tr('hud.action.not_allowed'), action)
         key = self.devices.get(action.device)
         if not key or not self.executor:
-            return self._outcome(False, 'No %s connected' % action.device, action)
+            return self._outcome(False, self.tr('hud.action.no_device', device=action.device), action)
         try:
             r = self.executor.execute(action.primitive, key, dict(action.params), consent=True)
         except Exception as e:                       # noqa: BLE001 - shown, never retried
-            return self._outcome(False, '%s failed' % action.label, action, error=type(e).__name__)
+            return self._outcome(False, self.tr('hud.action.failed', action=action.label), action, error=type(e).__name__)
         state = r.get('state')
         ok = bool(r.get('verified')) or state in ('VERIFIED', 'EXECUTED', 'EXECUTED_UNVERIFIED')
         if action.device == 'tv':
             self._absorb_tv(r)
             if ok:
                 self.refresh_tv(force=True)
-        text = action.label + (' ✓' if r.get('verified') else '' if ok else ': ' + human_error(r, action.device))
+        if r.get('verified'):
+            text = self.tr('hud.action.verified', action=action.label)
+        elif ok:
+            text = self.tr('hud.action.unverified', action=action.label) if state == 'EXECUTED_UNVERIFIED' else action.label
+        else:
+            text = action.label + ': ' + human_error(r, action.device, self.ctx.lang)
         return self._outcome(ok, text, action, receipt=r)
 
     def refresh_tv(self, force=False):
@@ -296,9 +354,9 @@ class Hub:
             self.menu.stack.append(ui.VoiceScreen())
         self.redraw()
         got = self.understand(text) if self.understand else None
-        action = voice_action(got) if got else None
+        action = voice_action(got, self.ctx.lang) if got else None
         if action is None:
-            self.ctx.voice = {'state': 'failed', 'text': text, 'result': 'Not something the glasses can do'}
+            self.ctx.voice = {'state': 'failed', 'text': text, 'result': self.tr('voice.not_understood')}
             self.redraw()
             return None
         out = self.run(action)
@@ -334,36 +392,38 @@ class Hub:
         if self.ctx.toast and self.ctx.toast['until'] < self.clock():
             self.ctx.toast = None
             acted = True
+        if self.sport is not None:
+            self.ctx.sport = self.sport.snapshot()
+        self.ctx.event = self.scheduler.tick()
         self.redraw(force=False)
         return acted
 
 
-def human_error(receipt, device):
+def human_error(receipt, device, lang='en'):
     """One short line the wearer understands, instead of an error code."""
     e = (receipt.get('errors') or [receipt.get('state') or 'failed'])[0]
-    name = {'tv': 'TV', 'vacuum': 'Vacuum'}.get(device, device)
+    name = t('menu.' + device, lang) if device in ('tv', 'vacuum') else device
     if 'DEVICE_UNAVAILABLE' in e or 'NOT_LINKED' in e or 'No live' in e:
-        return '%s not reachable' % name
+        return t('hud.action.not_reachable', lang, device=name)
     if 'CONSENT' in e or 'BLOCKED' in e:
-        return 'refused'
+        return t('hud.action.refused', lang, action='').strip(' :')
     if 'RECOVERY' in e or 'CONCURRENT' in e:
-        return 'busy, try again'
+        return t('hud.action.busy', lang)
     return e.split(':')[0].replace('_', ' ').lower()[:30]
 
 
-def voice_action(got):
+def voice_action(got, lang='en'):
     """(skill_id, params) from the command model -> the glasses action it means, or None."""
     sid, p = got
     p = p or {}
     if sid == 'tv_volume_step' and p.get('direction') in ('up', 'down'):
-        return ui.tv_key('volume_' + p['direction'], 'Volume ' + p['direction'])
+        return ui.tv_key('volume_' + p['direction'], t('tv.volume_' + p['direction'], lang))
     if sid == 'app_launch':
         label = next((lbl for lbl, pkg in ui.TV_APPS if pkg == p.get('package')), None)
         if label:
-            return ui.Action('device', 'Open ' + label, 'tv', 'device_action',
+            return ui.Action('device', t('tv.open_app', lang, app=label), 'tv', 'device_action',
                              {'action': 'launch_app', 'args': {'package': p['package']}})
     if sid in ('vacuum.start', 'vacuum.pause', 'vacuum.dock', 'vacuum.seek'):
         cmd = sid.split('.')[1]
-        return ui.vac(cmd, {'start': 'Start cleaning', 'pause': 'Pause vacuum', 'dock': 'Vacuum to dock',
-                            'seek': 'Find vacuum'}[cmd])
+        return ui.vac(cmd, t('vac.' + cmd, lang))
     return None

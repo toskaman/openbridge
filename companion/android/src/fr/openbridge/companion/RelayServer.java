@@ -585,7 +585,8 @@ final class RelayServer {
         caps.put(Aead.VERSION);
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
-                .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("full_control", fullControl());
+                .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("full_control", fullControl())
+                .put("language", L.resolved(ctx));
     }
 
     private synchronized JSONObject pairRequest(JSONObject msg) throws Exception {

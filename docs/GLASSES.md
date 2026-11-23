@@ -1,7 +1,8 @@
-# ENGO glasses: messages, TV, vacuum and voice
+# ENGO glasses: messages, TV, vacuum, voice and sport
 
 OpenBridge puts a small, calm interface on ActiveLook / ENGO glasses (ENGO 1, 2 and 3, including ENGO 3
-Photochromic): your messages, a TV remote, the robot vacuum and voice commands from the phone's microphone.
+Photochromic): your messages, a TV remote, the robot vacuum, voice commands from the phone's microphone, and a sport
+mode (running, cycling, intervals, Ghost, GPX navigation). In French or English.
 
 ![Every glasses screen, rendered by HUD Studio](img/glasses_contact_sheet.png)
 
@@ -25,6 +26,45 @@ phone (OpenBridge Companion) --messages, voice-->  PC: openbridge glasses run  -
 - **Voice:** hold the mic in the Companion app and speak, in French or English. The phone records, the PC transcribes
   locally, OpenBridge's own command model understands ("baisse le son de la télé", "start the vacuum"), and the
   glasses show what was heard and what was done. Anything the glasses may not do is refused and said so.
+
+## Sport
+
+Home → **Sport** opens running, cycling, navigation, Ghost and intervals. The dashboard shows pace or speed, distance,
+time, heart rate with its zone, cadence and power when a sensor sends them. Standard Bluetooth sensors are decoded
+(heart rate, running speed and cadence, cycling speed and cadence, power, smart trainers, battery). A value that has
+gone stale is no longer shown as current.
+
+- **Navigation:** load a GPX track or route. The glasses show the next turn with an arrow and its distance (announced
+  at 200 m and 50 m), the distance left, an off-route warning (over 40 m off, cleared under 25 m) and the arrival.
+- **Ghost:** race a previous session; the screen shows how many seconds and metres ahead or behind you are, and the
+  projected finish time.
+- **Intervals:** `6x400@4:15` means 10 min warm-up, 6 × 400 m at 4:15 /km with 90 s recoveries, 10 min cool-down; the glasses show the step, the target and
+  what is left, and announce each change.
+- Laps are taken automatically every kilometre.
+
+```
+openbridge glasses run --link studio --sport run --gpx parcours.gpx --max-hr 190
+openbridge glasses run --link studio --sport run --workout 6x400@4:15
+openbridge glasses run --link studio --sport run --gpx parcours.gpx --simulate 3.2   # SIMULATED walk along the track
+```
+
+`--simulate` moves a fake position along the track at the given speed (m/s), to try navigation at home; everything
+it produces is marked as simulated. On a real outing the phone's GPS will feed the position; that Companion part is
+next.
+
+## Language
+
+**Settings → Language** on the glasses switches Français / English. From the PC:
+
+```
+openbridge glasses set --lang fr            # auto | fr | en (auto follows the system, English otherwise)
+openbridge glasses set --hud-lang en        # follow | fr | en: glasses in another language than the app
+openbridge glasses set --units imperial     # metric | imperial, independent of the language
+```
+
+The Companion app has the same choice (the language button, first in its system buttons: Auto → Français →
+English). Distances, times and paces follow the language (`1,2 km` / `1.2 km`). The PC web interface is still in
+English.
 
 ## Moving around
 
@@ -57,6 +97,7 @@ openbridge glasses preview --out captures/glasses        # every screen as PNG +
 openbridge glasses grant --allow tv_remote,tv_apps,vacuum --consent ALLOW
 openbridge glasses run --link studio                     # HUD Studio (python -m src.adapters.hud_studio --model "ENGO 3")
 openbridge glasses run --link ble                        # real glasses over Bluetooth from this PC
+openbridge glasses run --link ble --takeover             # take the glasses over from another OpenBridge process
 openbridge glasses set --privacy sender --apps discord,telegram,sms,messages
 openbridge glasses set --rotate on                       # if the calibration arrow is not at the top left
 openbridge glasses notify --app telegram --from "Maman" --text "Tu viens ?"
@@ -76,7 +117,14 @@ port and saves a HUD Studio screenshot after each step.
 | TV actions | Reached the gate; not run on the TV (no ADB link at test time) |
 | Vacuum actions | Wired through the gate; not run (no physical test requested) |
 | Companion notification access + `get_notifications` | Built (APK compiles); to test on the phone |
-| Real ENGO 3 Photochromic over Bluetooth | Waiting for the glasses. First: the **calibration screen** (Settings → Calibrate display) to check orientation, then colours and fonts |
+| Sport, intervals, Ghost, GPX navigation | Engines and screens tested on simulated data and in HUD Studio |
+| Bluetooth sensors (heart rate, RSC, CSC, power, trainer) | Decoders tested on the standard byte layouts; no real sensor connected yet |
+| Bluetooth transport (MTU, flow control, one controller, reconnect) | Unit-tested; to measure on the real pair |
+| Français / English (glasses and Companion) | Built and tested; Companion switch to try on the phone |
+| Real ENGO 3 Photochromic over Bluetooth | Waiting for the glasses. First: the **calibration screen** (Settings → Calibrate display) to check orientation, then colours and fonts. Procedure: [validation report](partners/engo/22_REAL_HARDWARE_VALIDATION_REPORT.md) |
 
-Known gaps: on the move (no PC nearby) the glasses need the phone to hold the Bluetooth link itself; that Companion
-part is the next step. Phone buttons for next / OK / back on the Companion screen are also next.
+Known gaps: on the move (no PC nearby) the glasses need the phone to hold the Bluetooth link itself and to feed its
+GPS; that Companion part is the next step.
+
+Every feature, its status and its evidence: [traceability matrix](partners/engo/21_FEATURE_TRACEABILITY_MATRIX.md).
+The contracts behind it: [API and data contracts](partners/engo/24_API_AND_DATA_CONTRACTS.md). Phone buttons for next / OK / back on the Companion screen are also next.

@@ -136,6 +136,82 @@ def bell(p, cx, cy, s, tone):
     p.circle(cx, cy + s * 0.75, max(1, s // 7), tone, True)
 
 
+def arrow(p, cx, cy, s, angle_deg, tone, thick=True):
+    """Direction arrow: 0 = straight up, +90 = right, -90 = left."""
+    import math
+    a = math.radians(angle_deg)
+    ux, uy = math.sin(a), -math.cos(a)              # tip direction
+    px, py = -uy, ux                                # perpendicular
+    tip = (cx + ux * s, cy + uy * s)
+    tail = (cx - ux * s * 0.9, cy - uy * s * 0.9)
+    base = (cx + ux * s * 0.2, cy + uy * s * 0.2)
+    for o in ((-1.5, 0, 1.5) if thick else (0,)):
+        p.line(tail[0] + px * o, tail[1] + py * o, base[0] + px * o, base[1] + py * o, tone)
+    for o in ((-1, 0, 1) if thick else (0,)):
+        p.line(tip[0] + px * o * 0.5, tip[1] + py * o * 0.5, base[0] + px * s * 0.55, base[1] + py * s * 0.55, tone)
+        p.line(tip[0] + px * o * 0.5, tip[1] + py * o * 0.5, base[0] - px * s * 0.55, base[1] - py * s * 0.55, tone)
+
+
+def u_turn(p, cx, cy, s, tone):
+    p.arc(cx, cy - s * 0.2, s * 0.5, 180, 360, tone)
+    p.line(cx + s * 0.5, cy - s * 0.2, cx + s * 0.5, cy + s * 0.8, tone)
+    p.line(cx - s * 0.5, cy - s * 0.2, cx - s * 0.5, cy + s * 0.4, tone)
+    p.line(cx - s * 0.5, cy + s * 0.8, cx - s * 0.85, cy + s * 0.4, tone)
+    p.line(cx - s * 0.5, cy + s * 0.8, cx - s * 0.15, cy + s * 0.4, tone)
+
+
+def runner(p, cx, cy, s, tone):
+    p.circle(cx + s * 0.25, cy - s * 0.75, max(2, s * 0.18), tone, True)
+    p.line(cx + s * 0.1, cy - s * 0.5, cx - s * 0.1, cy + s * 0.15, tone)
+    p.line(cx - s * 0.1, cy + s * 0.15, cx + s * 0.45, cy + s * 0.5, tone)
+    p.line(cx + s * 0.45, cy + s * 0.5, cx + s * 0.35, cy + s * 0.95, tone)
+    p.line(cx - s * 0.1, cy + s * 0.15, cx - s * 0.5, cy + s * 0.55, tone)
+    p.line(cx - s * 0.5, cy + s * 0.55, cx - s * 0.85, cy + s * 0.45, tone)
+    p.line(cx + s * 0.05, cy - s * 0.35, cx + s * 0.55, cy - s * 0.1, tone)
+    p.line(cx + s * 0.05, cy - s * 0.35, cx - s * 0.45, cy - s * 0.2, tone)
+
+
+def bike(p, cx, cy, s, tone):
+    p.circle(cx - s * 0.55, cy + s * 0.3, s * 0.42, tone)
+    p.circle(cx + s * 0.55, cy + s * 0.3, s * 0.42, tone)
+    p.line(cx - s * 0.55, cy + s * 0.3, cx - s * 0.1, cy - s * 0.35, tone)
+    p.line(cx - s * 0.1, cy - s * 0.35, cx + s * 0.4, cy - s * 0.35, tone)
+    p.line(cx + s * 0.4, cy - s * 0.35, cx + s * 0.55, cy + s * 0.3, tone)
+    p.line(cx - s * 0.1, cy - s * 0.35, cx + s * 0.05, cy + s * 0.3, tone)
+    p.line(cx + s * 0.05, cy + s * 0.3, cx + s * 0.4, cy - s * 0.35, tone)
+
+
+def flag(p, cx, cy, s, tone):
+    p.line(cx - s * 0.5, cy - s, cx - s * 0.5, cy + s, tone)
+    p.rect(cx - s * 0.5, cy - s, cx + s * 0.6, cy - s * 0.2, tone)
+
+
+def ghost(p, cx, cy, s, tone):
+    p.arc(cx, cy - s * 0.2, s * 0.6, 180, 360, tone)
+    p.line(cx - s * 0.6, cy - s * 0.2, cx - s * 0.6, cy + s * 0.8, tone)
+    p.line(cx + s * 0.6, cy - s * 0.2, cx + s * 0.6, cy + s * 0.8, tone)
+    p.line(cx - s * 0.6, cy + s * 0.8, cx - s * 0.3, cy + s * 0.55, tone)
+    p.line(cx - s * 0.3, cy + s * 0.55, cx, cy + s * 0.8, tone)
+    p.line(cx, cy + s * 0.8, cx + s * 0.3, cy + s * 0.55, tone)
+    p.line(cx + s * 0.3, cy + s * 0.55, cx + s * 0.6, cy + s * 0.8, tone)
+    p.circle(cx - s * 0.22, cy - s * 0.1, max(1, s // 8), tone, True)
+    p.circle(cx + s * 0.22, cy - s * 0.1, max(1, s // 8), tone, True)
+
+
+def timer(p, cx, cy, s, tone):
+    p.circle(cx, cy + s * 0.1, s * 0.8, tone)
+    p.line(cx, cy + s * 0.1, cx, cy - s * 0.4, tone)
+    p.line(cx, cy + s * 0.1, cx + s * 0.35, cy + s * 0.3, tone)
+    p.line(cx - s * 0.25, cy - s * 0.95, cx + s * 0.25, cy - s * 0.95, tone)
+
+
+def heart(p, cx, cy, s, tone):
+    p.circle(cx - s * 0.3, cy - s * 0.2, s * 0.32, tone)
+    p.circle(cx + s * 0.3, cy - s * 0.2, s * 0.32, tone)
+    p.line(cx - s * 0.6, cy - s * 0.05, cx, cy + s * 0.7, tone)
+    p.line(cx + s * 0.6, cy - s * 0.05, cx, cy + s * 0.7, tone)
+
+
 def badge(p, cx, cy, r, letter, tone, font=1):
     """Lettered app badge: a ring and one capital."""
     from src.glasses.panel import FONTS, text_width
@@ -146,7 +222,8 @@ def badge(p, cx, cy, r, letter, tone, font=1):
 ICONS = {'chat': chat, 'tv': tv, 'vacuum': vacuum, 'mic': mic, 'bulb': bulb, 'gear': gear, 'volume': volume,
          'apps': apps, 'dpad': dpad, 'play': play, 'pause': pause, 'play_pause': play_pause, 'power': power,
          'check': check, 'cross': cross, 'home': home, 'search': search, 'back': back, 'plus': plus, 'minus': minus,
-         'bell': bell}
+         'bell': bell, 'runner': runner, 'bike': bike, 'flag': flag, 'ghost': ghost, 'timer': timer, 'heart': heart,
+         'u_turn': u_turn}
 
 
 def draw(p, name, cx, cy, s, tone):
