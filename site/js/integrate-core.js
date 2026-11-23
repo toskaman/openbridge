@@ -3,7 +3,7 @@
  * applied to an OpenAPI 3 description. The templates come from data/integrate-kit.json, which the site build exports
  * from partner_kit.py, and tests/unit/test_partner_kit_api.py checks that this file writes the same bytes as the
  * command line. Runs entirely in the page: the description never leaves the browser.
- *   node integrate-core.js --stdin   < {"kit": ..., "openapi": ..., "name": ..., "category": ...}
+ *   node integrate-core.js --job job.json   (job: {"kit": ..., "openapi": ..., "name": ..., "category": ...})
  */
 (function (root) {
   'use strict';
@@ -252,15 +252,12 @@
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
-    if (require.main === module && process.argv.indexOf('--stdin') !== -1) {
-      var chunks = [];
-      process.stdin.on('data', function (c) { chunks.push(c); });
-      process.stdin.on('end', function () {
-        var job = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-        api.setKit(job.kit);
-        var out = generate(job.openapi, job.name, job.category, job.title);
-        process.stdout.write(JSON.stringify({ spec: out.spec, files: out.files }));
-      });
+    var at = process.argv.indexOf('--job');
+    if (require.main === module && at !== -1) {
+      var job = JSON.parse(require('fs').readFileSync(process.argv[at + 1], 'utf8'));
+      api.setKit(job.kit);
+      var out = generate(job.openapi, job.name, job.category, job.title);
+      process.stdout.write(JSON.stringify({ spec: out.spec, files: out.files }));
     }
   } else {
     root.OBKit = api;

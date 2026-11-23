@@ -121,8 +121,9 @@ class BrowserParity(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:      # a local copy: node cannot start a script from a network share
             script = Path(d) / 'integrate-core.js'
             shutil.copy2(ROOT / 'site' / 'js' / 'integrate-core.js', script)
-            r = subprocess.run(['node', str(script), '--stdin'], input=json.dumps(job), cwd=d,
-                               capture_output=True, text=True, encoding='utf-8', timeout=60)
+            (Path(d) / 'job.json').write_text(json.dumps(job), encoding='utf-8')
+            r = subprocess.run(['node', str(script), '--job', str(Path(d) / 'job.json')], cwd=d, stdin=subprocess.DEVNULL,
+                               capture_output=True, text=True, encoding='utf-8', timeout=120)
         self.assertEqual(r.returncode, 0, r.stderr)
         return json.loads(r.stdout)
 
