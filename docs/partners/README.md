@@ -61,7 +61,9 @@ regression tests and benchmarks run on every release for the life of the integra
 the bench. Plus access to APIs, SDKs or developer documentation, and
 a technical contact for integration questions.
 
-Commercial licensing and deeper co-development are available on request.
+**Try it first, for free:** the [evaluation licence](../../LICENSES/OpenBridge-Evaluation-1.0.md) lets your engineers
+install and test OpenBridge with your products for 90 days, internally, with no signature. What each plan includes
+(Evaluation, Partner, OEM, and services such as audits, voice models and skill packs) is on [Plans](PLANS.md).
 
 ---
 
@@ -105,6 +107,7 @@ only what you approve is published.
 
 <p align="center">
   <a href="mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_Become_a_partner-info@lepcpro.fr-2dd4bf?style=for-the-badge" alt="Become a partner"></a>
+  <a href="PLANS.md"><img src="https://img.shields.io/badge/📋_Plans-Evaluation_free_·_Partner_·_OEM-1f2a52?style=for-the-badge" alt="Plans"></a>
   <a href="ENGO.md"><img src="https://img.shields.io/badge/Case_study-ENGO_×_OpenBridge-e7f11f?style=for-the-badge&labelColor=1a1a1a" alt="ENGO case study"></a>
   <a href="../../site/OpenBridge-Partner-Brief.pdf"><img src="https://img.shields.io/badge/📄_Partner_brief-PDF,_1_page-1f2a52?style=for-the-badge" alt="Partner brief (PDF)"></a>
   <a href="https://toskaman.github.io/openbridge/"><img src="https://img.shields.io/badge/🌐_Website-openbridge-0d1330?style=for-the-badge" alt="Project website"></a>

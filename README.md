@@ -255,7 +255,7 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 - 📈 **Wider compatibility:** USB, Wi-Fi, BLE or relay, on 6 platforms, even legacy Windows.
 - 🖥️ **An emulator of your device**, an expert review of your API / SDK, a **public verified compatibility report**, and your brand featured here like ENGO.
 
-**Your engineers can start today:** `python -m src.cli partner new "Your Device"` scaffolds an adapter, an emulator and tests that pass on day one ([guide](docs/INTEGRATE_YOUR_DEVICE.md)).
+**Your engineers can start today, for free:** the [evaluation licence](LICENSES/OpenBridge-Evaluation-1.0.md) lets your company test OpenBridge with your products for 90 days, internally, with no signature. `python -m src.cli partner new "Your Device"` scaffolds an adapter, an emulator and tests that pass on day one ([guide](docs/INTEGRATE_YOUR_DEVICE.md)). Evaluation, Partner and OEM side by side: **[Plans](docs/partners/PLANS.md)**.
 
 **What I ask in return:** 📦 **hardware to keep** (donated units or a permanent loan, never a time-limited one, so tests and benchmarks keep running on every release), API / SDK documentation, and a technical contact.
 
@@ -263,6 +263,7 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 
 <p align="center">
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/📘_Partner_program-What_you_gain-1f2a52?style=for-the-badge" alt="Partner program"></a>
+  <a href="docs/partners/PLANS.md"><img src="https://img.shields.io/badge/📋_Plans-Evaluation_free_90_days-2dd4bf?style=for-the-badge" alt="Plans"></a>
   <a href="mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Hardware%20partnership"><img src="https://img.shields.io/badge/📩_info@lepcpro.fr-Let's_talk-2dd4bf?style=for-the-badge" alt="Email me"></a>
   <a href="site/OpenBridge-Partner-Brief.pdf"><img src="https://img.shields.io/badge/📄_Partner_brief-PDF,_1_page-1f2a52?style=for-the-badge" alt="Partner brief (PDF)"></a>
   <a href="https://github.com/toskaman/openbridge/discussions/categories/partner-requests"><img src="https://img.shields.io/badge/💬_Partner_requests-Discussions-1f2a52?style=for-the-badge" alt="Partner requests on Discussions"></a>
@@ -327,7 +328,7 @@ Want the local AI models, the Android / TV / watch companion, or headless use ov
 - 🔐 **[Relay security](docs/RELAY_SECURITY.md)** · [Transactions & undo](docs/TRANSACTION_AND_UNDO.md)<br><sub>Pairing, signing, consent, rollback</sub>
 - ⚠️ **[Known limitations](docs/KNOWN_LIMITATIONS.md)**<br><sub>What doesn't work yet, stated upfront</sub>
 - 🗺️ **[Roadmap](ROADMAP.md)** · [What's new](CHANGELOG.md)<br><sub>Where OpenBridge is going, and what shipped when</sub>
-- 🔐 **[Security policy](SECURITY.md)** · [Privacy note](docs/PRIVACY.md) · [Commercial & partner licensing](docs/LICENSING.md#commercial--partner-licensing)<br><sub>How to report a vulnerability, what data leaves your machine (nothing by default), how companies can use OpenBridge</sub>
+- 🔐 **[Security policy](SECURITY.md)** · [Privacy note](docs/PRIVACY.md) · [GDPR](docs/GDPR.md) · [Support policy](docs/SUPPORT.md) · [Commercial & partner licensing](docs/LICENSING.md#commercial--partner-licensing)<br><sub>How to report a vulnerability, what data leaves your machine (nothing by default), how companies can use OpenBridge</sub>
 - 📖 **[All documentation](docs/README.md)**<br><sub>Everything else</sub>
 
 ---
