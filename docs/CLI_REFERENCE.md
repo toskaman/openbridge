@@ -83,7 +83,7 @@ See [Home Assistant bridge](HOME_ASSISTANT.md).
 
 ## Partner integration kit
 
-- `partner new NAME [--category C] [--title T] [--dry-run]` — scaffold an adapter, an emulator, a graph entry, passing tests and a checklist; never overwrites.
+- `partner new NAME [--category C] [--title T] [--from-openapi FILE] [--dry-run]` — scaffold an adapter, an emulator, a graph entry, passing tests and a checklist; never overwrites. With `--from-openapi`, settings, commands, refusals and tests come from the device's OpenAPI 3 description (same rules as the [Integrate page](https://toskaman.github.io/openbridge/integrate.html)).
 
 See [Integrate your device](INTEGRATE_YOUR_DEVICE.md).
 
@@ -100,5 +100,16 @@ See [Integrate your device](INTEGRATE_YOUR_DEVICE.md).
 | `openbridge links approve ID --consent ALLOW` | Let a link act |
 | `openbridge links list` / `remove ID` | Manage links |
 | `openbridge links watch [--seconds N] [--interval S]` | Run the link engine on live states |
+| `openbridge skills list` / `show ID` / `remove ID` | Saved skills (features that run with no AI model) |
+| `openbridge skills export [ID ...] --out FILE` / `import FILE` | Share skills as a signed file; imports arrive unapproved |
+| `openbridge skills approve ID --consent ALLOW` | Let a skill act; any later change to it voids the approval |
+| `openbridge skills run ID` | Run an approved skill now, through the normal gate and read-back |
+| `openbridge skills packs [--lang en\|fr]` / `pack-show ID` | Ready-made cross-brand skill packs |
+| `openbridge skills install-pack ID [--map ROLE=ENTITY ...] [--lang en\|fr]` | Install a pack on your devices; its skills arrive unapproved |
+| `openbridge skills pack-check FILE` | Check a partner pack and print its SHA-256 for review |
+| `openbridge quality status` / `enable --consent ALLOW` / `disable [--forget]` | Quality reports by device model and firmware: off by default, never sent |
+| `openbridge quality report [--month YYYY-MM] [--markdown FILE]` | This month's success rates, p95 latencies and firmware regressions |
+| `openbridge quality export [--month YYYY-MM] --out FILE` | A file you may choose to share (counts only, nothing identifying) |
+| `openbridge quality merge FILE... [--markdown FILE]` | For a device maker: merge the files owners sent into a monthly report |
 
-See [Devices that learn and talk to each other](DEVICE_LEARNING.md).
+See [Devices that learn and talk to each other](DEVICE_LEARNING.md), [Skills](SKILLS.md) and [Skill packs](SKILL_PACKS.md).
