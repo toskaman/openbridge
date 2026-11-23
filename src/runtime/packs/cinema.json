@@ -1,0 +1,148 @@
+{
+ "format": "openbridge-skillpack/1",
+ "id": "cinema",
+ "version": "1.0.0",
+ "title": {
+  "en": "Cinema",
+  "fr": "Cinéma"
+ },
+ "description": {
+  "en": "The light follows what the TV is doing: dim when a film plays, back up when it is paused.",
+  "fr": "La lumière suit la TV : tamisée quand un film démarre, plus forte à la pause."
+ },
+ "publisher": {
+  "name": "OpenBridge",
+  "kind": "openbridge",
+  "url": "https://github.com/toskaman/openbridge"
+ },
+ "roles": {
+  "tv": {
+   "categories": [
+    "media_player"
+   ],
+   "label": {
+    "en": "A TV or speaker (Home Assistant media player)",
+    "fr": "Une TV ou enceinte (lecteur multimédia Home Assistant)"
+   }
+  },
+  "light": {
+   "categories": [
+    "light"
+   ],
+   "label": {
+    "en": "A dimmable light",
+    "fr": "Une lumière réglable"
+   }
+  }
+ },
+ "skills": [
+  {
+   "name": {
+    "en": "Cinema: dim on play",
+    "fr": "Cinéma : tamiser à la lecture"
+   },
+   "description": {
+    "en": "When the TV starts playing, dim the light to 15 %.",
+    "fr": "Quand la TV lit, la lumière passe à 15 %."
+   },
+   "trigger": {
+    "kind": "state",
+    "device": "@tv",
+    "state": "playing"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 15
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "Cinema: light on pause",
+    "fr": "Cinéma : lumière à la pause"
+   },
+   "description": {
+    "en": "When the TV is paused, raise the light to 60 %.",
+    "fr": "À la pause, la lumière remonte à 60 %."
+   },
+   "trigger": {
+    "kind": "state",
+    "device": "@tv",
+    "state": "paused"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 60
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "Movie night",
+    "fr": "Soirée film"
+   },
+   "description": {
+    "en": "One button: dim the light, set the volume, play.",
+    "fr": "Un bouton : lumière tamisée, volume réglé, lecture."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_brightness",
+        "value": 15
+       }
+      }
+     }
+    },
+    {
+     "device": "@tv",
+     "by_category": {
+      "media_player": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "set_volume",
+        "value": 30
+       }
+      }
+     }
+    },
+    {
+     "device": "@tv",
+     "by_category": {
+      "media_player": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "play"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

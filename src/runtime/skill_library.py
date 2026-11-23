@@ -7,7 +7,7 @@ device, on a schedule, or when another device changes state. It can be exported 
 A recipe is data, never code: a trigger and 1 to 8 typed steps on known devices.
 
   {'id', 'name', 'description',
-   'origin':  {'kind': 'ai' | 'suggestion' | 'owner' | 'import', 'model': str | None, 'request': str | None},
+   'origin':  {'kind': 'ai' | 'suggestion' | 'owner' | 'import' | 'pack', 'model': str | None, 'request': str | None},
    'trigger': {'kind': 'manual'}
             | {'kind': 'state', 'device': key, 'state': 'playing'}             (edge: fires on the change only)
             | {'kind': 'time',  'at': 'HH:MM', 'days': [0..6]}                  (0 = Monday, local time)
@@ -135,7 +135,7 @@ class Library:
     # ---------- create ----------
     def add(self, proposal, origin_kind='owner', model=None, request=None):
         """Save a proposal (from the AI, a suggestion or the owner). It is NOT approved: it cannot run yet."""
-        if origin_kind not in ('ai', 'suggestion', 'owner', 'import'):
+        if origin_kind not in ('ai', 'suggestion', 'owner', 'import', 'pack'):
             raise SkillError('unknown origin')
         validate(proposal)
         with self._lock:

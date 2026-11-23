@@ -1,0 +1,40 @@
+{
+ "format": "openbridge-skillpack-index/1",
+ "packs": [
+  {
+   "id": "cinema",
+   "version": "1.0.0",
+   "publisher": "OpenBridge",
+   "file": "cinema.json",
+   "sha256": "ee86fa46bc99728cc85fe12e0c4d90ef84e3d11310d41afd85f2a287f97a5a35"
+  },
+  {
+   "id": "good-morning",
+   "version": "1.0.0",
+   "publisher": "OpenBridge",
+   "file": "good-morning.json",
+   "sha256": "bcb1ebd18d4acb13aa4c27911ff6700ddc1da3ec3a9fcc7a2cebd20dca4ac818"
+  },
+  {
+   "id": "good-night",
+   "version": "1.0.0",
+   "publisher": "OpenBridge",
+   "file": "good-night.json",
+   "sha256": "84ebb1f84e93b3ee191f21db7e7b56c1713876163058e51882eec64d7d81aa67"
+  },
+  {
+   "id": "leaving-home",
+   "version": "1.0.0",
+   "publisher": "OpenBridge",
+   "file": "leaving-home.json",
+   "sha256": "7fb3b1c1154f6d00ded564cf66011cbd08dd4f266087129b6ed258734e936344"
+  },
+  {
+   "id": "quiet-cleaning",
+   "version": "1.0.0",
+   "publisher": "OpenBridge",
+   "file": "quiet-cleaning.json",
+   "sha256": "56fed189f7c64fd67a620b9036f7924a3f3fde6ae036d28ee5c18a4ac59a805b"
+  }
+ ]
+}

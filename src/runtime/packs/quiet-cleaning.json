@@ -1,0 +1,107 @@
+{
+ "format": "openbridge-skillpack/1",
+ "id": "quiet-cleaning",
+ "version": "1.0.0",
+ "title": {
+  "en": "Quiet cleaning",
+  "fr": "Ménage discret"
+ },
+ "description": {
+  "en": "The robot vacuum pauses as soon as the TV or speaker starts playing, whatever their brands.",
+  "fr": "Le robot aspirateur se met en pause dès que la TV ou l'enceinte lit, quelles que soient les marques."
+ },
+ "publisher": {
+  "name": "OpenBridge",
+  "kind": "openbridge",
+  "url": "https://github.com/toskaman/openbridge"
+ },
+ "roles": {
+  "media": {
+   "categories": [
+    "media_player"
+   ],
+   "label": {
+    "en": "A TV or speaker (Home Assistant media player)",
+    "fr": "Une TV ou enceinte (lecteur multimédia Home Assistant)"
+   }
+  },
+  "robot": {
+   "categories": [
+    "robot",
+    "vacuum"
+   ],
+   "label": {
+    "en": "A robot vacuum (Home Assistant or Tuya)",
+    "fr": "Un robot aspirateur (Home Assistant ou Tuya)"
+   }
+  }
+ },
+ "skills": [
+  {
+   "name": {
+    "en": "Pause the robot when media plays",
+    "fr": "Pause du robot pendant la lecture"
+   },
+   "description": {
+    "en": "When the media player starts playing, pause the robot.",
+    "fr": "Quand le lecteur démarre, le robot se met en pause."
+   },
+   "trigger": {
+    "kind": "state",
+    "device": "@media",
+    "state": "playing"
+   },
+   "steps": [
+    {
+     "device": "@robot",
+     "by_category": {
+      "robot": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "pause"
+       }
+      },
+      "vacuum": {
+       "primitive": "tuya_command",
+       "params": {
+        "command": "pause"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "Send the robot home",
+    "fr": "Renvoyer le robot à sa base"
+   },
+   "description": {
+    "en": "One button: the robot returns to its dock.",
+    "fr": "Un bouton : le robot retourne à sa base."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@robot",
+     "by_category": {
+      "robot": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "return_to_base"
+       }
+      },
+      "vacuum": {
+       "primitive": "tuya_command",
+       "params": {
+        "command": "dock"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

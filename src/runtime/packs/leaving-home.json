@@ -1,0 +1,165 @@
+{
+ "format": "openbridge-skillpack/1",
+ "id": "leaving-home",
+ "version": "1.0.0",
+ "title": {
+  "en": "Leaving home",
+  "fr": "Je pars"
+ },
+ "description": {
+  "en": "One button by the door: lights and TV off, the robot starts cleaning.",
+  "fr": "Un bouton près de la porte : lumière et TV éteintes, le robot commence le ménage."
+ },
+ "publisher": {
+  "name": "OpenBridge",
+  "kind": "openbridge",
+  "url": "https://github.com/toskaman/openbridge"
+ },
+ "roles": {
+  "light": {
+   "categories": [
+    "light",
+    "plug"
+   ],
+   "label": {
+    "en": "A light (or a lamp on a smart plug)",
+    "fr": "Une lumière (ou une lampe sur prise connectée)"
+   }
+  },
+  "media": {
+   "categories": [
+    "media_player",
+    "tv"
+   ],
+   "label": {
+    "en": "A TV or speaker",
+    "fr": "Une TV ou enceinte"
+   }
+  },
+  "robot": {
+   "categories": [
+    "robot",
+    "vacuum"
+   ],
+   "label": {
+    "en": "A robot vacuum (Home Assistant or Tuya)",
+    "fr": "Un robot aspirateur (Home Assistant ou Tuya)"
+   }
+  }
+ },
+ "skills": [
+  {
+   "name": {
+    "en": "I'm leaving",
+    "fr": "Je pars"
+   },
+   "description": {
+    "en": "Light off, TV off, then the robot starts (last, because a start cannot be undone).",
+    "fr": "Lumière éteinte, TV éteinte, puis le robot démarre (en dernier : un départ ne s'annule pas)."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "plug": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      },
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      }
+     }
+    },
+    {
+     "device": "@media",
+     "by_category": {
+      "media_player": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_off"
+       }
+      },
+      "tv": {
+       "primitive": "tv_sleep",
+       "params": {}
+      }
+     }
+    },
+    {
+     "device": "@robot",
+     "by_category": {
+      "robot": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "start"
+       }
+      },
+      "vacuum": {
+       "primitive": "tuya_command",
+       "params": {
+        "command": "start"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": {
+    "en": "I'm home",
+    "fr": "Je suis rentré"
+   },
+   "description": {
+    "en": "Light on, the robot goes back to its dock.",
+    "fr": "Lumière allumée, le robot retourne à sa base."
+   },
+   "trigger": {
+    "kind": "manual"
+   },
+   "steps": [
+    {
+     "device": "@light",
+     "by_category": {
+      "plug": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_on"
+       }
+      },
+      "light": {
+       "primitive": "ha_set",
+       "params": {
+        "action": "turn_on"
+       }
+      }
+     }
+    },
+    {
+     "device": "@robot",
+     "by_category": {
+      "robot": {
+       "primitive": "ha_command",
+       "params": {
+        "action": "return_to_base"
+       }
+      },
+      "vacuum": {
+       "primitive": "tuya_command",
+       "params": {
+        "command": "dock"
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
