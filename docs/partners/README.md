@@ -91,10 +91,11 @@ No by default. The AI runs locally on the user's machine; OpenBridge ships no pa
 only if the owner connects one by hand ([details](../AI_PROVIDERS.md)).
 
 **Who owns the integration code?**
-You do, for your side, and your data stays yours. OpenBridge itself is source-available under
-[PolyForm Strict 1.0.0](../../LICENSE); partners get a separate commercial licence for their integration (for example,
-to run it in their own QA or ship the adapter in their product). Details:
-[commercial & partner licensing](../LICENSING.md#commercial--partner-licensing).
+You do. The integration kit and everything `openbridge partner new` generates (adapter, emulator, tests, checklist)
+are **Apache 2.0**, and the code you write is yours, under the licence you choose: you can keep it in your own
+repository and ship it. The OpenBridge core it runs on stays under [PolyForm Strict 1.0.0](../../LICENSE) (read, run
+and test, noncommercial); using the core commercially (your QA and CI, customer demos, shipping it in your products)
+is covered by a written [partner licence](PARTNER_LICENSE.md). Details: [licensing](../LICENSING.md).
 
 **Can our documentation stay confidential?**
 Working under an NDA can be arranged: what you share confidentially stays out of the public repository, and

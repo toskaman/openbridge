@@ -4,6 +4,11 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- ⚖️ **Licensing made explicit for partners:** the OpenBridge core stays under PolyForm Strict 1.0.0; the integration
+  kit (`openbridge partner new` and every file it generates, plus the integration guide) is now **Apache 2.0**, and a
+  partner's own code stays under the partner's licence. A [partner licence term sheet](docs/partners/PARTNER_LICENSE.md)
+  (English and French) describes the written licence for using the core commercially. [Licensing](docs/LICENSING.md)
+
 - 🧠 **Devices that learn:** every action updates a per-device profile (success rate, latency, states seen).
   `openbridge learn report`. [Guide](docs/DEVICE_LEARNING.md)
 - ✨ **New features from what works:** `openbridge create suggest` combines proven capabilities into

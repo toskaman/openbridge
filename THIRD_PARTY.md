@@ -4,7 +4,7 @@ Inventory reviewed 27 October 2026. No model weights, third-party fonts, downloa
 
 ## OpenBridge's own code license (effective for newly licensed revisions)
 
-The OpenBridge repository's own source code is currently offered under [PolyForm Strict License 1.0.0](LICENSE), with a supplementary [hackathon evaluation permission](HACKATHON_EVALUATION_PERMISSION.md). This does **not** replace the separate terms below for dependencies, model weights, SDKs, hosted services, and other third-party assets. See [licensing](docs/LICENSING.md).
+The OpenBridge repository's own source code is currently offered under [PolyForm Strict License 1.0.0](LICENSE), except the integration kit (`src/partner_kit.py` and the files it generates, plus `docs/INTEGRATE_YOUR_DEVICE.md`), which is under the [Apache License 2.0](LICENSES/Apache-2.0.txt); with a supplementary [hackathon evaluation permission](HACKATHON_EVALUATION_PERMISSION.md). This does **not** replace the separate terms below for dependencies, model weights, SDKs, hosted services, and other third-party assets. See [licensing](docs/LICENSING.md).
 
 ## Runtime, tools and optional packages
 

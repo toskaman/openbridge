@@ -3,6 +3,11 @@
 How a device joins OpenBridge, from the first command to recorded proof on real hardware. Written for the engineers of
 a hardware partner; no prior knowledge of the codebase needed.
 
+> **Licence.** This guide, the kit (`src/partner_kit.py`) and every file it generates are **Apache 2.0**
+> ([text](../LICENSES/Apache-2.0.txt)): you may modify, keep and ship them, and the code you add is yours. The OpenBridge
+> core they import stays under PolyForm Strict 1.0.0; using it commercially needs a [partner licence](partners/PARTNER_LICENSE.md).
+> [Licensing overview](LICENSING.md)
+
 > **Already in Home Assistant?** If your device has a Home Assistant integration (including Matter, Zigbee or Thread),
 > it can be reached today through the [Home Assistant bridge](HOME_ASSISTANT.md). A native integration, below, adds
 > what a generic bridge cannot: your full feature set, an emulator, dedicated tests and benchmarks.
