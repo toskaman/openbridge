@@ -259,7 +259,7 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 
 **What I ask in return:** 📦 **hardware to keep** (donated units or a permanent loan, never a time-limited one, so tests and benchmarks keep running on every release), API / SDK documentation, and a technical contact.
 
-🔐 **Your code and data stay yours.** Partners get a commercial licence for their integration, and I gladly work under your NDA: confidential material never reaches this repository. [Licensing](docs/LICENSING.md#commercial--partner-licensing) · [Security](SECURITY.md) · [Privacy](docs/PRIVACY.md)
+🔐 **Your code and data stay yours.** The integration kit is Apache 2.0 and your own code keeps your licence; a written partner licence covers commercial use of the OpenBridge core, and I gladly work under your NDA: confidential material never reaches this repository. [Licensing](docs/LICENSING.md#commercial--partner-licensing) · [Security](SECURITY.md) · [Privacy](docs/PRIVACY.md)
 
 <p align="center">
   <a href="docs/partners/README.md"><img src="https://img.shields.io/badge/📘_Partner_program-What_you_gain-1f2a52?style=for-the-badge" alt="Partner program"></a>
@@ -288,7 +288,7 @@ TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enferm�
 
 **Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel à conserver** (don ou prêt permanent, jamais de prêt limité dans le temps, pour que les tests et benchmarks tournent à chaque version) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
-🔐 **Votre code et vos données restent à vous** : les partenaires reçoivent une licence commerciale pour leur intégration, et je travaille volontiers sous NDA. [Plaquette partenaire (PDF, en anglais)](site/OpenBridge-Partner-Brief.pdf) · [Site du projet](https://toskaman.github.io/openbridge/)
+🔐 **Votre code et vos données restent à vous** : le kit d'intégration est sous Apache 2.0 et votre code garde votre licence ; une licence partenaire écrite couvre l'usage commercial du cœur d'OpenBridge, et je travaille volontiers sous NDA ([conditions](docs/partners/PARTNER_LICENSE.md#version-française)). [Plaquette partenaire (PDF, en anglais)](site/OpenBridge-Partner-Brief.pdf) · [Site du projet](https://toskaman.github.io/openbridge/)
 
 📩 **info@lepcpro.fr**
 </details>
@@ -340,4 +340,4 @@ If your devices should talk to each other, [let's talk](mailto:info@lepcpro.fr?s
 
 ---
 
-<sub>**License:** source-available under [PolyForm Strict 1.0.0](LICENSE): free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. **Companies:** partners get a commercial licence for their integration, and their code and data stay theirs ([commercial & partner licensing](docs/LICENSING.md#commercial--partner-licensing)). For any commercial use, [get in touch](mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>
+<sub>**License:** the OpenBridge core is source-available under [PolyForm Strict 1.0.0](LICENSE): free to read, run and test for noncommercial purposes; redistribution and derivative works are not licensed. The **integration kit** (`openbridge partner new` and the code it generates) is [Apache 2.0](LICENSES/Apache-2.0.txt), and a partner's own code stays under the partner's own licence. **Companies:** partners get a written [partner licence](docs/partners/PARTNER_LICENSE.md) to use the core commercially, and their code and data stay theirs ([commercial & partner licensing](docs/LICENSING.md#commercial--partner-licensing)). For any commercial use, [get in touch](mailto:info@lepcpro.fr?subject=OpenBridge%3A%20Commercial%20licensing). Third-party components and AI model weights keep their own licenses: [credits & notices](THIRD_PARTY.md) · [licensing details](docs/LICENSING.md) · [contributions](CONTRIBUTIONS.md) · [previous README versions](docs/README_HISTORY.md).</sub>

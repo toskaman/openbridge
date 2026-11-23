@@ -51,6 +51,20 @@ class PartnerKitTests(unittest.TestCase):
             with self.assertRaises(kit.KitError):
                 kit.generate('acme_plug', root=d)
 
+    def test_generated_files_carry_the_apache_licence(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            out = kit.generate('Acme Lamp', root=d)
+            for rel in out['files']:
+                text = (Path(d) / rel).read_text(encoding='utf-8')
+                if rel.endswith('.py'):
+                    self.assertTrue(text.startswith('# SPDX-License-Identifier: Apache-2.0'), rel)
+                    self.assertIn('PolyForm Strict', text)      # the imported core is not Apache
+                else:
+                    self.assertIn('Apache License 2.0', text)
+        self.assertTrue((Path(kit.ROOT) / 'LICENSES' / 'Apache-2.0.txt').exists())
+        self.assertTrue(Path(kit.__file__).read_text(encoding='utf-8').startswith('# SPDX-License-Identifier: Apache-2.0'))
+
     def test_names_are_checked(self):
         for bad in ('', '1lamp', 'tuya_local', 'home assistant', 'x'):
             with self.subTest(bad=bad), self.assertRaises(kit.KitError):

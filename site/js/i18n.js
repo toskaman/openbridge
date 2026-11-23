@@ -7,7 +7,7 @@
     'nav.partners': 'Partenaires', 'nav.cta': 'Devenir partenaire',
     'foot.by': 'OpenBridge, conçu par un développeur indépendant.', 'foot.start': 'Par où commencer',
     'foot.security': 'Sécurité', 'foot.privacy': 'Confidentialité', 'foot.licensing': 'Licences', 'foot.new': 'Nouveautés', 'foot.roadmap': 'Feuille de route',
-    'foot.notrack': 'Code source consultable sous licence PolyForm Strict 1.0.0. Aucun traceur sur ce site. La vidéo ne se charge depuis YouTube que si vous appuyez sur lecture.',
+    'foot.notrack': 'Cœur consultable sous licence PolyForm Strict 1.0.0 ; kit d\'intégration sous Apache 2.0. Aucun traceur sur ce site. La vidéo ne se charge depuis YouTube que si vous appuyez sur lecture.',
     'lvl.real': 'Matériel réel', 'lvl.vm': 'Machines virtuelles', 'lvl.off': 'Émulateurs officiels', 'lvl.emu': 'Émulateur, matériel à venir', 'lvl.emuwait': 'Émulateur, lunettes en route',
 
     /* home */
