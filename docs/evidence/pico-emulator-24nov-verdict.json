@@ -1,0 +1,43 @@
+{
+ "steps": {
+  "NET-01 server starts": {
+   "ok": true,
+   "detail": ""
+  },
+  "NET-02..06 emulator discovered": {
+   "ok": true,
+   "detail": "st=200"
+  },
+  "APK installed": {
+   "ok": true,
+   "detail": "Performing Streamed Install\nSuccess\n"
+  },
+  "NET-04 pair-start": {
+   "ok": true,
+   "detail": "st=200 {\"state\": \"CODE_SHOWN_ON_DEVICE\", \"relay_id\": \"relay-3acb8c6452f1\", \"declared\": {\"capabilities\": [\"ble_scan\", \"remote_controls\", \"command_submit\", \"aead1\"], \"permissions\": {\"BLUETOOTH_SCAN\": true, \"ow"
+  },
+  "code read from screen": {
+   "ok": true,
+   "detail": "tried=['920398']"
+  },
+  "NET-05..08 PAIRED": {
+   "ok": true,
+   "detail": "st=200 tried=['920398'] {\"state\": \"PAIRED\", \"relay_id\": \"relay-3acb8c6452f1\", \"declared\": {\"capabilities\": [\"ble_scan\", \"remote_controls\", \"command_submit\", \"aead1\"], \"permissions\": {\"BLUETOOTH_SCAN\": true, \"owner_enabled\": "
+  },
+  "NET-09..11 signed round-trip": {
+   "ok": true,
+   "detail": "st=409 advertisers=None {\"error\": \"Relay refused: {\\\"error\\\":\\\"Bluetooth is off on this device\\\"}\", \"guide\": {\"issue\": \"bluetooth_off\", \"vendor\": \"generic\", \"title\": \"Turn Bluetooth on\", \"why\": \"Scanning needs the device rad"
+  },
+  "oracle: service + adb-forward agree": {
+   "ok": true,
+   "detail": "emulator-5556 tcp:28669 tcp:47800\nemulator-5556 tcp:28936 tcp:47800\nemulator-5556 tcp:29157 tcp:47800\nemulator-5556 tcp:29479 tcp:47800"
+  },
+  "NET-12/13 revoked relay denied": {
+   "ok": true,
+   "detail": "st=409"
+  }
+ },
+ "status": "PASS",
+ "relay_id": "relay-3acb8c6452f1",
+ "advertisers": null
+}

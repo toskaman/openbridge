@@ -43,6 +43,8 @@ Verified on a real phone (Android 14), Android TV 11, and Galaxy Watch7; see
 [ANDROID_COMPANION.md](ANDROID_COMPANION.md) and the release notes in
 `docs/release/COMPANION_0_*.md`. Emulator coverage (official AVD images) is
 labeled EMULATOR wherever it appears and never presented as hardware proof.
+The PICO headset emulator (PICO OS 6) is covered the same way: see
+[PICO_EMULATOR.md](PICO_EMULATOR.md).
 
 ## Models by platform
 

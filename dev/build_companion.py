@@ -1,5 +1,10 @@
 """Reproducible build of the OpenBridge Companion APK with the official Android SDK tools only (no Gradle, no libraries).
-Signing key: generated once under %LOCALAPPDATA%/OpenBridge/companion-signing (never in Git)."""
+Signing key: generated once under %LOCALAPPDATA%/OpenBridge/companion-signing (never in Git).
+
+    python -m dev.build_companion                       # the normal APK
+    python -m dev.build_companion --software-rendering  # test build for the PICO OS 6 emulator only (docs/PICO_EMULATOR.md):
+                                                        # its x86_64 image crashes hardware-accelerated third-party apps
+"""
 import os, shutil, subprocess, sys, zipfile, hashlib
 from pathlib import Path
 
@@ -19,14 +24,22 @@ def run(*args):
     return r.stdout
 
 
-def main():
+def main(argv=None):
+    software = '--software-rendering' in (sys.argv[1:] if argv is None else argv)
     shutil.rmtree(OUT, ignore_errors=True); (OUT / 'classes').mkdir(parents=True)
+    manifest = SRC / 'AndroidManifest.xml'
+    if software:
+        text = manifest.read_text(encoding='utf-8')
+        if '<application ' not in text:
+            sys.exit('FAILED: no <application> tag in the manifest')
+        manifest = OUT / 'AndroidManifest.xml'
+        manifest.write_text(text.replace('<application ', '<application android:hardwareAccelerated="false" ', 1), encoding='utf-8')
     sources = sorted(str(p) for p in (SRC / 'src').rglob('*.java'))
     run('javac', '-encoding', 'UTF-8', '--release', '11', '-Xlint:-options', '-classpath', JAR, '-d', OUT / 'classes', *sources)
     classes = sorted(str(p) for p in (OUT / 'classes').rglob('*.class'))
     run(BT / ('d8' + BAT), '--release', '--min-api', '26', '--lib', JAR, '--output', OUT, *classes)
     res = SRC / 'res'
-    link_args = ['link', '--manifest', SRC / 'AndroidManifest.xml', '-I', JAR, '-o', OUT / 'base.apk']
+    link_args = ['link', '--manifest', manifest, '-I', JAR, '-o', OUT / 'base.apk']
     if res.is_dir():
         run(BT / ('aapt2' + EXE), 'compile', '--dir', res, '-o', OUT / 'res.zip')
         # -R archives get overlay treatment in build-tools 34: auto-add our base resources.
@@ -43,7 +56,7 @@ def main():
         run('keytool', '-genkeypair', '-keystore', keystore, '-storepass', pw, '-keypass', pw, '-alias', 'openbridge',
             '-keyalg', 'RSA', '-keysize', '3072', '-validity', '3650', '-dname', 'CN=OpenBridge Companion (participant build)')
     pw = (keydir / 'pass.txt').read_text(encoding='utf-8').strip()
-    apk = OUT / 'openbridge-companion.apk'
+    apk = OUT / ('openbridge-companion-software-rendering.apk' if software else 'openbridge-companion.apk')
     run(BT / ('apksigner' + BAT), 'sign', '--ks', keystore, '--ks-pass', 'pass:' + pw, '--out', apk, OUT / 'aligned.apk')
     print(run(BT / ('apksigner' + BAT), 'verify', '--print-certs', apk).splitlines()[0])
     print('APK', apk, apk.stat().st_size, 'bytes sha256', hashlib.sha256(apk.read_bytes()).hexdigest())
