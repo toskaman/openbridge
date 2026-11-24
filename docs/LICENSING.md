@@ -24,7 +24,7 @@ OpenBridge has **two licences, with a clear line between them**, plus written li
 
 ## Other permissions and third parties
 
-- A narrowly scoped [hackathon evaluation permission](../HACKATHON_EVALUATION_PERMISSION.md) supplements PolyForm
+- A narrowly scoped [hackathon evaluation permission](../LICENSES/HACKATHON_EVALUATION_PERMISSION.md) supplements PolyForm
   Strict so organizers and judges can clone, run, inspect and evaluate the submission.
 - Third-party dependencies, SDKs, model weights and services keep their own terms: see the
   [third-party inventory](../THIRD_PARTY.md).

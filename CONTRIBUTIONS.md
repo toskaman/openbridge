@@ -8,7 +8,7 @@ Development assistance: Codex authored and verified this initial implementation 
 
 ## Meta design contribution
 
-Meta Muse Spark 1.3 was actually called through the official Meta API on 26 October 2026 to propose visual direction, palette, responsive layout and source-state labels. Its returned identity, usage, request ID and estimated cost are recorded in docs/meta-design-receipt.json. Codex adapted and implemented the proposal, then converted the entire interface and public proposal to English at the participant's request. The published brief now requests English; the receipt hash identifies the original submitted version, retained in the private delta backup. No second Meta generation is claimed for translation. This design call is development assistance and does not establish in-product model use.
+Meta Muse Spark 1.3 was actually called through the official Meta API on 26 October 2026 to propose visual direction, palette, responsive layout and source-state labels. Its returned identity, usage, request ID and estimated cost are recorded in docs/evidence/receipts/meta-design-receipt.json. Codex adapted and implemented the proposal, then converted the entire interface and public proposal to English at the participant's request. The published brief now requests English; the receipt hash identifies the original submitted version, retained in the private delta backup. No second Meta generation is claimed for translation. This design call is development assistance and does not establish in-product model use.
 
 The Android adapter, tests and source-selection workflow were authored fresh during the event. One authorized USB phone has been read without modifying it. Device identifiers and actual private measurements are excluded from the repository.
 
@@ -20,7 +20,7 @@ The browser's live-provider path has integration and mocked UI tests; only the i
 
 ## Simulated recovery milestone
 
-The SQLite transaction engine, persistent synthetic setting, simulated-only HTTP controls and change/Undo interface were freshly authored during the event. Unit fault injection and browser reload recovery were performed. The actual simulation trace is in docs/simulated-transaction-receipt.json. It is explicitly excluded from physical-device rollback claims. Read-only review identified an interrupted-preparation recovery gap; a regression test reproduced it before the fix.
+The SQLite transaction engine, persistent synthetic setting, simulated-only HTTP controls and change/Undo interface were freshly authored during the event. Unit fault injection and browser reload recovery were performed. The actual simulation trace is in docs/evidence/receipts/simulated-transaction-receipt.json. It is explicitly excluded from physical-device rollback claims. Read-only review identified an interrupted-preparation recovery gap; a regression test reproduced it before the fix.
 
 ## Physical refusal handling
 
@@ -32,7 +32,7 @@ The on-demand ADB event monitor, redacted local event stream, browser subscripti
 
 ## Local Meta reasoning
 
-The pinned local Meta broker, private CPU-only service launcher, numeric-fact allowlist, ADB/SIMULATED source routing, schema validation and tests were authored during the event. One controlled local call on synthetic facts produced docs/local-meta-smoke-receipt.json. Llama 3.2 3B is runtime inference here (not development assistance). Documentation and line-ending normalization were verified for this milestone.
+The pinned local Meta broker, private CPU-only service launcher, numeric-fact allowlist, ADB/SIMULATED source routing, schema validation and tests were authored during the event. One controlled local call on synthetic facts produced docs/evidence/receipts/local-meta-smoke-receipt.json. Llama 3.2 3B is runtime inference here (not development assistance). Documentation and line-ending normalization were verified for this milestone.
 
 ## Physical reversible change, agent loop, registry, guided UX, Glimmer route
 

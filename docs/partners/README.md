@@ -30,6 +30,15 @@ For a hardware maker, that means your product stops being an island.
 
 ---
 
+## Current partners
+
+- **[ENGO](ENGO.md)** ([engoeyewear.com](https://www.engoeyewear.com)): heads-up display smart glasses, powered by ActiveLook by Microoled.
+- **[Elecrow](ELECROW.md)** ([elecrow.com](https://www.elecrow.com)): [CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html) (ESP32-S3) with an ESP32-H2 module for Matter and Thread.
+
+What each partner was promised is tracked in [partners.json](partners.json) and checked in CI ([commitments](COMMITMENTS.md)).
+
+---
+
 ## Proof, not promises: the ENGO case study
 
 [ENGO](ENGO.md) (heads-up display smart glasses, built on Microoled's ActiveLook platform) agreed to send a

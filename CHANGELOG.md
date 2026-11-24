@@ -4,6 +4,13 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- **New hardware partner: [Elecrow](https://www.elecrow.com).** The [CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)
+  (ESP32-S3) and an ESP32-H2 module join the bench, for an OpenBridge control panel and Matter / Thread testing.
+  [Partner page](docs/partners/ELECROW.md)
+- **Partner commitments are now enforced in CI:** [partners.json](docs/partners/partners.json) lists what each
+  partner was promised; a test fails if a credit or a promised report goes missing.
+- **Cleaner repository and README:** a shorter README with light and dark illustrations, a section for hardware
+  makers, lighter demo clips, and working notes moved to `docs/internal/`.
 - 🧠 **OpenBridge's own model v4 is now the official one:** trained on household chores, it gets 88 % of
   hand-written chore requests right (v3: 47 %) and never runs one as a command; home requests held out: 93.2 %
   (v3: 90.2 %). Two hand-written requests regressed and are listed. `train_lora.py --vram-fraction` keeps training

@@ -73,7 +73,7 @@ Then read, in this order:
 | Which devices were verified, and how? | [Hardware test matrix](HARDWARE_TEST_MATRIX.md), generated from the [evidence registry](DEVICE_EVIDENCE.json), or the filterable [Compatibility page](https://toskaman.github.io/openbridge/compatibility.html) |
 | What counts as proof? | Real hardware, virtual machines and emulators are labelled apart; each run names its independent check. Emulated results never count as hardware proof. |
 | Benchmarks and their method | [Benchmark status](benchmark/STATUS.md) · [Endurance baseline](benchmark/F90_ENDURANCE_BASELINE.md) · [1,000-turn evaluation](benchmark/EVAL_1000_RULES_BASELINE.md) · [Re-run manifest](benchmark/RERUN_MANIFEST.md) · [Charts](https://toskaman.github.io/openbridge/benchmarks.html) |
-| Release evidence | [Release evidence](RELEASE_EVIDENCE.md) · [Stress report](STRESS_14_REPORT.md) |
+| Release evidence | [Release evidence](RELEASE_EVIDENCE.md) · [Stress report](internal/STRESS_14_REPORT.md) |
 | What does not work yet | [Known limitations](KNOWN_LIMITATIONS.md) |
 
 Re-run everything yourself, no hardware needed:

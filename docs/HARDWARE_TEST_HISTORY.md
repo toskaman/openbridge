@@ -51,7 +51,7 @@ Historical (26 Oct), all since completed — see EVIDENCE_LEDGER. Former pending
 
 ## Subsequent hardware updates — 27 October 2026
 
-The original rows above describe their recorded revisions. Newer [device capability sweeps](DEVICE_CAPABILITIES.md) and the [evidence ledger](../EVIDENCE_LEDGER.md) record:
+The original rows above describe their recorded revisions. Newer [device capability sweeps](DEVICE_CAPABILITIES.md) and the [evidence ledger](evidence/EVIDENCE_LEDGER.md) record:
 
 - Android TV keys, app launch, touch and power state exercised while awake; the earlier standby failure is retained.
 - Blackview BV9300 Pro: keys, touch, YouTube launch, exact volume and brightness change/restore.

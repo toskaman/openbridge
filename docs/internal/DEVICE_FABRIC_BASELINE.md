@@ -18,7 +18,7 @@ Status vocabulary: REAL_HARDWARE_VERIFIED, INTEGRATION_VERIFIED (mocked process/
 | Meta proposals (Llama 3B, Glimmer, Spark 1.3) | REAL_HARDWARE_VERIFIED (local) / recorded (cloud) | receipts in docs/ |
 | Deterministic gate + consent | REAL_HARDWARE_VERIFIED | src/core/gate.py, agent.py |
 | Backup / exact Undo (optional-app state) | REAL_HARDWARE_VERIFIED | Writes require USB transport; current Android user not checked; `pm default-state` assumed (absent before Android 9) |
-| Crash recovery | REAL_HARDWARE_VERIFIED | docs/crash-recovery-receipt.json |
+| Crash recovery | REAL_HARDWARE_VERIFIED | docs/evidence/receipts/crash-recovery-receipt.json |
 | Guided UI | SIMULATED_VERIFIED | tests/e2e/guided_smoke.py (USB authorization only) |
 | Meta-only runtime registry | INTEGRATION_VERIFIED | src/ai/registry.py |
 | Concurrency | INTEGRATION_VERIFIED | SQLite unique active resource, single in-flight inference |

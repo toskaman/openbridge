@@ -1,6 +1,6 @@
 # Evidence ledger — 26 October 2026
 
-Current interpretation: this ledger is chronological. Counts, failures and statements such as NOT TESTED describe their recorded milestone; later sections may supersede them. See [release status](docs/RELEASE_STATUS.md) for the current backlog. Hosted-credit guards are $0.10 reserved per explicit request, $0.20 per fresh observation and $1 persistent local lifetime allowance; none is an account-wide provider billing cap.
+Current interpretation: this ledger is chronological. Counts, failures and statements such as NOT TESTED describe their recorded milestone; later sections may supersede them. See [release status](../RELEASE_STATUS.md) for the current backlog. Hosted-credit guards are $0.10 reserved per explicit request, $0.20 per fresh observation and $1 persistent local lifetime allowance; none is an account-wide provider billing cap.
 
 ## Phase 1 local checks
 
@@ -26,7 +26,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 ## Read-only expansion and English interface
 
 - 20 unit/integration tests PASS on Windows, including opt-in ADB inventory, no simulated fallback for failed physical inspection, unknown handles, unauthorized devices, timeouts and private identifier redaction.
-- Actual Meta development request: muse-spark-1.3, returned identity matches; 267 input tokens and 2,792 output tokens, estimated cost $0.01219975 at the published standard rates. Free promotional credits were observed active immediately before this supervised call. See docs/meta-design-receipt.json.
+- Actual Meta development request: muse-spark-1.3, returned identity matches; 267 input tokens and 2,792 output tokens, estimated cost $0.01219975 at the published standard rates. Free promotional credits were observed active immediately before this supervised call. See docs/evidence/receipts/meta-design-receipt.json.
 - Entire interface and public project documentation are English. The original model proposal was translated editorially; no additional Meta call is claimed for that translation.
 - Chromium tests PASS at 390/768/1440/3440 for demo inspection, explicit USB source, English language declaration, no overflow, and stale-card removal after discovery failure.
 - One real authorized USB phone was inspected through the adapter. Facts came from fixed getprop, dumpsys battery and df commands. No writes occurred. Private serials and device measurements are not committed.
@@ -47,7 +47,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 - 56 unit/integration tests PASS on Windows. Fourteen transaction tests cover exact restore, consent, targets, durable snapshots, external conflicts, ambiguous operation failure, restart recovery, snapshot corruption, identity mismatch, idempotency and concurrent preparation.
 - Independent review reproduced a crash gap between PREPARED and VERIFIED_BACKUP. New failing tests demonstrated it; recovery and cancellation were corrected. A never-executed transaction cannot overwrite an external value even if it coincides with the proposed target.
-- The actual simulated core loop ran 30 -> 60 -> 30 seconds with journal events PREPARED, VERIFIED_BACKUP, EXECUTING, VERIFIED, REVERTING, REVERTED. docs/simulated-transaction-receipt.json is synthetic evidence only; physical_writes=0.
+- The actual simulated core loop ran 30 -> 60 -> 30 seconds with journal events PREPARED, VERIFIED_BACKUP, EXECUTING, VERIFIED, REVERTING, REVERTED. docs/evidence/receipts/simulated-transaction-receipt.json is synthetic evidence only; physical_writes=0.
 - Chromium browser checks PASS at 390/768/1440/3440: explicit synthetic consent, verified change, page reload, persisted active journal and exact Undo. Actual Android and Freebox read-only inspections also pass in the local browser suite when available.
 - The transaction engine rejects physical adapters. The HTTP transaction route rejects physical sources. No physical action or physical rollback has been performed.
 
@@ -56,7 +56,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 - 63 unit/integration tests PASS on Windows after adding the narrowly scoped Android timeout adapter, explicit physical opt-in and HTTP refusal of misconfigured physical engines.
 - Read-only code review found no material defect in the isolated single-phone verifier. Mocked tests cover fixed commands, authorization loss, build-identity changes, exact unit conversion and denied writes.
 - One actual controlled screen-timeout attempt was blocked by the owned phone. Journal events were PREPARED -> VERIFIED_BACKUP -> EXECUTING -> QUARANTINED -> REVERTED. The proposed value was never verified. A separate read-only check confirmed the original setting remains intact.
-- Android's WRITE_SETTINGS diagnostic recorded a rejection. No permission bypass or automatic write retry was attempted. docs/physical-transaction-attempt.json records the failure and original-state preservation without device identifiers.
+- Android's WRITE_SETTINGS diagnostic recorded a rejection. No permission bypass or automatic write retry was attempted. docs/evidence/receipts/physical-transaction-attempt.json records the failure and original-state preservation without device identifiers.
 - Physical change and physical Undo success remain UNPROVEN. This is evidence of safe refusal/recovery, not a successful optimization. The browser remains physically read-only.
 
 ## Event-driven Android connection handling
@@ -84,7 +84,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 ## Local Meta reasoning
 
 - 81 unit/integration tests PASS (Python 3.10 in the Linux VM). New coverage: pinned digest, fixed loopback endpoint, numeric privacy allowlist, schema/identity rejection, invented-number rejection, ADB vs SIMULATED source routing, one in-flight request and no cloud fallback. HTTP tests confirm only server-reread allowlisted facts reach the local broker and that a cloud broker can never receive physical data.
-- One actual CPU-only call of llama3.2:3b-instruct-q4_K_M (digest verified) on SIMULATED facts: 151 prompt + 60 completion tokens, 8403 ms, 0 bytes VRAM observed, $0 provider cost. See docs/local-meta-smoke-receipt.json.
+- One actual CPU-only call of llama3.2:3b-instruct-q4_K_M (digest verified) on SIMULATED facts: 151 prompt + 60 completion tokens, 8403 ms, 0 bytes VRAM observed, $0 provider cost. See docs/evidence/receipts/local-meta-smoke-receipt.json.
 - Local review of real ADB facts through the browser: NOT TESTED. Windows unit run and browser e2e for this milestone: NOT RE-RUN.
 - No physical writes, no cloud model calls.
 
@@ -96,17 +96,17 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 ## Windows run_all (2026-10-26 19:05 UTC)
 
 - verify.ps1 exit: 0. Offline browser e2e exit: 0.
-- Local Meta review of real ADB facts: PASS - see docs/local-meta-adb-receipt.json.
+- Local Meta review of real ADB facts: PASS - see docs/evidence/receipts/local-meta-adb-receipt.json.
 
 ## Grounded local Meta summaries
 
 - New rule: the local summary must state the exact value of every referenced fact; ungrounded text such as "No changes detected." is rejected. Two new unit tests (83 total).
-- Real ADB review on Windows after the change: "Battery is 100% and 154.02 GB of storage is free." 175+76 tokens, 10.5 s CPU, digest verified, inspect_only. Receipt updated in docs/local-meta-adb-receipt.json.
+- Real ADB review on Windows after the change: "Battery is 100% and 154.02 GB of storage is free." 175+76 tokens, 10.5 s CPU, digest verified, inspect_only. Receipt updated in docs/evidence/receipts/local-meta-adb-receipt.json.
 
 ## First physical change and verified Undo
 
 - 90 unit/integration tests PASS (Linux VM; Windows re-run below). New package-state adapter tests: allowlist, fixed user-0 commands, inconsistent state blocks, unauthorized device blocks, denial preserves original, exact default-state restoration.
-- Real run on the owned Xiaomi phone (Android 14) for org.nixgame.ruler: default -> disabled-user -> default. Journal PREPARED, VERIFIED_BACKUP, EXECUTING, VERIFIED, REVERTING, REVERTED in 3.2 s. Raw `dumpsys package` independently showed user-0 enabled=0 before and after. Receipt: docs/physical-package-receipt.json.
+- Real run on the owned Xiaomi phone (Android 14) for org.nixgame.ruler: default -> disabled-user -> default. Journal PREPARED, VERIFIED_BACKUP, EXECUTING, VERIFIED, REVERTING, REVERTED in 3.2 s. Raw `dumpsys package` independently showed user-0 enabled=0 before and after. Receipt: docs/evidence/receipts/physical-package-receipt.json.
 - Honest note: an earlier run of the first adapter version restored the app to "enabled" (code 1) rather than the original "default" (code 0). The app was functional throughout, but the restoration was not bit-exact. This was caught by an independent dumpsys check; the adapter was corrected to track exact codes, the original default state was restored with `pm default-state`, and the verified run above was recorded.
 - The browser still exposes no physical write route.
 
@@ -114,7 +114,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 - 102 unit/integration tests PASS on Windows, three consecutive runs. One earlier Windows run reported a single error that did not reproduce; recorded here rather than hidden.
 - New tests: deterministic gate decisions, plan schema/privacy/grounding/eligibility rejection, fixed goal enum, consent and gate enforcement, refusal restores original, no double execution, undo-without-change blocked, HTTP opt-in/CSRF/source checks.
-- Real HTTP run (goal=declutter): local Llama 3.2 3B proposed disabling org.nixgame.ruler (11.4 s CPU, 286+113 tokens, $0); gate REVIEW_REQUIRED; consented execute verified; Undo exact. Raw dumpsys user-0 `enabled=0 -> 3 -> 0`. Receipt: docs/agent-loop-receipt.json.
+- Real HTTP run (goal=declutter): local Llama 3.2 3B proposed disabling org.nixgame.ruler (11.4 s CPU, 286+113 tokens, $0); gate REVIEW_REQUIRED; consented execute verified; Undo exact. Raw dumpsys user-0 `enabled=0 -> 3 -> 0`. Receipt: docs/evidence/receipts/agent-loop-receipt.json.
 - Real browser run (Chromium, 390 and 1440 px, tests/e2e/agent_physical_smoke.py): plan for com.miui.compass, consent, execute, Undo; no page errors or horizontal overflow. Raw dumpsys afterwards: all three candidate apps enabled=0.
 - With goal=review the model returned inspect_only (gate NO_ACTION). One plan was rejected by the grounding check before the prompt template was tightened; the system failed closed.
 - Offline browser e2e still PASS at 390/768/1440/3440.
@@ -132,7 +132,7 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 
 ## Muse Glimmer inference and planning ablation
 
-- First real Muse Glimmer call (digest-pinned, private service 127.0.0.1:11438): valid grounded plan in 18.1 s, 282+99 tokens, 13.5 of 17.4 GB in VRAM. Receipt: docs/glimmer-smoke-receipt.json. Ollama appended a literal `<|eot|>` after the JSON; only that exact suffix is now stripped (unit test covers exact/extra/other tokens).
+- First real Muse Glimmer call (digest-pinned, private service 127.0.0.1:11438): valid grounded plan in 18.1 s, 282+99 tokens, 13.5 of 17.4 GB in VRAM. Receipt: docs/evidence/receipts/glimmer-smoke-receipt.json. Ollama appended a literal `<|eot|>` after the JSON; only that exact suffix is now stripped (unit test covers exact/extra/other tokens).
 - To fit the 18 GB model, the participant's own unrelated Ollama model (port 11434, infinite keep-alive) was temporarily unloaded, then reloaded with the same infinite keep-alive and verified. No model files were removed.
 - Ablation, 30 synthetic cases × 3 repeats: rules 90.0% correct (9 unsafe proposals); Llama 3B 60.0% valid / 53.3% correct (6 unsafe); Muse Glimmer 90.0% valid / 86.7% correct (3 unsafe). Gate refused 100% of unsafe proposals for all routes. Details and honest interpretation: docs/benchmark/STATUS.md.
 - Product option `--local-meta --glimmer` added; registry enforces the declared Glimmer endpoint.
@@ -146,13 +146,13 @@ No model gate, provider identity, hackathon eligibility or physical result is ce
 ## Restart-after-change recovery (real phone)
 
 - Gap found in review: plans lived only in server memory, so a crash after a change would leave Undo unreachable from the browser. Added DeviceAgent.pending/recover, /api/agent-recover and a UI "Recover exact original state" action; planning is refused while a journaled change is pending. Three new unit tests + HTTP route test.
-- Real fault injection: Llama-planned change to com.miui.compass verified (raw dumpsys enabled=0 -> 3); server process force-killed before Undo; after restart, planning was blocked; recovery restored the exact original (raw enabled=0). Receipt: docs/crash-recovery-receipt.json. Cable unplug mid-write remains NOT TESTED on hardware.
+- Real fault injection: Llama-planned change to com.miui.compass verified (raw dumpsys enabled=0 -> 3); server process force-killed before Undo; after restart, planning was blocked; recovery restored the exact original (raw enabled=0). Receipt: docs/evidence/receipts/crash-recovery-receipt.json. Cable unplug mid-write remains NOT TESTED on hardware.
 - Pre-event reuse audit (kit audit_submission.py) against the participant's pre-event v0.8 archive: 0 exact matches, 0 near matches, 0 secrets across 110 tracked files. The v0.9 archive was not found on this PC.
 - Anonymous fresh clone of the public repository at 6a36803 on a clean Linux machine: all unit/integration tests, offline e2e and guided e2e PASS; no device serials or local usernames in the tree. GitHub CI green for every pushed commit through 29087f1.
 
 ## Device Fabric phase A — Android compatibility fixes
 
-- Baseline audit recorded in docs/DEVICE_FABRIC_BASELINE.md (HEAD 78b6692, tests PASS, CI green).
+- Baseline audit recorded in docs/internal/DEVICE_FABRIC_BASELINE.md (HEAD 78b6692, tests PASS, CI green).
 - Wi-Fi ADB (`ip:port`, `adb-…._adb-tls-connect._tcp`) now listed as WIFI instead of skipped/mislabelled. OpenBridge never pairs or connects Wi-Fi ADB itself. Wi-Fi ADB hardware: NOT TESTED (needs owner pairing on the phone).
 - Inspection is per-fact tolerant: a missing property, absent battery (TV boxes) or failed command marks only that fact `unavailable`. New read-only facts: CPU ABI, security patch, RAM, screen timeout, television (leanback) and Bluetooth LE features. The test now enforces an exact allowlist of read-only shell commands.
 - Two real-hardware regressions caught during this change and fixed: on the Xiaomi, `df -k /data` reports /data under a bind-mount point, and `pm has-feature` exits 1 for "false". Now parsed from the single df row and from `pm list features`. Real phone: all 12 facts read, none unavailable.
@@ -394,7 +394,7 @@ Each recovery ran in a fresh process that read the durable journal and the phone
 - Only free credits are used: the per-session budget is $0.10 and the durable local ceiling is $1; no automatic retries; failures keep their reservation.
 
 ## 27 Oct 2026 (night) — Tuya robot vacuum, real hardware
-Owner-linked over the Tuya local protocol 3.4 (key from the owner's saved Tuya IoT project config; the project's cloud subscription had expired, so the key was proven by a local handshake: 18 DPs). Server run at commit b10153f: discovery found the vacuum (TUYA provider OK); `read_facts` VERIFIED (status charge_done, battery 100 %, brush/filter wear, suction, water, work mode, volume); `tuya_setting` suction normal → gentle VERIFIED by read-back; `tuya_undo` REVERTED to normal, exact; `tuya_command seek` sent (momentary, EXECUTED_UNVERIFIED by design). Receipt: docs/tuya-hardware-receipt.json. Movement commands not exercised in this run.
+Owner-linked over the Tuya local protocol 3.4 (key from the owner's saved Tuya IoT project config; the project's cloud subscription had expired, so the key was proven by a local handshake: 18 DPs). Server run at commit b10153f: discovery found the vacuum (TUYA provider OK); `read_facts` VERIFIED (status charge_done, battery 100 %, brush/filter wear, suction, water, work mode, volume); `tuya_setting` suction normal → gentle VERIFIED by read-back; `tuya_undo` REVERTED to normal, exact; `tuya_command seek` sent (momentary, EXECUTED_UNVERIFIED by design). Receipt: docs/evidence/receipts/tuya-hardware-receipt.json. Movement commands not exercised in this run.
 Same night, owner-requested movement run (commit 363b538): `start` → status smart_clean (VERIFIED); `pause` → standby (VERIFIED); manual `move` forward / turn_left / forward, each auto-stopped (momentary, EXECUTED_UNVERIFIED; status showed `cleaning` during the turn); `dock` → goto_charge (VERIFIED); a later read showed `charging`, battery 82 %. Note: manual moves are ignored while the robot sits on the dock; it must leave the dock (start, then pause) first.
 
 ## 27 Oct 2026 (night) — PC 2 as a client, real hardware

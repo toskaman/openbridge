@@ -36,7 +36,7 @@ def main():
     if args.recover_only:
         print(json.dumps({'status':'NO_ACTIVE_TRANSACTION','new_change_attempted':False}))
         return
-    if Path('docs/physical-transaction-attempt.json').exists() or Path('docs/physical-transaction-receipt.json').exists():
+    if Path('docs/evidence/receipts/physical-transaction-attempt.json').exists() or Path('docs/physical-transaction-receipt.json').exists():
         raise SystemExit('Prior physical evidence exists. Review it before authorizing a new attempt; no automatic retry.')
     transaction_id='physical-'+uuid.uuid4().hex
     before=adapter.read_setting()

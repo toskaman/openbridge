@@ -18,14 +18,14 @@
 - Modify `src/server.py` — pair-start, pair-confirm (+ USB direct upgrade), restore_relays build `urls` + failover sends and persist `relay['urls']`.
 - Create `scripts/companion_wifi_setup.py` — one-time grants + pair + ADB-disconnected proof.
 - Create `tests/fabric/test_relay_transport.py` — all unit tests below.
-- Modify `docs/superpowers/specs/2026-10-31-wifi-direct-design.md` — §3 records the wifi → lan → adb-wifi → adb ordering mapping.
+- Modify `docs/internal/design-notes/specs/2026-10-31-wifi-direct-design.md` — §3 records the wifi → lan → adb-wifi → adb ordering mapping.
 
 ---
 
 ### Task 0: Branch + spec ordering note
 
 **Files:**
-- Modify: `docs/superpowers/specs/2026-10-31-wifi-direct-design.md`
+- Modify: `docs/internal/design-notes/specs/2026-10-31-wifi-direct-design.md`
 
 - [ ] **Step 1: Create the branch**
 
@@ -35,7 +35,7 @@ git checkout -b feat/p32-wifi-direct origin/main
 
 - [ ] **Step 2: Record the transport priority in the spec**
 
-Append to §3 of `docs/superpowers/specs/2026-10-31-wifi-direct-design.md`:
+Append to §3 of `docs/internal/design-notes/specs/2026-10-31-wifi-direct-design.md`:
 
 ```markdown
 Transport priority (owner order wifi → lan → adb-wifi → adb): for a
@@ -48,7 +48,7 @@ match (`lan_url_for_relay`).
 - [ ] **Step 3: Commit**
 
 ```bash
-git add docs/superpowers/specs/2026-10-31-wifi-direct-design.md
+git add docs/internal/design-notes/specs/2026-10-31-wifi-direct-design.md
 git commit -m "docs: record wifi-direct transport priority"
 ```
 

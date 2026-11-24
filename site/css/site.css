@@ -28,6 +28,7 @@ section{padding:120px 0}
 .nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
 .brand{display:flex;align-items:center;gap:10px;font:700 1.2rem var(--display);color:var(--text);text-decoration:none;letter-spacing:-.02em}
 .orb{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#b9fff4 35%,var(--teal) 75%,#7c3aed);box-shadow:0 0 18px rgba(45,212,191,.55)}
+.brand .mark{color:var(--teal);flex:none}
 .nav ul{display:flex;gap:26px;list-style:none;margin:0 0 0 auto;padding:0}
 .nav ul a{color:var(--muted);text-decoration:none;font-size:.95rem}
 .nav ul a:hover{color:var(--text)}
@@ -124,8 +125,12 @@ td:nth-child(2){color:var(--muted)}
 .partners .wrap{display:grid;gap:72px}
 .partner-top{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:end}
 .logos{display:flex;align-items:center;gap:40px;margin-top:30px}
+.logos a{display:inline-flex;align-items:center}
 .logos img{height:34px;width:auto}
-.logos img+img{height:42px}
+.logos img.logo-tall{height:42px}
+.logo-word{font-family:var(--display);font-weight:700;font-size:2rem;letter-spacing:-.02em;color:var(--text);text-decoration:none;line-height:1}
+.partner-products{margin-top:18px}
+.partner-products a,.partner-credit a{color:inherit}
 .gains{display:grid;grid-template-columns:1fr 1fr;gap:0 64px}
 .gain{padding:26px 0;border-top:1px solid var(--line)}
 .gain h3{font-size:1.2rem}

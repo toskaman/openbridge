@@ -33,7 +33,7 @@ def main():
              'before':snapshot['before'],'proposed':target,'observed_after_apply':observed,
              'observed_after_undo':after,'final_state':restored['state'],'events':events,
              'limitation':'Synthetic state only. This is not evidence of physical-device rollback.'}
-    Path('docs/simulated-transaction-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8')
+    Path('docs/evidence/receipts/simulated-transaction-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(receipt))
 
 

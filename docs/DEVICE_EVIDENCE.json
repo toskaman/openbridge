@@ -160,14 +160,14 @@
   "device_alias": "Second PC (Windows 11, Intel i5-12600H)",
   "environment": "REAL_HARDWARE",
   "evidence": [
-   "EVIDENCE_LEDGER.md"
+   "docs/evidence/EVIDENCE_LEDGER.md"
   ],
   "independent_oracle": "certutil SHA256 of remote agent.exe equals fresh build hash; pid changed; single CONNECTED after mutual auth",
   "integration": "HOST_APP_ADAPTER",
   "limitations": [
    "First build could not self-update (CreateProcessW win32 2); swapped via staged upload plus detached script",
    "Trust LAN only: v4 link authenticates, payloads not encrypted",
-   "29-Oct certutil/CONNECTED lines first-party only; closest committed transcript is the 27-Oct hot-swap plus 2-PC LAN proof in EVIDENCE_LEDGER.md"
+   "29-Oct certutil/CONNECTED lines first-party only; closest committed transcript is the 27-Oct hot-swap plus 2-PC LAN proof in docs/evidence/EVIDENCE_LEDGER.md"
   ],
   "operations": [
    "agent remote exec whoami",
@@ -193,7 +193,7 @@
   "environment": "REAL_HARDWARE",
   "evidence": [
    "https://github.com/toskaman/openbridge/pull/111",
-   "EVIDENCE_LEDGER.md"
+   "docs/evidence/EVIDENCE_LEDGER.md"
   ],
   "independent_oracle": "facts read back from device DPs (status charge_done, battery 100); seek acknowledged with status echo",
   "integration": "HOST_APP_ADAPTER",
@@ -222,7 +222,7 @@
   "evidence": [
    "https://github.com/toskaman/openbridge/pull/111",
    "docs/HARDWARE_TEST_HISTORY.md",
-   "EVIDENCE_LEDGER.md"
+   "docs/evidence/EVIDENCE_LEDGER.md"
   ],
   "independent_oracle": "live API responses (1 static lease, 127 hosts) under authorized session",
   "integration": "HOST_APP_ADAPTER",
@@ -1042,8 +1042,8 @@
   ],
   "evidence": [
    "docs/jury/screens/tv-wd7-direct-drain-caption.png",
-   "docs/superpowers/specs/2026-10-31-wifi-direct-design.md",
-   "docs/superpowers/plans/2026-10-31-wifi-direct-phase-a.md"
+   "docs/internal/design-notes/specs/2026-10-31-wifi-direct-design.md",
+   "docs/internal/design-notes/plans/2026-10-31-wifi-direct-phase-a.md"
   ],
   "independent_oracle": "adb devices output asserted without the TV during the drain; TV screencap pulled after reconnect shows the report caption plus the activity feed (paired 23:26:14, order 23:26:32, report 23:26:41 local); result file drained=1 adb_down=true; code-change timeline log",
   "permissions": [

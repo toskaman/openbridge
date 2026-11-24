@@ -1,6 +1,6 @@
 # Device scope
 
-Current scope is the Device Fabric table below plus [release status](docs/RELEASE_STATUS.md). The initial adapter/verifier sections are historical: authenticated Freebox inventory, browser consent-gated optional-app change and exact physical Undo were later verified (see [evidence ledger](EVIDENCE_LEDGER.md)). The refused timeout write remains a real failure, not evidence against the later optional-app result. Physical TV/Forge proof does not establish TV writes or Undo.
+Current scope is the Device Fabric table below plus [release status](RELEASE_STATUS.md). The initial adapter/verifier sections are historical: authenticated Freebox inventory, browser consent-gated optional-app change and exact physical Undo were later verified (see [evidence ledger](evidence/EVIDENCE_LEDGER.md)). The refused timeout write remains a real failure, not evidence against the later optional-app result. Physical TV/Forge proof does not establish TV writes or Undo.
 
 ## Historical initial scope
 

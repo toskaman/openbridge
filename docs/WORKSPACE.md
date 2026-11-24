@@ -9,6 +9,9 @@
 | `config/`, `.github/` | Runtime model configuration and CI |
 | `docs/` | [Documentation index](README.md), current checklist and evidence |
 | `docs/archive/` | Consolidated historical checkpoints |
+| `docs/internal/` | Working notes, plans and audits kept for traceability (not product documentation) |
+| `docs/jury/`, `docs/submission/` | Hackathon submission material |
+| `docs/evidence/` | Evidence ledger, receipts and dated hardware runs |
 | `artifacts/` | Ignored local runs, screenshots, receipts and temporary outputs; evidence may exist only here |
 | `dist/` | Ignored release packages; retain while needed for distribution or provenance |
 

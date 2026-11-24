@@ -1,6 +1,6 @@
 # OpenBridge — Meta Global AI Developer Hackathon 2026 evaluation permission
 
-This notice supplements the [PolyForm Strict License 1.0.0](LICENSE) for the sole purpose of evaluating OpenBridge as a submission to the Meta Global AI Developer Hackathon 2026. It does not replace the applicable hackathon entry terms, previously granted rights, or third-party licenses.
+This notice supplements the [PolyForm Strict License 1.0.0](../LICENSE) for the sole purpose of evaluating OpenBridge as a submission to the Meta Global AI Developer Hackathon 2026. It does not replace the applicable hackathon entry terms, previously granted rights, or third-party licenses.
 
 To the extent the OpenBridge copyright holder controls the necessary rights, the copyright holder grants the hackathon organizers, their service providers acting on their behalf, and the appointed judges a nonexclusive, royalty-free permission to:
 
@@ -15,4 +15,4 @@ The software is provided AS IS, WITHOUT WARRANTIES, to the extent permitted by l
 
 The organizers' rights under the hackathon's official entry terms remain unaffected. Public GitHub access and GitHub platform terms are also unaffected.
 
-See [licensing](docs/LICENSING.md) and [third-party inventory](THIRD_PARTY.md).
+See [licensing](../docs/LICENSING.md) and [third-party inventory](../THIRD_PARTY.md).
