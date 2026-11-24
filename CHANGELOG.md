@@ -4,6 +4,10 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- 🥽 **Tested on the PICO headset emulator:** the Companion pairs with PICO OS 6 (official PICO Emulator 6.2.1), runs
+  a signed relay round trip and is refused once revoked. The emulator image crashes hardware-accelerated apps, so
+  `python -m dev.build_companion --software-rendering` makes a test-only build; `cloud_e2e.py` now handles multi-display
+  focus, system dialogs and offline emulators. [Guide](docs/PICO_EMULATOR.md)
 - 🧠 **OpenBridge's own model v4 is now the official one:** trained on household chores, it gets 88 % of
   hand-written chore requests right (v3: 47 %) and never runs one as a command; home requests held out: 93.2 %
   (v3: 90.2 %). Two hand-written requests regressed and are listed. `train_lora.py --vram-fraction` keeps training

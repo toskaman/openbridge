@@ -1197,5 +1197,40 @@
    "TV idled back to sleep between run and owner check (fast sleep timeout); disable it when filming",
    "n=1 session"
   ]
+ },
+ {
+  "commit_sha": "87fa423c8f89490ac841c8d43b80c0c0178ebe2f",
+  "device_alias": "PICO OS 6 headset emulator (official, Android 16)",
+  "environment": "OFFICIAL_PLATFORM_EMULATOR",
+  "evidence": [
+   "docs/evidence/pico-emulator-24nov.md",
+   "docs/evidence/pico-emulator-24nov-verdict.json",
+   "docs/jury/screens/pico-emulator-pairing.jpg"
+  ],
+  "independent_oracle": "Android service state and adb forward table agree with the server; pairing code read from the headset screen by uiautomator; revoked relay refused",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "emulator, not a headset (level 4)",
+   "Companion built with software rendering: the emulator image aborts hardware-accelerated apps (arm64 libspatial_client.so on x86_64)",
+   "Bluetooth off in the emulator: the round trip ends in a signed refusal",
+   "the headset is classified as a phone (no headset category yet)"
+  ],
+  "operations": [
+   "pico-cli emulator start, adb discover as phone",
+   "Companion APK install on PICO OS 6",
+   "pair-start with the code shown on the headset, then PAIRED",
+   "signed relay round trip (signed Bluetooth-off refusal)",
+   "revoked relay denied"
+  ],
+  "os_version": "PICO OS 6.2.0 (Android 16, API 36), swan_oversea_x86_64",
+  "permissions": [
+   "lab emulator on D:",
+   "loopback adb"
+  ],
+  "platform": "Official PICO Emulator 6.2.1 (x86_64)",
+  "public_device_id": "pico-os6-emu-01",
+  "status": "VERIFIED",
+  "test_id": "pico-companion-pair-relay",
+  "test_utc": "2026-11-24T12:16:55Z"
  }
 ]

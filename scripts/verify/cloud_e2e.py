@@ -37,6 +37,21 @@ CODE_PATS_DUMPSYS = [CODE_PATS[0], CODE_PATS[2]]
 CODE_CARD_HINT = 'ENTER THIS CODE'
 
 
+ALLOW_LABELS = ('ALLOW', 'Allow', 'While using the app', 'Only this time', 'AUTORISER', 'Autoriser')
+
+
+def accept_system_dialog():
+    """Tap the allow button of the system dialog on screen (found by its label, never by position)."""
+    sh('adb', 'shell', 'uiautomator', 'dump', '/sdcard/ob-e2e-dialog.xml', timeout=60)
+    rc, xml_text = sh('adb', 'shell', 'cat', '/sdcard/ob-e2e-dialog.xml', timeout=60)
+    for m in re.finditer(r'text="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml_text or ''):
+        if m.group(1) in ALLOW_LABELS:
+            x1, y1, x2, y2 = (int(m.group(i)) for i in range(2, 6))
+            sh('adb', 'shell', 'input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
+            return True
+    return False
+
+
 def extract_codes(text, pats):
     """Ordered unique 6-digit candidates from a text blob, best pattern first."""
     out = []
@@ -138,16 +153,28 @@ def main():
         # First launch runs the setup flow, which may push Settings over the
         # Companion; the pairing code is only on screen while OUR activity is
         # in front. Re-raise it deterministically before pair-start.
-        for _ in range(3):
+        # A system dialog the Companion opened itself (turn Bluetooth on, runtime permission) is
+        # accepted the way the owner would; PICO OS shows one on first launch. Devices with
+        # several displays (a headset) report one focus line per display: any of them counts.
+        for _ in range(5):
             rc, win = sh('adb', 'shell', 'dumpsys', 'window', timeout=60)
-            if 'fr.openbridge.companion' in win and 'mCurrentFocus' in win:
-                focus = [ln for ln in win.splitlines() if 'mCurrentFocus' in ln]
-                if focus and 'fr.openbridge.companion' in focus[0]:
-                    break
+            focus = [ln for ln in win.splitlines() if 'mCurrentFocus' in ln]
+            if any('fr.openbridge.companion' in ln for ln in focus):
+                break
+            if any(('RequestPermissionActivity' in ln or 'GrantPermissionsActivity' in ln) for ln in focus):
+                accept_system_dialog()
+                time.sleep(4)
+                continue
             sh('adb', 'shell', 'am', 'start', '-n', 'fr.openbridge.companion/.MainActivity')
             time.sleep(4)
-        # NET-04/07/08: pairing handshake (code shown on the emulator screen).
-        st, hello = post('/api/relay-pair-start', {'device_id': handle})
+        # NET-04/07/08: pairing handshake (code shown on the emulator screen). A host can list
+        # more than one emulator (an offline one stays visible, without capabilities): pair
+        # with the first one that answers.
+        for cand in handles:
+            st, hello = post('/api/relay-pair-start', {'device_id': cand})
+            if st == 200:
+                handle = cand
+                break
         if not record('NET-04 pair-start', st == 200 and hello.get('state') == 'CODE_SHOWN_ON_DEVICE',
                       'st=%s %s' % (st, json.dumps(hello)[:200])):
             raise SystemExit(1)

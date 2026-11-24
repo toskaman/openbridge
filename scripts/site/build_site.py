@@ -19,7 +19,7 @@ GITHUB = 'https://github.com/toskaman/openbridge/blob/main/'
 
 CATEGORY_BY_PREFIX = [
     ('tv-vacuum', 'cross'), ('watch-tv', 'cross'), ('phone-bv9300-01-avd', 'cross'),
-    ('tv-', 'screens'), ('watch-', 'wearables'), ('phone-', 'phones'), ('avd-', 'phones'),
+    ('tv-', 'screens'), ('watch-', 'wearables'), ('phone-', 'phones'), ('avd-', 'phones'), ('pico-', 'phones'),
     ('vacuum-', 'robots'), ('freebox-', 'network'), ('pc', 'pcs'), ('vm-', 'vms'),
     ('esp32', 'micro'),
 ]
