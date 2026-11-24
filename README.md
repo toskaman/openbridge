@@ -38,7 +38,7 @@
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://heltec.cn/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/heltec-white.svg"><img src="docs/assets/partners/heltec-black.svg" height="40" alt="Heltec Automation"></picture></a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.elecrow.com"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/elecrow-white.svg"><img src="docs/assets/partners/elecrow-black.svg" height="38" alt="Elecrow"></picture></a>
+  <a href="https://www.elecrow.com"><img src="docs/assets/partners/elecrow.png" height="32" alt="Elecrow"></a>
   <br><sub><a href="https://www.engoeyewear.com">ENGO</a> × <a href="https://www.activelook.net">ActiveLook</a> · <a href="https://heltec.cn/">Heltec</a> <a href="https://heltec.org/project/wifi-lora-32-v4/">WiFi LoRa 32 V4</a> · <a href="https://www.elecrow.com">Elecrow</a> <a href="https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html">CrowPanel Advance 4.3-inch</a> + ESP32-H2</sub>
 </p>
 <!-- partners:end -->
