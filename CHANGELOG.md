@@ -4,6 +4,12 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- **New hardware partner: [Elecrow](https://www.elecrow.com).** The [CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)
+  (ESP32-S3) and an ESP32-H2 module join the bench, for an OpenBridge control panel and Matter / Thread testing.
+  [Partner page](docs/partners/ELECROW.md)
+- **Partner commitments are now enforced in CI:** [partners.json](docs/partners/partners.json) lists what each
+  partner was promised; a test fails if a credit or a promised report goes missing.
+- **Cleaner repository:** light and dark illustrations, lighter demo clips, and working notes moved to `docs/internal/`.
 - 🧭 **A shorter, more professional README:** one headline, two buttons, a row of proof figures and the partner logos up top; the French version moves to [README.fr.md](README.fr.md), and the longer sections move to [Why OpenBridge](docs/WHY_OPENBRIDGE.md) and [Hardware partners](docs/partners/HARDWARE_PARTNERS.md). The website gains Heltec and the same two sections.
 - 🗣️ **Partner voice adapter, measured:** trained on the fictional Acme brand from the official v4 model, it gets 98.6 %
   of held-out Acme requests right (official model: 45.1 %) with no loss on the base test sets.

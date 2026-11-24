@@ -135,7 +135,7 @@ release validation (§8).
 
 - Status: RE-DELIVERED 04-Nov — https://youtu.be/TZaxCcRmrLQ ("OpenBridge Jury v5 MetaMMS 175s",
   channel MS; verified live + oEmbed title/author/embeddable; canonical slot
-  `submission/final-video.mp4`, see submission/README.md). No agent-generated,
+  `submission/final-video.mp4`, see docs/submission/OFFICIAL_VIDEO.md). No agent-generated,
   reused, or fallback jury video is published or linked as the submission.
 - V2 (3d3e228e) / V3 (eee76671, 159.33 s) / V4 (12f49234) / V5 (b3cb41e7,
   170.70 s): HISTORICAL DRAFTs with builders + manifests preserved.

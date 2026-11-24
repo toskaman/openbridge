@@ -11,14 +11,14 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#070b1a">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='o' cx='.4' cy='.35' r='.7'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.4' stop-color='%23b9fff4'/%3E%3Cstop offset='.8' stop-color='%232dd4bf'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='22' fill='url(%23o)'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1117'/%3E%3Cpath d='M11 50 Q32 -12 53 50' fill='none' stroke='%232dd4bf' stroke-width='6.5' stroke-linecap='round'/%3E%3Cpath d='M4 50 H60' stroke='%232dd4bf' stroke-width='6.5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='19' r='7' fill='%232dd4bf'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/site.css">
 </head>
 <body data-page="home">
 <a class="skip" href="#main" data-i18n="nav.skip">Skip to content</a>
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="./"><span class="orb" aria-hidden="true"></span>OpenBridge</a>
+    <a class="brand" href="./"><svg class="mark" viewBox="0 0 64 64" width="26" height="26" aria-hidden="true"><path d="M11 50 Q32 -12 53 50" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"/><path d="M4 50 H60" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"/><circle cx="32" cy="19" r="7" fill="currentColor"/></svg>OpenBridge</a>
     <ul>
       <li><a href="try.html" data-page="try" data-i18n="nav.try">Try it</a></li>
       <li><a href="integrate.html" data-page="integrate" data-i18n="nav.integrate">Integrate</a></li>
@@ -235,10 +235,12 @@
       <div>
         <p class="lede" data-i18n="home.pa.first">Our hardware partners</p>
         <div class="logos">
-          <img src="assets/partners/engo-white.png" alt="ENGO smart glasses">
-          <img src="assets/partners/activelook-white.svg" alt="ActiveLook by Microoled">
-          <img src="assets/partners/heltec-white.svg" alt="Heltec Automation">
+          <a href="https://www.engoeyewear.com" rel="noopener"><img src="assets/partners/engo-white.png" alt="ENGO smart glasses"></a>
+          <a href="https://www.activelook.net" rel="noopener"><img class="logo-tall" src="assets/partners/activelook-white.svg" alt="ActiveLook by Microoled"></a>
+          <a href="https://heltec.cn/" rel="noopener"><img src="assets/partners/heltec-white.svg" alt="Heltec Automation"></a>
+          <a href="https://www.elecrow.com" rel="noopener"><img src="assets/partners/elecrow.png" alt="Elecrow"></a>
         </div>
+        <p class="note partner-products"><a href="https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html" rel="noopener" data-i18n="home.pa.elecrow">Elecrow CrowPanel Advance 4.3-inch (ESP32-S3) with ESP32-H2 module: integration in progress</a></p>
         <p class="note" data-i18n="home.pa.heltec">Heltec Automation is sending a WiFi LoRa 32 V4 board: the ESP32 agent moves from QEMU to real hardware.</p>
       </div>
     </div>

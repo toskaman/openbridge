@@ -1,6 +1,6 @@
 # OpenBridge — Meta visual design proposal
 
-English translation and condensed implementation notes from the actual Meta Muse Spark 1.3 response. The original response is retained privately for provenance; docs/meta-design-receipt.json records its model, request ID, usage and original prompt hash. This translation is editorial work, not a second Meta generation.
+English translation and condensed implementation notes from the actual Meta Muse Spark 1.3 response. The original response is retained privately for provenance; docs/evidence/receipts/meta-design-receipt.json records its model, request ID, usage and original prompt hash. This translation is editorial work, not a second Meta generation.
 
 ## Direction
 

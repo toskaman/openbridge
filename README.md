@@ -28,6 +28,7 @@
   </tr>
 </table>
 
+<!-- partners:start (promised to partners, checked in CI: see docs/partners/COMMITMENTS.md) -->
 <p align="center">
   <sub><b>TRUSTED BY HARDWARE MAKERS</b></sub>
   <br><br>
@@ -36,7 +37,11 @@
   <a href="https://www.activelook.net"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/activelook-white.svg"><img src="docs/assets/partners/activelook-black.svg" height="40" alt="ActiveLook by Microoled"></picture></a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://heltec.cn/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/heltec-white.svg"><img src="docs/assets/partners/heltec-black.svg" height="40" alt="Heltec Automation"></picture></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.elecrow.com"><img src="docs/assets/partners/elecrow.png" height="32" alt="Elecrow"></a>
+  <br><sub><a href="https://www.engoeyewear.com">ENGO</a> × <a href="https://www.activelook.net">ActiveLook</a> · <a href="https://heltec.cn/">Heltec</a> <a href="https://heltec.org/project/wifi-lora-32-v4/">WiFi LoRa 32 V4</a> · <a href="https://www.elecrow.com">Elecrow</a> <a href="https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html">CrowPanel Advance 4.3-inch</a> + ESP32-H2</sub>
 </p>
+<!-- partners:end -->
 
 ---
 
@@ -73,7 +78,7 @@
 ## How it works
 
 <p align="center">
-  <img src="docs/assets/readme/how-it-works.svg" alt="How it works: Discover, Understand, Create, Approve and verify" width="100%">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/how-it-works-dark.svg"><img src="docs/assets/readme/how-it-works-light.svg" alt="How it works: Discover, Understand, Create, Approve and verify" width="100%"></picture>
 </p>
 
 1. **Discover.** OpenBridge finds the devices around you and learns what each one can actually do.
@@ -98,6 +103,7 @@
 | **ENGO smart glasses** | 38 HUD features, official app bridge | Emulator |
 | **Windows XP · 7 · Linux** | Lightweight agent on genuine guest systems | Virtual machines |
 | **ESP32 · Pixel 6 · PICO OS 6** | Native agent and companion | Official emulators |
+| **Elecrow CrowPanel Advance 4.3** (ESP32-S3 + ESP32-H2) | Touch control panel, Matter / Thread testing | Integration in progress |
 
 Every result is in the public [evidence registry](docs/DEVICE_EVIDENCE.json). Emulated runs are labelled and never counted as physical proof. [Known limitations](docs/KNOWN_LIMITATIONS.md).
 
@@ -111,6 +117,10 @@ Every result is in the public [evidence registry](docs/DEVICE_EVIDENCE.json). Em
 
 <p align="center">
   <a href="https://heltec.cn/"><img src="docs/assets/readme/partner-heltec.svg" width="100%" alt="Official hardware partner: Heltec Automation, WiFi LoRa 32 V4 development board"></a>
+</p>
+
+<p align="center">
+  <a href="https://www.elecrow.com"><img src="docs/assets/readme/partner-elecrow.svg" width="100%" alt="Official hardware partner: Elecrow, CrowPanel Advance 4.3-inch (ESP32-S3) and ESP32-H2 module"></a>
 </p>
 
 <p align="center"><a href="docs/partners/HARDWARE_PARTNERS.md">Learn more about our partners →</a></p>

@@ -1,0 +1,81 @@
+{
+  "_comment": "Single source of truth for hardware partners and what OpenBridge promised each of them. tests/unit/test_partner_commitments.py fails CI if a promised credit disappears. Read docs/partners/COMMITMENTS.md before editing.",
+  "partners": [
+    {
+      "id": "engo",
+      "name": "ENGO",
+      "url": "https://www.engoeyewear.com",
+      "products": [
+        {
+          "name": "ENGO heads-up display smart glasses, powered by ActiveLook by Microoled",
+          "url": "https://www.engoeyewear.com"
+        }
+      ],
+      "page": "docs/partners/ENGO.md",
+      "credit_required_in": [
+        "README.md",
+        "site/index.html"
+      ]
+    },
+    {
+      "id": "heltec",
+      "name": "Heltec",
+      "url": "https://heltec.cn",
+      "products": [
+        {
+          "name": "Heltec WiFi LoRa 32 V4 development board (ESP32-S3 + SX1262 LoRa)",
+          "url": "https://heltec.org/project/wifi-lora-32-v4/"
+        }
+      ],
+      "page": "docs/partners/HARDWARE_PARTNERS.md",
+      "credit_required_in": [
+        "README.md",
+        "site/index.html"
+      ],
+      "product_link_required_in": [
+        "README.md"
+      ]
+    },
+    {
+      "id": "elecrow",
+      "name": "Elecrow",
+      "url": "https://www.elecrow.com",
+      "products": [
+        {
+          "name": "CrowPanel Advance 4.3-inch HMI display (ESP32-S3)",
+          "url": "https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html"
+        },
+        {
+          "name": "ESP32-H2 wireless module (Thread / Zigbee / Matter)",
+          "url": null
+        }
+      ],
+      "page": "docs/partners/ELECROW.md",
+      "credit_required_in": [
+        "README.md",
+        "docs/QUICKSTART.md",
+        "docs/HARDWARE_TEST_MATRIX.md",
+        "site/index.html",
+        "site/compatibility.html"
+      ],
+      "product_link_required_in": [
+        "README.md",
+        "docs/QUICKSTART.md",
+        "docs/HARDWARE_TEST_MATRIX.md"
+      ],
+      "deliverables": [
+        {
+          "id": "esp32-h2-matter-thread-notes",
+          "what": "Technical report / integration notes on the ESP32-H2 Matter and Thread testing",
+          "file": "docs/partners/elecrow/ESP32-H2_MATTER_THREAD.md",
+          "status": "planned"
+        }
+      ],
+      "media_permission": {
+        "granted": true,
+        "date": "2026-11-24",
+        "scope": "Elecrow may reuse screenshots and videos from OpenBridge integration demos on its official channels."
+      }
+    }
+  ]
+}

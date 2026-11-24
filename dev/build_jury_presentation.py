@@ -28,12 +28,12 @@ HTML_LINK = re.compile(r"""(?:href|src)=["']([^"'#]+)(?:#[^"']*)?["']""")
 # (repo glob, keep in stage) — globs relative to ROOT.
 INCLUDE = [
     "README.md",
-    "EVIDENCE_LEDGER.md",
+    "docs/evidence/EVIDENCE_LEDGER.md",
     "CONTRIBUTIONS.md",
     "THIRD_PARTY.md",
     "LICENSE",
-    "DEVICE_SCOPE.md",
-    "RISK_REGISTER.md",
+    "docs/DEVICE_SCOPE.md",
+    "docs/RISK_REGISTER.md",
     "docs/*.md",
     "docs/*.json",
     "docs/jury/*.md",
@@ -89,7 +89,7 @@ INCLUDE = [
     "dev/s5_tv_panel_chain.py",
     "dev/device_registry.py",
     # Pack-completeness (Nov 2026): files the staged docs link to.
-    "HACKATHON_EVALUATION_PERMISSION.md",
+    "LICENSES/HACKATHON_EVALUATION_PERMISSION.md",
     "docs/ui/**/*",
     "docs/benchmark/**/*",
     "docs/superpowers/**/*",

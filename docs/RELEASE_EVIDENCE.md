@@ -1,6 +1,6 @@
 # Release evidence index
 
-Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-recovery-receipt.json, glimmer-smoke-receipt.json, local-meta-adb-receipt.json, runtime-meta-receipt.json, physical-transaction-attempt.json (refusal). Benchmarks: docs/benchmark/. Screens: docs/jury/screens/. Full chronological log: [EVIDENCE_LEDGER.md](../EVIDENCE_LEDGER.md) (frozen 27 Oct — later evidence lives in docs/evidence/*.md + the registry). Baseline: DEVICE_FABRIC_BASELINE.md. Limitations: KNOWN_LIMITATIONS.md.
+Receipts: docs/evidence/receipts/physical-package-receipt.json, agent-loop-receipt.json, crash-recovery-receipt.json, glimmer-smoke-receipt.json, local-meta-adb-receipt.json, runtime-meta-receipt.json, physical-transaction-attempt.json (refusal). Benchmarks: docs/benchmark/. Screens: docs/jury/screens/. Full chronological log: [EVIDENCE_LEDGER.md](evidence/EVIDENCE_LEDGER.md) (frozen 27 Oct — later evidence lives in docs/evidence/*.md + the registry). Baseline: DEVICE_FABRIC_BASELINE.md. Limitations: KNOWN_LIMITATIONS.md.
 
 ## Latest integrated evidence — 28 October
 
@@ -24,7 +24,7 @@ Receipts: docs/physical-package-receipt.json, agent-loop-receipt.json, crash-rec
 - [P0 hardening](KNOWN_LIMITATIONS.md): pairing attempt limits, supervised STT worker, relay-scan HTTP verification, BridgeWindows plaintext warnings, HTTP/direct idempotency journal claims.
 - [Device connect](RELEASE_STATUS.md): hardware agent matrix + auto planner + per-device tutorials (PR133); multi-PC bridge + legacy XP/Win7 QEMU proofs ([legacy](evidence/vm-legacy-xp-win7-30oct.md)); capability explorer, hardware intel, permissions center (PR140–142).
 - [Eval-kit baseline](benchmark/EVAL_1000_RULES_BASELINE.md): 1,000-turn replay harness, rules 1.4%.
-- [DAG orchestration](evidence/s7-live-usb-30oct.md) + [official AVD](evidence/avd-ob-pixel-30oct.md) (rows 17–18); [relay dashboards](evidence/g04-watch-30oct.md); [RetroArch loopback](evidence/retroarch-loopback-30oct.md) (row 19); [stress report](STRESS_14_REPORT.md) (crash drill 5/5).
+- [DAG orchestration](evidence/s7-live-usb-30oct.md) + [official AVD](evidence/avd-ob-pixel-30oct.md) (rows 17–18); [relay dashboards](evidence/g04-watch-30oct.md); [RetroArch loopback](evidence/retroarch-loopback-30oct.md) (row 19); [stress report](internal/STRESS_14_REPORT.md) (crash drill 5/5).
 - [`openbridge` CLI + jury release](release/P30_GATES_AND_REPORT.md) (PR149 `73cfef5`): tiers, budget, doctor, parity, pack VERIFY OK; 2 Glimmer candidates validated+revoked (row 20); phone+AVD orchestration sha-verified (row 21).
 - [G04 watch native UI](evidence/g04-watch-30oct.md): QUICK CONTROLS + long-press loop on Watch7 (row 22); TV/phone 0.11.0 PAIRED shots (rows 23–24).
 - [Companion 0.12.0 LAN discovery](evidence/companion-lan-discovery-30oct.md): NSD advert + QU-bit browse + `companion_lan` onboarding, 3/3 devices (row 25); watch UI rescale.

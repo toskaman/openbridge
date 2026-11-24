@@ -10,6 +10,7 @@ Status legend: 🟢 shipped · 🟡 in progress · 🔵 next · ⚪ later / conc
 | | Item | Status |
 |---|---|---|
 | 🕶️ | **ENGO smart glasses (ActiveLook):** move from emulator-validated to real-hardware-validated. Run the 38 HUD features, the 82 tests and the latency / battery benchmarks on the physical pair. | 🟡 glasses on their way |
+| 🖥️ | **Elecrow CrowPanel Advance 4.3 (ESP32-S3) + ESP32-H2:** OpenBridge control panel on the touch screen, then Matter / Thread tests, published as [notes for Elecrow](docs/partners/elecrow/ESP32-H2_MATTER_THREAD.md). [Partner page](docs/partners/ELECROW.md) | 🟡 in progress |
 | 📊 | **Public benchmark reports per device:** latency, success rate, refusal correctness, linked to CI runs. | 🟡 |
 | 🏠 | **Home Assistant bridge:** lights, plugs, thermostats, media players, blinds, locks and robots known to Home Assistant (Matter, Zigbee and Thread included), with consent, read-back and exact Undo. [Guide](docs/HOME_ASSISTANT.md) | 🟢 shipped, verified on a real Home Assistant (demo devices) |
 | 🧰 | **Partner integration kit:** `openbridge partner new` scaffolds an adapter, an emulator and passing tests. [Guide](docs/INTEGRATE_YOUR_DEVICE.md) | 🟢 shipped |
