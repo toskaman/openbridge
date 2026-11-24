@@ -47,16 +47,12 @@ complete test suites and benchmarks on your real hardware, and an emulator of yo
 <p align="center"><sub><i>“OpenBridge” is a working name, not the final one: the project will be renamed later.</i></sub></p>
 
 <p align="center">
-  <sub><b>HARDWARE PARTNER</b></sub>
+  <sub><b>HARDWARE PARTNERS</b></sub>
   <br><br>
   <a href="https://www.engoeyewear.com"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/engo-white.png"><img src="docs/assets/partners/engo-black.png" height="34" alt="ENGO smart glasses"></picture></a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.activelook.net"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/activelook-white.svg"><img src="docs/assets/partners/activelook-black.svg" height="40" alt="ActiveLook by Microoled"></picture></a>
-</p>
-
-<p align="center">
-  <sub><b>HARDWARE SPONSOR</b></sub>
-  <br><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://heltec.cn/"><img src="docs/assets/partners/heltec.png" height="40" alt="Heltec Automation logo"></a>&nbsp;<a href="https://heltec.cn/"><b>Heltec Automation</b></a>
 </p>
 
@@ -230,7 +226,9 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 ## 🤝 Partners
 
-### 🕶️ Our hardware partner
+### Our hardware partners
+
+#### 🕶️ ENGO × ActiveLook
 
 <p align="center">
   <a href="https://www.engoeyewear.com"><img src="docs/assets/readme/partner-engo.svg" width="100%" alt="Official hardware partner: ENGO smart glasses, powered by ActiveLook by Microoled"></a>
@@ -247,7 +245,7 @@ These capabilities are **implemented and covered by automated tests**. What they
   <a href="docs/partners/ENGO.md"><img src="https://img.shields.io/badge/Integration_plan-ENGO_×_OpenBridge-e7f11f?style=for-the-badge&labelColor=1a1a1a" alt="Integration plan"></a>
 </p>
 
-### 📡 Our hardware sponsor
+#### 📡 Heltec Automation
 
 <p align="center">
   <a href="https://heltec.cn/"><img src="docs/assets/partners/heltec.png" height="72" alt="Heltec Automation logo"></a>
@@ -265,7 +263,7 @@ These capabilities are **implemented and covered by automated tests**. What they
 
 ### 🚀 Become the next partner
 
-**ENGO took the first step. Your devices could be next.**
+**ENGO and Heltec took the first step. Your devices could be next.**
 
 <p align="center">
   <a href="docs/partners/README.md"><img src="docs/assets/readme/partner-value.svg" width="100%" alt="Partner with OpenBridge: new features, interoperability, tests and benchmarks, wider compatibility. ENGO case study: 38 HUD features, 82 tests, a pro emulator and 19 technical documents before the hardware arrived."></a>
@@ -313,7 +311,7 @@ TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enferm�
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
 
-**[Heltec Automation](https://heltec.cn/)** soutient le projet comme **sponsor matériel** : Heltec nous envoie une **carte de développement Heltec WiFi LoRa 32 V4** (ESP32-S3 + LoRa SX1262, Wi-Fi, Bluetooth LE, écran OLED). Elle sera le premier ESP32 physique du labo : l'agent ESP32 d'OpenBridge n'a été vérifié jusqu'ici que sur l'émulateur QEMU d'Espressif. Merci Heltec !
+**[Heltec Automation](https://heltec.cn/)** a aussi rejoint le projet comme **partenaire matériel** : Heltec nous envoie une **carte de développement Heltec WiFi LoRa 32 V4** (ESP32-S3 + LoRa SX1262, Wi-Fi, Bluetooth LE, écran OLED). Elle sera le premier ESP32 physique du labo : l'agent ESP32 d'OpenBridge n'a été vérifié jusqu'ici que sur l'émulateur QEMU d'Espressif. Merci Heltec !
 
 **Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel à conserver** (don ou prêt permanent, jamais de prêt limité dans le temps, pour que les tests et benchmarks tournent à chaque version) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
