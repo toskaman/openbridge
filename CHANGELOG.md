@@ -4,6 +4,7 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- **What's new on the front page:** a dated, timed log of every update just above the demo, older entries folded away; kept up to date on every change (rule in AGENTS.md, checked by `tests/unit/test_whats_new.py`).
 - **New hardware partner: [Elecrow](https://www.elecrow.com).** The [CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)
   (ESP32-S3) and an ESP32-H2 module join the bench, for an OpenBridge control panel and Matter / Thread testing.
   [Partner page](docs/partners/ELECROW.md)
