@@ -4,6 +4,7 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- 🧭 **A shorter, more professional README:** one headline, two buttons, a row of proof figures and the partner logos up top; the French version moves to [README.fr.md](README.fr.md), and the longer sections move to [Why OpenBridge](docs/WHY_OPENBRIDGE.md) and [Hardware partners](docs/partners/HARDWARE_PARTNERS.md). The website gains Heltec and the same two sections.
 - 🗣️ **Partner voice adapter, measured:** trained on the fictional Acme brand from the official v4 model, it gets 98.6 %
   of held-out Acme requests right (official model: 45.1 %) with no loss on the base test sets.
   [Results](docs/PARTNER_VOICE_MODEL.md#example-results-the-fictional-acme-brand-24-november-2026)
