@@ -1,5 +1,7 @@
 # Option under consideration: a source-available core that becomes open source after two years
 
+> **Decision (24 November 2026): not adopted.** The owner keeps PolyForm Strict 1.0.0; this page is kept for reference.
+>
 > **Status: proposal, not applied.** The core is licensed under PolyForm Strict 1.0.0 today. Changing it is the
 > owner's decision and is hard to undo: every version published under the new licence becomes Apache 2.0 two years
 > after its release, for everyone, forever. Have it reviewed by counsel before deciding.

@@ -29,6 +29,7 @@ OpenBridge has **two licences, with a clear line between them**, plus written li
 - Third-party dependencies, SDKs, model weights and services keep their own terms: see the
   [third-party inventory](../THIRD_PARTY.md).
 - No licence above grants trademark or branding rights in the OpenBridge name, logo or identity.
+- “OpenBridge” is a working name, not the final one; the project will be renamed later.
 
 ## Plans at a glance
 
