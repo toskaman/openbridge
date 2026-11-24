@@ -44,6 +44,8 @@ complete test suites and benchmarks on your real hardware, and an emulator of yo
 
 <p align="center"><sub>🇫🇷 <a href="#fr">Lire en français</a></sub></p>
 
+<p align="center"><sub><i>“OpenBridge” is a working name, not the final one: the project will be renamed later.</i></sub></p>
+
 <p align="center">
   <sub><b>HARDWARE PARTNER</b></sub>
   <br><br>
@@ -297,6 +299,8 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 <details>
 <summary><b>🇫🇷 En bref, en français</b></summary>
 <br>
+
+*« OpenBridge » est un nom provisoire, non définitif : le projet sera renommé plus tard.*
 
 **Donnez à votre matériel des pouvoirs qu'il n'a jamais eus.**<br>
 **Brisez les murs entre vos appareils. Dites ce que vous voulez, ils s'organisent ensemble.**
