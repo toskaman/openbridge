@@ -43,12 +43,17 @@ def main(argv=None):
     ap.add_argument('--init-adapter', default=None, help='continue training an existing LoRA adapter')
     ap.add_argument('--max-minutes', type=float, default=0, help='stop (and save) after this long')
     ap.add_argument('--limit', type=int, default=0, help='train on the first N examples only (smoke runs)')
+    ap.add_argument('--vram-fraction', type=float, default=0,
+                    help='cap PyTorch at this share of the GPU (e.g. 0.72); on Windows, going past the card spills into '
+                         'shared RAM and a step becomes 3-8x slower')
     a = ap.parse_args(argv)
 
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
+    if a.vram_fraction:
+        torch.cuda.set_per_process_memory_fraction(a.vram_fraction, 0)
     torch.manual_seed(7)
     random.seed(7)
     out = Path(a.out)
@@ -109,7 +114,7 @@ def main(argv=None):
     tok.save_pretrained(out / 'adapter')
     meta = {'base': a.base, 'examples': len(data), 'epochs': a.epochs, 'lr': a.lr, 'rank': a.rank, 'accum': a.accum,
             'trainable_params': trainable, 'steps': step, 'train_seconds': round(time.time() - t0),
-            'gpu': torch.cuda.get_device_name(0), 'peak_vram_gb': round(torch.cuda.max_memory_allocated() / 2 ** 30, 2)}
+            'gpu': torch.cuda.get_device_name(0), 'vram_fraction': a.vram_fraction or None, 'peak_vram_gb': round(torch.cuda.max_memory_allocated() / 2 ** 30, 2)}
     (out / 'train_meta.json').write_text(json.dumps(meta, indent=1), encoding='utf-8')
     (out / 'train_log.json').write_text(json.dumps(log), encoding='utf-8')
     print(json.dumps(meta))

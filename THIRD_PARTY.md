@@ -43,7 +43,7 @@ Model `llama3.2:3b-instruct-q4_K_M`; upstream https://huggingface.co/meta-llama/
 
 ### openbridge-intent (OpenBridge's own command model)
 
-`openbridge-intent:latest` is Llama 3.2 3B Instruct plus a LoRA adapter trained for OpenBridge (`dev/ai_training`, `docs/AI_TRAINING.md`), built and served locally by the owner's Ollama. As a derivative of Llama 3.2, the Llama 3.2 Community License and Acceptable Use Policy apply to it; **Built with Llama.** Neither the adapter nor the merged weights are redistributed in this repository or in the Windows download. Pinned digest: `5198596071c9e6664ca1dc056a9d9724d0cbb14be982da138d2c8a8c897a48f2` (`src/ai/own_model.py`, `config/runtime_models.json`). Distributing the model later requires the license's attribution and naming terms to be reviewed first.
+`openbridge-intent:latest` is Llama 3.2 3B Instruct plus a LoRA adapter trained for OpenBridge (`dev/ai_training`, `docs/AI_TRAINING.md`), built and served locally by the owner's Ollama. As a derivative of Llama 3.2, the Llama 3.2 Community License and Acceptable Use Policy apply to it; **Built with Llama.** Neither the adapter nor the merged weights are redistributed in this repository or in the Windows download. Pinned digest: `6e20da0a7dbd2ddc0bded47c9a2a6b3cdf2cbc3719d5eccca8ad50d2a433bf60` (`src/ai/own_model.py`, `config/runtime_models.json`). Distributing the model later requires the license's attribution and naming terms to be reviewed first.
 
 ### Hosted Meta and development contributions
 

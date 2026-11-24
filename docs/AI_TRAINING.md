@@ -6,7 +6,7 @@ running on the owner's own GPU. It never acts by itself: every reply goes throug
 
 ## The official model, everywhere a request is understood
 
-Since 23 November 2026, `openbridge-intent:latest` is declared in [config/runtime_models.json](../config/runtime_models.json)
+Since 23 November 2026, `openbridge-intent:latest` (v4 since 24 November) is declared in [config/runtime_models.json](../config/runtime_models.json)
 as the **official command model** (digest-pinned like the other built-in models, `src/ai/own_model.py`). It is tried
 first by every path that turns words into a skill:
 
@@ -42,7 +42,29 @@ command model is not installed, or answers something unusable, the general model
 | Training | LoRA r16 continued from the v1 adapter, 1.2 epochs, lr 1.5e-4, 401 steps, 3 h 10 on an RTX 4060 Ti (9.4 GB VRAM). |
 | Scoring | `evaluate.py`: every reply goes through the router's own `_interpret()`; "fully correct" = same decision, skill, params and device refs. |
 
-## Results
+## v4 (24 November 2026): household chores, now the official model
+
+v4 continues the v3 adapter on `make_dataset_v4.py` (3 212 lines: v3 + 185 chore lines + 165 robot-vacuum lines that
+name the robot), 1 epoch, lr 1e-4, 402 steps, 3 h 22 on the RTX 4060 Ti. Scores on **exactly the same requests** as v3:
+
+| Test set | v3 | **v4** |
+|---|---|---|
+| Hand-written chore requests, never trained on (17) | 47.1 % | **88.2 %** (decision 100 %, 0 chore run as a command) |
+| Held-out chore templates (24) | 37.5 % | **95.8 %** |
+| Home held-out templates (132) | 90.2 % | **93.2 %** |
+| Every held-out template (417) | 94.2 % | **94.5 %** |
+| All hand-written requests (201) | **96.0 %** | 95.5 % (−1 request) |
+| Home requests written by hand (36) | **100 %** | 97.2 % (−1 request) |
+
+New misses: "mets le salon à 20 degrés" (temperature, wrong device ref), "fais sonner le robot" (start instead of
+find), "un peu plus de volume" (acts instead of asking which TV). Four v3 misses are fixed. The owner chose v4 for its
+gain on chores and home requests; v3 stays installed as `openbridge-intent-v3`.
+
+**Training on Windows: keep PyTorch inside the card's memory.** The first two v4 runs crawled at 100-250 s per step
+instead of ~30 s: PyTorch's cache grew to the whole 16 GB card, and Windows silently spilled the rest into shared RAM.
+`train_lora.py --vram-fraction 0.72` caps it (9.3 GB used, full speed); use it whenever other apps share the GPU.
+
+## Results (v3)
 
 Served by Ollama (GGUF q8_0, 3.4 GB), median **0.94 s** per request on an RTX 4060 Ti. The PyTorch adapter gives
 exactly the same scores at 6.5 s.
@@ -81,7 +103,7 @@ v1 (12 skills only) on its own test set: 96.6 %. Base Llama 3.2 3B before traini
     TV requests are asked back. Follow-ups ("pause it") keep their device from the conversation.
   - **v4 data** (`make_dataset_v4.py`): about 70 chore phrasings in French, US and UK English (bins, dishes, laundry,
     pets, plants...), all "no registered skill does this", next to every vacuum command that names the robot;
-    hand-written chore requests held out (`chores_novel`). Retraining from the v3 adapter: see Results when done.
+    hand-written chore requests held out (`chores_novel`). Trained into v4: see [v4](#v4-24-november-2026-household-chores-now-the-official-model).
 - **Ollama import:** Ollama 0.40 on Windows cannot import merged safetensors without the MLX runtime, so the model
   goes through a GGUF conversion with llama.cpp (`convert_hf_to_gguf.py --outtype q8_0`), then
   `ollama create openbridge-intent`. `dev/ai_training/serve_hf.py` serves the adapter directly when that is not
@@ -93,6 +115,7 @@ v1 (12 skills only) on its own test set: 96.6 %. Base Llama 3.2 3B before traini
 
 ```
 python dev/ai_training/make_dataset_v3.py --out E:/OpenBridgeAI/data_v3
+python dev/ai_training/make_dataset_v4.py --out E:/OpenBridgeAI/data_v4 --v3 E:/OpenBridgeAI/data_v3   # v4: + chores
 python dev/ai_training/train_lora.py --base <llama-3.2-3b-instruct> --data E:/OpenBridgeAI/data_v3 \
     --out E:/OpenBridgeAI/runs/llama3b_v3 --init-adapter E:/OpenBridgeAI/runs/llama3b/adapter --epochs 1.2 --lr 1.5e-4
 python dev/ai_training/export_ollama.py --base <llama-3.2-3b-instruct> --adapter E:/OpenBridgeAI/runs/llama3b_v3/adapter \
