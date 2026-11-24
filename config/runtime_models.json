@@ -3,12 +3,12 @@
   "environment": "runtime",
   "model_calls": [
     {
-      "purpose": "official_command_model_openbridge_intent_v3",
+      "purpose": "official_command_model_openbridge_intent_v4",
       "provider": "ollama",
       "model_id": "openbridge-intent:latest",
       "execution": "local",
       "endpoint": "http://127.0.0.1:11434",
-      "manifest_digest": "5198596071c9e6664ca1dc056a9d9724d0cbb14be982da138d2c8a8c897a48f2"
+      "manifest_digest": "6e20da0a7dbd2ddc0bded47c9a2a6b3cdf2cbc3719d5eccca8ad50d2a433bf60"
     },
     {
       "purpose": "explicit_local_numeric_evidence_advisory_and_agent_plan",
@@ -35,5 +35,5 @@
       "manifest_digest": "de878ce33ad81d060001db1469a02eebe4d86f0ad58cfe52dc062fdcbe4464c1"
     }
   ],
-  "notes": "OpenBridge's own command model (openbridge-intent v3: Llama 3.2 3B + a LoRA adapter trained for OpenBridge) is the official model for understanding requests; the other built-in models are free, pinned Meta open-weight models served locally by Ollama; default inference disabled. No paid model is built in. Owners may connect their own model or API by hand (openbridge ai add); those entries live in the per-user ai_providers.json, never in this manifest."
+  "notes": "OpenBridge's own command model (openbridge-intent v4: Llama 3.2 3B + a LoRA adapter trained for OpenBridge) is the official model for understanding requests; the other built-in models are free, pinned Meta open-weight models served locally by Ollama; default inference disabled. No paid model is built in. Owners may connect their own model or API by hand (openbridge ai add); those entries live in the per-user ai_providers.json, never in this manifest."
 }
