@@ -52,6 +52,12 @@ complete test suites and benchmarks on your real hardware, and an emulator of yo
   <a href="https://www.activelook.net"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/activelook-white.svg"><img src="docs/assets/partners/activelook-black.svg" height="40" alt="ActiveLook by Microoled"></picture></a>
 </p>
 
+<p align="center">
+  <sub><b>HARDWARE SPONSOR</b></sub>
+  <br><br>
+  <a href="https://heltec.cn/"><img src="docs/assets/partners/heltec.png" height="40" alt="Heltec Automation logo"></a>&nbsp;<a href="https://heltec.cn/"><b>Heltec Automation</b></a>
+</p>
+
 ---
 
 ## 🎬 See it in action
@@ -239,6 +245,22 @@ These capabilities are **implemented and covered by automated tests**. What they
   <a href="docs/partners/ENGO.md"><img src="https://img.shields.io/badge/Integration_plan-ENGO_×_OpenBridge-e7f11f?style=for-the-badge&labelColor=1a1a1a" alt="Integration plan"></a>
 </p>
 
+### 📡 Our hardware sponsor
+
+<p align="center">
+  <a href="https://heltec.cn/"><img src="docs/assets/partners/heltec.png" height="72" alt="Heltec Automation logo"></a>
+</p>
+
+**[Heltec Automation](https://heltec.cn/)** makes IoT and LoRa hardware: ESP32 development boards, LoRa / LoRaWAN modules and nodes. Heltec is sending OpenBridge **one Heltec WiFi LoRa 32 V4 development board** (ESP32-S3 + SX1262 LoRa, Wi-Fi, Bluetooth LE, OLED screen). Thank you, Heltec!
+
+- 🔧 **The first physical ESP32 in the lab:** OpenBridge's ESP32 agent has so far been verified on Espressif's QEMU emulator only; this board takes it onto real hardware.
+- 📶 **Wi-Fi, Bluetooth LE and long-range LoRa on one board:** a real test bench for the agent, its screen and its radios.
+
+<p align="center">
+  <a href="https://heltec.cn/"><img src="https://img.shields.io/badge/Discover_Heltec-heltec.cn-0b5fa5?style=for-the-badge" alt="Discover Heltec Automation"></a>
+  <a href="https://heltec.org/project/wifi-lora-32-v4/"><img src="https://img.shields.io/badge/The_board-WiFi_LoRa_32_V4-1f2a52?style=for-the-badge" alt="Heltec WiFi LoRa 32 V4"></a>
+</p>
+
 ### 🚀 Become the next partner
 
 **ENGO took the first step. Your devices could be next.**
@@ -286,6 +308,8 @@ TV, montre, téléphone, box internet, robot aspirateur, PC : chacun est enferm�
 - 🛡️ **Gardez le contrôle** : rien ne s'exécute sans votre accord, chaque action est **vérifiée sur l'appareil réel**, et l'IA tourne **en local**, sur votre propre machine.
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
+
+**[Heltec Automation](https://heltec.cn/)** soutient le projet comme **sponsor matériel** : Heltec nous envoie une **carte de développement Heltec WiFi LoRa 32 V4** (ESP32-S3 + LoRa SX1262, Wi-Fi, Bluetooth LE, écran OLED). Elle sera le premier ESP32 physique du labo : l'agent ESP32 d'OpenBridge n'a été vérifié jusqu'ici que sur l'émulateur QEMU d'Espressif. Merci Heltec !
 
 **Vous fabriquez ou distribuez des appareils connectés ?** Rejoignez ENGO. Je cherche des partenaires pour du **matériel à conserver** (don ou prêt permanent, jamais de prêt limité dans le temps, pour que les tests et benchmarks tournent à chaque version) et un accès à vos **API / SDK**. En échange : une **intégration native** dans OpenBridge, des **scripts dédiés**, de **nouvelles fonctionnalités**, des **centaines voire milliers de tests et benchmarks sur le matériel réel**, un **rapport de compatibilité public et vérifié**, et un retour technique détaillé sur votre API.
 
