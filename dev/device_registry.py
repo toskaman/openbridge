@@ -88,6 +88,21 @@ def safe(s):
     return str(s).replace('|', '\\|').replace('\n', ' ').replace('\r', ' ').replace('<', '&lt;').replace('>', '&gt;')[:200]
 
 
+
+def partner_lines():
+    """Hardware partner credits (promised to partners, see docs/partners/COMMITMENTS.md)."""
+    path = ROOT / 'docs' / 'partners' / 'partners.json'
+    if not path.exists():
+        return []
+    partners = json.loads(path.read_text(encoding='utf8'))['partners']
+    out = ['## Hardware partners', '',
+           'These companies provide real hardware so OpenBridge can be built and tested on their devices. Thank you.', '']
+    for p in partners:
+        products = ', '.join('[%s](%s)' % (x['name'], x['url']) if x.get('url') else x['name'] for x in p['products'])
+        out.append('- **[%s](%s)**: %s. [Partner page](%s)' % (p['name'], p['url'], products, p['page'][5:]))
+    return out + ['', '## Test runs', '']
+
+
 def render(records):
     most_recent = {}
     for rec in records:
@@ -99,6 +114,7 @@ def render(records):
     lines = ['# OpenBridge — Hardware Compatibility and Evidence', '',
              '> Generated from `docs/DEVICE_EVIDENCE.json` by `python -m dev.device_registry --render`.',
              '> No entry implies support for all functions. Physical and virtual environments are distinct.', '',
+             *partner_lines(),
              '| Device | Environment | Integration | Platform | Result | Validity | Tested operations | Date (UTC) | Evidence |',
              '|---|---|---|---|---|---|---|---|---|']
     for r in sorted(records, key=lambda x: (x['device_alias'].lower(), x['test_id'])):

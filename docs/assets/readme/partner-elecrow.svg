@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 380" width="1280" height="380" role="img" aria-label="Hardware partner: Elecrow, CrowPanel Advance 4.3-inch (ESP32-S3) and ESP32-H2 module">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#070b1a"/><stop offset="0.6" stop-color="#0b1a24"/><stop offset="1" stop-color="#0c1f1c"/></linearGradient>
+    <radialGradient id="g" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3ecf8e" stop-opacity="0.2"/><stop offset="1" stop-color="#3ecf8e" stop-opacity="0"/></radialGradient>
+    <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f2a2a" stop-opacity="0.95"/><stop offset="1" stop-color="#08161a" stop-opacity="0.98"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity="0.035"/></pattern>
+    <style>
+      .k{font:700 14px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;letter-spacing:5px;fill:#2dd4bf}
+      .w{font:800 64px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#ffffff;letter-spacing:1px}
+      .s{font:500 18px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#a9b8dc}
+      .sb{font:700 18px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#ffffff}
+      .m{font:600 15px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#9fb3d9}
+      .t{font:600 15px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#e6fff4}
+      .td{font:500 12px 'Segoe UI',Inter,Helvetica,Arial,sans-serif;fill:#3ecf8e;fill-opacity:.8}
+      .blink{animation:b 2.4s ease-in-out infinite}
+      @keyframes b{0%,100%{opacity:1}50%{opacity:.35}}
+      .l1{animation:in 6s ease-in-out infinite}
+      .l2{animation:in 6s ease-in-out infinite;animation-delay:2s}
+      .l3{animation:in 6s ease-in-out infinite;animation-delay:4s}
+      @keyframes in{0%,8%{opacity:.3}15%,40%{opacity:1}55%,100%{opacity:.3}}
+    </style>
+  </defs>
+  <rect width="1280" height="380" rx="20" fill="url(#bg)"/>
+  <rect width="1280" height="380" rx="20" fill="url(#grid)"/>
+  <rect x="0.5" y="0.5" width="1279" height="379" rx="20" fill="none" stroke="#2dd4bf" stroke-opacity=".25"/>
+  <text x="64" y="74" class="k">OFFICIAL HARDWARE PARTNER</text>
+  <rect x="64" y="112" width="12" height="56" rx="3" fill="#3ecf8e"/>
+  <text x="90" y="164" class="w">Elecrow</text>
+  <text x="64" y="214" class="s">ESP32 displays, boards and modules</text>
+  <text x="64" y="256" class="s">sending OpenBridge a <tspan class="sb">CrowPanel Advance 4.3"</tspan></text>
+  <text x="64" y="284" class="s">and an <tspan class="sb">ESP32-H2</tspan> module for Matter / Thread</text>
+  <circle cx="72" cy="326" r="6" fill="#3ecf8e" class="blink"/>
+  <text x="88" y="332" class="m">Integration in progress  ·  touch control panel  ·  Matter / Thread testing</text>
+  <circle cx="960" cy="190" r="200" fill="url(#g)"/>
+  <rect x="742" y="62" width="436" height="264" rx="20" fill="#0a0f14" stroke="#3ecf8e" stroke-opacity=".45" stroke-width="1.5"/>
+  <rect x="760" y="80" width="400" height="228" rx="10" fill="url(#scr)"/>
+  <text x="780" y="108" class="td">OPENBRIDGE · CONTROL PANEL</text>
+  <g class="l1"><rect x="780" y="124" width="174" height="74" rx="10" fill="#3ecf8e" fill-opacity=".14" stroke="#3ecf8e" stroke-opacity=".5"/><text x="796" y="156" class="t">Living room TV</text><text x="796" y="180" class="td">volume 21 ✓</text></g>
+  <g class="l2"><rect x="966" y="124" width="174" height="74" rx="10" fill="#3ecf8e" fill-opacity=".14" stroke="#3ecf8e" stroke-opacity=".5"/><text x="982" y="156" class="t">Robot vacuum</text><text x="982" y="180" class="td">docking</text></g>
+  <g class="l3"><rect x="780" y="210" width="360" height="56" rx="10" fill="#3ecf8e" fill-opacity=".14" stroke="#3ecf8e" stroke-opacity=".5"/><text x="796" y="244" class="t">Thread lamp  ·  on</text></g>
+  <text x="780" y="292" class="td">Concept: OpenBridge on the CrowPanel touch screen</text>
+</svg>

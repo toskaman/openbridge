@@ -14,7 +14,7 @@ Reading the results honestly:
 - Muse Glimmer is much more reliable than Llama 3B: 1.6× more correct decisions, no false action proposals, failures are blocked validations (6 ungrounded summaries, 3 incomplete completions), never unsafe execution.
 - On this deliberately narrow task, a hand-written rule is as accurate. The model's added value is a grounded explanation and fewer unsafe proposals (3 vs 9), not raw accuracy. The deterministic gate is what guarantees safety: 100% of unsafe proposals from every route were refused.
 - An earlier Llama 3B run (docs/benchmark/agent-benchmark-llama3b-v1.json, 53.3% valid / 46.7% correct) led to a schema fix (separate branches for observe-only and action plans) before the runs above.
-- Inputs are synthetic. Physical results are recorded separately (docs/agent-loop-receipt.json, docs/physical-package-receipt.json). No battery, speed or storage gains are claimed.
+- Inputs are synthetic. Physical results are recorded separately (docs/evidence/receipts/agent-loop-receipt.json, docs/evidence/receipts/physical-package-receipt.json). No battery, speed or storage gains are claimed.
 
 ## Coverage advisor ablation (synthetic graphs, 26 Oct 2026)
 
@@ -94,17 +94,17 @@ not 72). Unfavourable result kept as registered: no model arm beat the rules.
 | Receipt | Recorded | Kind |
 |---|---|---|
 | `docs/runtime-meta-receipt.json` | 2026-10-26T16:57Z | synthetic advisory, Muse Spark 1.3 (recorded runtime-core call, $0.00335, SIMULATED facts) |
-| `docs/meta-design-receipt.json` | 2026-10-26T16:39Z | design-time Meta call (not runtime evidence) |
-| `docs/physical-transaction-attempt.json` | 2026-10-26T18:22+01:00 | physical transaction attempt record |
-| `docs/local-meta-adb-receipt.json` | 2026-10-26T19:08Z | local Llama vs real ADB facts (grounded summary) |
-| `docs/agent-loop-receipt.json` | 2026-10-26T19:25Z | REAL_AGENT_LOOP: observe → local Llama plan → gate → consent → execute → undo |
-| `docs/physical-package-receipt.json` | 2026-10-26T20:17+01:00 | VERIFIED_CHANGE_AND_UNDO, one allowlisted app, reverted |
-| `docs/glimmer-smoke-receipt.json` | 2026-10-26T21:10+01:00 | real local Glimmer inference, synthetic facts, RTX 4060 Ti |
-| `docs/crash-recovery-receipt.json` | 2026-10-26T21:50+01:00 | crash-recovery drill record |
-| `docs/tuya-hardware-receipt.json` | 2026-10-27T20:37 | Tuya hardware observation |
+| `docs/evidence/receipts/meta-design-receipt.json` | 2026-10-26T16:39Z | design-time Meta call (not runtime evidence) |
+| `docs/evidence/receipts/physical-transaction-attempt.json` | 2026-10-26T18:22+01:00 | physical transaction attempt record |
+| `docs/evidence/receipts/local-meta-adb-receipt.json` | 2026-10-26T19:08Z | local Llama vs real ADB facts (grounded summary) |
+| `docs/evidence/receipts/agent-loop-receipt.json` | 2026-10-26T19:25Z | REAL_AGENT_LOOP: observe → local Llama plan → gate → consent → execute → undo |
+| `docs/evidence/receipts/physical-package-receipt.json` | 2026-10-26T20:17+01:00 | VERIFIED_CHANGE_AND_UNDO, one allowlisted app, reverted |
+| `docs/evidence/receipts/glimmer-smoke-receipt.json` | 2026-10-26T21:10+01:00 | real local Glimmer inference, synthetic facts, RTX 4060 Ti |
+| `docs/evidence/receipts/crash-recovery-receipt.json` | 2026-10-26T21:50+01:00 | crash-recovery drill record |
+| `docs/evidence/receipts/tuya-hardware-receipt.json` | 2026-10-27T20:37 | Tuya hardware observation |
 | `docs/DEVICE_EVIDENCE.json` | from 2026-10-29T17:45Z | hardware test registry (multiple rows; see HARDWARE_TEST_HISTORY.md) |
-| `docs/local-meta-smoke-receipt.json` | undated (no timestamp field in file) | local Llama smoke, SIMULATED facts |
-| `docs/simulated-transaction-receipt.json` | undated (no timestamp field in file) | synthetic rollback drill only, not physical evidence |
+| `docs/evidence/receipts/local-meta-smoke-receipt.json` | undated (no timestamp field in file) | local Llama smoke, SIMULATED facts |
+| `docs/evidence/receipts/simulated-transaction-receipt.json` | undated (no timestamp field in file) | synthetic rollback drill only, not physical evidence |
 
 ### Missing / unpublished artifacts (explicit)
 

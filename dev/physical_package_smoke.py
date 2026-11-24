@@ -59,7 +59,7 @@ def main():
         'verification':'Each read re-checks USB authorization and build identity, then requires the exact dumpsys user-0 enabled code to agree with pm list -e and -d.',
         'privacy':'Serial, build fingerprint, address and private content excluded',
         'limitation':'One controlled reversible app-state loop. App data is preserved by disable-user. No universal compatibility claim.'}
-    out='docs/physical-package-receipt.json'
+    out='docs/evidence/receipts/physical-package-receipt.json'
     if not failed and not (applied['state']=='VERIFIED' and observed==DISABLED and restored['state']=='REVERTED' and after==before):
         receipt['outcome']='UNVERIFIED'
     Path(out).write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8')

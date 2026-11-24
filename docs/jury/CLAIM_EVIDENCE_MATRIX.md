@@ -21,13 +21,13 @@ is preserved in git history, not deleted.
 
 | Claim | Status | Evidence |
 |---|---|---|
-| Discovers mDNS, SSDP, ADB USB/Wi-Fi, Freebox OS (authorized), BLE via relays | REAL_HARDWARE_VERIFIED | EVIDENCE_LEDGER.md, README screenshot |
-| One graph, strong-ID merge only, grants per link | REAL_HARDWARE_VERIFIED | TV mDNS+ADB merge in EVIDENCE_LEDGER.md |
+| Discovers mDNS, SSDP, ADB USB/Wi-Fi, Freebox OS (authorized), BLE via relays | REAL_HARDWARE_VERIFIED | docs/evidence/EVIDENCE_LEDGER.md, README screenshot |
+| One graph, strong-ID merge only, grants per link | REAL_HARDWARE_VERIFIED | TV mDNS+ADB merge in docs/evidence/EVIDENCE_LEDGER.md |
 | ISP Router API (e.g., Freebox OS / UPnP-IGD): Freebox inventory | REAL_HARDWARE_VERIFIED | docs/FREEBOX_INTEGRATION.md |
 | ISP Router API: generic UPnP-IGD read-only | SIMULATED_VERIFIED (fake IGD) | tests/fabric/test_upnp_igd.py; real read: `python -m dev.igd_read` (pending) |
 | BLE relay through phone and TV, signed protocol, revoke | REAL_HARDWARE_VERIFIED | docs/RELAY_SECURITY.md |
-| Reversible write with exact Undo and read-back | REAL_HARDWARE_VERIFIED | docs/physical-package-receipt.json |
-| Crash-recoverable physical workflows (not ACID): 5 kill points | REAL_HARDWARE_VERIFIED | crash drill 5/5, EVIDENCE_LEDGER.md |
+| Reversible write with exact Undo and read-back | REAL_HARDWARE_VERIFIED | docs/evidence/receipts/physical-package-receipt.json |
+| Crash-recoverable physical workflows (not ACID): 5 kill points | REAL_HARDWARE_VERIFIED | crash drill 5/5, docs/evidence/EVIDENCE_LEDGER.md |
 | Cross-transport timeline + competing hypotheses + read-only probe | SIMULATED_VERIFIED (CI drills + independent labels) | tests/runtime/test_timeline.py; real TV+router capture pending (prior live-capture wording needs re-verification) |
 | Privacy-preserving cloud escalation (never "zero-knowledge") | SIMULATED_VERIFIED (golden corpus + unit) | tests/runtime/test_redact.py, tests/runtime/test_cloud_escalation.py; no ACCEPTED live escalation receipt yet (the recorded Spark call is the 27-Oct synthetic advisory, not a V4-05 run) |
 | Meta Model API live call (muse-spark-1.3) | REAL (synthetic facts) | docs/runtime-meta-receipt.json, EVIDENCE_LEDGER 27 Oct |
@@ -37,7 +37,7 @@ is preserved in git history, not deleted.
 | Voice command (local STT worker; cloud Muse Voice path kept, consent-gated) | REAL_HARDWARE_VERIFIED: frozen corpus 16/16 no wrong-skill, owner voice 2/2 | docs/evidence/v4/overnight/N2_N3_RESULTS.md; worker isolation unit-verified |
 | Wear OS dynamic manifest | SIMULATED_VERIFIED | tests/fabric/test_wear_manifest.py; Watch7 run pending (prior REAL wording needs re-verification) |
 | PC 2 as a client: owner jobs (`pc_job`) and Meta inference worker | jobs REAL_HARDWARE_VERIFIED (EVIDENCE_LEDGER); inference worker SIMULATED_VERIFIED | tests/runtime/test_windows_bridge.py, tests/unit/test_scheduler.py; real job + `python -m dev.benchmark_scheduler` (pending) |
-| Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/dock; manual moves EXECUTED_UNVERIFIED) | tests/fabric/test_tuya_local.py; EVIDENCE_LEDGER.md (27-Oct movement run); docs/DEVICE_CAPABILITIES.md; live re-verify 30 Oct (facts + seek accepted, row 26) |
+| Tuya vacuum: reads, reversible suction/volume, full robot commands | REAL_HARDWARE_VERIFIED (reads, suction + exact Undo, seek, start/pause/dock; manual moves EXECUTED_UNVERIFIED) | tests/fabric/test_tuya_local.py; docs/evidence/EVIDENCE_LEDGER.md (27-Oct movement run); docs/DEVICE_CAPABILITIES.md; live re-verify 30 Oct (facts + seek accepted, row 26) |
 | Meta-only runtime | VERIFIED (static + network trace) | src/ai/registry.py, tests/unit/test_meta_only_network_trace.py |
 | Capability explorer: UI schemas matched to live device capabilities | SIMULATED_VERIFIED + live discovery smoke (2 cards/118 widgets) | tests/fabric/test_capability_explorer.py, tests/runtime/test_explorer_api.py (§6 `5224d99`) |
 | Hardware intelligence: PC facts + task rankers + micro-benchmarks | REAL_HARDWARE_VERIFIED (PC1 + BV9300 live) | tests/fabric/test_hardware_intel.py, tests/runtime/test_hardware_api.py (§9 `2ad4688`) |
@@ -47,8 +47,8 @@ is preserved in git history, not deleted.
 | Official Android emulator driven via adb (level 4, no companion) | EMULATOR_VERIFIED (capture/probe/send + cleanup) | docs/evidence/avd-ob-pixel-30oct.md (registry row 18) |
 | Relay dashboards: generated/patched/saved/restored UIs, reconnect repush | SIMULATED_VERIFIED + live watch run 30 Oct | tests/unit/test_dashboards*.py (§8 `972b545`); docs/evidence/g04-watch-30oct.md (registry row 22) |
 | RetroArch loopback control (VERSION/GET_STATUS verified; VOLUME_UP sent-unverified) | REAL_HARDWARE_VERIFIED (host-PC software loopback only: 127.0.0.1 UDP to local RetroArch process, menu-state only; no external physical device) | docs/evidence/retroarch-loopback-30oct.md (registry row 19, §13 `db5dedf`) |
-| Stress hardening: locks, byte cap, typed IO, crash drill | SIMULATED_VERIFIED + crash drill 5/5 | docs/STRESS_14_REPORT.md (§14 `ef58712`) |
-| CLI + headless + GUI/CLI parity + jury pack | REAL_HARDWARE_VERIFIED (CLI live runs) + SIMULATED_VERIFIED (parity) | docs/CLI_REFERENCE.md, docs/P30_MODEL_MATRIX.md, docs/release/P30_GATES_AND_REPORT.md (§P30 `73cfef5`) |
+| Stress hardening: locks, byte cap, typed IO, crash drill | SIMULATED_VERIFIED + crash drill 5/5 | docs/internal/STRESS_14_REPORT.md (§14 `ef58712`) |
+| CLI + headless + GUI/CLI parity + jury pack | REAL_HARDWARE_VERIFIED (CLI live runs) + SIMULATED_VERIFIED (parity) | docs/CLI_REFERENCE.md, docs/internal/P30_MODEL_MATRIX.md, docs/release/P30_GATES_AND_REPORT.md (§P30 `73cfef5`) |
 | Glimmer-synthesized capabilities validated + published + revoked (2) | REAL_HARDWARE_VERIFIED (live phone bundle; pending-kernel staging) | docs/evidence/p30-glimmer-synthesis-30oct.md (registry row 20) |
 | Phone+AVD orchestration via CLI, sha-verified montage | MIXED: REAL_HARDWARE_VERIFIED (BV9300 phone half) + EMULATOR_VERIFIED (Pixel 6 AVD half — emulator, not physical) | docs/evidence/p30-cli-orchestration-30oct.md (registry row 21) |
 | Native controls on real Watch7 + long-press loop; TV 0.11.0 PAIRED | REAL_HARDWARE_VERIFIED (SM-L310 + Android TV) | docs/evidence/g04-watch-30oct.md (registry rows 22-23, G04 PASS) |

@@ -18,6 +18,14 @@ python -m src.server                          # loopback-only server, default po
 
 Then open `http://127.0.0.1:18765` in a browser.
 
+## Hardware partners
+
+OpenBridge is tested on real devices, some of them provided by its hardware partners:
+
+- **[Elecrow](https://www.elecrow.com)**: [CrowPanel Advance 4.3-inch HMI display (ESP32-S3)](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)
+  and ESP32-H2 module (integration in progress, [partner page](partners/ELECROW.md)).
+- **[ENGO](https://www.engoeyewear.com)**: heads-up display smart glasses powered by ActiveLook ([partner page](partners/ENGO.md)).
+
 ## First session
 
 1. Press **Discover my environment** (bounded, read-only look at your network).

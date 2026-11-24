@@ -11,7 +11,7 @@ Historical as of 27-Oct-2026: internal self-review snapshot; ratings provisional
 | Gate | Evidence available | Current bounded assessment |
 |---|---|---|
 | Problem/theme fit | README and capability/service workflow describe consented device interoperability | Plausible fit; exact final chosen official statement/track and 12-second formulation need participant review. |
-| Actual Meta inference in product | `docs/glimmer-smoke-receipt.json`, `docs/forge/tv-glimmer-live-receipt.json`, `docs/runtime-meta-receipt.json`; pinned identities in `config/runtime_models.json` | Recorded product inference exists, distinct from build-time theme generation. No fresh inference performed for rehearsal. |
+| Actual Meta inference in product | `docs/evidence/receipts/glimmer-smoke-receipt.json`, `docs/forge/tv-glimmer-live-receipt.json`, `docs/runtime-meta-receipt.json`; pinned identities in `config/runtime_models.json` | Recorded product inference exists, distinct from build-time theme generation. No fresh inference performed for rehearsal. |
 | Meta-only runtime | Registry/config, broker boundary tests and `tests/unit/test_meta_only_network_trace.py` | Tested paths support declared policy. Socket interception does not establish complete OS/process/runtime egress coverage; see `THREAT_REVIEW.md`. |
 | Provenance, rights and public source | `CONTRIBUTIONS.md`, `THIRD_PARTY.md`; anonymous public baseline clone in `OFFLINE_REPLAY.md` | Evidence exists; final public revision, exact artifact/service terms and participant declarations still require review. |
 | Accessible final <=180-second demo | Historical stills and journey receipts exist | NOT ASSESSED: final video on owner hold. No video generated. |

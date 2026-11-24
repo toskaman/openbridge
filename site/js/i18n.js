@@ -94,6 +94,8 @@
     'home.b5.p': 'Demander pourquoi quelque chose ne marche pas, et obtenir une réponse fondée uniquement sur des faits observés.',
     'home.b6.h': 'Tableaux de bord portables',
     'home.b6.p': 'Exporter un ensemble de commandes vers un autre foyer et le réapprouver. Aucune autorisation n’est héritée.',
+    'home.pa.elecrow': 'Elecrow CrowPanel Advance 4.3 pouces (ESP32-S3) avec module ESP32-H2 : intégration en cours',
+    'compat.partners': 'Partenaires matériels :',
     'home.g1.h': 'De nouvelles fonctionnalités, sans nouveau firmware', 'home.g1.p': 'Commandes, alertes, voix et parcours multi-appareils, construits sur ce que votre appareil expose déjà.',
     'home.g2.h': 'Interopérabilité avec les autres marques', 'home.g2.p': 'Votre appareil fonctionne avec les TV, montres, téléphones, box, robots et PC d’autres fabricants, sous un même modèle de consentement et de vérification.',
     'home.g3.h': 'Des tests et benchmarks complets', 'home.g3.p': 'Des centaines de tests automatisés et des benchmarks sur le matériel réel pour votre produit, relancés à chaque changement, sur trois systèmes d’exploitation.',

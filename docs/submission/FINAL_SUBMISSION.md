@@ -20,7 +20,7 @@ confirmations remain owner actions (see bottom).
   (app/evidence/media packs + SHA-256 checksums).
 - Jury entry: https://github.com/toskaman/openbridge/blob/v0.3.1/docs/jury/JURY_START_HERE.md
 - License at the submitted revision: PolyForm Strict 1.0.0
-  (see docs/LICENSING.md) + HACKATHON_EVALUATION_PERMISSION.md,
+  (see docs/LICENSING.md) + LICENSES/HACKATHON_EVALUATION_PERMISSION.md,
   the scoped judge-run grant.
 - Members: owner-declared in the portal (OWNER_PENDING — confirm exact list).
 

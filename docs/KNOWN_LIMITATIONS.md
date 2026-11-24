@@ -4,7 +4,7 @@
 - BLE is verified through the phone and TV relays only; this PC has no Bluetooth adapter. Android TV evidence comes from one TV (Android 11).
 - A native Matter controller is not implemented. ESPHome lights, OpenWrt routers and FRITZ!Box routers have written adapters (emulator-validated with loopback round-trip tests, hardware runs pending). Home Assistant is (v0.4.0): Matter, Thread and Zigbee devices paired in Home Assistant are reachable through it, verified with Home Assistant demo devices only ([guide](HOME_ASSISTANT.md)).
 - Router/box configuration is read-only by policy.
-- A physical USB cable pull was verified during revert on the owned Xiaomi phone, followed by quarantine and exact recovery after reconnect. This does not prove cable loss during every write phase or on other devices; see the [evidence ledger](../EVIDENCE_LEDGER.md).
+- A physical USB cable pull was verified during revert on the owned Xiaomi phone, followed by quarantine and exact recovery after reconnect. This does not prove cable loss during every write phase or on other devices; see the [evidence ledger](evidence/EVIDENCE_LEDGER.md).
 - Identity merging is conservative: the same device may appear twice with a "possible duplicate" hint rather than be merged.
 - The local 3B model is weak at planning (53% correct); Muse Glimmer 87%; a simple rule reaches 90% on the narrow benchmark. Safety never depends on the model.
 

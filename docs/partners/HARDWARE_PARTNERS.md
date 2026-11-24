@@ -35,6 +35,19 @@
   <a href="https://heltec.org/project/wifi-lora-32-v4/"><img src="https://img.shields.io/badge/The_board-WiFi_LoRa_32_V4-1f2a52?style=for-the-badge" alt="Heltec WiFi LoRa 32 V4"></a>
 </p>
 
+## Elecrow
+
+<p align="center">
+  <a href="https://www.elecrow.com"><img src="../assets/readme/partner-elecrow.svg" width="100%" alt="Official hardware partner: Elecrow"></a>
+</p>
+
+**[Elecrow](https://www.elecrow.com)** makes ESP32 displays, boards and modules. Elecrow is sending OpenBridge a **[CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)** touch display (ESP32-S3) and an **ESP32-H2** module (Thread / Zigbee / Matter).
+
+- **A touch control panel:** OpenBridge controls on a dedicated wall or desk screen.
+- **Matter and Thread testing** with the ESP32-H2 ([planned notes](elecrow/ESP32-H2_MATTER_THREAD.md), no results claimed yet).
+
+Details, commitments and media authorization: [Elecrow partner page](ELECROW.md).
+
 ## Become the next partner
 
 **ENGO and Heltec took the first step. Your devices could be next.**
@@ -67,6 +80,8 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 <p align="center"><sub>I reply in English and French. Commercial licensing and integration partnerships are available on request.</sub></p>
 
 ## Version française
+
+**[Elecrow](https://www.elecrow.com)** a rejoint le projet comme **partenaire matériel** : Elecrow nous envoie un écran tactile **[CrowPanel Advance 4,3 pouces](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)** (ESP32-S3) et un module **ESP32-H2** (Thread / Zigbee / Matter), pour un écran de commande OpenBridge et des tests Matter / Thread ([page partenaire](ELECROW.md)).
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
 
