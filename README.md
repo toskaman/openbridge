@@ -45,6 +45,33 @@
 
 ---
 
+## What's new
+
+<!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
+
+- `2026-11-25 00:55` **What's new** on the front page: every update, with date and time.
+- `2026-11-24 20:03` **Elecrow joins as hardware partner:** CrowPanel Advance 4.3" (ESP32-S3) and ESP32-H2 for Matter / Thread. Partner promises are now checked in CI.
+- `2026-11-24 16:28` **New README:** shorter, proof figures up top, French in [README.fr.md](README.fr.md).
+
+<details>
+<summary>Older updates</summary>
+
+- `2026-11-24 15:07` **Heltec Automation joins as hardware partner:** a WiFi LoRa 32 V4 board takes the ESP32 agent from QEMU to real hardware.
+- `2026-11-24 14:38` **Partner voice adapter measured:** 98.6 % of a brand's requests understood (45.1 % before), no loss elsewhere. [Results](docs/PARTNER_VOICE_MODEL.md)
+- `2026-11-24 13:48` **Tested on the PICO OS 6 headset emulator:** pairing, signed round trip, revoked relay refused. [Guide](docs/PICO_EMULATOR.md)
+- `2026-11-24 12:44` **OpenBridge's own voice model v4 is official**, now also trained on household chores. [Training](docs/AI_TRAINING.md)
+- `2026-11-23 20:27` **ENGO glasses:** sport and navigation views, French / English.
+- `2026-11-23 19:10` **ENGO glasses hub:** messages, TV, vacuum and voice in your field of view. [Glasses](docs/GLASSES.md)
+- `2026-11-23 14:48` **Asks back when unsure:** the voice model checks with you instead of guessing.
+- `2026-11-23 13:55` **Release 0.5.0 and partner offer:** free 90-day evaluation licence, integrate a device from its OpenAPI. [Plans](docs/partners/PLANS.md)
+
+</details>
+
+<!-- whatsnew:end -->
+
+<sub>Times are Paris time (CET). Full history: [CHANGELOG](CHANGELOG.md).</sub>
+
+---
 ## See it in action
 
 <sub>Filmed with a phone pointed at the real hardware, late October and early November 2026.</sub>

@@ -45,6 +45,33 @@
 
 ---
 
+## Nouveautés
+
+<!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
+
+- `2026-11-25 00:55` Section **Nouveautés** en tête de page : chaque mise à jour, avec date et heure.
+- `2026-11-24 20:03` **Elecrow devient partenaire matériel :** CrowPanel Advance 4,3" (ESP32-S3) et ESP32-H2 pour Matter / Thread. Les engagements envers les partenaires sont vérifiés en CI.
+- `2026-11-24 16:28` **Nouveau README :** plus court, chiffres de preuve en haut, français dans [README.fr.md](README.fr.md).
+
+<details>
+<summary>Mises à jour précédentes</summary>
+
+- `2026-11-24 15:07` **Heltec Automation devient partenaire matériel :** une carte WiFi LoRa 32 V4 fait passer l'agent ESP32 de QEMU au vrai matériel.
+- `2026-11-24 14:38` **Adaptateur vocal partenaire mesuré :** 98,6 % des demandes d'une marque comprises (45,1 % avant), sans perte ailleurs. [Résultats](docs/PARTNER_VOICE_MODEL.md)
+- `2026-11-24 13:48` **Testé sur l'émulateur du casque PICO OS 6 :** appairage, aller-retour signé, relais révoqué refusé. [Guide](docs/PICO_EMULATOR.md)
+- `2026-11-24 12:44` **Le modèle vocal v4 d'OpenBridge devient officiel**, entraîné aussi sur les tâches ménagères. [Entraînement](docs/AI_TRAINING.md)
+- `2026-11-23 20:27` **Lunettes ENGO :** vues sport et navigation, français / anglais.
+- `2026-11-23 19:10` **Hub des lunettes ENGO :** messages, TV, aspirateur et voix dans votre champ de vision. [Lunettes](docs/GLASSES.md)
+- `2026-11-23 14:48` **Demande quand il hésite :** le modèle vocal vous pose la question au lieu de deviner.
+- `2026-11-23 13:55` **Version 0.5.0 et offre partenaire :** licence d'évaluation gratuite de 90 jours, intégration d'un appareil depuis son OpenAPI. [Offres](docs/partners/PLANS.md)
+
+</details>
+
+<!-- whatsnew:end -->
+
+<sub>Heures de Paris. Historique complet : [CHANGELOG](CHANGELOG.md).</sub>
+
+---
 ## En action
 
 <sub>Filmé au téléphone sur le vrai matériel, fin octobre et début novembre 2026.</sub>

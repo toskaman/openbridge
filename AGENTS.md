@@ -12,6 +12,17 @@ Before changing the README, the docs, the website or anything generated from the
 4. Never publish partner results that were not measured on the real device. "Planned" stays "planned".
 5. Run `python -m unittest tests.unit.test_partner_commitments` before finishing.
 
+## "What's new" log: update it on EVERY change (non-negotiable)
+
+The README has a "What's new" section just above "See it in action" (between `<!-- whatsnew:start` and `<!-- whatsnew:end -->`).
+Every change that ships (feature, partner, doc, fix people would notice) adds one line there, in the same PR:
+
+1. Format: ``- `YYYY-MM-DD HH:MM` **Short title:** one plain sentence.`` Paris time, newest first.
+2. Keep the 3 newest entries visible; move older ones inside the `<details>` block ("Older updates").
+3. Add the same entry, translated, to `README.fr.md` (same date and time).
+4. Also add the matching CHANGELOG line.
+5. `tests/unit/test_whats_new.py` checks the format, the order and that both languages match.
+
 ## Other house rules
 
 - Emulated or simulated results are always labelled as such and never counted as physical proof.
