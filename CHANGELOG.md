@@ -7,8 +7,8 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 - 🗣️ **Partner voice adapter, measured:** trained on the fictional Acme brand from the official v4 model, it gets 98.6 %
   of held-out Acme requests right (official model: 45.1 %) with no loss on the base test sets.
   [Results](docs/PARTNER_VOICE_MODEL.md#example-results-the-fictional-acme-brand-24-november-2026)
-- 📡 **New hardware sponsor: [Heltec Automation](https://heltec.cn/).** Heltec is sending a WiFi LoRa 32 V4 board
-  (ESP32-S3 + SX1262 LoRa): the first physical ESP32 for the agent, so far verified on QEMU only. [README](README.md#-our-hardware-sponsor)
+- 📡 **New hardware partner: [Heltec Automation](https://heltec.cn/).** Heltec is sending a WiFi LoRa 32 V4 board
+  (ESP32-S3 + SX1262 LoRa): the first physical ESP32 for the agent, so far verified on QEMU only. [README](README.md#-heltec-automation)
 - 🥽 **Tested on the PICO headset emulator:** the Companion pairs with PICO OS 6 (official PICO Emulator 6.2.1), runs
   a signed relay round trip and is refused once revoked. The emulator image crashes hardware-accelerated apps, so
   `python -m dev.build_companion --software-rendering` makes a test-only build; `cloud_e2e.py` now handles multi-display
