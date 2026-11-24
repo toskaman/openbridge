@@ -53,7 +53,7 @@ complete test suites and benchmarks on your real hardware, and an emulator of yo
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.activelook.net"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/activelook-white.svg"><img src="docs/assets/partners/activelook-black.svg" height="40" alt="ActiveLook by Microoled"></picture></a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://heltec.cn/"><img src="docs/assets/partners/heltec.png" height="40" alt="Heltec Automation logo"></a>&nbsp;<a href="https://heltec.cn/"><b>Heltec Automation</b></a>
+  <a href="https://heltec.cn/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/heltec-white.svg"><img src="docs/assets/partners/heltec-black.svg" height="40" alt="Heltec Automation"></picture></a>
 </p>
 
 ---
@@ -245,10 +245,10 @@ These capabilities are **implemented and covered by automated tests**. What they
   <a href="docs/partners/ENGO.md"><img src="https://img.shields.io/badge/Integration_plan-ENGO_×_OpenBridge-e7f11f?style=for-the-badge&labelColor=1a1a1a" alt="Integration plan"></a>
 </p>
 
-#### 📡 Heltec Automation
+#### 📡 Heltec × ESP32
 
 <p align="center">
-  <a href="https://heltec.cn/"><img src="docs/assets/partners/heltec.png" height="72" alt="Heltec Automation logo"></a>
+  <a href="https://heltec.cn/"><img src="docs/assets/readme/partner-heltec.svg" width="100%" alt="Official hardware partner: Heltec Automation, WiFi LoRa 32 V4 development board"></a>
 </p>
 
 **[Heltec Automation](https://heltec.cn/)** makes IoT and LoRa hardware: ESP32 development boards, LoRa / LoRaWAN modules and nodes. Heltec is sending OpenBridge **one Heltec WiFi LoRa 32 V4 development board** (ESP32-S3 + SX1262 LoRa, Wi-Fi, Bluetooth LE, OLED screen). Thank you, Heltec!
