@@ -42,18 +42,42 @@ profile can never rewrite ordinary speech.
 ## Training a partner adapter
 
 ```
-python dev/ai_training/make_partner_dataset.py --profile acme.json --base-data E:/OpenBridgeAI/data_v3 --out E:/OpenBridgeAI/data_acme
-python dev/ai_training/train_lora.py --base <llama-3.2-3b-instruct> --init-adapter E:/OpenBridgeAI/runs/llama3b_v3/adapter \
-    --data E:/OpenBridgeAI/data_acme --out E:/OpenBridgeAI/adapter_acme --epochs 1
-python dev/ai_training/evaluate.py --backend hf --model <llama-3.2-3b-instruct> --adapter E:/OpenBridgeAI/adapter_acme \
-    --data E:/OpenBridgeAI/data_acme --split partner_test --out E:/OpenBridgeAI/eval_acme.json
+python dev/ai_training/make_partner_dataset.py --profile docs/partners/examples/voice-profile.acme.json \
+    --base-data E:/OpenBridgeAI/data_v4 --replay 800 --out E:/OpenBridgeAI/data_partner_acme
+python dev/ai_training/train_lora.py --base <llama-3.2-3b-instruct> --init-adapter E:/OpenBridgeAI/runs/llama3b_v4c/adapter \
+    --data E:/OpenBridgeAI/data_partner_acme --out E:/OpenBridgeAI/runs/llama3b_partner_acme --epochs 1 --lr 1e-4 \
+    --vram-fraction 0.72
+python dev/ai_training/evaluate.py --backend ollama --model openbridge-intent-acme-example \
+    --data E:/OpenBridgeAI/data_partner_acme --split partner_test --out eval_acme_partner_test.json
 ```
+
+Between training and evaluation, merge the adapter, convert it to GGUF q8_0 and load it in Ollama exactly like the
+official model ([AI_TRAINING.md](AI_TRAINING.md)). Start from the official model's adapter (v4 today), never from
+scratch, so the partner model keeps everything the official one knows.
 
 The generator renders every request family that fits each product (about 700 lines for the example), holds whole
 templates out for the partner test set, and mixes in a replay slice of the base training set so the adapter keeps
 the rest of the home. Training takes one to three hours on one GPU. The adapter is published only if it does at
 least as well as the base model on the base test sets and better on the partner test set; the evaluation report goes
 with it.
+
+## Example results: the fictional Acme brand (24 November 2026)
+
+Trained from the official v4 model on the example profile (1,485 examples including 800 replayed from the base
+set, 186 steps, 1 h 49 min on an RTX 4060 Ti 16 GB, peak 9.7 GB). Same evaluation items for both models:
+
+| Test set | Items | Official model (v4) | Acme adapter |
+|---|---|---|---|
+| Acme requests held out (`partner_test`) | 71 | 45.1 % | **98.6 %** |
+| Home requests written by hand (`home_novel`) | 36 | 97.2 % | 97.2 % |
+| Unseen phrasings (`novel`) | 219 | 95.0 % | 95.4 % |
+| Household chores written by hand (`chores_novel`) | 17 | 88.2 % | 100 % |
+
+- On Acme requests, wrong or invented actions drop from 38 to 1. The official model failed on Acme product names
+  for every family except the vacuum ones ("turn on", "brightness", "undo": 0 %).
+- No base test set got worse in accuracy, so the adapter meets the publication rule above. One more wrong action on
+  `novel` (9 against 8) is listed in the evaluation report.
+- The adapter is an example only: the official model stays `openbridge-intent` (v4).
 
 ## What the partner provides, what they get
 
