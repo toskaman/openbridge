@@ -78,7 +78,7 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 - 🧰 **One LAN guard** (`src/fabric/netguard.py`) replaces 5 copies; partner kit ships a loopback HTTP fake
   (`tests/partners/httpfake.py`, 3 adapter suites refactored onto it); ESPHome covers switches, sensors,
   covers and climate reads.
-- 📜 **OpenAPI 3.0 for `/api/v2`** (94 paths, `docs/api/openapi.json`, coverage-enforced by tests) for
+- 📜 **OpenAPI 3.0 for `/api/v2`** (102 paths, `docs/api/openapi.json`, coverage-enforced by tests) for
   third-party companions and clients.
 - 🌙 **Overnight hardening:** `openbridge mqtt discover|do` CLI (passwords via env only); discovery and gateway
   ingests stay alive at the registry caps (new devices counted as capped, merges still apply); the session

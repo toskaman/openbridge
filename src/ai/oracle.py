@@ -201,6 +201,10 @@ _OLLAMA_MODEL = os.environ.get('OB_ORACLE_MODEL', 'qwen2.5:7b-instruct')
 _LLAMA_CPP_URL = os.environ.get('OB_LLAMACPP_URL', 'http://127.0.0.1:8080/completion')
 _GROQ_MODEL = os.environ.get('OB_GROQ_MODEL', 'llama-3.1-8b-instant')
 _GEMINI_MODEL = os.environ.get('OB_GEMINI_MODEL', 'gemini-2.5-flash')
+# R12: no built-in third-party endpoint. The owner opts in by setting
+# OB_GEMINI_URL_BASE (e.g. their Gemini-compatible base URL); otherwise
+# the cloud backend stays disabled and local backends are used.
+_GEMINI_URL_BASE = os.environ.get('OB_GEMINI_URL_BASE', '')
 
 _HTTP_LOCK = threading.Lock()
 _HTTP_CLIENT = None
@@ -234,13 +238,17 @@ ORACLE_SYSTEM_PROMPT = (
 
 
 def _call_gemini_grounded(prompt: str, timeout: float = 3.5) -> Optional[str]:
-    """Call Gemini Flash with native Google Search Grounding (single hop)."""
+    """Call the owner-provided Gemini-compatible endpoint with Search Grounding.
+
+    Needs GEMINI_API_KEY (or GOOGLE_API_KEY) plus OB_GEMINI_URL_BASE.
+    Returns None when the owner did not opt into a cloud backend.
+    """
     api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
-    if not api_key:
+    if not api_key or not _GEMINI_URL_BASE:
         return None
     try:
         url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{_GEMINI_URL_BASE.rstrip('/')}/models/"
             f"{_GEMINI_MODEL}:generateContent?key={api_key}"
         )
         payload = {
@@ -411,7 +419,7 @@ def status() -> dict:
         "model": _OLLAMA_MODEL,
         "warmed": _WARMED,
         "cache_entries": cache_len,
-        "cloud_gemini": bool(os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')),
+        "cloud_gemini": bool((os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')) and _GEMINI_URL_BASE),
         "cloud_groq": bool(os.environ.get('GROQ_API_KEY')),
         "recent": recent,
     }
