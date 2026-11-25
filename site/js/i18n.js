@@ -95,6 +95,7 @@
     'home.b6.h': 'Tableaux de bord portables',
     'home.b6.p': 'Exporter un ensemble de commandes vers un autre foyer et le réapprouver. Aucune autorisation n’est héritée.',
     'home.pa.elecrow': 'Elecrow CrowPanel Advance 4.3 pouces (ESP32-S3) avec module ESP32-H2 : intégration en cours',
+    'home.pa.airgradient': 'AirGradient ONE Indoor Monitor I-9PSL : la qualité de l’air pour les alertes et les automatisations, intégration en cours',
     'compat.partners': 'Partenaires matériels :',
     'home.g1.h': 'De nouvelles fonctionnalités, sans nouveau firmware', 'home.g1.p': 'Commandes, alertes, voix et parcours multi-appareils, construits sur ce que votre appareil expose déjà.',
     'home.g2.h': 'Interopérabilité avec les autres marques', 'home.g2.p': 'Votre appareil fonctionne avec les TV, montres, téléphones, box, robots et PC d’autres fabricants, sous un même modèle de consentement et de vérification.',

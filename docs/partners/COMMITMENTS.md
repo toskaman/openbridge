@@ -25,3 +25,4 @@ must **always** be kept, through every README rewrite, site redesign and docs re
 | Elecrow | Credited with a link to elecrow.com | README, installation guide (docs/QUICKSTART.md), hardware compatibility report, project website | Done |
 | Elecrow | Technical report on ESP32-H2 Matter / Thread testing | [elecrow/ESP32-H2_MATTER_THREAD.md](elecrow/ESP32-H2_MATTER_THREAD.md) | Planned, publish once tested |
 | Elecrow | Permission to reuse screenshots and videos of integration demos | Recorded in [ELECROW.md](ELECROW.md#media-authorization) | Granted 24 Nov 2026 |
+| AirGradient | Credited as hardware partner, with links to airgradient.com and the AirGradient ONE I-9PSL kit | README, installation guide (docs/QUICKSTART.md), hardware compatibility report, project website | Done |
