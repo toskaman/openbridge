@@ -93,6 +93,30 @@ class CompanionCommands:
                     if c['request_id'] in self.pending:
                         continue
                 text = c.get('text', '')
+                if c.get('kind') == 'oracle':
+                    from src.ai import oracle as Oracle
+                    ans = Oracle.oracle_answer(text)
+                    Oracle.push_oracle_to_hud(self.server, ans, mic_source=c.get('mic_source') or rid)
+                    doc = {'status': 'resolved', 'skill_id': 'voice.oracle', 'oracle': ans}
+                    with self._lock:
+                        self.pending[c['request_id']] = {'relay_id': rid, 'text': text,
+                                                         'lang': c['lang'], 'intent': doc}
+                        self._order.append(c['request_id'])
+                        while len(self._order) > MAX_PENDING:
+                            self.pending.pop(self._order.pop(0), None)
+                    new += 1
+                    for fn in list(self.listeners):
+                        try:
+                            fn(rid, text, doc)
+                        except Exception:
+                            pass
+                    try:
+                        self._send(rid, 'report_command',
+                                   {'request_id': c['request_id'], 'status': 'resolved',
+                                    'text': f"{ans['answer']} ({ans['latency_ms']}ms)"[:fabric_relay.MAX_COMMAND_REPORT]})
+                    except fabric_relay.RelayError:
+                        pass
+                    continue
                 if c.get('kind') == 'voice':
                     # Device-side voice: download the clip, transcribe with local Meta STT,
                     # then parse exactly like typed text. Sound stays on the device; only

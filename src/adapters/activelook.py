@@ -2683,6 +2683,95 @@ class ActiveLookAdapter:
                     "gesture_sensor": True,
                     "battery_percent": 88
                 },
-                "capabilities": ["hud_notify", "hud_layout", "gesture_input", "battery_status"]
+                "capabilities": ["hud_notify", "hud_layout", "gesture_input", "battery_status",
+                                  "voice_oracle"]
             }]
         }
+
+    # ------------------------------------------------------------------
+    # Voice AI Oracle HUD  (OpenBridge mod — VoiceAI Oracle v1)
+    # ------------------------------------------------------------------
+    def push_oracle_answer(
+        self,
+        query_class: str = "GENERAL",   # MATH | LOCATE | GENERAL
+        transcript: str = "",
+        answer: str = "",
+        source: str = "ollama",
+        latency_ms: int = 0,
+    ) -> bool:
+        """Display an Oracle AI answer card on the ENGO 3 HUD.
+
+        Layout (304x256 MicroOLED):
+          Row 0-20  : header bar  [ORACLE]  [Nms]
+          Row 24    : separator line
+          Row 26-48 : transcript echo (truncated, grey/cyan)
+          Row 50    : separator line
+          Row 56-96 : answer text (up to 3 lines, GREEN / AMBER)
+          Row 112   : source badge (small)
+          Row 240   : [WAVE dismiss]
+        """
+        cmds = bytearray()
+        cmds += cmd_clear()
+
+        # Header: colour by query class
+        hdr_color = {
+            'MATH': COLOR_CYAN,
+            'LOCATE': COLOR_AMBER,
+            'GENERAL': COLOR_GREEN,
+        }.get(query_class, COLOR_GREEN)
+
+        icon = {'MATH': 'MATH', 'LOCATE': 'GPS', 'GENERAL': 'AI'}.get(query_class, 'AI')
+        hdr_text = f"ORACLE {icon}"[:16]
+
+        if self.is_color:
+            cmds += cmd_color(hdr_color)
+        cmds += cmd_text(4, 4, hdr_text, font=0, color_or_grey=hdr_color if self.is_color else 15)
+        lat_color = COLOR_AMBER if latency_ms > 1500 else COLOR_GREEN
+        cmds += cmd_text(210, 4, f"~{latency_ms}ms", font=0,
+                         color_or_grey=lat_color if self.is_color else 12)
+        cmds += cmd_line(0, 20, 303, 20)
+
+        # Transcript echo (truncated to 30 chars)
+        tq = transcript[:30]
+        if self.is_color:
+            cmds += cmd_color(COLOR_CYAN)
+        cmds += cmd_text(4, 26, f"> {tq}", font=0, color_or_grey=COLOR_CYAN if self.is_color else 10)
+        cmds += cmd_line(0, 50, 303, 50)
+
+        # Answer block (up to 3 lines x 32 chars)
+        ans_lines = answer.strip().split('\n')[:3]
+        ans_color = COLOR_GREEN if query_class != 'LOCATE' else COLOR_AMBER
+        if self.is_color:
+            cmds += cmd_color(ans_color)
+        y = 56
+        for ln in ans_lines:
+            cmds += cmd_text(4, y, ln[:32], font=0,
+                             color_or_grey=ans_color if self.is_color else 15)
+            y += 20
+
+        # Source badge
+        src_map = {
+            'math_eval': 'CALC LOCAL',
+            'offline_kb': 'BASE LOCAL',
+            'gemini_search': 'GEMINI+WEB',
+            'groq+web': 'GROQ+WEB',
+            'groq': 'GROQ FAST',
+            'ollama+web': 'QWEN+WEB',
+            'ollama': 'QWEN LOCAL',
+            'llamacpp+web': 'LLAMA+WEB',
+            'llamacpp': 'LLAMA CPP',
+            'unavailable': 'INDISPONIBLE',
+        }
+        src_txt = src_map.get(source, source.upper())[:18]
+        if self.is_color:
+            cmds += cmd_color(COLOR_CYAN)
+        cmds += cmd_text(4, 112, f"src:{src_txt}", font=0,
+                         color_or_grey=COLOR_CYAN if self.is_color else 8)
+
+        # Bottom dismiss hint
+        if self.is_color:
+            cmds += cmd_color(COLOR_AMBER)
+        cmds += cmd_text(4, 240, "~ WAVE  dismiss", font=0,
+                         color_or_grey=COLOR_AMBER if self.is_color else 10)
+
+        return self._send(bytes(cmds))

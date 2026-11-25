@@ -85,7 +85,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     // Live data flows
     private FlowOverlayView flows;
     private TextView flowOut, flowIn;
-    private Button flowsBtn;
+    private Button flowsBtn, oracleBtn;
 
     // Live state that drives the orb
     private volatile boolean speaking;
@@ -188,11 +188,19 @@ public class MainActivity extends Activity implements RelayServer.Ui {
             setToggle(flowsBtn, on);
             log(on ? L.t("Flow view on") : L.t("Flow view off"));
         });
+        oracleBtn = button(L.t("Oracle ENGO"), PillIcon.SPARK, MAGENTA, STYLE_PRIMARY);
+        oracleBtn.setOnClickListener(v -> {
+            String lang = "fr".equals(L.resolved(this)) ? "fr-FR" : "en-US";
+            startActivity(new Intent(this, OracleVoiceActivity.class).putExtra("oracle_lang", lang));
+        });
         LinearLayout flowRow = new LinearLayout(this); flowRow.setOrientation(LinearLayout.VERTICAL); flowRow.setGravity(Gravity.CENTER_HORIZONTAL);
         flowRow.setPadding(0, dp(12), 0, 0);
         flowRow.addView(legend);
+        LinearLayout.LayoutParams obl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        obl.topMargin = dp(10);
+        flowRow.addView(oracleBtn, obl);
         LinearLayout.LayoutParams fbl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        fbl.topMargin = dp(10);
+        fbl.topMargin = dp(8);
         flowRow.addView(flowsBtn, fbl);
         flows = new FlowOverlayView(this);
         flows.setAnchor(orb);

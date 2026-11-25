@@ -127,6 +127,29 @@ def cmd_say(args):
     return _send_or_explain({'voice': args.text})
 
 
+def cmd_oracle(args):
+    if getattr(args, 'mic', False):
+        from src.ai import mic_oracle
+        from src import cli
+
+        def _on_ans(res):
+            send({'oracle': res}, port=args.control_port, timeout=1.0)
+
+        try:
+            mic_oracle.run_mic_loop(
+                mic_source=args.source,
+                language=args.lang,
+                on_answer=_on_ans,
+            )
+        except ImportError as e:
+            raise _err(cli, 'DEP_MISSING', f'Microphone capture requires sounddevice ({e})', 'dep')
+        return {'stopped': True}
+    if not getattr(args, 'text', None):
+        from src import cli
+        raise _err(cli, 'ARGS_REQUIRED', 'Pass --text "..." or --mic', 'args')
+    return _send_or_explain({'oracle_query': args.text})
+
+
 class Control:
     """127.0.0.1 only: one JSON request per line."""
 
@@ -164,6 +187,18 @@ class Control:
                 return {'shown': bool(item), 'unread': h.inbox.unread()}
         if 'voice' in req:                              # outside the lock: the model takes a moment
             return {'outcome': h.voice(str(req['voice'])), 'voice': h.ctx.voice}
+        if 'oracle' in req and isinstance(req['oracle'], dict):
+            ans = dict(req['oracle'])
+            with self.lock:
+                h.oracle(str(ans.get('transcript', '')), ans, partial=bool(req.get('partial')))
+            return {'shown': True, 'screen': type(h.menu.screen).__name__}
+        if 'oracle_query' in req:
+            from src.ai import oracle as Oracle
+            q = str(req['oracle_query'])
+            ans = Oracle.oracle_answer(q)
+            with self.lock:
+                h.oracle(q, ans, partial=False)
+            return {'oracle': ans}
         tr = getattr(h.link, 'tr', None)                 # BLE transport counters (MTU, pauses, drops), when on BLE
         return {'screen': type(h.menu.screen).__name__, 'unread': h.inbox.unread(), 'devices': h.devices,
                 'grant': h.settings.get('grant'), 'log': h.log[-10:],
@@ -256,12 +291,16 @@ def cmd_run(args):
                     colour='3' in args.glasses_model,
                     understand=_understand_factory(args.intent_model, args.endpoint))
         holder['hub'] = hub
+        server.glasses_hub = hub
+        server.glasses_control_port = args.control_port
+        from src.ai import oracle as Oracle
+        threading.Thread(target=Oracle.warmup, name='oracle-warmup', daemon=True).start()
         cc = None
         if not args.offline:
             from src.runtime.companion_commands import companion_commands
             cc = companion_commands(server)
             cc.listeners = getattr(cc, 'listeners', [])
-            cc.listeners.append(lambda rid, text, doc: hub.voice(text))
+            cc.listeners.append(lambda rid, text, doc: None if doc.get('skill_id') == 'voice.oracle' else hub.voice(text))
         Control(hub, lock, args.control_port)
         sim = _start_sport(hub, args)
         hub.redraw(force=True)
@@ -339,7 +378,7 @@ def register(subs, leaf):
     r.add_argument('--offline', action='store_true', help='no device discovery (menus and messages only)')
     r.add_argument('--studio-port', type=int, default=7789)
     r.add_argument('--control-port', type=int, default=CONTROL_PORT)
-    r.add_argument('--phone-poll', type=float, default=2.0)
+    r.add_argument('--phone-poll', type=float, default=0.35)
     r.add_argument('--intent-model', default='openbridge-intent')
     r.add_argument('--endpoint', default='http://127.0.0.1:11434')
     r.add_argument('--takeover', action='store_true', help='take the glasses over from the phone (explicit switch)')
@@ -370,3 +409,9 @@ def register(subs, leaf):
     nt.add_argument('--text', required=True)
     sy = leaf(gs, 'say', cmd_say, 'glasses say')
     sy.add_argument('text')
+    oc = leaf(gs, 'oracle', cmd_oracle, 'glasses oracle')
+    oc.add_argument('--text', default=None, help='question to answer on the ENGO glasses')
+    oc.add_argument('--mic', action='store_true', help='stream PC/USB/Bluetooth mic continuously to the glasses')
+    oc.add_argument('--source', default='pc_mic', help='mic source label (pc_mic, ble_headset, usb_mic)')
+    oc.add_argument('--lang', default='fr', choices=['fr', 'en'])
+    oc.add_argument('--control-port', type=int, default=CONTROL_PORT)
