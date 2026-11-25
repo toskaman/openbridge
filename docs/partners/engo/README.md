@@ -51,6 +51,7 @@
 | **[23_MANUFACTURER_IMPLEMENTATION_PACKAGE.md](23_MANUFACTURER_IMPLEMENTATION_PACKAGE.md)** | **Manufacturer implementation package (FR / EN)** | The document for ENGO / Microoled: what OpenBridge does, factual status, questions and requests, pre-send checklist. |
 | **[24_API_AND_DATA_CONTRACTS.md](24_API_AND_DATA_CONTRACTS.md)** | **API and data contracts** | Observation and HUD event schemas, priorities, TTLs, BLE sensor characteristics, transport rules, Companion ops, settings keys, languages. |
 | **[25_RELEASE_AND_COMPATIBILITY_MATRIX.md](25_RELEASE_AND_COMPATIBILITY_MATRIX.md)** | **Release and compatibility matrix** | Glasses models, firmware, OpenBridge parts and phones, with the evidence level of each. |
+| **[26_ANIMATION_STREAM_POC.md](26_ANIMATION_STREAM_POC.md)** | **Animation stream POC** | BLE pixel streaming (`imgStream`) + native text hybrid, 304x256 emulator, benchmarks and evidence videos. Code in `dev/engo-stream-poc/`. Emulator only. |
 
 Before sending anything to ENGO, go through the checklist at the end of document 23: factual status, commit and
 versions, emulator and real evidence kept apart, licences, no secrets or personal data, and no firmware support
