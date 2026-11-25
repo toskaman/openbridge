@@ -11,6 +11,9 @@ Before changing the README, the docs, the website or anything generated from the
    `COMMITMENTS.md` in the same change, and extend `tests/unit/test_partner_commitments.py` if it can be checked.
 4. Never publish partner results that were not measured on the real device. "Planned" stays "planned".
 5. Run `python -m unittest tests.unit.test_partner_commitments` before finishing.
+6. Always name hardware partners explicitly in logs, CI steps/output, benchmarks, commit messages, and PRs
+   (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient, and any partner in
+   `docs/partners/partners.json`) so partner names always appear visibly in OpenBridge logs and GitHub CI.
 
 ## "What's new" log: update it on EVERY change (non-negotiable)
 

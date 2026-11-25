@@ -51,12 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-25 23:58` **Partner visibility in logs & GitHub CI:** hardware partner names (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) are logged explicitly on every CI run and enforced in `AGENTS.md`.
 - `2026-11-25 16:15` **VoiceAI Oracle for ENGO 3 & multi-mic devices:** instant local math, cached web search, warm local LLM, long-polling Android/Wear OS relay (`Oracle ENGO`), and universal mic connector (`mic_oracle`) rendered on the ENGO 3 HUD.
 - `2026-11-25 13:20` **AirGradient joins as hardware partner:** an AirGradient ONE (I-9PSL) indoor monitor brings air quality to OpenBridge, read over its local API. [Partner page](docs/partners/AIRGRADIENT.md)
-- `2026-11-25 12:50` **Custom controls:** build your own buttons for your TV, watch or phone, save them as profiles and switch in one click. [Guide](docs/CUSTOM_CONTROLS.md)
 
 <details>
 <summary>Older updates</summary>
+
+- `2026-11-25 12:50` **Custom controls:** build your own buttons for your TV, watch or phone, save them as profiles and switch in one click. [Guide](docs/CUSTOM_CONTROLS.md)
 
 - `2026-11-25 00:55` **What's new** on the front page: every update, with date and time.
 
