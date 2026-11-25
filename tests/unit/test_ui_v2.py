@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[2]
 UI = ROOT / 'src' / 'ui'
 JAVA = ROOT / 'companion' / 'android' / 'src' / 'fr' / 'openbridge' / 'companion'
 MOTION = ['motion/orb_canvas.js', 'motion/flow_canvas.js', 'motion/motion_controller.js', 'motion/motion_state.js']
-VIEWS = ['views/studio_view.js', 'views/settings_view.js', 'views/workflows_view.js']
+VIEWS = ['views/studio_view.js', 'views/settings_view.js', 'views/workflows_view.js', 'views/controls_view.js']
 
 
 def text(path):
@@ -129,13 +129,13 @@ class AssetsServedAndWired(unittest.TestCase):
     def test_five_primary_sections_and_legacy_routes(self):
         index = text(UI / 'index.html')
         nav = index[index.index('<nav class="nav nav-v2"'):index.index('</nav>', index.index('<nav class="nav nav-v2"'))]
-        self.assertEqual(re.findall(r'<span>([^<]+)</span>', nav), ['Home', 'Devices', 'Capabilities', 'Workflows', 'Activity'])
+        self.assertEqual(re.findall(r'<span>([^<]+)</span>', nav), ['Home', 'Devices', 'Controls', 'Capabilities', 'Workflows', 'Activity'])
         self.assertEqual(index.count('id="ask-nav"'), 1)
         shell = text(UI / 'shell.js')
         for legacy in ('skills', 'fabric', 'automations', 'explore', 'advanced', 'replay'):
             self.assertRegex(shell, r"\b%s: '" % legacy)
         self.assertIn("ui=classic", shell)
-        for view in ('studio', 'settings'):
+        for view in ('studio', 'settings', 'controls'):
             self.assertIn(f'data-view="{view}"', index)
 
 
@@ -158,6 +158,25 @@ class StudioHonesty(unittest.TestCase):
             sim = body[start:body.index('else', start)]
             self.assertNotIn('post(', sim, fn)
         self.assertIn('SIMULATED REHEARSAL', src)
+
+
+class ControlsHonesty(unittest.TestCase):
+    def test_send_uses_the_owner_path_with_consent(self):
+        src = text(UI / 'views/controls_view.js')
+        self.assertIn("post('/api/v2/control_profiles/apply', { relay_id: C.screen, profile_id: p.id, consent: true })", src)
+        self.assertIn("post('/api/v2/control_profiles/clear', { relay_id: C.screen, consent: true })", src)
+        self.assertNotIn("'/api/v2/remote_controls'", src)          # never installs around the profile checks
+        self.assertNotIn('confirm(', src)
+
+    def test_demo_never_reaches_the_runtime(self):
+        src = text(UI / 'views/controls_view.js')
+        for fn in ('async function send()', 'async function clearScreen()', 'async function saveNow(p)'):
+            body = src[src.index(fn):src.index('\n  }\n', src.index(fn))]
+            start = body.index('if (C.demo)')
+            line = body[start:body.index('\n', start)]
+            self.assertNotIn('post(', line, fn)
+            self.assertIn('return', line, fn)
+        self.assertIn('SIMULATED DEMO', src)
 
 
 if __name__ == '__main__':

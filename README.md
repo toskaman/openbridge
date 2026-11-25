@@ -49,13 +49,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-25 12:50` **Custom controls:** build your own buttons for your TV, watch or phone, save them as profiles and switch in one click. [Guide](docs/CUSTOM_CONTROLS.md)
 - `2026-11-25 00:55` **What's new** on the front page: every update, with date and time.
 - `2026-11-24 20:03` **Elecrow joins as hardware partner:** CrowPanel Advance 4.3" (ESP32-S3) and ESP32-H2 for Matter / Thread. Partner promises are now checked in CI.
-- `2026-11-24 16:28` **New README:** shorter, proof figures up top, French in [README.fr.md](README.fr.md).
 
 <details>
 <summary>Older updates</summary>
 
+- `2026-11-24 16:28` **New README:** shorter, proof figures up top, French in [README.fr.md](README.fr.md).
 - `2026-11-24 15:07` **Heltec Automation joins as hardware partner:** a WiFi LoRa 32 V4 board takes the ESP32 agent from QEMU to real hardware.
 - `2026-11-24 14:38` **Partner voice adapter measured:** 98.6 % of a brand's requests understood (45.1 % before), no loss elsewhere. [Results](docs/PARTNER_VOICE_MODEL.md)
 - `2026-11-24 13:48` **Tested on the PICO OS 6 headset emulator:** pairing, signed round trip, revoked relay refused. [Guide](docs/PICO_EMULATOR.md)

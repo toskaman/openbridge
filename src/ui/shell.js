@@ -117,10 +117,10 @@
   }
 
   // ---------------- router ----------------
-  const VIEWS = { home: 'Home', devices: 'Devices', fabric: 'Network', skills: 'Capabilities', explore: 'Explore capabilities', studio: 'Create a capability', automations: 'Workflows', activity: 'Activity', replay: 'Demo replay', settings: 'Settings', advanced: 'Diagnostics' };
+  const VIEWS = { home: 'Home', devices: 'Devices', fabric: 'Network', skills: 'Capabilities', explore: 'Explore capabilities', studio: 'Create a capability', controls: 'Custom controls', automations: 'Workflows', activity: 'Activity', replay: 'Demo replay', settings: 'Settings', advanced: 'Diagnostics' };
   // V2 information architecture: five primary sections; legacy routes stay valid (#/skills, #/fabric, #/automations…).
   const ALIASES = { capabilities: 'skills', network: 'fabric', workflows: 'automations', create: 'studio', diagnostics: 'advanced', demo: 'replay' };
-  const SECTION = { home: 'home', devices: 'devices', fabric: 'devices', skills: 'capabilities', explore: 'capabilities', studio: 'capabilities', automations: 'workflows', activity: 'activity', replay: 'replay', settings: 'settings', advanced: 'advanced' };
+  const SECTION = { home: 'home', devices: 'devices', fabric: 'devices', skills: 'capabilities', explore: 'capabilities', studio: 'capabilities', controls: 'controls', automations: 'workflows', activity: 'activity', replay: 'replay', settings: 'settings', advanced: 'advanced' };
   const SUBNAV = { devices: [['devices', 'Devices'], ['fabric', 'Network']], capabilities: [['skills', 'Overview'], ['explore', 'Explore'], ['studio', 'Create']] };
   const SECTION_HOME = { home: 'home', devices: 'devices', capabilities: 'skills', workflows: 'automations', activity: 'activity' };
   const classic = () => !document.body.classList.contains('ui-v2');
@@ -161,6 +161,7 @@
     if (view === 'home') renderHome();
     if (view === 'studio' && window.OBViews) window.OBViews.studio.render(arg, { snap: st.snap, events: st.events, go });
     if (view === 'settings' && window.OBViews) window.OBViews.settings.render();
+    if (view === 'controls' && window.OBViews && window.OBViews.controls) window.OBViews.controls.render(arg, { go });
     if (view === 'explore' && typeof renderExplore === 'function') renderExplore();
     if (view === 'devices') { renderDevices(); if (arg) selectDevice(decodeURIComponent(arg)); }
     if (view === 'skills') renderSkills();
@@ -893,7 +894,7 @@
     if (!dlg.open) dlg._opener = document.activeElement;
     const items = () => [
       ...Object.entries(VIEWS).map(([k, v]) => ({ t: v, sub: 'Go to', run: () => go(k) })),
-      { t: 'Create a capability', sub: 'Action · Studio', run: () => go('studio') }, { t: 'Motion & visual effects', sub: 'Settings', run: () => go('settings') }, { t: 'Try the offline demo (SIMULATED)', sub: 'Action', run: () => go('replay') },
+      { t: 'Create a capability', sub: 'Action · Studio', run: () => go('studio') }, { t: 'Custom controls', sub: 'Build your own buttons for a TV, watch or phone', run: () => go('controls') }, { t: 'Motion & visual effects', sub: 'Settings', run: () => go('settings') }, { t: 'Try the offline demo (SIMULATED)', sub: 'Action', run: () => go('replay') },
       { t: 'Discover devices', sub: 'Action', run: discoverAndOpen }, { t: 'Connect a device', sub: 'Action', run: () => openConnect() }, { t: 'Teach a new skill', sub: 'Action', run: openTeach }, { t: 'Open Meta AI Assistant', sub: 'Action', run: openAssistant }, { t: 'Finish session (restore changes)', sub: 'Action', run: () => { go('activity'); setTimeout(() => $('#session-finish').click(), 50); } },
       ...(st.snap ? st.snap.devices.map(d => ({ t: label(d), sub: catLabel(d.category), run: () => go('devices', d.key) })) : []),
       ...skills().map(k => ({ t: k.name, sub: 'Skill · ' + k.availability, run: () => go('skills') }))];

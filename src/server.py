@@ -32,7 +32,7 @@ ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'), '/style.css': ('style
           '/motion/orb_canvas.js': ('motion/orb_canvas.js', 'text/javascript'), '/motion/flow_canvas.js': ('motion/flow_canvas.js', 'text/javascript'),
           '/motion/motion_controller.js': ('motion/motion_controller.js', 'text/javascript'), '/motion/motion_state.js': ('motion/motion_state.js', 'text/javascript'),
           '/views/studio_view.js': ('views/studio_view.js', 'text/javascript'), '/views/settings_view.js': ('views/settings_view.js', 'text/javascript'),
-          '/views/workflows_view.js': ('views/workflows_view.js', 'text/javascript')}
+          '/views/workflows_view.js': ('views/workflows_view.js', 'text/javascript'), '/views/controls_view.js': ('views/controls_view.js', 'text/javascript')}
 
 # Campaign One §3.6 HTTP hardening: request size caps and client patience.
 MAX_URL_BYTES = 8192            # request-target ceiling (stdlib guards the 64 KiB line; this is the app boundary)

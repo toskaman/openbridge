@@ -16,7 +16,7 @@ SNAP = {'schema_version': 1, 'status': 'OK', 'providers': {},
                   {'parent': 'pc', 'child': 'dev-watch', 'transport': 'WIFI', 'grants': ['observe'], 'source': 'test'}],
         'possible_duplicates': []}
 ROUTES = {'routes': [{'target_device': 'dev-watch', 'relay_device': 'dev-watch', 'relay_id': 'relay-w1', 'radio': 'ble', 'permission_granted': True, 'owner_enabled': True, 'online': True, 'last_success_at': None, 'status': 'FRESH'}]}
-VIEWS = ['home', 'devices', 'network', 'capabilities', 'explore', 'studio', 'workflows', 'activity', 'settings', 'replay', 'advanced']
+VIEWS = ['home', 'devices', 'controls', 'network', 'capabilities', 'explore', 'studio', 'workflows', 'activity', 'settings', 'replay', 'advanced']
 
 
 def debug(page):
@@ -48,7 +48,7 @@ def main():
             assert d['spawned'] == [0, 0] and d['comets'] == 0, d      # 0 events => 0 comets
             assert d['rafActive'] and d['orbFrames'] > 10, d          # orb visible + Full => animated
             nav = page.locator('nav.nav-v2 a span').all_inner_texts()
-            assert nav[:5] == ['Home', 'Devices', 'Capabilities', 'Workflows', 'Activity'], nav
+            assert nav[:6] == ['Home', 'Devices', 'Controls', 'Capabilities', 'Workflows', 'Activity'], nav
             expect(page.locator('#home-orb [data-orb-status] .orb-state')).to_have_text('Ready · waiting for your request')
 
             # 2. A real POST: OUT leaves the orb, the reply comes IN to the orb; amber/emerald constants.
