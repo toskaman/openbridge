@@ -34,6 +34,7 @@ For a hardware maker, that means your product stops being an island.
 
 - **[ENGO](ENGO.md)** ([engoeyewear.com](https://www.engoeyewear.com)): heads-up display smart glasses, powered by ActiveLook by Microoled.
 - **[Elecrow](ELECROW.md)** ([elecrow.com](https://www.elecrow.com)): [CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html) (ESP32-S3) with an ESP32-H2 module for Matter and Thread.
+- **[AirGradient](AIRGRADIENT.md)** ([airgradient.com](https://www.airgradient.com)): [AirGradient ONE Indoor Monitor I-9PSL](https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501) (kit), open-source indoor air quality monitor.
 
 What each partner was promised is tracked in [partners.json](partners.json) and checked in CI ([commitments](COMMITMENTS.md)).
 

@@ -25,6 +25,8 @@ OpenBridge is tested on real devices, some of them provided by its hardware part
 - **[Elecrow](https://www.elecrow.com)**: [CrowPanel Advance 4.3-inch HMI display (ESP32-S3)](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)
   and ESP32-H2 module (integration in progress, [partner page](partners/ELECROW.md)).
 - **[ENGO](https://www.engoeyewear.com)**: heads-up display smart glasses powered by ActiveLook ([partner page](partners/ENGO.md)).
+- **[AirGradient](https://www.airgradient.com)**: [AirGradient ONE Indoor Monitor I-9PSL (Kit)](https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501)
+  (integration in progress, [partner page](partners/AIRGRADIENT.md)).
 
 ## First session
 

@@ -39,7 +39,9 @@
   <a href="https://heltec.cn/"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/heltec-white.svg"><img src="docs/assets/partners/heltec-black.svg" height="40" alt="Heltec Automation"></picture></a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.elecrow.com"><img src="docs/assets/partners/elecrow.png" height="32" alt="Elecrow"></a>
-  <br><sub><a href="https://www.engoeyewear.com">ENGO</a> × <a href="https://www.activelook.net">ActiveLook</a> · <a href="https://heltec.cn/">Heltec</a> <a href="https://heltec.org/project/wifi-lora-32-v4/">WiFi LoRa 32 V4</a> · <a href="https://www.elecrow.com">Elecrow</a> <a href="https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html">CrowPanel Advance 4,3 pouces</a> + ESP32-H2</sub>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.airgradient.com"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/partners/airgradient-white.svg"><img src="docs/assets/partners/airgradient-color.svg" height="40" alt="AirGradient"></picture></a>
+  <br><sub><a href="https://www.engoeyewear.com">ENGO</a> × <a href="https://www.activelook.net">ActiveLook</a> · <a href="https://heltec.cn/">Heltec</a> <a href="https://heltec.org/project/wifi-lora-32-v4/">WiFi LoRa 32 V4</a> · <a href="https://www.elecrow.com">Elecrow</a> <a href="https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html">CrowPanel Advance 4,3 pouces</a> + ESP32-H2 · <a href="https://www.airgradient.com">AirGradient</a> <a href="https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501">ONE Indoor Monitor I-9PSL</a></sub>
 </p>
 <!-- partners:end -->
 
@@ -49,13 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-25 13:20` **AirGradient devient partenaire matériel :** un capteur AirGradient ONE (I-9PSL) apporte la qualité de l'air à OpenBridge, lue via son API locale. [Page partenaire](docs/partners/AIRGRADIENT.md)
 - `2026-11-25 12:50` **Boutons sur mesure :** créez vos propres boutons pour votre TV, montre ou téléphone, enregistrez-les en profils et changez en un clic. [Guide](docs/CUSTOM_CONTROLS.md)
 - `2026-11-25 00:55` Section **Nouveautés** en tête de page : chaque mise à jour, avec date et heure.
-- `2026-11-24 20:03` **Elecrow devient partenaire matériel :** CrowPanel Advance 4,3" (ESP32-S3) et ESP32-H2 pour Matter / Thread. Les engagements envers les partenaires sont vérifiés en CI.
 
 <details>
 <summary>Mises à jour précédentes</summary>
 
+- `2026-11-24 20:03` **Elecrow devient partenaire matériel :** CrowPanel Advance 4,3" (ESP32-S3) et ESP32-H2 pour Matter / Thread. Les engagements envers les partenaires sont vérifiés en CI.
 - `2026-11-24 16:28` **Nouveau README :** plus court, chiffres de preuve en haut, français dans [README.fr.md](README.fr.md).
 - `2026-11-24 15:07` **Heltec Automation devient partenaire matériel :** une carte WiFi LoRa 32 V4 fait passer l'agent ESP32 de QEMU au vrai matériel.
 - `2026-11-24 14:38` **Adaptateur vocal partenaire mesuré :** 98,6 % des demandes d'une marque comprises (45,1 % avant), sans perte ailleurs. [Résultats](docs/PARTNER_VOICE_MODEL.md)
@@ -132,6 +135,7 @@
 | **Windows XP · 7 · Linux** | Agent léger sur de vrais systèmes invités | Machines virtuelles |
 | **ESP32 · Pixel 6 · PICO OS 6** | Agent natif et companion | Émulateurs officiels |
 | **Elecrow CrowPanel Advance 4.3** (ESP32-S3 + ESP32-H2) | Écran de commande tactile, tests Matter / Thread | Intégration en cours |
+| **AirGradient ONE** (I-9PSL) | Qualité de l'air (PM2,5, CO₂, COV, NOx) pour alertes et automatisations, via son API locale | Intégration en cours |
 
 Chaque résultat est dans le [registre public des preuves](docs/DEVICE_EVIDENCE.json). Les tests émulés sont signalés et ne comptent jamais comme preuve physique. [Limites connues](docs/KNOWN_LIMITATIONS.md).
 
@@ -149,6 +153,10 @@ Chaque résultat est dans le [registre public des preuves](docs/DEVICE_EVIDENCE.
 
 <p align="center">
   <a href="https://www.elecrow.com"><img src="docs/assets/readme/partner-elecrow.svg" width="100%" alt="Official hardware partner: Elecrow, CrowPanel Advance 4.3-inch (ESP32-S3) and ESP32-H2 module"></a>
+</p>
+
+<p align="center">
+  <a href="https://www.airgradient.com"><img src="docs/assets/readme/partner-airgradient.svg" width="100%" alt="Official hardware partner: AirGradient, AirGradient ONE Indoor Monitor I-9PSL kit"></a>
 </p>
 
 <p align="center"><a href="docs/partners/HARDWARE_PARTNERS.md">En savoir plus sur nos partenaires →</a></p>

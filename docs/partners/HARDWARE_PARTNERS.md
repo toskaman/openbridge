@@ -48,9 +48,27 @@
 
 Details, commitments and media authorization: [Elecrow partner page](ELECROW.md).
 
+## AirGradient
+
+<p align="center">
+  <a href="https://www.airgradient.com"><img src="../assets/readme/partner-airgradient.svg" width="100%" alt="Official hardware partner: AirGradient, AirGradient ONE Indoor Monitor I-9PSL kit"></a>
+</p>
+
+**[AirGradient](https://www.airgradient.com)** makes open-source air quality monitors: open hardware designs, open firmware and a documented local API. AirGradient is sending OpenBridge an **[AirGradient ONE Indoor Monitor I-9PSL (Kit)](https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501)**: PM1 / PM2.5 / PM10, CO₂, TVOC, NOx, temperature and humidity, on an ESP32-C3.
+
+- 🌬️ **Air-aware automations:** air quality becomes something your other devices can react to, with your approval (a reminder on the watch when CO₂ climbs, the purifier or the vacuum timed around fine dust).
+- 🏠 **Local first:** readings come from the monitor's own local API on your network; no cloud account is needed.
+
+<p align="center">
+  <a href="https://www.airgradient.com"><img src="https://img.shields.io/badge/Discover_AirGradient-airgradient.com-1c75bc?style=for-the-badge" alt="Discover AirGradient"></a>
+  <a href="https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501"><img src="https://img.shields.io/badge/The_monitor-AirGradient_ONE_I--9PSL-1f2a52?style=for-the-badge" alt="AirGradient ONE Indoor Monitor I-9PSL"></a>
+</p>
+
+Details and commitments: [AirGradient partner page](AIRGRADIENT.md).
+
 ## Become the next partner
 
-**ENGO and Heltec took the first step. Your devices could be next.**
+**ENGO, Heltec, Elecrow and AirGradient took the first step. Your devices could be next.**
 
 <p align="center">
   <a href="README.md"><img src="../assets/readme/partner-value.svg" width="100%" alt="Partner with OpenBridge: new features, interoperability, tests and benchmarks, wider compatibility. ENGO case study: 38 HUD features, 82 tests, a pro emulator and 19 technical documents before the hardware arrived."></a>
@@ -82,6 +100,8 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 ## Version française
 
 **[Elecrow](https://www.elecrow.com)** a rejoint le projet comme **partenaire matériel** : Elecrow nous envoie un écran tactile **[CrowPanel Advance 4,3 pouces](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)** (ESP32-S3) et un module **ESP32-H2** (Thread / Zigbee / Matter), pour un écran de commande OpenBridge et des tests Matter / Thread ([page partenaire](ELECROW.md)).
+
+**[AirGradient](https://www.airgradient.com)** a rejoint le projet comme **partenaire matériel** : AirGradient nous envoie un **[AirGradient ONE Indoor Monitor I-9PSL (kit)](https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501)**, un capteur de qualité de l'air open source (particules fines PM1 / PM2,5 / PM10, CO₂, COV, NOx, température, humidité). La qualité de l'air devient une information à laquelle vos autres appareils peuvent réagir, avec votre accord, et tout passe par l'API locale du capteur, sans compte cloud ([page partenaire](AIRGRADIENT.md)).
 
 **ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
 

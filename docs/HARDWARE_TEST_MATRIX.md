@@ -10,6 +10,7 @@ These companies provide real hardware so OpenBridge can be built and tested on t
 - **[ENGO](https://www.engoeyewear.com)**: [ENGO heads-up display smart glasses, powered by ActiveLook by Microoled](https://www.engoeyewear.com). [Partner page](partners/ENGO.md)
 - **[Heltec](https://heltec.cn)**: [Heltec WiFi LoRa 32 V4 development board (ESP32-S3 + SX1262 LoRa)](https://heltec.org/project/wifi-lora-32-v4/). [Partner page](partners/HARDWARE_PARTNERS.md)
 - **[Elecrow](https://www.elecrow.com)**: [CrowPanel Advance 4.3-inch HMI display (ESP32-S3)](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html), ESP32-H2 wireless module (Thread / Zigbee / Matter). [Partner page](partners/ELECROW.md)
+- **[AirGradient](https://www.airgradient.com)**: [AirGradient ONE Indoor Monitor I-9PSL (Kit)](https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501). [Partner page](partners/AIRGRADIENT.md)
 
 ## Test runs
 
