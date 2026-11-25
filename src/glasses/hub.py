@@ -364,6 +364,18 @@ class Hub:
         self.redraw()
         return out
 
+    def oracle(self, text: str, answer_data: dict, partial: bool = False):
+        """Display a real-time VoiceAI Oracle answer (or live listening echo) on the glasses."""
+        self.ctx.voice = {
+            'state': 'listening' if partial else 'done',
+            'text': text,
+            'result': answer_data.get('answer', ''),
+            'oracle': dict(answer_data),
+        }
+        if not isinstance(self.menu.screen, ui.OracleScreen):
+            self.menu.stack.append(ui.OracleScreen())
+        return self.redraw(force=True)
+
     # ---- loop
     def redraw(self, force=False):
         with self._draw:                  # voice runs on another thread: frames never interleave on the link

@@ -125,6 +125,12 @@ final class L {
         FR.put("While this app is open", "Tant que l'appli est ouverte");
         FR.put("Yes", "Oui");
         FR.put("hold to send", "maintenir pour envoyer");
+        FR.put("Oracle ENGO", "Oracle ENGO");
+        FR.put("Live mic -> ENGO 3", "Micro direct -> ENGO 3");
+        FR.put("Listening… speak naturally", "J'écoute… parlez naturellement");
+        FR.put("Stop Oracle", "Arrêter Oracle");
+        FR.put("Last question", "Dernière question");
+        FR.put("ENGO 3 answer", "Réponse ENGO 3");
     }
 
     private L() {}

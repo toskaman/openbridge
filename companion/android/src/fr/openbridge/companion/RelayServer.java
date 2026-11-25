@@ -44,6 +44,9 @@ final class RelayServer {
     interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void nsd(boolean ok, int err) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); }
         /** Live data flow for the UI: out = this device -> PC. label = operation, bytes = payload size. */
         default void flow(boolean out, String label, int bytes) { } }
+    interface OracleListener { void onOracleResult(String text); }
+    private volatile OracleListener oracleListener;
+    void setOracleListener(OracleListener l) { this.oracleListener = l; }
     static final int MAX_CONTROLS = 12, MAX_QUEUE = 16;
     static final int MAX_COMMANDS = 8, MAX_COMMAND_TEXT = 500;
     /** Owner-typed NL commands queued on this device; the PC drains them and reports parse outcomes. Never auto-executed. */
@@ -208,9 +211,36 @@ final class RelayServer {
             try {
                 String lang = java.util.Locale.getDefault().getLanguage().startsWith("fr") ? "fr" : "en";
                 commands.add(new JSONObject().put("request_id", hex(bytes(16))).put("text", t).put("lang", lang).put("quality", "auto"));
+                commands.notifyAll();
             } catch (Exception e) { return "Could not queue the command"; }
         }
         return "Sent to your PC…";
+    }
+
+    /** Queue one VoiceAI Oracle transcript for ultra-fast PC inference -> ENGO 3 HUD. */
+    String submitOracle(String text, String micSource) {
+        if (!paired()) return "Not paired with a PC";
+        String t = text == null ? "" : text.trim();
+        if (t.isEmpty()) return "Empty transcript";
+        if (t.length() > MAX_COMMAND_TEXT) t = t.substring(0, MAX_COMMAND_TEXT);
+        synchronized (commands) {
+            if (commands.size() >= MAX_COMMANDS) return "Too many pending commands; wait for the PC";
+            try {
+                String lang = java.util.Locale.getDefault().getLanguage().startsWith("fr") ? "fr" : "en";
+                JSONObject item = new JSONObject()
+                        .put("request_id", hex(bytes(16)))
+                        .put("kind", "oracle")
+                        .put("text", t)
+                        .put("lang", lang)
+                        .put("quality", "auto");
+                if (micSource != null && !micSource.isEmpty()) {
+                    item.put("mic_source", micSource);
+                }
+                commands.add(item);
+                commands.notifyAll();
+            } catch (Exception e) { return "Could not queue oracle request"; }
+        }
+        return "Oracle queued…";
     }
 
     /** Queue one owner-recorded voice clip: the PC downloads the bytes, transcribes locally, parses as text. */
@@ -233,6 +263,7 @@ final class RelayServer {
                     clips.remove(old); String rq = clipRequest.remove(old); voiceRequests.remove(rq);
                     commands.removeIf(o -> rq != null && rq.equals(o.optString("request_id")));
                 }
+                commands.notifyAll();
             } catch (Exception e) { return "Could not queue the voice clip"; }
         }
         return "Sent voice to your PC…";
@@ -271,7 +302,7 @@ final class RelayServer {
         ui.flow(true, "voice clip", pcm.length);
     }
 
-    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); } synchronized (seen) { seen.clear(); replies.clear(); }
+    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); commands.notifyAll(); } synchronized (seen) { seen.clear(); replies.clear(); }
         prefs.edit().remove("controls").remove("key").remove("require_aead").putBoolean("owner_enabled", false).putBoolean("full_control", false).commit(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
@@ -298,23 +329,31 @@ final class RelayServer {
         return a != null && a.isEnabled();
     }
 
+    private java.util.concurrent.ExecutorService pool;
+
     void start() {
         if (running) return;
         running = true;
+        pool = java.util.concurrent.Executors.newFixedThreadPool(4);
         new Thread(() -> {
-            try (ServerSocket s = new ServerSocket(PORT, 8, InetAddress.getByName("0.0.0.0"))) {
+            try (ServerSocket s = new ServerSocket(PORT, 16, InetAddress.getByName("0.0.0.0"))) {
                 server = s;
                 try { new android.os.Handler(ctx.getMainLooper()).post(this::registerNsd); }
                 catch (Exception ignored) { registerNsd(); }
                 ui.status("Listening for OpenBridge on port " + PORT + (paired() ? " · paired" : " · not paired"));
                 while (running) {
-                    try (Socket c = s.accept()) { c.setSoTimeout(5000); handle(c); } catch (Exception ignored) { }
+                    final Socket c = s.accept();
+                    pool.execute(() -> {
+                        try (Socket client = c) { client.setSoTimeout(6000); handle(client); } catch (Exception ignored) { }
+                    });
                 }
             } catch (Exception e) { ui.status("Relay could not start: " + e.getClass().getSimpleName()); running = false; }
         }, "openbridge-relay").start();
     }
 
     void stop() { running = false;
+        synchronized (commands) { commands.notifyAll(); }
+        if (pool != null) { pool.shutdownNow(); pool = null; }
         try { new android.os.Handler(ctx.getMainLooper()).post(this::unregisterNsd); }
         catch (Exception ignored) { unregisterNsd(); }
         try { if (server != null) server.close(); } catch (Exception ignored) { } }
@@ -401,9 +440,9 @@ final class RelayServer {
             if (!prefs.getBoolean("require_aead", false)) prefs.edit().putBoolean("require_aead", true).apply();
         }
         JSONObject reply;
-        lastOp = msg.optString("op", sealed ? "sealed" : "request");
+        String[] opOut = new String[]{ msg.optString("op", sealed ? "sealed" : "request") };
         try {
-            reply = dispatch(msg, sealed);
+            reply = dispatch(msg, sealed, opOut);
             String rn = msg.optString("nonce");
             if (!rn.isEmpty()) {
                 synchronized (seen) {
@@ -420,26 +459,23 @@ final class RelayServer {
                     String body = sealed ? Aead.seal(k, Aead.aad(rid, "relay>pc"), cached.toString().getBytes(StandardCharsets.UTF_8), null).toString()
                                              : cached.toString();
                     respond(c, 200, body);
-                    ui.flow(false, lastOp, read);
+                    ui.flow(false, opOut[0], read);
                     ui.flow(true, "replay-cached", body.length());
                     return;
                 }
             }
-            ui.flow(false, lastOp, read);
+            ui.flow(false, opOut[0], read);
             String err = new JSONObject().put("error", e.getMessage()).toString();
             respond(c, 403, err);
             ui.flow(true, "denied", err.length());
             return;
         }
-        ui.flow(false, lastOp, read);
+        ui.flow(false, opOut[0], read);
         String body = sealed ? Aead.seal(k, Aead.aad(rid, "relay>pc"), reply.toString().getBytes(StandardCharsets.UTF_8), null).toString()
                              : reply.toString();
         respond(c, 200, body);
-        ui.flow(true, lastOp, body.length());
+        ui.flow(true, opOut[0], body.length());
     }
-
-    /** Operation of the request being handled (relay thread only), shown as the flow label. */
-    private String lastOp = "request";
 
     private void respond(Socket c, int code, String body) throws Exception {
         byte[] b = body.getBytes(StandardCharsets.UTF_8);
@@ -448,7 +484,7 @@ final class RelayServer {
         out.write(b); out.flush();
     }
 
-    private JSONObject dispatch(JSONObject msg, boolean sealed) throws Exception {
+    private JSONObject dispatch(JSONObject msg, boolean sealed, String[] opOut) throws Exception {
         if ("pair_request".equals(msg.optString("op"))) return pairRequest(msg);
         byte[] key = key();
         JSONObject cmd;
@@ -472,7 +508,7 @@ final class RelayServer {
             }
         }
         String op = cmd.getString("op");
-        lastOp = op;
+        opOut[0] = op;
         JSONObject params = new JSONObject();
         switch (op) {
             case "discover_capabilities": case "get_status": case "get_permissions":
@@ -544,8 +580,18 @@ final class RelayServer {
                 ui.result(text.length() > 80 ? text.substring(0, 80) : text); break;
             }
             case "get_commands": {
+                JSONObject gp = cmd.optJSONObject("params");
+                int waitMs = gp == null ? 0 : Math.max(0, Math.min(3500, gp.optInt("wait_ms", 0)));
                 JSONArray out = new JSONArray();
                 synchronized (commands) {
+                    if (commands.isEmpty() && waitMs > 0) {
+                        long deadline = System.currentTimeMillis() + waitMs;
+                        while (commands.isEmpty() && running) {
+                            long rem = deadline - System.currentTimeMillis();
+                            if (rem <= 0) break;
+                            try { commands.wait(rem); } catch (InterruptedException ignored) { break; }
+                        }
+                    }
                     while (!commands.isEmpty()) { JSONObject r = commands.poll(); out.put(r); pendingCommands.add(r.getString("request_id")); }
                 }
                 params.put("commands", out); break;
@@ -564,7 +610,11 @@ final class RelayServer {
                         if (drop != null) { clips.remove(drop); clipRequest.remove(drop); }
                     }
                 }
-                ui.commandResult(text.length() > 160 ? text.substring(0, 160) : text, voice); break;
+                String shown = text.length() > 160 ? text.substring(0, 160) : text;
+                ui.commandResult(shown, voice);
+                OracleListener ol = oracleListener;
+                if (ol != null) ol.onOracleResult(shown);
+                break;
             }
             case "revoke_access": unpair(); break;
             case "get_notifications":     // messages for the glasses; empty unless the owner granted notification access

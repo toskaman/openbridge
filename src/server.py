@@ -145,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(415, {'error': 'JSON required'})
         try:
             lengths = _header_all(self.headers, 'Content-Length')
-            cap = (MAX_BODY_TRANSCRIBE_BYTES if self.path == '/api/v2/voice/transcribe'
+            cap = (MAX_BODY_TRANSCRIBE_BYTES if self.path in ('/api/v2/voice/transcribe', '/api/v2/voice/oracle')
                    else MAX_BODY_MANIFEST_BYTES if self.path.startswith(('/api/v2/manifests/', '/api/v2/workflows/'))
                    else MAX_BODY_BYTES)
             if len(lengths) != 1 or _header_one(self.headers, 'Transfer-Encoding'):
@@ -850,6 +850,8 @@ def main():
             server.windows_bridge=start_windows_bridge()
         from src.runtime import command_drain
         command_drain.start(server)   # Companion typed/spoken orders -> parse -> report back
+        from src.ai import oracle as Oracle
+        threading.Thread(target=Oracle.warmup, name='oracle-warmup', daemon=True).start()
         print(f'OpenBridge: http://127.0.0.1:{server.server_port} (SIMULATED; read-only)', flush=True)
         try:
             server.serve_forever()

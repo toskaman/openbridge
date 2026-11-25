@@ -62,6 +62,11 @@ def _transcribe(pcm, lang, transcribe_fn, stt_available):
 def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, stt_available):
     """Return (report_status, report_text) for one validated command."""
     parse_fn = parse_fn or CMD.parse_request
+    if cmd['kind'] == 'oracle':
+        from src.ai import oracle as Oracle
+        ans = Oracle.oracle_answer(cmd['text'])
+        Oracle.push_oracle_to_hud(server, ans, mic_source=cmd.get('mic_source') or rid)
+        return ('resolved', _short(f"{ans['answer']} ({ans['latency_ms']}ms)"))
     if cmd['kind'] == 'voice':
         fetch = fetch_voice_fn or R.fetch_voice_urls
         # Identity check on the default multi-URL fetch: wrappers/partials of
@@ -88,6 +93,11 @@ def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, st
         hit = layout(rid, relay, text, cmd.get('lang'))
         if hit is not None:
             return hit[0], prefix + hit[1]
+    if cmd['kind'] == 'oracle':
+        from src.ai import oracle as Oracle
+        ans = Oracle.oracle_answer(cmd['text'])
+        Oracle.push_oracle_to_hud(server, ans, mic_source=cmd.get('mic_source') or rid)
+        return ('resolved', _short(f"{ans['answer']} ({ans['latency_ms']}ms)"))
     if cmd['kind'] == 'voice':
         # Campaign Two §4.6: deterministic fail-closed screens for STT
         # transcripts (refusals, conflicts, presses, moves, locate). Typed
@@ -126,7 +136,7 @@ def _report_one(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn
 
 
 def poll_once(server, parse_fn=None, fetch_voice_fn=None, transcribe_fn=None,
-              stt_available=None, sync=False):
+              stt_available=None, sync=False, long_poll=False, wait_ms=3000):
     """Poll every command_submit-capable relay once. Never raises for relay errors.
 
     Each queued command is handled in its own daemon worker so a slow parse or a
@@ -137,6 +147,7 @@ def poll_once(server, parse_fn=None, fetch_voice_fn=None, transcribe_fn=None,
     stats = {'relays_polled': 0, 'commands': 0, 'reported': 0, 'errors': []}
     lock = threading.Lock()
     mgr = server.relays
+    params = {'wait_ms': int(wait_ms)} if (long_poll and not sync and wait_ms > 0) else None
     for rid, relay in list(mgr.relays.items()):
         if 'command_submit' not in relay.get('capabilities', ()):
             continue
@@ -144,7 +155,7 @@ def poll_once(server, parse_fn=None, fetch_voice_fn=None, transcribe_fn=None,
             continue
         stats['relays_polled'] += 1
         try:
-            reply = relay['send'](relay, R.command(relay['key'], rid, 'get_commands'))
+            reply = relay['send'](relay, R.command(relay['key'], rid, 'get_commands', params))
             msg = R.verify(relay['key'], reply, relay.setdefault('seen', {}))
             cmds = R.validate_commands(msg.get('params', {}))
         except Exception as e:
@@ -168,14 +179,19 @@ def start(server, interval_s=POLL_INTERVAL_S, **kw):
     if getattr(server, '_command_drain_started', False):
         return None
     server._command_drain_started = True
+    use_long_poll = kw.pop('long_poll', True)
 
     def loop():
         while True:
+            polled = 0
             try:
-                poll_once(server, **kw)
+                st = poll_once(server, long_poll=use_long_poll, **kw)
+                polled = st.get('relays_polled', 0)
             except Exception:
                 traceback.print_exc()
-            time.sleep(interval_s)
+            # When an online relay is active with long-polling, re-arm immediately (<50ms)
+            # instead of waiting 5s, giving near-instant (<15ms) phone->PC wakeup.
+            time.sleep(0.05 if (use_long_poll and polled > 0) else interval_s)
 
     t = threading.Thread(target=loop, name='command-drain', daemon=True)
     t.start()
