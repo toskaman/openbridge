@@ -70,7 +70,7 @@
   ];
 
   const C = {
-    loading: false, error: '', demo: false, screens: [], devices: [], skills: {}, data: { screens: {}, max_buttons: 12 },
+    loading: false, error: '', demo: false, screens: [], devices: [], skills: {}, data: { max_buttons: 12 }, sdata: new Map(),
     screen: '', profile: '', saving: 0, savedAt: 0, dragFrom: null,
   };
   let root, ctx = {};
@@ -85,7 +85,10 @@
   }
   function needsDevice(skillId) { const s = C.skills[skillId]; return s ? !!s.targeted : true; }
   function screenOf(id) { return C.screens.find(s => s.relay_id === id); }
-  function screenData(id) { return (C.data.screens || {})[id] || { profiles: [], live: [], active: null, applied: null }; }
+  /* Screen ids come from the server and the URL: keep them in a Map, never as object keys. */
+  function screenData(id) { return C.sdata.get(id) || { profiles: [], live: [], active: null, applied: null }; }
+  function ensureScreen(id) { if (!C.sdata.has(id)) C.sdata.set(id, { profiles: [], live: [], active: null, applied: null }); return C.sdata.get(id); }
+  function setScreens(obj) { C.sdata = new Map(Object.entries(obj || {}).filter(([, v]) => v && typeof v === 'object')); }
   function profileOf() { return screenData(C.screen).profiles.find(p => p.id === C.profile) || null; }
   function word(scr) { return (scr && SCREEN_WORD[scr.category]) || 'screen'; }
 
@@ -103,7 +106,8 @@
       });
       for (const rid of Object.keys(prof.screens || {})) if (!seen.has(rid)) C.screens.push({ relay_id: rid, label: rid, category: '', online: false, unpaired: true });
       C.skills = Object.fromEntries((skills.skills || []).filter(k => (prof.bindable_skills || []).includes(k.skill_id)).map(k => [k.skill_id, k]));
-      C.data = prof;
+      C.data = { max_buttons: prof.max_buttons || 12, max_profiles: prof.max_profiles || 16 };
+      setScreens(prof.screens);
     } catch (e) { C.error = 'Could not load your controls: ' + e.message; }
     C.loading = false; pickDefaults(); paint();
   }
@@ -118,7 +122,8 @@
     C.screens = [{ relay_id: 'demo-watch', label: 'Galaxy Watch', category: 'watch', online: true }, { relay_id: 'demo-tvc', label: 'Living room TV', category: 'tv', online: true }];
     C.skills = Object.fromEntries(['tv_volume_step', 'tv_volume_set', 'tv_wake', 'tv_sleep', 'app_launch', 'vacuum_command', 'device_facts'].map(id => [id, { skill_id: id, targeted: true }]));
     const p = { id: 'demo-1', name: 'Movie night', buttons: TEMPLATES[0].make(C.devices[0]).slice(0, 3) };
-    C.data = { max_buttons: 12, screens: { 'demo-watch': { profiles: [p], live: [], active: null, applied: null } } };
+    C.data = { max_buttons: 12 };
+    setScreens({ 'demo-watch': { profiles: [p], live: [], active: null, applied: null } });
     C.screen = 'demo-watch'; C.profile = 'demo-1';
     paint();
   }
@@ -156,12 +161,12 @@
     const buttons = (seed || []).map(clean);
     if (C.demo) {
       const p = { id: 'demo-' + Math.random().toString(16).slice(2, 8), name: name.trim(), buttons };
-      (C.data.screens[C.screen] = C.data.screens[C.screen] || { profiles: [], live: [] }).profiles.push(p);
+      ensureScreen(C.screen).profiles.push(p);
       C.profile = p.id; paint(); return;
     }
     try {
       const r = await post('/api/v2/control_profiles/save', { relay_id: C.screen, name: name.trim(), buttons });
-      const s = C.data.screens[C.screen] = C.data.screens[C.screen] || { profiles: [], live: [], active: null, applied: null };
+      const s = ensureScreen(C.screen);
       s.profiles.push(r.profile); C.profile = r.profile.id; C.error = '';
     } catch (e) { C.error = e.message; }
     paint();
@@ -184,7 +189,7 @@
     const p = profileOf(); if (!p) return;
     const ok = await ask(`Delete "${p.name}"? Buttons already on the ${word(screenOf(C.screen))} stay there until you send another profile or remove them.`, { title: 'Delete profile', ok: 'Delete', danger: true });
     if (!ok) return;
-    const s = C.data.screens[C.screen];
+    const s = ensureScreen(C.screen);
     if (!C.demo) { try { await post('/api/v2/control_profiles/delete', { relay_id: C.screen, profile_id: p.id }); } catch (e) { C.error = e.message; paint(); return; } }
     s.profiles = s.profiles.filter(x => x.id !== p.id);
     if (s.active === p.id) s.active = null;
@@ -205,7 +210,7 @@
     const list = h('ul', { class: 'cx-confirm-list' }, p.buttons.map(b => { const d = describe(b); return h('li', {}, h('strong', { text: b.label }), h('span', { text: `${d.what} · ${d.on}` })); }));
     const ok = await ask(p.buttons.length ? `These ${p.buttons.length} button${p.buttons.length > 1 ? 's' : ''} will appear on ${scr ? scr.label : 'the screen'}. Each press runs its action once. You can change or remove them at any time.` : `This removes every button from ${scr ? scr.label : 'the screen'}.`, { title: `Send "${p.name}" to the ${word(scr)}?`, ok: 'Send', body: p.buttons.length ? list : null });
     if (!ok) return;
-    if (C.demo) { const s = C.data.screens[C.screen]; s.active = p.id; s.applied = { profile_id: p.id, digest: digestOf(p.buttons) }; s.live = p.buttons.map(b => ({ label: b.label, editable: true })); flash('Sent to the simulated watch (SIMULATED).', 'ok'); paint(); return; }
+    if (C.demo) { const s = ensureScreen(C.screen); s.active = p.id; s.applied = { profile_id: p.id, digest: digestOf(p.buttons) }; s.live = p.buttons.map(b => ({ label: b.label, editable: true })); flash('Sent to the simulated watch (SIMULATED).', 'ok'); paint(); return; }
     C.busy = true; paint();
     try {
       await post('/api/v2/control_profiles/apply', { relay_id: C.screen, profile_id: p.id, consent: true });
@@ -218,7 +223,7 @@
     const scr = screenOf(C.screen);
     const ok = await ask(`Remove every button from ${scr ? scr.label : 'this screen'}? Your saved profiles are kept.`, { title: 'Remove buttons from the screen', ok: 'Remove', danger: true });
     if (!ok) return;
-    if (C.demo) { const s = C.data.screens[C.screen]; s.live = []; s.active = null; s.applied = null; paint(); return; }
+    if (C.demo) { const s = ensureScreen(C.screen); s.live = []; s.active = null; s.applied = null; paint(); return; }
     try { await post('/api/v2/control_profiles/clear', { relay_id: C.screen, consent: true }); flash('Buttons removed.', 'ok'); await load(); }
     catch (e) { C.error = e.message; paint(); }
   }
