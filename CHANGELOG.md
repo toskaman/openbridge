@@ -4,6 +4,7 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 
 ## Unreleased
 
+- **Custom controls:** a new Controls page lets you build your own buttons for each paired screen (TV, watch, phone): pick a device, pick what the button does, name it. Buttons are saved as profiles ("Movie night", "Cleaning"), several per screen, and sent to the screen in one click after a confirmation. You can copy what an AI proposal installed into a profile and edit it, reorder by drag and drop, and the active profile comes back by itself after a Companion or PC restart. Same safety path as the Studio: every button is checked again by the server when sent. [Guide](docs/CUSTOM_CONTROLS.md)
 - **What's new on the front page:** a dated, timed log of every update just above the demo, older entries folded away; kept up to date on every change (rule in AGENTS.md, checked by `tests/unit/test_whats_new.py`).
 - **New hardware partner: [Elecrow](https://www.elecrow.com).** The [CrowPanel Advance 4.3-inch](https://www.elecrow.com/crowpanel-advance-4-3-hmi-esp32-800x480-ai-display-ips-touch-artificial-intelligent-screen.html)
   (ESP32-S3) and an ESP32-H2 module join the bench, for an OpenBridge control panel and Matter / Thread testing.

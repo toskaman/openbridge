@@ -10,6 +10,7 @@ Start with [project overview and setup](../README.md). Current instructions and 
 |---|---|
 | Delivery and next tasks | [Release status and remaining work](RELEASE_STATUS.md) |
 | First run | [Quickstart](QUICKSTART.md), [connect your own AI / API](AI_PROVIDERS.md) |
+| Your own buttons | [Custom controls: buttons and profiles per screen](CUSTOM_CONTROLS.md) |
 | Partners | [Partner program](partners/README.md), [ENGO × OpenBridge](partners/ENGO.md), [ENGO R&D hub](partners/engo/README.md) |
 | Ideas in development (not integrated) | [OpenBridge without a PC](concepts/PC_LESS_OPENBRIDGE.md) |
 | Demo for judges | [Jury start here](jury/JURY_START_HERE.md), [showcase page](showcase/index.html), [final storyboard](jury/DEMO_STORYBOARD_FINAL.md), [physical runbook](jury/DEMO_PHYSICAL_RUNBOOK.md) |

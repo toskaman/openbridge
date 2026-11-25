@@ -360,8 +360,9 @@
     }));
     if (!controls.length) face.append(h('span', { class: 'muted small', text: 'No controls yet' }));
     const badge = S.revoked ? h('p', { class: 'tag', text: 'REVOKED · drawn controls no longer run' }) : installed ? h('p', { class: 'tag ok', text: S.sim ? 'SIMULATED · installed on a simulated watch' : 'INSTALLED · acknowledged by the Companion' }) : h('p', { class: 'tag warn', text: 'PREVIEW ONLY — nothing installed' });
+    const tune = installed && !S.sim && !S.revoked && S.relay ? h('a', { class: 'button ghost small', href: '#/controls/' + encodeURIComponent(S.relay) }, 'Customize these buttons') : null;
     return h('section', { class: 'panel target-panel', 'aria-label': 'Destination preview' }, h('h2', { text: 'Destination' }), h('p', { class: 'muted small', text: r ? r.label : S.sim ? 'Watch (SIMULATED)' : 'No Companion selected' }),
-      h('div', { class: 'target-device ' + ((r && r.category) || (S.sim && S.relay === 'sim-tv-companion' ? 'tv' : 'watch')) }, face), badge);
+      h('div', { class: 'target-device ' + ((r && r.category) || (S.sim && S.relay === 'sim-tv-companion' ? 'tv' : 'watch')) }, face), badge, tune);
   }
   function paint() {
     if (!root) return;

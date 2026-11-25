@@ -410,6 +410,9 @@ class RemoteControls:
             if _store is not None:
                 for rid in _D.pending(_D.DashStore(_store)):
                     relays.setdefault(rid, set())
+            from src.runtime import control_profiles as _CP   # screens with an active custom profile too
+            for rid in _CP.pending(self.server):
+                relays.setdefault(rid, set())
         except Exception:
             pass
         done = 0
@@ -448,7 +451,9 @@ class RemoteControls:
                     from src.runtime.state_store import StateStore as _S
                     _store = _S.for_server(self.server)
                     if _store is not None:
-                        _D.ensure_controls(self, _D.DashStore(_store), rid)
+                        if _D.ensure_controls(self, _D.DashStore(_store), rid) is None:
+                            from src.runtime import control_profiles as _CP
+                            _CP.restore_active(self.server, self, rid)
                 except Exception:
                     pass
             ack = fabric_relay.applied_revision(reply)
