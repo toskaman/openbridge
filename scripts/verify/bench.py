@@ -27,7 +27,10 @@ PLAN = {'skill_validate': (200, 5.0),
         'cpace_handshake': (1, 10.0),
         'x25519_op': (3, 10.0),
         'skill_match': (200, 5.0),
-        'library_run': (20, 10.0)}
+        'library_run': (20, 10.0),
+        'tlv_roundtrip': (200, 5.0),
+        'mqtt_codec': (200, 5.0),
+        'sealed_frame': (50, 10.0)}
 
 
 def bench_skill_validate(n):
@@ -102,9 +105,39 @@ def bench_library_run(n):
         assert out['result'] == 'done', out
 
 
+def bench_tlv_roundtrip(n):
+    from src.fabric import matter_tlv as T
+    doc = {1: 'kitchen', 2: [1, True, None, 3.5], 3: {4: b'\x01\x02'}}
+    for _ in range(n):
+        raw = T.encode(doc)
+        assert T.decode_all(raw)[0] is None
+
+
+def bench_mqtt_codec(n):
+    from src.adapters import mqtt as M
+    for i in range(n):
+        pkt = M.encode_publish('a/b', b'x' * 64, qos=i % 2, pktid=(i % 60000) + 1)
+        ln, end = M._decode_remaining(pkt, 1)
+        t, p, q, _ = M.decode_publish(pkt[end:end + ln], pkt[0] & 0x0F)
+        assert (t, p) == ('a/b', b'x' * 64)
+
+
+def bench_sealed_frame(n):
+    from src.fabric import sealed as S
+    psk, agent = bytes(range(32)), b'bench'
+    sa, m1 = S.hello_a(psk)
+    sb, m2 = S.answer_b(psk, agent, m1)
+    A, m3 = S.finish_a(psk, agent, sa, m2)
+    B = S.finish_b(psk, agent, sb, m3)
+    for i in range(n):
+        assert B.open(A.seal(b'frame-%d' % i)) == b'frame-%d' % i
+
+
 BENCHES = {'skill_validate': bench_skill_validate, 'pack_validate_all': bench_pack_validate_all,
            'cpace_handshake': bench_cpace_handshake, 'x25519_op': bench_x25519_op,
-           'skill_match': bench_skill_match, 'library_run': bench_library_run}
+           'skill_match': bench_skill_match, 'library_run': bench_library_run,
+           'tlv_roundtrip': bench_tlv_roundtrip, 'mqtt_codec': bench_mqtt_codec,
+           'sealed_frame': bench_sealed_frame}
 
 
 def run():

@@ -306,7 +306,10 @@ class Library:
         body = {k: v for k, v in bundle.items() if k != 'signature'}
         expected = hmac.new(self._key, json.dumps(body, sort_keys=True, separators=(',', ':')).encode(),
                             hashlib.sha256).hexdigest()
-        trusted = hmac.compare_digest(expected, str(bundle.get('signature', '')))
+        try:
+            trusted = hmac.compare_digest(expected, bundle.get('signature', ''))
+        except TypeError:
+            trusted = False            # non-string or non-ASCII signature: untrusted, never a crash
         mapping = dict(device_map or {})
         imported, unmapped = [], set()
         for s in bundle['skills'][:MAX_RECIPES]:

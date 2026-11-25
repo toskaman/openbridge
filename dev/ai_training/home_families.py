@@ -38,6 +38,9 @@ OBJECTS = {
                   ('dishwasher', ['dishwasher'], ['dishwasher'], ['le lave-vaisselle']),
                   ('towel rail', ['towel warmer'], ['heated towel rail'], ['le sèche-serviettes']),
                   ('electric blanket', ['electric blanket'], ['electric blanket'], ['la couverture chauffante'])],
+    'fan': [('fan', ['fan'], ['fan'], ['le ventilateur']),
+            ('ceiling fan', ['ceiling fan'], ['ceiling fan'], ['le ventilateur de plafond']),
+            ('desk fan', ['desk fan'], ['desk fan'], ['le petit ventilateur'])],
     'thermostat': [('thermostat', ['thermostat'], ['thermostat'], ['le thermostat']),
                    ('heating', ['heat', 'heating'], ['heating', 'central heating'], ['le chauffage']),
                    ('heater', ['heater', 'radiator'], ['radiator', 'heater'], ['le radiateur']),
@@ -200,6 +203,41 @@ FAMILIES = {
         ('en-GB', 'Send {d} back to base'), ('en-GB', 'Pack {d} off to its dock'), ('en-GB', '{d} home, please'),
         ('fr', 'Renvoie {d} à sa base'), ('fr', 'Ramène {d}'), ('fr', 'Dis à {d} de recharger'),
         ('fr', 'Range {d}'), ('fr', 'Rentre {d}'), ('fr', '{d} à la base')]),
+    'home.set_color_temp': ('home.set_color_temp', ('light',), [
+        ('en-US', 'Set {d} to {k} kelvin'), ('en-US', 'Make {d} {k} kelvin'), ('en-US', 'White balance {d} at {k}'),
+        ('en-US', 'Warm white on {d}', {'value': 2700}), ('en-US', 'Cool white on {d}', {'value': 5000}),
+        ('en-GB', 'Put {d} on {k} kelvin'), ('en-GB', 'Warm white {d} please', {'value': 2700}),
+        ('fr', 'Mets {d} à {k} kelvins'), ('fr', 'Règle {d} sur {k} K'), ('fr', 'Blanc chaud sur {d}', {'value': 2700}),
+        ('fr', 'Blanc froid sur {d}', {'value': 5000}), ('fr', 'Lumière chaude sur {d}', {'value': 2700})]),
+    'home.set_color': ('home.set_color', ('light',), [
+        ('en-US', 'Set {d} to hue {h}'), ('en-US', 'Make {d} red', {'value': 0}), ('en-US', 'Make {d} green', {'value': 120}),
+        ('en-US', 'Make {d} blue', {'value': 240}), ('en-US', 'Make {d} purple', {'value': 270}),
+        ('en-GB', 'Put {d} red', {'value': 0}), ('en-GB', 'Make {d} blue', {'value': 240}),
+        ('fr', 'Mets {d} en rouge', {'value': 0}), ('fr', 'Mets {d} en bleu', {'value': 240}),
+        ('fr', 'Mets {d} en vert', {'value': 120}), ('fr', 'Règle la teinte de {d} sur {h}')]),
+    'home.fan_speed': ('home.fan_speed', ('fan',), [
+        ('en-US', 'Set {d} to {n} percent'), ('en-US', 'Fan speed {n} on {d}'), ('en-US', 'Run {d} at {n} percent'),
+        ('en-GB', 'Put {d} on {n} per cent'), ('en-GB', 'Stick the fan on {n}'),
+        ('fr', 'Mets {d} à {n} pour cent'), ('fr', 'Vitesse {n} sur {d}'), ('fr', 'Règle {d} sur {n} %')]),
+    'home.media_next': ('home.media_next', ('speaker',), [
+        ('en-US', 'Next song on {d}'), ('en-US', 'Skip {d}'), ('en-US', 'Play the next track on {d}'),
+        ('en-GB', 'Skip this one on {d}'), ('en-GB', 'Next track {d} please'),
+        ('fr', 'Morceau suivant sur {d}'), ('fr', 'Passe au suivant sur {d}'), ('fr', 'Chanson suivante {d}')]),
+    'home.media_previous': ('home.media_previous', ('speaker',), [
+        ('en-US', 'Previous song on {d}'), ('en-US', 'Go back one track on {d}'), ('en-US', 'Replay the last song on {d}'),
+        ('en-GB', 'Back one track on {d}'),
+        ('fr', 'Morceau précédent sur {d}'), ('fr', 'Reviens en arrière sur {d}'), ('fr', 'Chanson précédente {d}')]),
+    'home.media_mute': ('home.media_mute', ('speaker',), [
+        ('en-US', 'Mute {d}', {'value': 1}), ('en-US', 'Unmute {d}', {'value': 0}), ('en-US', 'Silence {d}', {'value': 1}),
+        ('en-GB', 'Mute {d} please', {'value': 1}),
+        ('fr', 'Mets {d} en sourdine', {'value': 1}), ('fr', 'Remets le son sur {d}', {'value': 0}),
+        ('fr', 'Coupe le son de {d}', {'value': 1})]),
+    'home.set_mode': ('home.set_mode', ('thermostat',), [
+        ('en-US', 'Set {d} to heat', {'mode': 'heat'}), ('en-US', 'Put {d} in cool mode', {'mode': 'cool'}),
+        ('en-US', 'Switch {d} to auto', {'mode': 'auto'}), ('en-US', 'Turn {d} off', {'mode': 'off'}),
+        ('en-GB', 'Put {d} on heat', {'mode': 'heat'}),
+        ('fr', 'Mets {d} en mode chaud', {'mode': 'heat'}), ('fr', 'Passe {d} en mode froid', {'mode': 'cool'}),
+        ('fr', 'Mets {d} en auto', {'mode': 'auto'}), ('fr', 'Éteins {d}', {'mode': 'off'})]),
     'home.undo': ('home.undo', ('light', 'appliance', 'thermostat'), [
         ('en-US', 'Undo that on {d}'), ('en-US', 'Put {d} back how it was'), ('en-US', 'Revert {d}'),
         ('en-GB', 'Put {d} back as it was'), ('en-GB', 'Undo what you did to {d}'),
@@ -303,13 +341,20 @@ def gold(family, slots):
         params['value'] = slots['n']
     if 't' in slots:
         params['value'] = slots['t']
+    if 'h' in slots:
+        params['value'] = slots['h']
+    if 'k' in slots:
+        params['value'] = slots['k']
+    params.update(slots.get('fixed', {}))
     return R('%s %s' % (sid.split('.', 1)[1].replace('_', ' '), slots['ref']), sid, [DEVT(slots['ref'])], params)
 
 
-def render(family, dialect, template, rng):
-    """One (text, slots) from a template, or None."""
+def render(family, dialect, template, rng, fixed=None):
+    """One (text, slots) from a template, or None. fixed: literal params (color names, hvac modes)."""
     lang = 'fr' if dialect == 'fr' else 'en'
     slots = {'lang': lang, 'dialect': dialect}
+    if fixed:
+        slots['fixed'] = dict(fixed)
     t = template
     if family == 'links.create':
         trig_ref, state, en_t, fr_t = rng.choice(TRIGGERS)
@@ -334,10 +379,18 @@ def render(family, dialect, template, rng):
     if '{t}' in t:
         slots['t'] = rng.choice([16, 17, 18, 18.5, 19, 19.5, 20, 20.5, 21, 21.5, 22, 23, 24, 25, 26])
         t = t.replace('{t}', ('%g' % slots['t']).replace('.', ',') if dialect == 'fr' and rng.random() < 0.7 else '%g' % slots['t'])
+    if '{h}' in t:
+        slots['h'] = rng.randrange(0, 361)
+        t = t.replace('{h}', str(slots['h']))
+    if '{k}' in t:
+        slots['k'] = rng.choice([2200, 2700, 3000, 3500, 4000, 5000, 6500])
+        t = t.replace('{k}', str(slots['k']))
     if family == 'home.set_temperature' and 'ref' not in slots:
         slots['ref'] = 'thermostat'
     if family == 'home.media_pause' and 'ref' not in slots:
         slots['ref'] = 'speaker'
+    if family == 'home.fan_speed' and 'ref' not in slots:
+        slots['ref'] = 'fan'
     if family == 'home.policy' and 'ref' not in slots:
         slots['ref'] = 'garage'
     t = t[0].upper() + t[1:]
@@ -352,17 +405,18 @@ def build(vary, seed=11, k_train=8, k_test=3):
     train, test = [], []
     for family, (_, _, templates) in FAMILIES.items():
         by_d = {}
-        for d, t in templates:
-            by_d.setdefault(d, []).append(t)
+        for item in templates:
+            d, t = item[0], item[1]
+            by_d.setdefault(d, []).append((t, item[2] if len(item) > 2 else None))
         for dialect, ts in by_d.items():
             ts = list(ts)
             rng.shuffle(ts)
             n_test = max(1, len(ts) // 5) if len(ts) >= 3 else 0
             kt = k_train * (2 if family == 'links.create' else 1) if not family.startswith(('home.unsupported', 'home.policy')) else 3
-            for i, t in enumerate(ts):
+            for i, (t, fixed) in enumerate(ts):
                 k = k_test if i < n_test else kt
                 for _ in range(k):
-                    text, slots = render(family, dialect, t, rng)
+                    text, slots = render(family, dialect, t, rng, fixed)
                     lang = slots['lang']
                     row = {'family': family, 'lang': lang, 'dialect': dialect, 'text': vary(text, lang, rng),
                            'reply': gold(family, slots)}
@@ -412,4 +466,12 @@ HOME_NOVEL = [
     ('fr', 'ouvre le portail', ('unsupported',)),
     ('fr', 'allume', ('clarify',)),
     ('fr', 'commande des croissants', ('unsupported',)),
+    ('en-US', 'make the kitchen light warm white', _s('home.set_color_temp', 'kitchen light', {'value': 2700})),
+    ('en-US', 'turn the bedroom lamp blue', _s('home.set_color', 'bedroom lamp', {'value': 240})),
+    ('en-US', 'crank the office fan to max', _s('home.fan_speed', 'office fan', {'value': 100})),
+    ('en-US', 'skip this track on the sonos', _s('home.media_next', 'sonos')),
+    ('en-US', 'mute it', _s('home.media_mute', 'speaker', {'value': 1})),
+    ('en-GB', 'put the heating on cool mode', _s('home.set_mode', 'heating', {'mode': 'cool'})),
+    ('fr', 'mets les leds en violet', _s('home.set_color', 'led strip', {'value': 270})),
+    ('fr', 'remets la clim en auto', _s('home.set_mode', 'air conditioning', {'mode': 'auto'})),
 ]

@@ -1,0 +1,8866 @@
+{
+ "openapi": "3.0.3",
+ "info": {
+  "title": "OpenBridge local API",
+  "version": "1.0",
+  "description": "The PC-local HTTP API a browser app or companion speaks to. All routes live under /api/v2; mutating routes take JSON and answer JSON."
+ },
+ "servers": [
+  {
+   "url": "http://127.0.0.1:18765",
+   "description": "Default (python -m src.server --port)."
+  }
+ ],
+ "paths": {
+  "/api/v2/ai/providers": {
+   "get": {
+    "operationId": "get_ai_providers",
+    "summary": "AI providers",
+    "description": "Configured command models and which one is active.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "operationId": "post_ai_providers",
+    "summary": "AI providers",
+    "description": "Configured command models and which one is active.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/ai/providers/activate": {
+   "post": {
+    "operationId": "post_ai_providers_activate",
+    "summary": "Ai Providers Activate",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/ai/providers/remove": {
+   "post": {
+    "operationId": "post_ai_providers_remove",
+    "summary": "Ai Providers Remove",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/ai/providers/test": {
+   "post": {
+    "operationId": "post_ai_providers_test",
+    "summary": "Ai Providers Test",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/capabilities": {
+   "get": {
+    "operationId": "get_capabilities",
+    "summary": "Capabilities",
+    "description": "Live device capabilities with STATUS vocabulary.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/capabilities/explore": {
+   "get": {
+    "operationId": "get_capabilities_explore",
+    "summary": "Explore capabilities",
+    "description": "Probe what a device can do (read-only).",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/capabilities/followup": {
+   "post": {
+    "operationId": "post_capabilities_followup",
+    "summary": "Capabilities Followup",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/capabilities/layouts": {
+   "get": {
+    "operationId": "get_capabilities_layouts",
+    "summary": "Capabilities Layouts",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "operationId": "post_capabilities_layouts",
+    "summary": "Capabilities Layouts",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/capabilities/render": {
+   "get": {
+    "operationId": "get_capabilities_render",
+    "summary": "Capabilities Render",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/catalog": {
+   "get": {
+    "operationId": "get_catalog",
+    "summary": "Device catalog",
+    "description": "Known device classes and their integration status.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/command/approve": {
+   "post": {
+    "operationId": "post_command_approve",
+    "summary": "Approve a command",
+    "description": "Owner approves exactly one proposed command.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/command/execute": {
+   "post": {
+    "operationId": "post_command_execute",
+    "summary": "Execute a command",
+    "description": "Run an approved command through the gate.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/command/parse": {
+   "post": {
+    "operationId": "post_command_parse",
+    "summary": "Parse a command",
+    "description": "Map free text to a skill proposal (no execution).",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/command/tiers": {
+   "get": {
+    "operationId": "get_command_tiers",
+    "summary": "Command Tiers",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/companion/commands": {
+   "get": {
+    "operationId": "get_companion_commands",
+    "summary": "Companion commands",
+    "description": "Commands queued for paired Companions.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/composer/catalog": {
+   "get": {
+    "operationId": "get_composer_catalog",
+    "summary": "Composer Catalog",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/composer/compose": {
+   "post": {
+    "operationId": "post_composer_compose",
+    "summary": "Composer Compose",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/composer/summary": {
+   "get": {
+    "operationId": "get_composer_summary",
+    "summary": "Composer Summary",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/contract": {
+   "get": {
+    "operationId": "get_contract",
+    "summary": "Fabric contract",
+    "description": "Contract version and schema.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/create": {
+   "post": {
+    "operationId": "post_dashboards_create",
+    "summary": "Dashboards Create",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/delete": {
+   "post": {
+    "operationId": "post_dashboards_delete",
+    "summary": "Dashboards Delete",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/list": {
+   "get": {
+    "operationId": "get_dashboards_list",
+    "summary": "Dashboards List",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/load": {
+   "post": {
+    "operationId": "post_dashboards_load",
+    "summary": "Dashboards Load",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/patch": {
+   "post": {
+    "operationId": "post_dashboards_patch",
+    "summary": "Dashboards Patch",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/restore": {
+   "post": {
+    "operationId": "post_dashboards_restore",
+    "summary": "Dashboards Restore",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/dashboards/save": {
+   "post": {
+    "operationId": "post_dashboards_save",
+    "summary": "Save a dashboard",
+    "description": "Persist a dashboard layout.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/diagnose": {
+   "post": {
+    "operationId": "post_diagnose",
+    "summary": "Diagnose",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/diagnosis": {
+   "get": {
+    "operationId": "get_diagnosis",
+    "summary": "Diagnosis",
+    "description": "What is wrong and what to do, in plain words.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/events": {
+   "get": {
+    "operationId": "get_events",
+    "summary": "Events",
+    "description": "Recent timeline events.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/execute": {
+   "post": {
+    "operationId": "post_execute",
+    "summary": "Execute a primitive",
+    "description": "Run one typed primitive with receipts and Undo.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "primitive_id": {
+          "type": "string"
+         },
+         "device_key": {
+          "type": "string"
+         },
+         "params": {
+          "type": "object"
+         },
+         "consent": {
+          "type": "boolean"
+         },
+         "idempotency_key": {
+          "type": "string",
+          "maxLength": 96
+         }
+        },
+        "additionalProperties": false
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/facts": {
+   "get": {
+    "operationId": "get_facts",
+    "summary": "Facts",
+    "description": "Observed device facts.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/facts/signed": {
+   "get": {
+    "operationId": "get_facts_signed",
+    "summary": "Facts Signed",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/graph": {
+   "get": {
+    "operationId": "get_graph",
+    "summary": "Device graph",
+    "description": "Devices, links and capabilities snapshot.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/hardware/bench": {
+   "post": {
+    "operationId": "post_hardware_bench",
+    "summary": "Hardware Bench",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/hardware/facts": {
+   "get": {
+    "operationId": "get_hardware_facts",
+    "summary": "Hardware facts",
+    "description": "This PC: CPU, RAM, GPU, radios.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/hardware/rank": {
+   "post": {
+    "operationId": "post_hardware_rank",
+    "summary": "Hardware Rank",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/hypotheses": {
+   "get": {
+    "operationId": "get_hypotheses",
+    "summary": "Hypotheses",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/library": {
+   "get": {
+    "operationId": "get_library",
+    "summary": "Skill library",
+    "description": "Saved skills: proposals, runs, buttons.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/library/approve": {
+   "post": {
+    "operationId": "post_library_approve",
+    "summary": "Approve a skill",
+    "description": "Approve exactly one saved recipe.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "consent": {
+          "type": "boolean"
+         }
+        },
+        "additionalProperties": false,
+        "required": [
+         "id",
+         "consent"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/library/enable": {
+   "post": {
+    "operationId": "post_library_enable",
+    "summary": "Enable/disable a skill",
+    "description": "Toggle a recipe without deleting it.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "enabled": {
+          "type": "boolean"
+         },
+         "consent": {
+          "type": "boolean"
+         }
+        },
+        "additionalProperties": false,
+        "required": [
+         "id",
+         "enabled",
+         "consent"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/library/remove": {
+   "post": {
+    "operationId": "post_library_remove",
+    "summary": "Remove a skill",
+    "description": "Delete a recipe permanently.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "consent": {
+          "type": "boolean"
+         }
+        },
+        "additionalProperties": false,
+        "required": [
+         "id",
+         "consent"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/library/run": {
+   "post": {
+    "operationId": "post_library_run",
+    "summary": "Run a skill",
+    "description": "Run one approved recipe now.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "consent": {
+          "type": "boolean"
+         }
+        },
+        "additionalProperties": false,
+        "required": [
+         "id",
+         "consent"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/manifests/compile": {
+   "post": {
+    "operationId": "post_manifests_compile",
+    "summary": "Manifests Compile",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/manifests/grant": {
+   "post": {
+    "operationId": "post_manifests_grant",
+    "summary": "Manifests Grant",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/manifests/invoke": {
+   "post": {
+    "operationId": "post_manifests_invoke",
+    "summary": "Manifests Invoke",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/manifests/receipts": {
+   "get": {
+    "operationId": "get_manifests_receipts",
+    "summary": "Manifests Receipts",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/manifests/revoke": {
+   "post": {
+    "operationId": "post_manifests_revoke",
+    "summary": "Manifests Revoke",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/manifests/ui_install": {
+   "post": {
+    "operationId": "post_manifests_ui_install",
+    "summary": "Manifests Ui Install",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/migrate/apply": {
+   "post": {
+    "operationId": "post_migrate_apply",
+    "summary": "Migrate Apply",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/migrate/propose": {
+   "post": {
+    "operationId": "post_migrate_propose",
+    "summary": "Migrate Propose",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/migrate/rollback": {
+   "post": {
+    "operationId": "post_migrate_rollback",
+    "summary": "Migrate Rollback",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/onboarding": {
+   "get": {
+    "operationId": "get_onboarding",
+    "summary": "Onboarding",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/onboarding/apk-portal": {
+   "post": {
+    "operationId": "post_onboarding_apk_portal",
+    "summary": "Onboarding Apk Portal",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/orchestration/approve": {
+   "post": {
+    "operationId": "post_orchestration_approve",
+    "summary": "Orchestration Approve",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/orchestration/cancel": {
+   "post": {
+    "operationId": "post_orchestration_cancel",
+    "summary": "Orchestration Cancel",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/orchestration/run": {
+   "post": {
+    "operationId": "post_orchestration_run",
+    "summary": "Orchestration Run",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/orchestration/status": {
+   "get": {
+    "operationId": "get_orchestration_status",
+    "summary": "Orchestration Status",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/pc/full-control": {
+   "get": {
+    "operationId": "get_pc_full_control",
+    "summary": "Pc Full Control",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "operationId": "post_pc_full_control",
+    "summary": "Pc Full Control",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/permissions/catalog": {
+   "get": {
+    "operationId": "get_permissions_catalog",
+    "summary": "Permissions Catalog",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/permissions/open": {
+   "post": {
+    "operationId": "post_permissions_open",
+    "summary": "Permissions Open",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/permissions/recheck": {
+   "post": {
+    "operationId": "post_permissions_recheck",
+    "summary": "Permissions Recheck",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/permissions/state": {
+   "get": {
+    "operationId": "get_permissions_state",
+    "summary": "Permissions State",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/primitives": {
+   "get": {
+    "operationId": "get_primitives",
+    "summary": "Primitives",
+    "description": "Typed action catalog with schemas and reversibility.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/primitives/catalog": {
+   "get": {
+    "operationId": "get_primitives_catalog",
+    "summary": "Primitives Catalog",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/recovery": {
+   "get": {
+    "operationId": "get_recovery",
+    "summary": "Recovery",
+    "description": "Pending Undo and recovery state.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/recovery/acknowledge": {
+   "post": {
+    "operationId": "post_recovery_acknowledge",
+    "summary": "Recovery Acknowledge",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/relays": {
+   "get": {
+    "operationId": "get_relays",
+    "summary": "Relays",
+    "description": "Paired relay devices and routes.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/relays/samples": {
+   "get": {
+    "operationId": "get_relays_samples",
+    "summary": "Relays Samples",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/remote_controls": {
+   "get": {
+    "operationId": "get_remote_controls",
+    "summary": "Remote controls",
+    "description": "Buttons granted to paired Companions.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   },
+   "post": {
+    "operationId": "post_remote_controls",
+    "summary": "Remote controls",
+    "description": "Buttons granted to paired Companions.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/remote_controls/full_control": {
+   "post": {
+    "operationId": "post_remote_controls_full_control",
+    "summary": "Remote Controls Full Control",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/remote_controls/invoke": {
+   "post": {
+    "operationId": "post_remote_controls_invoke",
+    "summary": "Remote Controls Invoke",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/remote_controls/skills": {
+   "post": {
+    "operationId": "post_remote_controls_skills",
+    "summary": "Grant skill buttons",
+    "description": "Show approved skills as Companion buttons.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "relay_id": {
+          "type": "string"
+         },
+         "recipe_ids": {
+          "type": "array",
+          "items": {
+           "type": "string"
+          }
+         },
+         "consent": {
+          "type": "boolean"
+         }
+        },
+        "additionalProperties": false,
+        "required": [
+         "relay_id",
+         "recipe_ids",
+         "consent"
+        ]
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/route_intel": {
+   "get": {
+    "operationId": "get_route_intel",
+    "summary": "Route Intel",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/route_intel/dispatch": {
+   "post": {
+    "operationId": "post_route_intel_dispatch",
+    "summary": "Dispatch a route",
+    "description": "Send a command down one route.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/route_intel/failover": {
+   "post": {
+    "operationId": "post_route_intel_failover",
+    "summary": "Route Intel Failover",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/route_intel/simulate_loss": {
+   "post": {
+    "operationId": "post_route_intel_simulate_loss",
+    "summary": "Route Intel Simulate Loss",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/routes": {
+   "get": {
+    "operationId": "get_routes",
+    "summary": "Routes",
+    "description": "How each device is reached.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/skill_arm": {
+   "post": {
+    "operationId": "post_skill_arm",
+    "summary": "Skill Arm",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/skill_invoke": {
+   "post": {
+    "operationId": "post_skill_invoke",
+    "summary": "Invoke a skill",
+    "description": "Run one registry skill through the gate.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/skill_policy": {
+   "post": {
+    "operationId": "post_skill_policy",
+    "summary": "Skill Policy",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/skill_routes": {
+   "get": {
+    "operationId": "get_skill_routes",
+    "summary": "Skill routes",
+    "description": "Which device serves each skill.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/skills": {
+   "get": {
+    "operationId": "get_skills",
+    "summary": "Skills",
+    "description": "Voice/command skill registry with policies.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/timeline": {
+   "get": {
+    "operationId": "get_timeline",
+    "summary": "Timeline",
+    "description": "Receipts and events, newest first.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/transplant/get": {
+   "post": {
+    "operationId": "post_transplant_get",
+    "summary": "Transplant Get",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/transplant/report": {
+   "post": {
+    "operationId": "post_transplant_report",
+    "summary": "Transplant Report",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/transplant/revoke": {
+   "post": {
+    "operationId": "post_transplant_revoke",
+    "summary": "Transplant Revoke",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/transplant/run": {
+   "post": {
+    "operationId": "post_transplant_run",
+    "summary": "Run a transplant",
+    "description": "Move a proven feature between devices.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/voice/intent": {
+   "post": {
+    "operationId": "post_voice_intent",
+    "summary": "Voice intent",
+    "description": "Map transcribed speech to an intent.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/voice/transcribe": {
+   "post": {
+    "operationId": "post_voice_transcribe",
+    "summary": "Transcribe",
+    "description": "Speech to text on this PC.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/watches": {
+   "get": {
+    "operationId": "get_watches",
+    "summary": "Watches",
+    "description": "State watches feeding automations.",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/workflows/grant": {
+   "post": {
+    "operationId": "post_workflows_grant",
+    "summary": "Workflows Grant",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/workflows/receipts": {
+   "get": {
+    "operationId": "get_workflows_receipts",
+    "summary": "Workflows Receipts",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/workflows/revoke": {
+   "post": {
+    "operationId": "post_workflows_revoke",
+    "summary": "Workflows Revoke",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v2/workflows/run": {
+   "post": {
+    "operationId": "post_workflows_run",
+    "summary": "Run a workflow",
+    "description": "Start one multi-step workflow.",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "400": {
+      "description": "Bad request",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Unknown target",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "409": {
+      "description": "Conflict / consent required",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     },
+     "503": {
+      "description": "Dependency unavailable",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "error": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "error"
+         ]
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

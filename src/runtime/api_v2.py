@@ -38,12 +38,14 @@ GET_ROUTES = ('/api/v2/ai/providers', '/api/v2/hardware/facts', '/api/v2/permiss
               '/api/v2/route_intel',
               '/api/v2/dashboards/list',
               '/api/v2/pc/full-control',
-              '/api/v2/library')
+              '/api/v2/library',
+              '/api/v2/voice/oracle/status')
 POST_ROUTES = ('/api/v2/ai/providers', '/api/v2/ai/providers/test', '/api/v2/ai/providers/remove', '/api/v2/ai/providers/activate', '/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
               '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
  '/api/v2/pc/full-control',
  '/api/v2/library/approve', '/api/v2/library/run', '/api/v2/library/enable', '/api/v2/library/remove',
- '/api/v2/remote_controls/skills')
+ '/api/v2/remote_controls/skills',
+ '/api/v2/voice/oracle')
 
 
 import threading
@@ -385,6 +387,15 @@ def ai_providers(path, body=None):
 def get(server, path, query):
     if path == '/api/v2/ai/providers':
         return ai_providers(path)
+    if path == '/api/v2/voice/oracle/status':
+        from src.ai import oracle as Oracle
+        st = Oracle.status()
+        st['glasses_connected'] = bool(
+            getattr(server, 'glasses_hub', None)
+            or getattr(server, 'engo_bridge', None)
+            or getattr(server, 'activelook', None)
+        )
+        return 200, st
     if isinstance(query, dict):
         # In-process callers (CLI) pass already-parsed params; normalize scalars to parse_qs shape.
         q = {k: (v if isinstance(v, list) else [v]) for k, v in query.items()}
@@ -661,6 +672,61 @@ def get(server, path, query):
 
 def voice(server, path, body):
     from src.ai import voice_intent, voice_stt
+
+    # ------------------------------------------------------------------
+    # VoiceAI Oracle: STT + LLM answer → glasses HUD in one round-trip
+    # Accepts: {"audio_b64": "<pcm16 base64>", "language": "fr"|"en"}
+    #       OR {"transcript": "<already-transcribed text>"}
+    # Returns: {"query_class", "answer", "latency_ms", "source", "transcript"}
+    # ------------------------------------------------------------------
+    if path == '/api/v2/voice/oracle':
+        from src.ai import oracle as Oracle
+        import base64, binascii
+        transcript = None
+
+        if 'transcript' in body and isinstance(body['transcript'], str):
+            # Fast path: phone already did STT, skip local STT
+            transcript = body['transcript'][:400]
+        elif 'audio_b64' in body and isinstance(body.get('audio_b64'), str):
+            # Full path: decode PCM and run local STT first
+            try:
+                pcm = base64.b64decode(body['audio_b64'], validate=True)
+            except (binascii.Error, ValueError):
+                return 400, {'error': 'invalid audio_b64'}
+            from src.ai import stt_local
+            try:
+                if not stt_local.available():
+                    raise voice_stt.STTBlocked('local STT not installed')
+                result = stt_local.transcribe_pcm(bytes(pcm), body.get('language', 'fr'))
+                transcript = result.get('transcript', '')
+            except voice_stt.STTBlocked as e:
+                return 409, {'error': str(e), 'hint': 'pass transcript directly'}
+            except Exception as e:
+                return 503, {'error': f'STT failed: {type(e).__name__}'}
+        else:
+            return 400, {'error': 'audio_b64 or transcript required'}
+
+        if not transcript or not transcript.strip():
+            return 200, {'query_class': 'GENERAL', 'answer': '', 'latency_ms': 0,
+                         'source': 'empty', 'transcript': ''}
+
+        mic_source = body.get('mic_source') if isinstance(body.get('mic_source'), str) else 'phone_mic'
+        if body.get('partial') is True:
+            # Speculative web pre-fetch + fast live transcript preview without running LLM
+            Oracle.prefetch_web(transcript)
+            pushed = Oracle.push_oracle_to_hud(
+                server, {'transcript': transcript}, mic_source=mic_source, partial=True
+            )
+            return 200, {'status': 'listening', 'transcript': transcript,
+                         'mic_source': mic_source, 'hud_pushed': pushed}
+
+        answer_data = Oracle.oracle_answer(transcript)
+        answer_data['mic_source'] = mic_source
+        answer_data['hud_pushed'] = Oracle.push_oracle_to_hud(
+            server, answer_data, mic_source=mic_source, partial=False
+        )
+        return 200, answer_data
+
     if path == '/api/v2/voice/intent':
         if set(body) - {'text', 'lang'} or 'text' not in body:
             return 400, {'error': 'text plus optional lang'}

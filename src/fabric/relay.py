@@ -3,8 +3,9 @@
 A relay (Android phone/TV companion, ESPHome proxy, ...) is enrolled once with a short pairing code shown on the relay;
 both sides derive a per-relay key. Since 23 Nov 2026 the key comes from CPace (src/fabric/cpace.py), a
 password-authenticated key exchange: the recorded pairing exchange no longer lets anyone test the 6-digit code
-offline. Companions that predate it still pair with the legacy PBKDF2 derivation (pairing reports 'legacy-v1'),
-unless OPENBRIDGE_PAIRING_REQUIRE_PAKE=1 refuses them. Every command is HMAC-SHA256 signed, carries a nonce and an expiry, and names one
+offline. Companions that predate it are refused by default (pair with CPace instead); only an explicit
+OPENBRIDGE_PAIRING_ALLOW_LEGACY=1 still pairs them with the legacy PBKDF2 derivation (pairing then
+reports 'legacy-v1'). Every command is HMAC-SHA256 signed, carries a nonce and an expiry, and names one
 operation from a closed set. Scans are bounded (<= 15 s, <= 200 observations). Installing a companion grants nothing
 by itself: the relay must report the Android permission as granted and the owner must have enabled the capability."""
 import hashlib
@@ -51,8 +52,14 @@ HEX64 = re.compile(r'^[0-9a-f]{64}$')
 
 
 def require_pake():
-    """True when legacy (PBKDF2) pairing is refused: OPENBRIDGE_PAIRING_REQUIRE_PAKE=1."""
-    return os.environ.get('OPENBRIDGE_PAIRING_REQUIRE_PAKE', '') == '1'
+    """True unless the owner explicitly allows legacy pairing. Legacy PBKDF2 pairing is refused
+    by default (it allows offline guessing of a recorded 6-digit code); set
+    OPENBRIDGE_PAIRING_ALLOW_LEGACY=1 only to pair a Companion too old for CPace during the
+    transition. OPENBRIDGE_PAIRING_REQUIRE_PAKE=1 keeps working (same effect). Already-paired
+    relays are unaffected either way (their keys are already derived)."""
+    if os.environ.get('OPENBRIDGE_PAIRING_ALLOW_LEGACY', '') == '1':
+        return False
+    return True
 
 
 def pake_offered(hello):
@@ -257,13 +264,16 @@ def validate_commands(report):
             out.append({'request_id': c['request_id'], 'kind': 'voice', 'clip_id': c['clip_id'],
                         'bytes': nbytes, 'sha256': c['sha256'], 'lang': c['lang'], 'quality': c['quality']})
             continue
-        if c.get('kind', 'text') != 'text':
+        if c.get('kind', 'text') not in ('text', 'oracle'):
             continue
         text = c.get('text')
         if not isinstance(text, str) or not text.strip() or len(text) > MAX_COMMAND_TEXT:
             continue
-        out.append({'request_id': c['request_id'], 'kind': 'text', 'text': text.strip(),
-                    'lang': c['lang'], 'quality': c['quality']})
+        entry = {'request_id': c['request_id'], 'kind': c.get('kind', 'text'),
+                 'text': text.strip(), 'lang': c['lang'], 'quality': c['quality']}
+        if entry['kind'] == 'oracle' and isinstance(c.get('mic_source'), str):
+            entry['mic_source'] = c['mic_source'][:32]
+        out.append(entry)
     return out
 
 

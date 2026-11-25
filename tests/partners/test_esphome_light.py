@@ -49,6 +49,19 @@ class EsphomeLightTests(unittest.TestCase):
         self.assertEqual((r['verified'], r['reversible']), (None, False))
         self.assertEqual(self.emu.state['power'], 'on')
 
+    def test_switch_and_cover(self):
+        r = self.dev.set_reversible('switch', 'on')
+        self.assertEqual((r['before'], r['after'], r['verified']), ('off', 'on', True))
+        self.assertTrue(self.dev.undo('switch')['exact'])
+        self.dev.command('switch_toggle')
+        self.assertEqual(self.emu.state['switch'], 'on')
+        self.dev.command('cover_open')
+        self.assertEqual(self.emu.state['cover'], 100)
+        self.dev.command('cover_close')
+        self.assertEqual(self.emu.state['cover'], 0)
+        with self.assertRaises(EsphomeLightBlocked):
+            self.dev.set_reversible('climate_target', 21)   # read-only until action URLs are verified
+
     def test_graph_entry_is_pseudonymized_and_labelled_emulated(self):
         reg = Registry()
         self.assertEqual(ingest_esphome_light(reg, self.dev, b'salt', 'SERIAL-1234')['status'], 'OK')
@@ -92,32 +105,28 @@ class TransportRoundtrip(unittest.TestCase):
 
     @staticmethod
     def serve(state):
-        import threading
-        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from tests.partners import httpfake
 
-        class H(BaseHTTPRequestHandler):
-            def log_message(self, *_):
-                pass
-
-            def _send(self, doc, code=200):
-                body = json.dumps(doc).encode()
-                self.send_response(code)
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Content-Length', str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-
+        class H(httpfake.Quiet):
             def do_GET(self):
                 if self.path == '/light/desk':
-                    return self._send({'id': 'desk', 'state': state['power'].upper(),
-                                       'brightness': int(state['brightness'] * 255 / 100)})
+                    return self._send_json({'id': 'desk', 'state': state['power'].upper(),
+                                            'brightness': int(state['brightness'] * 255 / 100)})
+                if self.path == '/switch/pump':
+                    return self._send_json({'id': 'pump', 'state': state['switch'].upper()})
+                if self.path == '/sensor/temp':
+                    return self._send_json({'id': 'temp', 'value': state['temp']})
+                if self.path == '/cover/blind':
+                    return self._send_json({'id': 'blind', 'position': state['cover']})
+                if self.path == '/climate/room':
+                    return self._send_json({'id': 'room', 'current_temperature': state['ct'],
+                                            'target_temperature': state['ctt']})
                 if self.path == '/device-info':
-                    return self._send({'esphome_version': '2026.11.0'})
-                return self._send({}, 404)
+                    return self._send_json({'esphome_version': '2026.11.0'})
+                return self._send_json({}, 404)
 
             def do_POST(self):
-                ln = int(self.headers.get('Content-Length') or 0)
-                body = json.loads(self.rfile.read(ln) or b'{}') if ln else {}
+                body = json.loads(self._read_body() or b'{}')
                 if self.path == '/light/desk/turn_on':
                     state['power'] = 'on'
                     if 'brightness' in body:
@@ -126,13 +135,23 @@ class TransportRoundtrip(unittest.TestCase):
                     state['power'] = 'off'
                 elif self.path == '/light/desk/toggle':
                     state['power'] = 'off' if state['power'] == 'on' else 'on'
+                elif self.path == '/switch/pump/turn_on':
+                    state['switch'] = 'on'
+                elif self.path == '/switch/pump/turn_off':
+                    state['switch'] = 'off'
+                elif self.path == '/switch/pump/toggle':
+                    state['switch'] = 'off' if state['switch'] == 'on' else 'on'
+                elif self.path == '/cover/blind/open':
+                    state['cover'] = 100
+                elif self.path == '/cover/blind/close':
+                    state['cover'] = 0
+                elif self.path == '/cover/blind/stop':
+                    pass
                 else:
-                    return self._send({}, 404)
-                return self._send({'ok': True})
+                    return self._send_json({}, 404)
+                return self._send_json({'ok': True})
 
-        srv = HTTPServer(('127.0.0.1', 0), H)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
-        return srv
+        return httpfake.serve(H)
 
     def test_read_write_command_roundtrip(self):
         state = {'power': 'off', 'brightness': 50}
@@ -152,23 +171,51 @@ class TransportRoundtrip(unittest.TestCase):
             srv.shutdown()
             srv.server_close()
 
+    def test_full_node_roundtrip(self):
+        state = {'power': 'off', 'brightness': 50, 'switch': 'off', 'cover': 0,
+                 'temp': 21.5, 'ct': 20.0, 'ctt': 21.0}
+        srv = self.serve(state)
+        try:
+            t = EsphomeLightTransport('127.0.0.1', 'desk', port=srv.server_port, switch_id='pump',
+                                      cover_id='blind', climate_id='room', sensors={'office_temp': 'temp'})
+            names = {f['name']: f['value'] for f in EsphomeLight(t).facts()}
+            self.assertEqual((names['switch'], names['cover'], names['climate_temp'],
+                              names['climate_target'], names['office_temp']), ('off', 0, 20.0, 21.0, 21.5))
+            dev = EsphomeLight(t)
+            self.assertTrue(dev.set_reversible('switch', 'on')['verified'])
+            dev.command('switch_toggle')
+            self.assertEqual(state['switch'], 'off')
+            dev.command('cover_open')
+            self.assertEqual(state['cover'], 100)
+            self.assertTrue(dev.undo('switch')['exact'])
+        finally:
+            srv.shutdown()
+            srv.server_close()
+
+    def test_missing_entities_are_omitted_never_faked(self):
+        state = {'power': 'off', 'brightness': 50}
+        srv = self.serve(state)
+        try:
+            t = EsphomeLightTransport('127.0.0.1', 'desk', port=srv.server_port,
+                                      switch_id='ghost', sensors={'ghost_temp': 'nope'})
+            names = {f['name'] for f in EsphomeLight(t).facts()}
+            self.assertNotIn('switch', names)
+            self.assertNotIn('ghost_temp', names)
+            self.assertIn('power', names)          # the light still reads
+            with self.assertRaises(EsphomeLightBlocked):
+                EsphomeLight(t).set_reversible('switch', 'on')
+        finally:
+            srv.shutdown()
+            srv.server_close()
+
     def test_garbage_fails_closed(self):
-        import threading
-        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from tests.partners import httpfake
 
-        class H(BaseHTTPRequestHandler):
-            def log_message(self, *_):
-                pass
-
+        class H(httpfake.Quiet):
             def do_GET(self):
-                body = b'not json{{'
-                self.send_response(200)
-                self.send_header('Content-Length', str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                self._send_raw(b'not json{{')
 
-        srv = HTTPServer(('127.0.0.1', 0), H)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        srv = httpfake.serve(H)
         try:
             dev = EsphomeLight(EsphomeLightTransport('127.0.0.1', 'desk', port=srv.server_port))
             with self.assertRaises(EsphomeLightError):

@@ -16,7 +16,7 @@ def ingest_home_assistant(registry, ha, salt):
                           label='Home Assistant', observations=[DeviceObservation('entities', len(states), 'HOME_ASSISTANT', 'LAN', t, True)])
     registry.link(Link('pc', hub, 'LAN', ('observe', 'read'), 'HOME_ASSISTANT'))
     registry.capability(hub, Capability('home_assistant_api', 'read', 'IMPLEMENTED_UNVERIFIED', 'HOME_ASSISTANT', EVIDENCE))
-    count = 0
+    count, capped = 0, 0
     for s in states:
         eid = s['entity_id']
         domain, attrs = domain_of(eid), s.get('attributes') or {}
@@ -26,8 +26,12 @@ def ingest_home_assistant(registry, ha, salt):
                DeviceObservation('ha_domain', domain, 'HOME_ASSISTANT', 'LAN', t, True)]
         if attrs.get('device_class'):
             obs.append(DeviceObservation('device_class', str(attrs['device_class'])[:40], 'HOME_ASSISTANT', 'LAN', t, True))
-        key = registry.upsert([Identifier('ha_entity', opaque('ha_entity', ha.url + '|' + eid, salt), True)],
-                              category=CATEGORY[domain], label=label, observations=obs)
+        try:
+            key = registry.upsert([Identifier('ha_entity', opaque('ha_entity', ha.url + '|' + eid, salt), True)],
+                                  category=CATEGORY[domain], label=label, observations=obs)
+        except OverflowError:
+            capped += 1       # registry full: skip new devices, keep merging the rest
+            continue
         registry.devices[key]['ha_entity'] = eid          # kept off the snapshot
         registry.link(Link(hub, key, 'INVENTORY', ('observe', 'read', 'control') if acts else ('observe', 'read'), 'HOME_ASSISTANT'))
         registry.capability(key, Capability('ha_state', 'read', 'IMPLEMENTED_UNVERIFIED', 'HOME_ASSISTANT', EVIDENCE))
@@ -37,4 +41,4 @@ def ingest_home_assistant(registry, ha, salt):
         elif domain in ('cover', 'lock', 'alarm_control_panel'):
             registry.capability(key, Capability('ha_control', 'write', 'BLOCKED', 'HOME_ASSISTANT', 'refused by policy (physical access)'))
         count += 1
-    return {'status': 'OK', 'devices': count}
+    return {'status': 'OK', 'devices': count, 'capped': capped}

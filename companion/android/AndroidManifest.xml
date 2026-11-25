@@ -40,6 +40,7 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".OracleVoiceActivity" android:exported="false" android:configChanges="orientation|screenSize|keyboardHidden" />
         <service android:name=".RelayService" android:exported="false"
             android:foregroundServiceType="connectedDevice" />
         <!-- Messages on the glasses: active only after the owner allows notification access in Android settings. -->

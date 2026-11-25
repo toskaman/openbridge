@@ -30,3 +30,14 @@ class SessionTests(unittest.TestCase):
         j=SessionJournal(tempfile.mkdtemp()+'/s.json')
         with self.assertRaises(ValueError):j.record('flash_firmware','x',{},0,1)
         self.assertEqual(restore({'kind':'system_package_enabled','target':{'serial':'s','package':'p'},'before':0},FakeAdb())[0],'FAILED')
+
+    def test_closed_history_is_bounded_open_never_dropped(self):
+        j=SessionJournal(tempfile.mkdtemp()+'/s.json')
+        keep=j.record('adb_network_connected','TV',{'address':'kept'},'not connected','connected')
+        for i in range(SessionJournal.MAX_KEPT_CLOSED + 50):
+            cid=j.record('adb_network_connected','TV',{'address':'r%d' % i},'not connected','connected')
+            j.close(cid,'RESTORED')
+        rows=j._load()
+        self.assertEqual(len(rows), 1 + SessionJournal.MAX_KEPT_CLOSED)
+        self.assertIn(keep,[r['id'] for r in j.open_changes()])
+        self.assertEqual(rows[-1]['state'],'RESTORED')

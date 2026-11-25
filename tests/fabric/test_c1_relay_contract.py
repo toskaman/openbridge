@@ -6,10 +6,21 @@ with one structured reason per cause, keeps the programming-error guards (verify
 untouched, and guarantees a refused enroll leaves no partial pairing state.
 """
 import json
+import os
 import threading
 import time
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+def setUpModule():
+    # Contract tests use legacy-format fake hellos for pairing mechanics; opt in explicitly
+    # (production refuses legacy pairing unless the owner sets the same variable).
+    os.environ['OPENBRIDGE_PAIRING_ALLOW_LEGACY'] = '1'
+
+
+def tearDownModule():
+    os.environ.pop('OPENBRIDGE_PAIRING_ALLOW_LEGACY', None)
 from unittest import mock
 
 from src.fabric import relay as R

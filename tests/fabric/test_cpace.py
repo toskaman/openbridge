@@ -148,12 +148,12 @@ class Pairing(unittest.TestCase):
         with self.assertRaises(R.RelayError):
             R.verify(R.derive_key('424242', hello['relay_nonce'], dev.pc), first, None)
 
-    def test_legacy_companion_still_pairs_unless_cpace_is_required(self):
-        dev = ReferenceCompanion(cpace=False)
-        self.assertEqual(R.pair(dev, lambda: '424242')[1], dev.key)
-        with mock.patch.dict(os.environ, {'OPENBRIDGE_PAIRING_REQUIRE_PAKE': '1'}):
-            with self.assertRaises(R.RelayError):
-                R.pair(ReferenceCompanion(cpace=False), lambda: '424242')
+    def test_legacy_companion_refused_by_default_allowed_on_opt_out(self):
+        with self.assertRaises(R.RelayError):
+            R.pair(ReferenceCompanion(cpace=False), lambda: '424242')
+        with mock.patch.dict(os.environ, {'OPENBRIDGE_PAIRING_ALLOW_LEGACY': '1'}):
+            dev = ReferenceCompanion(cpace=False)
+            self.assertEqual(R.pair(dev, lambda: '424242')[1], dev.key)
 
     def test_companion_refuses_a_legacy_proof_after_offering_cpace(self):
         dev = ReferenceCompanion()
@@ -188,11 +188,22 @@ class Pairing(unittest.TestCase):
         import tempfile
         server = create_server(0, fabric_salt=b's', session_journal=SessionJournal(tempfile.mkdtemp() + '/s.json'))
         self.addCleanup(server.server_close)
-        with mock.patch.object(server.android, 'relay_urls', return_value=['http://127.0.0.1:47800']):
+        with mock.patch.dict(os.environ, {'OPENBRIDGE_PAIRING_ALLOW_LEGACY': '1'}), \
+                mock.patch.object(server.android, 'relay_urls', return_value=['http://127.0.0.1:47800']):
             start = server.relay_action('/api/relay-pair-start', {'device_id': 'h2'},
                                         transport_factory=lambda u: ReferenceCompanion(relay_id='tv', cpace=False))
         self.assertEqual(start['pairing'], 'legacy-v1')
         self.assertIn('update', start['warning'])
+
+
+class LegacyDefault(unittest.TestCase):
+    def test_require_pake_defaults_to_true(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertTrue(R.require_pake())
+        with mock.patch.dict(os.environ, {'OPENBRIDGE_PAIRING_ALLOW_LEGACY': '1'}):
+            self.assertFalse(R.require_pake())
+        with mock.patch.dict(os.environ, {'OPENBRIDGE_PAIRING_REQUIRE_PAKE': '1'}):
+            self.assertTrue(R.require_pake())
 
 
 if __name__ == '__main__':

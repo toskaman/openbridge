@@ -88,16 +88,11 @@ class TransportRoundtrip(unittest.TestCase):
 
     @staticmethod
     def serve(auth_ok=True):
-        import threading
-        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from tests.partners import httpfake
 
-        class H(BaseHTTPRequestHandler):
-            def log_message(self, *_):
-                pass
-
+        class H(httpfake.Quiet):
             def do_POST(self):
-                ln = int(self.headers.get('Content-Length') or 0)
-                raw = self.rfile.read(ln).decode('utf-8', 'replace') if ln else ''
+                raw = self._read_body().decode('utf-8', 'replace')
                 if not auth_ok or not (self.headers.get('Authorization') or '').startswith('Digest '):
                     self.send_response(401)
                     self.send_header('WWW-Authenticate', 'Digest realm="TR-064", nonce="abc123", qop="auth"')
@@ -107,16 +102,9 @@ class TransportRoundtrip(unittest.TestCase):
                 key = (self.path.rsplit('/', 1)[-1],
                        'GetInfo' if 'GetInfo' in raw else 'GetHostNumberOfEntries' if 'GetHostNumberOfEntries' in raw
                        else 'GetStatusInfo' if 'GetStatusInfo' in raw else 'GetTotalAssociations')
-                body = (ENVELOPE % RESPONSES[key]).encode()
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/xml')
-                self.send_header('Content-Length', str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                self._send_raw((ENVELOPE % RESPONSES[key]).encode(), ctype='text/xml')
 
-        srv = HTTPServer(('127.0.0.1', 0), H)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
-        return srv
+        return httpfake.serve(H)
 
     def test_read_roundtrip(self):
         srv = self.serve()
@@ -140,22 +128,14 @@ class TransportRoundtrip(unittest.TestCase):
             srv.server_close()
 
     def test_garbage_fails_closed(self):
-        import threading
-        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from tests.partners import httpfake
 
-        class H(BaseHTTPRequestHandler):
-            def log_message(self, *_):
-                pass
-
+        class H(httpfake.Quiet):
             def do_POST(self):
-                body = b'<html>not soap'
-                self.send_response(200)
-                self.send_header('Content-Length', str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+                self._read_body()
+                self._send_raw(b'<html>not soap')
 
-        srv = HTTPServer(('127.0.0.1', 0), H)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        srv = httpfake.serve(H)
         try:
             t = FritzboxRouterTransport('127.0.0.1', 'admin', 'secret', port=srv.server_port)
             with self.assertRaises(FritzboxRouterError):

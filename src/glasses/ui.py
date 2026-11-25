@@ -523,6 +523,62 @@ class VoiceScreen(Screen):
             hint(p, ctx.tr('voice.try'))
 
 
+class OracleScreen(Screen):
+    """Real-time VoiceAI Oracle answer card for ENGO 3 (304x256 MicroOLED)."""
+
+    def on(self, ev, ctx):
+        if ev in ('ok', 'back'):
+            return ('pop',)
+        if ev == 'home':
+            return ('home',)
+        return None
+
+    def render(self, p, ctx):
+        v = ctx.voice or {}
+        o = v.get('oracle') or {}
+        st = v.get('state', 'done')
+        qclass = o.get('query_class', 'GENERAL')
+        lat = int(o.get('latency_ms', 0) or 0)
+
+        # Header badge + latency
+        badge_tone = {'MATH': 'accent', 'LOCATE': 'warn', 'GENERAL': 'ok'}.get(qclass, 'accent')
+        badge = {'MATH': 'ORACLE MATH', 'LOCATE': 'ORACLE INFO', 'GENERAL': 'ORACLE AI'}.get(qclass, 'ORACLE AI')
+        if st == 'listening':
+            badge = 'ECOUTE...'
+            badge_tone = 'accent'
+        p.text(22, 16, badge, 1, badge_tone)
+        if st != 'listening':
+            lat_tone = 'ok' if lat < 600 else 'warn' if lat < 2000 else 'alert'
+            p.text_right(284, 16, f'{lat}ms', 1, lat_tone)
+        p.line(18, 38, 286, 38, 'faint')
+
+        # Heard transcript (1-2 lines)
+        heard = v.get('text') or o.get('transcript') or ''
+        for i, line in enumerate(wrap('> ' + heard if heard else '', 0, 264, 2)):
+            p.text(20, 44 + i * 16, line, 0, 'secondary')
+        p.line(18, 80, 286, 80, 'faint')
+
+        # Answer body (up to 3 crisp lines, larger font when short)
+        ans = (o.get('answer') or v.get('result') or '').strip()
+        lines = [ln for ln in ans.splitlines() if ln.strip()][:3]
+        if st == 'listening':
+            p.text_center(W / 2, 128, '...', 2, 'accent')
+        elif lines:
+            use_big = len(lines) <= 2 and all(text_width(ln, 2) <= 264 for ln in lines)
+            font_id = 2 if use_big else 1
+            step_y = 32 if use_big else 24
+            y0 = 104 if len(lines) <= 2 else 90
+            ans_tone = 'ok' if qclass != 'LOCATE' else 'primary'
+            for i, ln in enumerate(lines):
+                p.text_center(W / 2, y0 + i * step_y, fit(ln, font_id, 268), font_id, ans_tone)
+
+        # Footer source + dismiss hint
+        src = str(o.get('source') or '').upper()
+        if src:
+            p.text(22, 206, src[:18], 0, 'muted')
+        hint(p, ctx.tr('hint.message'))
+
+
 class SettingsScreen(ListScreen):
     def title(self, ctx):
         return ctx.tr('menu.settings')

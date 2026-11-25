@@ -25,6 +25,8 @@ class SessionError(OSError):
 
 
 class SessionJournal:
+    MAX_KEPT_CLOSED = 200
+
     def __init__(self, path=None):
         root = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge'
         self.path = Path(path) if path else root / 'session-changes.json'
@@ -109,12 +111,26 @@ class SessionJournal:
                     return r['id']
             entry = {'id': 'chg-' + uuid.uuid4().hex[:10], 'kind': kind, 'title': KINDS[kind], 'device': device_label,
                      'target': target, 'before': before, 'after': after, 'recorded_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'state': 'OPEN'}
-            rows.append(entry); self._save(rows)
+            rows.append(entry); self._save(self._prune(rows))
             return entry['id']
 
     def open_changes(self):
         with self._locked():
             return [r for r in self._load() if r['state'] == 'OPEN']
+
+    @staticmethod
+    def _prune(rows):
+        """Keep every OPEN change plus the newest MAX_KEPT_CLOSED closed ones. Pending restores are
+        never dropped; old history is, so the file (rewritten on every op) stays small."""
+        kept, closed_seen = [], 0
+        for r in reversed(rows):
+            if not isinstance(r, dict) or r.get('state') == 'OPEN':
+                kept.append(r)
+            elif closed_seen < SessionJournal.MAX_KEPT_CLOSED:
+                closed_seen += 1
+                kept.append(r)
+        kept.reverse()
+        return kept
 
     def close(self, change_id, state, detail=''):
         with self._locked():
@@ -122,7 +138,7 @@ class SessionJournal:
             for r in rows:
                 if r['id'] == change_id:
                     r['state'] = state; r['closed_detail'] = detail[:200]; r['closed_at'] = time.strftime('%Y-%m-%dT%H:%M:%S%z')
-            self._save(rows)
+            self._save(self._prune(rows))
 
 
 def restore(change, adb):

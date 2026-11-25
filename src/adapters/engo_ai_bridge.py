@@ -1264,6 +1264,15 @@ class EngoAIBridge:
                 azimuth_dir=p.get("azimuth_dir", "CENTRE 0°"),
                 latency_ms=p.get("latency_ms", 120)
             )
+        elif e_type == "oracle_answer":
+            # VoiceAI Oracle: show Q&A answer card on ENGO 3
+            return self.adapter.push_oracle_answer(
+                query_class=p.get("query_class", "GENERAL"),
+                transcript=p.get("transcript", ""),
+                answer=p.get("answer", ""),
+                source=p.get("source", "unavailable"),
+                latency_ms=p.get("latency_ms", 0),
+            )
         elif e_type == "linky_rte_tempo":
             return self.push_api_glance("linky_rte_tempo", p)
         elif e_type == "weather_radar":

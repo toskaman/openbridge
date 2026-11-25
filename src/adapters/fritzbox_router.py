@@ -13,7 +13,6 @@ Every value is read from the device; anything unrecognized fails closed with Fri
 
 Status: emulator only. Record real-hardware runs in docs/DEVICE_EVIDENCE.json before claiming support.
 """
-import ipaddress
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -44,20 +43,8 @@ class FritzboxRouterError(OSError):
 
 
 def _host_allowed(host):
-    """Local network only (plus the FRITZ!Box default name, which resolves on the LAN)."""
-    h = (host or '').strip().lower().rstrip('.')
-    if not h or '/' in h or '\\' in h or '@' in h or ' ' in h:
-        return False
-    try:
-        ip = ipaddress.ip_address(h)
-        return ip.is_private or ip.is_loopback or ip.is_link_local
-    except ValueError:
-        pass
-    if h in ('localhost', 'fritz.box'):
-        return True
-    if h.endswith('.lan') or h.endswith('.local') or h.endswith('.fritz.box'):
-        return True
-    return '.' not in h and h.replace('-', '').replace('_', '').isalnum()
+    from src.fabric import netguard
+    return netguard.local_host(host, bare_names=True, extra_names=('fritz.box',), extra_suffixes=('.fritz.box',))
 
 
 def _local(tag):

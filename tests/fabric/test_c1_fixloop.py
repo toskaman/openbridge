@@ -4,12 +4,24 @@ Each class pins one audit finding; every unexpected escape (KeyError,
 AttributeError, RuntimeError) fails the test instead of passing silently.
 """
 import io
+import os
 import socket
 import threading
 import time
 import unittest
 
 from src.fabric import relay as R
+
+
+def setUpModule():
+    # Pairing-mechanics tests with legacy-format fake hellos; opt in explicitly
+    # (production refuses legacy pairing unless the owner sets the same variable).
+    os.environ['OPENBRIDGE_PAIRING_ALLOW_LEGACY'] = '1'
+
+
+def tearDownModule():
+    os.environ.pop('OPENBRIDGE_PAIRING_ALLOW_LEGACY', None)
+
 
 KEY = R.derive_key('123456', 'rn', 'pn')
 

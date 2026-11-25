@@ -93,13 +93,8 @@ def save(doc: dict, path=None) -> Path:
 # ---------------------------------------------------------------- validation
 
 def _host_is_private(host: str) -> bool:
-    if host in ('localhost',) or host.endswith('.localhost'):
-        return True
-    try:
-        ip = ipaddress.ip_address(host)
-    except ValueError:
-        return host.endswith('.local') or host.endswith('.lan')
-    return ip.is_loopback or ip.is_private or ip.is_link_local
+    from src.fabric import netguard
+    return netguard.local_host(host)
 
 
 def _host_is_loopback(host: str) -> bool:

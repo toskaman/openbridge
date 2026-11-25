@@ -53,6 +53,19 @@ class TrainingDataMatchesRegistry(unittest.TestCase):
         dialects = {r['dialect'] for r in rows}
         self.assertEqual(dialects, {'en-US', 'en-GB', 'fr'})
 
+    def test_novel_rows_resolve(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'dev' / 'ai_training'))
+        import home_families as H
+        n = 0
+        for dialect, text, exp in H.HOME_NOVEL:
+            if exp[0] != 'skill':
+                continue
+            _, sid, params, ref = exp
+            S.resolve(sid, params)               # raises on unknown skill or bad params
+            self.assertTrue(ref)
+            n += 1
+        self.assertGreater(n, 20)
+
 
 if __name__ == '__main__':
     unittest.main()

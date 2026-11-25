@@ -43,6 +43,24 @@ The newest changes first. Planned work is in the [roadmap](ROADMAP.md).
 - 🗺️ **Companion platforms surveyed:** what a port needs (protocol checklist) and verdicts for 10 OS families —
   Linux tray first, one web kit for Tizen + webOS TVs, Swift core for iOS + macOS, AAOS variant, Playdate
   prototype; HarmonyOS phones blocked, KaiOS thin-client only. [Plan](docs/COMPANION_PLATFORMS.md)
+- 📡 **MQTT gateway:** Tasmota, Shelly Gen1 and Zigbee2MQTT devices over a local broker (stdlib MQTT 3.1.1
+  subset, typed on/off/brightness/toggle with read-back and exact Undo, discovery, graph ingest). 14 loopback
+  tests. [Guide](docs/MQTT.md)
+- 🏠 **7 new Home Assistant actions:** light colour temperature + colour, fan speed, media next/previous/mute,
+  thermostat mode — each gated by device capabilities, read back, exactly undone, voiced in FR/EN (`ha say`
+  domains, training families, battery) and soaked.
+- 🔒 **Legacy pairing cut:** PBKDF2 pairing refused by default (offline-guessable); CPace required unless the
+  owner sets `OPENBRIDGE_PAIRING_ALLOW_LEGACY=1` for the transition. Already-paired relays unaffected.
+- 🧰 **One LAN guard** (`src/fabric/netguard.py`) replaces 5 copies; partner kit ships a loopback HTTP fake
+  (`tests/partners/httpfake.py`, 3 adapter suites refactored onto it); ESPHome covers switches, sensors,
+  covers and climate reads.
+- 📜 **OpenAPI 3.0 for `/api/v2`** (94 paths, `docs/api/openapi.json`, coverage-enforced by tests) for
+  third-party companions and clients.
+- 🌙 **Overnight hardening:** `openbridge mqtt discover|do` CLI (passwords via env only); discovery and gateway
+  ingests stay alive at the registry caps (new devices counted as capped, merges still apply); the session
+  journal keeps every OPEN change plus the newest 200 closed ones instead of growing forever; voice-profile
+  and skills-bundle parsers fail typed on hostile shapes (found by extended fuzz); endurance report counts
+  capped devices. [Night evidence](docs/evidence/overnight-24nov.md)
 
 
 

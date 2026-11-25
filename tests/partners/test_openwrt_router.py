@@ -70,47 +70,51 @@ class TransportRoundtrip(unittest.TestCase):
 
     @staticmethod
     def serve():
-        import threading
-        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from tests.partners.httpfake import json_handler, serve
 
-        class H(BaseHTTPRequestHandler):
-            def log_message(self, *_):
-                pass
+        def authed(params):
+            return bool(params) and params[0] == 'tok-1'
 
-            def _send(self, doc):
-                body = json.dumps(doc).encode()
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Content-Length', str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+        def auth(h, body):
+            req = json.loads(body or b'{}')
+            if req.get('method') == 'login' and req.get('params') == ['root', 'secret']:
+                return h._send_json({'result': 'tok-1'})
+            return h._send_json({'error': 'denied'})
 
-            def do_POST(self):
-                ln = int(self.headers.get('Content-Length') or 0)
-                req = json.loads(self.rfile.read(ln) or b'{}')
-                method, params = req.get('method'), req.get('params') or []
-                if self.path == '/cgi-bin/luci/rpc/auth' and method == 'login':
-                    if params == ['root', 'secret']:
-                        return self._send({'result': 'tok-1'})
-                    return self._send({'error': 'denied'})
-                if not params or params[0] != 'tok-1':
-                    return self._send({'error': 'bad token'})
-                if self.path == '/cgi-bin/luci/rpc/sys' and method == 'uptime':
-                    return self._send({'result': 90061})
-                if self.path == '/cgi-bin/luci/rpc/sys' and method == 'load':
-                    return self._send({'result': [0.42, 0.31, 0.12]})
-                if self.path == '/cgi-bin/luci/rpc/network' and method == 'get_wan_status':
-                    return self._send({'result': {'up': True, 'uptime': 80000}})
-                if self.path == '/cgi-bin/luci/rpc/dhcp':
-                    return self._send({'error': 'no such object'})
-                if self.path == '/cgi-bin/luci/rpc/fs' and method == 'read':
-                    return self._send({'result': '1700000000 aa:bb:cc:dd:ee:01 192.168.1.10 pi *\n'
-                                                '1700000060 aa:bb:cc:dd:ee:02 192.168.1.11 tv *\n'})
-                return self._send({'error': 'unknown'})
+        def sys(h, body):
+            req = json.loads(body or b'{}')
+            if not authed(req.get('params')):
+                return h._send_json({'error': 'bad token'})
+            if req.get('method') == 'uptime':
+                return h._send_json({'result': 90061})
+            return h._send_json({'result': [0.42, 0.31, 0.12]})
 
-        srv = HTTPServer(('127.0.0.1', 0), H)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
-        return srv
+        def network(h, body):
+            req = json.loads(body or b'{}')
+            if not authed(req.get('params')):
+                return h._send_json({'error': 'bad token'})
+            return h._send_json({'result': {'up': True, 'uptime': 80000}})
+
+        def missing(h, body):
+            req = json.loads(body or b'{}')
+            if not authed(req.get('params')):
+                return h._send_json({'error': 'bad token'})
+            return h._send_json({'error': 'no such object'})
+
+        def fs(h, body):
+            req = json.loads(body or b'{}')
+            if not authed(req.get('params')):
+                return h._send_json({'error': 'bad token'})
+            return h._send_json({'result': '1700000000 aa:bb:cc:dd:ee:01 192.168.1.10 pi *\n'
+                                           '1700000060 aa:bb:cc:dd:ee:02 192.168.1.11 tv *\n'})
+
+        return serve(json_handler({
+            ('POST', '/cgi-bin/luci/rpc/auth'): auth,
+            ('POST', '/cgi-bin/luci/rpc/sys'): sys,
+            ('POST', '/cgi-bin/luci/rpc/network'): network,
+            ('POST', '/cgi-bin/luci/rpc/dhcp'): missing,
+            ('POST', '/cgi-bin/luci/rpc/fs'): fs,
+        }))
 
     def test_read_roundtrip_with_lease_fallback(self):
         srv = self.serve()
