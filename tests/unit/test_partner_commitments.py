@@ -54,6 +54,17 @@ class PartnerCommitments(unittest.TestCase):
         for p in PARTNERS:
             self.assertTrue(p['name'] in section, f"{p['name']} missing from the README partner strip")
 
+    def test_partner_names_logged_for_ci(self):
+        # Emit explicit partner company & product names so they always appear in GitHub CI / test logs.
+        names = [p['name'] for p in PARTNERS]
+        self.assertTrue(all(isinstance(n, str) and n.strip() for n in names))
+        for p in PARTNERS:
+            products = ', '.join(x['name'] for x in p.get('products', []))
+            print(f"[partner-ci] {p['name']} ({p['url']}) -> {products}", flush=True)
+        wf = read('.github/workflows/verify.yml')
+        self.assertIn('partners.json', wf)
+        self.assertIn('test_partner_commitments', wf)
+
 
 if __name__ == '__main__':
     unittest.main()

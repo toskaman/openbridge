@@ -15,6 +15,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.14.4'
+      - name: Hardware partners log (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient)
+        run: python -c "import json; ps=json.load(open('docs/partners/partners.json',encoding='utf8'))['partners']; print('OpenBridge hardware partners:', ', '.join(p['name'] for p in ps)); [print(' -', p['name'], p['url']) for p in ps]"
+      - name: Hardware partners commitments check (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient)
+        run: python -m unittest -v tests.unit.test_partner_commitments
       - run: python -m unittest discover -s tests -v
       - run: python -m compileall -q src tests
   bench:
