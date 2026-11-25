@@ -1,8 +1,20 @@
+import os
 import time
 import unittest
 from src.fabric import relay as R
 from src.fabric.registry import Registry
 from src.fabric.discovery import ingest_ble
+
+
+def setUpModule():
+    # These tests exercise pairing mechanics with legacy-format fake relays; opt in explicitly
+    # (production refuses legacy pairing unless the owner sets the same variable).
+    os.environ['OPENBRIDGE_PAIRING_ALLOW_LEGACY'] = '1'
+
+
+def tearDownModule():
+    os.environ.pop('OPENBRIDGE_PAIRING_ALLOW_LEGACY', None)
+
 
 KEY=R.derive_key('123456','rn','pn')
 

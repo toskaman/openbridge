@@ -122,6 +122,16 @@ class RecipeFuzz(unittest.TestCase):
                 seen_err += 1
         self.assertGreater(seen_err, 0)
 
+    def test_foreign_signatures_are_untrusted_never_a_crash(self):
+        lib = SL.Library(None, persist=False)
+        lib.add(_valid_recipe(), 'owner')
+        bundle = lib.export()
+        for bad in ('é' * 64, '🔥 tampered', 12345, None, ['x'], {'s': 1}):
+            fresh = SL.Library(None, persist=False)
+            out = fresh.import_bundle(dict(bundle, signature=bad))
+            self.assertFalse(out['trusted'])
+            self.assertEqual(len(out['imported']), 1)   # foreign bundles still import, unapproved
+
 
 class PackFuzz(unittest.TestCase):
     def test_mutated_packs_validate_or_raise_pack_error(self):
@@ -161,6 +171,13 @@ class VoiceProfileFuzz(unittest.TestCase):
                 PV.repairs(doc)          # accepted profiles must produce repairs without crashing
                 PV.coverage(doc)
         self.assertGreater(seen_err, 0)
+
+    def test_non_list_phrases_rejected_typed(self):
+        profile = json.loads((ROOT / 'docs' / 'partners' / 'examples' / 'voice-profile.acme.json').read_text(encoding='utf-8'))
+        for bad in (42, 'x', {'a': 1}, True, None):
+            doc = dict(profile, phrases=bad)
+            with self.assertRaises(PV.ProfileError):
+                PV.validate(doc)
 
 
 class QualityFuzz(unittest.TestCase):

@@ -4,10 +4,21 @@ Covers the long-session harness in dev/f90_endurance.py at small deterministic
 scales: report schema, exact op/error totals, injected-fault measurement,
 bounded fabric growth, graceful shutdown after heavy use, and external stop.
 """
+import os
 import threading
 import unittest
 
 from dev import f90_endurance as E
+
+
+def setUpModule():
+    # Load mechanics with legacy-format fake relays; opt in explicitly
+    # (production refuses legacy pairing unless the owner sets the same variable).
+    os.environ['OPENBRIDGE_PAIRING_ALLOW_LEGACY'] = '1'
+
+
+def tearDownModule():
+    os.environ.pop('OPENBRIDGE_PAIRING_ALLOW_LEGACY', None)
 
 
 def small_run(**over):

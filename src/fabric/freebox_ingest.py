@@ -47,6 +47,7 @@ def ingest_freebox(registry, adapters, salt):
     for capability in ('router_settings', 'wifi_settings', 'dhcp', 'firewall'):
         registry.capability(box, Capability(capability, 'write', 'BLOCKED', 'FREEBOX_API', 'read-only by policy: no independent recovery path'))
     inactive = sum(1 for h in hosts if not h['active'])
+    capped = 0
     for host in (h for h in hosts if h['active']):
         ids = []
         if host['mac'] and not mac_is_randomized(host['mac']):
@@ -57,8 +58,12 @@ def ingest_freebox(registry, adapters, salt):
             hobs.append(DeviceObservation('manufacturer', host['vendor'], 'FREEBOX_API', 'INVENTORY', t, False, 0.6))
         if host['mac'] and mac_is_randomized(host['mac']):
             hobs.append(DeviceObservation('randomized_mac', True, 'FREEBOX_API', 'INVENTORY', t, True))
-        key = registry.upsert(ids, category=CATEGORY.get(host['type'], 'unknown'), label=host['name'] or host['vendor'] or 'LAN host',
-                              observations=hobs, weak=[('ip', ip) for ip in host['ipv4']] + ([('name', host['name'].lower())] if host['name'] else []))
+        try:
+            key = registry.upsert(ids, category=CATEGORY.get(host['type'], 'unknown'), label=host['name'] or host['vendor'] or 'LAN host',
+                                  observations=hobs, weak=[('ip', ip) for ip in host['ipv4']] + ([('name', host['name'].lower())] if host['name'] else []))
+        except OverflowError:
+            capped += 1       # registry full: skip new hosts, keep merging the rest
+            continue
         registry.link(_L(box, key, 'INVENTORY', ('observe',), 'FREEBOX_API:lan'))
-    report.update(status='AUTHENTICATED', lan_hosts=len(hosts) - inactive, inactive_hidden=inactive)
+    report.update(status='AUTHENTICATED', lan_hosts=len(hosts) - inactive, inactive_hidden=inactive, capped=capped)
     return report

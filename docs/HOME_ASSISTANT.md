@@ -42,10 +42,11 @@ Without `--consent ALLOW` nothing is sent.
 
 | Device | Actions | Undo |
 |---|---|---|
-| Lights | turn on, turn off, set brightness | exact: on/off, brightness and colour (temperature or hue) |
-| Plugs and switches, fans | turn on, turn off | exact |
-| Thermostats | set the target temperature (7 to 30 °C, within the device's own range) | exact |
-| Media players | turn on, turn off, set volume, play, pause | exact for power (playing / paused come back too) and volume |
+| Lights | turn on, turn off, set brightness, colour temperature (kelvin), colour (hue 0-360) | exact: on/off, brightness and colour (temperature or hue) |
+| Plugs and switches | turn on, turn off | exact |
+| Fans | turn on, turn off, set speed (0-100 %) | exact |
+| Thermostats | set the target temperature (7 to 30 °C, within the device's own range), set mode (off, heat, cool, auto, dry, fan_only) | exact |
+| Media players | turn on, turn off, set volume, mute/unmute, play, pause, next/previous track | exact for power (playing / paused come back too), volume and mute; next/previous verify the player is active |
 | Blinds and shutters | open, close, stop | no (physical movement) |
 | Locks | lock | no |
 | Robot vacuums | start, pause, return to base | no |

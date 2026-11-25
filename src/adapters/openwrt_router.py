@@ -13,7 +13,6 @@ Every value is read from the device; anything unrecognized fails closed with Ope
 
 Status: emulator only. Record real-hardware runs in docs/DEVICE_EVIDENCE.json before claiming support.
 """
-import ipaddress
 import json
 import urllib.error
 import urllib.request
@@ -37,20 +36,8 @@ class OpenwrtRouterError(OSError):
 
 
 def _host_allowed(host):
-    """Local network only."""
-    h = (host or '').strip().lower().rstrip('.')
-    if not h or '/' in h or '\\' in h or '@' in h or ' ' in h:
-        return False
-    try:
-        ip = ipaddress.ip_address(h)
-        return ip.is_private or ip.is_loopback or ip.is_link_local
-    except ValueError:
-        pass
-    if h in ('localhost', 'openwrt'):
-        return True
-    if h.endswith('.lan') or h.endswith('.local'):
-        return True
-    return '.' not in h and h.replace('-', '').replace('_', '').isalnum()
+    from src.fabric import netguard
+    return netguard.local_host(host, bare_names=True, extra_names=('openwrt',))
 
 
 class OpenwrtRouterTransport:

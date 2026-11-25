@@ -74,7 +74,10 @@ def validate(profile):
         if not isinstance(mis, dict) or not all(isinstance(v, list) and all(isinstance(n, str) and 0 < len(n) <= 60 for n in v)
                                                 for v in mis.values()):
             raise ProfileError('product %r: misheard is {lang: [variants]}' % p['ref'])
-    for ph in profile.get('phrases', []):
+    phrases = profile.get('phrases', [])
+    if not isinstance(phrases, list):
+        raise ProfileError('phrases is a list of {family, dialect, template}')
+    for ph in phrases:
         if not isinstance(ph, dict) or ph.get('dialect') not in DIALECTS or not isinstance(ph.get('family'), str) \
                 or not isinstance(ph.get('template'), str) or not 0 < len(ph['template']) <= 120:
             raise ProfileError('each phrase is {family, dialect (fr | en-US | en-GB), template}')

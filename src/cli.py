@@ -624,7 +624,8 @@ def _ha_fabric(args):
     ex = Executor(SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(),
                                   fabric_adapters=lambda p=None: {'home_assistant': ha}))
     keys = {d['ha_entity']: k for k, d in reg.devices.items() if d.get('ha_entity')}
-    set_actions = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+    set_actions = ('turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color', 'set_volume',
+                   'set_mute', 'set_temperature', 'set_mode', 'set_speed')
 
     def latency_hint(entity_id, action):
         # Learned p95 latency of this action on this device stretches its read-back window (slow devices).
@@ -661,14 +662,17 @@ def cmd_ha_soak(args):
         raise CliError('permission', 'CONSENT_REQUIRED', 'The soak test changes devices (and undoes them). Re-run with --consent ALLOW.')
     ha, reg, ex, learner, keys = _ha_fabric(args)
     rng = random.Random(getattr(args, 'seed', 7))
-    values = {'set_brightness': (5, 100), 'set_volume': (0, 100), 'set_temperature': (16, 26)}
-    SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+    values = {'set_brightness': (5, 100), 'set_color_temp': (2700, 5000), 'set_color': (0, 360),
+              'set_volume': (0, 100), 'set_mute': (0, 1), 'set_temperature': (16, 26), 'set_speed': (0, 100)}
+    SET = ('turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color', 'set_volume', 'set_mute',
+           'set_temperature', 'set_mode', 'set_speed')
     stats, t0, reasons, acked = {}, _t.time(), {}, 0
-    plan = []
+    plan, attrs_by_eid = [], {}
     only = set(getattr(args, 'entity', None) or ())
     for s in ha.states():
         if only and s['entity_id'] not in only:
             continue                      # real homes: test only the devices the owner listed
+        attrs_by_eid[s['entity_id']] = s.get('attributes') or {}
         for a in HA.actions_for(s):
             if a in ('open', 'close', 'stop') and not getattr(args, 'include_covers', False):
                 continue
@@ -683,6 +687,11 @@ def cmd_ha_soak(args):
             if a in values:
                 lo, hi = values[a]
                 params['value'] = rng.randint(lo, hi)
+            elif a == 'set_mode':
+                modes = [m for m in (attrs_by_eid.get(eid, {}).get('hvac_modes') or []) if m in HA.HVAC_MODES]
+                if not modes:
+                    continue               # nothing honest to try on this device
+                params['mode'] = rng.choice(modes)
             prim = 'ha_set' if a in SET else 'ha_command'
             r = ex.execute(prim, key, params, consent=True)
             _learned(learner, reg, r, key, '%s:%s' % (prim, a))
@@ -696,7 +705,7 @@ def cmd_ha_soak(args):
                 # The soak is the owner here: it reads the device back and acknowledges the outcome,
                 # so one demo quirk cannot fill the recovery backlog for the rest of the run.
                 try:
-                    if ha.confirm(eid, a, params.get('value'))['verified']:
+                    if ha.confirm(eid, a, params.get('value', params.get('mode')))['verified']:
                         row['verified_late'] = row.get('verified_late', 0) + 1
                     if ex.acknowledge(r['transaction_id']):
                         acked += 1
@@ -782,10 +791,15 @@ def cmd_links_add(args):
     for e in (args.when, args.then):
         if e not in keys:
             raise CliError('args', 'HA_UNKNOWN_ENTITY', 'No listed Home Assistant device %r.' % e)
-    SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+    SET = ('turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color', 'set_volume', 'set_mute',
+           'set_temperature', 'set_mode', 'set_speed')
     params = {'action': args.action}
     if getattr(args, 'value', None) is not None:
         params['value'] = args.value
+    if getattr(args, 'mode', None) is not None:
+        params['mode'] = args.mode
+    if args.action == 'set_mode' and 'mode' not in params:
+        raise CliError('args', 'LINK_INVALID', 'set_mode needs --mode (off, heat, cool, auto, dry, fan_only)')
     try:
         link = links.add(keys[args.when], args.state, keys[args.then], 'ha_set' if args.action in SET else 'ha_command', params,
                          title=getattr(args, 'title', '') or '%s %s -> %s %s' % (args.when, args.state, args.then, args.action),
@@ -1085,7 +1099,10 @@ def cmd_ha_status(args):
 
 SAY_DOMAINS = {'home.turn_on': ('light', 'switch', 'fan', 'media_player'), 'home.turn_off': ('light', 'switch', 'fan', 'media_player'),
                'home.set_brightness': ('light',), 'home.set_temperature': ('climate',),
+               'home.set_color_temp': ('light',), 'home.set_color': ('light',),
+               'home.fan_speed': ('fan',), 'home.set_mode': ('climate',),
                'home.media_play': ('media_player',), 'home.media_pause': ('media_player',), 'home.media_volume': ('media_player',),
+               'home.media_next': ('media_player',), 'home.media_previous': ('media_player',), 'home.media_mute': ('media_player',),
                'home.cover_open': ('cover',), 'home.cover_close': ('cover',), 'home.cover_stop': ('cover',),
                'home.lock': ('lock',), 'home.vacuum_start': ('vacuum',), 'home.vacuum_dock': ('vacuum',),
                'home.vacuum_pause': ('vacuum',),
@@ -1193,7 +1210,8 @@ def cmd_ha_say(args):
         params = {'action': action}
         if p.get('value') is not None:
             params['value'] = p['value']
-        SET = ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature')
+        SET = ('turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color', 'set_volume', 'set_mute',
+               'set_temperature', 'set_mode', 'set_speed')
         try:
             link = Links(ex, learner=learner).add(keys[trig[0]], p['when_state'], keys[tgt[0]], 'ha_set' if action in SET else 'ha_command',
                                                  params, title=text[:80])
@@ -1261,10 +1279,13 @@ def cmd_ha_do(args):
     key = next((k for k, d in reg.devices.items() if d.get('ha_entity') == args.entity), None)
     if key is None:
         raise CliError('args', 'HA_UNKNOWN_ENTITY', 'No listed Home Assistant device %r (see `openbridge ha devices`).' % args.entity)
-    prim = 'ha_set' if args.action in ('turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature') else 'ha_command'
+    prim = 'ha_set' if args.action in ('turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color',
+                                                 'set_volume', 'set_mute', 'set_temperature', 'set_mode', 'set_speed') else 'ha_command'
     params = {'action': args.action}
     if getattr(args, 'value', None) is not None:
         params['value'] = args.value
+    if getattr(args, 'mode', None) is not None:
+        params['mode'] = args.mode
     ctx = SimpleNamespace(fabric_registry=reg, fabric_snapshot=reg.snapshot(), fabric_adapters=lambda p=None: {'home_assistant': ha})
     receipt = Executor(ctx).execute(prim, key, params, consent=getattr(args, 'consent', None) == 'ALLOW')
     if receipt['state'] == 'BLOCKED' and any(e.startswith('CONSENT_REQUIRED') for e in receipt['errors']):
@@ -1281,6 +1302,78 @@ def cmd_ha_disconnect(args):
         pass
     Vault().delete(HA.SECRET_NAME)
     return {'connected': False}
+
+
+# ---------------- mqtt ----------------
+
+def _mqtt_client(args):
+    import os
+    from src.adapters import mqtt as M
+    pwd = None
+    if getattr(args, 'password_env', None):
+        pwd = os.environ.get(args.password_env)
+        if not pwd:
+            raise CliError('args', 'MQTT_NO_PASSWORD', 'password env var %r is empty or missing' % args.password_env)
+    try:
+        client = M.Client(getattr(args, 'host'), port=int(getattr(args, 'port', 1883) or 1883),
+                          username=getattr(args, 'user', None), password=pwd)
+    except M.MqttBlocked as e:
+        raise CliError('args', 'MQTT_BAD_HOST', str(e))
+    try:
+        client.connect()
+    except M.MqttError as e:
+        raise CliError('device', 'MQTT_UNAVAILABLE', str(e))
+    return client
+
+
+def cmd_mqtt_discover(args):
+    from src.adapters import mqtt as M
+    client = _mqtt_client(args)
+    try:
+        found = M.discover(client, seconds=float(getattr(args, 'seconds', 5.0) or 5.0))
+    finally:
+        client.close()
+    return {'devices': found, 'count': len(found),
+            'next': 'openbridge mqtt do --host HOST --family tasmota|shelly|z2m --id ID --action NAME [--value V] --consent ALLOW'}
+
+
+def cmd_mqtt_do(args):
+    from src.adapters import mqtt as M
+    if getattr(args, 'consent', None) != 'ALLOW':
+        raise CliError('permission', 'CONSENT_REQUIRED', 'Re-run with --consent ALLOW to approve this one action.')
+    desc = {'family': args.family}
+    if args.family == 'tasmota':
+        desc['topic'] = args.id
+    elif args.family == 'shelly':
+        desc['shelly_id'] = args.id
+        desc['index'] = int(getattr(args, 'index', 0) or 0)
+    elif args.family == 'z2m':
+        desc['name'] = args.id
+    else:
+        raise CliError('args', 'MQTT_UNKNOWN_FAMILY', 'family is tasmota, shelly or z2m')
+    client = _mqtt_client(args)
+    try:
+        try:
+            dev = M.open_device(client, desc)
+        except M.MqttBlocked as e:
+            raise CliError('args', 'MQTT_BAD_DEVICE', str(e))
+        try:
+            if args.action in dev.COMMANDS:
+                return dev.command(args.action)
+            value = args.value
+            if value is not None:
+                try:
+                    value = float(value)
+                    value = int(value) if value.is_integer() else value
+                except (TypeError, ValueError):
+                    pass
+            return dev.set_reversible(args.action, value)
+        except M.MqttBlocked as e:
+            raise CliError('args', 'MQTT_REFUSED', str(e))
+        except M.MqttError as e:
+            raise CliError('device', 'MQTT_FAILED', str(e))
+    finally:
+        client.close()
 
 
 # ---------------- devices ----------------
@@ -2731,6 +2824,7 @@ def build_parser():
     la.add_argument('--then', required=True, help='target entity')
     la.add_argument('--action', required=True)
     la.add_argument('--value', type=float, default=None)
+    la.add_argument('--mode', default=None, help='hvac mode for set_mode')
     la.add_argument('--title', default='')
     la.add_argument('--cooldown', type=int, default=30)
     lap = leaf(links_subs, 'approve', cmd_links_approve, 'links approve')
@@ -2796,8 +2890,9 @@ def build_parser():
     leaf(ha_subs, 'devices', cmd_ha_devices, 'ha devices')
     ha_do = leaf(ha_subs, 'do', cmd_ha_do, 'ha do')
     ha_do.add_argument('entity', help='entity id, e.g. light.living_room')
-    ha_do.add_argument('action', help='turn_on, turn_off, set_brightness, set_volume, set_temperature, play, pause, open, close, stop, lock, start, return_to_base')
+    ha_do.add_argument('action', help='turn_on, turn_off, set_brightness, set_color_temp, set_color, set_volume, set_mute, set_temperature, set_mode, set_speed, play, pause, next, previous, open, close, stop, lock, start, return_to_base')
     ha_do.add_argument('--value', type=float, default=None)
+    ha_do.add_argument('--mode', default=None, help='hvac mode for set_mode (off, heat, cool, auto, dry, fan_only)')
     leaf(ha_subs, 'disconnect', cmd_ha_disconnect, 'ha disconnect')
     ha_say = leaf(ha_subs, 'say', cmd_ha_say, 'ha say')
     ha_say.add_argument('text', help='a request in English or French, e.g. "dim the kitchen lights to 30%%"')
@@ -2811,6 +2906,25 @@ def build_parser():
     ha_soak.add_argument('--include-covers', action='store_true')
     ha_soak.add_argument('--entity', action='append', default=[],
                          help='only test this entity (repeat); recommended on a real home, e.g. --entity light.desk')
+
+    mqtt = subs.add_parser('mqtt', help='MQTT gateway: Tasmota, Shelly Gen1, Zigbee2MQTT')
+    mqtt_subs = mqtt.add_subparsers(dest='mqtt_command')
+    mq_discover = leaf(mqtt_subs, 'discover', cmd_mqtt_discover, 'mqtt discover')
+    mq_discover.add_argument('--host', required=True, help='LAN broker, e.g. 192.168.1.10')
+    mq_discover.add_argument('--port', type=int, default=1883)
+    mq_discover.add_argument('--user', default=None)
+    mq_discover.add_argument('--password-env', default=None, help='env var holding the broker password (never on the command line)')
+    mq_discover.add_argument('--seconds', type=float, default=5.0)
+    mq_do = leaf(mqtt_subs, 'do', cmd_mqtt_do, 'mqtt do')
+    mq_do.add_argument('--host', required=True)
+    mq_do.add_argument('--port', type=int, default=1883)
+    mq_do.add_argument('--user', default=None)
+    mq_do.add_argument('--password-env', default=None)
+    mq_do.add_argument('--family', required=True, choices=['tasmota', 'shelly', 'z2m'])
+    mq_do.add_argument('--id', required=True, help='topic (tasmota), Shelly id, or Zigbee2MQTT name')
+    mq_do.add_argument('--index', type=int, default=0, help='Shelly relay index')
+    mq_do.add_argument('--action', required=True, help='power, brightness or toggle')
+    mq_do.add_argument('--value', default=None, help='on, off or a number')
 
     devices = subs.add_parser('devices')
     device_subs = devices.add_subparsers(dest='devices_command')

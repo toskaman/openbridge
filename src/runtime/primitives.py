@@ -140,9 +140,9 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('owner consent for this command',), ('owner-linked Tuya key', 'value in the command allowlist', 'manual moves end with stop after <= 3 s'),
                      ('device acted on the command',), 'status read after the command; momentary commands report verified=null', '',
                      R.IRREVERSIBLE.value, ('NOT_LINKED', 'BLOCKED'), 30, 'single-per-device', True),
-    ActionDescriptor('ha_set', 'Change one Home Assistant device (on/off, brightness, volume, target temperature) with read-back and exact Undo',
-                     {'type': 'object', 'properties': {'action': _s('string', enum=['turn_on', 'turn_off', 'set_brightness', 'set_volume', 'set_temperature']),
-                                                       'value': _s('number')}, 'required': ['action'], 'additionalProperties': False},
+    ActionDescriptor('ha_set', 'Change one Home Assistant device (on/off, brightness, colour temperature, colour, volume, mute, target temperature, mode, fan speed) with read-back and exact Undo',
+                     {'type': 'object', 'properties': {'action': _s('string', enum=['turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color', 'set_volume', 'set_mute', 'set_temperature', 'set_mode', 'set_speed']),
+                                                       'value': _s('number'), 'mode': _s('string', maxLength=16)}, 'required': ['action'], 'additionalProperties': False},
                      ('owner consent', 'Home Assistant connected by the owner'), ('action in the allowlist for this device', 'device available'),
                      ('entity state equals the requested value',), 'independent state read through the Home Assistant API', 'ha_undo', R.EXACT.value,
                      ('NOT_LINKED', 'BLOCKED', 'READBACK_MISMATCH'), 30, 'single-per-device', True),
@@ -150,8 +150,8 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      {'type': 'object', 'properties': {}, 'additionalProperties': False},
                      ('owner consent',), ('a change was recorded',), ('entity state equals the recorded before value',),
                      'independent state read equals before value', '', R.EXACT.value, ('NOTHING_TO_UNDO', 'RESTORE_NOT_EXACT'), 30, 'single-per-device', True),
-    ActionDescriptor('ha_command', 'Send one command to a Home Assistant device (play, pause, open or close a cover, lock, start or dock a robot)',
-                     {'type': 'object', 'properties': {'action': _s('string', enum=['play', 'pause', 'open', 'close', 'stop', 'lock', 'start', 'return_to_base'])},
+    ActionDescriptor('ha_command', 'Send one command to a Home Assistant device (play, pause, next/previous track, open/close/stop a cover, lock, start/pause/dock a robot)',
+                     {'type': 'object', 'properties': {'action': _s('string', enum=['play', 'pause', 'next', 'previous', 'open', 'close', 'stop', 'lock', 'start', 'return_to_base'])},
                       'required': ['action'], 'additionalProperties': False},
                      ('owner consent for this command',), ('action in the allowlist for this device', 'never unlock, never a garage door or an alarm'),
                      ('device acted on the command',), 'state read after the command; still-moving devices report EXECUTED_UNVERIFIED', '',
@@ -692,7 +692,7 @@ class Executor:
         from src.adapters.home_assistant import HABlocked
         eid = self._ha_entity(key)
         try:
-            r = self._ha().act(eid, params['action'], params.get('value'))
+            r = self._ha().act(eid, params['action'], params.get('value', params.get('mode')))
         except HABlocked as e:
             raise PrimitiveError('BLOCKED', str(e)) from None
         state = 'FAILED' if r['verified'] is False else 'VERIFIED' if r['verified'] else 'EXECUTED_UNVERIFIED'

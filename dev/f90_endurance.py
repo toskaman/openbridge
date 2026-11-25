@@ -109,6 +109,7 @@ class Fabric:
         self.errors = {}
         self.ops = {'discover': 0, 'dispatch': 0, 'pair': 0, 'revoke': 0,
                     'journal': 0, 'flap': 0}
+        self.capped = 0
         self.max_queue_depth = 0
         self.devices = 0
         self.links = 0
@@ -231,15 +232,16 @@ class Fabric:
                          'addresses': ['192.168.9.%d' % (i % 250 + 1)],
                          'txt': {'id': 'guest%d' % i, 'fn': 'Guest %d' % i},
                          'category': 'media'})
-        ingest_mdns(self.registry, {'instances': inst}, SALT)
+        mdns_rep = ingest_mdns(self.registry, {'instances': inst}, SALT)
         ble = [ble_normalize('C0:AA:%02X:%02X:00:%02X' % (seq % 64, i, i), 'Beacon%d' % i,
                              -60 - (i % 20), {76: b'x'}, [], {})
                for i in range(8)]  # 512 distinct static beacons max: repeat and merge
         if seq % 4 == 0:  # sparse rotating private address: weak, never merges, stays rare
             ble.append(ble_normalize('41:00:00:00:%02X:%02X' % ((seq // 4) % 64, seq % 8), '', -70, {}, [], {}))
-        ingest_ble(self.registry, {'devices': ble}, SALT)
+        ble_rep = ingest_ble(self.registry, {'devices': ble}, SALT)
         with self._m:
             self.ops['discover'] += 1
+            self.capped += mdns_rep['capped'] + ble_rep['capped']
 
     def do_journal(self, seq):
         kind, label, target = JOURNAL_POOL[seq % len(JOURNAL_POOL)]
@@ -461,6 +463,7 @@ def run(*, cycles=None, duration=90.0, rate=4.0, workers=4, devices=120,
                    'seed': seed, 'wall_s': round(wall, 1)},
         'ops': dict(fabric.ops),
         'ops_total': ops_total,
+        'capped': fabric.capped,
         'errors': dict(fabric.errors),
         'error_total': err_total,
         'error_rate': round(err_total / ops_total, 4) if ops_total else 0.0,
@@ -489,6 +492,10 @@ def run(*, cycles=None, duration=90.0, rate=4.0, workers=4, devices=120,
 
 
 def main(argv=None):
+    # Simulated relays pair the legacy way by construction; production refuses that unless the
+    # owner opts out, so standalone runs say so out loud instead of failing mid-run.
+    os.environ.setdefault('OPENBRIDGE_PAIRING_ALLOW_LEGACY', '1')
+    print('simulated relays: legacy pairing explicitly allowed for this run', flush=True)
     parser = argparse.ArgumentParser(description='F90 long-session endurance harness')
     parser.add_argument('--duration', type=float, default=90.0)
     parser.add_argument('--cycles', type=int, default=None)

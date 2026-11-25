@@ -20,7 +20,6 @@ Safety, on top of OpenBridge's consent gate:
 Status: verified on a real Home Assistant instance with its demo devices (docs/evidence/home-assistant-real-instance-22nov.md);
 physical devices through Home Assistant not yet tested.
 """
-import ipaddress
 import json
 import os
 import re
@@ -48,16 +47,20 @@ EXCLUDED = ('camera', 'person', 'device_tracker', 'zone', 'image', 'calendar', '
 
 # action -> (domain, service, kind). kind: 'onoff' (exact undo), 'value' (exact undo), 'momentary' (irreversible)
 ACTIONS = {
-    'light': {'turn_on': ('turn_on', 'onoff'), 'turn_off': ('turn_off', 'onoff'), 'set_brightness': ('turn_on', 'value')},
+    'light': {'turn_on': ('turn_on', 'onoff'), 'turn_off': ('turn_off', 'onoff'), 'set_brightness': ('turn_on', 'value'),
+              'set_color_temp': ('turn_on', 'value'), 'set_color': ('turn_on', 'value')},
     'switch': {'turn_on': ('turn_on', 'onoff'), 'turn_off': ('turn_off', 'onoff')},
-    'fan': {'turn_on': ('turn_on', 'onoff'), 'turn_off': ('turn_off', 'onoff')},
+    'fan': {'turn_on': ('turn_on', 'onoff'), 'turn_off': ('turn_off', 'onoff'), 'set_speed': ('set_percentage', 'value')},
     'media_player': {'turn_on': ('turn_on', 'onoff'), 'turn_off': ('turn_off', 'onoff'), 'set_volume': ('volume_set', 'value'),
-                     'play': ('media_play', 'momentary'), 'pause': ('media_pause', 'momentary')},
-    'climate': {'set_temperature': ('set_temperature', 'value')},
+                     'play': ('media_play', 'momentary'), 'pause': ('media_pause', 'momentary'),
+                     'next': ('media_next_track', 'momentary'), 'previous': ('media_previous_track', 'momentary'),
+                     'set_mute': ('volume_mute', 'value')},
+    'climate': {'set_temperature': ('set_temperature', 'value'), 'set_mode': ('set_hvac_mode', 'value')},
     'cover': {'open': ('open_cover', 'momentary'), 'close': ('close_cover', 'momentary'), 'stop': ('stop_cover', 'momentary')},
     'lock': {'lock': ('lock', 'momentary')},
     'vacuum': {'start': ('start', 'momentary'), 'pause': ('pause', 'momentary'), 'return_to_base': ('return_to_base', 'momentary')},
 }
+HVAC_MODES = ('off', 'heat', 'cool', 'auto', 'dry', 'fan_only')
 ALL_ACTIONS = sorted({a for d in ACTIONS.values() for a in d})
 # Refused by policy, with the reason shown to the owner.
 POLICY = {('lock', 'unlock'): 'OpenBridge never unlocks a door.',
@@ -66,6 +69,30 @@ POLICY = {('lock', 'unlock'): 'OpenBridge never unlocks a door.',
           ('cover', 'garage'): 'Garage doors and gates are never moved by OpenBridge.'}
 SENSITIVE_COVERS = ('garage', 'gate', 'door')
 TEMP_RANGE = (7.0, 30.0)
+def _expect_color_temp(s, a, v):
+    attrs = s.get('attributes') or {}
+    return s.get('state') == 'on' and isinstance(attrs.get('color_temp_kelvin'), (int, float)) \
+        and abs(attrs['color_temp_kelvin'] - v) <= 150
+
+
+def _expect_color(s, a, v):
+    attrs = s.get('attributes') or {}
+    hs = attrs.get('hs_color')
+    if s.get('state') != 'on' or not isinstance(hs, (list, tuple)) or len(hs) != 2:
+        return False
+    try:
+        return min(abs(float(hs[0]) - v), 360 - abs(float(hs[0]) - v)) <= 5
+    except (TypeError, ValueError):
+        return False
+
+
+def _expect_speed(s, a, v):
+    try:
+        return abs(float((s.get('attributes') or {}).get('percentage', -99)) - v) <= 2
+    except (TypeError, ValueError):
+        return False
+
+
 EXPECT = {'turn_on': lambda s, a, v: s.get('state') not in ('off', 'unavailable', 'unknown'),
           'turn_off': lambda s, a, v: s.get('state') == 'off',
           'set_brightness': lambda s, a, v: s.get('state') == 'on' and abs(round((s.get('attributes', {}).get('brightness') or 0) * 100 / 255) - v) <= 2,
@@ -75,7 +102,13 @@ EXPECT = {'turn_on': lambda s, a, v: s.get('state') not in ('off', 'unavailable'
           'open': lambda s, a, v: s.get('state') == 'open', 'close': lambda s, a, v: s.get('state') == 'closed',
           'stop': lambda s, a, v: s.get('state') in ('open', 'closed', 'stopped'),
           'lock': lambda s, a, v: s.get('state') == 'locked',
-          'start': lambda s, a, v: s.get('state') == 'cleaning', 'return_to_base': lambda s, a, v: s.get('state') in ('returning', 'docked')}
+          'start': lambda s, a, v: s.get('state') == 'cleaning', 'return_to_base': lambda s, a, v: s.get('state') in ('returning', 'docked'),
+          'set_color_temp': _expect_color_temp, 'set_color': _expect_color,
+          'set_speed': _expect_speed,
+          'next': lambda s, a, v: s.get('state') in ('playing', 'paused'),
+          'previous': lambda s, a, v: s.get('state') in ('playing', 'paused'),
+          'set_mute': lambda s, a, v: bool((s.get('attributes', {}).get('is_volume_muted'))) == bool(v),
+          'set_mode': lambda s, a, v: s.get('state') == v}
 # Read-back window per action (seconds). Slow mechanical or networked devices need more than the 6 s default;
 # the effective window is max(default, this, 2 x learned p95 latency + 1), capped at MAX_VERIFY_S.
 VERIFY_WINDOWS = {('vacuum', 'start'): 20.0, ('vacuum', 'pause'): 15.0, ('vacuum', 'return_to_base'): 30.0,
@@ -99,18 +132,10 @@ def config_path():
     return Path(os.environ.get('LOCALAPPDATA', str(Path.home() / '.local/share'))) / 'OpenBridge' / 'home_assistant.json'
 
 
-TAILNET = ipaddress.ip_network('100.64.0.0/10')   # Tailscale / CGNAT range: reachable only inside the private mesh
-
-
 def _host_is_private(host):
     """Local network, or a WireGuard mesh (Tailscale): plain http is acceptable there, the mesh already encrypts."""
-    if host in ('localhost', 'homeassistant') or host.endswith(('.localhost', '.local', '.lan', '.home.arpa', '.ts.net')):
-        return True
-    try:
-        ip = ipaddress.ip_address(host)
-    except ValueError:
-        return False
-    return ip.is_loopback or ip.is_private or ip.is_link_local or (ip.version == 4 and ip in TAILNET)
+    from src.fabric import netguard
+    return netguard.local_host(host)
 
 
 def validate_url(url):
@@ -203,9 +228,11 @@ def domain_of(entity_id):
 
 
 FEATURE_BITS = {
-    'media_player': {'set_volume': 4, 'turn_on': 128, 'turn_off': 256, 'play': 16384, 'pause': 1, 'next': 32, 'previous': 16},
+    'media_player': {'set_volume': 4, 'turn_on': 128, 'turn_off': 256, 'play': 16384, 'pause': 1, 'next': 32,
+                     'previous': 16, 'set_mute': 8},
     'climate': {'set_temperature': 1},
     'vacuum': {'start': 8192, 'pause': 4, 'return_to_base': 16},
+    'fan': {'set_speed': 1},
 }
 
 
@@ -216,9 +243,15 @@ def actions_for(state):
     attrs = state.get('attributes') or {}
     if domain == 'cover' and attrs.get('device_class') in SENSITIVE_COVERS:
         return {}
-    if domain == 'light' and not any(m in (attrs.get('supported_color_modes') or ['brightness']) for m in
-                                     ('brightness', 'color_temp', 'hs', 'xy', 'rgb', 'rgbw', 'rgbww', 'white')):
-        acts.pop('set_brightness', None)
+    if domain == 'light':
+        modes = attrs.get('supported_color_modes') or ['brightness']
+        if not any(m in modes for m in
+                   ('brightness', 'color_temp', 'hs', 'xy', 'rgb', 'rgbw', 'rgbww', 'white')):
+            acts.pop('set_brightness', None)
+        if 'color_temp' not in modes:
+            acts.pop('set_color_temp', None)
+        if not any(m in modes for m in ('hs', 'xy', 'rgb', 'rgbw', 'rgbww')):
+            acts.pop('set_color', None)
     feats = attrs.get('supported_features')
     if isinstance(feats, int):
         # Home Assistant feature bits: offer only what the entity says it supports (avoids HTTP 400).
@@ -338,6 +371,30 @@ class HomeAssistant:
             if not isinstance(value, (int, float)) or not lo <= value <= hi:
                 raise HABlocked('temperature must be between %g and %g' % (lo, hi))
             data['temperature'] = round(float(value), 1)
+        elif action == 'set_color_temp':
+            attrs = state.get('attributes') or {}
+            lo = float(attrs.get('min_color_temp_kelvin', 2000) or 2000)
+            hi = float(attrs.get('max_color_temp_kelvin', 6500) or 6500)
+            if not isinstance(value, (int, float)) or not lo <= value <= hi:
+                raise HABlocked('colour temperature must be between %g and %g K' % (lo, hi))
+            data['color_temp_kelvin'] = int(value)
+        elif action == 'set_color':
+            if not isinstance(value, (int, float)) or not 0 <= value <= 360:
+                raise HABlocked('hue must be between 0 and 360 degrees')
+            data['hs_color'] = [round(float(value)) % 360, 100]
+        elif action == 'set_speed':
+            if not isinstance(value, (int, float)) or not 0 <= value <= 100:
+                raise HABlocked('fan speed must be between 0 and 100 %')
+            data['percentage'] = int(value)
+        elif action == 'set_mute':
+            if value not in (0, 1, True, False):
+                raise HABlocked('mute must be 0 or 1')
+            data['is_volume_muted'] = bool(value)
+        elif action == 'set_mode':
+            modes = (state.get('attributes') or {}).get('hvac_modes') or []
+            if value not in HVAC_MODES or (modes and value not in modes):
+                raise HABlocked('mode must be one of %s' % ', '.join(m for m in HVAC_MODES if not modes or m in modes))
+            data['hvac_mode'] = value
         elif value is not None:
             raise HABlocked('this action takes no value')
         return data
@@ -390,7 +447,7 @@ class HomeAssistant:
     def _snapshot(self, action, state):
         attrs = state.get('attributes') or {}
         domain = domain_of(state['entity_id'])
-        if domain == 'light' and action in ('turn_on', 'turn_off', 'set_brightness'):
+        if domain == 'light' and action in ('turn_on', 'turn_off', 'set_brightness', 'set_color_temp', 'set_color'):
             return {'kind': 'light', 'look': self._light_look(state)}
         if domain == 'media_player' and action in ('turn_on', 'turn_off'):
             return {'kind': 'media', 'state': state.get('state'),
@@ -401,6 +458,12 @@ class HomeAssistant:
             return {'kind': 'volume', 'pct': round(float(attrs.get('volume_level') or 0) * 100)}
         if action == 'set_temperature' and isinstance(attrs.get('temperature'), (int, float)):
             return {'kind': 'temperature', 'value': attrs.get('temperature')}
+        if action == 'set_speed' and isinstance(attrs.get('percentage'), (int, float)):
+            return {'kind': 'speed', 'value': attrs['percentage']}
+        if action == 'set_mute':
+            return {'kind': 'mute', 'muted': bool(attrs.get('is_volume_muted'))}
+        if action == 'set_mode':
+            return {'kind': 'mode', 'mode': state.get('state')}
         return None
 
     def _wait(self, entity_id, ok, moving=(), window=None):
@@ -498,6 +561,18 @@ class HomeAssistant:
             self._post('media_player', 'volume_set', {'entity_id': entity_id, 'volume_level': round(snap['pct'] / 100.0, 2)})
             ok = lambda s: EXPECT['set_volume'](s, None, snap['pct'])
             window = self.window(entity_id, 'set_volume')
+        elif k == 'speed':
+            self._post('fan', 'set_percentage', {'entity_id': entity_id, 'percentage': int(snap['value'])})
+            ok = lambda s: EXPECT['set_speed'](s, None, snap['value'])
+            window = self.window(entity_id, 'set_speed')
+        elif k == 'mute':
+            self._post('media_player', 'volume_mute', {'entity_id': entity_id, 'is_volume_muted': snap['muted']})
+            ok = lambda s: EXPECT['set_mute'](s, None, 1 if snap['muted'] else 0)
+            window = self.window(entity_id, 'set_mute')
+        elif k == 'mode':
+            self._post('climate', 'set_hvac_mode', {'entity_id': entity_id, 'hvac_mode': snap['mode']})
+            ok = lambda s: EXPECT['set_mode'](s, None, snap['mode'])
+            window = self.window(entity_id, 'set_mode')
         else:
             self._post('climate', 'set_temperature', {'entity_id': entity_id, 'temperature': snap['value']})
             ok = lambda s: EXPECT['set_temperature'](s, None, float(snap['value']))

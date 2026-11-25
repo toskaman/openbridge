@@ -73,7 +73,8 @@ def home_rows(profile, rng_seed=17, k_train=6, k_test=2):
             if not kinds_here or fam == 'links.create':
                 continue
             extra = [(ph['dialect'], ph['template']) for ph in profile.get('phrases', []) if ph['family'] == fam]
-            ts = [(d, t) for d, t in templates + extra if d in dialects and '{d}' in t]
+            norm = [(it[0], it[1], it[2] if len(it) > 2 else None) for it in templates + extra]
+            ts = [(d, t, fx) for d, t, fx in norm if d in dialects and '{d}' in t]
             if ts:
                 fams[fam] = (sid, kinds_here, ts)
         H.FAMILIES.clear()

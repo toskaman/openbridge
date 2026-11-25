@@ -11,7 +11,7 @@ import copy
 
 class EsphomeLightEmulator:
     def __init__(self, **state):
-        self.state = {'power': 'off', 'brightness': 50, 'firmware': '2026.11.0-emulated'}
+        self.state = {'power': 'off', 'brightness': 50, 'firmware': '2026.11.0-emulated', 'switch': 'off'}
         self.state.update(state)
         self.history = []          # every write and command, for tests and demos
         self.drop_writes = False   # simulate a device that acknowledges but does not change
@@ -28,8 +28,16 @@ class EsphomeLightEmulator:
 
     def command(self, name, value=None):
         self.history.append(('command', name, value))
-        if name == 'toggle' and not self.drop_writes:
+        if self.drop_writes:
+            return
+        if name == 'toggle':
             self.state['power'] = 'off' if self.state.get('power') == 'on' else 'on'
+        elif name == 'switch_toggle':
+            self.state['switch'] = 'off' if self.state.get('switch') == 'on' else 'on'
+        elif name == 'cover_open':
+            self.state['cover'] = 100
+        elif name == 'cover_close':
+            self.state['cover'] = 0
 
 
 if __name__ == '__main__':

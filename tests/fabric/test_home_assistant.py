@@ -21,12 +21,16 @@ def initial_states():
     return {s['entity_id']: s for s in (
         e('light.living_room', 'on', brightness=128, supported_color_modes=['brightness'], friendly_name='Living room'),
         e('light.desk', 'on', brightness=102, color_mode='color_temp', color_temp_kelvin=2700,
-          supported_color_modes=['color_temp', 'hs'], friendly_name='Desk'),
+          supported_color_modes=['color_temp', 'hs'], min_color_temp_kelvin=2200, max_color_temp_kelvin=6500,
+          friendly_name='Desk'),
         e('light.strip', 'on', brightness=255, color_mode='hs', hs_color=[240.0, 80.0],
           supported_color_modes=['hs'], friendly_name='Strip'),
         e('switch.coffee', 'off', friendly_name='Coffee machine'),
-        e('climate.hall', 'heat', temperature=19.0, min_temp=7, max_temp=30, friendly_name='Hall'),
-        e('media_player.tv', 'playing', volume_level=0.2, friendly_name='TV'),
+        e('fan.living_room', 'on', percentage=50, supported_features=1, friendly_name='Living room fan'),
+        e('climate.hall', 'heat', temperature=19.0, min_temp=7, max_temp=30,
+          hvac_modes=['off', 'heat', 'cool', 'auto'], friendly_name='Hall'),
+        e('media_player.tv', 'playing', volume_level=0.2, is_volume_muted=False, supported_features=16829,
+          friendly_name='TV'),
         e('cover.garage', 'closed', device_class='garage', friendly_name='Garage'),
         e('cover.blinds', 'closed', device_class='blind', friendly_name='Blinds'),
         e('lock.front_door', 'unlocked', friendly_name='Front door'),
@@ -113,6 +117,14 @@ class FakeHA:
                     a['temperature'] = body['temperature']
                 elif service == 'volume_set':
                     a['volume_level'] = body['volume_level']
+                elif service == 'volume_mute':
+                    a['is_volume_muted'] = body['is_volume_muted']
+                elif service == 'set_percentage':
+                    a['percentage'] = body['percentage']
+                elif service == 'set_hvac_mode':
+                    s['state'] = body['hvac_mode']
+                elif service in ('media_next_track', 'media_previous_track'):
+                    pass                                  # track advanced; state stays playing/paused
                 else:
                     s['state'] = {'media_play': 'playing', 'media_pause': 'paused', 'open_cover': 'open', 'close_cover': 'closed',
                                   'lock': 'locked', 'start': 'cleaning', 'return_to_base': 'returning'}.get(service, s['state'])
@@ -238,6 +250,63 @@ class Bridge(Base):
         r = self.ha().act('switch.coffee', 'turn_on')
         self.assertIs(r['verified'], False)
         self.assertEqual(r['after'], 'off')
+
+
+class NewActions(Base):
+    def test_color_temp_roundtrip_and_undo(self):
+        ha = self.ha()
+        r = ha.act('light.desk', 'set_color_temp', 3000)
+        self.assertTrue(r['verified'])
+        self.assertEqual(FakeHA.states['light.desk']['attributes']['color_temp_kelvin'], 3000)
+        self.assertTrue(ha.undo('light.desk')['exact'])
+        self.assertEqual(FakeHA.states['light.desk']['attributes']['color_temp_kelvin'], 2700)
+
+    def test_color_temp_gating_and_range(self):
+        ha = self.ha()
+        self.assertNotIn('set_color_temp', HA.actions_for(FakeHA.states['light.living_room']))
+        self.assertNotIn('set_color_temp', HA.actions_for(FakeHA.states['light.strip']))
+        self.assertIn('set_color_temp', HA.actions_for(FakeHA.states['light.desk']))
+        for bad in (1000, 7000, 'warm'):
+            with self.subTest(bad=bad), self.assertRaises(HA.HABlocked):
+                ha.act('light.desk', 'set_color_temp', bad)
+
+    def test_color_roundtrip_and_undo(self):
+        ha = self.ha()
+        r = ha.act('light.strip', 'set_color', 120)
+        self.assertTrue(r['verified'])
+        self.assertEqual(FakeHA.states['light.strip']['attributes']['hs_color'], [120, 100])
+        self.assertTrue(ha.undo('light.strip')['exact'])
+        self.assertEqual(FakeHA.states['light.strip']['attributes']['hs_color'], [240.0, 80.0])
+        self.assertNotIn('set_color', HA.actions_for(FakeHA.states['light.living_room']))
+        with self.assertRaises(HA.HABlocked):
+            ha.act('light.strip', 'set_color', 400)
+
+    def test_fan_speed_and_undo(self):
+        ha = self.ha()
+        r = ha.act('fan.living_room', 'set_speed', 80)
+        self.assertTrue(r['verified'])
+        self.assertEqual(FakeHA.states['fan.living_room']['attributes']['percentage'], 80)
+        self.assertTrue(ha.undo('fan.living_room')['exact'])
+
+    def test_media_next_previous_mute(self):
+        ha = self.ha()
+        self.assertTrue(ha.act('media_player.tv', 'next')['verified'])
+        self.assertTrue(ha.act('media_player.tv', 'previous')['verified'])
+        r = ha.act('media_player.tv', 'set_mute', 1)
+        self.assertTrue(r['verified'])
+        self.assertTrue(FakeHA.states['media_player.tv']['attributes']['is_volume_muted'])
+        self.assertTrue(ha.undo('media_player.tv')['exact'])
+        self.assertFalse(FakeHA.states['media_player.tv']['attributes']['is_volume_muted'])
+
+    def test_mode_and_undo(self):
+        ha = self.ha()
+        r = ha.act('climate.hall', 'set_mode', 'cool')
+        self.assertTrue(r['verified'])
+        self.assertEqual(FakeHA.states['climate.hall']['state'], 'cool')
+        self.assertTrue(ha.undo('climate.hall')['exact'])
+        self.assertEqual(FakeHA.states['climate.hall']['state'], 'heat')
+        with self.assertRaises(HA.HABlocked):
+            ha.act('climate.hall', 'set_mode', 'eco')
 
 
 class ExactUndoAndSlowDevices(Base):

@@ -36,3 +36,18 @@ class LabelTests(unittest.TestCase):
     def test_company_label_without_name(self):
         r=Registry();ingest_ble(r,{'devices':[ble_local.normalize('4A:00:00:00:00:01','',-50,{76:b''},[],{})]},b's')
         self.assertEqual(r.snapshot()['devices'][0]['label'],'Apple device (BLE)')
+
+
+class CapToleranceTests(unittest.TestCase):
+    def test_capped_devices_skipped_merges_still_apply(self):
+        from unittest import mock
+        import src.fabric.registry as REG
+        r = Registry()
+        known = ble_local.normalize('C1:22:33:44:55:66', 'Thermo', -60, {76: b''}, [], {})
+        rep = ingest_ble(r, {'devices': [known]}, b's')
+        self.assertEqual(rep, {'ingested': 1, 'capped': 0})
+        with mock.patch.object(REG, 'MAX_DEVICES', 1):
+            new = ble_local.normalize('C1:22:33:44:55:77', 'New', -61, {76: b''}, [], {})
+            rep = ingest_ble(r, {'devices': [new, known]}, b's')
+            self.assertEqual(rep, {'ingested': 1, 'capped': 1})   # new refused, known merged
+            self.assertEqual(len(r.snapshot()['devices']), 1)

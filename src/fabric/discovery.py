@@ -24,8 +24,15 @@ def install_salt(root=None):
     return path.read_bytes()
 
 
+def _capped_counter():
+    return {'ingested': 0, 'capped': 0}
+
+
 def ingest_mdns(registry, result, salt):
+    """Returns {'ingested': n, 'capped': m}: at the registry caps, new devices are counted as
+    capped and skipped instead of aborting the batch, so merges into known devices still apply."""
     t = now()
+    out = _capped_counter()
     for inst in result.get('instances', []):
         txt, ids = inst.get('txt', {}), []
         if inst.get('host'):
@@ -54,13 +61,21 @@ def ingest_mdns(registry, result, salt):
         category = inst['category']
         if companion:
             category = txt.get('form') if txt.get('form') in ('phone', 'watch', 'tv') else 'phone'
-        key = registry.upsert(ids, category=category, label=label, observations=obs,
-                              weak=[('ip', a) for a in inst.get('addresses', [])])
+        try:
+            key = registry.upsert(ids, category=category, label=label, observations=obs,
+                                  weak=[('ip', a) for a in inst.get('addresses', [])])
+        except OverflowError:
+            out['capped'] += 1
+            continue
         services = registry.devices[key].setdefault('mdns_services', set()); services.add(inst['service'])
         if inst.get('port') and any('.' in a for a in inst.get('addresses', [])):
             # Kept off the snapshot; used only by the local onboarding view (e.g. the ADB pairing port).
             registry.devices[key].setdefault('endpoints', {})[inst['service']] = (next(a for a in inst['addresses'] if '.' in a), int(inst['port']))
-        registry.observe(key, DeviceObservation('mdns_services', sorted(services), 'MDNS', 'LAN', t, False, 0.9))
+        try:
+            registry.observe(key, DeviceObservation('mdns_services', sorted(services), 'MDNS', 'LAN', t, False, 0.9))
+        except OverflowError:
+            out['capped'] += 1
+            continue
         registry.link(Link('pc', key, 'LAN', ('observe',), 'MDNS:' + inst['service']))
         cap = {'_fbx-api._tcp': ('freebox_api', 'read', 'REAL_HARDWARE_VERIFIED'),
                '_androidtvremote2._tcp': ('tv_remote_protocol', 'observe', 'NOT_SUPPORTED'),
@@ -70,6 +85,8 @@ def ingest_mdns(registry, result, salt):
                COMPANION_SERVICE: ('companion_relay', 'observe', 'IMPLEMENTED_UNVERIFIED')}.get(inst['service'])
         if cap:
             registry.capability(key, Capability(cap[0], cap[1], cap[2], 'MDNS', inst['service']))
+        out['ingested'] += 1
+    return out
 
 
 def ingest_android(registry, adapter, salt):
@@ -110,7 +127,7 @@ def run(adapters, salt, providers=('mdns', 'ssdp', 'android', 'freebox'), mdns_t
     if 'mdns' in providers:
         res = mdns_fn(mdns_timeout)
         report['mdns'] = {'status': res['status'], 'instances': len(res['instances']), 'packets': res['packets']}
-        ingest_mdns(registry, res, salt)
+        report['mdns'].update(ingest_mdns(registry, res, salt))
     if 'android' in providers and adapters.get('android'):
         ingest_android(registry, adapters['android'], salt)
         report['android'] = {'status': 'OK'}
@@ -118,12 +135,12 @@ def run(adapters, salt, providers=('mdns', 'ssdp', 'android', 'freebox'), mdns_t
         from src.fabric import ssdp
         res = adapters.get('ssdp_discover', ssdp.discover)()
         report['ssdp'] = {'status': res['status'], 'devices': len(res['devices'])}
-        ingest_ssdp(registry, res, salt)
+        report['ssdp'].update(ingest_ssdp(registry, res, salt))
     if 'ble' in providers:
         from src.fabric import ble_local
         res = adapters.get('ble_scan', ble_local.scan)()
         report['ble'] = {'status': res['status'], 'devices': len(res['devices'])}
-        ingest_ble(registry, res, salt)
+        report['ble'].update(ingest_ble(registry, res, salt))
     if 'windows' in providers and adapters.get('windows'):
         report['windows'] = ingest_windows(registry, adapters['windows'], salt)
     if 'tuya' in providers and adapters.get('tuya'):
@@ -147,8 +164,12 @@ BLE_COMPANIES = {6: 'Microsoft', 76: 'Apple', 89: 'Nordic Semiconductor', 117: '
 
 
 def ingest_ble(registry, result, salt, observer='pc', source='BLE:pc'):
-    """BLE advertisers. Addresses are weak identity (private addresses rotate). Link grants 'observe' only."""
+    """BLE advertisers. Addresses are weak identity (private addresses rotate). Link grants 'observe' only.
+
+    Returns {'ingested': n, 'capped': m}: at the registry caps, new devices are counted as
+    capped and skipped instead of aborting the batch, so merges into known devices still apply."""
     t = now()
+    out = _capped_counter()
     for dev in result.get('devices', []):
         ids = []
         if dev['address_kind'] == 'static_random':
@@ -160,9 +181,15 @@ def ingest_ble(registry, result, salt, observer='pc', source='BLE:pc'):
             obs.append(DeviceObservation('ble_services', dev['service_uuids'], source, 'BLE', t, True))
         company = next((BLE_COMPANIES[c] for c in dev['company_ids'] if c in BLE_COMPANIES), None)
         label = dev['name'] or (f'{company} device (BLE)' if company else 'BLE advertiser')
-        key = registry.upsert(ids, category='ble', label=label, observations=obs,
-                              weak=[('ble_addr', opaque('ble_address', dev['address'].lower(), salt))])
+        try:
+            key = registry.upsert(ids, category='ble', label=label, observations=obs,
+                                  weak=[('ble_addr', opaque('ble_address', dev['address'].lower(), salt))])
+        except OverflowError:
+            out['capped'] += 1
+            continue
         registry.link(Link(observer, key, 'BLE', ('observe',), source))
+        out['ingested'] += 1
+    return out
 
 
 UPNP_CATEGORY = (('MediaRenderer', 'media'), ('InternetGatewayDevice', 'router'), ('MediaServer', 'nas'), ('Printer', 'printer'),
@@ -170,8 +197,12 @@ UPNP_CATEGORY = (('MediaRenderer', 'media'), ('InternetGatewayDevice', 'router')
 
 
 def ingest_ssdp(registry, result, salt):
-    """UPnP devices: the UDN is a stable strong identifier; IP is weak. Observe-only links; no SOAP control is ever used."""
+    """UPnP devices: the UDN is a stable strong identifier; IP is weak. Observe-only links; no SOAP control is ever used.
+
+    Returns {'ingested': n, 'capped': m}: at the registry caps, new devices are counted as
+    capped and skipped instead of aborting the batch, so merges into known devices still apply."""
     t = now()
+    out = _capped_counter()
     for d in result.get('devices', []):
         desc = d.get('description') or {}
         ids = [Identifier('upnp_udn', opaque('upnp_udn', (desc.get('udn') or d['uuid']).lower(), salt), True)]
@@ -181,8 +212,12 @@ def ingest_ssdp(registry, result, salt):
         for k in ('manufacturer', 'model'):
             if desc.get(k):
                 obs.append(DeviceObservation(k, desc[k], 'SSDP', 'LAN', t, False, 0.8))
-        key = registry.upsert(ids, category=category, label=desc.get('friendly_name') or desc.get('model') or 'UPnP device',
-                              observations=obs, weak=[('ip', d['ip'])])
+        try:
+            key = registry.upsert(ids, category=category, label=desc.get('friendly_name') or desc.get('model') or 'UPnP device',
+                                  observations=obs, weak=[('ip', d['ip'])])
+        except OverflowError:
+            out['capped'] += 1
+            continue
         registry.link(Link('pc', key, 'LAN', ('observe',), 'SSDP'))
         if category == 'router':
             registry.capability(key, Capability('upnp_igd_control', 'write', 'BLOCKED', 'SSDP', 'port mapping and every write action refused'))
@@ -192,6 +227,8 @@ def ingest_ssdp(registry, result, salt):
                 registry.capability(key, Capability('igd_status', 'read', 'IMPLEMENTED_UNVERIFIED', 'UPNP_IGD',
                                                     'allowlisted read-only IGD queries; external IP masked'))
                 registry.link(Link('pc', key, 'LAN', ('observe', 'read'), 'UPNP_IGD'))
+        out['ingested'] += 1
+    return out
 
 
 def ingest_tuya(registry, vacuum, salt):
