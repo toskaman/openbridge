@@ -89,6 +89,10 @@ class PanelTests(unittest.TestCase):
         self.assertEqual((x, y, rot), (303 - 10, 255 - 20, 4))
 
     def test_emulator_draws_native_frames_upright(self):
+        try:
+            import PIL  # noqa: F401 - the emulator draws with Pillow (optional in CI)
+        except ImportError:
+            self.skipTest('Pillow not installed')
         from src.adapters.activelook_emulator import HUDCanvas
         p = Panel(colour=False, x_offset=0).begin()
         p.rect(0, 0, 9, 9, fill=True)          # logical top-left corner
