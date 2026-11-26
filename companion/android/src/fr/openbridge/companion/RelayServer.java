@@ -656,6 +656,8 @@ final class RelayServer {
                 int waitMs = p == null ? 0 : Math.max(0, Math.min(1500, p.optInt("wait_ms", 0)));
                 params = glasses().status().put("events", glasses().drain(waitMs)); break;
             }
+            case "glasses_info":
+                params = glasses().readInfo(); break;
             case "glasses_disconnect": glasses().disconnect(); params = glasses().status(); break;
             case "set_modules": {
                 JSONObject p = cmd.getJSONObject("params");

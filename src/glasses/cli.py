@@ -173,6 +173,24 @@ def cmd_oracle(args):
     return _send_or_explain({'oracle_query': args.text})
 
 
+def cmd_backup(args):
+    from src.glasses.backup import backup_glasses
+    from src import cli
+    try:
+        return backup_glasses(out_dir=args.out, address=args.address, fw_package=args.fw_package)
+    except (OSError, FileNotFoundError, ImportError) as e:
+        raise _err(cli, 'GLASSES_BACKUP_FAILED', str(e)[:240], 'device')
+
+
+def cmd_restore_settings(args):
+    from src.glasses.backup import restore_settings
+    from src import cli
+    try:
+        return restore_settings(args.backup_path, address=args.address)
+    except (OSError, FileNotFoundError, ValueError, ImportError) as e:
+        raise _err(cli, 'GLASSES_RESTORE_FAILED', str(e)[:240], 'device')
+
+
 class Control:
     """127.0.0.1 only: one JSON request per line."""
 
@@ -508,3 +526,10 @@ def register(subs, leaf):
     oc.add_argument('--source', default='pc_mic', help='mic source label (pc_mic, ble_headset, usb_mic)')
     oc.add_argument('--lang', default='fr', choices=['fr', 'en'])
     oc.add_argument('--control-port', type=int, default=CONTROL_PORT)
+    bk = leaf(gs, 'backup', cmd_backup, 'glasses backup')
+    bk.add_argument('--address', default=None, help='Bluetooth address of ENGO / ActiveLook glasses')
+    bk.add_argument('--out', default=None, help='backup output directory (default: %%LOCALAPPDATA%%/OpenBridge/engo_backups)')
+    bk.add_argument('--fw-package', default=None, help='optional official ENGO / ActiveLook SUOTA/SMP firmware file (.img/.bin/.zip) to archive alongside BLE state')
+    rs = leaf(gs, 'restore-settings', cmd_restore_settings, 'glasses restore-settings')
+    rs.add_argument('backup_path', help='path to backup .zip, folder, or settings_restore.bin')
+    rs.add_argument('--address', default=None, help='Bluetooth address of ENGO / ActiveLook glasses')
