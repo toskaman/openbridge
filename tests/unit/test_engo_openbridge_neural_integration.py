@@ -50,6 +50,7 @@ class EngoOpenBridgeNeuralIntegrationTests(unittest.TestCase):
             transport=lambda b: self.sent_bytes.extend(b),
             model="ENGO 3"
         )
+        self.adapter.native_frame = False   # these tests read the logical frames; test_activelook.NativeFrameTests covers the conversion
         self.bridge = EngoAIBridge(
             adapter=self.adapter,
             ai_inference_fn=lambda q: f"Synthese IA: {q} execute.",

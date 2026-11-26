@@ -20,9 +20,9 @@
 
 <table align="center">
   <tr>
-    <td align="center" width="20%"><b>38</b><br><sub>tests d'appareils vérifiés</sub></td>
-    <td align="center" width="20%"><b>28</b><br><sub>sur du vrai matériel</sub></td>
-    <td align="center" width="20%"><b>6</b><br><sub>familles : TV, montre, téléphone, box, robot, PC</sub></td>
+    <td align="center" width="20%"><b>39</b><br><sub>tests d'appareils vérifiés</sub></td>
+    <td align="center" width="20%"><b>29</b><br><sub>sur du vrai matériel</sub></td>
+    <td align="center" width="20%"><b>7</b><br><sub>familles : TV, montre, téléphone, lunettes, box, robot, PC</sub></td>
     <td align="center" width="20%"><b>IA locale</b><br><sub>sur votre propre machine</sub></td>
     <td align="center" width="20%"><b>Relecture</b><br><sub>chaque action revérifiée sur l'appareil</sub></td>
   </tr>
@@ -51,13 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-26 18:50` **Tous les écrans des lunettes redessinés pour la vraie ENGO 3 :** messages, TV, sport, navigation, réglages et écran vocal tiennent dans l'écran avec ses vraies tailles de police ; les anciens écrans de démonstration ENGO s'affichent aussi à l'endroit et en couleur, et l'émulateur ne les dessine plus à l'envers. Ce qu'on aimerait d'ENGO ensuite est dans un [fichier de suggestions](docs/partners/engo/ENGO_FEATURE_REQUESTS.md). [Lunettes](docs/GLASSES.md)
 - `2026-11-26 16:10` **L'Oracle devient un module optionnel par Companion :** activez-le ou retirez-le depuis le PC (Contrôles > Modules, ou `openbridge glasses module oracle on|off`) ou en disant « active / retire l'Oracle » sur le téléphone. [Lunettes](docs/GLASSES.md)
 - `2026-11-26 15:45` **Lunettes ENGO 3 pilotées via le téléphone :** un PC sans Bluetooth utilise celui du téléphone ; posez une question à l'Oracle à voix haute sur le téléphone, la réponse s'affiche dans les lunettes, en couleur. [Lunettes](docs/GLASSES.md)
-- `2026-11-25 23:58` **Partenaires visibles dans les logs & la CI GitHub :** les noms des entreprises partenaires (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) sont journalisés explicitement à chaque exécution CI et imposés dans `AGENTS.md`.
 
 <details>
 <summary>Mises à jour précédentes</summary>
 
+- `2026-11-25 23:58` **Partenaires visibles dans les logs & la CI GitHub :** les noms des entreprises partenaires (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) sont journalisés explicitement à chaque exécution CI et imposés dans `AGENTS.md`.
 - `2026-11-25 16:15` **Oracle vocal pour ENGO 3 et multi-micros :** calcul local instantané, recherche web en cache avec préchargement, LLM local en VRAM, relais Android/Wear OS en long-polling (`Oracle ENGO`) et connecteur micro universel (`mic_oracle`) affichés sur le HUD ENGO 3.
 - `2026-11-25 13:20` **AirGradient devient partenaire matériel :** un capteur AirGradient ONE (I-9PSL) apporte la qualité de l'air à OpenBridge, lue via son API locale. [Page partenaire](docs/partners/AIRGRADIENT.md)
 - `2026-11-25 12:50` **Boutons sur mesure :** créez vos propres boutons pour votre TV, montre ou téléphone, enregistrez-les en profils et changez en un clic. [Guide](docs/CUSTOM_CONTROLS.md)
@@ -137,7 +138,7 @@
 | **Robot aspirateur** (Tuya) | Démarrer, pause, retour à la base, avec relecture de l'état | Vrai matériel |
 | **Freebox Delta** (box internet) | Inventaire réseau, en lecture seule par principe | Vrai matériel |
 | **PC Windows** | Agent à distance, tâches soumises à accord | Vrai matériel |
-| **Lunettes ENGO** | 38 fonctions d'affichage tête haute, pont avec l'app officielle | Émulateur |
+| **Lunettes ENGO 3** | Menus, messages, réponses de l'Oracle dictées au téléphone, 38 fonctions tête haute | Matériel réel (via le téléphone) |
 | **Windows XP · 7 · Linux** | Agent léger sur de vrais systèmes invités | Machines virtuelles |
 | **ESP32 · Pixel 6 · PICO OS 6** | Agent natif et companion | Émulateurs officiels |
 | **Elecrow CrowPanel Advance 4.3** (ESP32-S3 + ESP32-H2) | Écran de commande tactile, tests Matter / Thread | Intégration en cours |

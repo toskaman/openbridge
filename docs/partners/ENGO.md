@@ -8,7 +8,7 @@
 
 [ENGO](https://www.engoeyewear.com) designs heads-up display (HUD) smart glasses in Grenoble, France. They are built on [ActiveLook](https://www.activelook.net), Microoled's ultra-light, low-power micro-OLED display platform, driven over Bluetooth Low Energy.
 
-ENGO is OpenBridge's first official hardware partner and is sending a pair of smart glasses for integration and testing (covering the ENGO 2 and newly launched ENGO 3 generation).
+ENGO is OpenBridge's first official hardware partner. **The ENGO 3 Photochromic pair arrived in November 2026 and runs OpenBridge today**, through the phone's Bluetooth: menus, messages, TV and vacuum control, sport screens, and the Oracle answering questions spoken into the phone, right in the wearer's view.
 
 ## Supported Hardware Generations
 
@@ -30,6 +30,17 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 | You're wiring a test bench | Look away to a screen for every reading | Sensor values and alerts stay in sight |
 | A device drops off the network | Nothing, until something fails | A short alert, the moment it happens |
 
+## Working today on a real ENGO 3 (26 November 2026)
+
+- **A PC without Bluetooth is fine:** the OpenBridge Companion on the phone holds the Bluetooth link and relays the frames over the signed, encrypted relay channel.
+- **Ask a question into the phone, read the answer in the glasses:** the Oracle's answer is paged in the large font.
+- **Every OpenBridge screen drawn for the real panel:** orientation, the 81-colour red-green palette, the real font sizes and the visible window were measured on the pair, and every screen is laid out for them. The older ENGO demo screens are converted on the fly.
+- **Navigation without the phone in hand:** double tap on the temple = next, the home menu opens by itself after 3 s, and Next / Open / Back / Home buttons and single voice words on the phone.
+
+Details and measurements: [glasses guide](../GLASSES.md) · [evidence, 26 Nov 2026](../evidence/engo3-phone-link-26nov.md).
+
+**What we'd love from ENGO next** (more tap gestures, accented fonts, a smaller font, two connections at once...): [suggestions for ENGO](engo/ENGO_FEATURE_REQUESTS.md), kept up to date as we build.
+
 ## What we're building
 
 1. **ActiveLook adapter.** Discover and pair the glasses like any other OpenBridge device, with a verified evidence record.
@@ -43,10 +54,12 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 ## Progress
 
 - [x] Partnership confirmed with ENGO
-- [ ] Hardware received
-- [ ] BLE connection and evidence record (real hardware)
-- [ ] Status layout on the glasses
-- [ ] Alerts and confirmations
+- [x] Hardware received (ENGO 3 Photochromic, November 2026)
+- [x] Bluetooth connection on real hardware, through the phone ([evidence](../evidence/engo3-phone-link-26nov.md))
+- [x] Menus and status screens on the glasses, drawn for the real panel
+- [x] Oracle answers on the glasses, from the phone microphone
+- [ ] Alerts and confirmations from real device actions (TV, vacuum)
+- [ ] Bluetooth straight from a PC that has it
 - [ ] Filmed demo with TV, watch and robot vacuum
 - [ ] Public, verified compatibility report
 

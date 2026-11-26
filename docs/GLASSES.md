@@ -71,9 +71,17 @@ the PC.
   Companion do the same.
 - **Characters:** the fonts are ASCII only; accents are folded (`été` -> `ete`).
 - **Fonts:** line heights 24 / 24 / 38 / 64 px for ids 0-3 (24 px is the smallest text); a word of n letters is
-  about n x height / 2 wide. Screens are being redrawn for these sizes: the home screen and the Oracle are done.
+  about n x height / 2 wide. Every OpenBridge screen (home, messages, TV, volume, apps, remote, vacuum, voice,
+  Oracle, sport, navigation, Ghost, intervals, settings, calibration, alerts) is laid out for these sizes inside the
+  visible window: titles and list rows use the 38 px font and fall back to 24 px when the text would not fit.
+- **Older ENGO demo screens** (the 38 HUD Studio features, the ENGO AI bridge) draw in top-left coordinates;
+  the ActiveLook adapter converts each frame to the native frame on the way out (`to_native`), and swaps their
+  colour ids for palette colours on the ENGO 3. They now show upright in the glasses and in the emulator; some of
+  their long texts still run past the edge.
 - **Arcs:** device angles equal logical angles (0 at 3 o'clock, clockwise as seen), start in 0-359.
-- HUD Studio draws the frames the same way (mirrored axes, text rotation, red-green palette).
+- HUD Studio and the emulator draw the frames the same way (mirrored axes, text rotation, red-green palette).
+
+What the glasses cannot do yet, and what we asked ENGO for: [suggestions for ENGO](partners/engo/ENGO_FEATURE_REQUESTS.md).
 
 ## Sport
 
@@ -116,13 +124,17 @@ English.
 
 ## Moving around
 
-The ENGO gesture sensor (a hand wave in front of the right lens) drives everything:
+On the ENGO 1 / 2, the gesture sensor (a hand wave in front of the right lens) drives everything:
 
 | Gesture | Action |
 |---|---|
 | 1 wave | next item |
 | 2 quick waves | open / press |
 | 3 quick waves | back |
+
+On the ENGO 3, a double tap on the temple is the only input: double tap = next, the home carousel opens the focused
+menu after 3 s, and open / back / home come from the Companion buttons or the voice. The bottom hint of each screen
+says which applies (`tap next, say open` on the ENGO 3).
 
 The same menus answer to `openbridge glasses press next|prev|ok|back|home|up|down|left|right`, to the HUD Studio
 `G` key, and to voice. A new message slides in at the top for six seconds; two waves open it.
@@ -176,4 +188,4 @@ Known gaps: on the move (no PC nearby) the glasses need the phone to hold the Bl
 GPS; that Companion part is the next step.
 
 Every feature, its status and its evidence: [traceability matrix](partners/engo/21_FEATURE_TRACEABILITY_MATRIX.md).
-The contracts behind it: [API and data contracts](partners/engo/24_API_AND_DATA_CONTRACTS.md). Phone buttons for next / OK / back on the Companion screen are also next.
+The contracts behind it: [API and data contracts](partners/engo/24_API_AND_DATA_CONTRACTS.md).

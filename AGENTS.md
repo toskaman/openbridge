@@ -26,6 +26,14 @@ Every change that ships (feature, partner, doc, fix people would notice) adds on
 4. Also add the matching CHANGELOG line.
 5. `tests/unit/test_whats_new.py` checks the format, the order and that both languages match.
 
+## Glasses: what the hardware is missing goes to ENGO (always)
+
+When a glasses feature is blocked or made awkward by the glasses themselves (firmware, fonts, gestures, Bluetooth,
+missing docs), add it to `docs/partners/engo/ENGO_FEATURE_REQUESTS.md` in the same PR: what was measured, why it
+matters to wearers, the smallest change that would unlock it, and a priority. Update the "Last update" line. When a
+firmware or SDK release delivers an item, move it to "Done" with the version. The same applies to other hardware
+partners: keep one such file per partner in its folder.
+
 ## Other house rules
 
 - Emulated or simulated results are always labelled as such and never counted as physical proof.

@@ -389,8 +389,91 @@ class ActiveLookArcadeEngine:
         return {"game_over": False, "score": self.score}
 
 
+NATIVE_W, NATIVE_H = 304, 256
+TEXT_ROT_UPRIGHT = 4
+
+
+def split_packets(stream: bytes):
+    """Yield (cmd, query_id, data, raw) for each ActiveLook frame in `stream`; bytes that do not parse as a frame are
+    yielded once as (None, b'', b'', raw) so they can be passed through untouched."""
+    i, n = 0, len(stream)
+    while i < n:
+        if stream[i] != 0xFF or i + 4 > n:
+            yield None, b"", b"", stream[i:]
+            return
+        cmd, fmt = stream[i + 1], stream[i + 2]
+        wide = bool(fmt & 0x20)
+        if wide:
+            if i + 5 > n:
+                yield None, b"", b"", stream[i:]
+                return
+            length, head = struct.unpack_from(">H", stream, i + 3)[0], 5
+        else:
+            length, head = stream[i + 3], 4
+        qlen = (fmt >> 1) & 0x0F
+        end = i + length
+        if length < head + qlen + 1 or end > n or stream[end - 1] != 0xAA:
+            yield None, b"", b"", stream[i:]
+            return
+        qid = stream[i + head:i + head + qlen]
+        yield cmd, qid, stream[i + head + qlen:end - 1], stream[i:end]
+        i = end
+
+
+def _flip(x: int, y: int):
+    return NATIVE_W - 1 - x, NATIVE_H - 1 - y
+
+
+# The old demo screens name colours 0x01-0x05 (COLOR_GREEN...). On a real ENGO 3 those bytes are red-green palette
+# values close to black, so to_native(colour=True) swaps them for the calibrated colours (no cyan on a red-green panel).
+LEGACY_COLOURS = {COLOR_GREEN: RG_COLOURS['green'], COLOR_AMBER: RG_COLOURS['amber'], COLOR_RED: RG_COLOURS['red'],
+                  COLOR_CYAN: RG_COLOURS['lime'], COLOR_YELLOW: RG_COLOURS['yellow']}
+
+
+def to_native(stream: bytes, colour: bool = False) -> bytes:
+    """Logical frames (origin top-left, text rotation 0) -> the ActiveLook native frame, as a real ENGO 3 needs them.
+
+    Measured on a real ENGO 3 (26 Nov 2026): both axes are mirrored and upright text uses rotation 4, anchored at the
+    text's logical top-left. OpenBridge's display engine (src/glasses/panel.py) already draws in the native frame;
+    this converts the older demo screens built with the cmd_* helpers (push_* methods, ENGO AI bridge, HUD Studio
+    features) so they show upright too. Arc angles are unchanged (both axes are mirrored). With colour=True (ENGO 3)
+    the legacy colour ids become real palette colours, for shapes (0x3D) and for text (0x37 -> 0x3E)."""
+    out = []
+    for cmd, qid, d, raw in split_packets(stream):
+        try:
+            if cmd == 0x31 and len(d) >= 4:
+                d = struct.pack(">hh", *_flip(*struct.unpack_from(">hh", d))) + d[4:]
+            elif cmd in (0x32, 0x33, 0x34) and len(d) >= 8:
+                x0, y0, x1, y1 = struct.unpack_from(">hhhh", d)
+                (x0, y0), (x1, y1) = _flip(x0, y0), _flip(x1, y1)
+                if cmd != 0x32:                      # rectangles keep min / max corners
+                    x0, x1, y0, y1 = min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
+                d = struct.pack(">hhhh", x0, y0, x1, y1) + d[8:]
+            elif cmd in (0x35, 0x36, 0x3C) and len(d) >= 4:
+                d = struct.pack(">hh", *_flip(*struct.unpack_from(">hh", d))) + d[4:]
+            elif cmd == 0x3D and colour and d and d[0] in LEGACY_COLOURS:
+                d = bytes([LEGACY_COLOURS[d[0]]]) + d[1:]
+            elif cmd in (0x37, 0x3E) and len(d) >= 7:
+                x, y = _flip(*struct.unpack_from(">hh", d))
+                rot = TEXT_ROT_UPRIGHT if d[4] == 0 else d[4]
+                if cmd == 0x37 and colour and d[6] in LEGACY_COLOURS:
+                    cmd, d = 0x3E, d[:6] + bytes([LEGACY_COLOURS[d[6]]]) + d[7:]
+                d = struct.pack(">hhB", x, y, rot) + d[5:]
+            else:
+                out.append(raw)
+                continue
+        except struct.error:
+            out.append(raw)
+            continue
+        out.append(encode_packet(cmd, d, qid))
+    return b"".join(out)
+
+
 class ActiveLookAdapter:
-    """OpenBridge Adapter for ActiveLook / ENGO Eyewear."""
+    """OpenBridge Adapter for ActiveLook / ENGO Eyewear.
+
+    The push_* screens draw in logical coordinates (origin top-left); send() converts them to the native frame
+    (to_native) unless native_frame is False."""
 
     def __init__(self, transport: Optional[Callable[[bytes], Any]] = None, model: str = "ENGO 3"):
         self.transport = transport
@@ -401,13 +484,14 @@ class ActiveLookAdapter:
         self.last_gesture_time = 0.0
         self.active_abort_handler: Optional[Callable[[], Any]] = None
         self.status = "READY"
+        self.native_frame = True
 
     def send(self, data: bytes) -> bool:
-        """Send command bytes to glasses through transport."""
+        """Send command bytes to glasses through transport (converted to the native frame, see to_native)."""
         if self.paused_by_flow_control:
             return False
         if self.transport:
-            self.transport(data)
+            self.transport(to_native(data, self.is_color) if self.native_frame else data)
             self.tx_queue_depth += 1
             return True
         return False

@@ -374,6 +374,7 @@ def cmd_run(args):
             # 3-4 taps still send one event, measured 26 Nov 2026). Each one is 'next'; open/back come from the phone
             # buttons, the voice, or the 3 s auto-open on the home carousel.
             holder['tap'] = True
+            hub.ctx.input = 'tap'
         server.glasses_hub = hub
         server.glasses_control_port = args.control_port
         from src.ai import oracle as Oracle
