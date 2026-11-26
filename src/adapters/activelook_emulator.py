@@ -281,6 +281,13 @@ class HUDCanvas:
         if not self._hold_buffer:
             self._refresh_gui()
 
+    def _logical(self, cmd: int, payload: bytes):
+        """Draw one command given in logical coordinates (origin top-left), as the built-in demo screens do."""
+        from src.adapters.activelook import encode_packet, to_native
+        frames, _ = scan_frames(to_native(encode_packet(cmd, payload)))
+        for f in frames:
+            self._dispatch_frame(f)
+
     def _dispatch_frame(self, f: Frame):
         self._last_cmd = f"0x{f.cmd:02X}"
         if self.frame_observer is not None:
@@ -360,8 +367,7 @@ class HUDCanvas:
     def _cmd_line(self, d):
         if len(d) >= 8:
             x0, y0, x1, y1 = struct.unpack_from('>hhhh', d)
-            (x0, y0), (x1, y1) = native_to_view(x0, y0), native_to_view(x1, y1)
-            x0, x1, y0, y1 = min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
+            (x0, y0), (x1, y1) = native_to_view(x0, y0), native_to_view(x1, y1)   # keep the direction of diagonals
             self._draw.line([(x0, y0), (x1, y1)], fill=self._resolve_colour(), width=1)
 
     def _cmd_rect(self, d):
@@ -785,43 +791,43 @@ class HUDCanvas:
         def demo_vacuum_docking():
             self._cmd_clear()
             self._colour = COLOUR_MAP[0x01]  # green
-            self._cmd_rectf(struct.pack('>hhhh', 0, 0, 303, 29))
+            self._logical(0x34, struct.pack('>hhhh', 0, 0, 303, 29))
             self._colour = (0, 0, 0)
-            self._cmd_txt(struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'WAN: OK    OpenBridge      BATT: 88%')
+            self._logical(0x37, struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'WAN: OK    OpenBridge      BATT: 88%')
             self._colour = COLOUR_MAP[0x05]  # yellow
-            self._cmd_txt(struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'[VACUUM] ROBOT: DOCKING')
-            self._cmd_txt(struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'BATT: 78%  |  BIN: FULL  |  ZONE: LIVING')
+            self._logical(0x37, struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'[VACUUM] ROBOT: DOCKING')
+            self._logical(0x37, struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'BATT: 78%  |  BIN: FULL  |  ZONE: LIVING')
             self._colour = COLOUR_MAP[0x02]  # amber
-            self._cmd_txt(struct.pack('>hh', 4, 95) + bytes([0, 0, 10]) + b'ETA: 2min 30s')
+            self._logical(0x37, struct.pack('>hh', 4, 95) + bytes([0, 0, 10]) + b'ETA: 2min 30s')
             self._colour = COLOUR_MAP[0x04]  # cyan
-            self._cmd_txt(struct.pack('>hh', 4, 220) + bytes([0, 0, 10]) + b'>> [WAVE] DISMISS')
+            self._logical(0x37, struct.pack('>hh', 4, 220) + bytes([0, 0, 10]) + b'>> [WAVE] DISMISS')
             self._refresh_gui()
 
         def demo_refused():
             self._cmd_clear()
             self._colour = COLOUR_MAP[0x03]  # red
-            self._cmd_rectf(struct.pack('>hhhh', 0, 0, 303, 29))
+            self._logical(0x34, struct.pack('>hhhh', 0, 0, 303, 29))
             self._colour = (0, 0, 0)
-            self._cmd_txt(struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'! OPENBRIDGE REFUSED ACTION !')
+            self._logical(0x37, struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'! OPENBRIDGE REFUSED ACTION !')
             self._colour = COLOUR_MAP[0x03]
-            self._cmd_txt(struct.pack('>hh', 4, 45) + bytes([0, 0, 12]) + b'Refused: Stale State')
+            self._logical(0x37, struct.pack('>hh', 4, 45) + bytes([0, 0, 12]) + b'Refused: Stale State')
             self._colour = COLOUR_MAP[0x05]
-            self._cmd_txt(struct.pack('>hh', 4, 70) + bytes([0, 0, 10]) + b'TV last seen: 4 minutes ago')
-            self._cmd_txt(struct.pack('>hh', 4, 90) + bytes([0, 0, 10]) + b'Confirm device is reachable')
+            self._logical(0x37, struct.pack('>hh', 4, 70) + bytes([0, 0, 10]) + b'TV last seen: 4 minutes ago')
+            self._logical(0x37, struct.pack('>hh', 4, 90) + bytes([0, 0, 10]) + b'Confirm device is reachable')
             self._colour = COLOUR_MAP[0x04]
-            self._cmd_txt(struct.pack('>hh', 4, 220) + bytes([0, 0, 10]) + b'>> [WAVE] DISMISS')
+            self._logical(0x37, struct.pack('>hh', 4, 220) + bytes([0, 0, 10]) + b'>> [WAVE] DISMISS')
             self._refresh_gui()
 
         def demo_ambient():
             self._cmd_clear()
             self._colour = COLOUR_MAP[0x04]
-            self._cmd_rect(struct.pack('>hhhh', 0, 0, 303, 29))
-            self._cmd_txt(struct.pack('>hh', 4, 6) + bytes([0, 0, 10]) + b'[1.4kW] [LOCK:ALL] [TV:OFF] [WAN:940M]')
+            self._logical(0x33, struct.pack('>hhhh', 0, 0, 303, 29))
+            self._logical(0x37, struct.pack('>hh', 4, 6) + bytes([0, 0, 10]) + b'[1.4kW] [LOCK:ALL] [TV:OFF] [WAN:940M]')
             self._colour = COLOUR_MAP[0x01]
-            self._cmd_txt(struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'All devices nominal')
+            self._logical(0x37, struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'All devices nominal')
             self._colour = COLOUR_MAP[0x05]
-            self._cmd_txt(struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'Last action: TV sleep  2 min ago')
-            self._cmd_txt(struct.pack('>hh', 4, 85) + bytes([0, 0, 10]) + b'Next: Bedtime routine in 47 min')
+            self._logical(0x37, struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'Last action: TV sleep  2 min ago')
+            self._logical(0x37, struct.pack('>hh', 4, 85) + bytes([0, 0, 10]) + b'Next: Bedtime routine in 47 min')
             self._cmd_gauge_display(bytes([0, 72]))   # gauge 0 = 72% (battery?)
             self._cmd_gauge_display(bytes([1, 100]))  # gauge 1 = 100% WAN
             self._refresh_gui()
@@ -829,26 +835,26 @@ class HUDCanvas:
         def demo_energy():
             self._cmd_clear()
             self._colour = COLOUR_MAP[0x02]  # amber warning
-            self._cmd_rectf(struct.pack('>hhhh', 0, 0, 303, 29))
+            self._logical(0x34, struct.pack('>hhhh', 0, 0, 303, 29))
             self._colour = (0, 0, 0)
-            self._cmd_txt(struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'! PEAK TARIFF IN 8 MIN !')
+            self._logical(0x37, struct.pack('>hh', 4, 6) + bytes([0, 0, 15]) + b'! PEAK TARIFF IN 8 MIN !')
             self._colour = COLOUR_MAP[0x02]
-            self._cmd_txt(struct.pack('>hh', 4, 40) + bytes([0, 0, 12]) + b'Current: 7.2 kW (HIGH)')
+            self._logical(0x37, struct.pack('>hh', 4, 40) + bytes([0, 0, 12]) + b'Current: 7.2 kW (HIGH)')
             self._colour = COLOUR_MAP[0x05]
-            self._cmd_txt(struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'Washing machine + Oven + TV + AC')
+            self._logical(0x37, struct.pack('>hh', 4, 65) + bytes([0, 0, 10]) + b'Washing machine + Oven + TV + AC')
             self._colour = COLOUR_MAP[0x03]
-            self._cmd_txt(struct.pack('>hh', 4, 90) + bytes([0, 0, 10]) + b'Cost spike: +0.38 EUR/kWh at 18:00')
+            self._logical(0x37, struct.pack('>hh', 4, 90) + bytes([0, 0, 10]) + b'Cost spike: +0.38 EUR/kWh at 18:00')
             self._cmd_gauge_display(bytes([0, 72]))   # 72% load
             self._refresh_gui()
 
         def demo_twophase():
             self._cmd_clear()
             self._colour = COLOUR_MAP[0x02]
-            self._cmd_txt(struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'BEDTIME ROUTINE starting in:')
+            self._logical(0x37, struct.pack('>hh', 4, 40) + bytes([0, 1, 12]) + b'BEDTIME ROUTINE starting in:')
             self._colour = COLOUR_MAP[0x03]
-            self._cmd_txt(struct.pack('>hh', 100, 80) + bytes([0, 1, 15]) + b'  5s')
+            self._logical(0x37, struct.pack('>hh', 100, 80) + bytes([0, 1, 15]) + b'  5s')
             self._colour = COLOUR_MAP[0x04]
-            self._cmd_txt(struct.pack('>hh', 4, 220) + bytes([0, 0, 10]) + b'>> [WAVE] ABORT EXECUTION')
+            self._logical(0x37, struct.pack('>hh', 4, 220) + bytes([0, 0, 10]) + b'>> [WAVE] ABORT EXECUTION')
             # Countdown bar
             self._cmd_gauge_display(bytes([0, 100]))
             self._refresh_gui()
@@ -856,7 +862,7 @@ class HUDCanvas:
         def demo_debug():
             self._cmd_clear()
             self._colour = COLOUR_MAP[0x05]
-            self._cmd_txt(struct.pack('>hh', 4, 5) + bytes([0, 0, 10]) + b'== OPENBRIDGE DEBUG MODE ==')
+            self._logical(0x37, struct.pack('>hh', 4, 5) + bytes([0, 0, 10]) + b'== OPENBRIDGE DEBUG MODE ==')
             self._colour = COLOUR_MAP[0x04]
             lines = [
                 'BLE RSSI: -48 dBm (excellent)',
@@ -869,7 +875,7 @@ class HUDCanvas:
                 'Battery (emulated): 88%',
             ]
             for i, l in enumerate(lines):
-                self._cmd_txt(struct.pack('>hh', 4, 20 + i*28) + bytes([0, 0, 10]) + l.encode())
+                self._logical(0x37, struct.pack('>hh', 4, 20 + i*28) + bytes([0, 0, 10]) + l.encode())
             self._refresh_gui()
 
         from src.adapters.activelook import ActiveLookAdapter

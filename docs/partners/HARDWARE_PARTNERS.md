@@ -8,7 +8,7 @@
   <a href="https://www.engoeyewear.com"><img src="../assets/readme/partner-engo.svg" width="100%" alt="Official hardware partner: ENGO smart glasses, powered by ActiveLook by Microoled"></a>
 </p>
 
-**[ENGO](https://www.engoeyewear.com)** designs heads-up display smart glasses in Grenoble, France, built on **[ActiveLook](https://www.activelook.net)**, Microoled's ultra-light micro-OLED display platform. ENGO is sending OpenBridge a pair of glasses, and together we're bringing OpenBridge into your field of view:
+**[ENGO](https://www.engoeyewear.com)** designs heads-up display smart glasses in Grenoble, France, built on **[ActiveLook](https://www.activelook.net)**, Microoled's ultra-light micro-OLED display platform. ENGO sent OpenBridge an ENGO 3 pair, and OpenBridge now runs on it, through the phone's Bluetooth ([what works](ENGO.md), [what we'd like from ENGO next](engo/ENGO_FEATURE_REQUESTS.md)):
 
 - 👀 **Glanceable status:** see what your devices are doing without reaching for your phone.
 - 🔔 **Alerts that find you:** a refused action, a device going offline, a long job finished.
@@ -103,7 +103,7 @@ If you build or sell connected devices (smart-home products, robot vacuums, TVs 
 
 **[AirGradient](https://www.airgradient.com)** a rejoint le projet comme **partenaire matériel** : AirGradient nous envoie un **[AirGradient ONE Indoor Monitor I-9PSL (kit)](https://www.airgradient.com/shop/#!/AirGradient-ONE-Indoor-Monitor-I-9PSL-Kit/p/594725501)**, un capteur de qualité de l'air open source (particules fines PM1 / PM2,5 / PM10, CO₂, COV, NOx, température, humidité). La qualité de l'air devient une information à laquelle vos autres appareils peuvent réagir, avec votre accord, et tout passe par l'API locale du capteur, sans compte cloud ([page partenaire](AIRGRADIENT.md)).
 
-**ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, vont afficher l'état de vos appareils directement dans votre champ de vision.
+**ENGO** (Grenoble) a rejoint le projet comme **partenaire matériel** : ses lunettes à affichage tête haute, basées sur la plateforme ActiveLook de Microoled, affichent désormais l'état de vos appareils et les réponses de l'Oracle directement dans votre champ de vision (testé sur une vraie paire ENGO 3, via le Bluetooth du téléphone).
 
 **[Heltec Automation](https://heltec.cn/)** a aussi rejoint le projet comme **partenaire matériel** : Heltec nous envoie une **carte de développement Heltec WiFi LoRa 32 V4** (ESP32-S3 + LoRa SX1262, Wi-Fi, Bluetooth LE, écran OLED). Elle sera le premier ESP32 physique du labo : l'agent ESP32 d'OpenBridge n'a été vérifié jusqu'ici que sur l'émulateur QEMU d'Espressif. Merci Heltec !
 

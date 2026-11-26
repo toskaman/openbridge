@@ -30,6 +30,7 @@ class EngoKillerFeaturesTests(unittest.TestCase):
             transport=lambda b: self.sent_bytes.extend(b),
             model="ENGO 3"
         )
+        self.adapter.native_frame = False   # these tests read the logical frames; test_activelook.NativeFrameTests covers the conversion
 
     def test_spatial_radar_polar_math_and_bytes(self):
         devices = [

@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 
 from src.glasses import icons as I
 from src.glasses.i18n import NATIVE_NAMES, fmt_distance, fmt_duration, fmt_pace, fmt_speed, t
-from src.glasses.panel import H, W, Panel, fit, text_width, wrap
+from src.glasses.panel import FONTS, H, W, Panel, ascii_fold, fit, text_width, wrap
 
 EVENTS = ('next', 'prev', 'ok', 'back', 'home', 'up', 'down', 'left', 'right')
 
@@ -73,6 +73,7 @@ class Context:
     toast: dict | None = None                      # notification item shown over the screen, with 'until'
     event: object = None                           # current HudEvent from the scheduler
     sport: dict = field(default_factory=dict)      # live values from the sport engines (None = unknown / stale)
+    input: str = 'wave'                            # 'wave' (ENGO 1/2 gesture sensor) or 'tap' (ENGO 3 double tap)
 
     def tr(self, key, **kw):
         return t(key, self.lang, **kw)
@@ -81,31 +82,63 @@ class Context:
 # ---------------------------------------------------------------- chrome
 
 # Part of the logical canvas the wearer sees on a real ENGO 3 (measured: x 0-~292, y 0-~236), with a small margin.
-VIS_X0, VIS_X1 = 12, 284
+# Every screen below is laid out for that window and the real fonts (24 px for ids 0-1, 38 px id 2, 64 px id 3,
+# 82 px id 5; a letter is about half as wide as the font is tall).
+VIS_X0, VIS_X1, VIS_Y0, VIS_Y1 = 12, 284, 4, 234
 VIS_W, VIS_CX = VIS_X1 - VIS_X0, (12 + 284) // 2
+HEAD_Y, BODY_Y, HINT_Y = 34, 76, 210          # title row, first content row, bottom hint row
 
 def status_bar(p: Panel, ctx: Context):
     tm = time.localtime(ctx.clock())
     p.text(VIS_X0, 6, '%02d:%02d' % (tm.tm_hour, tm.tm_min), 1, 'secondary')
     x = VIS_X1
     if ctx.glasses_battery is not None:
-        x -= p.text_right(x, 16, '%d%%' % ctx.glasses_battery, 0, 'muted') + 10
+        x -= p.text_right(x, 6, '%d%%' % ctx.glasses_battery, 0, 'muted') + 10
     unread = ctx.inbox.unread() if ctx.inbox else 0
     if unread:
         w = text_width(str(unread), 0)
-        p.round_rect(x - w - 26, 13, x, 31, 9, 'accent')
-        I.bell(p, x - w - 15, 21, 6, 'accent')
-        p.text(x - w - 5, 16, str(unread), 0, 'accent')
+        p.round_rect(x - w - 26, 6, x, 30, 10, 'accent')
+        I.bell(p, x - w - 15, 18, 6, 'accent')
+        p.text(x - w - 5, 6, str(unread), 0, 'accent')
         x -= w + 34
     gps = (ctx.sport or {}).get('gps')
     if gps:
-        p.text_right(x - 12, 16, 'GPS', 0, {'READY': 'ok', 'STALE': 'warn'}.get(gps, 'alert'))
-        x -= 40
-    p.circle(x - 4, 22, 3, 'ok' if ctx.linked else 'faint', True)
+        x -= p.text_right(x - 6, 6, 'GPS', 0, {'READY': 'ok', 'STALE': 'warn'}.get(gps, 'alert')) + 12
+    p.circle(x - 4, 18, 3, 'ok' if ctx.linked else 'faint', True)
 
 
 def hint(p: Panel, text):
-    p.text_center(W / 2, 234, text, 0, 'muted', width=264)
+    p.text_center(VIS_CX, HINT_Y, text, 0, 'muted', width=VIS_W)
+
+
+def best_font(text, fonts, width):
+    """First font of `fonts` (largest first) in which `text` fits `width`; the last one otherwise (then cut)."""
+    clean = ' '.join(ascii_fold(text).split())
+    for f in fonts:
+        if text_width(clean, f) <= width:
+            return f
+    return fonts[-1]
+
+
+def text_fit(p, x, ymid, text, fonts, width, tone='primary', align='left'):
+    """Text in the largest font that fits, centred vertically on ymid. Returns the width drawn."""
+    f = best_font(text, fonts, width)
+    y = ymid - FONTS[f][0] // 2
+    s = fit(text, f, width)
+    if align == 'center':
+        return p.text_center(x, y, s, f, tone)
+    if align == 'right':
+        return p.text_right(x, y, s, f, tone)
+    return p.text(x, y, s, f, tone)
+
+
+def hint_key(ctx: Context, key: str) -> str:
+    """Bottom hint for the wearer's input: the ENGO 3 only has the double tap, so its hints mention the voice."""
+    if ctx.input == 'tap':
+        tap = ctx.tr(key + '.tap')
+        if tap != key + '.tap':
+            return tap
+    return ctx.tr(key)
 
 
 def banner(p: Panel, ctx: Context):
@@ -113,22 +146,24 @@ def banner(p: Panel, ctx: Context):
     if not b or b.get('until', 0) < ctx.clock():
         return
     tone = 'ok' if b.get('ok') else 'alert'
-    p.erase(20, 190, 284, 252)
-    p.round_rect(26, 196, 278, 230, 14, tone)
-    (I.check if b.get('ok') else I.cross)(p, 46, 213, 8, tone)
-    p.text(62, 204, fit(b.get('text', ''), 1, 206), 1, 'primary')
+    p.erase(VIS_X0, 168, VIS_X1, VIS_Y1)
+    p.round_rect(VIS_X0, 172, VIS_X1, 212, 14, tone)
+    (I.check if b.get('ok') else I.cross)(p, VIS_X0 + 22, 192, 8, tone)
+    p.text(VIS_X0 + 40, 180, fit(b.get('text', ''), 1, VIS_W - 52), 1, 'primary')
 
 
 def toast(p: Panel, ctx: Context):
     n = ctx.toast
     if not n or n.get('until', 0) < ctx.clock():
         return
-    p.erase(8, 36, 296, 124)
-    p.round_rect(14, 40, 290, 112, 14, 'accent')
-    I.badge(p, 40, 62, 15, n.get('letter', '?'), 'accent')
-    p.text(64, 48, fit(n.get('sender', ''), 1, 160), 1, 'primary')
-    p.text_right(278, 51, n.get('app', ''), 0, 'accent_dim')
-    p.text(64, 76, fit(n.get('text', ''), 0, 210), 0, 'secondary')
+    p.erase(VIS_X0, 30, VIS_X1, 124)
+    p.round_rect(VIS_X0, 34, VIS_X1, 120, 14, 'accent')
+    I.badge(p, VIS_X0 + 24, 62, 14, n.get('letter', '?'), 'accent')
+    app = fit(n.get('app', ''), 0, 84)
+    p.text(VIS_X0 + 46, 40, fit(n.get('sender', ''), 1, VIS_W - 64 - text_width(app, 0)), 1, 'primary')
+    p.text_right(VIS_X1 - 10, 40, app, 0, 'accent_dim')
+    for i, line in enumerate(wrap(n.get('text', ''), 1, VIS_W - 58, 2)):
+        p.text(VIS_X0 + 46, 66 + i * 24, line, 1, 'secondary')
 
 
 def event_card(p: Panel, ctx: Context):
@@ -137,12 +172,15 @@ def event_card(p: Panel, ctx: Context):
     if ev is None:
         return
     tone = PRIORITY_TONE.get(ev.priority, 'accent')
-    p.erase(8, 150, 296, 236)
-    p.round_rect(14, 156, 290, 228, 14, tone)
+    p.erase(VIS_X0, 140, VIS_X1, VIS_Y1)
+    p.round_rect(VIS_X0, 144, VIS_X1, VIS_Y1, 14, tone)
     if ev.priority == 'CRITICAL':
-        p.round_rect(16, 158, 288, 226, 13, tone)
-    for i, line in enumerate(wrap(ctx.tr(ev.message_key, **ev.params), 2 if len(ev.params) < 3 else 1, 256, 2)):
-        p.text_center(W / 2, 166 + i * 28, line, 2 if len(ev.params) < 3 else 1, 'primary')
+        p.round_rect(VIS_X0 + 2, 146, VIS_X1 - 2, VIS_Y1 - 2, 13, tone)
+    msg = ctx.tr(ev.message_key, **ev.params)
+    font = 2 if len(wrap(msg, 2, VIS_W - 20, 3)) <= 2 else 1
+    step = 38 if font == 2 else 26
+    for i, line in enumerate(wrap(msg, font, VIS_W - 20, 2 if font == 2 else 3)):
+        p.text_center(VIS_CX, 150 + i * step, line, font, 'primary')
 
 
 def ago(ts, ctx):
@@ -193,10 +231,11 @@ class Screen:
 class ListScreen(Screen):
     """Header + up to three rows, the focused one in an accent card."""
     rows_per_page = 3
+    row_h = 44
     hint_key = 'hint.list'
 
     def row(self, p, item, x, y, focused, ctx):
-        p.text(x, y + 10, fit(item[0], 2, 230), 2, 'primary' if focused else 'secondary')
+        text_fit(p, x, y + 20, item[0], (2, 1), VIS_X1 - x - 10, 'primary' if focused else 'secondary')
 
     def header_right(self, ctx):
         n = len(self.items(ctx))
@@ -207,19 +246,20 @@ class ListScreen(Screen):
 
     def render(self, p, ctx):
         status_bar(p, ctx)
-        p.text(22, 42, fit(self.title(ctx), 2, 190), 2, 'primary')
-        p.text_right(284, 50, self.header_right(ctx), 0, 'muted')
+        right = self.header_right(ctx)
+        rw = p.text_right(VIS_X1, HEAD_Y + 8, right, 1, 'muted') if right else 0
+        text_fit(p, VIS_X0, HEAD_Y + 19, self.title(ctx), (2, 1), VIS_W - rw - 10)
         items = self.items(ctx)
         if not items:
-            p.text_center(W / 2, 120, self.empty_text(ctx), 1, 'muted')
+            p.text_center(VIS_CX, 120, self.empty_text(ctx), 1, 'muted', width=VIS_W)
         page = self.focus // self.rows_per_page
         for i, item in enumerate(items[page * self.rows_per_page:(page + 1) * self.rows_per_page]):
             idx = page * self.rows_per_page + i
-            y = 78 + i * 50
+            y = BODY_Y + i * self.row_h
             if idx == self.focus:
-                p.round_rect(14, y, 290, y + 44, 12, 'accent')
-            self.row(p, item, 30, y, idx == self.focus, ctx)
-        hint(p, ctx.tr(self.hint_key))
+                p.round_rect(VIS_X0, y, VIS_X1, y + self.row_h - 4, 12, 'accent')
+            self.row(p, item, VIS_X0 + 12, y, idx == self.focus, ctx)
+        hint(p, hint_key(ctx, self.hint_key))
         banner(p, ctx)
 
 
@@ -227,8 +267,8 @@ class IconList(ListScreen):
     """Rows of (label, payload, icon)."""
 
     def row(self, p, item, x, y, focused, ctx):
-        I.draw(p, item[2], x + 10, y + 22, 9, 'accent' if focused else 'muted')
-        p.text(x + 34, y + 10, fit(item[0], 2, 220), 2, 'primary' if focused else 'secondary')
+        I.draw(p, item[2], x + 10, y + 20, 9, 'accent' if focused else 'muted')
+        text_fit(p, x + 32, y + 20, item[0], (2, 1), VIS_X1 - x - 42, 'primary' if focused else 'secondary')
 
 
 class Home(Screen):
@@ -277,6 +317,7 @@ class Home(Screen):
 
 class Inbox(ListScreen):
     hint_key = 'hint.inbox'
+    rows_per_page, row_h = 2, 66
 
     def title(self, ctx):
         return ctx.tr('menu.messages')
@@ -288,13 +329,14 @@ class Inbox(ListScreen):
         return ctx.tr('inbox.empty')
 
     def row(self, p, n, x, y, focused, ctx):
-        I.badge(p, x + 10, y + 22, 13, n['letter'], 'accent' if focused else 'muted', 1)
-        p.text(x + 34, y + 6, fit(n['sender'], 1, 170), 1, 'primary' if focused else 'secondary')
-        p.text_right(278, y + 9, ago(n['time'], ctx), 0, 'muted')
+        I.badge(p, x + 10, y + 30, 13, n['letter'], 'accent' if focused else 'muted', 1)
+        when = ago(n['time'], ctx)
+        ww = p.text_right(VIS_X1 - 10, y + 4, when, 0, 'muted')
+        p.text(x + 32, y + 4, fit(n['sender'], 1, VIS_X1 - x - 52 - ww), 1, 'primary' if focused else 'secondary')
         text = ctx.tr('inbox.privacy_hidden') if n.get('text') == 'New message' else n['text']
-        p.text(x + 34, y + 27, fit(text, 0, 220), 0, 'secondary' if focused else 'muted')
+        p.text(x + 32, y + 30, fit(text, 1, VIS_X1 - x - 42), 1, 'secondary' if focused else 'muted')
         if not n.get('read'):
-            p.circle(x - 6, y + 22, 3, 'accent', True)
+            p.circle(x - 6, y + 30, 3, 'accent', True)
 
     def select(self, item, ctx):
         return ('push', MessageView(item))
@@ -316,14 +358,14 @@ class MessageView(Screen):
             ctx.inbox.mark_read(n['id'])
             self.marked = True
         status_bar(p, ctx)
-        I.badge(p, 36, 56, 14, n['letter'], 'accent')
-        p.text(58, 50, n['app'], 0, 'accent')
-        p.text_right(284, 50, ago(n['time'], ctx), 0, 'muted')
-        p.text(22, 76, fit(n['sender'], 2, 262), 2, 'primary')
+        I.badge(p, VIS_X0 + 14, HEAD_Y + 12, 13, n['letter'], 'accent')
+        ww = p.text_right(VIS_X1, HEAD_Y, ago(n['time'], ctx), 0, 'muted')
+        p.text(VIS_X0 + 34, HEAD_Y, fit(n['app'], 0, VIS_W - 44 - ww), 0, 'accent')
+        p.text(VIS_X0, 60, fit(n['sender'], 2, VIS_W), 2, 'primary')
         text = ctx.tr('inbox.privacy_hidden') if n.get('text') == 'New message' else n['text']
-        for i, line in enumerate(wrap(text, 1, 262, 5)):
-            p.text(22, 112 + i * 23, line, 1, 'secondary')
-        hint(p, ctx.tr('hint.message'))
+        for i, line in enumerate(wrap(text, 1, VIS_W, 4)):
+            p.text(VIS_X0, 100 + i * 26, line, 1, 'secondary')
+        hint(p, hint_key(ctx, 'hint.message'))
 
 
 class TVHub(Screen):
@@ -350,16 +392,18 @@ class TVHub(Screen):
 
     def render(self, p, ctx):
         status_bar(p, ctx)
-        p.text(22, 42, fit(ctx.tv_name, 2, 170), 2, 'primary')
-        p.text_right(284, 50, fit(ctx.tv_app, 0, 100), 0, 'muted')
+        app = fit(ctx.tv_app, 1, 110)
+        aw = p.text_right(VIS_X1, HEAD_Y + 8, app, 1, 'muted') if app else 0
+        text_fit(p, VIS_X0, HEAD_Y + 19, ctx.tv_name, (2, 1), VIS_W - aw - 10)
+        tw = (VIS_W - 8) // 2
         for i, (key, icon) in enumerate(self.TILES):
-            col, row = i % 3, i // 3
-            x0, y0 = 16 + col * 92, 78 + row * 76
+            col, row = i % 2, i // 2
+            x0, y0 = VIS_X0 + col * (tw + 8), BODY_Y + row * 44
             f = i == self.focus
-            p.round_rect(x0, y0, x0 + 84, y0 + 68, 12, 'accent' if f else 'faint')
-            I.draw(p, icon, x0 + 42, y0 + 26, 13, 'primary' if f else 'muted')
-            p.text_center(x0 + 42, y0 + 46, fit(ctx.tr(key), 0, 78), 0, 'primary' if f else 'muted')
-        hint(p, ctx.tr('hint.select'))
+            p.round_rect(x0, y0, x0 + tw, y0 + 40, 12, 'accent' if f else 'faint')
+            I.draw(p, icon, x0 + 20, y0 + 20, 9, 'primary' if f else 'muted')
+            p.text(x0 + 38, y0 + 8, fit(ctx.tr(key), 1, tw - 46), 1, 'primary' if f else 'muted')
+        hint(p, hint_key(ctx, 'hint.select'))
         banner(p, ctx)
 
 
@@ -380,22 +424,22 @@ class VolumeScreen(Screen):
 
     def render(self, p, ctx):
         status_bar(p, ctx)
-        cx, cy, r = W / 2, 118, 62
+        cx, cy, r = VIS_CX, 118, 66
         p.arc(cx, cy, r, 135, 405, 'faint')
         v = ctx.tv_volume
         if v is not None:
             end = 135 + int(270 * max(0, min(100, v)) / 100)
             p.arc(cx, cy, r, 135, end, 'accent')
             p.arc(cx, cy, r - 3, 135, end, 'accent')
-            p.text_center(cx, cy - 28, str(v), 5, 'primary')
+            p.text_center(cx, cy - 34, str(v), 3, 'primary')
         else:
-            p.text_center(cx, cy - 16, '- -', 3, 'muted')
-        p.text_center(cx, cy + 34, ctx.tr('tv.volume_label'), 0, 'muted')
-        for i, (bx, ic) in enumerate(((54, 'minus'), (250, 'plus'))):
+            p.text_center(cx, cy - 34, '- -', 3, 'muted')
+        p.text_center(cx, cy + 34, fit(ctx.tr('tv.volume_label'), 0, 110), 0, 'muted')
+        for i, (bx, ic) in enumerate(((VIS_X0 + 26, 'minus'), (VIS_X1 - 26, 'plus'))):
             f = i == self.focus
             p.circle(bx, cy + 10, 24, 'accent' if f else 'faint')
             I.draw(p, ic, bx, cy + 10, 14, 'primary' if f else 'muted')
-        hint(p, ctx.tr('hint.switch'))
+        hint(p, hint_key(ctx, 'hint.switch'))
         banner(p, ctx)
 
 
@@ -407,10 +451,11 @@ class AppsScreen(ListScreen):
         return TV_APPS
 
     def row(self, p, item, x, y, focused, ctx):
-        I.apps(p, x + 10, y + 22, 9, 'accent' if focused else 'muted')
-        p.text(x + 34, y + 10, item[0], 2, 'primary' if focused else 'secondary')
-        if ctx.tv_app and ctx.tv_app.lower() == item[0].lower():
-            p.text_right(278, y + 16, ctx.tr('tv.on_screen'), 0, 'ok')
+        I.apps(p, x + 10, y + 20, 9, 'accent' if focused else 'muted')
+        on = ctx.tv_app and ctx.tv_app.lower() == item[0].lower()
+        if on:
+            p.circle(VIS_X1 - 16, y + 20, 5, 'ok', True)           # 'on screen' dot
+        text_fit(p, x + 32, y + 20, item[0], (2, 1), VIS_X1 - x - 42 - (20 if on else 0), 'primary' if focused else 'secondary')
 
     def select(self, item, ctx):
         return ('act', Action('device', ctx.tr('tv.open_app', app=item[0]), 'tv', 'device_action',
@@ -439,16 +484,15 @@ class RemoteScreen(Screen):
 
     def render(self, p, ctx):
         status_bar(p, ctx)
-        p.text(22, 42, ctx.tr('tv.remote'), 2, 'primary')
-        p.text_right(284, 50, fit(ctx.tv_app, 0, 110), 0, 'muted')
-        cx, cy, d = 124, 136, 52
+        p.text(VIS_X0, HEAD_Y, fit(ctx.tr('tv.remote'), 2, VIS_W), 2, 'primary')
+        cx, cy, d = 92, 140, 46
         for i, (name, dx, dy) in enumerate(self.KEYS[:5]):
             x, y = cx + dx * d, cy + dy * d
             f = i == self.focus
-            p.circle(x, y, 22 if name != 'ok' else 25, 'accent' if f else 'faint')
+            p.circle(x, y, 20 if name != 'ok' else 23, 'accent' if f else 'faint')
             tone = 'primary' if f else 'muted'
             if name == 'ok':
-                p.text_center(x, y - 9, 'OK', 1, tone)
+                p.text_center(x, y - 12, 'OK', 1, tone)
             else:
                 ang = {'up': -90, 'right': 0, 'down': 90, 'left': 180}[name]
                 ux, uy = math.cos(math.radians(ang)), math.sin(math.radians(ang))
@@ -457,12 +501,12 @@ class RemoteScreen(Screen):
                 p.line(tx, ty, x - ux * 4 + uy * 8, y - uy * 4 - ux * 8, tone)
         for j, (name, key, icon) in enumerate((('back', 'tv.back', 'back'), ('home', 'tv.home', 'home'))):
             i = 5 + j
-            y = 96 + j * 74
+            y = BODY_Y + 8 + j * 66
             f = i == self.focus
-            p.round_rect(214, y, 286, y + 56, 12, 'accent' if f else 'faint')
-            I.draw(p, icon, 250, y + 20, 9, 'primary' if f else 'muted')
-            p.text_center(250, y + 34, fit(ctx.tr(key), 0, 68), 0, 'primary' if f else 'muted')
-        hint(p, ctx.tr('hint.remote'))
+            p.round_rect(180, y, VIS_X1, y + 58, 12, 'accent' if f else 'faint')
+            I.draw(p, icon, 232, y + 18, 9, 'primary' if f else 'muted')
+            p.text_center(232, y + 30, fit(ctx.tr(key), 0, VIS_X1 - 188), 0, 'primary' if f else 'muted')
+        hint(p, hint_key(ctx, 'hint.remote'))
         banner(p, ctx)
 
 
@@ -509,26 +553,31 @@ class VoiceScreen(Screen):
         v = ctx.voice or {}
         st = v.get('state', 'idle')
         st = st if st in ('idle', 'listening', 'thinking', 'done', 'failed') else 'idle'
-        cx, cy = W / 2, 92
+        cx, cy = VIS_CX, 76
         tone = {'listening': 'accent', 'thinking': 'warn', 'done': 'ok', 'failed': 'alert'}.get(st, 'muted')
-        I.mic(p, cx, cy, 20, 'primary' if st != 'idle' else 'secondary')
-        p.circle(cx, cy, 36, tone)
+        I.mic(p, cx, cy, 18, 'primary' if st != 'idle' else 'secondary')
+        p.circle(cx, cy, 32, tone)
         if st == 'listening':
             for k in range(int(ctx.clock() * 3) % 3 + 1):
-                p.circle(cx, cy, 44 + k * 9, 'accent_dim')
+                p.circle(cx, cy, 38 + k * 7, 'accent_dim')
         label = ctx.tr({'idle': 'voice.idle', 'listening': 'voice.listening', 'thinking': 'voice.thinking',
                         'done': 'voice.done', 'failed': 'voice.failed'}[st])
-        p.text_center(cx, 140, label, 2 if st != 'idle' else 1, 'primary' if st != 'idle' else 'secondary', width=268)
-        heard = v.get('text') or ''
-        for i, line in enumerate(wrap('“%s”' % heard if heard else '', 1, 262, 2)):
-            p.text_center(cx, 174 + i * 22, line, 1, 'secondary')
-        if v.get('result'):
-            p.text_center(cx, 220, fit(v['result'], 0, 262), 0, 'ok' if st == 'done' else 'alert')
+        if st == 'idle':
+            for i, line in enumerate(wrap(label, 1, VIS_W, 2)):
+                p.text_center(cx, 116 + i * 26, line, 1, 'secondary')
         else:
-            hint(p, ctx.tr('voice.try'))
+            text_fit(p, cx, 132, label, (2, 1), VIS_W, 'primary', 'center')
+        heard = v.get('text') or ''
+        for i, line in enumerate(wrap('"%s"' % heard if heard else '', 1, VIS_W, 2)):
+            p.text_center(cx, 160 + i * 24, line, 1, 'secondary')
+        if v.get('result'):
+            p.text_center(cx, HINT_Y, fit(v['result'], 0, VIS_W), 0, 'ok' if st == 'done' else 'alert')
+        elif st == 'idle':
+            for i, line in enumerate(wrap(ctx.tr('voice.try'), 0, VIS_W, 2)):
+                p.text_center(cx, 182 + i * 24, line, 0, 'muted')
 
 
-ORACLE_LINES_PER_PAGE, ORACLE_FONT, ORACLE_WIDTH = 4, 2, 264
+ORACLE_LINES_PER_PAGE, ORACLE_FONT, ORACLE_WIDTH = 3, 2, 270
 
 
 def oracle_pages(answer: str) -> list:
@@ -573,35 +622,34 @@ class OracleScreen(Screen):
         if st == 'listening':
             badge = 'ECOUTE...'
             badge_tone = 'accent'
-        p.text(22, 16, badge, 1, badge_tone)
+        p.text(VIS_X0, VIS_Y0, badge, 1, badge_tone)
         if st != 'listening':
             lat_tone = 'ok' if lat < 600 else 'warn' if lat < 2000 else 'alert'
-            p.text_right(284, 16, f'{lat}ms', 1, lat_tone)
-        p.line(18, 38, 286, 38, 'faint')
+            p.text_right(VIS_X1, VIS_Y0, f'{lat}ms', 1, lat_tone)
+        p.line(VIS_X0, 30, VIS_X1, 30, 'faint')
 
-        # Heard transcript (1-2 lines)
+        # Heard transcript (one line)
         heard = v.get('text') or o.get('transcript') or ''
-        for i, line in enumerate(wrap('> ' + heard if heard else '', 0, 264, 2)):
-            p.text(20, 44 + i * 16, line, 0, 'secondary')
-        p.line(18, 80, 286, 80, 'faint')
+        if heard:
+            p.text(VIS_X0, 34, fit('> ' + heard, 1, VIS_W), 1, 'secondary')
+        p.line(VIS_X0, 62, VIS_X1, 62, 'faint')
 
         # Answer body: large font, 4 lines per page; a wave shows the next page
         pages = self._pages(ctx)
         self.page = min(self.page, len(pages) - 1)
         if st == 'listening':
-            p.text_center(W / 2, 128, '...', 2, 'accent')
+            p.text_center(VIS_CX, 110, '...', 2, 'accent')
         elif pages[self.page]:
             ans_tone = 'ok' if qclass != 'LOCATE' else 'primary'
             for i, ln in enumerate(pages[self.page]):
-                p.text(20, 84 + i * 29, ln, ORACLE_FONT, ans_tone)
+                p.text(VIS_X0, 68 + i * 40, ln, ORACLE_FONT, ans_tone)
             if len(pages) > 1:
-                p.text_right(284, 206, '%d/%d' % (self.page + 1, len(pages)), 1, 'accent')
+                p.text_right(VIS_X1, HINT_Y, '%d/%d' % (self.page + 1, len(pages)), 1, 'accent')
 
-        # Footer source + dismiss hint
+        # Footer: where the answer came from
         src = str(o.get('source') or '').upper()
         if src:
-            p.text(22, 206, src[:18], 0, 'muted')
-        hint(p, ctx.tr('hint.message'))
+            p.text(VIS_X0, HINT_Y, fit(src, 0, 150), 0, 'muted')
 
 
 class SettingsScreen(ListScreen):
@@ -615,7 +663,7 @@ class SettingsScreen(ListScreen):
                 (ctx.tr('settings.clear'), 'clear'), (ctx.tr('settings.calibrate'), 'calibrate')]
 
     def row(self, p, item, x, y, focused, ctx):
-        p.text(x, y + 12, fit(item[0], 1, 250), 1, 'primary' if focused else 'secondary')
+        p.text(x, y + 8, fit(item[0], 1, VIS_X1 - x - 10), 1, 'primary' if focused else 'secondary')
 
     def select(self, item, ctx):
         if item[1] == 'lang':
@@ -638,14 +686,16 @@ class Calibration(Screen):
         return ('pop',) if ev in ('ok', 'back') else None
 
     def render(self, p, ctx):
-        p.rect(0, 0, W - 1, H - 1, 'muted')
-        p.line(20, 20, 70, 20, 'accent')
-        p.line(20, 20, 20, 70, 'accent')
-        p.line(20, 20, 80, 80, 'accent')
-        p.text(92, 30, ctx.tr('calib.top_left'), 1, 'accent')
-        p.text_center(W / 2, 120, fit(ctx.tr('calib.question'), 2, 280), 2, 'primary')
-        p.text_center(W / 2, 156, fit(ctx.tr('calib.fix'), 0, 280), 0, 'secondary')
-        p.text_right(W - 20, H - 36, ctx.tr('calib.bottom_right'), 0, 'muted')
+        p.rect(VIS_X0 - 8, VIS_Y0, VIS_X1 + 6, VIS_Y1, 'muted')
+        p.line(VIS_X0, 12, VIS_X0 + 50, 12, 'accent')
+        p.line(VIS_X0, 12, VIS_X0, 62, 'accent')
+        p.line(VIS_X0, 12, VIS_X0 + 56, 68, 'accent')
+        p.text(VIS_X0 + 64, 16, fit(ctx.tr('calib.top_left'), 1, VIS_W - 64), 1, 'accent')
+        for i, line in enumerate(wrap(ctx.tr('calib.question'), 1, VIS_W, 2)):
+            p.text_center(VIS_CX, 96 + i * 26, line, 1, 'primary')
+        for i, line in enumerate(wrap(ctx.tr('calib.fix'), 0, VIS_W, 2)):
+            p.text_center(VIS_CX, 152 + i * 24, line, 0, 'secondary')
+        p.text_right(VIS_X1, VIS_Y1 - 26, ctx.tr('calib.bottom_right'), 0, 'muted')
 
 
 # ---------------------------------------------------------------- sport
@@ -665,8 +715,8 @@ class SportMenu(IconList):
 
 
 def _metric(p, x, y, label, value, tone='primary', width=128):
-    p.text(x, y, label, 0, 'muted')
-    p.text(x, y + 14, fit(value, 3, width), 3, tone)
+    p.text(x, y, fit(label, 0, width), 0, 'muted')
+    p.text(x, y + 24, fit(value, 2, width), 2, tone)
 
 
 class SportDashboard(Screen):
@@ -685,24 +735,32 @@ class SportDashboard(Screen):
         else:
             big, unit = fmt_speed(s.get('speed_mps'), ctx.units, ctx.lang), ('km/h' if ctx.units == 'metric' else 'mph')
             label = ctx.tr('hud.metric.speed')
-        p.text(22, 40, label, 0, 'muted')
-        w = p.text(22, 50, big, 5, 'primary')
-        p.text(30 + w, 82, unit, 1, 'secondary')
         hr, zone = s.get('heart_rate'), s.get('hr_zone')
+        hr_w = 0
         if hr is not None:
-            I.heart(p, 250, 62, 9, {5: 'alert', 4: 'warn'}.get(zone, 'accent'))
-            p.text_right(284, 76, str(int(hr)), 2, 'primary')
+            ztone = {5: 'alert', 4: 'warn'}.get(zone, 'accent')
+            hr_w = p.text_right(VIS_X1, 44, str(int(hr)), 2, 'primary')
+            I.heart(p, VIS_X1 - hr_w - 14, 62, 8, ztone)
             if zone:
-                p.text_right(284, 104, 'Z%d' % zone, 0, {5: 'alert', 4: 'warn'}.get(zone, 'accent'))
-        p.line(22, 124, 282, 124, 'faint')
-        _metric(p, 22, 132, ctx.tr('hud.metric.distance'), fmt_distance(s.get('distance_m'), ctx.units, ctx.lang))
-        _metric(p, 160, 132, ctx.tr('hud.metric.time'), fmt_duration(s.get('elapsed_s')))
+                p.text_right(VIS_X1, 84, 'Z%d' % zone, 0, ztone)
+            hr_w += 26
+        p.text(VIS_X0, 32, fit(label, 0, 150), 0, 'muted')
+        room = VIS_W - hr_w - text_width(unit, 0) - 10
+        f = best_font(big, (5, 4, 3), room)
+        w = text_fit(p, VIS_X0, 92, big, (f,), room)
+        p.text(VIS_X0 + w + 6, 92 + FONTS[f][0] // 2 - 24, unit, 0, 'secondary')
+        p.line(VIS_X0, 140, VIS_X1, 140, 'faint')
+        half = VIS_W // 2
+        _metric(p, VIS_X0, 144, ctx.tr('hud.metric.distance'), fmt_distance(s.get('distance_m'), ctx.units, ctx.lang),
+                width=half - 6)
+        _metric(p, VIS_X0 + half, 144, ctx.tr('hud.metric.time'), fmt_duration(s.get('elapsed_s')), width=half)
         third = (ctx.tr('hud.metric.power'), '%d W' % s['power']) if s.get('power') is not None else \
                 (ctx.tr('hud.metric.cadence'), '%d' % s['cadence']) if s.get('cadence') is not None else \
-                (ctx.tr('hud.metric.lap'), fmt_duration(s.get('lap_s')) if s.get('lap_s') else '—')
-        _metric(p, 22, 182, third[0], third[1])
+                (ctx.tr('hud.metric.lap'), fmt_duration(s.get('lap_s')) if s.get('lap_s') else '-')
+        line = '%s %s' % (third[0], third[1])
         if s.get('lap_n'):
-            _metric(p, 160, 182, ctx.tr('hud.metric.lap') + ' %d' % s['lap_n'], fmt_duration(s.get('last_lap_s')))
+            line += '   %s %d %s' % (ctx.tr('hud.metric.lap'), s['lap_n'], fmt_duration(s.get('last_lap_s')))
+        p.text(VIS_X0, HINT_Y, fit(line, 0, VIS_W), 0, 'secondary')
         event_card(p, ctx)
 
 
@@ -714,39 +772,45 @@ class NavScreen(Screen):
         nav = s.get('nav') or {}
         status_bar(p, ctx)
         if not nav:
-            p.text_center(W / 2, 110, ctx.tr('common.unavailable'), 2, 'muted')
+            p.text_center(VIS_CX, 110, ctx.tr('common.unavailable'), 2, 'muted', width=VIS_W)
             return
         if nav.get('arrived'):
-            I.flag(p, W / 2, 96, 30, 'ok')
-            p.text_center(W / 2, 150, ctx.tr('hud.navigation.arrival'), 3, 'ok')
+            I.flag(p, VIS_CX, 84, 28, 'ok')
+            p.text_center(VIS_CX, 130, ctx.tr('hud.navigation.arrival'), 2, 'ok', width=VIS_W)
             return
         off = nav.get('off_route')
         turn = nav.get('next_turn') or {'direction': 'straight', 'in_m': nav.get('remaining_m')}
         direction = turn['direction']
         tone = 'alert' if off else 'accent'
-        cx, cy = 76, 112
-        p.circle(cx, cy, 52, tone)
+        cx, cy = VIS_X0 + 48, 96
+        p.circle(cx, cy, 46, tone)
         if direction == 'u_turn':
             I.u_turn(p, cx, cy, 30, 'primary')
         else:
             I.arrow(p, cx, cy, 32, DIRECTION_ANGLE.get(direction, 0), 'primary')
+        tx, tw = VIS_X0 + 106, VIS_X1 - VIS_X0 - 106
         if off:
             label = ctx.tr('hud.navigation.off_route')
-            size = 2 if text_width(label, 2) <= 140 else 1          # "Hors itinéraire" is wider than "Off route"
-            p.text(150, 60 if size == 2 else 66, fit(label, size, 140), size, 'alert')
-            p.text(150, 92, fmt_distance(nav.get('off_by_m'), ctx.units, ctx.lang), 3, 'primary')
+            for i, line in enumerate(wrap(label, 1, tw, 2)):
+                p.text(tx, 40 + i * 24, line, 1, 'alert')
+            p.text(tx, 92, fit(fmt_distance(nav.get('off_by_m'), ctx.units, ctx.lang), 2, tw), 2, 'primary')
         else:
-            p.text(150, 56, fmt_distance(turn.get('in_m'), ctx.units, ctx.lang), 4, 'primary')
-            p.text(150, 110, fit(ctx.tr('hud.dir.' + direction), 1, 140), 1, 'secondary')
-        p.line(22, 184, 282, 184, 'faint')
-        p.text(22, 194, ctx.tr('hud.navigation.remaining', distance=fmt_distance(nav.get('remaining_m'), ctx.units, ctx.lang)),
-               1, 'secondary')
+            dist = fmt_distance(turn.get('in_m'), ctx.units, ctx.lang)
+            size = 3 if text_width(dist, 3) <= tw else 2
+            p.text(tx, 46 if size == 3 else 58, fit(dist, size, tw), size, 'primary')
+            p.text(tx, 114, fit(ctx.tr('hud.dir.' + direction), 1, tw), 1, 'secondary')
+        p.line(VIS_X0, 150, VIS_X1, 150, 'faint')
+        eta_txt = ''
         if nav.get('eta_s') is not None:
             eta = time.localtime(ctx.clock() + nav['eta_s'])
-            p.text_right(282, 194, ctx.tr('hud.navigation.eta', time='%02d:%02d' % (eta.tm_hour, eta.tm_min)), 1, 'secondary')
+            eta_txt = ctx.tr('hud.navigation.eta', time='%02d:%02d' % (eta.tm_hour, eta.tm_min))
+        p.text(VIS_X0, 156, fit(ctx.tr('hud.navigation.remaining', distance=fmt_distance(nav.get('remaining_m'), ctx.units, ctx.lang)),
+                                1, VIS_W), 1, 'secondary')
+        if eta_txt:
+            p.text(VIS_X0, 182, fit(eta_txt, 1, VIS_W), 1, 'secondary')
         poi = nav.get('nearest_poi')
         if poi and poi.get('distance_m', 1e9) < 2000:
-            p.text(22, 222, fit('%s · %s' % (poi['name'], fmt_distance(poi['distance_m'], ctx.units, ctx.lang)), 0, 260), 0, 'accent')
+            p.text(VIS_X0, 208, fit('%s - %s' % (poi['name'], fmt_distance(poi['distance_m'], ctx.units, ctx.lang)), 1, VIS_W), 1, 'accent')
         event_card(p, ctx)
 
 
@@ -757,27 +821,27 @@ class GhostScreen(Screen):
         s = ctx.sport or {}
         g = s.get('ghost') or {}
         status_bar(p, ctx)
-        I.ghost(p, 36, 54, 12, 'muted')
-        p.text(56, 44, fit(g.get('ghost_name') or ctx.tr('hud.sport.ghost'), 1, 220), 1, 'secondary')
+        I.ghost(p, VIS_X0 + 12, 46, 11, 'muted')
+        p.text(VIS_X0 + 30, 34, fit(g.get('ghost_name') or ctx.tr('hud.sport.ghost'), 1, VIS_W - 30), 1, 'secondary')
         gap = g.get('gap_s')
         if gap is None:
-            p.text_center(W / 2, 100, '—', 5, 'muted')
+            p.text_center(VIS_CX, 66, '-', 5, 'muted')
         else:
             ahead = gap >= 0
             tone = 'ok' if ahead else 'warn'
-            txt = ('+' if ahead else '−') + fmt_duration(abs(gap))
-            p.text_center(W / 2, 82, txt, 5, tone)
+            txt = ('+' if ahead else '-') + fmt_duration(abs(gap))
+            p.text_center(VIS_CX, 62, txt, 5 if text_width(txt, 5) <= VIS_W else 3, tone)
             key = 'hud.ghost.even' if abs(gap) < 1 else 'hud.ghost.ahead' if ahead else 'hud.ghost.behind'
-            p.text_center(W / 2, 146, ctx.tr(key, gap=fmt_distance(abs(g.get('gap_m') or 0), ctx.units, ctx.lang)), 1, 'secondary')
+            p.text_center(VIS_CX, 148, ctx.tr(key, gap=fmt_distance(abs(g.get('gap_m') or 0), ctx.units, ctx.lang)), 1, 'secondary', width=VIS_W)
         total = g.get('total_m') or 0
         if total:
-            x0, x1, y = 30, 274, 186
+            x0, x1, y = VIS_X0 + 8, VIS_X1 - 8, 188
             p.line(x0, y, x1, y, 'faint')
             for dist, tone, r in ((g.get('ghost_m') or 0, 'muted', 5), (s.get('distance_m') or 0, 'accent', 6)):
                 x = x0 + (x1 - x0) * max(0, min(1, dist / total))
                 p.circle(x, y, r, tone, True)
         if g.get('projected_finish_s'):
-            p.text_center(W / 2, 206, ctx.tr('hud.ghost.projection', time=fmt_duration(g['projected_finish_s'])), 1, 'muted')
+            p.text_center(VIS_CX, HINT_Y, ctx.tr('hud.ghost.projection', time=fmt_duration(g['projected_finish_s'])), 0, 'muted', width=VIS_W)
         event_card(p, ctx)
 
 
@@ -789,27 +853,28 @@ class WorkoutScreen(Screen):
         w = s.get('workout') or {}
         status_bar(p, ctx)
         if not w:
-            p.text_center(W / 2, 110, ctx.tr('common.unavailable'), 2, 'muted')
+            p.text_center(VIS_CX, 110, ctx.tr('common.unavailable'), 2, 'muted', width=VIS_W)
             return
         if w.get('done'):
-            I.check(p, W / 2, 96, 30, 'ok')
-            p.text_center(W / 2, 146, ctx.tr('hud.training.done'), 2, 'ok')
+            I.check(p, VIS_CX, 84, 28, 'ok')
+            p.text_center(VIS_CX, 130, ctx.tr('hud.training.done'), 2, 'ok', width=VIS_W)
             return
         kind_tone = {'work': 'warn', 'recovery': 'ok'}.get(w.get('kind'), 'accent')
-        p.text(22, 42, ctx.tr('hud.training.' + w.get('kind', 'work')), 2, kind_tone)
-        p.text_right(284, 50, ctx.tr('hud.training.step', n=w.get('n', 1), total=w.get('total', 1)), 0, 'muted')
+        sw = p.text_right(VIS_X1, HEAD_Y + 8, '%d/%d' % (w.get('n', 1), w.get('total', 1)), 1, 'muted')
+        text_fit(p, VIS_X0, HEAD_Y + 19, ctx.tr('hud.training.' + w.get('kind', 'work')), (2, 1), VIS_W - sw - 10, kind_tone)
         unit, left = w.get('remaining') or ('s', None)
         big = fmt_duration(left) if unit == 's' else fmt_distance(left, ctx.units, ctx.lang)
-        p.text_center(W / 2, 84, big, 5, 'primary')
+        text_fit(p, VIS_CX, 116, big, (5, 4, 3), VIS_W, 'primary', 'center')
         tgt, cur = w.get('target_pace'), s.get('pace_s_per_km')
         if tgt:
-            p.text(22, 162, ctx.tr('hud.training.target_pace', pace=fmt_pace(tgt, ctx.units)), 1, 'secondary')
+            cw = 0
             if cur:
                 tone = 'ok' if abs(cur - tgt) <= 5 else 'warn'
-                p.text_right(282, 162, fmt_pace(cur, ctx.units), 2, tone)
+                cw = p.text_right(VIS_X1, 160, fmt_pace(cur, ctx.units), 2, tone)
+            p.text(VIS_X0, 168, fit(ctx.tr('hud.training.target_pace', pace=fmt_pace(tgt, ctx.units)), 1, VIS_W - cw - 10), 1, 'secondary')
         n, total = w.get('n', 1), max(1, w.get('total', 1))
-        p.rect(22, 204, 282, 210, 'faint')
-        p.rect(22, 204, 22 + int(260 * (n - 1) / total), 210, 'accent', True)
+        p.rect(VIS_X0, 210, VIS_X1, 216, 'faint')
+        p.rect(VIS_X0, 210, VIS_X0 + int(VIS_W * (n - 1) / total), 216, 'accent', True)
         event_card(p, ctx)
 
 

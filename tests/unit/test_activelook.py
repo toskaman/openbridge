@@ -1,3 +1,4 @@
+import struct
 import unittest
 from src.adapters.activelook import (
     ActiveLookAdapter, encode_packet, cmd_clear, cmd_luma, cmd_color,
@@ -41,7 +42,8 @@ class ActiveLookTests(unittest.TestCase):
     def test_receipt_push_ok_and_refused(self):
         sent_chunks = []
         adapter = ActiveLookAdapter(transport=lambda b: sent_chunks.append(b), model="ENGO 3")
-        
+        adapter.native_frame = False      # logical frames here; NativeFrameTests covers the conversion
+
         # OK Receipt (Green)
         ok = adapter.push_receipt("VACUUM", "Docked in base station", status="ok")
         self.assertTrue(ok)
@@ -207,6 +209,46 @@ class ActiveLookTests(unittest.TestCase):
 
         client.close()
         server.stop()
+
+
+class NativeFrameTests(unittest.TestCase):
+    """The old demo screens draw in logical coordinates; a real ENGO 3 mirrors both axes (measured 26 Nov 2026)."""
+
+    def test_text_is_flipped_and_upright(self):
+        from src.adapters.activelook import to_native, split_packets
+        out = list(split_packets(to_native(cmd_text(10, 20, 'Hi', font=1, color_or_grey=15))))
+        self.assertEqual(len(out), 1)
+        cmd, _, d, _ = out[0]
+        self.assertEqual(cmd, 0x37)
+        self.assertEqual(struct.unpack_from('>hhB', d), (303 - 10, 255 - 20, 4))
+        self.assertEqual(d[5:7], bytes([1, 15]))
+
+    def test_rect_keeps_min_max_and_line_keeps_direction(self):
+        from src.adapters.activelook import to_native, split_packets, cmd_rectf
+        frames = list(split_packets(to_native(cmd_rectf(0, 0, 100, 30) + cmd_line(0, 0, 50, 10))))
+        self.assertEqual(struct.unpack('>hhhh', frames[0][2]), (203, 225, 303, 255))
+        self.assertEqual(struct.unpack('>hhhh', frames[1][2]), (303, 255, 253, 245))
+
+    def test_legacy_colours_become_palette_colours_on_colour_glasses(self):
+        from src.adapters.activelook import to_native, split_packets, RG_COLOURS
+        frames = list(split_packets(to_native(cmd_color(COLOR_RED) + cmd_text(0, 0, 'x', color_or_grey=COLOR_GREEN), True)))
+        self.assertEqual(frames[0][2], bytes([RG_COLOURS['red']]))
+        self.assertEqual(frames[1][0], 0x3E)
+        self.assertEqual(frames[1][2][6], RG_COLOURS['green'])
+        mono = list(split_packets(to_native(cmd_color(COLOR_RED))))
+        self.assertEqual(mono[0][2], bytes([COLOR_RED]))
+
+    def test_other_frames_pass_through_and_adapter_converts(self):
+        from src.adapters.activelook import to_native
+        raw = cmd_clear() + cmd_luma(10) + cmd_hold_flush(1)
+        self.assertEqual(to_native(raw), raw)
+        sent = []
+        ad = ActiveLookAdapter(transport=sent.append, model='ENGO 2')
+        ad.send(cmd_text(0, 0, 'x'))
+        self.assertEqual(struct.unpack_from('>hh', sent[0], 4), (303, 255))
+        ad.native_frame = False
+        ad.send(cmd_text(0, 0, 'x'))
+        self.assertEqual(struct.unpack_from('>hh', sent[1], 4), (0, 0))
 
 
 if __name__ == "__main__":

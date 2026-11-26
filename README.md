@@ -20,9 +20,9 @@
 
 <table align="center">
   <tr>
-    <td align="center" width="20%"><b>38</b><br><sub>verified device runs</sub></td>
-    <td align="center" width="20%"><b>28</b><br><sub>on real hardware</sub></td>
-    <td align="center" width="20%"><b>6</b><br><sub>device families: TV, watch, phone, router, robot, PC</sub></td>
+    <td align="center" width="20%"><b>39</b><br><sub>verified device runs</sub></td>
+    <td align="center" width="20%"><b>29</b><br><sub>on real hardware</sub></td>
+    <td align="center" width="20%"><b>7</b><br><sub>device families: TV, watch, phone, glasses, router, robot, PC</sub></td>
     <td align="center" width="20%"><b>Local AI</b><br><sub>runs on your own machine</sub></td>
     <td align="center" width="20%"><b>Read back</b><br><sub>every action checked on the device</sub></td>
   </tr>
@@ -51,13 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-26 18:50` **Every glasses screen redrawn for the real ENGO 3:** messages, TV, sport, navigation, settings and the voice screen now fit the panel with its real font sizes; the older ENGO demo screens show upright and in colour too, and the emulator no longer draws them upside down. What we'd like from ENGO next is in a [suggestions file](docs/partners/engo/ENGO_FEATURE_REQUESTS.md). [Glasses](docs/GLASSES.md)
 - `2026-11-26 16:10` **The Oracle becomes an optional module per Companion:** switch it on or off from the PC (Controls > Modules, or `openbridge glasses module oracle on|off`) or by saying "active / retire l'Oracle" on the phone. [Glasses](docs/GLASSES.md)
 - `2026-11-26 15:45` **ENGO 3 glasses driven through the phone:** a PC without Bluetooth uses the phone's; ask the Oracle out loud on the phone, the answer appears on the glasses, in colour. [Glasses](docs/GLASSES.md)
-- `2026-11-25 23:58` **Partner visibility in logs & GitHub CI:** hardware partner names (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) are logged explicitly on every CI run and enforced in `AGENTS.md`.
 
 <details>
 <summary>Older updates</summary>
 
+- `2026-11-25 23:58` **Partner visibility in logs & GitHub CI:** hardware partner names (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) are logged explicitly on every CI run and enforced in `AGENTS.md`.
 - `2026-11-25 16:15` **VoiceAI Oracle for ENGO 3 & multi-mic devices:** instant local math, cached web search, warm local LLM, long-polling Android/Wear OS relay (`Oracle ENGO`), and universal mic connector (`mic_oracle`) rendered on the ENGO 3 HUD.
 - `2026-11-25 13:20` **AirGradient joins as hardware partner:** an AirGradient ONE (I-9PSL) indoor monitor brings air quality to OpenBridge, read over its local API. [Partner page](docs/partners/AIRGRADIENT.md)
 - `2026-11-25 12:50` **Custom controls:** build your own buttons for your TV, watch or phone, save them as profiles and switch in one click. [Guide](docs/CUSTOM_CONTROLS.md)
@@ -137,7 +138,7 @@
 | **Robot vacuum** (Tuya) | Start, pause, dock, with state read-back | Real hardware |
 | **Freebox Delta** (ISP router) | Network inventory, read-only by policy | Real hardware |
 | **Windows PCs** | Remote agent, consent-gated jobs | Real hardware |
-| **ENGO smart glasses** | 38 HUD features, official app bridge | Emulator |
+| **ENGO 3 smart glasses** | Menus, messages, Oracle answers spoken into the phone, 38 HUD features | Real hardware (through the phone) |
 | **Windows XP · 7 · Linux** | Lightweight agent on genuine guest systems | Virtual machines |
 | **ESP32 · Pixel 6 · PICO OS 6** | Native agent and companion | Official emulators |
 | **Elecrow CrowPanel Advance 4.3** (ESP32-S3 + ESP32-H2) | Touch control panel, Matter / Thread testing | Integration in progress |

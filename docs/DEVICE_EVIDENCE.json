@@ -1232,5 +1232,39 @@
   "status": "VERIFIED",
   "test_id": "pico-companion-pair-relay",
   "test_utc": "2026-11-24T12:16:55Z"
+ },
+ {
+  "commit_sha": "f414276a5a68dc4150bf29239ff862d3a7991688",
+  "companion_version": "0.14.0 (phone holds the Bluetooth link)",
+  "device_alias": "ENGO 3 Photochromic smart glasses (owner pair)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/engo3-phone-link-26nov.md"
+  ],
+  "independent_oracle": "owner wearing the glasses reported each screen live; gesture events logged from the glasses' gesture characteristic",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "PC without Bluetooth: tested through the phone only, not over the PC's own Bluetooth",
+   "only input on the ENGO 3: double tap (single, triple taps and hand wave send nothing distinct)",
+   "fonts are ASCII only (accents folded)",
+   "n=1 pair, 1 session"
+  ],
+  "operations": [
+   "glasses_connect / glasses_write / glasses_events through the Companion relay: OpenBridge home menu shown on the glasses, upright, owner-confirmed",
+   "display calibration: mirrored axes + text rotation 4, 81-colour red-green palette, font sizes and visible window measured with the owner",
+   "oracle_on_glasses: question spoken into the phone, answer paged on the glasses, owner-confirmed",
+   "module_toggle: Oracle switched off / on from the PC and by voice on the phone",
+   "navigation: double tap = next, 3 s auto-open, Companion Next / Open / Back / Home buttons, single voice words"
+  ],
+  "os_version": "ENGO 3 firmware as delivered (Nov 2026)",
+  "permissions": [
+   "owner-authorized physical run; owner wearing the glasses",
+   "ENGO app closed by the owner (one connection at a time)"
+  ],
+  "platform": "ENGO 3 Photochromic (ActiveLook) via Android 13 phone Bluetooth",
+  "public_device_id": "engo3-glasses-01",
+  "status": "VERIFIED",
+  "test_id": "engo3-phone-link-26nov",
+  "test_utc": "2026-11-26T15:30:00Z"
  }
 ]
