@@ -108,6 +108,7 @@
       C.skills = Object.fromEntries((skills.skills || []).filter(k => (prof.bindable_skills || []).includes(k.skill_id)).map(k => [k.skill_id, k]));
       C.data = { max_buttons: prof.max_buttons || 12, max_profiles: prof.max_profiles || 16 };
       setScreens(prof.screens);
+      C.modules = await get('/api/v2/companion_modules').catch(() => null);
     } catch (e) { C.error = 'Could not load your controls: ' + e.message; }
     C.loading = false; pickDefaults(); paint();
   }
@@ -473,7 +474,29 @@
         h('div', { class: 'row wrap' },
           differs && live.some(l => l.editable) && !C.demo ? h('button', { type: 'button', class: 'ghost small', onclick: capture }, 'Copy into a new profile') : null,
           h('button', { type: 'button', class: 'ghost small cx-danger', onclick: clearScreen }, 'Remove from screen'))) : null,
+      modulesPanel(),
       h('p', { class: 'muted small cx-note', text: 'Saving never changes the screen. Buttons appear only when you press Send, and each press runs its action once.' }));
+  }
+  // ---------- optional modules (Oracle...) per screen ----------
+  async function setModule(name, on) {
+    try {
+      await post('/api/v2/companion_modules', { relay_id: C.screen, module: name, enabled: on, consent: true });
+      const s = ((C.modules || {}).screens || {})[C.screen];
+      if (s) s.modules = Object.assign({}, s.modules || {}, { [name]: on });
+      flash(on ? 'Module turned on.' : 'Module turned off.', 'ok');
+    } catch (e) { C.error = 'Could not change the module: ' + e.message; }
+    paint();
+  }
+  function modulesPanel() {
+    if (C.demo || !C.modules) return null;
+    const s = (C.modules.screens || {})[C.screen];
+    const defs = C.modules.modules || {};
+    if (!s) return null;
+    return h('div', { class: 'cx-live cx-modules' }, h('h3', { text: 'Modules' }),
+      !s.modules ? h('p', { class: 'muted small', text: s.online ? 'This Companion is too old for modules: update it to 0.14.0 or later.' : 'Offline: open the OpenBridge Companion to change its modules.' }) : null,
+      s.modules ? Object.keys(defs).map(name => h('label', { class: 'row wrap cx-module' },
+        h('input', { type: 'checkbox', checked: !!s.modules[name] || null, onchange: e => setModule(name, e.target.checked) }),
+        h('span', { text: defs[name] }))) : null);
   }
   function emptyState() {
     return h('section', { class: 'cx-empty panel cx-noscreen' },

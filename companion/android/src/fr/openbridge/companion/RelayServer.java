@@ -43,7 +43,9 @@ final class RelayServer {
 
     interface Ui { void status(String text); void code(String code); default void controls(JSONArray c) { } default void result(String text) { } default void nsd(boolean ok, int err) { } default void commandResult(String text) { } default void commandResult(String text, boolean voice) { commandResult(text); }
         /** Live data flow for the UI: out = this device -> PC. label = operation, bytes = payload size. */
-        default void flow(boolean out, String label, int bytes) { } }
+        default void flow(boolean out, String label, int bytes) { }
+        /** Owner switched an optional module (Oracle...) on or off from the PC. */
+        default void modulesChanged() { } }
     interface OracleListener { void onOracleResult(String text); }
     private volatile OracleListener oracleListener;
     void setOracleListener(OracleListener l) { this.oracleListener = l; }
@@ -142,6 +144,15 @@ final class RelayServer {
     /** Minimum gap between two pair_request answers: a remote PC may not churn the on-screen code. */
     private static final long PAIR_REQUEST_MIN_INTERVAL_MS = 5_000;
     private volatile boolean scanning;
+    /** Bluetooth link to ActiveLook / ENGO glasses held for the paired PC (ops glasses_*). */
+    private GlassesLink glasses;
+    synchronized GlassesLink glasses() {
+        if (glasses == null) {
+            glasses = new GlassesLink(ctx);
+            glasses.setListener((st, n) -> ui.status("Glasses " + (n == null || n.isEmpty() ? "" : n + " ") + "· " + st.toLowerCase()));
+        }
+        return glasses;
+    }
 
     RelayServer(Context ctx, Ui ui) {
         this.ctx = ctx; this.ui = ui;
@@ -149,6 +160,9 @@ final class RelayServer {
     }
 
     boolean paired() { return prefs.contains("key"); }
+    /** Optional module: the Oracle screen. On unless the owner switched it off (PC customisation, CLI or voice). */
+    boolean moduleOracle() { return prefs.getBoolean("module_oracle", true); }
+    JSONObject modules() throws Exception { return new JSONObject().put("oracle", moduleOracle()); }
     boolean ownerEnabled() { return prefs.getBoolean("owner_enabled", false); }
     void setOwnerEnabled(boolean v) { prefs.edit().putBoolean("owner_enabled", v).apply(); }
     /** Standing owner consent for PC-initiated invokes. Explicit on-device toggle only, default off. */
@@ -244,7 +258,10 @@ final class RelayServer {
     }
 
     /** Queue one owner-recorded voice clip: the PC downloads the bytes, transcribes locally, parses as text. */
-    String submitVoice(byte[] pcm) {
+    String submitVoice(byte[] pcm) { return submitVoice(pcm, null); }
+
+    /** mode "oracle": the PC transcribes the clip and answers it with the Oracle (phones without a speech service). */
+    String submitVoice(byte[] pcm, String mode) {
         if (!paired()) return "Not paired with a PC";
         if (pcm == null || pcm.length < 16000 || pcm.length > VOICE_MAX_BYTES || pcm.length % 2 != 0)
             return pcm != null && pcm.length < 16000 ? "Too short — hold a little longer" : "Voice clip too long (15 seconds max)";
@@ -255,8 +272,10 @@ final class RelayServer {
                 String clip = "v" + hex(bytes(6));
                 MessageDigest sha = MessageDigest.getInstance("SHA-256");
                 String req = hex(bytes(16));
-                commands.add(new JSONObject().put("request_id", req).put("kind", "voice").put("clip_id", clip)
-                        .put("bytes", pcm.length).put("sha256", hex(sha.digest(pcm))).put("lang", lang).put("quality", "auto"));
+                JSONObject item = new JSONObject().put("request_id", req).put("kind", "voice").put("clip_id", clip)
+                        .put("bytes", pcm.length).put("sha256", hex(sha.digest(pcm))).put("lang", lang).put("quality", "auto");
+                if ("oracle".equals(mode)) item.put("mode", "oracle");
+                commands.add(item);
                 clips.put(clip, pcm); clipRequest.put(clip, req); voiceRequests.add(req);
                 while (clips.size() > MAX_CLIPS) {  // evict oldest held clip and its queued announcement
                     String old = clips.keySet().iterator().next();
@@ -302,7 +321,7 @@ final class RelayServer {
         ui.flow(true, "voice clip", pcm.length);
     }
 
-    void unpair() { synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); commands.notifyAll(); } synchronized (seen) { seen.clear(); replies.clear(); }
+    void unpair() { if (glasses != null) glasses.disconnect(); synchronized (requests) { controls = new JSONArray(); requests.clear(); } synchronized (commands) { commands.clear(); pendingCommands.clear(); clips.clear(); clipRequest.clear(); voiceRequests.clear(); commands.notifyAll(); } synchronized (seen) { seen.clear(); replies.clear(); }
         prefs.edit().remove("controls").remove("key").remove("require_aead").putBoolean("owner_enabled", false).putBoolean("full_control", false).commit(); ui.status("Pairing removed. This device no longer accepts commands."); }
 
     boolean bleHardware() { return ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE); }
@@ -617,6 +636,39 @@ final class RelayServer {
                 break;
             }
             case "revoke_access": unpair(); break;
+            // Glasses link: the phone holds the Bluetooth connection to ActiveLook / ENGO glasses for this PC.
+            // Pairing (owner_enabled) is the consent; the scope is the ActiveLook service only (see GlassesLink).
+            case "glasses_connect": {
+                if (!ownerEnabled()) throw new SecurityException("owner has not enabled Bluetooth on this device");
+                if (!bleHardware()) throw new SecurityException("no BLE hardware");
+                JSONObject p = cmd.optJSONObject("params"); if (p == null) p = new JSONObject();
+                int seconds = p.optInt("seconds", 10);
+                String hint = p.optString("name_hint", "ENGO");
+                if (seconds < 1 || seconds > MAX_SCAN_SECONDS || !hint.matches("[A-Za-z0-9 _-]{1,20}")) throw new SecurityException("bounds");
+                params = glasses().connect(p.optString("address", ""), hint, seconds); break;
+            }
+            case "glasses_write":
+                params = glasses().write(cmd.getJSONObject("params").getJSONArray("chunks")); break;
+            case "glasses_events": {
+                JSONObject p = cmd.optJSONObject("params");
+                int waitMs = p == null ? 0 : Math.max(0, Math.min(1500, p.optInt("wait_ms", 0)));
+                params = glasses().status().put("events", glasses().drain(waitMs)); break;
+            }
+            case "glasses_disconnect": glasses().disconnect(); params = glasses().status(); break;
+            case "set_modules": {
+                JSONObject p = cmd.getJSONObject("params");
+                if (p.length() == 0 || p.length() > 4) throw new SecurityException("bounds");
+                java.util.Iterator<String> keys = p.keys();
+                SharedPreferences.Editor ed = prefs.edit();
+                while (keys.hasNext()) {
+                    String k = keys.next();
+                    if (!"oracle".equals(k) || !(p.get(k) instanceof Boolean)) throw new SecurityException("unknown module");
+                    ed.putBoolean("module_oracle", p.getBoolean(k));
+                }
+                ed.apply();
+                ui.modulesChanged();
+                params.put("modules", modules()); break;
+            }
             case "get_notifications":     // messages for the glasses; empty unless the owner granted notification access
                 params.put("notifications", NotifListener.accessGranted(ctx) ? NotifListener.drain() : new JSONArray()); break;
             default: throw new SecurityException("unknown op");
@@ -628,15 +680,16 @@ final class RelayServer {
         JSONObject perms = new JSONObject();
         perms.put("BLUETOOTH_SCAN", scanPermission()).put("owner_enabled", ownerEnabled()).put("bluetooth_on", bluetoothOn()).put("location_on", locationOn()).put("bluetooth_service", bluetoothServiceEnabled());
         JSONArray caps = new JSONArray();
-        if (bleHardware()) caps.put("ble_scan");
+        if (bleHardware()) { caps.put("ble_scan"); caps.put("glasses_link"); }
         caps.put("remote_controls");
         caps.put("command_submit");
         if (NotifListener.accessGranted(ctx)) caps.put("notifications");
         caps.put(Aead.VERSION);
+        caps.put("modules");
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
                 .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("full_control", fullControl())
-                .put("language", L.resolved(ctx));
+                .put("language", L.resolved(ctx)).put("modules", modules());
     }
 
     private synchronized JSONObject pairRequest(JSONObject msg) throws Exception {

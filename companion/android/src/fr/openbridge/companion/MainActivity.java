@@ -199,6 +199,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         LinearLayout.LayoutParams obl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         obl.topMargin = dp(10);
         flowRow.addView(oracleBtn, obl);
+        oracleBtn.setVisibility(RelayServer.get(this, null).moduleOracle() ? View.VISIBLE : View.GONE);
         LinearLayout.LayoutParams fbl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         fbl.topMargin = dp(8);
         flowRow.addView(flowsBtn, fbl);
@@ -694,6 +695,10 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     // RelayServer.Ui
     // =================================================================================================
     /** Controls the owner authorized on the PC; each press sends one request, the PC verifies and reports back. */
+    @Override public void modulesChanged() {
+        runOnUiThread(() -> { if (oracleBtn != null) oracleBtn.setVisibility(RelayServer.get(this, null).moduleOracle() ? View.VISIBLE : View.GONE); });
+    }
+
     @Override public void controls(org.json.JSONArray c) {
         runOnUiThread(() -> {
             int before = controlsBox.getChildCount();

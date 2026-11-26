@@ -20,7 +20,13 @@ import time
 PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
               'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
-              'get_commands', 'report_command', 'update_status', 'get_notifications')
+              'get_commands', 'report_command', 'update_status', 'get_notifications',
+              'glasses_connect', 'glasses_write', 'glasses_events', 'glasses_disconnect', 'set_modules')
+COMPANION_MODULES = ('oracle',)
+# Glasses link: the phone holds the Bluetooth link to ActiveLook / ENGO glasses for a PC without Bluetooth.
+GLASSES_MAX_CHUNKS, GLASSES_MAX_BATCH, GLASSES_MAX_CHUNK = 64, 8192, 512
+BT_ADDRESS = re.compile(r'^[0-9A-F]{2}(:[0-9A-F]{2}){5}$')
+NAME_HINT = re.compile(r'^[A-Za-z0-9 _-]{1,20}$')
 MAX_CONTROLS, MAX_REQUESTS = 12, 16
 CONTROL_KINDS = ('button', 'confirm', 'status', 'label')   # layout v2; a missing kind means 'button' (v1 devices)
 MAX_STATUS_TEXT, MAX_LAYOUT_REVISION = 40, 100000
@@ -131,6 +137,11 @@ def command(key, relay_id, op, params=None, now=None, extra=None):
                 or params.get('status') not in ('resolved', 'needs_clarification', 'unsupported', 'escalation_required') \
                 or not isinstance(params.get('text'), str) or len(params['text']) > MAX_COMMAND_REPORT:
             raise RelayError('Malformed command report')
+    if op.startswith('glasses_'):
+        _check_glasses(op, params)
+    if op == 'set_modules' and (not params or set(params) - set(COMPANION_MODULES)
+                                or not all(isinstance(v, bool) for v in params.values())):
+        raise RelayError('set_modules takes {module: true|false} for known modules')
     now = int(now if now is not None else time.time())
     msg = {'protocol': PROTOCOL, 'relay_id': relay_id, 'op': op, 'params': params, 'nonce': secrets.token_hex(12),
            'issued_at': now, 'expires_at': now + COMMAND_TTL}
@@ -139,6 +150,36 @@ def command(key, relay_id, op, params=None, now=None, extra=None):
             raise RelayError('Unknown envelope field')
         msg[k] = v
     return {**msg, 'mac': sign(key, msg)}
+
+
+def _check_glasses(op, params):
+    import base64
+    import binascii
+    if op == 'glasses_connect':
+        sec = params.get('seconds', 8)
+        if set(params) - {'address', 'name_hint', 'seconds'} or isinstance(sec, bool) or not isinstance(sec, int) \
+                or not 1 <= sec <= MAX_SCAN_SECONDS or not NAME_HINT.match(str(params.get('name_hint', 'ENGO'))) \
+                or ('address' in params and not BT_ADDRESS.match(str(params['address']))):
+            raise RelayError('glasses_connect takes address (AA:BB:..), name_hint and 1-15 s')
+    elif op == 'glasses_write':
+        cs = params.get('chunks')
+        if set(params) != {'chunks'} or not isinstance(cs, list) or not 0 < len(cs) <= GLASSES_MAX_CHUNKS:
+            raise RelayError('glasses_write takes 1-64 chunks')
+        total = 0
+        for c in cs:
+            try:
+                n = len(base64.b64decode(str(c), validate=True))
+            except (binascii.Error, ValueError):
+                raise RelayError('glasses_write chunks are base64') from None
+            total += n
+            if not 0 < n <= GLASSES_MAX_CHUNK or total > GLASSES_MAX_BATCH:
+                raise RelayError('glasses_write chunk or batch too large')
+    elif op == 'glasses_events':
+        w = params.get('wait_ms', 0)
+        if set(params) - {'wait_ms'} or isinstance(w, bool) or not isinstance(w, int) or not 0 <= w <= 1500:
+            raise RelayError('glasses_events takes wait_ms 0-1500')
+    elif params:
+        raise RelayError('glasses_disconnect takes no parameters')
 
 
 MAX_NONCES = 512   # mirrors the Companion nonce-cache prune; bounds long-lived relay replay windows
@@ -261,8 +302,11 @@ def validate_commands(report):
                 continue
             if not isinstance(nbytes, int) or nbytes <= 0 or nbytes > VOICE_MAX_BYTES or nbytes % 2:
                 continue
-            out.append({'request_id': c['request_id'], 'kind': 'voice', 'clip_id': c['clip_id'],
-                        'bytes': nbytes, 'sha256': c['sha256'], 'lang': c['lang'], 'quality': c['quality']})
+            item = {'request_id': c['request_id'], 'kind': 'voice', 'clip_id': c['clip_id'],
+                    'bytes': nbytes, 'sha256': c['sha256'], 'lang': c['lang'], 'quality': c['quality']}
+            if c.get('mode') == 'oracle':
+                item['mode'] = 'oracle'          # transcribe here, then answer with the Oracle (no speech service on the phone)
+            out.append(item)
             continue
         if c.get('kind', 'text') not in ('text', 'oracle'):
             continue

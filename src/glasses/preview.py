@@ -30,7 +30,7 @@ def to_image(frame: bytes, model='ENGO 3', mode='lens', scale=3):
     c.dispatch(frame)
     if mode == 'raw':
         return c._img.copy()
-    return render_hud(c._img, mode, scale, 13, mono='3' not in model)
+    return render_hud(c._img, mode, scale, 13, mono=not __import__('src.adapters.activelook_emulator', fromlist=['is_colour']).is_colour(model))
 
 
 def sample_context(now=None):

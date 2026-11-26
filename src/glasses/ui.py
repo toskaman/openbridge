@@ -80,10 +80,14 @@ class Context:
 
 # ---------------------------------------------------------------- chrome
 
+# Part of the logical canvas the wearer sees on a real ENGO 3 (with the default 20 px left offset): ~258 x 250.
+VIS_X0, VIS_X1 = 22, 282
+VIS_W, VIS_CX = VIS_X1 - VIS_X0, (22 + 282) // 2
+
 def status_bar(p: Panel, ctx: Context):
     tm = time.localtime(ctx.clock())
-    p.text(22, 14, '%02d:%02d' % (tm.tm_hour, tm.tm_min), 1, 'secondary')
-    x = 284
+    p.text(VIS_X0, 6, '%02d:%02d' % (tm.tm_hour, tm.tm_min), 1, 'secondary')
+    x = VIS_X1
     if ctx.glasses_battery is not None:
         x -= p.text_right(x, 16, '%d%%' % ctx.glasses_battery, 0, 'muted') + 10
     unread = ctx.inbox.unread() if ctx.inbox else 0
@@ -251,23 +255,24 @@ class Home(Screen):
         return ('push', item[3]())
 
     def render(self, p, ctx):
+        # Laid out for the real ENGO 3: visible width ~258 px (VIS_X0..VIS_X1), 24/38 px fonts.
         status_bar(p, ctx)
         items = self.items(ctx)
         n = len(items)
         cur = items[self.focus]
-        cx, cy = W / 2, 106
-        p.circle(cx, cy, 44, 'accent')
-        p.circle(cx, cy, 47, 'accent_dim')
-        I.draw(p, cur[1], cx, cy, 22, 'primary')
+        cx, cy = VIS_CX, 94
+        p.circle(cx, cy, 40, 'accent')
+        p.circle(cx, cy, 43, 'accent_dim')
+        I.draw(p, cur[1], cx, cy, 20, 'primary')
         for side, k in ((-1, (self.focus - 1) % n), (1, (self.focus + 1) % n)):
-            sx = cx + side * 104
-            p.circle(sx, cy, 22, 'faint')
-            I.draw(p, items[k][1], sx, cy, 11, 'muted')
-        p.text_center(cx, 160, fit(cur[0], 3, 280), 3, 'primary')
-        p.text_center(cx, 200, fit(cur[2], 1, 250), 1, 'secondary')
+            sx = cx + side * 96
+            p.circle(sx, cy, 18, 'faint')
+            I.draw(p, items[k][1], sx, cy, 9, 'muted')
+        p.text_center(cx, 144, fit(cur[0], 2, VIS_W - 8), 2, 'primary')
+        p.text_center(cx, 186, fit(cur[2], 1, VIS_W - 8), 1, 'secondary')
         x0 = cx - (n - 1) * 7
         for i in range(n):
-            p.circle(x0 + i * 14, 232, 3 if i == self.focus else 2, 'accent' if i == self.focus else 'muted', True)
+            p.circle(x0 + i * 14, 226, 3 if i == self.focus else 2, 'accent' if i == self.focus else 'muted', True)
 
 
 class Inbox(ListScreen):
@@ -523,10 +528,32 @@ class VoiceScreen(Screen):
             hint(p, ctx.tr('voice.try'))
 
 
+ORACLE_LINES_PER_PAGE, ORACLE_FONT, ORACLE_WIDTH = 4, 2, 264
+
+
+def oracle_pages(answer: str) -> list:
+    """A long answer is cut into pages of 4 lines in the large font (one wave = next page)."""
+    lines = wrap(answer, ORACLE_FONT, ORACLE_WIDTH, 999)
+    return [lines[i:i + ORACLE_LINES_PER_PAGE] for i in range(0, len(lines), ORACLE_LINES_PER_PAGE)] or [[]]
+
+
 class OracleScreen(Screen):
-    """Real-time VoiceAI Oracle answer card for ENGO 3 (304x256 MicroOLED)."""
+    """Real-time VoiceAI Oracle answer card for ENGO 3 (304x256 MicroOLED). Long answers are paged."""
+    page = 0
+
+    def _pages(self, ctx):
+        v = ctx.voice or {}
+        ans = ((v.get('oracle') or {}).get('answer') or v.get('result') or '').strip()
+        return oracle_pages(ans)
 
     def on(self, ev, ctx):
+        n = len(self._pages(ctx))
+        if ev in ('next', 'down', 'right') and n > 1:
+            self.page = (self.page + 1) % n
+            return None
+        if ev in ('prev', 'up', 'left') and n > 1:
+            self.page = (self.page - 1) % n
+            return None
         if ev in ('ok', 'back'):
             return ('pop',)
         if ev == 'home':
@@ -558,19 +585,17 @@ class OracleScreen(Screen):
             p.text(20, 44 + i * 16, line, 0, 'secondary')
         p.line(18, 80, 286, 80, 'faint')
 
-        # Answer body (up to 3 crisp lines, larger font when short)
-        ans = (o.get('answer') or v.get('result') or '').strip()
-        lines = [ln for ln in ans.splitlines() if ln.strip()][:3]
+        # Answer body: large font, 4 lines per page; a wave shows the next page
+        pages = self._pages(ctx)
+        self.page = min(self.page, len(pages) - 1)
         if st == 'listening':
             p.text_center(W / 2, 128, '...', 2, 'accent')
-        elif lines:
-            use_big = len(lines) <= 2 and all(text_width(ln, 2) <= 264 for ln in lines)
-            font_id = 2 if use_big else 1
-            step_y = 32 if use_big else 24
-            y0 = 104 if len(lines) <= 2 else 90
+        elif pages[self.page]:
             ans_tone = 'ok' if qclass != 'LOCATE' else 'primary'
-            for i, ln in enumerate(lines):
-                p.text_center(W / 2, y0 + i * step_y, fit(ln, font_id, 268), font_id, ans_tone)
+            for i, ln in enumerate(pages[self.page]):
+                p.text(20, 84 + i * 29, ln, ORACLE_FONT, ans_tone)
+            if len(pages) > 1:
+                p.text_right(284, 206, '%d/%d' % (self.page + 1, len(pages)), 1, 'accent')
 
         # Footer source + dismiss hint
         src = str(o.get('source') or '').upper()
@@ -825,8 +850,8 @@ class Menu:
             return r[1]
         return None
 
-    def render(self, colour=True, rotate180=False) -> Panel:
-        p = Panel(colour=colour, rotate180=rotate180).begin()
+    def render(self, colour=True, rotate180=False, x_offset=None) -> Panel:
+        p = Panel(colour=colour, rotate180=rotate180, **({} if x_offset is None else {'x_offset': x_offset})).begin()
         self.screen.render(p, self.ctx)
         toast(p, self.ctx)
         return p.end()

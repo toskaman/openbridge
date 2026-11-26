@@ -72,6 +72,27 @@ class CompanionCommands:
         amb = (doc.get('ambiguities') or ['no detail'])
         return f"{'Unsupported' if st == 'unsupported' else 'Escalation needed'}: {amb[0]}"
 
+    def _module_toggle(self, rid, c, said):
+        """'désactive l'Oracle' typed or spoken on a Companion: switch the module on that device and say so."""
+        from src.runtime import companion_modules as M
+        print('[companion] %s %s: %r' % (rid, c.get('kind'), said), flush=True)   # what the PC understood
+        t = M.parse_toggle(said)
+        if t is None:
+            return False
+        module, on = t
+        fr = c.get('lang') == 'fr'
+        try:
+            M.set_module(self.server, rid, module, on)
+            msg = ('Oracle activé' if on else 'Oracle désactivé') if fr else ('Oracle turned on' if on else 'Oracle turned off')
+            status = 'resolved'
+        except (fabric_relay.RelayError, ValueError) as e:
+            msg, status = str(e)[:fabric_relay.MAX_COMMAND_REPORT], 'escalation_required'
+        try:
+            self._send(rid, 'report_command', {'request_id': c['request_id'], 'status': status, 'text': msg})
+        except fabric_relay.RelayError:
+            pass
+        return True
+
     def poll_once(self):
         from src.runtime import command as C
         from src.runtime import nl_router as N
@@ -93,6 +114,20 @@ class CompanionCommands:
                     if c['request_id'] in self.pending:
                         continue
                 text = c.get('text', '')
+                if c.get('kind') in ('text', 'voice') and c.get('mode') != 'oracle':
+                    said = text if c.get('kind') == 'text' else self._voice_text(rid, r, c)
+                    if said is None:
+                        continue
+                    if self._module_toggle(rid, c, said):
+                        continue
+                    if c.get('kind') == 'voice':
+                        c = dict(c, kind='text', text=said)
+                        text = said
+                if c.get('kind') == 'voice' and c.get('mode') == 'oracle':
+                    text = self._voice_text(rid, r, c)
+                    if text is None:
+                        continue
+                    c = dict(c, kind='oracle', text=text, mic_source='phone_mic_pc_stt')
                 if c.get('kind') == 'oracle':
                     from src.ai import oracle as Oracle
                     ans = Oracle.oracle_answer(text)

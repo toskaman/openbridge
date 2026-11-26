@@ -40,6 +40,7 @@ except ImportError:  # pragma: no cover - exercised by the dependency-free CI jo
 
 from src.adapters import hud_features as hf
 from src.adapters.activelook import ActiveLookAdapter
+from src.adapters import activelook_emulator as AE
 from src.adapters.activelook_emulator import DISPLAY_H, DISPLAY_W, Frame, HUDCanvas
 
 VERSION = "2.0"
@@ -537,7 +538,7 @@ class StudioEngine:
     def set_model(self, model: str):
         self.model = model
         self.hud.model = model
-        self.hud._colour_mode = "3" in model
+        self.hud._colour_mode = AE.is_colour(model)
         self.adapter = ActiveLookAdapter(transport=lambda b: self.ingest(b, "studio"), model=model)
         self.dirty = True
         self._emit("model", model)
@@ -571,7 +572,7 @@ class StudioEngine:
         stamp = _dt.datetime.now().strftime("%Y%m%d_%H%M%S")
         out = pathlib.Path(path) if path else CAPTURE_DIR / f"hud_{stamp}_{mode}.png"
         img = self.hud._img.copy() if mode == "raw" else render_hud(self.hud._img, mode, scale, self.hud._luma,
-                                                                     mono="3" not in self.model)
+                                                                     mono=not AE.is_colour(self.model))
         img.save(out)
         return str(out)
 
@@ -1072,7 +1073,7 @@ class HUDStudioApp:
         from PIL import ImageTk
         n = max(1, min(5, int(self.s)))
         img = render_hud(self.e.hud._img, self.mode, n, self.e.hud._luma, self.grid, bg=(7, 9, 13),
-                         mono="3" not in self.e.model)
+                         mono=not AE.is_colour(self.e.model))
         target = (round(DISPLAY_W * self.s), round(DISPLAY_H * self.s))
         if img.size != target:
             img = img.resize(target, Image.BILINEAR if self.mode != "pixels" else Image.NEAREST)

@@ -40,13 +40,14 @@ GET_ROUTES = ('/api/v2/ai/providers', '/api/v2/hardware/facts', '/api/v2/permiss
               '/api/v2/control_profiles',
               '/api/v2/pc/full-control',
               '/api/v2/library',
-              '/api/v2/voice/oracle/status')
+              '/api/v2/voice/oracle/status',
+              '/api/v2/companion_modules')
 POST_ROUTES = ('/api/v2/ai/providers', '/api/v2/ai/providers/test', '/api/v2/ai/providers/remove', '/api/v2/ai/providers/activate', '/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
               '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/control_profiles/save', '/api/v2/control_profiles/delete', '/api/v2/control_profiles/apply', '/api/v2/control_profiles/capture', '/api/v2/control_profiles/clear', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
  '/api/v2/pc/full-control',
  '/api/v2/library/approve', '/api/v2/library/run', '/api/v2/library/enable', '/api/v2/library/remove',
  '/api/v2/remote_controls/skills',
- '/api/v2/voice/oracle')
+ '/api/v2/voice/oracle', '/api/v2/companion_modules')
 
 
 import threading
@@ -468,6 +469,9 @@ def get(server, path, query):
         if rec is None:
             return 404, {'error': 'unknown workflow id'}
         return 200, comp.summarize(rec)
+    if path == '/api/v2/companion_modules':
+        from src.runtime import companion_modules as CM
+        return 200, CM.state(server)
     if path == '/api/v2/control_profiles':
         from src.runtime import control_profiles as CP
         try:
@@ -989,6 +993,17 @@ def post(server, path, body):
             return 200, comp.compose(prop, devices, router(server))
         except comp.ComposerError as e:
             return 400, {'error': str(e)}
+    if path == '/api/v2/companion_modules':
+        from src.runtime import companion_modules as CM
+        from src.fabric.relay import RelayError
+        if body.get('consent') is not True or not isinstance(body.get('enabled'), bool):
+            return 400, {'error': 'send {relay_id, module, enabled: true|false, consent: true}'}
+        try:
+            return 200, CM.set_module(server, str(body.get('relay_id', '')), str(body.get('module', '')), body['enabled'])
+        except ValueError as e:
+            return 400, {'error': str(e)}
+        except RelayError as e:
+            return 502, {'error': str(e)}
     if path.startswith('/api/v2/control_profiles/'):
         from src.runtime import control_profiles as CP
         from src.runtime.remote_controls import RemoteControlError
