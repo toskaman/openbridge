@@ -208,6 +208,196 @@ class BleLink:
         self.lock.release()
 
 
+class PhoneLink:
+    """ENGO glasses over the phone's Bluetooth, for a PC without Bluetooth.
+
+    The paired Companion holds the Bluetooth connection (relay ops glasses_*); this PC only sends ActiveLook frame
+    chunks over the signed, encrypted relay channel and receives the gesture and flow-control notifications. Same
+    transport core as BleLink: MTU-sized chunks, nothing written while the glasses say PAUSE, newest screen wins,
+    single controller (takeover=True is the owner's explicit switch), bounded reconnect back-off.
+
+    send(op, params) -> reply params: one signed relay call to the phone (CompanionCommands._send)."""
+
+    BATCH_BYTES, BATCH_CHUNKS = 4096, 60
+
+    def __init__(self, on_gesture, send, address=None, takeover=False, on_status=None, connect_seconds=8,
+                 on_touch=None):
+        import os
+        from src.glasses.transport import Backoff, ControllerLock, Transport
+        self.on_gesture, self.send = on_gesture, send
+        self.on_touch = on_touch or on_gesture          # tap on the temple (ENGO 3); defaults to a wave
+        self.on_button = lambda ev: None                # set by the hub owner: Next / Open / Back / Home on the phone
+        self.on_status = on_status or (lambda *a: None)
+        self.address, self.connect_seconds = address, connect_seconds
+        self.lock = ControllerLock('pc-via-phone:%d' % os.getpid())
+        ok, holder = self.lock.acquire(takeover=takeover)
+        if not ok:
+            raise OSError('the glasses are driven by %s; use --takeover to switch to this PC' % holder.get('owner'))
+        self._pending = []
+        self._tlock = threading.Lock()
+        self.tr = Transport(self._pending.append)
+        self.backoff = Backoff()
+        self.state, self.error, self.info = 'CONNECTING', None, {}
+        self.stats = {'batches': 0, 'rejected': 0, 'gestures': 0, 'reconnects': 0}
+        self._stop = threading.Event()
+        try:
+            self._connect()                      # first connection is synchronous: a clear error if it fails
+        except BaseException:
+            self.lock.release()                  # a failed start must not keep the glasses locked
+            raise
+        threading.Thread(target=self._writer, name='glasses-phone-tx', daemon=True).start()
+        threading.Thread(target=self._events, name='glasses-phone-rx', daemon=True).start()
+
+    def _connect(self):
+        import base64
+        params = {'seconds': self.connect_seconds, 'name_hint': 'ENGO'}
+        if self.address:
+            params['address'] = self.address
+        info = self.send('glasses_connect', params)
+        if info.get('state') != 'READY':
+            raise OSError('glasses: %s' % (info.get('error') or info.get('state')))
+        self.info = info
+        self.address = info.get('address') or self.address     # reconnect straight to the same pair, no scan
+        with self._tlock:
+            self.tr.set_mtu(int(info.get('mtu') or 23))
+            self.tr.paused = False
+        self.state, self.error = 'READY', None
+        self.backoff.reset()
+        # Gesture sensor and touch on: ActiveLook commands 0x20 (sensor) and 0x21 (gesture), both 'on'. The ENGO app
+        # may have switched them off; they are what lets a wave or a tap drive the menus.
+        try:
+            from src.adapters.activelook import encode_packet
+            self.send('glasses_write', {'chunks': [base64.b64encode(encode_packet(0x20, b'\x01')).decode('ascii'),
+                                                   base64.b64encode(encode_packet(0x21, b'\x01')).decode('ascii')]})
+        except Exception:                            # noqa: BLE001 - menus still work from the phone and the PC
+            pass
+        self.on_status(self.state, None)
+
+    def _lost(self, why):
+        if self.state != 'READY':
+            return
+        self.state, self.error = 'DISCONNECTED', str(why)[:200]
+        self.on_status(self.state, self.error)
+
+    def _handle(self, events):
+        for e in events or ():
+            t = e.get('t') if isinstance(e, dict) else None
+            if t in ('gesture', 'touch'):          # hand wave, or tap on the temple
+                self.stats['gestures'] += 1
+                try:
+                    (self.on_touch if t == 'touch' else self.on_gesture)()
+                except Exception:                    # noqa: BLE001 - a UI error must not kill the link
+                    pass
+            elif t == 'button' and e.get('v') in ('next', 'ok', 'back', 'home'):
+                try:
+                    self.on_button(e['v'])
+                except Exception:                    # noqa: BLE001
+                    pass
+            elif t == 'flow':
+                with self._tlock:
+                    self.tr.on_flow(int(e.get('v', 0)))
+            elif t == 'state' and e.get('v') == 'DISCONNECTED':
+                self._lost('glasses disconnected from the phone')
+
+    def _batch(self):
+        with self._tlock:
+            self.tr.pump(budget=self.BATCH_CHUNKS)
+            chunks, self._pending[:] = list(self._pending), []
+        out, size = [], 0
+        for c in chunks:
+            if out and (size + len(c) > self.BATCH_BYTES or len(out) >= self.BATCH_CHUNKS):
+                yield out
+                out, size = [], 0
+            out.append(c)
+            size += len(c)
+        if out:
+            yield out
+
+    def _writer(self):
+        import base64
+        beat = 0.0
+        while not self._stop.is_set():
+            if self.state != 'READY':
+                delay = self.backoff.next_delay()
+                if delay is None:
+                    self.on_status('GAVE_UP', self.error)
+                    return
+                self._stop.wait(delay)
+                try:
+                    self.stats['reconnects'] += 1
+                    self._connect()
+                except Exception as e:               # noqa: BLE001 - reported, bounded retry
+                    self.error = '%s: %s' % (type(e).__name__, e)
+                continue
+            sent = False
+            for batch in self._batch():
+                sent = True
+                try:
+                    r = self.send('glasses_write', {'chunks': [base64.b64encode(c).decode('ascii') for c in batch]})
+                except Exception as e:               # noqa: BLE001 - relay down: reconnect path
+                    self._lost(e)
+                    break
+                self.stats['batches'] += 1
+                if int(r.get('accepted', 0)) < len(batch):
+                    self.stats['rejected'] += len(batch) - int(r.get('accepted', 0))
+                    if r.get('state') != 'READY':
+                        self._lost(r.get('error') or 'write refused')
+                        break
+                self._handle(r.get('events'))
+            if time.time() - beat > 5:
+                self.lock.beat()
+                beat = time.time()
+            self._stop.wait(0.01 if sent else 0.03)
+
+    def _events(self):
+        while not self._stop.is_set():
+            if self.state != 'READY':
+                self._stop.wait(0.3)
+                continue
+            try:
+                r = self.send('glasses_events', {'wait_ms': 800})
+            except Exception:                        # noqa: BLE001 - the writer handles reconnects
+                self._stop.wait(0.5)
+                continue
+            if r.get('state') not in ('READY', None):
+                self._lost(r.get('error') or r.get('state'))
+            self._handle(r.get('events'))
+
+    def write(self, data: bytes):
+        with self._tlock:
+            self.tr.submit(data, 'screen')
+
+    def close(self):
+        self._stop.set()
+        try:
+            self.send('glasses_disconnect', {})
+        except Exception:                            # noqa: BLE001 - phone already gone
+            pass
+        self.lock.release()
+
+
+class MirrorLink:
+    """Sends every frame to the real glasses and, unchanged, to HUD Studio on the PC: what the glasses were sent,
+    drawn on screen. A mirror failure never affects the glasses."""
+
+    def __init__(self, main, mirror):
+        self.main, self.mirror = main, mirror
+        self.tr = getattr(main, 'tr', None)
+
+    def write(self, data: bytes):
+        self.main.write(data)
+        if self.mirror is not None:
+            try:
+                self.mirror.write(data)
+            except OSError:
+                self.mirror = None
+
+    def close(self):
+        for link in (self.main, self.mirror):
+            if link is not None:
+                link.close()
+
+
 class NullLink:
     def __init__(self):
         self.last = b''
@@ -265,6 +455,21 @@ class Hub:
 
     def press(self, ev):
         self.events.put(ev)
+        self._auto_open_at = None                       # any explicit input cancels the pending auto-open
+
+    AUTO_OPEN_S = 3.0
+
+    def tap_next(self):
+        """ENGO 3 double tap: next item; on the home carousel the item opens by itself after AUTO_OPEN_S."""
+        self.events.put('next')
+        self._auto_open_at = self.clock() + self.AUTO_OPEN_S if isinstance(self.menu.screen, ui.Home) else None
+
+    def _auto_open(self):
+        at = getattr(self, '_auto_open_at', None)
+        if at is not None and self.clock() >= at:
+            self._auto_open_at = None
+            if isinstance(self.menu.screen, ui.Home):  # only the home carousel: opening a menu, never an action
+                self.events.put('ok')
 
     def notify(self, n):
         item = self.inbox.add(n)
@@ -374,18 +579,21 @@ class Hub:
         }
         if not isinstance(self.menu.screen, ui.OracleScreen):
             self.menu.stack.append(ui.OracleScreen())
+        self.menu.screen.page = 0                         # a new answer starts on its first page
         return self.redraw(force=True)
 
     # ---- loop
     def redraw(self, force=False):
         with self._draw:                  # voice runs on another thread: frames never interleave on the link
-            frame = self.menu.render(colour=self.colour, rotate180=bool(self.settings.get('rotate180'))).to_bytes()
+            frame = self.menu.render(colour=self.colour, rotate180=bool(self.settings.get('rotate180')),
+                                     x_offset=self.settings.get('x_offset')).to_bytes()
             if force or frame != self._last_frame:
                 self.link.write(frame)
                 self._last_frame = frame
         return frame
 
     def tick(self):
+        self._auto_open()
         ev = self.gestures.poll()
         if ev:
             self.events.put(ev)

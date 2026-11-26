@@ -86,6 +86,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private FlowOverlayView flows;
     private TextView flowOut, flowIn;
     private Button flowsBtn, oracleBtn;
+    private LinearLayout glassesRow;
 
     // Live state that drives the orb
     private volatile boolean speaking;
@@ -199,6 +200,21 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         LinearLayout.LayoutParams obl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         obl.topMargin = dp(10);
         flowRow.addView(oracleBtn, obl);
+        oracleBtn.setVisibility(RelayServer.get(this, null).moduleOracle() ? View.VISIBLE : View.GONE);
+        // Glasses navigation: the ENGO 3 has a single input (double tap = next); open / back / home come from here.
+        glassesRow = new LinearLayout(this); glassesRow.setOrientation(LinearLayout.HORIZONTAL); glassesRow.setGravity(Gravity.CENTER_HORIZONTAL);
+        for (String[] gb : new String[][]{{"next", L.t("Next")}, {"ok", L.t("Open")}, {"back", L.t("Back")}, {"home", L.t("Home")}}) {
+            Button bt = button(gb[1], PillIcon.SPARK, MAGENTA, STYLE_PRIMARY);
+            final String ev = gb[0];
+            bt.setOnClickListener(v -> RelayServer.get(this, null).glasses().button(ev));
+            LinearLayout.LayoutParams gl = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            gl.setMargins(dp(3), 0, dp(3), 0);
+            glassesRow.addView(bt, gl);
+        }
+        LinearLayout.LayoutParams grl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        grl.topMargin = dp(10);
+        flowRow.addView(glassesRow, grl);
+        glassesRow.setVisibility("READY".equals(RelayServer.get(this, null).glasses().state()) ? View.VISIBLE : View.GONE);
         LinearLayout.LayoutParams fbl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         fbl.topMargin = dp(8);
         flowRow.addView(flowsBtn, fbl);
@@ -694,6 +710,14 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     // RelayServer.Ui
     // =================================================================================================
     /** Controls the owner authorized on the PC; each press sends one request, the PC verifies and reports back. */
+    @Override public void glassesState(String st) {
+        runOnUiThread(() -> { if (glassesRow != null) glassesRow.setVisibility("READY".equals(st) ? View.VISIBLE : View.GONE); });
+    }
+
+    @Override public void modulesChanged() {
+        runOnUiThread(() -> { if (oracleBtn != null) oracleBtn.setVisibility(RelayServer.get(this, null).moduleOracle() ? View.VISIBLE : View.GONE); });
+    }
+
     @Override public void controls(org.json.JSONArray c) {
         runOnUiThread(() -> {
             int before = controlsBox.getChildCount();

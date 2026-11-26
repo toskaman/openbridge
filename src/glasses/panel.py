@@ -3,10 +3,14 @@
 Every glasses screen in OpenBridge is drawn through a Panel, never with raw commands, so that three things that
 depend on the real hardware live in one spot:
 
-- orientation: the panel can be mounted rotated 180° (native ActiveLook coordinates start bottom-right). Set
-  ``rotate180=True`` once the calibration screen shows the arrow upside down on the real glasses;
-- colour: ENGO 3 draws with a small palette (cyan, green, amber, red, white) scaled by a 0-15 level; ENGO 1/2 only
-  have the 0-15 level of their yellow-green panel. Screens ask for *tones*, the panel picks the right commands;
+- orientation: native ActiveLook coordinates start bottom-right, and upright text needs text rotation 4. Measured on
+  a real ENGO 3 Photochromic (26 Nov 2026): logical (x, y) is sent as (W-1-x, H-1-y) and text with rotation 4,
+  anchored at its logical top-left. ``rotate180=True`` turns the whole picture by 180° (a display mounted the other
+  way round);
+- colour: the ENGO 3 shows grey levels as yellow and has 81 red-green colours (no blue, no white), drawn with the
+  colour commands 0x3D / 0x3E and the official red-green palette (AL.RG_PALETTE). ENGO 1/2 only
+  have the 0-15 level of their panel. Screens ask for *tones*, the panel picks the right commands;
+- text: the glasses' fonts are ASCII only; accents are folded (été -> ete) before sending; Screens ask for *tones*, the panel picks the right commands;
 - text metrics: the glasses' fonts are fixed; widths are estimated conservatively so text never overflows.
 
 Black pixels are transparent on the see-through OLED and cost no power, so the design language draws outlines and
@@ -17,35 +21,57 @@ from __future__ import annotations
 from src.adapters import activelook as AL
 
 W, H = 304, 256
+TEXT_ROT_UPRIGHT = 4               # ActiveLook text rotation that reads upright on the real glasses
+# Visible window measured on our ENGO 3 (26 Nov 2026, lines at known positions): x 0 to ~292, y 0 to ~236 of the
+# 304 x 256 panel, so no horizontal offset is needed. `openbridge glasses set --x-offset N` moves the picture if a pair
+# (or the ENGO app's display position) differs.
+X_OFFSET = 0
 SAFE = (14, 12, 290, 244)          # x0, y0, x1, y1 kept clear of the lens edge
 
-# font id -> (glyph height px, average advance px). Conservative: real ActiveLook fonts are a little narrower.
-FONTS = {0: (12, 7), 1: (18, 10), 2: (25, 14), 3: (34, 19), 4: (46, 26), 5: (58, 33)}
+# font id -> (line height px, average advance px). Measured on a real ENGO 3 on 26 Nov 2026 (fonts 1-3: a word of n
+# letters fills n x height/2; heights as reported by fontList on firmware 4.13). 24 px is the smallest text there is.
+FONTS = {0: (24, 12), 1: (24, 12), 2: (38, 19), 3: (64, 32), 4: (75, 37), 5: (82, 41)}
 
-# tone -> (ENGO 3 palette index, level 0-15). Mono glasses use the level only.
+# tone -> (ENGO 3 red-green colour value or None, grey level 0-15). Grey tones show yellow on the ENGO 3 panel;
+# coloured tones use the red-green commands (0x3D / 0x3E). Mono glasses use the level only.
 TONES = {
-    'primary': (0x0F, 15), 'secondary': (0x0F, 11), 'muted': (0x0F, 8), 'faint': (0x0F, 7),
-    'accent': (0x04, 15), 'accent_dim': (0x04, 9), 'ok': (0x01, 15), 'warn': (0x02, 15), 'alert': (0x03, 15),
-    'black': (0x00, 0),
+    'primary': (None, 15), 'secondary': (None, 11), 'muted': (None, 8), 'faint': (None, 7),
+    'accent': (AL.RG_COLOURS['lime'], 15), 'accent_dim': (AL.rg(0, 5), 9), 'ok': (AL.RG_COLOURS['green'], 15),
+    'warn': (AL.RG_COLOURS['orange'], 15), 'alert': (AL.RG_COLOURS['red'], 15),
+    'black': (None, 0),
 }
-# Levels 1-6 are avoided on purpose: ENGO 3 firmware (and HUD Studio) read a 0x00-0x06 colour byte as a palette
-# index, so a "level 3" would come out red. Dim tones therefore stay at levels 7-11.
+FOLD = {'œ': 'oe', 'Œ': 'OE', 'æ': 'ae', 'Æ': 'AE', 'ß': 'ss', '’': "'", '‘': "'", '“': '"', '”': '"', '«': '"',
+        '»': '"', '–': '-', '—': '-', '…': '...', '°': 'o', '€': 'EUR', '×': 'x', '÷': '/', '\u00a0': ' '}
+
+
+def ascii_fold(text: str) -> str:
+    """The glasses' fonts are ASCII only (accents are not drawn, measured 26 Nov 2026): été -> ete, « » -> "."""
+    import unicodedata
+    out = []
+    for ch in str(text or ''):
+        if ord(ch) < 128:
+            out.append(ch)
+            continue
+        if ch in FOLD:
+            out.append(FOLD[ch])
+            continue
+        base = ''.join(c for c in unicodedata.normalize('NFKD', ch) if ord(c) < 128 and not unicodedata.combining(c))
+        out.append(base)
+    return ''.join(out)
 
 
 def text_width(text: str, font: int) -> int:
-    adv = FONTS.get(font, FONTS[1])[1]
-    narrow = sum(1 for c in text if c in "il.,:;'!|() ")
-    return max(0, len(text) * adv - narrow * adv // 2)
+    return len(text) * FONTS.get(font, FONTS[1])[1]
 
 
 def fit(text: str, font: int, width: int) -> str:
     """Longest prefix that fits, with an ellipsis when cut."""
-    text = ' '.join(str(text or '').split())
+    text = ' '.join(ascii_fold(text).split())
     if text_width(text, font) <= width:
         return text
-    while text and text_width(text + '…', font) > width:
+    while text and text_width(text + '...', font) > width:
         text = text[:-1]
-    return text.rstrip() + '…'
+    return text.rstrip() + '...'
 
 
 def wrap(text: str, font: int, width: int, max_lines: int) -> list[str]:
@@ -68,8 +94,8 @@ def wrap(text: str, font: int, width: int, max_lines: int) -> list[str]:
 
 
 class Panel:
-    def __init__(self, colour: bool = True, rotate180: bool = False):
-        self.colour, self.rotate180 = colour, rotate180
+    def __init__(self, colour: bool = True, rotate180: bool = False, x_offset: int = X_OFFSET):
+        self.colour, self.rotate180, self.dx = colour, rotate180, int(x_offset)
         self.frames: list[bytes] = []
         self._ink = None
 
@@ -88,45 +114,48 @@ class Panel:
         return self
 
     # -------- coordinates and colour --------
+    @property
+    def native(self):
+        """True when logical coordinates must be flipped to the ActiveLook native frame (the upright default)."""
+        return not self.rotate180
+
     def _p(self, x, y):
-        x, y = int(round(x)), int(round(y))
-        return (W - 1 - x, H - 1 - y) if self.rotate180 else (x, y)
+        x, y = int(round(x)) + self.dx, int(round(y))
+        return (W - 1 - x, H - 1 - y) if self.native else (x, y)
 
     def ink(self, tone: str):
         if tone == self._ink:
             return
-        idx, level = TONES.get(tone, TONES['primary'])
-        self.frames.append(AL.cmd_grey(level))
-        if self.colour:
-            self.frames.append(AL.cmd_color(idx))
+        rgv, level = TONES.get(tone, TONES['primary'])
+        if self.colour and rgv is not None:
+            self.frames.append(AL.cmd_color(rgv))        # 0x3D red-green value for the next shapes
+        else:
+            self.frames.append(AL.cmd_grey(level))
         self._ink = tone
-
-    def _text_colour(self, tone):
-        idx, level = TONES.get(tone, TONES['primary'])
-        if not self.colour:
-            return level
-        if level == 15 and idx != 0x0F:
-            return idx                      # palette colour at full strength
-        self.ink(tone)                      # white at a level: set the ink, then pass the level
-        return level
 
     # -------- primitives --------
     def text(self, x, y, s, font=1, tone='primary', width=None):
-        s = fit(s, font, width) if width else ' '.join(str(s).split())
+        s = fit(s, font, width) if width else ' '.join(ascii_fold(s).split())
         if not s:
             return 0
-        c = self._text_colour(tone)
-        if self.rotate180:
-            # Anchor the far corner so the rotated string covers the same box.
-            x, y = W - 1 - int(x) - text_width(s, font), H - 1 - int(y) - FONTS.get(font, FONTS[1])[0]
-        self.frames.append(AL.cmd_text(int(x), int(y), s, font=font, color_or_grey=c))
+        rgv, level = TONES.get(tone, TONES['primary'])
+        rot = 0
+        x = int(x) + self.dx
+        if self.native:
+            # Upright text: rotation 4, anchored at the text's logical top-left (measured on a real ENGO 3).
+            x, y, rot = W - 1 - int(x), H - 1 - int(y), TEXT_ROT_UPRIGHT
+        if self.colour and rgv is not None:
+            self.frames.append(AL.cmd_text_rg(int(x), int(y), s, font=font, colour=rgv, rot=rot))
+        else:
+            self.frames.append(AL.cmd_text(int(x), int(y), s, font=font, color_or_grey=level, rot=rot))
         return text_width(s, font)
 
     def text_center(self, cx, y, s, font=1, tone='primary', width=None):
-        s = fit(s, font, width) if width else s
+        s = fit(s, font, width) if width else ascii_fold(s)
         return self.text(cx - text_width(s, font) / 2, y, s, font, tone)
 
     def text_right(self, xr, y, s, font=1, tone='primary'):
+        s = ascii_fold(s)
         return self.text(xr - text_width(s, font), y, s, font, tone)
 
     def line(self, x0, y0, x1, y1, tone='primary'):
@@ -147,8 +176,11 @@ class Panel:
     def arc(self, cx, cy, r, start, end, tone='primary'):
         """Degrees, 0 at 3 o'clock, clockwise."""
         self.ink(tone)
-        if self.rotate180:
-            start, end = start + 180, end + 180
+        # Measured on a real ENGO 3: with both axes mirrored, device angles equal logical angles (0 at 3 o'clock,
+        # clockwise as seen). The firmware wants the start in 0-359 and end = start + sweep.
+        sweep = int(end) - int(start)
+        start = int(start) % 360
+        end = start + sweep
         self.frames.append(AL.cmd_arc(*self._p(cx, cy), int(r), int(start), int(end)))
 
     def erase(self, x0, y0, x1, y1):

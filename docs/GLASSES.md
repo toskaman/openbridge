@@ -27,6 +27,54 @@ phone (OpenBridge Companion) --messages, voice-->  PC: openbridge glasses run  -
   locally, OpenBridge's own command model understands ("baisse le son de la télé", "start the vacuum"), and the
   glasses show what was heard and what was done. Anything the glasses may not do is refused and said so.
 
+## A PC without Bluetooth: the phone holds the link
+
+```
+openbridge glasses run --link phone             # the paired phone's Bluetooth talks to the glasses
+openbridge glasses run --link phone --mirror    # ... and HUD Studio on the PC shows the same frames
+```
+
+The paired OpenBridge Companion (0.14.0 or later) connects to the glasses itself (relay operations
+`glasses_connect`, `glasses_write`, `glasses_events`, `glasses_disconnect`); the PC sends the ActiveLook frames over
+the signed, encrypted relay channel (USB or Wi-Fi) and gets the gestures back. Scope, by construction: only a device
+exposing the ActiveLook service is kept connected, the PC can only write the ActiveLook RX characteristic, and
+unpairing drops the link. Close the ENGO app first: the glasses accept one connection at a time.
+
+**Oracle from the phone microphone:** open the Oracle screen in the Companion and speak. Phones with an Android speech
+service transcribe on the phone; phones without one (seen on a Blackview BV9300 Pro) record short utterances and the
+PC transcribes them locally, then answers with the Oracle and shows the answer on the glasses. Long answers are cut
+into pages in the large font; one wave shows the next page.
+
+**The Oracle is an optional module, per Companion.** Switch it off and the Oracle button disappears from that phone or
+watch; switch it back on the same three ways:
+
+- on the PC, in **Controls** (the Companions customisation screen), **Modules** box of the selected screen;
+- `openbridge glasses module oracle on|off [--relay <relay id>]`;
+- by typing or saying it on the Companion: "active l'Oracle", "retire l'Oracle", "turn off the Oracle"
+  (matched without any model; speech-to-text near-misses such as "Loracle" are accepted).
+
+The switch is stored on the device (relay operation `set_modules`, Companion 0.14.0 or later) and confirmed back to
+the PC.
+
+## Display facts measured on a real ENGO 3 (26 November 2026)
+
+- **Orientation:** both axes are mirrored and upright text needs text rotation 4; OpenBridge does this by default
+  (`--rotate on` turns the picture by 180° for an unusual mount).
+- **Colours:** grey levels show yellow; the ENGO 3 has 81 red-green colours (no blue, no white), drawn with the colour
+  commands and the official palette. OpenBridge uses green (ok), orange (warning), red (refused) and lime (accent).
+- **Visible area:** x 0 to ~292 and y 0 to ~236 of the 304 x 256 panel on our pair (`openbridge glasses set
+  --x-offset N` moves the picture if a pair differs).
+- **Input:** the ENGO 3 has one input, the **double tap on the temple** (one gesture event, value 1). Single taps
+  send nothing; 3-4 taps still send one event; the hand wave does nothing (ENGO 2 only). So: double tap = next; on
+  the home carousel the focused menu opens after 3 s; **Next / Open / Back / Home buttons** appear in the Companion
+  while the glasses are connected; and "suivant", "ouvre", "retour", "accueil" said (or typed) alone on the
+  Companion do the same.
+- **Characters:** the fonts are ASCII only; accents are folded (`été` -> `ete`).
+- **Fonts:** line heights 24 / 24 / 38 / 64 px for ids 0-3 (24 px is the smallest text); a word of n letters is
+  about n x height / 2 wide. Screens are being redrawn for these sizes: the home screen and the Oracle are done.
+- **Arcs:** device angles equal logical angles (0 at 3 o'clock, clockwise as seen), start in 0-359.
+- HUD Studio draws the frames the same way (mirrored axes, text rotation, red-green palette).
+
 ## Sport
 
 Home → **Sport** opens running, cycling, navigation, Ghost and intervals. The dashboard shows pace or speed, distance,
@@ -121,7 +169,8 @@ port and saves a HUD Studio screenshot after each step.
 | Bluetooth sensors (heart rate, RSC, CSC, power, trainer) | Decoders tested on the standard byte layouts; no real sensor connected yet |
 | Bluetooth transport (MTU, flow control, one controller, reconnect) | Unit-tested; to measure on the real pair |
 | Français / English (glasses and Companion) | Built and tested; Companion switch to try on the phone |
-| Real ENGO 3 Photochromic over Bluetooth | Waiting for the glasses. First: the **calibration screen** (Settings → Calibrate display) to check orientation, then colours and fonts. Procedure: [validation report](partners/engo/22_REAL_HARDWARE_VALIDATION_REPORT.md) |
+| Real ENGO 3 Photochromic through the phone's Bluetooth (26 Nov 2026) | Verified by the owner wearing them: menus upright and readable, colours from the palette, Oracle answer to a question spoken into the phone shown on the glasses |
+| Real ENGO 3 Photochromic over Bluetooth from the PC | Not tested (this PC has no Bluetooth). Previously: waiting for the glasses. First: the **calibration screen** (Settings → Calibrate display) to check orientation, then colours and fonts. Procedure: [validation report](partners/engo/22_REAL_HARDWARE_VALIDATION_REPORT.md) |
 
 Known gaps: on the move (no PC nearby) the glasses need the phone to hold the Bluetooth link itself and to feed its
 GPS; that Companion part is the next step.

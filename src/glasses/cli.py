@@ -57,6 +57,8 @@ def cmd_set(args):
     s = G.load_settings()
     if args.rotate is not None:
         s['rotate180'] = args.rotate == 'on'
+    if getattr(args, 'x_offset', None) is not None:
+        s['x_offset'] = max(-60, min(60, args.x_offset))
     if args.privacy:
         s['privacy'] = args.privacy
     if args.lang:
@@ -125,6 +127,27 @@ def cmd_notify(args):
 
 def cmd_say(args):
     return _send_or_explain({'voice': args.text})
+
+
+def cmd_module(args):
+    """Switch an optional Companion module (the Oracle) on or off, on one paired screen or all of them."""
+    from src import cli
+    from src.fabric import relay as fabric_relay
+    from src.fabric.relay_store import default_owner_store
+    from src.runtime import companion_modules as CM
+    with cli.Core() as server:
+        server.relay_store = default_owner_store()
+        cli.ensure_discovery(server, ['android'])
+        rids = [args.relay] if args.relay else list(CM._relays(server))
+        if not rids:
+            raise _err(cli, 'NO_PAIRED_PHONE', 'Pair a Companion first', 'device')
+        out = []
+        for rid in rids:
+            try:
+                out.append(CM.set_module(server, rid, args.module, args.state == 'on'))
+            except (fabric_relay.RelayError, ValueError) as e:
+                out.append({'relay_id': rid, 'error': str(e)[:200]})
+        return {'modules': out}
 
 
 def cmd_oracle(args):
@@ -258,6 +281,46 @@ def _poll_phone(server, hub, lock):
         pass
 
 
+def _studio_mirror(wave, args):
+    """HUD Studio window on the PC showing the same frames as the glasses (started if not running)."""
+    import subprocess
+    import sys
+    try:
+        return G.StudioLink(wave, port=args.studio_port)
+    except OSError:
+        pass
+    subprocess.Popen([sys.executable, '-m', 'src.adapters.hud_studio', '--model', args.glasses_model])
+    for _ in range(40):
+        time.sleep(0.5)
+        try:
+            return G.StudioLink(wave, port=args.studio_port)
+        except OSError:
+            continue
+    return None                                          # glasses keep working without the mirror
+
+
+def _phone_link(server, wave, args):
+    """ENGO glasses through the Bluetooth of a paired phone (Companion op glasses_connect), for a PC without Bluetooth."""
+    from src import cli
+    from src.fabric import relay as fabric_relay
+    from src.runtime.companion_commands import companion_commands
+    cc = companion_commands(server)
+    relays = getattr(getattr(server, 'relays', None), 'relays', None) or {}
+    ids = [rid for rid, r in relays.items() if (args.relay in (None, rid)) and 'glasses_link' in r.get('capabilities', ())]
+    if not ids:
+        ids = [rid for rid in relays if args.relay in (None, rid)]
+    if not ids:
+        raise _err(cli, 'NO_PAIRED_PHONE', 'Pair the phone first (OpenBridge Companion), then retry --link phone', 'device')
+    errors = []
+    for rid in ids:
+        try:
+            return G.PhoneLink(wave, lambda op, p, rid=rid: cc._send(rid, op, p), address=args.address,
+                               takeover=args.takeover)
+        except (OSError, fabric_relay.RelayError) as e:
+            errors.append('%s: %s' % (rid, e))
+    raise _err(cli, 'GLASSES_UNAVAILABLE', ('; '.join(errors))[:300], 'device')
+
+
 def cmd_run(args):
     from src import cli
     from src.runtime import api_v2
@@ -268,7 +331,7 @@ def cmd_run(args):
     def wave():
         h = holder.get('hub')
         if h:
-            h.wave()
+            h.tap_next() if holder.get('tap') else h.wave()
 
     if args.link == 'studio':
         try:
@@ -280,17 +343,37 @@ def cmd_run(args):
             link = G.BleLink(wave, address=args.address, takeover=args.takeover)
         except (OSError, ImportError) as e:
             raise _err(cli, 'GLASSES_UNAVAILABLE', str(e)[:200], 'device')
+    elif args.link == 'phone':
+        link = None                                      # needs the paired phone: opened once the core is up
     else:
         link = G.NullLink()
     with cli.Core() as server:
         executor = devices = None
+        if getattr(server, 'relay_store', None) is None:
+            # The in-process core starts without the owner's pairings; without them no paired phone is reachable
+            # (messages, voice, Oracle, and --link phone).
+            from src.fabric.relay_store import default_owner_store
+            server.relay_store = default_owner_store()
         if not args.offline:
             cli.ensure_discovery(server, cli.default_providers(args))
             executor, devices = api_v2.executor(server), _find_devices(server)
+        if link is None:
+            link = _phone_link(server, wave, args)
+        if args.mirror and args.link in ('ble', 'phone'):
+            link = G.MirrorLink(link, _studio_mirror(wave, args))
         hub = G.Hub(link=link, executor=executor, devices=devices, settings=settings,
-                    colour='3' in args.glasses_model,
+                    colour=__import__('src.adapters.activelook_emulator', fromlist=['is_colour']).is_colour(args.glasses_model),
                     understand=_understand_factory(args.intent_model, args.endpoint))
         holder['hub'] = hub
+        if hasattr(link, 'on_button'):                   # Next / Open / Back / Home buttons on the phone
+            link.on_button = hub.press
+        elif hasattr(getattr(link, 'main', None), 'on_button'):
+            link.main.on_button = hub.press
+        if '3' in args.glasses_model:
+            # ENGO 3: the only input is a double tap on the temple (one event, value 1; single taps send nothing and
+            # 3-4 taps still send one event, measured 26 Nov 2026). Each one is 'next'; open/back come from the phone
+            # buttons, the voice, or the 3 s auto-open on the home carousel.
+            holder['tap'] = True
         server.glasses_hub = hub
         server.glasses_control_port = args.control_port
         from src.ai import oracle as Oracle
@@ -371,7 +454,10 @@ def register(subs, leaf):
     g = subs.add_parser('glasses', help='ENGO / ActiveLook glasses: menus, messages, TV, vacuum, voice')
     gs = g.add_subparsers(dest='glasses_command')
     r = leaf(gs, 'run', cmd_run, 'glasses run')
-    r.add_argument('--link', choices=['studio', 'ble', 'none'], default='studio')
+    r.add_argument('--link', choices=['studio', 'ble', 'phone', 'none'], default='studio',
+                   help="phone: the paired phone's Bluetooth holds the link (PC without Bluetooth)")
+    r.add_argument('--mirror', action='store_true', help='with ble or phone: also draw every frame in HUD Studio on the PC')
+    r.add_argument('--relay', default=None, help='with --link phone: which paired phone (relay id), default: the first')
     r.add_argument('--address', default=None, help='Bluetooth address of the glasses (default: first ENGO found)')
     r.add_argument('--glasses', dest='glasses_model', default='ENGO 3', help='ENGO 1, ENGO 2 or ENGO 3')
     r.add_argument('--seconds', type=float, default=0, help='stop after N seconds (default: run until Ctrl+C)')
@@ -392,6 +478,8 @@ def register(subs, leaf):
     leaf(gs, 'revoke', cmd_revoke, 'glasses revoke')
     st = leaf(gs, 'set', cmd_set, 'glasses set')
     st.add_argument('--rotate', choices=['on', 'off'], default=None, help='display mounted upside down')
+    st.add_argument('--x-offset', dest='x_offset', type=int, default=None,
+                    help='move the picture left (negative) or right, in pixels, to fit the visible area (default -20)')
     st.add_argument('--privacy', choices=['full', 'sender', 'off'], default=None)
     st.add_argument('--apps', default=None, help='apps whose messages are shown, e.g. discord,telegram,sms,messages')
     st.add_argument('--lang', choices=['auto', 'fr', 'en'], default=None, help='app language (Français / English)')
@@ -409,6 +497,10 @@ def register(subs, leaf):
     nt.add_argument('--text', required=True)
     sy = leaf(gs, 'say', cmd_say, 'glasses say')
     sy.add_argument('text')
+    md = leaf(gs, 'module', cmd_module, 'glasses module')
+    md.add_argument('module', choices=['oracle'])
+    md.add_argument('state', choices=['on', 'off'])
+    md.add_argument('--relay', default=None, help='one paired Companion (relay id); default: all of them')
     oc = leaf(gs, 'oracle', cmd_oracle, 'glasses oracle')
     oc.add_argument('--text', default=None, help='question to answer on the ENGO glasses')
     oc.add_argument('--mic', action='store_true', help='stream PC/USB/Bluetooth mic continuously to the glasses')

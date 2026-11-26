@@ -28,7 +28,7 @@ class FakeExecutor:
 class PanelTests(unittest.TestCase):
     def test_text_never_overflows(self):
         s = fit('A very long sender name that cannot fit on the glasses', 2, 120)
-        self.assertTrue(s.endswith('…'))
+        self.assertTrue(s.endswith('...'))   # ASCII: the glasses' fonts have no '…'
         self.assertLessEqual(text_width(s, 2), 120)
         lines = wrap('word ' * 60, 1, 200, 3)
         self.assertEqual(len(lines), 3)
@@ -42,12 +42,64 @@ class PanelTests(unittest.TestCase):
         self.assertTrue(b.startswith(bytes([0xFF, 0x39])))
         self.assertIn(bytes([0x39]), b[-8:])
 
+    def test_accents_are_folded_to_ascii(self):
+        from src.glasses.panel import ascii_fold
+        self.assertEqual(ascii_fold('été à ça « oui » – 3°'), 'ete a ca " oui " - 3o')
+        p = Panel(colour=False)
+        p.text(10, 10, 'Préférences')
+        self.assertIn(b'Preferences\x00', p.frames[-1])
+
+    def test_red_green_colour_encoding(self):
+        from src.adapters import activelook as AL
+        self.assertEqual((AL.rg(8, 0), AL.rg(0, 8), AL.rg(8, 8)), (0x3c, 0xc3, 0xff))   # API palette
+        self.assertEqual(AL.rg_levels(0x3e), (8, 2))
+        self.assertEqual(len({v for row in AL.RG_PALETTE for v in row}), 81)
+
+    def test_coloured_tones_use_red_green_commands_on_engo3(self):
+        p = Panel(colour=True)
+        p.text(10, 10, 'OK', tone='ok')
+        self.assertEqual(p.frames[-1][1], 0x3E)              # txtColor
+        p.text(10, 40, 'plain', tone='primary')
+        self.assertEqual(p.frames[-1][1], 0x37)              # grey text shows yellow on the ENGO 3
+        p.line(0, 0, 10, 0, tone='alert')
+        self.assertIn(bytes([0xFF, 0x3D]), b''.join(p.frames))
+
+    def test_long_oracle_answer_is_paged(self):
+        from src.glasses.ui import ORACLE_LINES_PER_PAGE, oracle_pages
+        pages = oracle_pages('mot ' * 120)
+        self.assertGreater(len(pages), 1)
+        self.assertTrue(all(len(pg) <= ORACLE_LINES_PER_PAGE for pg in pages))
+
     def test_rotate180_mirrors_coordinates(self):
-        a, b = Panel(), Panel(rotate180=True)
+        # Upright default = ActiveLook native frame (origin bottom-right), measured on a real ENGO 3 on 26 Nov 2026.
+        a, b = Panel(x_offset=0), Panel(rotate180=True, x_offset=0)
         a.line(0, 0, 10, 0)
         b.line(0, 0, 10, 0)
         self.assertNotEqual(a.to_bytes(), b.to_bytes())
-        self.assertEqual(b._p(0, 0), (303, 255))
+        self.assertEqual(a._p(0, 0), (303, 255))
+        self.assertEqual(b._p(0, 0), (0, 0))
+        self.assertEqual(Panel()._p(0, 0), (303, 255))       # default: no offset (whole width visible)
+
+    def test_upright_text_uses_rotation_4_at_flipped_anchor(self):
+        import struct
+        p = Panel(colour=False, x_offset=0)
+        p.text(10, 20, 'HAUT', font=2)
+        frame = p.frames[-1]
+        x, y, rot = struct.unpack_from('>hhB', frame, 4)
+        self.assertEqual((x, y, rot), (303 - 10, 255 - 20, 4))
+
+    def test_emulator_draws_native_frames_upright(self):
+        try:
+            import PIL  # noqa: F401 - the emulator draws with Pillow (optional in CI)
+        except ImportError:
+            self.skipTest('Pillow not installed')
+        from src.adapters.activelook_emulator import HUDCanvas
+        p = Panel(colour=False, x_offset=0).begin()
+        p.rect(0, 0, 9, 9, fill=True)          # logical top-left corner
+        hud = HUDCanvas(model='ENGO 3')
+        hud.dispatch(p.end().to_bytes())
+        self.assertNotEqual(hud._img.getpixel((2, 2)), (0, 0, 0))
+        self.assertEqual(hud._img.getpixel((300, 250)), (0, 0, 0))
 
     def test_dim_tones_avoid_palette_bytes(self):
         from src.glasses.panel import TONES

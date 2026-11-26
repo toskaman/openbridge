@@ -69,6 +69,43 @@ def cmd_luma(level: int) -> bytes:
     return encode_packet(0x10, bytes([max(0, min(15, level))]))
 
 
+# Red-green palette of ActiveLook colour glasses (ENGO 3, hardware MDP08): 9 red x 9 green levels = 81 colours, no
+# blue and no white. Row = red level 0-8, column = green level 0-8. Values from the ActiveLook API documentation
+# (resources/ActiveLook_RRGG_colors.png), as tabulated by the MIT-licensed @pranen/activelook library.
+RG_PALETTE = (
+    (0x00, 0x01, 0x02, 0x41, 0x81, 0x82, 0x43, 0x83, 0xc3),
+    (0x04, 0x05, 0x06, 0x45, 0x85, 0x86, 0x47, 0x87, 0xc7),
+    (0x20, 0x21, 0x22, 0x61, 0xa1, 0xa2, 0x63, 0xa3, 0xe3),
+    (0x14, 0x15, 0x16, 0x55, 0x95, 0x96, 0x57, 0x97, 0xd7),
+    (0x18, 0x19, 0x1a, 0x59, 0x99, 0x9a, 0x5b, 0x9b, 0xdb),
+    (0x28, 0x29, 0x2a, 0x69, 0xa9, 0xaa, 0x6b, 0xab, 0xeb),
+    (0x1c, 0x1d, 0x1e, 0x5d, 0x9d, 0x9e, 0x5f, 0x9f, 0xdf),
+    (0x38, 0x39, 0x3a, 0x79, 0xb9, 0xba, 0x7b, 0xbb, 0xfb),
+    (0x3c, 0x3d, 0x3e, 0x7d, 0xbd, 0xbe, 0x7f, 0xbf, 0xff),
+)
+# Named colours calibrated by eye on an ENGO 3 (same source); checked on our pair on 26 Nov 2026.
+RG_COLOURS = {'red': 0x3c, 'orange': 0x3e, 'amber': 0xbd, 'yellow': 0xff, 'lime': 0x87, 'green': 0xc3}
+
+
+def rg(red: int, green: int) -> int:
+    """Colour value for red and green levels 0-8 (ENGO 3 red-green palette)."""
+    return RG_PALETTE[max(0, min(8, int(red)))][max(0, min(8, int(green)))]
+
+
+def rg_levels(value: int):
+    """(red, green) levels 0-8 of a palette value, or None if the value is not one of the 81 colours."""
+    for red, row in enumerate(RG_PALETTE):
+        if value in row:
+            return red, row.index(value)
+    return None
+
+
+def cmd_text_rg(x: int, y: int, text: str, font: int = 0, colour: int = 0x88, rot: int = 0) -> bytes:
+    """0x3E txtColor: text in a red-green colour value (colour glasses only)."""
+    clean_text = text.encode("utf-8")[:250] + b"\x00"
+    return encode_packet(0x3E, struct.pack(">hh BBB", x, y, rot, font, colour & 0xFF) + clean_text)
+
+
 def cmd_color(color_id: int) -> bytes:
     """Set active color for ENGO 3 MultiColor (0x01=Green, 0x02=Amber, 0x03=Red, 0x04=Cyan)."""
     return encode_packet(0x3D, bytes([color_id & 0xFF]))

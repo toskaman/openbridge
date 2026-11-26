@@ -90,6 +90,11 @@ public class OracleVoiceActivity extends Activity {
             mLang = "fr".equals(L.resolved(this)) ? "fr-FR" : LANG_DEFAULT;
         }
 
+        if (!RelayServer.get(this, null).moduleOracle()) {      // module switched off by the owner
+            Toast.makeText(this, L.t("The Oracle is turned off for this device."), Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         buildUi();
         RelayServer.get(this, null).setOracleListener(mOracleListener);
 
@@ -179,6 +184,7 @@ public class OracleVoiceActivity extends Activity {
     @Override
     protected void onDestroy() {
         mPaused = true;
+        stopPcTranscription();
         mHandler.removeCallbacksAndMessages(null);
         RelayServer.get(this, null).setOracleListener(null);
         if (mRecognizer != null) {
@@ -192,8 +198,7 @@ public class OracleVoiceActivity extends Activity {
         if (mPaused) return;
         try {
             if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-                statusBadge.setText("●  SpeechRecognizer indisponible");
-                statusBadge.setTextColor(Color.rgb(255, 82, 82));
+                startPcTranscription();          // no speech service on this phone: the PC transcribes locally
                 return;
             }
             mRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
@@ -260,6 +265,83 @@ public class OracleVoiceActivity extends Activity {
             mRecognizer.startListening(mRecogIntent);
         } catch (Exception e) {
             scheduleRestart(RESTART_BUSY);
+        }
+    }
+
+    // ---- Fallback for phones without a speech service: record here, transcribe on the PC (local model). ----
+    private volatile boolean mPcLoop;
+    private Thread mPcThread;
+
+    private void startPcTranscription() {
+        if (mPcLoop) return;
+        RelayServer relay = RelayServer.get(this, null);
+        if (!relay.paired()) {
+            statusBadge.setText("●  " + L.t("Not paired — pair PC first"));
+            statusBadge.setTextColor(Color.rgb(255, 82, 82));
+            return;
+        }
+        mPcLoop = true;
+        statusBadge.setText("●  " + L.t("Listening… speak naturally") + " (PC)");
+        statusBadge.setTextColor(Color.rgb(105, 240, 174));
+        mPcThread = new Thread(this::pcLoop, "oracle-pc-mic");
+        mPcThread.start();
+    }
+
+    private void stopPcTranscription() { mPcLoop = false; }
+
+    /** Energy voice detection on 30 ms frames: an utterance starts after 2 loud frames (with 120 ms of pre-roll) and
+     *  ends after 700 ms of silence or 8 s; shorter than 0.6 s is ignored. Each utterance goes to the paired PC as a
+     *  voice clip marked "oracle"; the sound never leaves for anywhere else. */
+    @android.annotation.SuppressLint("MissingPermission")
+    private void pcLoop() {
+        final int rate = 16000, frame = 480;
+        android.media.AudioRecord rec = null;
+        try {
+            int min = android.media.AudioRecord.getMinBufferSize(rate, android.media.AudioFormat.CHANNEL_IN_MONO, android.media.AudioFormat.ENCODING_PCM_16BIT);
+            rec = new android.media.AudioRecord(android.media.MediaRecorder.AudioSource.VOICE_RECOGNITION, rate,
+                    android.media.AudioFormat.CHANNEL_IN_MONO, android.media.AudioFormat.ENCODING_PCM_16BIT, Math.max(min, frame * 8));
+            if (rec.getState() != android.media.AudioRecord.STATE_INITIALIZED) throw new IllegalStateException("mic");
+            rec.startRecording();
+            short[] buf = new short[frame];
+            java.util.ArrayDeque<byte[]> pre = new java.util.ArrayDeque<>();
+            java.io.ByteArrayOutputStream utt = null;
+            int loud = 0, quiet = 0, frames = 0;
+            while (mPcLoop) {
+                int n = rec.read(buf, 0, frame);
+                if (n <= 0) continue;
+                double sum = 0;
+                byte[] b = new byte[n * 2];
+                for (int i = 0; i < n; i++) { sum += (double) buf[i] * buf[i]; b[2 * i] = (byte) buf[i]; b[2 * i + 1] = (byte) (buf[i] >> 8); }
+                double db = 20 * Math.log10(Math.max(1e-9, Math.sqrt(sum / n) / 32768.0));
+                boolean active = db > -42;
+                if (utt == null) {
+                    pre.add(b); if (pre.size() > 4) pre.poll();
+                    loud = active ? loud + 1 : 0;
+                    if (loud >= 2) {
+                        utt = new java.io.ByteArrayOutputStream();
+                        for (byte[] p : pre) utt.write(p);
+                        pre.clear(); quiet = 0; frames = 0;
+                        runOnUiThread(() -> { statusBadge.setText("●  " + L.t("LISTENING")); statusBadge.setTextColor(Color.rgb(0, 229, 255)); });
+                    }
+                    continue;
+                }
+                utt.write(b); frames++;
+                quiet = active ? 0 : quiet + 1;
+                if (quiet >= 23 || frames >= 266) {
+                    byte[] clip = utt.toByteArray(); utt = null; loud = 0;
+                    if (clip.length >= 19200) {                 // at least 0.6 s
+                        String s = RelayServer.get(this, null).submitVoice(clip, "oracle");
+                        runOnUiThread(() -> { statusBadge.setText("●  " + L.t("THINKING") + " · " + s); statusBadge.setTextColor(Color.rgb(255, 183, 77)); });
+                    } else {
+                        runOnUiThread(() -> { statusBadge.setText("●  " + L.t("Listening… speak naturally") + " (PC)"); statusBadge.setTextColor(Color.rgb(105, 240, 174)); });
+                    }
+                }
+            }
+        } catch (Exception e) {
+            runOnUiThread(() -> { statusBadge.setText("●  " + L.t("Microphone unavailable.")); statusBadge.setTextColor(Color.rgb(255, 82, 82)); });
+        } finally {
+            if (rec != null) { try { rec.stop(); } catch (Exception ignored) { } rec.release(); }
+            mPcLoop = false;
         }
     }
 

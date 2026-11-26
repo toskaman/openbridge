@@ -74,6 +74,29 @@ GESTURE_UUID = "0783b03e-8535-b5a0-7140-a304d2495cbb" # gesture events
 BATT_SVC_UUID = "0000180f-0000-1000-8000-00805f9b34fb"
 BATT_CHAR_UUID = "00002a19-0000-1000-8000-00805f9b34fb"
 
+# Models with a colour panel: ENGO 3 (81 red-green colours, grey levels show yellow), measured on 26 Nov 2026.
+COLOUR_MODELS: tuple = ('ENGO 3', 'ENGO 3 Titanium')
+GREY_TINT = (255, 214, 10)        # how a grey level looks on the ENGO 3 panel (yellow)
+
+
+def rg_to_rgb(value: int):
+    """ENGO 3 red-green palette value -> RGB for the screen (a value outside the 81 colours draws nothing)."""
+    from src.adapters.activelook import rg_levels
+    lv = rg_levels(value)
+    if lv is None:
+        return (0, 0, 0)
+    return (lv[0] * 255 // 8, lv[1] * 255 // 8, 0)
+
+
+def is_colour(model: str) -> bool:
+    return model in COLOUR_MODELS
+
+
+def native_to_view(x: int, y: int):
+    """ActiveLook native frame (origin bottom-right) -> upright picture as the wearer sees it."""
+    return DISPLAY_W - 1 - x, DISPLAY_H - 1 - y
+
+
 # ENGO 3 colour palette (81 possible, here we map 8 key colours)
 COLOUR_MAP = {
     0x00: (0,   0,   0),    # black (OLED off)
@@ -190,7 +213,7 @@ class HUDCanvas:
         self.model = model
         self.scale = scale
         self.gesture_callback = gesture_callback
-        self._colour_mode = "3" in model  # ENGO 3 has colour
+        self._colour_mode = is_colour(model)
 
         # Canvas state
         self._img   = Image.new("RGB", (DISPLAY_W, DISPLAY_H), (0, 0, 0))
@@ -233,15 +256,13 @@ class HUDCanvas:
         if grey_or_colour is not None:
             if isinstance(grey_or_colour, tuple):
                 return grey_or_colour
-            # ENGO 3 colour firmware: txt/colour bytes 0x00-0x06 are palette indices (COLOR_* in activelook.py)
-            if self._colour_mode and grey_or_colour in COLOUR_MAP and grey_or_colour <= 0x06:
-                return COLOUR_MAP[grey_or_colour]
-            # greyscale 0-15
+            # greyscale 0-15 (yellow on the ENGO 3 panel)
             lv = int(grey_or_colour * 255 / 15)
             if self._colour_mode:
-                r, g, b = self._colour
-                return (int(r * lv / 255), int(g * lv / 255), int(b * lv / 255))
+                return tuple(int(c * lv / 255) for c in GREY_TINT)
             return (lv, lv, lv)
+        if self._colour_mode and getattr(self, '_rg', None) is not None:
+            return rg_to_rgb(self._rg)                   # last 0x3D red-green value
         return self._resolve_colour(self._grey)
 
     # ── Command dispatcher ────────────────────────────────────────────────────
@@ -284,6 +305,7 @@ class HUDCanvas:
         elif cmd == 0x39:  self._cmd_hold_flush(d)
         elif cmd == 0x3C:  self._cmd_arc(d)
         elif cmd == 0x3D:  self._cmd_colour(d)
+        elif cmd == 0x3E:  self._cmd_txt(d, rg=True)
         elif cmd == 0x60:  self._cmd_layout_save(d, is_color=False)
         elif cmd == 0x61:  self._cmd_layout_delete(d)
         elif cmd == 0x62:  self._cmd_layout_display(d)
@@ -318,63 +340,89 @@ class HUDCanvas:
             self._luma = max(0, min(15, d[0]))
 
     def _cmd_grayscale(self, d):
+        self._rg = None                                  # back to grey levels
         if d:
             self._grey = max(0, min(15, d[0]))
             lv = int(self._grey * 255 / 15)
             self._colour = (lv, lv, lv)
 
     def _cmd_colour(self, d):
-        """0x3D colour — select from 81-colour ENGO 3 palette."""
-        if d:
-            self._colour = COLOUR_MAP.get(d[0], (255, 255, 0))
+        """0x3D colour: red-green value (81 colours) for the next shapes, colour glasses only."""
+        if d and self._colour_mode:
+            self._rg = d[0]
 
     def _cmd_point(self, d):
         if len(d) >= 4:
-            x, y = struct.unpack_from('>hh', d)
+            x, y = native_to_view(*struct.unpack_from('>hh', d))
             if 0 <= x < DISPLAY_W and 0 <= y < DISPLAY_H:
                 self._draw.point((x, y), fill=self._resolve_colour())
 
     def _cmd_line(self, d):
         if len(d) >= 8:
             x0, y0, x1, y1 = struct.unpack_from('>hhhh', d)
+            (x0, y0), (x1, y1) = native_to_view(x0, y0), native_to_view(x1, y1)
+            x0, x1, y0, y1 = min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
             self._draw.line([(x0, y0), (x1, y1)], fill=self._resolve_colour(), width=1)
 
     def _cmd_rect(self, d):
         if len(d) >= 8:
             x0, y0, x1, y1 = struct.unpack_from('>hhhh', d)
+            (x0, y0), (x1, y1) = native_to_view(x0, y0), native_to_view(x1, y1)
+            x0, x1, y0, y1 = min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
             self._draw.rectangle([(x0, y0), (x1, y1)], outline=self._resolve_colour())
 
     def _cmd_rectf(self, d):
         if len(d) >= 8:
             x0, y0, x1, y1 = struct.unpack_from('>hhhh', d)
+            (x0, y0), (x1, y1) = native_to_view(x0, y0), native_to_view(x1, y1)
+            x0, x1, y0, y1 = min(x0, x1), max(x0, x1), min(y0, y1), max(y0, y1)
             self._draw.rectangle([(x0, y0), (x1, y1)], fill=self._resolve_colour())
 
     def _cmd_circ(self, d):
         if len(d) >= 5:
-            x, y = struct.unpack_from('>hh', d)
+            x, y = native_to_view(*struct.unpack_from('>hh', d))
             r = d[4]
             self._draw.ellipse([(x-r, y-r), (x+r, y+r)], outline=self._resolve_colour())
 
     def _cmd_circf(self, d):
         if len(d) >= 5:
-            x, y = struct.unpack_from('>hh', d)
+            x, y = native_to_view(*struct.unpack_from('>hh', d))
             r = d[4]
             self._draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=self._resolve_colour())
 
-    def _cmd_txt(self, d):
+    def _cmd_txt(self, d, rg=False):
         """0x37 txt — s16 x, s16 y, u8 rot, u8 font, u8 grey, str text"""
         if len(d) < 7:
             return
-        x, y = struct.unpack_from('>hh', d)
-        font_id = d[5]                     # d[4] is rotation (not rendered by the emulator)
+        x, y = native_to_view(*struct.unpack_from('>hh', d))
+        rot, font_id = d[4], d[5]
         grey_val = d[6]
         text = d[7:].decode('utf-8', errors='replace').rstrip('\x00')
-        col = self._resolve_colour(grey_val)
-        self._draw_text_with_ghost(x, y, text, font_id, col)
+        col = rg_to_rgb(grey_val) if (rg and self._colour_mode) else self._resolve_colour(grey_val)
+        if rot == 4:                       # upright on the real glasses, anchored at its top-left
+            self._draw_text_with_ghost(x, y, text, font_id, col)
+        else:                              # any other rotation reads upside down on the real glasses: show it so
+            self._draw_text_upside_down(x, y, text, font_id, col)
+
+    def _draw_text_upside_down(self, x, y, text, font_id, col):
+        from PIL import ImageChops, ImageDraw
+        l, t, r, b = self._font(font_id).getbbox(text or ' ')
+        w, h = max(1, r + 2), max(1, b + 2)
+        tmp = self._Image.new('RGB', (w, h), (0, 0, 0))
+        saved = (self._img, self._draw)
+        self._img, self._draw = tmp, ImageDraw.Draw(tmp)
+        try:
+            self._draw_text_with_ghost(0, 0, text, font_id, col)
+        finally:
+            self._img, self._draw = saved
+        tmp = tmp.rotate(180)
+        box = (x - w + 1, y - h + 1, x + 1, y + 1)
+        region = self._img.crop(box)
+        self._img.paste(ImageChops.lighter(region, tmp), box[:2])
 
     # ActiveLook system fonts are compact (font 1 ≈ 24 px cell, glyphs ≈ 18 px); Bahnschrift is the
     # closest condensed DIN-style face shipped with Windows. Sizes are glyph pixel heights on the 304×256 panel.
-    _FONT_SIZES = {0: 12, 1: 18, 2: 25, 3: 34, 4: 46, 5: 58}
+    _FONT_SIZES = {0: 19, 1: 19, 2: 30, 3: 51, 4: 60, 5: 66}   # glyphs of the real ENGO 3 line heights 24/24/38/64/75/82
     _FONT_FACES = ("bahnschrift.ttf", "Bahnschrift.ttf", "DejaVuSansCondensed.ttf", "arialn.ttf", "arial.ttf",
                    "DejaVuSans.ttf")
     _font_cache: dict = {}
@@ -463,7 +511,7 @@ class HUDCanvas:
 
     def _cmd_arc(self, d):
         if len(d) >= 10:
-            x, y = struct.unpack_from('>hh', d)
+            x, y = native_to_view(*struct.unpack_from('>hh', d))
             r = d[4]
             start, end = struct.unpack_from('>hh', d, 5)
             self._draw.arc([(x-r, y-r), (x+r, y+r)], start=start, end=end, fill=self._resolve_colour())
@@ -722,7 +770,7 @@ class HUDCanvas:
         model_var = tk.StringVar(value=self.model)
         def on_model_change(*_):
             self.model = model_var.get()
-            self._colour_mode = "3" in self.model
+            self._colour_mode = is_colour(self.model)
             self._root.title(f"OpenBridge × {self.model} HUD Emulator — 304×256 MicroOLED")
         for m in ["ENGO 1", "ENGO 2", "ENGO 3", "ENGO 3 Titanium"]:
             tk.Radiobutton(ctrl, text=m, variable=model_var, value=m, command=on_model_change,
