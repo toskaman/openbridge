@@ -21,7 +21,7 @@ PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
               'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
               'get_commands', 'report_command', 'update_status', 'get_notifications',
-              'glasses_connect', 'glasses_write', 'glasses_events', 'glasses_disconnect', 'set_modules')
+              'glasses_connect', 'glasses_write', 'glasses_events', 'glasses_info', 'glasses_disconnect', 'set_modules')
 COMPANION_MODULES = ('oracle',)
 # Glasses link: the phone holds the Bluetooth link to ActiveLook / ENGO glasses for a PC without Bluetooth.
 GLASSES_MAX_CHUNKS, GLASSES_MAX_BATCH, GLASSES_MAX_CHUNK = 64, 8192, 512
@@ -178,6 +178,9 @@ def _check_glasses(op, params):
         w = params.get('wait_ms', 0)
         if set(params) - {'wait_ms'} or isinstance(w, bool) or not isinstance(w, int) or not 0 <= w <= 1500:
             raise RelayError('glasses_events takes wait_ms 0-1500')
+    elif op == 'glasses_info':
+        if params:
+            raise RelayError('glasses_info takes no parameters')
     elif params:
         raise RelayError('glasses_disconnect takes no parameters')
 

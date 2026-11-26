@@ -31,11 +31,16 @@ import org.json.JSONObject;
  *  the Bluetooth side is reachable through the relay. One link at a time; any unpair drops it. */
 final class GlassesLink {
     static final UUID SERVICE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");
+    static final UUID TX = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb8");       // query responses / metadata
     static final UUID RX = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba");
     static final UUID FLOW = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb9");
     static final UUID GESTURE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbb");   // hand wave (sensor)
     static final UUID TOUCH = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbc");     // tap on the temple (ENGO 3)
     static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    static final UUID DIS_SERVICE = UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb");
+    static final UUID BATT_SERVICE = UUID.fromString("0000180f-0000-1000-8000-00805f9b34fb");
+    static final UUID BATT_CHAR = UUID.fromString("00002a19-0000-1000-8000-00805f9b34fb");
+    static final UUID SUOTA_SERVICE = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");
     static final int MAX_CHUNKS = 64, MAX_BATCH = 8192, MAX_EVENTS = 64, WANT_MTU = 247;
 
     private final Context ctx;
@@ -47,6 +52,8 @@ final class GlassesLink {
     private volatile int mtu = 23;
     private volatile int opStatus;                     // result of the GATT operation being waited on
     private volatile boolean opDone;
+    private volatile byte[] lastRead;
+    private final JSONArray subscribeLog = new JSONArray();
     private long written, writeErrors, gestures;
     interface Listener { void changed(String state, String name); }
     private volatile Listener listener;
@@ -96,18 +103,23 @@ final class GlassesLink {
         @Override public void onDescriptorWrite(BluetoothGatt g, BluetoothGattDescriptor d, int status) { done(status); }
         @Override public void onCharacteristicWrite(BluetoothGatt g, BluetoothGattCharacteristic c, int status) { done(status); }
         @SuppressWarnings("deprecation")
+        @Override public void onCharacteristicRead(BluetoothGatt g, BluetoothGattCharacteristic c, int status) { lastRead = c.getValue(); done(status); }
+        @Override public void onCharacteristicRead(BluetoothGatt g, BluetoothGattCharacteristic c, byte[] value, int status) { lastRead = value; done(status); }
+        @SuppressWarnings("deprecation")
         @Override public void onCharacteristicChanged(BluetoothGatt g, BluetoothGattCharacteristic c) { changed(c.getUuid(), c.getValue()); }
         @Override public void onCharacteristicChanged(BluetoothGatt g, BluetoothGattCharacteristic c, byte[] value) { changed(c.getUuid(), value); }
     };
 
     private void changed(UUID u, byte[] v) {
         try {
-            if (GESTURE.equals(u)) { gestures++; event(new JSONObject().put("t", "gesture").put("v", hexOf(v))); }
+            if (TX.equals(u) && v != null && v.length > 0) event(new JSONObject().put("t", "tx").put("v", fullHex(v)));
+            else if (GESTURE.equals(u)) { gestures++; event(new JSONObject().put("t", "gesture").put("v", hexOf(v))); }
             else if (TOUCH.equals(u)) { gestures++; event(new JSONObject().put("t", "touch").put("v", hexOf(v))); }
             else if (FLOW.equals(u) && v != null && v.length > 0) event(new JSONObject().put("t", "flow").put("v", v[0] & 0xff));
         } catch (Exception ignored) { }
     }
 
+    private static String fullHex(byte[] v) { StringBuilder b = new StringBuilder(v.length * 2); for (byte x : v) b.append(String.format("%02x", x)); return b.toString(); }
     private static String hexOf(byte[] v) { StringBuilder b = new StringBuilder(); if (v != null) for (int i = 0; i < v.length && i < 8; i++) b.append(String.format("%02x", v[i])); return b.toString(); }
 
     private void done(int status) { synchronized (lock) { opStatus = status; opDone = true; lock.notifyAll(); } }
@@ -157,7 +169,8 @@ final class GlassesLink {
                 if (rx == null) throw new SecurityException("glasses: RX characteristic missing");
                 opDone = false;
                 if (gatt.requestMtu(WANT_MTU)) { try { await(2_000, "MTU"); } catch (SecurityException ignored) { } }
-                for (UUID u : new UUID[]{FLOW, GESTURE, TOUCH}) subscribe(s.getCharacteristic(u));
+                synchronized (subscribeLog) { while (subscribeLog.length() > 0) subscribeLog.remove(0); }
+                for (UUID u : new UUID[]{FLOW, TX, GESTURE, TOUCH}) subscribe(s.getCharacteristic(u));
                 try { gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }
                 setState("READY");
                 synchronized (events) { events.clear(); }
@@ -174,14 +187,23 @@ final class GlassesLink {
     @SuppressWarnings("deprecation")
     private void subscribe(BluetoothGattCharacteristic c) throws Exception {
         if (c == null) return;
+        int props = c.getProperties();
+        byte[] val = (props & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0
+                ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                : BluetoothGattDescriptor.ENABLE_INDICATION_VALUE;
         gatt.setCharacteristicNotification(c, true);
         BluetoothGattDescriptor d = c.getDescriptor(CCCD);
-        if (d == null) return;
+        if (d == null) {
+            synchronized (subscribeLog) { subscribeLog.put(c.getUuid().toString() + ":no_cccd:props=" + props); }
+            return;
+        }
         opDone = false;
         boolean started;
-        if (Build.VERSION.SDK_INT >= 33) started = gatt.writeDescriptor(d, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothGatt.GATT_SUCCESS;
-        else { d.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE); started = gatt.writeDescriptor(d); }
-        if (started) await(2_000, "subscribe");
+        if (Build.VERSION.SDK_INT >= 33) started = gatt.writeDescriptor(d, val) == BluetoothGatt.GATT_SUCCESS;
+        else { d.setValue(val); started = gatt.writeDescriptor(d); }
+        int st = -999;
+        if (started) st = await(2_000, "subscribe");
+        synchronized (subscribeLog) { subscribeLog.put(c.getUuid().toString() + ":props=" + props + ":started=" + started + ":st=" + st); }
     }
 
     private static boolean match(String n, String hint) {
@@ -229,11 +251,15 @@ final class GlassesLink {
         int ok = 0;
         synchronized (lock) {
             if (gatt == null || rx == null || !"READY".equals(state)) throw new SecurityException("glasses not connected");
+            int wt = (chunks.length() <= 16 && (rx.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0)
+                    || (rx.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) == 0
+                    ? BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                    : BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE;
             for (byte[] d : data) {
                 opDone = false;
                 boolean started;
-                if (Build.VERSION.SDK_INT >= 33) started = gatt.writeCharacteristic(rx, d, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) == BluetoothGatt.GATT_SUCCESS;
-                else { rx.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE); rx.setValue(d); started = gatt.writeCharacteristic(rx); }
+                if (Build.VERSION.SDK_INT >= 33) started = gatt.writeCharacteristic(rx, d, wt) == BluetoothGatt.GATT_SUCCESS;
+                else { rx.setWriteType(wt); rx.setValue(d); started = gatt.writeCharacteristic(rx); }
                 if (!started) { writeErrors++; break; }
                 try { if (await(2_000, "write") != 0) { writeErrors++; break; } } catch (SecurityException e) { writeErrors++; break; }
                 ok++; written++;
@@ -242,6 +268,63 @@ final class GlassesLink {
         JSONObject r = status().put("accepted", ok);
         r.put("events", drain(0));
         return r;
+    }
+
+    @SuppressLint("MissingPermission")
+    JSONObject readInfo() throws Exception {
+        JSONObject dis = new JSONObject();
+        boolean suota;
+        JSONArray svcs = new JSONArray();
+        synchronized (lock) {
+            if (gatt == null || !"READY".equals(state)) throw new SecurityException("glasses not connected");
+            suota = gatt.getService(SUOTA_SERVICE) != null;
+            for (BluetoothGattService svc : gatt.getServices()) {
+                JSONArray chs = new JSONArray();
+                for (BluetoothGattCharacteristic ch : svc.getCharacteristics()) {
+                    chs.put(new JSONObject().put("uuid", ch.getUuid().toString()).put("props", ch.getProperties()));
+                }
+                svcs.put(new JSONObject().put("uuid", svc.getUuid().toString()).put("chars", chs));
+            }
+            BluetoothGattService disSvc = gatt.getService(DIS_SERVICE);
+            if (disSvc != null) {
+                String[][] fields = {
+                    {"model_number", "00002a24-0000-1000-8000-00805f9b34fb"},
+                    {"serial_number", "00002a25-0000-1000-8000-00805f9b34fb"},
+                    {"firmware_revision", "00002a26-0000-1000-8000-00805f9b34fb"},
+                    {"hardware_revision", "00002a27-0000-1000-8000-00805f9b34fb"},
+                    {"software_revision", "00002a28-0000-1000-8000-00805f9b34fb"},
+                    {"manufacturer", "00002a29-0000-1000-8000-00805f9b34fb"},
+                };
+                for (String[] f : fields) {
+                    BluetoothGattCharacteristic ch = disSvc.getCharacteristic(UUID.fromString(f[1]));
+                    if (ch != null) {
+                        opDone = false; lastRead = null;
+                        if (gatt.readCharacteristic(ch)) {
+                            try {
+                                if (await(2_000, "read " + f[0]) == 0 && lastRead != null) {
+                                    dis.put(f[0], new String(lastRead, java.nio.charset.StandardCharsets.UTF_8).replace("\0", ""));
+                                }
+                            } catch (SecurityException ignored) { }
+                        }
+                    }
+                }
+            }
+            BluetoothGattService battSvc = gatt.getService(BATT_SERVICE);
+            if (battSvc != null) {
+                BluetoothGattCharacteristic bch = battSvc.getCharacteristic(BATT_CHAR);
+                if (bch != null) {
+                    opDone = false; lastRead = null;
+                    if (gatt.readCharacteristic(bch)) {
+                        try {
+                            if (await(2_000, "read battery") == 0 && lastRead != null && lastRead.length > 0) {
+                                dis.put("battery_level_gatt", lastRead[0] & 0xff);
+                            }
+                        } catch (SecurityException ignored) { }
+                    }
+                }
+            }
+        }
+        return status().put("dis", dis).put("suota_present", suota).put("services", svcs).put("subs", subscribeLog);
     }
 
     /** Notifications from the glasses (gestures, flow control, link state), waiting up to waitMs for the first one. */
