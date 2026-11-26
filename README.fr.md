@@ -51,13 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-26 20:30` **Latence du tap ENGO 3 attribuée au firmware :** les ~2 s avant qu'un double tap soit pris en compte, et les taps supplémentaires ignorés, viennent de la détection de tap des lunettes, pas d'OpenBridge (notre chaîne fait moins de 100 ms). Documenté, avec une demande firmware concrète, dans les [suggestions pour ENGO](docs/partners/engo/ENGO_FEATURE_REQUESTS.md).
 - `2026-11-26 18:50` **Tous les écrans des lunettes redessinés pour la vraie ENGO 3 :** messages, TV, sport, navigation, réglages et écran vocal tiennent dans l'écran avec ses vraies tailles de police ; les anciens écrans de démonstration ENGO s'affichent aussi à l'endroit et en couleur, et l'émulateur ne les dessine plus à l'envers. Ce qu'on aimerait d'ENGO ensuite est dans un [fichier de suggestions](docs/partners/engo/ENGO_FEATURE_REQUESTS.md). [Lunettes](docs/GLASSES.md)
 - `2026-11-26 16:10` **L'Oracle devient un module optionnel par Companion :** activez-le ou retirez-le depuis le PC (Contrôles > Modules, ou `openbridge glasses module oracle on|off`) ou en disant « active / retire l'Oracle » sur le téléphone. [Lunettes](docs/GLASSES.md)
-- `2026-11-26 15:45` **Lunettes ENGO 3 pilotées via le téléphone :** un PC sans Bluetooth utilise celui du téléphone ; posez une question à l'Oracle à voix haute sur le téléphone, la réponse s'affiche dans les lunettes, en couleur. [Lunettes](docs/GLASSES.md)
 
 <details>
 <summary>Mises à jour précédentes</summary>
 
+- `2026-11-26 15:45` **Lunettes ENGO 3 pilotées via le téléphone :** un PC sans Bluetooth utilise celui du téléphone ; posez une question à l'Oracle à voix haute sur le téléphone, la réponse s'affiche dans les lunettes, en couleur. [Lunettes](docs/GLASSES.md)
 - `2026-11-25 23:58` **Partenaires visibles dans les logs & la CI GitHub :** les noms des entreprises partenaires (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) sont journalisés explicitement à chaque exécution CI et imposés dans `AGENTS.md`.
 - `2026-11-25 16:15` **Oracle vocal pour ENGO 3 et multi-micros :** calcul local instantané, recherche web en cache avec préchargement, LLM local en VRAM, relais Android/Wear OS en long-polling (`Oracle ENGO`) et connecteur micro universel (`mic_oracle`) affichés sur le HUD ENGO 3.
 - `2026-11-25 13:20` **AirGradient devient partenaire matériel :** un capteur AirGradient ONE (I-9PSL) apporte la qualité de l'air à OpenBridge, lue via son API locale. [Page partenaire](docs/partners/AIRGRADIENT.md)

@@ -1,6 +1,6 @@
 # Suggestions for ENGO: what OpenBridge would need from the glasses
 
-*Living document, kept up to date by the OpenBridge project. Last update: 2026-11-26 18:45 (Paris).*
+*Living document, kept up to date by the OpenBridge project. Last update: 2026-11-26 20:30 (Paris).*
 
 OpenBridge drives an **ENGO 3 Photochromic** through the phone's Bluetooth: menus, messages, TV and vacuum control,
 sport screens and an AI assistant answering questions spoken into the phone. Everything below was found while
@@ -9,9 +9,14 @@ would unlock it. Nothing here is a complaint: the glasses are light, readable an
 pieces between "a display" and "a hands-free interface".
 
 **Résumé en français.** La seule entrée des ENGO 3 aujourd'hui est le double tap sur la branche, vu comme un seul
-évènement. Nos demandes principales : remonter le nombre de taps (1, 2, 3), un appui long et un glissement le long de
-la branche ; des polices avec accents ; une police plus petite ; la zone visible et l'orientation documentées ; deux
-connexions Bluetooth à la fois (application ENGO + OpenBridge). Le détail, avec nos mesures, est ci-dessous.
+évènement, et il met environ **2 s** à être pris en compte. Nos demandes principales : remonter le nombre de taps
+(1, 2, 3), un appui long et un glissement le long de la branche ; **réduire la latence et le debounce du tap** ; des
+polices avec accents ; une police plus petite ; la zone visible et l'orientation documentées ; deux connexions
+Bluetooth à la fois (application ENGO + OpenBridge). Ces points sont dans le firmware des lunettes : OpenBridge peut
+tester immédiatement toute build candidate sur la vraie paire. Le détail, avec nos mesures, est ci-dessous.
+
+> **Partenariat.** Ces demandes portent sur le firmware fermé des ENGO 3 (voir « Firmware et livraison » en bas).
+> OpenBridge est partenaire officiel d'ENGO et peut valider chaque build sur le matériel réel, avec preuves publiques.
 
 ## Priority 1: input
 
@@ -25,9 +30,15 @@ and `0x21 = 1`, notifications on the gesture and touch characteristics):
 | Triple tap, quadruple tap | one gesture event, value `01` (same as a double tap) |
 | Hand wave in front of the lens (ENGO 2 gesture) | nothing |
 | Touch characteristic (`...cbc`) | no notification at all |
+| Time from the double tap to the event reaching OpenBridge | about **2 s** |
 
 With one event, a menu can only move forward. Opening and going back need the phone (buttons or voice) or a timer,
 which is slow and not hands-free.
+
+**The ~2 s is in the glasses, not in OpenBridge.** On our side a tap is turned into an action in under 100 ms (the
+phone relay wakes the PC as soon as the gesture notification arrives, and the UI redraws within 50 ms). The delay and
+the way 3-4 taps collapse into one event are the firmware's own tap detection (a debounce window before it emits).
+A shorter window, or the raw per-tap events, would remove both at once.
 
 | # | Request | Why it matters | Suggested change |
 |---|---|---|---|
@@ -39,6 +50,7 @@ which is slow and not hands-free.
 | I6 | **Head gestures** (nod, shake), if an IMU is fitted | Confirm / cancel when hands are busy | Event values for nod and shake |
 | I7 | **Document the touch characteristic** | We subscribed and got nothing; we don't know what it is for | One paragraph in the SDK docs |
 | I8 | **Let the app choose the tap window** | Fast users vs gloves | A command setting the multi-tap timeout |
+| I9 | **Cut the tap-to-event latency** (about 2 s today) | The HUD should react as fast as a watch | A shorter debounce, or emit each tap as it happens and let the app group them |
 
 ## Priority 1: text
 
@@ -75,6 +87,29 @@ firmware helps every developer.
 | H1 | A touch strip with swipe on both temples | Rich navigation without the phone |
 | H2 | A microphone, or a documented way to use the phone's | "Ask the glasses" without taking the phone out |
 | H3 | A white or blue channel | Neutral text and an information colour next to green / orange / red |
+
+## Firmware and delivery
+
+Everything in "input" and "text" above lives in the glasses' firmware, which is closed:
+
+- The ActiveLook SDK updates firmware only through the signed over-the-air service
+  (`https://fw.activelook.net/v1/firmwares/{hardware}/{token}`, one token per account); the glasses verify the image
+  before installing. There is no BLE command to read the running firmware, and the documented command interface has
+  no tap-sensitivity or debounce setting. So an app cannot change tap behaviour from its side, and OpenBridge does not
+  try to read or alter the signed firmware.
+- To deliver these, the smallest paths are, in order of least effort for ENGO/Microoled:
+  1. a firmware build that **emits each tap as a separate event** (with a timestamp or a per-burst count) and drops
+     the debounce — the app then decides what 1 / 2 / 3 taps and a long press mean, so future changes need no new
+     firmware;
+  2. failing that, specific new events for single tap, long press and swipe, plus a command to set the tap window;
+  3. for OpenBridge's own validation, a **source or toolchain arrangement** under the partnership, or candidate signed
+     builds we flash over the official OTA path.
+- **What OpenBridge brings:** we have the real ENGO 3 pair on a working bridge and can test any candidate build the
+  same day, on real hardware, and publish a verified report (as we do for every device). A new gesture or font can be
+  confirmed within hours of a build landing.
+
+Contact: through the ENGO partnership channel (official partnership agreement on file; mirrored in the OpenBridge
+GitHub). Happy to join a call with the firmware team and walk through the measurements.
 
 ## How this list is kept
 

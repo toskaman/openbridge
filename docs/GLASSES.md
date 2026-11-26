@@ -65,7 +65,7 @@ the PC.
 - **Visible area:** x 0 to ~292 and y 0 to ~236 of the 304 x 256 panel on our pair (`openbridge glasses set
   --x-offset N` moves the picture if a pair differs).
 - **Input:** the ENGO 3 has one input, the **double tap on the temple** (one gesture event, value 1). Single taps
-  send nothing; 3-4 taps still send one event; the hand wave does nothing (ENGO 2 only). So: double tap = next; on
+  send nothing; 3-4 taps still send one event; the hand wave does nothing (ENGO 2 only). So: double tap = next (the glasses' firmware takes about 2 s to register it, and 3-4 taps still make one event — this is in the firmware, not OpenBridge; see [suggestions for ENGO](partners/engo/ENGO_FEATURE_REQUESTS.md)); on
   the home carousel the focused menu opens after 3 s; **Next / Open / Back / Home buttons** appear in the Companion
   while the glasses are connected; and "suivant", "ouvre", "retour", "accueil" said (or typed) alone on the
   Companion do the same.

@@ -51,13 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-26 20:30` **ENGO 3 tap latency traced to the firmware:** the ~2 s before a double tap registers, and the way extra taps are ignored, are the glasses' own tap detection, not OpenBridge (our path is under 100 ms). Documented, with a concrete firmware ask, in the [suggestions for ENGO](docs/partners/engo/ENGO_FEATURE_REQUESTS.md).
 - `2026-11-26 18:50` **Every glasses screen redrawn for the real ENGO 3:** messages, TV, sport, navigation, settings and the voice screen now fit the panel with its real font sizes; the older ENGO demo screens show upright and in colour too, and the emulator no longer draws them upside down. What we'd like from ENGO next is in a [suggestions file](docs/partners/engo/ENGO_FEATURE_REQUESTS.md). [Glasses](docs/GLASSES.md)
 - `2026-11-26 16:10` **The Oracle becomes an optional module per Companion:** switch it on or off from the PC (Controls > Modules, or `openbridge glasses module oracle on|off`) or by saying "active / retire l'Oracle" on the phone. [Glasses](docs/GLASSES.md)
-- `2026-11-26 15:45` **ENGO 3 glasses driven through the phone:** a PC without Bluetooth uses the phone's; ask the Oracle out loud on the phone, the answer appears on the glasses, in colour. [Glasses](docs/GLASSES.md)
 
 <details>
 <summary>Older updates</summary>
 
+- `2026-11-26 15:45` **ENGO 3 glasses driven through the phone:** a PC without Bluetooth uses the phone's; ask the Oracle out loud on the phone, the answer appears on the glasses, in colour. [Glasses](docs/GLASSES.md)
 - `2026-11-25 23:58` **Partner visibility in logs & GitHub CI:** hardware partner names (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) are logged explicitly on every CI run and enforced in `AGENTS.md`.
 - `2026-11-25 16:15` **VoiceAI Oracle for ENGO 3 & multi-mic devices:** instant local math, cached web search, warm local LLM, long-polling Android/Wear OS relay (`Oracle ENGO`), and universal mic connector (`mic_oracle`) rendered on the ENGO 3 HUD.
 - `2026-11-25 13:20` **AirGradient joins as hardware partner:** an AirGradient ONE (I-9PSL) indoor monitor brings air quality to OpenBridge, read over its local API. [Partner page](docs/partners/AIRGRADIENT.md)
