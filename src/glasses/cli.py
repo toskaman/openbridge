@@ -331,7 +331,7 @@ def cmd_run(args):
     def wave():
         h = holder.get('hub')
         if h:
-            h.wave()
+            h.tap_next() if holder.get('tap') else h.wave()
 
     if args.link == 'studio':
         try:
@@ -365,6 +365,15 @@ def cmd_run(args):
                     colour=__import__('src.adapters.activelook_emulator', fromlist=['is_colour']).is_colour(args.glasses_model),
                     understand=_understand_factory(args.intent_model, args.endpoint))
         holder['hub'] = hub
+        if hasattr(link, 'on_button'):                   # Next / Open / Back / Home buttons on the phone
+            link.on_button = hub.press
+        elif hasattr(getattr(link, 'main', None), 'on_button'):
+            link.main.on_button = hub.press
+        if '3' in args.glasses_model:
+            # ENGO 3: the only input is a double tap on the temple (one event, value 1; single taps send nothing and
+            # 3-4 taps still send one event, measured 26 Nov 2026). Each one is 'next'; open/back come from the phone
+            # buttons, the voice, or the 3 s auto-open on the home carousel.
+            holder['tap'] = True
         server.glasses_hub = hub
         server.glasses_control_port = args.control_port
         from src.ai import oracle as Oracle

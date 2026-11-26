@@ -80,9 +80,9 @@ class Context:
 
 # ---------------------------------------------------------------- chrome
 
-# Part of the logical canvas the wearer sees on a real ENGO 3 (with the default 20 px left offset): ~258 x 250.
-VIS_X0, VIS_X1 = 22, 282
-VIS_W, VIS_CX = VIS_X1 - VIS_X0, (22 + 282) // 2
+# Part of the logical canvas the wearer sees on a real ENGO 3 (measured: x 0-~292, y 0-~236), with a small margin.
+VIS_X0, VIS_X1 = 12, 284
+VIS_W, VIS_CX = VIS_X1 - VIS_X0, (12 + 284) // 2
 
 def status_bar(p: Panel, ctx: Context):
     tm = time.localtime(ctx.clock())
@@ -265,7 +265,7 @@ class Home(Screen):
         p.circle(cx, cy, 43, 'accent_dim')
         I.draw(p, cur[1], cx, cy, 20, 'primary')
         for side, k in ((-1, (self.focus - 1) % n), (1, (self.focus + 1) % n)):
-            sx = cx + side * 96
+            sx = cx + side * 104
             p.circle(sx, cy, 18, 'faint')
             I.draw(p, items[k][1], sx, cy, 9, 'muted')
         p.text_center(cx, 144, fit(cur[0], 2, VIS_W - 8), 2, 'primary')
@@ -858,20 +858,25 @@ class Menu:
 
 
 class GestureDecoder:
-    """The ENGO gesture sensor reports single waves. 1 wave = next, 2 within WINDOW = ok, 3 = back."""
+    """The glasses report single input events: a wave (ENGO 1/2 sensor) or, on the ENGO 3, a double tap on the temple
+    (measured 26 Nov 2026: the hand wave does nothing there, each double tap arrives as one event).
+    1 event = next, 2 within the window = ok, 3 = back. A double tap takes longer to repeat than a wave, hence the
+    longer window for the ENGO 3 (TAP_WINDOW)."""
     WINDOW = 0.7
+    TAP_WINDOW = 1.6
 
-    def __init__(self, clock=time.monotonic):
+    def __init__(self, clock=time.monotonic, window=None):
         self.clock, self.count, self.last = clock, 0, 0.0
+        self.window = self.WINDOW if window is None else window
 
     def wave(self):
         now = self.clock()
-        self.count = self.count + 1 if now - self.last <= self.WINDOW else 1
+        self.count = self.count + 1 if now - self.last <= self.window else 1
         self.last = now
 
     def poll(self):
         """Call regularly; returns an event once the burst of waves is over."""
-        if self.count and self.clock() - self.last > self.WINDOW:
+        if self.count and self.clock() - self.last > self.window:
             n, self.count = self.count, 0
             return {1: 'next', 2: 'ok'}.get(n, 'back')
         return None

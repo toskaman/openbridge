@@ -78,7 +78,7 @@ class PanelTests(unittest.TestCase):
         self.assertNotEqual(a.to_bytes(), b.to_bytes())
         self.assertEqual(a._p(0, 0), (303, 255))
         self.assertEqual(b._p(0, 0), (0, 0))
-        self.assertEqual(Panel()._p(20, 0), (303, 255))      # default: picture moved 20 px left
+        self.assertEqual(Panel()._p(0, 0), (303, 255))       # default: no offset (whole width visible)
 
     def test_upright_text_uses_rotation_4_at_flipped_anchor(self):
         import struct

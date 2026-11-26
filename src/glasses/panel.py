@@ -22,9 +22,10 @@ from src.adapters import activelook as AL
 
 W, H = 304, 256
 TEXT_ROT_UPRIGHT = 4               # ActiveLook text rotation that reads upright on the real glasses
-# Only part of the 304-px width is visible through the ENGO 3 optics (about x 0-258 on our pair, 26 Nov 2026), so the
-# layout (designed on 14-290) is moved left by default. `openbridge glasses set --x-offset N` tunes it per pair.
-X_OFFSET = -20
+# Visible window measured on our ENGO 3 (26 Nov 2026, lines at known positions): x 0 to ~292, y 0 to ~236 of the
+# 304 x 256 panel, so no horizontal offset is needed. `openbridge glasses set --x-offset N` moves the picture if a pair
+# (or the ENGO app's display position) differs.
+X_OFFSET = 0
 SAFE = (14, 12, 290, 244)          # x0, y0, x1, y1 kept clear of the lens edge
 
 # font id -> (line height px, average advance px). Measured on a real ENGO 3 on 26 Nov 2026 (fonts 1-3: a word of n

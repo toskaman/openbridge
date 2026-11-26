@@ -45,7 +45,9 @@ final class RelayServer {
         /** Live data flow for the UI: out = this device -> PC. label = operation, bytes = payload size. */
         default void flow(boolean out, String label, int bytes) { }
         /** Owner switched an optional module (Oracle...) on or off from the PC. */
-        default void modulesChanged() { } }
+        default void modulesChanged() { }
+        /** Glasses link state changed (READY shows the navigation buttons). */
+        default void glassesState(String state) { } }
     interface OracleListener { void onOracleResult(String text); }
     private volatile OracleListener oracleListener;
     void setOracleListener(OracleListener l) { this.oracleListener = l; }
@@ -149,7 +151,7 @@ final class RelayServer {
     synchronized GlassesLink glasses() {
         if (glasses == null) {
             glasses = new GlassesLink(ctx);
-            glasses.setListener((st, n) -> ui.status("Glasses " + (n == null || n.isEmpty() ? "" : n + " ") + "· " + st.toLowerCase()));
+            glasses.setListener((st, n) -> { ui.status("Glasses " + (n == null || n.isEmpty() ? "" : n + " ") + "· " + st.toLowerCase()); ui.glassesState(st); });
         }
         return glasses;
     }

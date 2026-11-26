@@ -220,10 +220,13 @@ class PhoneLink:
 
     BATCH_BYTES, BATCH_CHUNKS = 4096, 60
 
-    def __init__(self, on_gesture, send, address=None, takeover=False, on_status=None, connect_seconds=8):
+    def __init__(self, on_gesture, send, address=None, takeover=False, on_status=None, connect_seconds=8,
+                 on_touch=None):
         import os
         from src.glasses.transport import Backoff, ControllerLock, Transport
         self.on_gesture, self.send = on_gesture, send
+        self.on_touch = on_touch or on_gesture          # tap on the temple (ENGO 3); defaults to a wave
+        self.on_button = lambda ev: None                # set by the hub owner: Next / Open / Back / Home on the phone
         self.on_status = on_status or (lambda *a: None)
         self.address, self.connect_seconds = address, connect_seconds
         self.lock = ControllerLock('pc-via-phone:%d' % os.getpid())
@@ -246,6 +249,7 @@ class PhoneLink:
         threading.Thread(target=self._events, name='glasses-phone-rx', daemon=True).start()
 
     def _connect(self):
+        import base64
         params = {'seconds': self.connect_seconds, 'name_hint': 'ENGO'}
         if self.address:
             params['address'] = self.address
@@ -259,6 +263,14 @@ class PhoneLink:
             self.tr.paused = False
         self.state, self.error = 'READY', None
         self.backoff.reset()
+        # Gesture sensor and touch on: ActiveLook commands 0x20 (sensor) and 0x21 (gesture), both 'on'. The ENGO app
+        # may have switched them off; they are what lets a wave or a tap drive the menus.
+        try:
+            from src.adapters.activelook import encode_packet
+            self.send('glasses_write', {'chunks': [base64.b64encode(encode_packet(0x20, b'\x01')).decode('ascii'),
+                                                   base64.b64encode(encode_packet(0x21, b'\x01')).decode('ascii')]})
+        except Exception:                            # noqa: BLE001 - menus still work from the phone and the PC
+            pass
         self.on_status(self.state, None)
 
     def _lost(self, why):
@@ -270,11 +282,16 @@ class PhoneLink:
     def _handle(self, events):
         for e in events or ():
             t = e.get('t') if isinstance(e, dict) else None
-            if t == 'gesture':
+            if t in ('gesture', 'touch'):          # hand wave, or tap on the temple
                 self.stats['gestures'] += 1
                 try:
-                    self.on_gesture()
+                    (self.on_touch if t == 'touch' else self.on_gesture)()
                 except Exception:                    # noqa: BLE001 - a UI error must not kill the link
+                    pass
+            elif t == 'button' and e.get('v') in ('next', 'ok', 'back', 'home'):
+                try:
+                    self.on_button(e['v'])
+                except Exception:                    # noqa: BLE001
                     pass
             elif t == 'flow':
                 with self._tlock:
@@ -438,6 +455,21 @@ class Hub:
 
     def press(self, ev):
         self.events.put(ev)
+        self._auto_open_at = None                       # any explicit input cancels the pending auto-open
+
+    AUTO_OPEN_S = 3.0
+
+    def tap_next(self):
+        """ENGO 3 double tap: next item; on the home carousel the item opens by itself after AUTO_OPEN_S."""
+        self.events.put('next')
+        self._auto_open_at = self.clock() + self.AUTO_OPEN_S if isinstance(self.menu.screen, ui.Home) else None
+
+    def _auto_open(self):
+        at = getattr(self, '_auto_open_at', None)
+        if at is not None and self.clock() >= at:
+            self._auto_open_at = None
+            if isinstance(self.menu.screen, ui.Home):  # only the home carousel: opening a menu, never an action
+                self.events.put('ok')
 
     def notify(self, n):
         item = self.inbox.add(n)
@@ -561,6 +593,7 @@ class Hub:
         return frame
 
     def tick(self):
+        self._auto_open()
         ev = self.gestures.poll()
         if ev:
             self.events.put(ev)

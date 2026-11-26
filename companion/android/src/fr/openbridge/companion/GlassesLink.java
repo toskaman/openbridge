@@ -33,7 +33,8 @@ final class GlassesLink {
     static final UUID SERVICE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb7");
     static final UUID RX = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cba");
     static final UUID FLOW = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cb9");
-    static final UUID GESTURE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbb");
+    static final UUID GESTURE = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbb");   // hand wave (sensor)
+    static final UUID TOUCH = UUID.fromString("0783b03e-8535-b5a0-7140-a304d2495cbc");     // tap on the temple (ENGO 3)
     static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     static final int MAX_CHUNKS = 64, MAX_BATCH = 8192, MAX_EVENTS = 64, WANT_MTU = 247;
 
@@ -101,10 +102,13 @@ final class GlassesLink {
 
     private void changed(UUID u, byte[] v) {
         try {
-            if (GESTURE.equals(u)) { gestures++; event(new JSONObject().put("t", "gesture")); }
+            if (GESTURE.equals(u)) { gestures++; event(new JSONObject().put("t", "gesture").put("v", hexOf(v))); }
+            else if (TOUCH.equals(u)) { gestures++; event(new JSONObject().put("t", "touch").put("v", hexOf(v))); }
             else if (FLOW.equals(u) && v != null && v.length > 0) event(new JSONObject().put("t", "flow").put("v", v[0] & 0xff));
         } catch (Exception ignored) { }
     }
+
+    private static String hexOf(byte[] v) { StringBuilder b = new StringBuilder(); if (v != null) for (int i = 0; i < v.length && i < 8; i++) b.append(String.format("%02x", v[i])); return b.toString(); }
 
     private void done(int status) { synchronized (lock) { opStatus = status; opDone = true; lock.notifyAll(); } }
 
@@ -153,7 +157,7 @@ final class GlassesLink {
                 if (rx == null) throw new SecurityException("glasses: RX characteristic missing");
                 opDone = false;
                 if (gatt.requestMtu(WANT_MTU)) { try { await(2_000, "MTU"); } catch (SecurityException ignored) { } }
-                for (UUID u : new UUID[]{FLOW, GESTURE}) subscribe(s.getCharacteristic(u));
+                for (UUID u : new UUID[]{FLOW, GESTURE, TOUCH}) subscribe(s.getCharacteristic(u));
                 try { gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }
                 setState("READY");
                 synchronized (events) { events.clear(); }
@@ -252,6 +256,14 @@ final class GlassesLink {
         }
         return out;
     }
+
+    /** A navigation button pressed on the phone (next, ok, back, home): delivered with the glasses' own events. */
+    void button(String ev) {
+        if (!"READY".equals(state) || !ev.matches("next|ok|back|home")) return;
+        try { event(new JSONObject().put("t", "button").put("v", ev)); } catch (Exception ignored) { }
+    }
+
+    String state() { return state; }
 
     void disconnect() { synchronized (lock) { disconnectLocked(); } setState("IDLE"); }
 

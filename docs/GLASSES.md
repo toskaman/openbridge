@@ -62,8 +62,13 @@ the PC.
   (`--rotate on` turns the picture by 180° for an unusual mount).
 - **Colours:** grey levels show yellow; the ENGO 3 has 81 red-green colours (no blue, no white), drawn with the colour
   commands and the official palette. OpenBridge uses green (ok), orange (warning), red (refused) and lime (accent).
-- **Visible area:** about x 0-258 of the 304-px width on our pair; the picture is moved 20 px left by default
-  (`openbridge glasses set --x-offset N`).
+- **Visible area:** x 0 to ~292 and y 0 to ~236 of the 304 x 256 panel on our pair (`openbridge glasses set
+  --x-offset N` moves the picture if a pair differs).
+- **Input:** the ENGO 3 has one input, the **double tap on the temple** (one gesture event, value 1). Single taps
+  send nothing; 3-4 taps still send one event; the hand wave does nothing (ENGO 2 only). So: double tap = next; on
+  the home carousel the focused menu opens after 3 s; **Next / Open / Back / Home buttons** appear in the Companion
+  while the glasses are connected; and "suivant", "ouvre", "retour", "accueil" said (or typed) alone on the
+  Companion do the same.
 - **Characters:** the fonts are ASCII only; accents are folded (`été` -> `ete`).
 - **Fonts:** line heights 24 / 24 / 38 / 64 px for ids 0-3 (24 px is the smallest text); a word of n letters is
   about n x height / 2 wide. Screens are being redrawn for these sizes: the home screen and the Oracle are done.

@@ -72,6 +72,27 @@ class CompanionCommands:
         amb = (doc.get('ambiguities') or ['no detail'])
         return f"{'Unsupported' if st == 'unsupported' else 'Escalation needed'}: {amb[0]}"
 
+    NAV_WORDS = {'suivant': 'next', 'next': 'next', 'ouvre': 'ok', 'ouvrir': 'ok', 'open': 'ok', 'ok': 'ok',
+                 'valide': 'ok', 'retour': 'back', 'back': 'back', 'reviens': 'back', 'accueil': 'home',
+                 'home': 'home', 'menu': 'home'}
+
+    def _glasses_nav(self, rid, c, said):
+        """'suivant', 'ouvre', 'retour', 'accueil' said alone on a Companion drive the glasses menus (only when a
+        glasses hub runs; a longer order such as 'ouvre YouTube' is never taken as navigation)."""
+        hub = getattr(self.server, 'glasses_hub', None)
+        import unicodedata
+        words = ''.join(ch for ch in unicodedata.normalize('NFKD', str(said or '').lower())
+                        if not unicodedata.combining(ch)).strip(' .!?').split()
+        if hub is None or len(words) != 1 or words[0] not in self.NAV_WORDS:
+            return False
+        hub.press(self.NAV_WORDS[words[0]])
+        try:
+            self._send(rid, 'report_command', {'request_id': c['request_id'], 'status': 'resolved',
+                                               'text': 'Glasses: ' + self.NAV_WORDS[words[0]]})
+        except fabric_relay.RelayError:
+            pass
+        return True
+
     def _module_toggle(self, rid, c, said):
         """'désactive l'Oracle' typed or spoken on a Companion: switch the module on that device and say so."""
         from src.runtime import companion_modules as M
@@ -119,6 +140,8 @@ class CompanionCommands:
                     if said is None:
                         continue
                     if self._module_toggle(rid, c, said):
+                        continue
+                    if self._glasses_nav(rid, c, said):
                         continue
                     if c.get('kind') == 'voice':
                         c = dict(c, kind='text', text=said)

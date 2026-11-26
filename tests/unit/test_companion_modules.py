@@ -93,6 +93,7 @@ class PhoneLinkBatching(unittest.TestCase):
                 return {'state': 'READY', 'events': []}
             return {'state': 'IDLE'}
         link = PhoneLink(lambda: gestures.append(1), send, takeover=True)
+        sent.clear()                                         # the gesture-sensor switch-on sent at connection
         try:
             link.write(bytes(range(256)) * 40)               # 10 240 bytes
             for _ in range(100):
@@ -105,6 +106,40 @@ class PhoneLinkBatching(unittest.TestCase):
         self.assertTrue(all(len(c) <= 244 for b in sent for c in b))
         self.assertTrue(all(sum(len(c) for c in b) <= PhoneLink.BATCH_BYTES for b in sent))
         self.assertTrue(gestures)
+
+
+class GlassesNavigation(unittest.TestCase):
+    def test_phone_buttons_and_auto_open(self):
+        from src.glasses import hub as G
+        from src.glasses import ui
+        now = [100.0]
+        h = G.Hub(link=G.NullLink(), settings={}, clock=lambda: now[0])
+        h.tap_next()
+        self.assertEqual(h.events.get_nowait(), 'next')
+        now[0] += 3.1
+        h._auto_open()
+        self.assertEqual(h.events.get_nowait(), 'ok')          # home carousel opens the focused menu by itself
+        h.tap_next()
+        h.events.get_nowait()
+        h.press('back')                                        # an explicit input cancels the auto-open
+        h.events.get_nowait()
+        now[0] += 5
+        h._auto_open()
+        self.assertTrue(h.events.empty())
+        self.assertIsInstance(h.menu.screen, ui.Home)
+
+    def test_single_navigation_words_only(self):
+        from src.runtime.companion_commands import CompanionCommands
+        pressed, sent = [], []
+        srv = type('S', (), {})()
+        srv.glasses_hub = type('Hub', (), {'press': lambda self, ev: pressed.append(ev)})()
+        cc = CompanionCommands(srv)
+        cc._send = lambda rid, op, params=None: sent.append(op) or {}
+        c = {'request_id': 'a' * 32}
+        self.assertTrue(cc._glasses_nav('r', c, 'Retour.'))
+        self.assertTrue(cc._glasses_nav('r', c, 'ouvre'))
+        self.assertFalse(cc._glasses_nav('r', c, 'ouvre YouTube sur la télé'))
+        self.assertEqual(pressed, ['back', 'ok'])
 
 
 if __name__ == '__main__':
