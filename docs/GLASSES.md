@@ -62,6 +62,25 @@ glasses' screen, takes the volume keys as next / back, sends the phone's GPS and
 screens when the owner allows it, and can drive the glasses alone when the PC is away (standalone mode). Details:
 [Android Companion](ANDROID_COMPANION.md#0150-27-november-2026).
 
+## Wear OS watch: full ENGO 3 controls on the fly (ENGO × ActiveLook by Microoled)
+
+When a Wear OS watch running OpenBridge Companion (`android.hardware.type.watch` / `form_factor: watch`) is detected,
+every ENGO 3 hardware and HUD control fits cleanly on the watch across four `<= 12`-control pages (`main`, `screens`,
+`display`, `align`), each carrying a live status header tile and routed through OpenBridge's signed `RemoteControls` +
+`Router` + `Executor` channel (`engo_control` skill):
+
+- **Covered controls:** navigation (`next`, `ok`, `back`, `home`, D-pad), all 9 HUD screens (`home`, `inbox`, `oracle`,
+  `voice`, `sport`, `tv`, `vacuum`, `calibration`, `settings`), BLE display power (`0x00`), brightness (`0x10`), ALS auto-luma
+  (`0x22`), temple tap/gesture enable (`0x21`), OLED clear (`0x01`), optical alignment shift (`0x09`), 180° rotation,
+  privacy mode, language (`FR`/`EN`), units (`metric`/`imperial`) and inbox clear.
+- **Zero clutter when no watch is paired:** the watch button in Companion (`ENGO 3 Controls`) only renders on
+  `watch` hardware, and the PC Web UI (`Controls` and `Settings`) hides the watch panel whenever
+  `GET /api/v2/engo_watch_controls` reports `watch_detected: false`.
+- **On-the-fly activation:** ask by text or voice in French or English (from the watch, phone or PC Ask OpenBridge — e.g.
+  `"affiche tous les contrôles ENGO 3 sur ma montre"`, `"affiche les réglages de la ENGO 3 sur la montre"`,
+  `"masque les contrôles ENGO de la montre"`), toggle in **Settings / Controls** when a watch is detected, or run
+  `openbridge glasses watch-controls show|hide|status`.
+
 ## Display facts measured on a real ENGO 3 (26 November 2026)
 
 - **Orientation:** both axes are mirrored and upright text needs text rotation 4; OpenBridge does this by default
@@ -169,6 +188,7 @@ openbridge glasses set --rotate on                       # if the calibration ar
 openbridge glasses notify --app telegram --from "Maman" --text "Tu viens ?"
 openbridge glasses say "monte le son de la télé"
 openbridge glasses status
+openbridge glasses watch-controls status|show|hide --page main --lang fr
 ```
 
 `python dev/glasses_e2e.py --out <dir> [--tv-volume] [--voice]` drives a running hub step by step through its control

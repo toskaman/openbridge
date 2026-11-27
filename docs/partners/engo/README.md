@@ -88,12 +88,14 @@ python -m unittest tests/unit/test_activelook.py tests/unit/test_engo_killer_fea
 ## 📦 Code delivered
 
 - **Protocol adapter:** [`src/adapters/activelook.py`](../../../src/adapters/activelook.py)
+- **Wear OS watch complete ENGO 3 controller:** [`src/glasses/watch_controls.py`](../../../src/glasses/watch_controls.py)
 - **AI, voice and sensory-proxy bridge:** [`src/adapters/engo_ai_bridge.py`](../../../src/adapters/engo_ai_bridge.py)
 - **Visual emulator and virtual BLE server:** [`src/adapters/activelook_emulator.py`](../../../src/adapters/activelook_emulator.py)
 - **HUD Studio (pro emulator):** [`src/adapters/hud_studio.py`](../../../src/adapters/hud_studio.py), F01–F38 catalogue [`src/adapters/hud_features.py`](../../../src/adapters/hud_features.py), ALooK bank [`src/adapters/alook_layouts.py`](../../../src/adapters/alook_layouts.py)
 - **Official ActiveLook app → emulator bridge:** [`dev/build_activelook_openbridge.py`](../../../dev/build_activelook_openbridge.py), [`dev/repatch_nosplit_bridge.py`](../../../dev/repatch_nosplit_bridge.py)
-- **Dedicated test suites (82/82 passing, emulator only):**
+- **Dedicated test suites (emulator / captured-frame verified):**
   - [`tests/unit/test_activelook.py`](../../../tests/unit/test_activelook.py)
+  - [`tests/unit/test_engo_watch_controls.py`](../../../tests/unit/test_engo_watch_controls.py)
   - [`tests/unit/test_engo_killer_features.py`](../../../tests/unit/test_engo_killer_features.py)
   - [`tests/unit/test_engo_ai_bridge.py`](../../../tests/unit/test_engo_ai_bridge.py)
   - [`tests/unit/test_engo_openbridge_neural_integration.py`](../../../tests/unit/test_engo_openbridge_neural_integration.py)

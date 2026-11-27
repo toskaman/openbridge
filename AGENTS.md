@@ -23,8 +23,9 @@ Every change that ships (feature, partner, doc, fix people would notice) adds on
 1. Format: ``- `YYYY-MM-DD HH:MM` **Short title:** one plain sentence.`` Paris time, newest first.
 2. Keep the 3 newest entries visible; move older ones inside the `<details>` block ("Older updates").
 3. Add the same entry, translated, to `README.fr.md` (same date and time).
-4. Also add the matching CHANGELOG line.
-5. `tests/unit/test_whats_new.py` checks the format, the order and that both languages match.
+4. Also add the matching `CHANGELOG.md` line under `## Unreleased`.
+5. Update affected hardware partner pages/docs (`docs/partners/*.md`, `docs/partners/<partner>/README.md`, `docs/GLASSES.md`, `docs/ANDROID_COMPANION.md`), `docs/api/openapi.json` (if API changed), and run `tests.unit.test_whats_new` + `tests.unit.test_partner_commitments` + `python -m dev.device_registry --check` before pushing/merging to GitHub.
+6. `tests/unit/test_whats_new.py` checks the format, the order and that both languages match.
 
 ## Glasses: what the hardware is missing goes to ENGO (always)
 
