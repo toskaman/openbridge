@@ -105,6 +105,8 @@ final class RelayServer {
     private final Map<String, JSONObject> replies = new LinkedHashMap<>();
     private volatile boolean running;
     private static RelayServer instance;
+    /** Last signed request from the paired PC (local AI decides "the PC is away" from it). */
+    static volatile long lastPcAt;
     volatile boolean foreground;
 
     /** One relay per process: survives the activity being destroyed while a settings screen is open (low-RAM TVs). */
@@ -151,7 +153,11 @@ final class RelayServer {
     synchronized GlassesLink glasses() {
         if (glasses == null) {
             glasses = new GlassesLink(ctx);
-            glasses.setListener((st, n) -> { ui.status("Glasses " + (n == null || n.isEmpty() ? "" : n + " ") + "· " + st.toLowerCase()); ui.glassesState(st); });
+            glasses.setListener((st, n) -> {
+                ui.status("Glasses " + (n == null || n.isEmpty() ? "" : n + " ") + "· " + st.toLowerCase()); ui.glassesState(st);
+                Diag.log("glasses " + st.toLowerCase());
+                try { GlassesWidget.refreshAll(ctx); } catch (Exception ignored) { }
+            });
         }
         return glasses;
     }
@@ -159,12 +165,33 @@ final class RelayServer {
     RelayServer(Context ctx, Ui ui) {
         this.ctx = ctx; this.ui = ui;
         this.prefs = ctx.getSharedPreferences("relay", Context.MODE_PRIVATE);
+        Profiles.startAuto(ctx);
+        if (StandaloneHub.enabled(ctx)) StandaloneHub.get(ctx).start();
     }
 
     boolean paired() { return prefs.contains("key"); }
     /** Optional module: the Oracle screen. On unless the owner switched it off (PC customisation, CLI or voice). */
-    boolean moduleOracle() { return prefs.getBoolean("module_oracle", true); }
-    JSONObject modules() throws Exception { return new JSONObject().put("oracle", moduleOracle()); }
+    boolean moduleOracle() { return module("oracle"); }
+    /** Optional modules, each switched on the phone (Settings), from the PC (Controls > Modules, CLI) or by voice. */
+    static final String[] MODULES = {"oracle", "messages", "sport", "tv", "vacuum", "sensors"};
+    static boolean knownModule(String m) { for (String x : MODULES) if (x.equals(m)) return true; return false; }
+    boolean module(String m) { return prefs.getBoolean("module_" + m, !"sensors".equals(m)); }   // sensors: off until the owner turns them on
+    void setModule(String m, boolean on) {
+        if (!knownModule(m)) return;
+        prefs.edit().putBoolean("module_" + m, on).apply();
+        Diag.log("module " + m + " " + (on ? "on" : "off"));
+        ui.modulesChanged();
+    }
+    JSONObject modules() throws Exception {
+        JSONObject o = new JSONObject();
+        for (String m : MODULES) o.put(m, module(m));
+        return o;
+    }
+    /** Device cards pushed by the PC (op set_cards): what each device is doing, for the Devices page. */
+    JSONArray cards() {
+        try { return new JSONArray(prefs.getString("cards", "[]")); } catch (Exception e) { return new JSONArray(); }
+    }
+    long cardsAt() { return prefs.getLong("cards_at", 0); }
     boolean ownerEnabled() { return prefs.getBoolean("owner_enabled", false); }
     void setOwnerEnabled(boolean v) { prefs.edit().putBoolean("owner_enabled", v).apply(); }
     /** Standing owner consent for PC-initiated invokes. Explicit on-device toggle only, default off. */
@@ -288,6 +315,36 @@ final class RelayServer {
             } catch (Exception e) { return "Could not queue the voice clip"; }
         }
         return "Sent voice to your PC…";
+    }
+
+    /** Visual Oracle: a JPEG photo (shrunk on the phone) and the owner's question. Held and downloaded exactly like a
+     *  voice clip (same signed, encrypted, one-at-a-time path); the PC answers with a local vision model. */
+    String submitPhoto(byte[] jpeg, String question) {
+        if (!paired()) return "Not paired with a PC";
+        if (jpeg == null || jpeg.length < 1000 || jpeg.length > VOICE_MAX_BYTES) return "Photo too large";
+        String q = question == null ? "" : question.trim();
+        if (q.length() > 300) q = q.substring(0, 300);
+        synchronized (commands) {
+            if (commands.size() >= MAX_COMMANDS) return "Too many pending commands; wait for the PC";
+            try {
+                String lang = java.util.Locale.getDefault().getLanguage().startsWith("fr") ? "fr" : "en";
+                String clip = "p" + hex(bytes(6));
+                MessageDigest sha = MessageDigest.getInstance("SHA-256");
+                String req = hex(bytes(16));
+                JSONObject item = new JSONObject().put("request_id", req).put("kind", "vision").put("clip_id", clip)
+                        .put("bytes", jpeg.length).put("sha256", hex(sha.digest(jpeg))).put("lang", lang).put("quality", "auto").put("text", q);
+                commands.add(item);
+                clips.put(clip, jpeg); clipRequest.put(clip, req); voiceRequests.add(req);
+                while (clips.size() > MAX_CLIPS) {
+                    String old = clips.keySet().iterator().next();
+                    clips.remove(old); String rq = clipRequest.remove(old); voiceRequests.remove(rq);
+                    commands.removeIf(o -> rq != null && rq.equals(o.optString("request_id")));
+                }
+                commands.notifyAll();
+            } catch (Exception e) { return "Could not queue the photo"; }
+        }
+        Diag.log("photo queued for the visual Oracle (" + jpeg.length / 1024 + " KB)");
+        return "Sent — the answer will show on your glasses";
     }
 
     /** One-shot signed download of a queued voice clip. Mirrors the PC's voice_url HMAC byte for byte. */
@@ -463,7 +520,9 @@ final class RelayServer {
         JSONObject reply;
         String[] opOut = new String[]{ msg.optString("op", sealed ? "sealed" : "request") };
         try {
+            long t0 = System.nanoTime();
             reply = dispatch(msg, sealed, opOut);
+            Diag.op(opOut[0], (System.nanoTime() - t0) / 1_000_000L);
             String rn = msg.optString("nonce");
             if (!rn.isEmpty()) {
                 synchronized (seen) {
@@ -530,6 +589,8 @@ final class RelayServer {
         }
         String op = cmd.getString("op");
         opOut[0] = op;
+        lastPcAt = System.currentTimeMillis();
+        if (op.startsWith("glasses_") && StandaloneHub.enabled(ctx)) StandaloneHub.get(ctx).pcSeen();
         JSONObject params = new JSONObject();
         switch (op) {
             case "discover_capabilities": case "get_status": case "get_permissions":
@@ -661,18 +722,42 @@ final class RelayServer {
             case "glasses_disconnect": glasses().disconnect(); params = glasses().status(); break;
             case "set_modules": {
                 JSONObject p = cmd.getJSONObject("params");
-                if (p.length() == 0 || p.length() > 4) throw new SecurityException("bounds");
+                if (p.length() == 0 || p.length() > MODULES.length) throw new SecurityException("bounds");
                 java.util.Iterator<String> keys = p.keys();
                 SharedPreferences.Editor ed = prefs.edit();
                 while (keys.hasNext()) {
                     String k = keys.next();
-                    if (!"oracle".equals(k) || !(p.get(k) instanceof Boolean)) throw new SecurityException("unknown module");
-                    ed.putBoolean("module_oracle", p.getBoolean(k));
+                    if (!knownModule(k) || !(p.get(k) instanceof Boolean)) throw new SecurityException("unknown module");
+                    ed.putBoolean("module_" + k, p.getBoolean(k));
+                    Diag.log("module " + k + " " + (p.getBoolean(k) ? "on" : "off") + " (from the PC)");
                 }
                 ed.apply();
                 ui.modulesChanged();
                 params.put("modules", modules()); break;
             }
+            case "set_cards": {           // device cards for the Devices page: display only, never actions
+                JSONArray in = cmd.getJSONObject("params").getJSONArray("cards");
+                if (in.length() > 16) throw new SecurityException("bounds");
+                JSONArray out = new JSONArray();
+                for (int i = 0; i < in.length(); i++) {
+                    JSONObject c = in.getJSONObject(i), o = new JSONObject();
+                    for (String k : new String[]{"id", "title", "kind", "state", "detail"}) {
+                        String v = c.optString(k, "");
+                        if (v.length() > 80) v = v.substring(0, 80);
+                        o.put(k, v);
+                    }
+                    String tone = c.optString("tone", "");
+                    o.put("tone", tone.matches("ok|warn|alert|muted") ? tone : "");
+                    out.put(o);
+                }
+                prefs.edit().putString("cards", out.toString()).putLong("cards_at", System.currentTimeMillis()).apply();
+                params.put("cards", out.length()); break;
+            }
+            case "get_sessions":          // sport sessions recorded in standalone mode, handed over once
+                params.put("sessions", StandaloneHub.get(ctx).takeSessions()); break;
+            case "get_sensors":           // the phone's own sensors, only when the owner switched the Sensors module on
+                if (!module("sensors")) throw new SecurityException("sensors module is off on this phone");
+                params.put("sensors", PhoneSensors.get(ctx).snapshot()); break;
             case "get_notifications":     // messages for the glasses; empty unless the owner granted notification access
                 params.put("notifications", NotifListener.accessGranted(ctx) ? NotifListener.drain() : new JSONArray()); break;
             default: throw new SecurityException("unknown op");
@@ -690,10 +775,13 @@ final class RelayServer {
         if (NotifListener.accessGranted(ctx)) caps.put("notifications");
         caps.put(Aead.VERSION);
         caps.put("modules");
+        caps.put("cards");
+        if (module("sensors")) caps.put("phone_sensors");
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
                 .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("full_control", fullControl())
-                .put("language", L.resolved(ctx)).put("modules", modules());
+                .put("language", L.resolved(ctx)).put("modules", modules()).put("profile", Profiles.current(ctx))
+                .put("standalone", StandaloneHub.enabled(ctx));
     }
 
     private synchronized JSONObject pairRequest(JSONObject msg) throws Exception {

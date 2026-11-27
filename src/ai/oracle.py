@@ -11,6 +11,7 @@ It replies with <= 3 short lines (<= 32 chars/line) optimised for 304x256 MicroO
 """
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -501,6 +502,57 @@ def push_oracle_to_hud(
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+_VISION_MODEL = os.environ.get('OB_VISION_MODEL', '')
+_VISION_PICK: dict = {}
+
+
+def vision_model(timeout: float = 4.0) -> Optional[str]:
+    """The local Ollama model used for the visual Oracle: OB_VISION_MODEL, or the smallest installed model that
+    declares the 'vision' capability. None when there is none (the answer then says so)."""
+    if _VISION_MODEL:
+        return _VISION_MODEL
+    if 'name' in _VISION_PICK and time.monotonic() - _VISION_PICK['at'] < 600:
+        return _VISION_PICK['name']
+    base = _OLLAMA_URL.rsplit('/api/', 1)[0]
+    best = None
+    try:
+        with urllib.request.urlopen(base + '/api/tags', timeout=timeout) as r:
+            models = json.loads(r.read()).get('models', [])
+        for m in sorted(models, key=lambda m: m.get('size', 1 << 60)):
+            info = _http_post_json(base + '/api/show', {'model': m['name']}, timeout=timeout) or {}
+            if 'vision' in (info.get('capabilities') or []):
+                best = m['name']
+                break
+    except Exception:
+        best = None
+    _VISION_PICK.update(name=best, at=time.monotonic())
+    return best
+
+
+def vision_answer(jpeg: bytes, question: str, lang: str = 'fr', timeout: float = 90.0) -> dict:
+    """Visual Oracle: a photo from the phone and the owner's question, answered by a local vision model.
+    Same result shape as oracle_answer (query_class VISION)."""
+    t0 = time.monotonic()
+    q = ' '.join(str(question or '').split()) or ("Qu'est-ce que c'est ?" if lang == 'fr' else 'What is this?')
+    model = vision_model()
+    answer, source = None, 'unavailable'
+    if model:
+        try:
+            data = _http_post_json(_OLLAMA_URL, {
+                'model': model, 'prompt': q, 'system': ORACLE_SYSTEM_PROMPT, 'stream': False, 'think': False,
+                'images': [base64.b64encode(jpeg).decode('ascii')], 'keep_alive': '5m',
+                'options': {'num_predict': 80, 'num_ctx': 4096, 'temperature': 0.2}}, timeout=timeout) or {}
+            answer = (data.get('response') or '').strip() or None
+            source = 'ollama_vision:' + model if answer else 'unavailable'
+        except Exception:
+            answer = None
+    if not answer:
+        answer = ("Pas de modele de vision\nsur ce PC" if lang == 'fr' else "No vision model\non this PC") if not model \
+            else ("Image non analysee" if lang == 'fr' else "Could not read the image")
+    return {'query_class': 'VISION', 'answer': _format_hud(answer), 'latency_ms': int((time.monotonic() - t0) * 1000),
+            'source': source, 'transcript': q}
+
+
 def oracle_answer(
     transcript: str,
     timeout: float = 8.0,

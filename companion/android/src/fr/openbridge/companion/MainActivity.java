@@ -215,6 +215,25 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         grl.topMargin = dp(10);
         flowRow.addView(glassesRow, grl);
         glassesRow.setVisibility("READY".equals(RelayServer.get(this, null).glasses().state()) ? View.VISIBLE : View.GONE);
+        // Pages: glasses (live screen, remote), devices, phone sensors, settings (modules, profiles, messages, AI).
+        LinearLayout pages = new LinearLayout(this); pages.setOrientation(LinearLayout.VERTICAL);
+        Object[][] defs = tv ? new Object[][]{{L.t("Devices"), DevicesActivity.class}, {L.t("Settings"), SettingsActivity.class}}
+                : watch ? new Object[][]{{L.t("Glasses"), GlassesActivity.class}, {L.t("Devices"), DevicesActivity.class}}
+                : new Object[][]{{L.t("Glasses"), GlassesActivity.class}, {L.t("Devices"), DevicesActivity.class},
+                                 {L.t("Sensors"), SensorsActivity.class}, {L.t("Settings"), SettingsActivity.class}};
+        LinearLayout prow = null;
+        for (int i = 0; i < defs.length; i++) {
+            if (i % 2 == 0) { prow = new LinearLayout(this); prow.setOrientation(LinearLayout.HORIZONTAL); pages.addView(prow); }
+            Button pb = button((String) defs[i][0], PillIcon.SPARK, VIOLET, STYLE_NORMAL);
+            final Class<?> target = (Class<?>) defs[i][1];
+            pb.setOnClickListener(v -> startActivity(new Intent(this, target)));
+            LinearLayout.LayoutParams pl = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            pl.setMargins(dp(3), dp(3), dp(3), dp(3));
+            prow.addView(pb, pl);
+        }
+        LinearLayout.LayoutParams pgl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        pgl.topMargin = dp(10);
+        flowRow.addView(pages, pgl);
         LinearLayout.LayoutParams fbl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         fbl.topMargin = dp(8);
         flowRow.addView(flowsBtn, fbl);

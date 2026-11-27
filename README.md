@@ -20,8 +20,8 @@
 
 <table align="center">
   <tr>
-    <td align="center" width="20%"><b>39</b><br><sub>verified device runs</sub></td>
-    <td align="center" width="20%"><b>29</b><br><sub>on real hardware</sub></td>
+    <td align="center" width="20%"><b>40</b><br><sub>verified device runs</sub></td>
+    <td align="center" width="20%"><b>30</b><br><sub>on real hardware</sub></td>
     <td align="center" width="20%"><b>7</b><br><sub>device families: TV, watch, phone, glasses, router, robot, PC</sub></td>
     <td align="center" width="20%"><b>Local AI</b><br><sub>runs on your own machine</sub></td>
     <td align="center" width="20%"><b>Read back</b><br><sub>every action checked on the device</sub></td>
@@ -51,13 +51,14 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-27 01:00` **OpenBridge Companion 0.15: glasses page, phone sensors, standalone mode and AI on the phone:** a live copy of what the glasses show, the volume keys as a remote, quick tiles and a widget; device cards; six modules the glasses follow; profiles (home, bike, work); the phone's GPS and sport sensors for the sport screens; a visual Oracle; the phone drives the glasses alone when the PC is away; and a small model, speech-to-text and a command model trained on the PC, running on the phone with no network. [Companion](docs/ANDROID_COMPANION.md#0150-27-november-2026)
 - `2026-11-26 20:30` **ENGO 3 tap latency traced to the firmware:** the ~2 s before a double tap registers, and the way extra taps are ignored, are the glasses' own tap detection, not OpenBridge (our path is under 100 ms). Documented, with a concrete firmware ask, in the [suggestions for ENGO](docs/partners/engo/ENGO_FEATURE_REQUESTS.md).
 - `2026-11-26 18:50` **Every glasses screen redrawn for the real ENGO 3:** messages, TV, sport, navigation, settings and the voice screen now fit the panel with its real font sizes; the older ENGO demo screens show upright and in colour too, and the emulator no longer draws them upside down. What we'd like from ENGO next is in a [suggestions file](docs/partners/engo/ENGO_FEATURE_REQUESTS.md). [Glasses](docs/GLASSES.md)
-- `2026-11-26 16:10` **The Oracle becomes an optional module per Companion:** switch it on or off from the PC (Controls > Modules, or `openbridge glasses module oracle on|off`) or by saying "active / retire l'Oracle" on the phone. [Glasses](docs/GLASSES.md)
 
 <details>
 <summary>Older updates</summary>
 
+- `2026-11-26 16:10` **The Oracle becomes an optional module per Companion:** switch it on or off from the PC (Controls > Modules, or `openbridge glasses module oracle on|off`) or by saying "active / retire l'Oracle" on the phone. [Glasses](docs/GLASSES.md)
 - `2026-11-26 15:45` **ENGO 3 glasses driven through the phone:** a PC without Bluetooth uses the phone's; ask the Oracle out loud on the phone, the answer appears on the glasses, in colour. [Glasses](docs/GLASSES.md)
 - `2026-11-25 23:58` **Partner visibility in logs & GitHub CI:** hardware partner names (ENGO, ActiveLook by Microoled, Heltec Automation, Elecrow, AirGradient) are logged explicitly on every CI run and enforced in `AGENTS.md`.
 - `2026-11-25 16:15` **VoiceAI Oracle for ENGO 3 & multi-mic devices:** instant local math, cached web search, warm local LLM, long-polling Android/Wear OS relay (`Oracle ENGO`), and universal mic connector (`mic_oracle`) rendered on the ENGO 3 HUD.

@@ -128,6 +128,7 @@
  "vac.pause": "Pause",
  "vac.seek": "Find it (beep)",
  "vac.start": "Start cleaning",
+ "phone.fall": "Fall detected? Check on the phone",
  "voice.done": "Done",
  "voice.failed": "Not done",
  "voice.idle": "Hold the mic on your phone",

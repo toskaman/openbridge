@@ -57,6 +57,14 @@ final class GlassesLink {
     private long written, writeErrors, gestures;
     interface Listener { void changed(String state, String name); }
     private volatile Listener listener;
+    /** What the glasses show, drawn on the phone from the frames written below (Glasses page, widget). */
+    static final FrameMirror MIRROR = new FrameMirror();
+    /** Standalone mode (no PC): the phone's own hub takes the glasses' events instead of the PC. */
+    interface EventTap { boolean take(JSONObject e); }
+    private volatile EventTap tap;
+    void setTap(EventTap t) { tap = t; }
+    private volatile int battery = -1;
+    private volatile long batteryAt;
 
     GlassesLink(Context ctx) { this.ctx = ctx.getApplicationContext(); }
     void setListener(Listener l) { listener = l; }
@@ -78,6 +86,8 @@ final class GlassesLink {
     }
 
     private void event(JSONObject e) {
+        EventTap t = tap;
+        if (t != null) { try { if (t.take(e)) return; } catch (Exception ignored) { } }
         synchronized (events) {
             if (events.size() >= MAX_EVENTS) events.pollFirst();   // oldest dropped; gestures are not commands
             events.add(e);
@@ -173,6 +183,7 @@ final class GlassesLink {
                 for (UUID u : new UUID[]{FLOW, TX, GESTURE, TOUCH}) subscribe(s.getCharacteristic(u));
                 try { gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH); } catch (Exception ignored) { }
                 setState("READY");
+                ctx.getSharedPreferences("glasses", Context.MODE_PRIVATE).edit().putString("address", address).putString("name", name).apply();
                 synchronized (events) { events.clear(); }
                 return status();
             } catch (Exception e) {
@@ -239,7 +250,11 @@ final class GlassesLink {
     /** Write a batch of ActiveLook frame chunks, in order, each one waiting for the stack before the next. */
     @SuppressLint("MissingPermission")
     @SuppressWarnings("deprecation")
-    JSONObject write(JSONArray chunks) throws Exception {
+    JSONObject write(JSONArray chunks) throws Exception { return write(chunks, true); }
+
+    @SuppressLint("MissingPermission")
+    @SuppressWarnings("deprecation")
+    private JSONObject write(JSONArray chunks, boolean withEvents) throws Exception {
         if (chunks == null || chunks.length() > MAX_CHUNKS) throw new SecurityException("bounds");
         byte[][] data = new byte[chunks.length()][];
         int total = 0;
@@ -263,10 +278,11 @@ final class GlassesLink {
                 if (!started) { writeErrors++; break; }
                 try { if (await(2_000, "write") != 0) { writeErrors++; break; } } catch (SecurityException e) { writeErrors++; break; }
                 ok++; written++;
+                MIRROR.feed(d);
             }
         }
         JSONObject r = status().put("accepted", ok);
-        r.put("events", drain(0));
+        if (withEvents) r.put("events", drain(0));
         return r;
     }
 
@@ -347,6 +363,49 @@ final class GlassesLink {
     }
 
     String state() { return state; }
+    /** A link event for the PC that no local tap may take (standalone mode handing the glasses back: "RESUMED"). */
+    void injectState(String v) throws Exception {
+        JSONObject e = new JSONObject().put("t", "state").put("v", v);
+        synchronized (events) { events.add(e); events.notifyAll(); }
+    }
+    String name() { return name; }
+    String lastAddress() { return ctx.getSharedPreferences("glasses", Context.MODE_PRIVATE).getString("address", ""); }
+    String lastName() { return ctx.getSharedPreferences("glasses", Context.MODE_PRIVATE).getString("name", ""); }
+
+    /** Frames built on the phone (standalone hub, brightness): cut to the link's chunk size and written like the
+     *  PC's. Returns the number of chunks accepted. */
+    int writeLocal(byte[] stream) throws Exception {
+        int size = Math.max(20, mtu - 3);
+        JSONArray chunks = new JSONArray();
+        int bytes = 0, ok = 0;
+        for (int i = 0; i < stream.length; i += size) {
+            int n = Math.min(size, stream.length - i);
+            if (chunks.length() == MAX_CHUNKS || bytes + n > MAX_BATCH) { ok += write(chunks, false).optInt("accepted", 0); chunks = new JSONArray(); bytes = 0; }
+            chunks.put(Base64.encodeToString(java.util.Arrays.copyOfRange(stream, i, i + n), Base64.NO_WRAP));
+            bytes += n;
+        }
+        if (chunks.length() > 0) ok += write(chunks, false).optInt("accepted", 0);
+        return ok;
+    }
+
+    /** Battery level of the glasses (standard Bluetooth battery service), read at most once a minute; -1 unknown. */
+    @SuppressLint("MissingPermission")
+    int battery() {
+        if (!"READY".equals(state)) return -1;
+        if (System.currentTimeMillis() - batteryAt < 60_000) return battery;
+        batteryAt = System.currentTimeMillis();
+        synchronized (lock) {
+            try {
+                BluetoothGattService svc = gatt == null ? null : gatt.getService(BATT_SERVICE);
+                BluetoothGattCharacteristic ch = svc == null ? null : svc.getCharacteristic(BATT_CHAR);
+                if (ch == null) return battery;
+                opDone = false; lastRead = null;
+                if (gatt.readCharacteristic(ch) && await(2_000, "read battery") == 0 && lastRead != null && lastRead.length > 0)
+                    battery = lastRead[0] & 0xff;
+            } catch (Exception ignored) { }
+        }
+        return battery;
+    }
 
     void disconnect() { synchronized (lock) { disconnectLocked(); } setState("IDLE"); }
 

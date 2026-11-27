@@ -494,7 +494,7 @@
     if (!s) return null;
     return h('div', { class: 'cx-live cx-modules' }, h('h3', { text: 'Modules' }),
       !s.modules ? h('p', { class: 'muted small', text: s.online ? 'This Companion is too old for modules: update it to 0.14.0 or later.' : 'Offline: open the OpenBridge Companion to change its modules.' }) : null,
-      s.modules ? Object.keys(defs).map(name => h('label', { class: 'row wrap cx-module' },
+      s.modules ? Object.keys(defs).filter(name => name in s.modules).map(name => h('label', { class: 'row wrap cx-module' },
         h('input', { type: 'checkbox', checked: !!s.modules[name] || null, onchange: e => setModule(name, e.target.checked) }),
         h('span', { text: defs[name] }))) : null);
   }

@@ -14,7 +14,8 @@ BAT = '.bat' if os.name == 'nt' else ''      # SDK wrappers: d8/apksigner are .b
 EXE = '.exe' if os.name == 'nt' else ''      # aapt2/zipalign are .exe on Windows, bare ELF elsewhere
 JAR = SDK / 'platforms' / 'android-34' / 'android.jar'
 SRC = Path('companion/android')
-OUT = Path('artifacts/companion')
+# OB_BUILD_DIR: build somewhere local when the checkout sits on a network share (javac can fail writing classes there).
+OUT = Path(os.environ.get('OB_BUILD_DIR', 'artifacts/companion'))
 
 
 def run(*args):
@@ -47,6 +48,12 @@ def main(argv=None):
     run(BT / ('aapt2' + EXE), *link_args)
     with zipfile.ZipFile(OUT / 'base.apk', 'a') as z:
         z.write(OUT / 'classes.dex', 'classes.dex')
+        # AI on the phone (optional): libobai.so from `python -m dev.build_companion_ai`; without it the AI page says
+        # the engine is not in this build and everything else works the same.
+        from dev.build_companion_ai import lib_path
+        if lib_path().exists():
+            z.write(lib_path(), 'lib/arm64-v8a/libobai.so')
+            print('AI engine included:', lib_path(), lib_path().stat().st_size, 'bytes')
     run(BT / ('zipalign' + EXE), '-f', '-p', '4', OUT / 'base.apk', OUT / 'aligned.apk')
     keydir = Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'OpenBridge' / 'companion-signing'
     keystore = keydir / 'companion.jks'

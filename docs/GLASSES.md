@@ -56,6 +56,12 @@ watch; switch it back on the same three ways:
 The switch is stored on the device (relay operation `set_modules`, Companion 0.14.0 or later) and confirmed back to
 the PC.
 
+**Companion 0.15:** six modules instead of one (Oracle, Messages, Sport, TV, Vacuum, Phone sensors); a module
+switched off on the phone hides its menu on the glasses within 15 s. The Companion also shows a live copy of the
+glasses' screen, takes the volume keys as next / back, sends the phone's GPS and Bluetooth sport sensors to the sport
+screens when the owner allows it, and can drive the glasses alone when the PC is away (standalone mode). Details:
+[Android Companion](ANDROID_COMPANION.md#0150-27-november-2026).
+
 ## Display facts measured on a real ENGO 3 (26 November 2026)
 
 - **Orientation:** both axes are mirrored and upright text needs text rotation 4; OpenBridge does this by default

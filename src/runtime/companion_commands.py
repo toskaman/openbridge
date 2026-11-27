@@ -63,6 +63,33 @@ class CompanionCommands:
             pass
         return None
 
+    def _vision(self, rid, relay, item):
+        """Visual Oracle: download the phone's photo like a voice clip (signed, size + sha256 checked, encrypted after
+        aead1), answer with a local vision model, show it on the glasses, report it to the phone. The photo is
+        only kept in memory for this call."""
+        from src.ai import oracle as Oracle
+        try:
+            jpeg = fabric_relay.fetch_voice_urls(relay.get('urls') or [relay['url']], relay['key'], item['clip_id'],
+                                                 item['bytes'], item['sha256'], relay_id=rid, aead_version=relay.get('aead'))
+        except (fabric_relay.RelayError, OSError, KeyError):
+            jpeg = None
+        if not jpeg or not jpeg.startswith(b'\xff\xd8'):
+            text, status = 'Photo download failed — try again', 'escalation_required'
+        else:
+            ans = Oracle.vision_answer(jpeg, item.get('text', ''), item.get('lang', 'fr'))
+            Oracle.push_oracle_to_hud(self.server, ans, mic_source='phone_camera')
+            text, status = '%s (%sms)' % (ans['answer'], ans['latency_ms']), 'resolved'
+            for fn in list(self.listeners):
+                try:
+                    fn(rid, ans['transcript'], {'status': 'resolved', 'skill_id': 'voice.oracle', 'oracle': ans})
+                except Exception:  # noqa: BLE001 - a listener never breaks the command path
+                    pass
+        try:
+            self._send(rid, 'report_command', {'request_id': item['request_id'], 'status': status,
+                                               'text': text[:fabric_relay.MAX_COMMAND_REPORT]})
+        except fabric_relay.RelayError:
+            pass
+
     def _report_text(self, doc):
         st = doc['status']
         if st == 'resolved':
@@ -146,6 +173,10 @@ class CompanionCommands:
                     if c.get('kind') == 'voice':
                         c = dict(c, kind='text', text=said)
                         text = said
+                if c.get('kind') == 'vision':
+                    self._vision(rid, r, c)
+                    new += 1
+                    continue
                 if c.get('kind') == 'voice' and c.get('mode') == 'oracle':
                     text = self._voice_text(rid, r, c)
                     if text is None:

@@ -197,8 +197,8 @@ public class OracleVoiceActivity extends Activity {
     private void startListening() {
         if (mPaused) return;
         try {
-            if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-                startPcTranscription();          // no speech service on this phone: the PC transcribes locally
+            if (!SpeechRecognizer.isRecognitionAvailable(this) || (LocalAi.useLocal(this) && LocalAi.sttReady(this))) {
+                startPcTranscription();          // record here; transcribe on the PC, or on the phone when it answers itself
                 return;
             }
             mRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
@@ -275,13 +275,13 @@ public class OracleVoiceActivity extends Activity {
     private void startPcTranscription() {
         if (mPcLoop) return;
         RelayServer relay = RelayServer.get(this, null);
-        if (!relay.paired()) {
+        if (!relay.paired() && !(LocalAi.useLocal(this) && LocalAi.sttReady(this))) {
             statusBadge.setText("●  " + L.t("Not paired — pair PC first"));
             statusBadge.setTextColor(Color.rgb(255, 82, 82));
             return;
         }
         mPcLoop = true;
-        statusBadge.setText("●  " + L.t("Listening… speak naturally") + " (PC)");
+        statusBadge.setText("●  " + L.t("Listening… speak naturally") + (LocalAi.useLocal(this) ? " (" + L.t("phone") + ")" : " (PC)"));
         statusBadge.setTextColor(Color.rgb(105, 240, 174));
         mPcThread = new Thread(this::pcLoop, "oracle-pc-mic");
         mPcThread.start();
@@ -329,7 +329,9 @@ public class OracleVoiceActivity extends Activity {
                 quiet = active ? 0 : quiet + 1;
                 if (quiet >= 23 || frames >= 266) {
                     byte[] clip = utt.toByteArray(); utt = null; loud = 0;
-                    if (clip.length >= 19200) {                 // at least 0.6 s
+                    if (clip.length >= 19200 && LocalAi.useLocal(this) && LocalAi.sttReady(this)) {
+                        answerLocally(clip);
+                    } else if (clip.length >= 19200) {                 // at least 0.6 s
                         String s = RelayServer.get(this, null).submitVoice(clip, "oracle");
                         runOnUiThread(() -> { statusBadge.setText("●  " + L.t("THINKING") + " · " + s); statusBadge.setTextColor(Color.rgb(255, 183, 77)); });
                     } else {
@@ -366,7 +368,37 @@ public class OracleVoiceActivity extends Activity {
         }, delayMs);
     }
 
+    /** The phone answers by itself (PC away, or the owner chose "on the phone"): local speech-to-text, then the local
+     *  model; the answer goes to this screen and, in standalone mode, to the glasses. */
+    private void answerLocally(byte[] clip) {
+        runOnUiThread(() -> { statusBadge.setText("●  " + L.t("THINKING") + " (" + L.t("phone") + ")"); statusBadge.setTextColor(Color.rgb(255, 183, 77)); });
+        mPool.submit(() -> {
+            String heard = LocalAi.transcribe(this, clip, mLang.startsWith("fr") ? "fr" : "en");
+            if (heard == null || heard.isEmpty()) { runOnUiThread(() -> statusBadge.setText("●  " + L.t("I didn't catch that."))); return; }
+            runOnUiThread(() -> heardView.setText(heard));
+            answerText(heard);
+        });
+    }
+
+    private void answerText(String q) {
+        long t0 = System.currentTimeMillis();
+        String a = LocalAi.intentReady(this) ? LocalAi.handle(this, q) : LocalAi.ask(this, q);
+        if (a == null) { runOnUiThread(() -> answerView.setText(L.t("No model on the phone yet."))); return; }
+        long ms = System.currentTimeMillis() - t0;
+        if (StandaloneHub.enabled(this)) StandaloneHub.get(this).oracle(q, a);
+        runOnUiThread(() -> {
+            answerView.setText(a + " (" + ms + "ms, " + L.t("phone") + ")");
+            statusBadge.setText("●  " + L.t("Listening… speak naturally") + " (" + L.t("phone") + ")");
+            statusBadge.setTextColor(Color.rgb(105, 240, 174));
+        });
+    }
+
     private void dispatchOracle(String transcript, boolean isPartial) {
+        if (!isPartial && LocalAi.useLocal(this) && LocalAi.llmReady(this)) {
+            runOnUiThread(() -> heardView.setText(transcript));
+            mPool.submit(() -> answerText(transcript));
+            return;
+        }
         if (!isPartial && (mHost == null || mHost.isEmpty())) {
             RelayServer relay = RelayServer.get(this, null);
             if (relay.paired()) {

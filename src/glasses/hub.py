@@ -227,6 +227,7 @@ class PhoneLink:
         self.on_gesture, self.send = on_gesture, send
         self.on_touch = on_touch or on_gesture          # tap on the temple (ENGO 3); defaults to a wave
         self.on_button = lambda ev: None                # set by the hub owner: Next / Open / Back / Home on the phone
+        self.on_resumed = lambda: None                  # the phone's standalone mode handed the glasses back: redraw
         self.on_status = on_status or (lambda *a: None)
         self.address, self.connect_seconds = address, connect_seconds
         self.lock = ControllerLock('pc-via-phone:%d' % os.getpid())
@@ -298,6 +299,11 @@ class PhoneLink:
                     self.tr.on_flow(int(e.get('v', 0)))
             elif t == 'state' and e.get('v') == 'DISCONNECTED':
                 self._lost('glasses disconnected from the phone')
+            elif t == 'state' and e.get('v') == 'RESUMED':
+                try:
+                    self.on_resumed()
+                except Exception:                    # noqa: BLE001
+                    pass
 
     def _batch(self):
         with self._tlock:
