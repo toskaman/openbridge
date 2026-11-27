@@ -51,11 +51,13 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-27 15:55` **Manual brightness finally wins:** on the real ENGO 3 ([ENGO](https://www.engoeyewear.com) / [ActiveLook by Microoled](https://www.activelook.net)), the auto light sensor visibly overrode any manual level, so setting a brightness now switches auto off first (re-enable it with the ALS button).
 - `2026-11-27 15:30` **Oracle answers reach the glasses again:** pushing an answer card to the ENGO 3 ([ENGO](https://www.engoeyewear.com) / [ActiveLook by Microoled](https://www.activelook.net)) crashed calling a send helper that never existed; it now uses the normal send path, proven live on real hardware with a card shown and confirmed in the glasses.
 - `2026-11-27 14:15` **Reliability fixes and cleanup:** a refused MQTT subscription now raises instead of hanging, discovery ignores stale devices, the microphone loop no longer stalls audio and reports errors, and the first-responder EXPECTANT screen ([ENGO](https://www.engoeyewear.com) / [ActiveLook by Microoled](https://www.activelook.net)) renders instead of crashing; plus case-insensitive local names and a full unused-import cleanup.
-- `2026-11-27 13:45` **AI model pinned to every device class:** a 73-test matrix now locks the official command model, voice intents, discovery grounding and the Oracle to each device class, and fixes the model being told phone/PC/glasses skills work on any device ([ENGO](https://www.engoeyewear.com) / [ActiveLook by Microoled](https://www.activelook.net) controls included); spoken English math like "12 divided by 4" now answers instantly. [Matrix](tests/unit/test_ai_device_matrix.py)
 <details>
 <summary>Older updates</summary>
+
+- `2026-11-27 13:45` **AI model pinned to every device class:** a 73-test matrix now locks the official command model, voice intents, discovery grounding and the Oracle to each device class, and fixes the model being told phone/PC/glasses skills work on any device ([ENGO](https://www.engoeyewear.com) / [ActiveLook by Microoled](https://www.activelook.net) controls included); spoken English math like "12 divided by 4" now answers instantly. [Matrix](tests/unit/test_ai_device_matrix.py)
 
 - `2026-11-27 12:30` **Full ENGO 3 controls on Wear OS watches ([ENGO](https://www.engoeyewear.com) × [ActiveLook by Microoled](https://www.activelook.net)):** summon all ENGO 3 controls (navigation, 9 HUD screens, display power, brightness, ALS, tap/gesture toggle, 180° rotation, optical alignment shift, privacy and inbox) onto a Wear OS watch by text, voice or options, with watch menus hidden whenever no watch is detected. [Glasses](docs/GLASSES.md) · [Partner page](docs/partners/ENGO.md)
 

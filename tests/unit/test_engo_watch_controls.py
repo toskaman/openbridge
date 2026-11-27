@@ -166,6 +166,9 @@ class EngoWatchControlsTests(unittest.TestCase):
         h.apply_control('luma_up')
         self.assertEqual(h.settings['luma'], 10)
         self.assertTrue(any(b'\xFF\x10\x00\x06\x0A\xAA' in w for w in link.writes))
+        # Manual level takes manual control: ALS auto is switched off with it.
+        self.assertFalse(h.settings['als'])
+        self.assertTrue(any(b'\xFF\x22\x00\x06\x00\xAA' in w for w in link.writes))
 
         h.apply_control('luma_set', '14')
         self.assertEqual(h.settings['luma'], 14)
