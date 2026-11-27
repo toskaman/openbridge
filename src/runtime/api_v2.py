@@ -41,13 +41,14 @@ GET_ROUTES = ('/api/v2/ai/providers', '/api/v2/hardware/facts', '/api/v2/permiss
               '/api/v2/pc/full-control',
               '/api/v2/library',
               '/api/v2/voice/oracle/status',
-              '/api/v2/companion_modules')
+              '/api/v2/companion_modules',
+              '/api/v2/engo_watch_controls')
 POST_ROUTES = ('/api/v2/ai/providers', '/api/v2/ai/providers/test', '/api/v2/ai/providers/remove', '/api/v2/ai/providers/activate', '/api/v2/hardware/rank', '/api/v2/hardware/bench', '/api/v2/permissions/open', '/api/v2/permissions/recheck', '/api/v2/workflows/grant', '/api/v2/workflows/run', '/api/v2/workflows/revoke', '/api/v2/manifests/ui_install', '/api/v2/manifests/compile', '/api/v2/manifests/grant', '/api/v2/manifests/revoke', '/api/v2/manifests/invoke', '/api/v2/remote_controls', '/api/v2/remote_controls/invoke',
               '/api/v2/remote_controls/full_control', '/api/v2/skill_policy', '/api/v2/skill_arm', '/api/v2/skill_invoke', '/api/v2/onboarding/apk-portal', '/api/v2/execute', '/api/v2/recovery/acknowledge', '/api/v2/voice/intent', '/api/v2/voice/transcribe', '/api/v2/command/parse', '/api/v2/command/approve', '/api/v2/command/execute', '/api/v2/capabilities/layouts', '/api/v2/capabilities/followup', '/api/v2/orchestration/run', '/api/v2/orchestration/approve', '/api/v2/orchestration/cancel', '/api/v2/dashboards/create', '/api/v2/control_profiles/save', '/api/v2/control_profiles/delete', '/api/v2/control_profiles/apply', '/api/v2/control_profiles/capture', '/api/v2/control_profiles/clear', '/api/v2/dashboards/patch', '/api/v2/dashboards/save', '/api/v2/dashboards/load', '/api/v2/dashboards/delete', '/api/v2/dashboards/restore', '/api/v2/migrate/propose', '/api/v2/migrate/apply', '/api/v2/migrate/rollback', '/api/v2/composer/compose', '/api/v2/route_intel/dispatch', '/api/v2/route_intel/failover', '/api/v2/route_intel/simulate_loss', '/api/v2/diagnose', '/api/v2/transplant/run', '/api/v2/transplant/revoke', '/api/v2/transplant/report', '/api/v2/transplant/get',
  '/api/v2/pc/full-control',
  '/api/v2/library/approve', '/api/v2/library/run', '/api/v2/library/enable', '/api/v2/library/remove',
  '/api/v2/remote_controls/skills',
- '/api/v2/voice/oracle', '/api/v2/companion_modules')
+ '/api/v2/voice/oracle', '/api/v2/companion_modules', '/api/v2/engo_watch_controls')
 
 
 import threading
@@ -436,6 +437,9 @@ def get(server, path, query):
         return 200, {'events': ex.events_since(since)}
     if path == '/api/v2/remote_controls':
         return 200, remote_controls(server).state()
+    if path == '/api/v2/engo_watch_controls':
+        from src.glasses import watch_controls as WC
+        return 200, WC.watch_controls_status(server, lang=(q.get('lang') or ['en'])[0])
     if path == '/api/v2/command/tiers':
         from src.runtime import command as cmd
         return 200, cmd.tiers(server)
@@ -1273,6 +1277,37 @@ def post(server, path, body):
         from src.fabric.relay import RelayError
         try:
             return 200, remote_controls(server).set_skill_controls(body)
+        except RemoteControlError as e:
+            return e.status, {'error': str(e)}
+        except RelayError as e:
+            return 409, {'error': str(e)}
+    if path == '/api/v2/engo_watch_controls' and isinstance(body, dict):
+        from src.glasses import watch_controls as WC
+        from src.runtime.remote_controls import RemoteControlError
+        from src.fabric.relay import RelayError
+        if set(body) - {'action', 'page', 'relay_id', 'lang', 'consent'} or body.get('consent') is not True:
+            return 400, {'error': 'consent: true is required; allowed fields: action, page, relay_id, lang'}
+        action = str(body.get('action') or 'show')
+        if action not in ('show', 'hide', 'toggle', 'switch_page'):
+            return 400, {'error': 'action must be show|hide|toggle|switch_page'}
+        page = str(body.get('page') or 'main')
+        if page not in WC.PAGE_IDS:
+            return 400, {'error': f'page must be one of {WC.PAGE_IDS}'}
+        try:
+            if action == 'hide':
+                return 200, WC.hide_watch_controls(server, relay_id=body.get('relay_id'))
+            if action == 'toggle':
+                det = WC.detect_watches(server)
+                if not det['paired_watches']:
+                    raise LookupError('No Wear OS watch paired')
+                rid = body.get('relay_id') or det['paired_watches'][0]['relay_id']
+                cur = (getattr(server, '_engo_watch_pages', None) or {}).get(rid)
+                if cur and 'page' not in body:
+                    return 200, WC.hide_watch_controls(server, relay_id=rid)
+                return 200, WC.show_watch_controls(server, relay_id=rid, page=page, lang=body.get('lang'))
+            return 200, WC.show_watch_controls(server, relay_id=body.get('relay_id'), page=page, lang=body.get('lang'))
+        except LookupError as e:
+            return 404, {'error': str(e)}
         except RemoteControlError as e:
             return e.status, {'error': str(e)}
         except RelayError as e:

@@ -78,7 +78,7 @@ public class MainActivity extends Activity implements RelayServer.Ui {
     private LinearLayout systemBody, checklist;
     private TextView systemToggle, statusLine;
     private boolean systemOpen, systemTouched;
-    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background, messages, language;
+    private Button setup, bluetooth, location, permission, enable, unpair, fullctl, background, messages, language, engoWatchBtn;
     private boolean setupRunning;
     private long backgroundLastTap;
     private ScrollView scroll;
@@ -310,7 +310,18 @@ public class MainActivity extends Activity implements RelayServer.Ui {
         });
         language = button(L.label(this), PillIcon.SPARK, CYAN, STYLE_NORMAL);
         language.setOnClickListener(v -> { L.cycle(this); recreate(); });     // applied at once, no restart
-        for (Button x : new Button[]{language, setup, bluetooth, location, permission, enable, fullctl, background, messages, unpair}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
+        for (Button x : new Button[]{language, setup, bluetooth, location, permission, enable, fullctl, background, messages}) { systemBody.addView(x); systemBody.addView(spacer(8)); }
+        if (watch) {
+            engoWatchBtn = button(L.t("ENGO 3 Controls"), PillIcon.SPARK, MAGENTA, STYLE_PRIMARY);
+            engoWatchBtn.setOnClickListener(v -> {
+                String msg = relay.submitCommand("__engo_watch_controls__:toggle");
+                log(msg.startsWith("Sent") ? L.t("Requested ENGO 3 controls…") : L.t(msg));
+            });
+            systemBody.addView(engoWatchBtn);
+            systemBody.addView(spacer(8));
+        }
+        systemBody.addView(unpair);
+        systemBody.addView(spacer(8));
         statusLine = text(L.t("Starting…"), 12, false, FAINT); systemBody.addView(statusLine);
         system.addView(systemBody);
 

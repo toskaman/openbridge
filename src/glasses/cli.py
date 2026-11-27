@@ -193,6 +193,21 @@ def cmd_restore_settings(args):
         raise _err(cli, 'GLASSES_RESTORE_FAILED', str(e)[:240], 'device')
 
 
+def cmd_watch_controls(args):
+    from src import cli
+    from src.glasses import watch_controls as WC
+    with cli.Core() as server:
+        cli.ensure_discovery(server, ['android'])
+        if args.action == 'status':
+            return WC.watch_controls_status(server)
+        try:
+            if args.action == 'hide':
+                return WC.hide_watch_controls(server, relay_id=args.relay)
+            return WC.show_watch_controls(server, relay_id=args.relay, page=args.page, lang=args.lang)
+        except Exception as e:
+            raise _err(cli, 'WATCH_CONTROLS_FAILED', str(e)[:240], 'device')
+
+
 class Control:
     """127.0.0.1 only: one JSON request per line."""
 
@@ -242,6 +257,10 @@ class Control:
             with self.lock:
                 h.oracle(q, ans, partial=False)
             return {'oracle': ans}
+        if 'engo_control' in req and isinstance(req['engo_control'], dict):
+            ec = req['engo_control']
+            with self.lock:
+                return h.apply_control(ec.get('op', ''), ec.get('value'))
         tr = getattr(h.link, 'tr', None)                 # BLE transport counters (MTU, pauses, drops), when on BLE
         return {'screen': type(h.menu.screen).__name__, 'unread': h.inbox.unread(), 'devices': h.devices,
                 'grant': h.settings.get('grant'), 'log': h.log[-10:],
@@ -598,3 +617,8 @@ def register(subs, leaf):
     rs = leaf(gs, 'restore-settings', cmd_restore_settings, 'glasses restore-settings')
     rs.add_argument('backup_path', help='path to backup .zip, folder, or settings_restore.bin')
     rs.add_argument('--address', default=None, help='Bluetooth address of ENGO / ActiveLook glasses')
+    wc = leaf(gs, 'watch-controls', cmd_watch_controls, 'glasses watch-controls')
+    wc.add_argument('action', nargs='?', choices=['show', 'hide', 'status'], default='status')
+    wc.add_argument('--page', choices=['main', 'screens', 'display', 'align'], default='main')
+    wc.add_argument('--relay', default=None, help='paired Wear OS watch relay id')
+    wc.add_argument('--lang', choices=['fr', 'en'], default=None)

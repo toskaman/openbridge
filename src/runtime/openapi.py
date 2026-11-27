@@ -66,6 +66,8 @@ SUMMARIES = {
     '/api/v2/voice/intent': ('Voice intent', 'Map transcribed speech to an intent.'),
     '/api/v2/voice/transcribe': ('Transcribe', 'Speech to text on this PC.'),
     '/api/v2/watches': ('Watches', 'State watches feeding automations.'),
+    '/api/v2/engo_watch_controls': ('ENGO 3 watch controls', 'Detected Wear OS watches and active ENGO 3 / ActiveLook by Microoled watch control pages.'),
+    'POST /api/v2/engo_watch_controls': ('Push ENGO 3 controls to watch', 'Show, switch page, toggle or hide all ENGO 3 controls on a detected Wear OS watch.'),
 }
 
 SCHEMAS = {
@@ -89,6 +91,12 @@ SCHEMAS = {
                                                            'recipe_ids': {'type': 'array',
                                                                           'items': {'type': 'string'}},
                                                            'consent': {'type': 'boolean'}}},
+    'POST /api/v2/engo_watch_controls': {'required': ['consent'],
+                                         'properties': {'action': {'type': 'string'},
+                                                        'page': {'type': 'string'},
+                                                        'relay_id': {'type': 'string'},
+                                                        'lang': {'type': 'string'},
+                                                        'consent': {'type': 'boolean'}}},
 }
 
 

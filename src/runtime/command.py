@@ -213,9 +213,35 @@ def parse_request(server, body):
 
     prior = body.get('prior')
     if prior is None:
-        doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
-                      cloud_allowed=allowed,
-                      before_cloud=gate if quality in ('high', 'auto') else None)
+        from src.glasses import watch_controls as _WC
+        _engo = _WC.match_engo_watch_command(text.strip(), lang_hint=lang)
+        if _engo is not None:
+            doc = I.new_intent(text.strip(), lang)
+            doc['targets'] = [{'kind': 'category', 'ref': 'fabric'}]
+            doc['skill_id'] = 'engo_control'
+            doc['confidence'] = 0.98
+            doc['risk_level'] = 'low'
+            if _engo['kind'] == 'watch_panel':
+                if _engo['action'] == 'show' and not _WC.detect_watches(server)['watch_detected']:
+                    doc['status'] = 'escalation_required'
+                    doc['ambiguities'] = ['No Wear OS watch detected — pair Companion on your watch first.']
+                    doc['outcome'] = doc['ambiguities'][0]
+                else:
+                    op_p = 'hide_controls' if _engo['action'] == 'hide' else 'switch_page'
+                    doc['status'] = 'resolved'
+                    doc['params'] = {'op': op_p, 'value': str(_engo.get('page', 'main'))}
+                    doc['outcome'] = f"ENGO 3 watch controls ({doc['params']['value']})" if op_p == 'switch_page' else 'Hide ENGO 3 watch controls'
+            else:
+                p_dir = {'op': _engo['op']}
+                if 'value' in _engo and _engo['value'] is not None:
+                    p_dir['value'] = str(_engo['value'])
+                doc['status'] = 'resolved'
+                doc['params'] = p_dir
+                doc['outcome'] = f"ENGO 3: {_engo['op']}" + (f" ({p_dir['value']})" if 'value' in p_dir else '')
+        else:
+            doc = N.parse(text.strip(), lang, quality, _low(server), cloud, _medium(server),
+                          cloud_allowed=allowed,
+                          before_cloud=gate if quality in ('high', 'auto') else None)
     else:
         # Follow-up turn: deterministic context resolution first, existing router
         # untouched on miss (parse_with_context delegates with identical args).

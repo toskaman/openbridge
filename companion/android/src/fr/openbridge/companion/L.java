@@ -296,6 +296,8 @@ final class L {
         FR.put("Stop Oracle", "Arrêter Oracle");
         FR.put("Last question", "Dernière question");
         FR.put("ENGO 3 answer", "Réponse ENGO 3");
+        FR.put("ENGO 3 Controls", "Contrôles ENGO 3");
+        FR.put("Requested ENGO 3 controls…", "Contrôles ENGO 3 demandés…");
     }
 
     private L() {}

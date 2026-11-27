@@ -172,8 +172,36 @@
         h('button', { class: 'ghost small lg-in-btn', type: 'button', onclick: () => M && M.signal('transport_inbound', { origin: 'test', label: 'harness', bytes: 2048, corr: 'test-in-' + Date.now() }) }, '↓ IN comet (emerald)'),
         h('button', { class: 'ghost small', type: 'button', onclick: () => M && M.signal('oracle_success', { origin: 'test', text: 'harness pulse' }) }, 'Verified pulse')),
       h('p', { class: 'muted small', 'data-flow-counts': '' }));
-    root.replaceChildren(h('div', { class: 'settings-grid' }, aiSection(), motion, layout, harness));
+    const watchWrap = h('div', { id: 'set-engo-watch-wrap', hidden: true });
+    root.replaceChildren(h('div', { class: 'settings-grid' }, aiSection(), watchWrap, motion, layout, harness));
+    refreshWatchOptions(watchWrap);
     if (M) M.mount(document.getElementById('settings-orb'), { sector: [-Math.PI, Math.PI] });
+  }
+  async function refreshWatchOptions(wrap) {
+    try {
+      const d = await call('/api/v2/engo_watch_controls');
+      if (!d || !d.watch_detected) { wrap.hidden = true; wrap.replaceChildren(); return; }
+      const paired = d.paired_watches || [];
+      const target = paired[0] || null;
+      const pages = d.pages || [];
+      const active = target ? (d.active_pages || {})[target.relay_id] : null;
+      const status = h('p', { class: 'muted small', role: 'status', text: target ? `Watch detected: ${target.label}${active ? ' · active page: ' + active : ''}` : 'Watch detected on network — pair Companion on the watch first.' });
+      const act = async (action, page) => {
+        status.textContent = 'Updating watch controls…';
+        try {
+          await call('/api/v2/engo_watch_controls', Object.assign({ action, consent: true }, page ? { page } : {}, target ? { relay_id: target.relay_id } : {}));
+          await refreshWatchOptions(wrap);
+        } catch (e) { status.textContent = e.message; }
+      };
+      wrap.hidden = false;
+      wrap.replaceChildren(h('section', { class: 'panel', 'aria-labelledby': 'set-engo-watch-title', 'data-engo-watch': '1' },
+        h('h2', { id: 'set-engo-watch-title', text: 'Wear OS Watch · ENGO 3 Controls' }),
+        h('p', { class: 'muted', text: 'This option appears only when your Wear OS watch is detected. Push all ENGO 3 controls onto the watch at once.' }),
+        status,
+        target ? h('div', { class: 'row wrap' },
+          pages.map(pg => h('button', { class: (active === pg.id ? 'primary' : 'ghost') + ' small', type: 'button', onclick: () => act('show', pg.id) }, pg.title)),
+          active ? h('button', { class: 'ghost small danger', type: 'button', onclick: () => act('hide') }, 'Hide controls') : null) : null));
+    } catch { wrap.hidden = true; wrap.replaceChildren(); }
   }
   global.OBViews = global.OBViews || {};
   global.OBViews.settings = { render };

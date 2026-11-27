@@ -266,6 +266,20 @@ PRIMITIVES = {p.primitive_id: p for p in (
                      ('queries return a reply; actions are delivered without reply',),
                      'queries: reply text read back; actions: EXECUTED_UNVERIFIED (delivery only)', '',
                      R.IRREVERSIBLE.value, ('RETRO_UNAVAILABLE',), 15, 'single-global', True),
+    ActionDescriptor('engo_control', 'Control ENGO 3 / ActiveLook by Microoled smart glasses or Wear OS watch ENGO panel',
+                     {'type': 'object',
+                      'properties': {
+                          'op': _s('string', maxLength=32),
+                          'value': _s('string', maxLength=40),
+                          'relay_id': _s('string', maxLength=64),
+                          'control_port': _s('integer', minimum=1024, maximum=65535),
+                      },
+                      'required': ['op'], 'additionalProperties': False},
+                     ('owner consent for this ENGO 3 control',),
+                     ('ENGO 3 glasses hub running or paired BLE relay available',),
+                     ('executes the requested display, optical, navigation or watch-page control',),
+                     'ENGO 3 hub reply or BLE write receipt returned', '',
+                     R.IRREVERSIBLE.value, ('ENGO_UNAVAILABLE', 'UNKNOWN_ENGO_OP'), 15, 'single-global', True),
     ActionDescriptor('file_push', 'Push stored transfer bytes to /sdcard/OpenBridge/<name>, hash-verified',
                      {'type': 'object', 'properties': {'transfer_id': _s('string', maxLength=32), 'name': _s('string', maxLength=64)},
                       'required': ['transfer_id', 'name'], 'additionalProperties': False},
@@ -1043,6 +1057,10 @@ class Executor:
             return 'EXECUTED', None, out[:120], True, {'reply': out}
         return 'EXECUTED_UNVERIFIED', None, 'delivered, effect unverified', False, {'sent': out}
 
+    def _engo_control(self, key, params):
+        from src.glasses.watch_controls import execute_engo_action
+        return execute_engo_action(self.ctx, params)
+
     def _tv_sleep(self, key, params):
         handle = self._adb_handle(key)
         try:
@@ -1142,7 +1160,7 @@ class Executor:
                'relay_revoke': _relay_revoke, 'android_optional_app_state': _app_state, 'undo_transaction': _undo,
                'session_cleanup': _session_cleanup, 'screen_capture': _screen_capture, 'capture_send': _capture_send,
                'capture_montage': _capture_montage, 'file_pull': _file_pull, 'file_push': _file_push,
-               'retro_command': _retro_command, 'tv_sleep': _tv_sleep, 'tv_wake': _tv_wake,
+               'retro_command': _retro_command, 'engo_control': _engo_control, 'tv_sleep': _tv_sleep, 'tv_wake': _tv_wake,
                'companion_foreground': _companion_foreground}
 
     # ---------- recovery backlog ----------

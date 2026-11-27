@@ -141,6 +141,23 @@ class CompanionCommands:
             pass
         return True
 
+    def _engo_watch_order(self, rid, relay, c, said):
+        from src.glasses import watch_controls as WC
+        from_watch = bool((relay.get('declared') or {}).get('watch') or (relay.get('declared') or {}).get('form_factor') == 'watch')
+        order = WC.match_engo_watch_command(said, lang_hint=c.get('lang'), from_watch=from_watch)
+        if order is None:
+            return False
+        res = WC.apply_engo_watch_order(self.server, order, source_relay_id=rid)
+        try:
+            self._send(rid, 'report_command', {
+                'request_id': c['request_id'],
+                'status': res['status'],
+                'text': res['text'][:fabric_relay.MAX_COMMAND_REPORT],
+            })
+        except fabric_relay.RelayError:
+            pass
+        return True
+
     def poll_once(self):
         from src.runtime import command as C
         from src.runtime import nl_router as N
@@ -169,6 +186,8 @@ class CompanionCommands:
                     if self._module_toggle(rid, c, said):
                         continue
                     if self._glasses_nav(rid, c, said):
+                        continue
+                    if self._engo_watch_order(rid, r, c, said):
                         continue
                     if c.get('kind') == 'voice':
                         c = dict(c, kind='text', text=said)

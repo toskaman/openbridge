@@ -93,6 +93,12 @@ def _handle(server, relay, rid, cmd, parse_fn, fetch_voice_fn, transcribe_fn, st
         hit = layout(rid, relay, text, cmd.get('lang'))
         if hit is not None:
             return hit[0], prefix + hit[1]
+    from src.glasses import watch_controls as _WC
+    _from_watch = bool((relay.get('declared') or {}).get('watch') or (relay.get('declared') or {}).get('form_factor') == 'watch')
+    _engo = _WC.match_engo_watch_command(text, lang_hint=cmd.get('lang'), from_watch=_from_watch)
+    if _engo is not None:
+        _res = _WC.apply_engo_watch_order(server, _engo, source_relay_id=rid)
+        return (_res['status'], _short(prefix + _res['text']))
     if cmd['kind'] == 'oracle':
         from src.ai import oracle as Oracle
         ans = Oracle.oracle_answer(cmd['text'])

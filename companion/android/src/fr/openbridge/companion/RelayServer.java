@@ -778,8 +778,10 @@ final class RelayServer {
         caps.put("cards");
         if (module("sensors")) caps.put("phone_sensors");
         boolean tv = ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        boolean watch = ctx.getPackageManager().hasSystemFeature("android.hardware.type.watch");
         return new JSONObject().put("capabilities", caps).put("permissions", perms).put("battery_powered", !tv)
-                .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("full_control", fullControl())
+                .put("sdk", Build.VERSION.SDK_INT).put("television", tv).put("watch", watch)
+                .put("form_factor", watch ? "watch" : (tv ? "tv" : "phone")).put("full_control", fullControl())
                 .put("language", L.resolved(ctx)).put("modules", modules()).put("profile", Profiles.current(ctx))
                 .put("standalone", StandaloneHub.enabled(ctx));
     }
