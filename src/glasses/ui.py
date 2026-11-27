@@ -74,6 +74,7 @@ class Context:
     event: object = None                           # current HudEvent from the scheduler
     sport: dict = field(default_factory=dict)      # live values from the sport engines (None = unknown / stale)
     input: str = 'wave'                            # 'wave' (ENGO 1/2 gesture sensor) or 'tap' (ENGO 3 double tap)
+    modules: dict = field(default_factory=dict)    # Companion modules switched off on the phone hide their menu
 
     def tr(self, key, **kw):
         return t(key, self.lang, **kw)
@@ -218,7 +219,7 @@ class Screen:
         elif ev == 'home':
             return ('home',)
         elif ev == 'ok' and n:
-            return self.select(self.items(ctx)[self.focus], ctx)
+            return self.select(self.items(ctx)[self.focus % n], ctx)
         return None
 
     def select(self, item, ctx):
@@ -278,13 +279,14 @@ class Home(Screen):
         unread = ctx.inbox.unread() if ctx.inbox else 0
         vac_sub = ' · '.join(x for x in (ctx.vacuum_state.capitalize(),
                                          '%d%%' % ctx.vacuum_battery if ctx.vacuum_battery is not None else '') if x)
-        return [(ctx.tr('menu.messages'), 'chat',
+        items = [(ctx.tr('menu.messages'), 'chat',
                  ctx.tr('menu.messages.unread', n=unread) if unread else ctx.tr('menu.messages.none'), Inbox),
                 (ctx.tr('menu.sport'), 'runner', ctx.tr('hud.sport.subtitle'), SportMenu),
                 (ctx.tr('menu.tv'), 'tv', ctx.tv_app or ctx.tv_name, TVHub),
                 (ctx.tr('menu.vacuum'), 'vacuum', vac_sub or ctx.tr('menu.vacuum.sub'), VacuumScreen),
                 (ctx.tr('menu.voice'), 'mic', ctx.tr('menu.voice.sub'), VoiceScreen),
                 (ctx.tr('menu.settings'), 'gear', ctx.tr('menu.settings.sub'), SettingsScreen)]
+        return [i for i in items if ctx.modules.get(HOME_MODULE.get(i[3]), True)]
 
     def on(self, ev, ctx):
         if ev == 'back':
@@ -299,6 +301,7 @@ class Home(Screen):
         status_bar(p, ctx)
         items = self.items(ctx)
         n = len(items)
+        self.focus %= max(1, len(items))                 # a module switched off can shorten the list
         cur = items[self.focus]
         cx, cy = VIS_CX, 94
         p.circle(cx, cy, 40, 'accent')
@@ -945,3 +948,7 @@ class GestureDecoder:
             n, self.count = self.count, 0
             return {1: 'next', 2: 'ok'}.get(n, 'back')
         return None
+
+
+# Home menu entry -> Companion module that hides it when switched off on the phone (Settings > Modules).
+HOME_MODULE = {Inbox: 'messages', SportMenu: 'sport', TVHub: 'tv', VacuumScreen: 'vacuum'}

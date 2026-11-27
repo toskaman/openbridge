@@ -1266,5 +1266,38 @@
   "status": "VERIFIED",
   "test_id": "engo3-phone-link-26nov",
   "test_utc": "2026-11-26T15:30:00Z"
+ },
+ {
+  "commit_sha": "2b733ad3a1e303cb4c752a92600e4d09df0dc28e",
+  "companion_version": "0.15.0 (code 15), AI engine libobai.so arm64",
+  "device_alias": "Owner phone (rugged model, Android 13)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/companion-015-27nov.md"
+  ],
+  "independent_oracle": "adb screenshots of the phone screen after each step, dumpsys package / appwidget, logcat (no crash)",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "glasses not connected during this test: live mirror and standalone mode on the glasses not yet seen",
+   "phone GPS, Bluetooth sport sensors, wake word, local dictation and visual Oracle not yet tested on the phone",
+   "small on-phone model gets some facts wrong (answered six legs for a spider)",
+   "n=1 phone, 1 session"
+  ],
+  "operations": [
+   "companion install 0.15.0 over 0.14.0, pairing kept",
+   "new pages shown in French: Glasses, Devices, Sensors, Settings, Diagnostics, AI on this phone",
+   "on-phone language model (Qwen3.5-2B, 4-bit) answered short questions in 3 to 8 s without network",
+   "on-phone command model (Qwen3.5-0.8B fine-tuned on the PC) ran phone orders: profile Bike in 1.5 s, brightness down in 1.6 s; an order for the TV was handed to the general model",
+   "quick settings tiles and home-screen widget registered by Android"
+  ],
+  "os_version": "Android 13",
+  "permissions": [
+   "owner-authorized test session over USB debugging"
+  ],
+  "platform": "Android 13 phone, MediaTek Helio G99 (MT6789), 12 GB",
+  "public_device_id": "phone-bv9300-companion",
+  "status": "VERIFIED",
+  "test_id": "companion-015-phone-ai-27nov",
+  "test_utc": "2026-11-26T23:55:00Z"
  }
 ]

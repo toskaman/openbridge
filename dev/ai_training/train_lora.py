@@ -20,9 +20,12 @@ def answer(reply):
     return json.dumps(reply, ensure_ascii=False, separators=(', ', ': '))
 
 
-def encode(tok, row, max_len):
-    msgs = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': row['prompt']}]
-    prefix = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+def encode(tok, row, max_len, system=None, no_think=False):
+    msgs = [{'role': 'system', 'content': system or SYSTEM}, {'role': 'user', 'content': row['prompt']}]
+    kw = {'enable_thinking': False} if no_think else {}
+    prefix = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, **kw)
+    if no_think and not prefix.rstrip().endswith('</think>'):
+        prefix += '<think>\n\n</think>\n\n'      # what the phone sends (Qwen3 / 3.5: answer directly, no reasoning)
     p_ids = tok(prefix, add_special_tokens=False)['input_ids']
     a_ids = tok(answer(row['reply']) + tok.eos_token, add_special_tokens=False)['input_ids']
     ids = (p_ids + a_ids)[:max_len]
@@ -43,6 +46,8 @@ def main(argv=None):
     ap.add_argument('--init-adapter', default=None, help='continue training an existing LoRA adapter')
     ap.add_argument('--max-minutes', type=float, default=0, help='stop (and save) after this long')
     ap.add_argument('--limit', type=int, default=0, help='train on the first N examples only (smoke runs)')
+    ap.add_argument('--system', default=None, help='system line the model will see in production (default: the PC router)')
+    ap.add_argument('--no-think', action='store_true', help='Qwen3 / 3.5: train with the empty reasoning block')
     ap.add_argument('--vram-fraction', type=float, default=0,
                     help='cap PyTorch at this share of the GPU (e.g. 0.72); on Windows, going past the card spills into '
                          'shared RAM and a step becomes 3-8x slower')
@@ -64,7 +69,7 @@ def main(argv=None):
     rows = [json.loads(l) for l in open(Path(a.data) / 'train.jsonl', encoding='utf-8')]
     if a.limit:
         rows = rows[:a.limit]
-    data = [encode(tok, r, a.max_len) for r in rows]
+    data = [encode(tok, r, a.max_len, a.system, a.no_think) for r in rows]
     model = AutoModelForCausalLM.from_pretrained(a.base, dtype=torch.bfloat16, device_map={'': 0})
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()

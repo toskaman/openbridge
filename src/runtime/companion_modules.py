@@ -1,6 +1,7 @@
 """Optional Companion modules: features the owner switches on or off per paired screen.
 
-Today one module, the Oracle (ask a question out loud on the phone or watch, the answer shows on the ENGO glasses).
+Six modules (Companion 0.15): the Oracle, messages, sport, TV, vacuum (the glasses hide the menus that are off) and
+the phone's sensors (off by default). Companion 0.14 knows only the Oracle.
 The switch lives on the device (relay op ``set_modules``) so the Companion hides what is off; the PC asks for the
 change from three places, all owner actions: the Companions customisation screen, the CLI
 (``openbridge glasses module oracle on|off``) and a typed or spoken order on the Companion ("désactive l'Oracle").
@@ -10,19 +11,32 @@ import unicodedata
 
 from src.fabric import relay as fabric_relay
 
-MODULES = {'oracle': 'Oracle: ask a question out loud, the answer shows on the glasses'}
+MODULES = {'oracle': 'Oracle: ask a question out loud, the answer shows on the glasses',
+           'messages': 'Messages: the phone sends its notifications to the glasses',
+           'sport': 'Sport: running, cycling and navigation screens on the glasses',
+           'tv': 'TV: the TV menu on the glasses',
+           'vacuum': 'Vacuum: the robot vacuum menu on the glasses',
+           'sensors': "Phone sensors: the phone's GPS, compass and sport sensors for the glasses (off by default)"}
+# Words people say for each module (speech-to-text output, accents removed).
+ALIASES = {'messages': 'messages', 'message': 'messages', 'notifications': 'messages', 'sms': 'messages',
+           'sport': 'sport', 'sports': 'sport', 'tele': 'tv', 'tv': 'tv', 'television': 'tv', 'tele\'': 'tv',
+           'aspirateur': 'vacuum', 'aspi': 'vacuum', 'vacuum': 'vacuum', 'robot': 'vacuum',
+           'capteurs': 'sensors', 'capteur': 'sensors', 'sensors': 'sensors', 'gps': 'sensors'}
 
 _ON = r"(?:active|activez|activer|allume|allumez|ajoute|ajoutez|mets|remets|affiche|enable|turn on|switch on|add|show)"
 _OFF = r"(?:desactive|desactivez|desactiver|eteins|eteignez|enleve|enlevez|retire|retirez|supprime|supprimez|cache|"
 _OFF += r"masque|disable|turn off|switch off|remove|hide)"
-_TOGGLE = re.compile(r"^\s*(?:(?P<on>%s)|(?P<off>%s))\s+(?:les |le |la |l'|l |the )?(?:module )?(?P<m>[a-z']+)" % (_ON, _OFF))
+_TOGGLE = re.compile(r"^\s*(?:(?P<on>%s)|(?P<off>%s))\s+(?:les |le |la |l'|l |the )?(?P<pre>module |menu )?(?P<m>[a-z']+)" % (_ON, _OFF))
 
 
-def _module_word(word):
-    """'oracle', and what speech-to-text makes of it ('loracle', 'oracles', 'lauracle'...)."""
+def _module_word(word, explicit=False):
+    """'oracle', and what speech-to-text makes of it ('loracle', 'oracles', 'lauracle'...). The other modules need the
+    word "module" or "menu" ("désactive le module télé"): "éteins la télé" is an order for the TV itself."""
     import difflib
     w = word.strip("'").removeprefix("l'")
-    for name in MODULES:
+    if w in ALIASES:
+        return ALIASES[w] if explicit else None
+    for name in ('oracle',):
         if w == name or difflib.SequenceMatcher(None, w, name).ratio() >= 0.75 \
                 or difflib.SequenceMatcher(None, w.removeprefix('l'), name).ratio() >= 0.75:
             return name
@@ -39,7 +53,7 @@ def parse_toggle(text):
     m = _TOGGLE.match(_plain(text))
     if not m:
         return None
-    name = _module_word(m.group('m'))
+    name = _module_word(m.group('m'), explicit=bool(m.group('pre')))
     return (name, m.group('on') is not None) if name else None
 
 

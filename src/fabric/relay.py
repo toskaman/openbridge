@@ -21,8 +21,12 @@ PROTOCOL = 'openbridge-relay/1'
 OPERATIONS = ('discover_capabilities', 'start_discovery', 'stop_discovery', 'report_observations', 'get_status',
               'get_permissions', 'revoke_access', 'set_controls', 'get_requests', 'report_result',
               'get_commands', 'report_command', 'update_status', 'get_notifications',
-              'glasses_connect', 'glasses_write', 'glasses_events', 'glasses_info', 'glasses_disconnect', 'set_modules')
-COMPANION_MODULES = ('oracle',)
+              'glasses_connect', 'glasses_write', 'glasses_events', 'glasses_info', 'glasses_disconnect', 'set_modules',
+              'set_cards', 'get_sensors', 'get_sessions')
+# Optional Companion modules (0.15: all six; 0.14 knows only the Oracle and refuses the others).
+COMPANION_MODULES = ('oracle', 'messages', 'sport', 'tv', 'vacuum', 'sensors')
+MAX_CARDS, CARD_FIELD = 16, 80
+CARD_TONES = ('', 'ok', 'warn', 'alert', 'muted')
 # Glasses link: the phone holds the Bluetooth link to ActiveLook / ENGO glasses for a PC without Bluetooth.
 GLASSES_MAX_CHUNKS, GLASSES_MAX_BATCH, GLASSES_MAX_CHUNK = 64, 8192, 512
 BT_ADDRESS = re.compile(r'^[0-9A-F]{2}(:[0-9A-F]{2}){5}$')
@@ -142,6 +146,15 @@ def command(key, relay_id, op, params=None, now=None, extra=None):
     if op == 'set_modules' and (not params or set(params) - set(COMPANION_MODULES)
                                 or not all(isinstance(v, bool) for v in params.values())):
         raise RelayError('set_modules takes {module: true|false} for known modules')
+    if op == 'set_cards':
+        cards = params.get('cards')
+        if set(params) != {'cards'} or not isinstance(cards, list) or len(cards) > MAX_CARDS or not all(
+                isinstance(c, dict) and not set(c) - {'id', 'title', 'kind', 'state', 'detail', 'tone'}
+                and all(isinstance(v, str) and len(v) <= CARD_FIELD for v in c.values())
+                and c.get('tone', '') in CARD_TONES for c in cards):
+            raise RelayError('set_cards takes up to 16 cards of short strings (id, title, kind, state, detail, tone)')
+    if op in ('get_sensors', 'get_sessions') and params:
+        raise RelayError('%s takes no parameters' % op)
     now = int(now if now is not None else time.time())
     msg = {'protocol': PROTOCOL, 'relay_id': relay_id, 'op': op, 'params': params, 'nonce': secrets.token_hex(12),
            'issued_at': now, 'expires_at': now + COMMAND_TTL}
@@ -310,6 +323,17 @@ def validate_commands(report):
             if c.get('mode') == 'oracle':
                 item['mode'] = 'oracle'          # transcribe here, then answer with the Oracle (no speech service on the phone)
             out.append(item)
+            continue
+        if c.get('kind') == 'vision':
+            # Visual Oracle: a JPEG photo held on the phone like a voice clip, plus the owner's question.
+            nbytes, q = c.get('bytes'), c.get('text', '')
+            if not CLIP_ID.match(str(c.get('clip_id', ''))) or not SHA256.match(str(c.get('sha256', ''))):
+                continue
+            if not isinstance(nbytes, int) or not 0 < nbytes <= VOICE_MAX_BYTES or not isinstance(q, str) \
+                    or len(q) > MAX_COMMAND_TEXT:
+                continue
+            out.append({'request_id': c['request_id'], 'kind': 'vision', 'clip_id': c['clip_id'], 'bytes': nbytes,
+                        'sha256': c['sha256'], 'text': q.strip(), 'lang': c['lang'], 'quality': c['quality']})
             continue
         if c.get('kind', 'text') not in ('text', 'oracle'):
             continue

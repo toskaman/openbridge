@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="fr.openbridge.companion" android:versionCode="14" android:versionName="0.14.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="fr.openbridge.companion" android:versionCode="15" android:versionName="0.15.0">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -24,15 +24,33 @@
         <intent>
             <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
         </intent>
+        <!-- Settings > Messages on the glasses: list the installed apps the owner may choose from. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- Visual Oracle: the phone's camera app takes the photo. -->
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
     </queries>
     <!-- Android 8-11 requirements for BLE scanning. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+    <!-- Phone sensors (owner switch, Sensors page): GPS for the glasses' sport and navigation screens, and the Wi-Fi
+         name for automatic profiles. Android 8-11 also need it for Bluetooth scans. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- "OK Bridge" wake word (owner switch, off by default, visible notification while on). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- Glasses remote and phone sensors show an ongoing notification (Android 13+ asks the owner). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Diagnostics (phase 2 `diag` op): granted once over ADB by the owner, never auto-granted. -->
     <uses-permission android:name="android.permission.DUMP" />
     <uses-permission android:name="android.permission.READ_LOGS" />
-    <application android:label="OpenBridge Companion" android:allowBackup="false" android:usesCleartextTraffic="true" android:banner="@drawable/tv_banner" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round">
+    <application android:label="OpenBridge Companion" android:allowBackup="false" android:usesCleartextTraffic="true" android:banner="@drawable/tv_banner" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:extractNativeLibs="true">
         <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,6 +59,29 @@
             </intent-filter>
         </activity>
         <activity android:name=".OracleVoiceActivity" android:exported="false" android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity android:name=".GlassesActivity" android:exported="false" android:label="Glasses" android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity android:name=".DevicesActivity" android:exported="false" android:label="Devices" />
+        <activity android:name=".SensorsActivity" android:exported="false" android:label="Sensors" />
+        <activity android:name=".SettingsActivity" android:exported="false" android:label="Settings" />
+        <activity android:name=".DiagnosticsActivity" android:exported="false" android:label="Diagnostics" />
+        <activity android:name=".AiActivity" android:exported="false" android:label="AI" />
+        <activity android:name=".VisionActivity" android:exported="false" android:label="Visual Oracle" />
+        <service android:name=".GlassesRemoteService" android:exported="false" android:foregroundServiceType="connectedDevice" />
+        <service android:name=".SensorService" android:exported="false" android:foregroundServiceType="location|connectedDevice" />
+        <service android:name=".WakeService" android:exported="false" android:foregroundServiceType="microphone" />
+        <service android:name=".GlassesTile" android:exported="true" android:label="Glasses: next" android:icon="@drawable/ic_glasses"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <service android:name=".OracleTile" android:exported="true" android:label="Oracle" android:icon="@drawable/ic_oracle"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <receiver android:name=".GlassesWidget" android:exported="true" android:label="OpenBridge glasses">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_glasses" />
+        </receiver>
+        <provider android:name=".PhotoProvider" android:authorities="fr.openbridge.companion.photo" android:exported="false" android:grantUriPermissions="true" />
         <service android:name=".RelayService" android:exported="false"
             android:foregroundServiceType="connectedDevice" />
         <!-- Messages on the glasses: active only after the owner allows notification access in Android settings. -->

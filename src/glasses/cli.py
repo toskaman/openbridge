@@ -11,9 +11,11 @@
 from __future__ import annotations
 
 import json
+import os
 import socket
 import threading
 import time
+from pathlib import Path
 
 from src.glasses import hub as G
 
@@ -387,6 +389,9 @@ def cmd_run(args):
             link.on_button = hub.press
         elif hasattr(getattr(link, 'main', None), 'on_button'):
             link.main.on_button = hub.press
+        for l in (link, getattr(link, 'main', None)):    # the phone's standalone mode handed the glasses back
+            if hasattr(l, 'on_resumed'):
+                l.on_resumed = lambda: hub.redraw(force=True)
         if '3' in args.glasses_model:
             # ENGO 3: the only input is a double tap on the temple (one event, value 1; single taps send nothing and
             # 3-4 taps still send one event, measured 26 Nov 2026). Each one is 'next'; open/back come from the phone
@@ -404,6 +409,10 @@ def cmd_run(args):
             cc.listeners = getattr(cc, 'listeners', [])
             cc.listeners.append(lambda rid, text, doc: None if doc.get('skill_id') == 'voice.oracle' else hub.voice(text))
         Control(hub, lock, args.control_port)
+        feed = None
+        if not args.offline:                             # modules, device cards, phone sensors, standalone sessions
+            from src.glasses.phone_feed import PhoneFeed
+            feed = PhoneFeed(server, hub, lock).start()
         sim = _start_sport(hub, args)
         hub.redraw(force=True)
         end = time.time() + args.seconds if args.seconds else None
@@ -417,6 +426,8 @@ def cmd_run(args):
                 last_phone = time.time()
                 _poll_phone(server, hub, lock)
             time.sleep(0.05)
+        if feed is not None:
+            feed.stop()
         link.close()
         return {'ran_s': args.seconds, 'devices': devices, 'log': hub.log[-20:]}
 
@@ -469,6 +480,51 @@ def _feed_simulation(hub, sim):
         sim['next'] = None
 
 
+AI_MODELS = Path(os.environ.get('OB_AI_SRC', r'D:\OpenBridgeAI'))
+PHONE_MODELS = '/sdcard/Android/data/fr.openbridge.companion/files/models/'
+
+
+def _latest_intent():
+    runs = sorted((AI_MODELS / 'export').glob('phone_*/intent.gguf'), key=lambda p: p.stat().st_mtime)
+    return runs[-1] if runs else None
+
+
+def cmd_companion_ai_push(args):
+    """Copy the phone's AI models over USB (adb): the general model, speech-to-text and the command model."""
+    import shutil
+    import subprocess
+    from src import cli
+    adb = shutil.which('adb')
+    if not adb:
+        raise _err(cli, 'NO_ADB', 'adb not found: install Android platform-tools and plug the phone in with USB debugging on')
+    files = {'llm.gguf': args.llm or AI_MODELS / 'models' / 'Qwen3.5-2B-Q4_K_M.gguf',
+             'stt.bin': args.stt or AI_MODELS / 'models' / 'ggml-base-q5_1.bin',
+             'intent.gguf': args.intent or _latest_intent()}
+    serial = args.serial
+    if not serial:                     # one phone plugged in: use it (ANDROID_SERIAL may name another device)
+        lines = subprocess.run([adb, 'devices'], capture_output=True, text=True, timeout=30).stdout.splitlines()[1:]
+        ready = [l.split()[0] for l in lines if l.strip().endswith('device')]
+        if len(ready) != 1:
+            raise _err(cli, 'PICK_PHONE', 'adb sees %d devices (%s): choose one with --serial'
+                       % (len(ready), ', '.join(ready) or 'none'), 'device')
+        serial = ready[0]
+    dev = ['-s', serial]
+    out = []
+    for name, src in files.items():
+        if src is None or not Path(src).exists():
+            out.append({'file': name, 'pushed': False, 'reason': 'not found: %s' % src})
+            continue
+        r = subprocess.run([adb, *dev, 'push', str(src), PHONE_MODELS + name], capture_output=True, text=True, timeout=900)
+        out.append({'file': name, 'from': str(src), 'bytes': Path(src).stat().st_size, 'pushed': r.returncode == 0,
+                    'adb': (r.stdout or r.stderr).strip().splitlines()[-1:] })
+    failed = [f['file'] for f in out if not f['pushed'] and 'not found' not in str(f.get('reason', ''))]
+    if failed:
+        raise _err(cli, 'PUSH_FAILED', 'adb could not copy %s to %s: %s' % (', '.join(failed), serial,
+                                                                       out[-1].get('adb') or out[-1].get('reason')), 'device')
+    return {'phone': serial, 'phone_folder': PHONE_MODELS, 'files': out,
+            'next': 'Open the Companion > Settings > AI on this phone: the models are used at once.'}
+
+
 def register(subs, leaf):
     g = subs.add_parser('glasses', help='ENGO / ActiveLook glasses: menus, messages, TV, vacuum, voice')
     gs = g.add_subparsers(dest='glasses_command')
@@ -516,8 +572,17 @@ def register(subs, leaf):
     nt.add_argument('--text', required=True)
     sy = leaf(gs, 'say', cmd_say, 'glasses say')
     sy.add_argument('text')
+    comp = subs.add_parser('companion', help='OpenBridge Companion on the phone: AI models')
+    cs = comp.add_subparsers(dest='companion_command')
+    cai = cs.add_parser('ai', help='AI on the phone')
+    cais = cai.add_subparsers(dest='companion_ai_command')
+    push = leaf(cais, 'push', cmd_companion_ai_push, 'companion ai push')
+    push.add_argument('--llm', default=None, help='general model (GGUF), default Qwen3.5-2B-Q4_K_M under OB_AI_SRC/models')
+    push.add_argument('--stt', default=None, help='whisper.cpp model, default ggml-base-q5_1.bin')
+    push.add_argument('--intent', default=None, help='phone command model, default the newest OB_AI_SRC/export/phone_*/intent.gguf')
+    push.add_argument('--serial', default=None, help='adb serial of the phone when several are plugged in')
     md = leaf(gs, 'module', cmd_module, 'glasses module')
-    md.add_argument('module', choices=['oracle'])
+    md.add_argument('module', choices=['oracle', 'messages', 'sport', 'tv', 'vacuum', 'sensors'])
     md.add_argument('state', choices=['on', 'off'])
     md.add_argument('--relay', default=None, help='one paired Companion (relay id); default: all of them')
     oc = leaf(gs, 'oracle', cmd_oracle, 'glasses oracle')
