@@ -181,6 +181,8 @@ class BleLink:
                 self.tr.paused = False
             await c.start_notify(self.AL.FLOW_CHAR_UUID, lambda _, d: d and self._flow(d[0]))
             await c.start_notify(self.AL.GESTURE_CHAR_UUID, lambda _, d: self.on_gesture())
+            for pkt in (self.AL.encode_packet(0x20, b'\x01'), self.AL.cmd_gesture_enable(True)):
+                await c.write_gatt_char(self.AL.RX_CHAR_UUID, pkt, response=False)
             self.state = 'READY'
             self.ready.set()
             self.on_status(self.state, None)
@@ -588,8 +590,175 @@ class Hub:
         self.menu.screen.page = 0                         # a new answer starts on its first page
         return self.redraw(force=True)
 
+    # ---- full ENGO 3 hardware + HUD controls
+    _SCREENS = {
+        'home': lambda: ui.Home(),
+        'inbox': lambda: ui.Inbox(),
+        'sport': lambda: ui.SportMenu(),
+        'tv': lambda: ui.TVHub(),
+        'vacuum': lambda: ui.VacuumScreen(),
+        'voice': lambda: ui.VoiceScreen(),
+        'oracle': lambda: ui.OracleScreen(),
+        'settings': lambda: ui.SettingsScreen(),
+        'calibration': lambda: ui.Calibration(),
+    }
+
+    def open_screen(self, name: str):
+        key = str(name or 'home').strip().lower()
+        factory = self._SCREENS.get(key)
+        if factory is None:
+            raise ValueError(f'unknown screen: {key}')
+        self._auto_open_at = None
+        if key == 'home':
+            self.menu.stack[1:] = []
+        else:
+            self.menu.stack = [self.menu.stack[0], factory()]
+        if not self.settings.get('screen_on', True):
+            self.apply_control('display_on')
+        else:
+            self.redraw(force=True)
+        return key
+
+    def control_summary(self) -> str:
+        s = self.settings
+        on = 'ON' if s.get('screen_on', True) else 'OFF'
+        luma = int(s.get('luma', 10))
+        priv = s.get('privacy', 'full')
+        rot = ' 180' if s.get('rotate180') else ''
+        return f'{on} · Lum {luma} · {priv}{rot}'
+
+    def apply_control(self, op: str, value=None):
+        """Execute a direct ENGO 3 hardware/display/navigation control."""
+        from src.adapters import activelook as AL
+        op_n = str(op or '').strip().lower()
+        nav = {'next', 'prev', 'ok', 'back', 'home', 'up', 'down', 'left', 'right'}
+        if op_n in nav:
+            if not self.settings.get('screen_on', True):
+                self.settings['screen_on'] = True
+                self.link.write(AL.cmd_power(True))
+            self.press(op_n)
+            self.tick()
+            return {'ok': True, 'op': op_n, 'screen': type(self.menu.screen).__name__, 'status': self.control_summary()}
+        if op_n == 'open_screen':
+            scr = self.open_screen(str(value or 'home'))
+            return {'ok': True, 'op': op_n, 'screen': scr, 'status': self.control_summary()}
+        ble_frames = bytearray()
+        dirty = False
+        msg = op_n
+        if op_n in ('display_on', 'display_off', 'display_toggle'):
+            cur = bool(self.settings.get('screen_on', True))
+            nxt = True if op_n == 'display_on' else (False if op_n == 'display_off' else not cur)
+            self.settings['screen_on'] = nxt
+            dirty = True
+            ble_frames += AL.cmd_power(nxt)
+            if not nxt:
+                ble_frames += AL.cmd_clear()
+            msg = f"Display {'ON' if nxt else 'OFF'}"
+        elif op_n == 'clear':
+            ble_frames += AL.cmd_clear()
+            self._last_frame = b''
+            msg = 'Cleared OLED'
+            if ble_frames:
+                self.link.write(bytes(ble_frames))
+            return {'ok': True, 'op': op_n, 'summary': msg, 'status': self.control_summary()}
+        elif op_n in ('luma_up', 'luma_down', 'luma_set'):
+            cur = int(self.settings.get('luma', 10))
+            if op_n == 'luma_up':
+                lvl = min(15, cur + 2)
+            elif op_n == 'luma_down':
+                lvl = max(0, cur - 2)
+            else:
+                lvl = max(0, min(15, int(value if value is not None else cur)))
+            self.settings['luma'] = lvl
+            dirty = True
+            ble_frames += AL.cmd_luma(lvl)
+            msg = f'Luma {lvl}/15'
+        elif op_n in ('als_on', 'als_off', 'als_toggle'):
+            cur = bool(self.settings.get('als', True))
+            nxt = True if op_n == 'als_on' else (False if op_n == 'als_off' else not cur)
+            self.settings['als'] = nxt
+            dirty = True
+            ble_frames += AL.cmd_als_enable(nxt)
+            msg = f"Auto-luma {'ON' if nxt else 'OFF'}"
+        elif op_n in ('gesture_on', 'gesture_off', 'gesture_toggle'):
+            cur = bool(self.settings.get('gesture', True))
+            nxt = True if op_n == 'gesture_on' else (False if op_n == 'gesture_off' else not cur)
+            self.settings['gesture'] = nxt
+            dirty = True
+            if nxt:
+                ble_frames += AL.encode_packet(0x20, b'\x01')
+            ble_frames += AL.cmd_gesture_enable(nxt)
+            msg = f"Tap/Gesture {'ON' if nxt else 'OFF'}"
+        elif op_n in ('rotate_on', 'rotate_off', 'rotate_toggle'):
+            cur = bool(self.settings.get('rotate180', False))
+            nxt = True if op_n == 'rotate_on' else (False if op_n == 'rotate_off' else not cur)
+            self.settings['rotate180'] = nxt
+            dirty = True
+            msg = f"Rotate180 {'ON' if nxt else 'OFF'}"
+        elif op_n in ('privacy_cycle', 'privacy_set'):
+            order = ['full', 'sender', 'off']
+            cur = self.settings.get('privacy', 'full')
+            nxt = str(value) if (op_n == 'privacy_set' and str(value) in order) else order[(order.index(cur) + 1) % 3 if cur in order else 0]
+            self.settings['privacy'] = nxt
+            self.inbox.privacy = nxt
+            dirty = True
+            msg = f'Privacy {nxt}'
+        elif op_n in ('lang_toggle', 'lang_set'):
+            cur = self.ctx.lang
+            nxt = str(value) if (op_n == 'lang_set' and str(value) in ('fr', 'en')) else ('en' if cur == 'fr' else 'fr')
+            self.ctx.lang = nxt
+            self.settings['hud_language'] = nxt
+            dirty = True
+            msg = f'Lang {nxt.upper()}'
+        elif op_n in ('units_toggle', 'units_set'):
+            cur = self.settings.get('units', 'metric')
+            nxt = str(value) if (op_n == 'units_set' and str(value) in ('metric', 'imperial')) else ('imperial' if cur == 'metric' else 'metric')
+            self.settings['units'] = nxt
+            self.ctx.units = nxt
+            if self.sport is not None:
+                self.sport.units = nxt
+            dirty = True
+            msg = 'Units km' if nxt == 'metric' else 'Units mi'
+        elif op_n in ('shift_left', 'shift_right', 'shift_up', 'shift_down', 'shift_reset'):
+            sx = int(self.settings.get('shift_x', 0))
+            sy = int(self.settings.get('shift_y', 0))
+            if op_n == 'shift_left':
+                sx -= 4
+            elif op_n == 'shift_right':
+                sx += 4
+            elif op_n == 'shift_up':
+                sy -= 4
+            elif op_n == 'shift_down':
+                sy += 4
+            else:
+                sx, sy = 0, 0
+            sx, sy = max(-40, min(40, sx)), max(-40, min(40, sy))
+            self.settings['shift_x'], self.settings['shift_y'] = sx, sy
+            self.settings['x_offset'] = sx
+            dirty = True
+            ble_frames += AL.cmd_shift(sx, sy)
+            msg = f'Shift {sx:+d},{sy:+d}'
+        elif op_n == 'inbox_clear':
+            self.inbox.clear()
+            msg = 'Inbox cleared'
+        elif op_n == 'status':
+            msg = self.control_summary()
+        else:
+            raise ValueError(f'unsupported ENGO control: {op_n}')
+
+        if dirty and self.persist:
+            save_settings(self.settings)
+        if ble_frames:
+            self.link.write(bytes(ble_frames))
+        if self.settings.get('screen_on', True) and op_n != 'status':
+            self.ctx.banner = {'ok': True, 'text': msg, 'until': self.clock() + 2.0}
+            self.redraw(force=True)
+        return {'ok': True, 'op': op_n, 'summary': msg, 'status': self.control_summary()}
+
     # ---- loop
     def redraw(self, force=False):
+        if not self.settings.get('screen_on', True):
+            return b''
         with self._draw:                  # voice runs on another thread: frames never interleave on the link
             frame = self.menu.render(colour=self.colour, rotate180=bool(self.settings.get('rotate180')),
                                      x_offset=self.settings.get('x_offset')).to_bytes()

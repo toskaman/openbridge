@@ -74,6 +74,14 @@ SKILLS = {
     'retro_command': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': False,
                       'input': {'type': 'object', 'properties': {'command': {'type': 'string', 'enum': ['VERSION', 'GET_STATUS', 'PAUSE_TOGGLE', 'VOLUME_UP', 'VOLUME_DOWN']}}, 'required': ['command'], 'additionalProperties': False},
                       'plain': 'Send one allowlisted command to the RetroArch running on this PC (loopback only).'},
+    'engo_control': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': False, 'consent': 'per_invocation', 'targeted': False,
+                     'input': {'type': 'object',
+                               'properties': {'op': {'type': 'string', 'maxLength': 32},
+                                              'value': {'type': 'string', 'maxLength': 40},
+                                              'relay_id': {'type': 'string', 'maxLength': 64},
+                                              'control_port': {'type': 'integer', 'minimum': 1024, 'maximum': 65535}},
+                               'required': ['op'], 'additionalProperties': False},
+                     'plain': 'Control ENGO 3 / ActiveLook by Microoled glasses (navigation, screens, luma, ALS, optics, rotation, privacy) or switch watch ENGO control pages.'},
     'pc_open_url': {'version': 1, 'reversibility': 'IRREVERSIBLE', 'idempotent': True, 'consent': 'per_invocation', 'targeted': True,
                     'input': {'type': 'object', 'properties': {'url': {'type': 'string', 'maxLength': 300}}, 'required': ['url'], 'additionalProperties': False},
                     'plain': 'Open one http(s) URL in the default browser of this PC. Only process launch is verified, never page load.'},
@@ -306,6 +314,13 @@ class Router:
             r = self._route(skill_id, snap, 'fabric', hops, 'op:retro_command', 'retro_command',
                             self.clock(), LEASE_S['LAN'], 'localhost RetroArch', None, None)
             r['_params'] = lambda p: {'command': p['command']}
+            return [r]
+        if skill_id == 'engo_control':
+            hops = [{'device_key': 'fabric', 'transport': 'LAN', 'primitive_id': 'engo_control',
+                     'grant': 'read', 'required_grant': 'read'}]
+            r = self._route(skill_id, snap, 'fabric', hops, 'op:engo_control', 'engo_control',
+                            self.clock(), LEASE_S['LAN'], 'ENGO 3 / ActiveLook by Microoled hub', None, None)
+            r['_params'] = lambda p: {k: p[k] for k in ('op', 'value', 'relay_id', 'control_port') if k in p}
             return [r]
         if target not in devs:
             return out

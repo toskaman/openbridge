@@ -398,6 +398,9 @@ PARITY = (
     ('learn.report', 'what have you learned about reliability',
      'qu as tu appris sur la fiabilite', 'learned report',
      []),
+    ('engo_control', 'show engo 3 glasses controls',
+     'affiche les controles lunettes engo 3', 'engo control',
+     [{'kind': 'category', 'ref': 'fabric'}]),
 )
 
 VOICE_PARITY = (

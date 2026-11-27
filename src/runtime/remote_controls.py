@@ -525,7 +525,7 @@ class RemoteControls:
         with self._lock:
             self.history.append(entry)
             del self.history[:-100]
-        self._update_status(rid, req['control_id'], outcome, now)
+        self._update_status(rid, req['control_id'], outcome, now, status_text=entry.get('engo_status'))
         ev = {k: v for k, v in entry.items() if k not in ('at', 'touch', 'seq')}
         self._ex().emit('remote_request', device_seq=entry['seq'], **ev)
         if origin == 'press' and not self.closed:
@@ -535,16 +535,21 @@ class RemoteControls:
                 pass
         return entry
 
-    def _update_status(self, rid, cid, outcome, now):
+    def _update_status(self, rid, cid, outcome, now, status_text=None):
         """Status widgets show the last outcome of their source control. Sent as update_status, which never resets
         pending device requests (a full set_controls would)."""
         with self._lock:
             l = self.layouts.get(rid)
-            targets = [k for k, v in (l or {}).get('display', {}).items() if v['kind'] == 'status' and v['source'] == cid]
+            display = (l or {}).get('display', {})
+            targets = [k for k, v in display.items()
+                       if v['kind'] == 'status' and (v['source'] == cid or (status_text and k.startswith('ui-engo-')))]
             if not targets:
                 return
-            word = {'VERIFIED': 'done, verified', 'EXECUTED': 'done', 'REVOKED': 'not authorized'}.get(outcome, outcome.lower().replace('_', ' '))
-            value = (word + ' ' + time.strftime('%H:%M', time.localtime(now)))[:fabric_relay.MAX_STATUS_TEXT]
+            if status_text:
+                value = str(status_text)[:fabric_relay.MAX_STATUS_TEXT]
+            else:
+                word = {'VERIFIED': 'done, verified', 'EXECUTED': 'done', 'REVOKED': 'not authorized'}.get(outcome, outcome.lower().replace('_', ' '))
+                value = (word + ' ' + time.strftime('%H:%M', time.localtime(now)))[:fabric_relay.MAX_STATUS_TEXT]
             for k in targets:
                 l['display'][k]['value'] = value
         if not self.closed:
@@ -580,11 +585,14 @@ class RemoteControls:
             rc = rt.invoke(body, actor=actor)
             entry['transaction_id'] = rc.get('transaction_id')
             outcome = rc.get('state', 'FAILED')
-            text = f"{grant['label']}: " + {'VERIFIED': 'done, verified', 'EXECUTED': 'done', 'REVERTED': 'restored'}.get(outcome, outcome.lower().replace('_', ' '))
+            res_dict = rc.get('result') if isinstance(rc.get('result'), dict) else {}
+            if grant['skill_id'] == 'engo_control' and res_dict.get('status'):
+                entry['engo_status'] = res_dict['status']
+            text = res_dict.get('summary') or (f"{grant['label']}: " + {'VERIFIED': 'done, verified', 'EXECUTED': 'done', 'REVERTED': 'restored'}.get(outcome, outcome.lower().replace('_', ' ')))
             after = rc.get('after')
             if outcome == 'VERIFIED' and isinstance(after, int):
                 text += f' ({after})'
-            return outcome, text
+            return outcome, str(text)[:80]
         except RouteError as e:
             if e.code == 'UNCERTAIN_OUTCOME':
                 return 'UNCERTAIN', f"{grant['label']}: interrupted; press again"[:80]

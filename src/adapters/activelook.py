@@ -158,9 +158,24 @@ def cmd_gauge(gauge_id: int, value_pct: int) -> bytes:
     return encode_packet(0x70, bytes([gauge_id & 0xFF, max(0, min(100, value_pct))]))
 
 
+def cmd_power(on: bool) -> bytes:
+    """Turn ActiveLook MicroOLED display on or sleep (0x00)."""
+    return encode_packet(0x00, bytes([0x01 if on else 0x00]))
+
+
+def cmd_shift(x: int, y: int) -> bytes:
+    """Set optical alignment X/Y offset in pixels (0x09)."""
+    return encode_packet(0x09, struct.pack(">hh", max(-128, min(127, int(x))), max(-128, min(127, int(y)))))
+
+
 def cmd_gesture_enable(enable: bool) -> bytes:
     """Toggle infrared gesture proximity sensor."""
     return encode_packet(0x21, bytes([0x01 if enable else 0x00]))
+
+
+def cmd_als_enable(enable: bool) -> bytes:
+    """Toggle ambient light sensor auto-brightness (0x22)."""
+    return encode_packet(0x22, bytes([0x01 if enable else 0x00]))
 
 
 def cmd_hold_flush(action: int) -> bytes:

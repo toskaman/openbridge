@@ -61,6 +61,9 @@
       suggest: p => ({ PAUSE_TOGGLE: 'Pause game', VOLUME_UP: 'Game vol +', VOLUME_DOWN: 'Game vol −' }[p.command]) },
     { id: 'ble_scan_room', name: 'Look for Bluetooth devices nearby', group: 'Info', for: ['this_pc'],
       fields: { seconds: { label: 'Scan time (seconds)', range: [1, 15], def: 8 } }, suggest: () => 'Bluetooth scan' },
+    { id: 'engo_control', name: 'Control ENGO 3 smart glasses', group: 'ENGO 3 Glasses', for: ['this_pc', 'watch', 'phone'],
+      fields: { op: { label: 'ENGO 3 action', options: [['next', 'Next'], ['ok', 'Open (OK)'], ['back', 'Back'], ['home', 'Home'], ['display_toggle', 'Display ON / OFF'], ['luma_up', 'Brightness +'], ['luma_down', 'Brightness −'], ['als_toggle', 'Auto-Luma (ALS)'], ['gesture_toggle', 'Tap / Gestures'], ['rotate_toggle', 'Rotate 180°'], ['privacy_cycle', 'Privacy mode'], ['lang_toggle', 'Language FR / EN'], ['units_toggle', 'Units km / mi'], ['clear', 'Clear OLED']], def: 'display_toggle' } },
+      suggest: p => ({ next: 'ENGO Next', ok: 'ENGO OK', back: 'ENGO Back', home: 'ENGO Home', display_toggle: 'ENGO ON/OFF', luma_up: 'ENGO Lum +', luma_down: 'ENGO Lum −', als_toggle: 'ENGO ALS', gesture_toggle: 'ENGO Tap', rotate_toggle: 'ENGO 180°', privacy_cycle: 'ENGO Privacy', lang_toggle: 'ENGO Lang', units_toggle: 'ENGO Units', clear: 'ENGO Clear' }[p.op] || 'ENGO Control') },
   ];
   const HIDDEN = new Set(['pc_run', 'capture_send', 'capture_montage', 'file_pull', 'file_push', 'view_image', 'pc_place_file', 'pc_wallpaper', 'capability_probe']);
   const THIS_PC = { key: '__this_pc__', label: 'This PC (OpenBridge)', category: 'this_pc' };
@@ -109,6 +112,7 @@
       C.data = { max_buttons: prof.max_buttons || 12, max_profiles: prof.max_profiles || 16 };
       setScreens(prof.screens);
       C.modules = await get('/api/v2/companion_modules').catch(() => null);
+      C.engoWatch = await get('/api/v2/engo_watch_controls').catch(() => null);
     } catch (e) { C.error = 'Could not load your controls: ' + e.message; }
     C.loading = false; pickDefaults(); paint();
   }
@@ -475,7 +479,32 @@
           differs && live.some(l => l.editable) && !C.demo ? h('button', { type: 'button', class: 'ghost small', onclick: capture }, 'Copy into a new profile') : null,
           h('button', { type: 'button', class: 'ghost small cx-danger', onclick: clearScreen }, 'Remove from screen'))) : null,
       modulesPanel(),
+      engoWatchPanel(),
       h('p', { class: 'muted small cx-note', text: 'Saving never changes the screen. Buttons appear only when you press Send, and each press runs its action once.' }));
+  }
+  // ---------- ENGO 3 Watch Controls (rendered ONLY when a Wear OS watch is detected) ----------
+  async function setEngoWatch(action, page, relayId) {
+    try {
+      const r = await post('/api/v2/engo_watch_controls', Object.assign({ action, consent: true }, page ? { page } : {}, relayId ? { relay_id: relayId } : {}));
+      flash(r.hidden ? 'ENGO 3 controls removed from watch.' : `ENGO 3 controls (${r.title || r.page}) sent to watch.`, 'ok');
+      await load();
+    } catch (e) { C.error = 'ENGO watch controls: ' + e.message; paint(); }
+  }
+  function engoWatchPanel() {
+    if (C.demo || !C.engoWatch || !C.engoWatch.watch_detected) return null;
+    const scr = screenOf(C.screen);
+    const paired = C.engoWatch.paired_watches || [];
+    const target = paired.find(w => w.relay_id === C.screen) || paired[0];
+    if (scr && scr.category && scr.category !== 'watch' && !paired.some(w => w.relay_id === C.screen)) return null;
+    const pages = C.engoWatch.pages || [{ id: 'main', title: 'ENGO 3' }, { id: 'screens', title: 'Screens' }, { id: 'display', title: 'Optics & Settings' }, { id: 'align', title: 'Optical Alignment' }];
+    const activePage = target ? (C.engoWatch.active_pages || {})[target.relay_id] : null;
+    return h('div', { class: 'cx-live cx-engo-watch', 'data-engo-watch': '1' },
+      h('h3', { text: 'ENGO 3 on Watch' }),
+      !target ? h('p', { class: 'muted small', text: 'Wear OS watch detected — pair OpenBridge Companion on the watch first to push ENGO 3 controls.' })
+        : h('div', { class: 'row wrap' },
+            pages.map(pg => h('button', { type: 'button', class: (activePage === pg.id ? 'primary' : 'ghost') + ' small',
+              onclick: () => setEngoWatch('show', pg.id, target.relay_id) }, pg.title)),
+            activePage ? h('button', { type: 'button', class: 'ghost small cx-danger', onclick: () => setEngoWatch('hide', null, target.relay_id) }, 'Hide ENGO') : null));
   }
   // ---------- optional modules (Oracle...) per screen ----------
   async function setModule(name, on) {
