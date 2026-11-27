@@ -30,7 +30,7 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 | You're wiring a test bench | Look away to a screen for every reading | Sensor values and alerts stay in sight |
 | A device drops off the network | Nothing, until something fails | A short alert, the moment it happens |
 
-## Working today on a real ENGO 3 (26 November 2026)
+## Working today on a real ENGO 3 (26–27 November 2026)
 
 - **A PC without Bluetooth is fine:** the OpenBridge Companion on the phone holds the Bluetooth link and relays the frames over the signed, encrypted relay channel.
 - **Ask a question into the phone, read the answer in the glasses:** the Oracle's answer is paged in the large font.
@@ -38,7 +38,7 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 - **Navigation without the phone in hand:** double tap on the temple = next, the home menu opens by itself after 3 s, and Next / Open / Back / Home buttons and single voice words on the phone.
 - **Full ENGO 3 controls on a Wear OS watch (implemented & unit-tested):** when a Wear OS watch Companion is detected, every ENGO 3 / ActiveLook control (navigation, all 9 HUD screens, display power `0x00`, brightness `0x10`, ALS auto-luma `0x22`, tap/gestures `0x21`, 180° rotation, optical shift `0x09`, privacy, language, units) is pushed across 4 `<= 12`-control signed pages by text, voice or UI options — hidden when no watch is detected. *(Unit-tested against captured BLE frames and simulated watch relay; physical Wear OS watch + ENGO 3 session pending hardware run.)*
 
-Details and measurements: [glasses guide](../GLASSES.md) · [evidence, 26 Nov 2026](../evidence/engo3-phone-link-26nov.md).
+Details and measurements: [glasses guide](../GLASSES.md) · [evidence, 26 Nov 2026](../evidence/engo3-phone-link-26nov.md) · [evidence, 27 Nov 2026](../evidence/engo3-oracle-push-27nov.md).
 
 **What we'd love from ENGO next** (more tap gestures, accented fonts, a smaller font, two connections at once...): [suggestions for ENGO](engo/ENGO_FEATURE_REQUESTS.md), kept up to date as we build.
 

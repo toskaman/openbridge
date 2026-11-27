@@ -92,11 +92,12 @@ class TestOracleAnswer(unittest.TestCase):
 
 class TestPushOracleAnswer(unittest.TestCase):
     def test_push_smoke(self):
+        # Real construction (no __new__ bypass): a stubbed _send once hid
+        # an AttributeError on this exact path.
         from src.adapters.activelook import ActiveLookAdapter
-        adapter = ActiveLookAdapter.__new__(ActiveLookAdapter)
-        adapter.is_color = True
-        adapter.model = "ENGO 3"
-        adapter._send = lambda data: True
+        sent = bytearray()
+        adapter = ActiveLookAdapter(transport=sent.extend, model="ENGO 3")
+        adapter.native_frame = False
         result = adapter.push_oracle_answer(
             query_class="MATH",
             transcript="combien fait 2 fois 6",
@@ -105,6 +106,8 @@ class TestPushOracleAnswer(unittest.TestCase):
             latency_ms=1,
         )
         self.assertTrue(result)
+        self.assertTrue(bytes(sent))
+        self.assertIn(b"= 12", bytes(sent))
 
 
 class TestHybridRoutingAndFormat(unittest.TestCase):

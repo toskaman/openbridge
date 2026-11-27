@@ -1299,5 +1299,37 @@
   "status": "VERIFIED",
   "test_id": "companion-015-phone-ai-27nov",
   "test_utc": "2026-11-26T23:55:00Z"
+ },
+ {
+  "commit_sha": "b6f6e4c808fccb9146f5fc01b5ad5879ff7c30d0",
+  "companion_version": "phone Companion with glasses_link, modules and cards capabilities",
+  "device_alias": "ENGO 3 Photochromic smart glasses (owner pair)",
+  "environment": "REAL_HARDWARE",
+  "evidence": [
+   "docs/evidence/engo3-oracle-push-27nov.md"
+  ],
+  "independent_oracle": "owner wearing the glasses confirmed = 12 and = 56 live; phone relay counters written 17, write_errors 0",
+  "integration": "NATIVE_COMPANION",
+  "limitations": [
+   "PC without Bluetooth: tested through the phone only, not over the PC's own Bluetooth",
+   "media and triage screens accepted at transport level, display not visually confirmed",
+   "n=1 pair, 1 session"
+  ],
+  "operations": [
+   "BLE scan from watch relay and phone relay: ENGO 3 seen by both at RSSI -53",
+   "glasses_connect to the glasses address: link READY, MTU 247",
+   "oracle MATH cards pushed and shown on the glasses, owner-confirmed twice",
+   "brightness set to 13/15 through the relay, batch accepted",
+   "3 device cards pushed to the phone, owner-confirmed on the Devices page"
+  ],
+  "os_version": "ENGO 3 firmware as delivered (Nov 2026)",
+  "permissions": [
+   "owner-authorized physical run; owner wearing the glasses"
+  ],
+  "platform": "ENGO 3 Photochromic (ActiveLook) via Android 13 phone Bluetooth",
+  "public_device_id": "engo3-glasses-01",
+  "status": "VERIFIED",
+  "test_id": "engo3-oracle-push-27nov",
+  "test_utc": "2026-11-27T14:40:00Z"
  }
 ]

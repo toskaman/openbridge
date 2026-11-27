@@ -2913,4 +2913,4 @@ class ActiveLookAdapter:
         cmds += cmd_text(4, 240, "~ WAVE  dismiss", font=0,
                          color_or_grey=COLOR_AMBER if self.is_color else 10)
 
-        return self._send(bytes(cmds))
+        return self.send(bytes(cmds))
