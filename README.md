@@ -51,12 +51,13 @@
 
 <!-- whatsnew:start (newest first, "YYYY-MM-DD HH:MM" Paris time; update on EVERY change, see AGENTS.md) -->
 
+- `2026-11-27 13:45` **AI model pinned to every device class:** a 73-test matrix now locks the official command model, voice intents, discovery grounding and the Oracle to each device class, and fixes the model being told phone/PC/glasses skills work on any device ([ENGO](https://www.engoeyewear.com) / [ActiveLook by Microoled](https://www.activelook.net) controls included); spoken English math like "12 divided by 4" now answers instantly. [Matrix](tests/unit/test_ai_device_matrix.py)
 - `2026-11-27 12:30` **Full ENGO 3 controls on Wear OS watches ([ENGO](https://www.engoeyewear.com) × [ActiveLook by Microoled](https://www.activelook.net)):** summon all ENGO 3 controls (navigation, 9 HUD screens, display power, brightness, ALS, tap/gesture toggle, 180° rotation, optical alignment shift, privacy and inbox) onto a Wear OS watch by text, voice or options, with watch menus hidden whenever no watch is detected. [Glasses](docs/GLASSES.md) · [Partner page](docs/partners/ENGO.md)
 - `2026-11-27 01:00` **OpenBridge Companion 0.15: glasses page, phone sensors, standalone mode and AI on the phone:** a live copy of what the glasses show, the volume keys as a remote, quick tiles and a widget; device cards; six modules the glasses follow; profiles (home, bike, work); the phone's GPS and sport sensors for the sport screens; a visual Oracle; the phone drives the glasses alone when the PC is away; and a small model, speech-to-text and a command model trained on the PC, running on the phone with no network. [Companion](docs/ANDROID_COMPANION.md#0150-27-november-2026)
-- `2026-11-26 20:30` **ENGO 3 tap latency traced to the firmware:** the ~2 s before a double tap registers, and the way extra taps are ignored, are the glasses' own tap detection, not OpenBridge (our path is under 100 ms). Documented, with a concrete firmware ask, in the [suggestions for ENGO](docs/partners/engo/ENGO_FEATURE_REQUESTS.md).
-
 <details>
 <summary>Older updates</summary>
+
+- `2026-11-26 20:30` **ENGO 3 tap latency traced to the firmware:** the ~2 s before a double tap registers, and the way extra taps are ignored, are the glasses' own tap detection, not OpenBridge (our path is under 100 ms). Documented, with a concrete firmware ask, in the [suggestions for ENGO](docs/partners/engo/ENGO_FEATURE_REQUESTS.md).
 
 - `2026-11-26 18:50` **Every glasses screen redrawn for the real ENGO 3:** messages, TV, sport, navigation, settings and the voice screen now fit the panel with its real font sizes; the older ENGO demo screens show upright and in colour too, and the emulator no longer draws them upside down. What we'd like from ENGO next is in a [suggestions file](docs/partners/engo/ENGO_FEATURE_REQUESTS.md). [Glasses](docs/GLASSES.md)
 

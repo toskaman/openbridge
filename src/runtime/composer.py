@@ -45,16 +45,20 @@ NO_ATOMIC_ROLLBACK = (
 # Skill audience by device category, mirroring Router._providers. This only
 # shapes the proposal prompt; compose() re-checks every step against the live
 # route truth, so a stale map can only refuse, never admit.
+# Every skill in routing.SKILLS must have an entry here: an unlisted skill
+# silently falls back to 'any linked device', which tells the model it can
+# run anywhere (tests/unit/test_ai_device_matrix.py guards this).
 ANDROID = ('phone', 'tv', 'android', 'watch')
 SKILL_AUDIENCE = {
     'ble_scan_room': 'fabric',
     'capture_montage': 'fabric',
     'retro_command': 'fabric',
+    'engo_control': 'fabric',
     'device_facts': 'any linked device',
     'tv_volume_set': 'android',
     'tv_volume_step': 'android',
-    'tv_sleep': 'android',
-    'tv_wake': 'android',
+    'tv_sleep': 'tv',
+    'tv_wake': 'tv',
     'screen_capture': 'android',
     'file_pull': 'android',
     'capability_probe': 'android',
@@ -62,8 +66,12 @@ SKILL_AUDIENCE = {
     'capture_send': 'android',
     'file_push': 'android',
     'app_launch': 'android',
+    'view_image': 'android',
     'vacuum_command': 'vacuum',
     'pc_run': 'computer',
+    'pc_open_url': 'computer',
+    'pc_place_file': 'computer',
+    'pc_wallpaper': 'computer',
 }
 
 # Ollama structured-output constraint (shape only; values stay model-authored
@@ -123,6 +131,7 @@ def candidates_for(device):
             continue
         if aud == 'any linked device' or aud == 'computer' and cat == 'computer' \
                 or aud == 'vacuum' and cat == 'vacuum' \
+                or aud == 'tv' and cat == 'tv' \
                 or aud == 'android' and cat in ANDROID + ('tablet',):
             out.append(sid)
     return out

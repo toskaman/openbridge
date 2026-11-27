@@ -31,7 +31,7 @@ except ImportError:
 # ---------------------------------------------------------------------------
 _SAFE_MATH = re.compile(r'^[\d\s\+\-\*\/\%\(\)\.e]+$')
 _MATH_TRIGGERS = re.compile(
-    r'\b(?:combien|calcul\w*|fois|divis\w*|multipl\w*|plus|moins|racine|carre|puissance|'
+    r'\b(?:combien|calcul\w*|fois|divis\w*|divid\w*|multipl\w*|plus|moins|minus|racine|carre|puissance|'
     r'sqrt|pow|percent|pourcent|how\s+much|what\s+is\s+[\d]|[\d]+\s*[\+\-\*\/x×÷]\s*[\d])\b',
     re.IGNORECASE,
 )
@@ -56,7 +56,7 @@ def _normalise_expr(text: str) -> str:
     t = re.sub(r'\b(fois|multiplié\s+par|multiplie\s+par|multiplié|times|x)\b', '*', t)
     t = re.sub(r'\b(divisé\s+par|divise\s+par|divisé|divided\s+by|sur)\b', '/', t)
     t = re.sub(r'\b(plus)\b', '+', t)
-    t = re.sub(r'\b(moins)\b', '-', t)
+    t = re.sub(r'\b(moins|minus)\b', '-', t)
     t = re.sub(r'\bracine\s+(?:carré\s+|carree\s+)?de\b', 'sqrt', t)
     t = re.sub(r'\bau\s+carré\b|\bau\s+carre\b', '**2', t)
     t = re.sub(r'\bpuissance\b', '**', t)
