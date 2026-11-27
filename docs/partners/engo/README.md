@@ -9,11 +9,15 @@
 > ENGO smart glasses (ENGO 1, ENGO 2, ENGO 3, ENGO 3 Titanium) into OpenBridge.
 
 > [!IMPORTANT]
-> **Validation status: emulator only.** The integration was built and tested with the
+> **Validation status: emulator + first real-hardware sessions.** The integration was built and tested with the
 > [HUD Studio](19_HUD_STUDIO_EMULATOR.md) emulator and the official ActiveLook app (development build) on an
-> Android smartphone, **without physical glasses**. Real tests on an ENGO pair (BLE, flow control,
-> "ALooK" firmware layouts, optics, gesture sensor, battery life) **are waiting for the pair to arrive**,
-> as are the announced hardware benchmarks.
+> Android smartphone. Since 26 Nov 2026 the owner's **ENGO 3 Photochromic** pair is in hand: the phone-held BLE
+> link, display calibration, Oracle answer cards, brightness and tap latency were measured on the real glasses
+> ([phone-link evidence](../../evidence/engo3-phone-link-26nov.md),
+> [oracle-push evidence](../../evidence/engo3-oracle-push-27nov.md),
+> [compatibility matrix](../../HARDWARE_TEST_MATRIX.md)).
+> Everything else (optics bench, gesture sensor, battery life, "ALooK" firmware layouts) stays emulator-only
+> until measured.
 
 ---
 
@@ -78,7 +82,7 @@ python -m src.adapters.activelook_emulator --classic --model "ENGO 3 Titanium"
 ```
 Full guide: [19_HUD_STUDIO_EMULATOR.md](19_HUD_STUDIO_EMULATOR.md).
 
-### 2. Run the dedicated test suites (82 tests, emulator only)
+### 2. Run the dedicated test suites (93 tests, emulator only)
 ```bash
 python -m unittest tests/unit/test_activelook.py tests/unit/test_engo_killer_features.py tests/unit/test_engo_ai_bridge.py tests/unit/test_engo_openbridge_neural_integration.py tests/unit/test_hud_studio.py -v
 ```
