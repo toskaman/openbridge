@@ -2,7 +2,6 @@
 import hashlib
 import tempfile
 import unittest
-from types import SimpleNamespace
 
 from tests.runtime.test_primitives import ctx
 from src.runtime import montage as M

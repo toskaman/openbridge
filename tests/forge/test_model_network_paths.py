@@ -3,16 +3,12 @@
 No packets reach a provider/model. No paid/hosted model path exists any more.
 This is Python in-process transport coverage, not subprocess or OS egress control.
 """
-from contextlib import closing
-from datetime import datetime, timezone
 import json
 from pathlib import Path
-import sqlite3
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from src.ai.broker import ModelBlocked
 from src.ai.glimmer import GlimmerBroker
 from src.ai.local_meta import LocalMetaBroker, local_request
 from src.ai.registry import RegistryInvalid, require

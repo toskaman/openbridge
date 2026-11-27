@@ -10,7 +10,7 @@ Tests:
 import unittest
 from src.adapters.activelook import ActiveLookAdapter
 from src.adapters.activelook_emulator import parse_frames, HUDCanvas
-from src.adapters.engo_ai_bridge import EngoAIBridge, PhoneSensoryState
+from src.adapters.engo_ai_bridge import EngoAIBridge
 
 
 

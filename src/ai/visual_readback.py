@@ -9,7 +9,6 @@ account badges) is cropped away before the model sees it; only the SHA-256 of th
 """
 import base64
 import hashlib
-import json
 import re
 import struct
 import time

@@ -48,7 +48,6 @@ def build_query(names, qid=0):
 
 def read_name(data, offset, depth=0):
     labels = []
-    jumped = None
     while True:
         if depth > 20 or offset >= len(data):
             raise ValueError('Malformed name')
@@ -65,7 +64,6 @@ def read_name(data, offset, depth=0):
             suffix, _ = read_name(data, pointer, depth + 1)
             labels.append(suffix)
             offset += 2
-            jumped = True
             break
         if length > 63 or offset + 1 + length > len(data):
             raise ValueError('Malformed label')

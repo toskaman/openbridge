@@ -1,6 +1,5 @@
 """V4 substrate trust kernel (SIMULATED_VERIFIED: real registry + Executor, fake device runners, fixed test key).
 Each security test states the attack it blocks; all were written before kernel.py existed (new module)."""
-import copy
 import time
 import json
 import tempfile
@@ -306,7 +305,6 @@ class UIPlan(Base):
     """Meta UIViewPlan -> Companion buttons -> approved manifest executions (fake Companion mirroring RelayServer.java)."""
     def setUp(self):
         super().setUp()
-        import time as _t
         from src.fabric import relay as R
         from src.fabric.relay import RelayManager
         from src.runtime.api_v2 import remote_controls

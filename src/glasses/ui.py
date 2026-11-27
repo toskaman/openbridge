@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 
 from src.glasses import icons as I
 from src.glasses.i18n import NATIVE_NAMES, fmt_distance, fmt_duration, fmt_pace, fmt_speed, t
-from src.glasses.panel import FONTS, H, W, Panel, ascii_fold, fit, text_width, wrap
+from src.glasses.panel import FONTS, Panel, ascii_fold, fit, text_width, wrap
 
 EVENTS = ('next', 'prev', 'ok', 'back', 'home', 'up', 'down', 'left', 'right')
 

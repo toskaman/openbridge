@@ -175,6 +175,7 @@ class Client:
         self.cache = {}           # topic -> (payload bytes, monotonic ts)
         self._pktid = 0
         self._puback = {}         # pktid -> Event-less flag set
+        self._pending_subs = {}   # pktid -> filter (SUBACK tracking)
         self._last_io = clock()
 
     def _next_id(self):
@@ -202,7 +203,9 @@ class Client:
         return True
 
     def _resub(self, filt, qos):
-        self._send(encode_subscribe(self._next_id(), [(filt, qos)]))
+        pid = self._next_id()
+        self._pending_subs[pid] = filt
+        self._send(encode_subscribe(pid, [(filt, qos)]))
 
     def close(self):
         s, self.sock = self.sock, None
@@ -305,8 +308,12 @@ class Client:
                 while len(self.cache) > MAX_CACHE:
                     self.cache.pop(next(iter(self.cache)))
                 out.append((topic, payload))
-            elif ptype == 11:
-                pass                                    # SUBACK: subscription confirmed
+            elif ptype == 9:                            # SUBACK
+                if len(body) >= 2:
+                    pid = int.from_bytes(body[:2], 'big')
+                    filt = self._pending_subs.pop(pid, None)
+                    if any(c == 0x80 for c in body[2:]):
+                        raise MqttError('broker refused subscription %r' % (filt,))
             elif ptype == 4 and len(body) == 2:
                 self._puback[int.from_bytes(body, 'big')] = True
             elif ptype == 13:
@@ -593,13 +600,19 @@ def discover(client, seconds=5.0):
     """Bounded discovery: subscribes to the three conventions, returns device descriptors.
 
     Each: {family: 'tasmota' | 'shelly' | 'z2m', key, label, ...ids}. Bridge/availability/set
-    topics are ignored; nothing is published.
+    topics are ignored; nothing is published. Only topics observed during this
+    call are reported (older cache entries are ignored).
     """
+    t0 = client.clock()
     for p in PATTERNS:
         client.subscribe(p)
     client.spin(seconds)
     seen = {}
-    for topic in [t for t in client.cache if any(filter_match(p, t) for p in PATTERNS)]:
+    for topic, (_payload, ts) in client.cache.items():
+        if ts < t0:
+            continue
+        if not any(filter_match(p, topic) for p in PATTERNS):
+            continue
         parts = topic.split('/')
         if topic.startswith('tele/') and topic.endswith('/STATE') and len(parts) == 3:
             seen.setdefault(('tasmota', parts[1]), {'family': 'tasmota', 'topic': parts[1],

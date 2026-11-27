@@ -1,5 +1,4 @@
 """Multi-interface mDNS browse: explicit extra interfaces only (P2P/hotspot subnets)."""
-import socket
 import unittest
 from unittest import mock
 

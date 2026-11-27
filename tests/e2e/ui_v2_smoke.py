@@ -3,7 +3,6 @@ keyboard, Studio rehearsal and Studio live path on fixtures, classic fallback, n
 
   python -m tests.e2e.ui_v2_smoke
 """
-import json
 import os
 import threading
 from playwright.sync_api import sync_playwright, expect

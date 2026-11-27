@@ -14,8 +14,6 @@ from src.glasses import hub as G
 from src.glasses import watch_controls as WC
 from src.runtime import api_v2, command as CMD, command_drain as CD
 from src.runtime.companion_commands import CompanionCommands
-from src.runtime.remote_controls import RemoteControls
-from src.runtime.routing import Router
 
 
 class _CaptureLink:

@@ -176,7 +176,6 @@ class ClaudeBindingHolds(unittest.TestCase):
 class TraceIdContract(unittest.TestCase):
     def test_runner_trace_ids_match_invoke_schema(self):
         # Attempt 3 was refused by the kernel (SCHEMA) because 'g3act' is 5 chars; the kernel pattern is 6-64.
-        import re
         # The hosted runner was removed with the paid tier; the local G3 runner builds the same ids.
         with open('dev/run_g3_local.py', encoding='utf-8') as f:
             src = f.read()

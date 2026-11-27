@@ -12,7 +12,6 @@ Chain: replay -> proposal -> compose (real routes) -> preview ->
 consented install on watch relay -> exactly-one press EXECUTED ->
 re-press deduped -> revoke -> press denied.
 """
-import json
 import unittest
 from pathlib import Path
 

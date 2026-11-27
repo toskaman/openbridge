@@ -16,7 +16,6 @@ from src import cli
 from src.fabric import relay as R
 from src.fabric.contracts import DeviceObservation, Identifier, Link, now
 from src.fabric.registry import Registry
-from src.fabric.relay import RelayManager
 from src.forge.fixtures import manifest
 from src.runtime.api_v2 import get, post
 

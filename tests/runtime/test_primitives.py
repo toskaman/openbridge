@@ -8,7 +8,7 @@ import urllib.request
 from types import SimpleNamespace
 
 from src.core.agent import AgentBlocked
-from src.fabric.contracts import Identifier, Link, Capability
+from src.fabric.contracts import Identifier, Link
 from src.fabric.registry import Registry
 from src.fabric.relay import RelayError
 from src.fabric.session import SessionJournal

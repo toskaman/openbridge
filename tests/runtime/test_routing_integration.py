@@ -1,6 +1,5 @@
 import threading
 import time
-import unittest
 from unittest.mock import patch
 from tests.runtime.test_routing import Base
 from src.runtime.routing import RouteError

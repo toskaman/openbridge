@@ -8,7 +8,6 @@ Pipeline (11_META_NATIVE_V4/03_ADAPTER_FACTORY_POLICY.md):
   Executor with its locks/consent/receipts, no retry after an uncertain outcome] -> signed Receipt.
 Unknown, hypothetical or owner-only primitives -> REJECTED_UNSUPPORTED_PRIMITIVE + EngineeringPrimitiveRequest.
 """
-import copy
 import hashlib
 import hmac
 import json

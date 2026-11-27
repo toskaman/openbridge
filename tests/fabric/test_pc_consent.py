@@ -1,5 +1,4 @@
 """Per-PC full-control consent (fail-closed): OFF unless the owner opted in."""
-import json
 import unittest
 
 from src.fabric import pc_consent as P

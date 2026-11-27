@@ -14,7 +14,9 @@ from __future__ import annotations
 import base64
 import json
 import math
+import queue
 import struct
+import threading
 import time
 import urllib.request
 from typing import Callable, Optional
@@ -188,6 +190,32 @@ def send_to_oracle(
     return ans
 
 
+def _handle_utterance(utt, mic_source, language, server, server_url, on_answer, on_error):
+    """Transcribe + Oracle + HUD for one utterance. Runs on the worker thread.
+
+    Returns the result dict, or None when it failed (reported via on_error).
+    """
+    try:
+        res = send_to_oracle(
+            audio_pcm16=utt,
+            mic_source=mic_source,
+            language=language,
+            server=server,
+            server_url=server_url,
+        )
+    except Exception as e:
+        if on_error is not None:
+            on_error(e)
+        return None
+    try:
+        if on_answer and res.get('answer'):
+            on_answer(res)
+    except Exception as e:
+        if on_error is not None:
+            on_error(e)
+    return res
+
+
 def run_mic_loop(
     mic_source: str = 'pc_mic',
     language: str = 'fr',
@@ -196,37 +224,57 @@ def run_mic_loop(
     threshold_db: float = -38.0,
     on_answer: Optional[Callable[[dict], None]] = None,
     device=None,
+    on_error: Optional[Callable[[BaseException], None]] = None,
+    queue_size: int = 8,
 ) -> None:
-    """Continuous listening loop for PC / USB / Bluetooth mics (requires `sounddevice`)."""
+    """Continuous listening loop for PC / USB / Bluetooth mics (requires `sounddevice`).
+
+    The audio callback only segments speech and queues utterances; a worker
+    thread does the blocking STT + Oracle + HUD work, so transcription never
+    stalls the input stream. Errors go to on_error (utterances dropped while
+    the worker is overloaded are reported the same way).
+    """
     import sounddevice as sd  # type: ignore
 
     Oracle.warmup()
     vad = VadRecorder(threshold_db=threshold_db)
+    work: queue.Queue = queue.Queue(maxsize=max(1, queue_size))
+    stop = threading.Event()
+
+    def _worker():
+        while not stop.is_set():
+            try:
+                utt = work.get(timeout=0.25)
+            except queue.Empty:
+                continue
+            try:
+                _handle_utterance(utt, mic_source, language, server, server_url,
+                                  on_answer, on_error)
+            finally:
+                work.task_done()
+
+    threading.Thread(target=_worker, name='mic-oracle-worker', daemon=True).start()
 
     def _callback(indata, frames, time_info, status):
-        pcm = bytes(indata)
-        utt = vad.feed(pcm)
-        if utt:
-            try:
-                res = send_to_oracle(
-                    audio_pcm16=utt,
-                    mic_source=mic_source,
-                    language=language,
-                    server=server,
-                    server_url=server_url,
-                )
-                if on_answer and res.get('answer'):
-                    on_answer(res)
-            except Exception:
-                pass
+        utt = vad.feed(bytes(indata))
+        if utt is None:
+            return
+        try:
+            work.put_nowait(utt)
+        except queue.Full:
+            if on_error is not None:
+                on_error(RuntimeError('utterance dropped: worker overloaded'))
 
-    with sd.RawInputStream(
-        samplerate=SAMPLE_RATE,
-        blocksize=FRAME_SAMPLES,
-        dtype='int16',
-        channels=1,
-        device=device,
-        callback=_callback,
-    ):
-        while True:
-            time.sleep(0.25)
+    try:
+        with sd.RawInputStream(
+            samplerate=SAMPLE_RATE,
+            blocksize=FRAME_SAMPLES,
+            dtype='int16',
+            channels=1,
+            device=device,
+            callback=_callback,
+        ):
+            while True:
+                time.sleep(0.25)
+    finally:
+        stop.set()

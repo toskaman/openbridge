@@ -1,6 +1,6 @@
 """Device Capability Contract v1 — shared between the Device Runtime (adapters, policy, journal) and Capability Forge.
 Pure data. Changing a field is a breaking change: bump CONTRACT_VERSION and update the golden schema test."""
-from dataclasses import dataclass, field, asdict, fields
+from dataclasses import dataclass, asdict, fields
 from enum import Enum
 
 CONTRACT_VERSION = '1.0.0'

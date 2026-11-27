@@ -1,6 +1,6 @@
 """Freebox into the graph: public identity always; authenticated LAN inventory only with an official app token.
 A host seen by the Freebox is linked Freebox -> host with grant 'observe' only: not reachable or controllable from the PC."""
-from src.fabric.contracts import DeviceObservation, Identifier, Capability, Link, opaque, mac_is_randomized, now
+from src.fabric.contracts import DeviceObservation, Identifier, Capability, opaque, mac_is_randomized, now
 from src.adapters.freebox_auth import FreeboxAuthError
 
 CATEGORY = {'smartphone': 'phone', 'tablet': 'phone', 'television': 'tv', 'multimedia_device': 'media', 'workstation': 'computer',

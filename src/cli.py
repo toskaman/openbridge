@@ -1266,7 +1266,6 @@ def cmd_ha_devices(args):
 def cmd_ha_do(args):
     """One action through the same gate as the app: typed primitive, consent, read-back, receipt."""
     from types import SimpleNamespace
-    from src.adapters import home_assistant as HA
     from src.fabric.discovery import install_salt
     from src.fabric.home_assistant_ingest import ingest_home_assistant
     from src.fabric.registry import Registry
@@ -2441,7 +2440,7 @@ def _journal_open_changes(journal):
     from src.fabric.session import SessionError
     try:
         return journal.open_changes()
-    except SessionError as e:
+    except SessionError:
         raise CliError('internal', 'SESSION_CORRUPT', 'Session journal is corrupt; preserve %s for review.' % journal.path)
 
 
@@ -2449,7 +2448,7 @@ def _journal_close(journal, sid, state, detail=''):
     from src.fabric.session import SessionError
     try:
         journal.close(sid, state, detail)
-    except SessionError as e:
+    except SessionError:
         raise CliError('internal', 'SESSION_CORRUPT', 'Session journal is corrupt; preserve %s for review.' % journal.path)
 
 

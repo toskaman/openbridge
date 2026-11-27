@@ -9,11 +9,8 @@ Stub worker targets (top-level so spawn can pickle them) stand in for the
 real multi-GB backend: no torch, no model download.
 """
 import hashlib
-import inspect
-import json
 import os
 import secrets
-import struct
 import threading
 import time
 import types

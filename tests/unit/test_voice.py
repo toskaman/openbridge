@@ -1,8 +1,4 @@
 """V4-10 voice: typed intents only, refusal of risky requests, STT client against a fake WebSocket (SIMULATED)."""
-import base64
-import json
-import os
-import struct
 import unittest
 
 from src.ai import voice_intent as vi

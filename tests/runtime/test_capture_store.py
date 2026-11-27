@@ -2,7 +2,6 @@
 import hashlib
 import os
 import unittest
-from pathlib import Path
 import tempfile
 
 from src.runtime import capture_store as C

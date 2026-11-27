@@ -8,7 +8,6 @@ without duplication -> expired press fails closed -> cleanup. No hardware, no mo
 """
 import unittest
 
-from src.fabric import relay as R
 from src.fabric.contracts import DeviceObservation, Identifier, Link, now
 from src.forge import v4_schemas as S
 from src.forge import v4_ui

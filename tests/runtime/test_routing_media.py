@@ -1,7 +1,6 @@
 """§7 media/file routable skills (SIMULATED_VERIFIED: synthetic registry, fake runners)."""
 import json
 import unittest
-from types import SimpleNamespace
 
 from tests.runtime.test_routing import Clock, world
 from src.runtime import route_contract as rc

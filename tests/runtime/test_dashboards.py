@@ -3,11 +3,9 @@
 SIMULATED_VERIFIED: FakeCompanion mirrors RelayServer.java; no devices.
 Live watch proof is owner-gated (watch offline, pairing needs owner-tapped code).
 """
-import tempfile
 import unittest
 
-from src.fabric import relay as R
-from src.runtime.api_v2 import executor, remote_controls
+from src.runtime.api_v2 import remote_controls
 from src.runtime import dashboards as D
 from src.runtime.remote_controls import RemoteControlError
 from src.runtime.state_store import StateStore

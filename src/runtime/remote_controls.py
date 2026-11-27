@@ -473,7 +473,6 @@ class RemoteControls:
 
     def process(self, rid, req, origin='press'):
         from src.runtime.api_v2 import router
-        from src.runtime.routing import RouteError
         actor = f'relay:{rid}'
         key = (rid, req['control_id'])
         now = self.clock()

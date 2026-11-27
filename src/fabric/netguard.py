@@ -22,9 +22,11 @@ def local_host(host, bare_names=False, extra_names=(), extra_suffixes=()):
     h = (host or '').strip().lower().rstrip('.') if isinstance(host, str) else ''
     if not h or '/' in h or '\\' in h or '@' in h or ' ' in h:
         return False
-    if h in LOCAL_NAMES or h in set(extra_names or ()):
+    extra_n = {str(e).lower() for e in (extra_names or ())}
+    extra_s = tuple(str(e).lower() for e in (extra_suffixes or ()))
+    if h in LOCAL_NAMES or h in extra_n:
         return True
-    if h.endswith(LOCAL_SUFFIXES + tuple(extra_suffixes or ())):
+    if h.endswith(LOCAL_SUFFIXES + extra_s):
         return True
     try:
         ip = ipaddress.ip_address(h)

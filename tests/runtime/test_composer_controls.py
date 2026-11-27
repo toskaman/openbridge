@@ -11,10 +11,9 @@ import unittest
 from src.fabric import relay as R
 from src.fabric.contracts import DeviceObservation, Identifier, Link, now
 from src.runtime import composer as C
-from src.runtime.api_v2 import executor, remote_controls, router
-from src.runtime.primitives import Executor
+from src.runtime.api_v2 import remote_controls
 from src.runtime.remote_controls import RemoteControlError
-from tests.runtime.test_composer import DEVICES, FakeRoutes, stub_proposer
+from tests.runtime.test_composer import DEVICES, FakeRoutes
 from tests.runtime.test_remote_controls import FakeCompanion
 from tests.runtime.test_routing import Clock, world
 

@@ -12,7 +12,7 @@ import unittest
 
 from src.runtime.api_v2 import executor, remote_controls, router
 from src.runtime.primitives import Executor
-from src.runtime.remote_controls import BURST_WINDOW_S, RECONNECT_PROBE_S
+from src.runtime.remote_controls import RECONNECT_PROBE_S
 from src.runtime.routing import RouteError, Router
 from tests.runtime.test_remote_controls import KEY, FakeCompanion
 from tests.runtime.test_routing import Base as RoutingBase
