@@ -56,8 +56,9 @@ class Codec(unittest.TestCase):
 class FakeBroker:
     """Minimal scripted broker: 3 devices, retained-style answers, state updates on writes."""
 
-    def __init__(self, connack=0, drop_writes=False, huge=False):
+    def __init__(self, connack=0, drop_writes=False, huge=False, refuse_subs=False):
         self.connack, self.drop_writes, self.huge = connack, drop_writes, huge
+        self.refuse_subs = refuse_subs
         self.state = {'power': 'off', 'dimmer': 20, 'switch': 'off', 'watts': 0.0,
                       'zpower': 'off', 'zbright': 0}
         self.received = []
@@ -189,7 +190,7 @@ class FakeBroker:
                         self._retained(send, filt)
                         if self.huge:
                             send(M.encode_publish('big', b'x' * (M.MAX_PACKET + 8)))
-                    send(b'\x90\x03' + body[:2] + b'\x00')
+                    send(b'\x90\x03' + body[:2] + (b'\x80' if self.refuse_subs else b'\x00'))
                 elif ptype == 3:
                     topic, payload, qos, pktid = M.decode_publish(body, flags)
                     self._on_publish(send, topic, payload, qos, pktid)
@@ -344,6 +345,44 @@ class Devices(unittest.TestCase):
         reg = Registry()
         rep = MI.ingest_mqtt(reg, self.client, b'salt', seconds=0.2)
         self.assertEqual(rep['status'], 'UNAVAILABLE')
+
+
+class Freshness(unittest.TestCase):
+    def test_subscribe_refused_raises(self):
+        broker = FakeBroker(refuse_subs=True)
+        try:
+            c = M.Client('127.0.0.1', broker.port)
+            c.connect()
+            with self.assertRaises(M.MqttError):
+                c.subscribe('tele/+/STATE')
+            c.close()
+        finally:
+            broker.close()
+
+    def test_discover_ignores_stale_cache(self):
+        class StubClient:
+            def __init__(self):
+                self.subscribed = []
+                self.cache = {'tele/stale/STATE': (b'{}', 0.0),
+                              'zigbee2mqtt/bulb': (b'{}', 1000.0),
+                              'shellies/x/relay/0': (b'on', 1000.0)}
+
+            def clock(self):
+                return 1000.0
+
+            def subscribe(self, filt, qos=0):
+                self.subscribed.append(filt)
+
+            def spin(self, seconds):
+                return []
+
+        stub = StubClient()
+        found = M.discover(stub, seconds=0.1)
+        labels = [d['label'] for d in found]
+        self.assertNotIn('Tasmota stale', labels)
+        self.assertIn('bulb', labels)
+        self.assertIn('Shelly x relay 0', labels)
+        self.assertEqual(stub.subscribed, list(M.PATTERNS))
 
 
 if __name__ == '__main__':

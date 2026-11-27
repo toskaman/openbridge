@@ -33,6 +33,10 @@ class LocalHost(unittest.TestCase):
         self.assertTrue(NG.local_host('x.fritz.box', extra_suffixes=('.fritz.box',)))
         self.assertFalse(NG.local_host('x.fritz.box'))
 
+    def test_extras_case_insensitive(self):
+        self.assertTrue(NG.local_host('fritz.box', extra_names=('Fritz.Box',)))
+        self.assertTrue(NG.local_host('x.fritz.box', extra_suffixes=('.Fritz.Box',)))
+
     def test_require_local(self):
         self.assertEqual(NG.require_local('lamp.local', 'light'), 'lamp.local')
         with self.assertRaises(ValueError):

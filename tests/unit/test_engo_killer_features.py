@@ -10,9 +10,7 @@ Tests all 6 core features:
 """
 import unittest
 from src.adapters.activelook import (
-    ActiveLookAdapter, cmd_clear, cmd_color, cmd_text, cmd_rectf, cmd_circ, cmd_gauge,
-    COLOR_GREEN, COLOR_AMBER, COLOR_RED, COLOR_CYAN, COLOR_YELLOW,
-    TempleTapMorseDecoder, ActiveLookArcadeEngine
+    ActiveLookAdapter, COLOR_GREEN, COLOR_AMBER, COLOR_RED, TempleTapMorseDecoder, ActiveLookArcadeEngine
 )
 from src.adapters.activelook_emulator import parse_frames, run_headless_benchmark
 
@@ -394,6 +392,18 @@ class EngoKillerFeaturesTests(unittest.TestCase):
         text_tri = [f for f in frames_tri if f.cmd == 0x37]
         self.assertTrue(any(b"START TRIAGE" in f.data for f in text_tri))
         self.assertTrue(any(b"IMMEDIATE / RED" in f.data for f in text_tri))
+
+    def test_triage_expectant_branch_renders(self):
+        # Regression: the non-IMMEDIATE/DELAYED/MINOR branch used an undefined
+        # COLOR_WHITE (NameError). EXPECTANT must render its badge instead.
+        self.sent_bytes.clear()
+        ok = self.adapter.push_first_responder_triage(
+            mode="triage", triage_level="EXPECTANT", step_prompt="RESPIRATIONS ABSENTES"
+        )
+        self.assertTrue(ok)
+        frames = parse_frames(bytes(self.sent_bytes))
+        text = [f for f in frames if f.cmd == 0x37]
+        self.assertTrue(any(b"EXPECTANT / BLACK" in f.data for f in text))
 
     def test_directional_subtitles_frames(self):
         ok = self.adapter.push_directional_subtitles(

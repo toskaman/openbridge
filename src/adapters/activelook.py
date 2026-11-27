@@ -16,8 +16,8 @@ from __future__ import annotations
 import math
 import struct
 import time
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # ActiveLook GATT Constants
 SERVICE_UUID = "0783b03e-8535-b5a0-7140-a304d2495cb7"
@@ -33,6 +33,9 @@ COLOR_AMBER = 0x02   # Warning / Pending / Attention
 COLOR_RED = 0x03     # Refused / Safety / Fault
 COLOR_CYAN = 0x04    # Information / Peripheral
 COLOR_YELLOW = 0x05  # Legacy ENGO 1/2 Monochrome
+# Nearest neutral: same subtle gray (0x07) already used for dim UI accents.
+# A dedicated pure-white code is unconfirmed on hardware; do not renumber blindly.
+COLOR_WHITE = 0x07
 
 
 def encode_packet(cmd: int, payload: bytes = b"", query_id: bytes = b"") -> bytes:
@@ -1220,7 +1223,7 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(0, 42, 303, 115)
-            cmds += cmd_text(4, 48, f"⚠️ PHANTOM STANDBY DETECTED!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(4, 48, "⚠️ PHANTOM STANDBY DETECTED!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
             cmds += cmd_text(4, 75, f"Device : {v_name[:20]} ({v_watts} W)", font=0, color_or_grey=14)
             cmds += cmd_text(4, 95, f"Idle for : {v_idle} hours", font=0, color_or_grey=14)
 
@@ -1829,7 +1832,7 @@ class ActiveLookAdapter:
             if self.is_color:
                 cmds += cmd_color(COLOR_RED)
             cmds += cmd_rect(10, 155, 293, 205)
-            cmds += cmd_text(16, 162, f"⚠️ DANGER : ARC-FLASH BOUNDARY CROSSED!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
+            cmds += cmd_text(16, 162, "⚠️ DANGER : ARC-FLASH BOUNDARY CROSSED!", font=1, color_or_grey=COLOR_RED if self.is_color else 15)
             cmds += cmd_text(16, 186, f"Required safety distance : {afb_dist_m:.1f} m", font=0, color_or_grey=14)
         else:
             cmds += cmd_text(16, 175, f"Limite Arc-Flash (NFPA 70E) : {afb_dist_m:.1f} m ✓ OK", font=0, color_or_grey=COLOR_GREEN if self.is_color else 10)
