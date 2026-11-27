@@ -337,7 +337,9 @@ def _ble_fallback_packet(op: str, value: Any = None) -> Optional[bytes]:
     if op == 'display_off':
         return AL.cmd_power(False) + AL.cmd_clear()
     if op == 'luma_set' and value is not None:
-        return AL.cmd_luma(int(value))
+        # No-hub fallback has no settings state: always take manual control,
+        # since ALS auto visibly overrides a bare level on the real ENGO 3.
+        return AL.cmd_als_enable(False) + AL.cmd_luma(int(value))
     if op == 'als_on':
         return AL.cmd_als_enable(True)
     if op == 'als_off':

@@ -670,8 +670,16 @@ class Hub:
                 lvl = max(0, min(15, int(value if value is not None else cur)))
             self.settings['luma'] = lvl
             dirty = True
+            # Measured on the real ENGO 3 (27 Nov 2026): with ALS auto on, a
+            # manual level has no visible effect, so a manual set takes manual
+            # control (als_on re-enables auto afterwards).
+            if self.settings.get('als', True):
+                self.settings['als'] = False
+                ble_frames += AL.cmd_als_enable(False)
+                msg = f'Luma {lvl}/15 (ALS off)'
+            else:
+                msg = f'Luma {lvl}/15'
             ble_frames += AL.cmd_luma(lvl)
-            msg = f'Luma {lvl}/15'
         elif op_n in ('als_on', 'als_off', 'als_toggle'):
             cur = bool(self.settings.get('als', True))
             nxt = True if op_n == 'als_on' else (False if op_n == 'als_off' else not cur)
