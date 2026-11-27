@@ -76,7 +76,7 @@ class LocalMetaTests(unittest.TestCase):
 
 class GlimmerTests(unittest.TestCase):
     def test_glimmer_is_pinned_and_fails_closed_on_other_digest(self):
-        from src.ai.glimmer import GlimmerBroker, GLIMMER_ID, GLIMMER_DIGEST
+        from src.ai.glimmer import GlimmerBroker, GLIMMER_ID
         b=GlimmerBroker(catalog=lambda:{'models':[{'name':GLIMMER_ID,'digest':'sha256:'+'0'*64}]},chat=lambda p:self.fail('no call'))
         self.assertFalse(b.ready())
         with self.assertRaises(ModelBlocked):b.recommend({'battery_percent':72})

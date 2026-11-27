@@ -1,6 +1,5 @@
 """Read-only UPnP-IGD adapter (SIMULATED_VERIFIED with a fake IGD; no residential gateway is touched in CI)."""
 import unittest
-from urllib.parse import urlsplit
 
 from src.adapters import upnp_igd
 from src.adapters.upnp_igd import IGDBlocked
@@ -99,7 +98,6 @@ class IGD(unittest.TestCase):
         self.assertIn('internet_down', {x['name'] for x in diagnostics.igd(f)})
 
     def test_discovery_marks_igd_readable_and_read_facts_uses_it(self):
-        import threading
         from types import SimpleNamespace
         from src.fabric.registry import Registry
         from src.fabric.discovery import ingest_ssdp

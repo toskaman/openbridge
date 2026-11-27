@@ -15,19 +15,11 @@ import unittest
 
 from src.adapters.activelook import (
     ActiveLookAdapter,
-    cmd_clear,
-    cmd_color,
-    cmd_grey,
-    COLOR_GREEN,
-    COLOR_AMBER,
-    COLOR_RED,
-    COLOR_CYAN,
-    COLOR_YELLOW
+    COLOR_RED
 )
 from src.adapters.activelook_emulator import parse_frames, HUDCanvas, run_headless_benchmark
 from src.adapters.engo_ai_bridge import (
     EngoAIBridge,
-    PhoneSensoryState,
     AudioStreamingProxy,
     AudioChunk,
     StreamingSTTRunner,

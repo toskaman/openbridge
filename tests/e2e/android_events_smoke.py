@@ -1,5 +1,4 @@
 """Controlled browser event tests; no device mutation and no model requests."""
-import json
 from playwright.sync_api import sync_playwright, expect
 
 

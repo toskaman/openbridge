@@ -16,11 +16,8 @@ assertions); every spawned thread is joined.
 
 import copy
 import json
-import tempfile
 import threading
-import time
 import unittest
-from types import SimpleNamespace
 
 from src.ai import voice_intent as VI
 from src.fabric import diagnostics as FD

@@ -6,7 +6,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from src.fabric.session import SessionJournal
-from src.runtime.contract import TransactionReceipt
 from src.runtime.primitives import Executor
 from src.runtime.routing import Router, RouteError
 from src.runtime.state_store import StateError, StateStore

@@ -4,7 +4,6 @@ import unittest
 from pathlib import Path
 from datetime import datetime
 from unittest.mock import patch
-from types import SimpleNamespace
 
 from src.fabric import onboarding
 from src.fabric.apk_portal import ApkPortal

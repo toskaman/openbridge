@@ -1,10 +1,10 @@
 import struct
 import unittest
 from src.adapters.activelook import (
-    ActiveLookAdapter, encode_packet, cmd_clear, cmd_luma, cmd_color,
-    cmd_text, cmd_gauge, cmd_gesture_enable, cmd_line,
+    ActiveLookAdapter, cmd_clear, cmd_luma, cmd_color,
+    cmd_text, cmd_line,
     cmd_hold_flush, cmd_layout_save, cmd_page_save, cmd_page_display,
-    COLOR_GREEN, COLOR_AMBER, COLOR_RED
+    COLOR_GREEN, COLOR_RED
 )
 from src.adapters.activelook_emulator import parse_frames, HUDCanvas
 

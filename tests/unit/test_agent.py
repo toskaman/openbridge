@@ -6,7 +6,6 @@ from src.ai.local_meta import LocalMetaBroker, MODEL_ID, MODEL_DIGEST
 from src.ai.broker import ModelBlocked
 from src.core.gate import evaluate
 from src.core.agent import DeviceAgent, AgentBlocked
-from src.core.transactions import TransactionEngine
 from src.adapters.android_package import DEFAULT, DISABLED
 
 LIMIT='Device health and write permission are unknown from these limited facts.'

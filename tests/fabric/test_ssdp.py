@@ -1,4 +1,4 @@
-import ipaddress, socket, unittest
+import socket, unittest
 from src.fabric import ssdp
 from src.fabric.discovery import ingest_ssdp
 from src.fabric.registry import Registry

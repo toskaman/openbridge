@@ -4,9 +4,6 @@ refused, so no real traffic leaves CI). Built-in model paths may only reach the 
 no paid / hosted model is built in. A provider the owner connects by hand reaches exactly the host it declared."""
 import socket
 import unittest
-from datetime import datetime, timezone
-from tempfile import TemporaryDirectory
-from pathlib import Path
 from unittest import mock
 
 ALLOWED = {('127.0.0.1', 11437), ('127.0.0.1', 11438), ('127.0.0.1', 11439)}

@@ -1,5 +1,4 @@
 """V4-07 visual read-back (SIMULATED_VERIFIED: generated PNG, fake Glimmer; no real screenshot in CI)."""
-import json
 import struct
 import tempfile
 import unittest

@@ -1,7 +1,6 @@
 """Tuya vacuum, owner-linked local protocol (SIMULATED_VERIFIED with a fake device; no real robot in CI)."""
 import json
 import tempfile
-import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace

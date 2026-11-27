@@ -107,7 +107,6 @@ class RequiredRequests(unittest.TestCase):
 
     def test_fixture_steps_use_only_shipped_primitives(self):
         from src.runtime.primitives import PRIMITIVES
-        from src.runtime.routing import Router
         # Every skill used above must route to a real primitive (checked via
         # provider op table, not by dispatching).
         seen = {s['skill_id'] for f in FIXTURES for s in f['body']['steps']}

@@ -6,7 +6,6 @@ import unittest
 
 from tests.runtime.test_primitives import ctx
 from tests.runtime.test_routing import Clock, world
-from src.runtime.api_v2 import executor
 from src.runtime.primitives import Executor
 
 

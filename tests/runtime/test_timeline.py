@@ -1,9 +1,7 @@
 """V4-01 timeline + hypotheses (SIMULATED_VERIFIED: synthetic drills; labels live in a separate file)."""
 import json
-import threading
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 
 from src.runtime import hypotheses
 from src.runtime.timeline import Timeline

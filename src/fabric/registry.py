@@ -7,7 +7,8 @@ import hashlib
 import re
 import threading
 import uuid
-from src.fabric.contracts import DeviceObservation, Identifier, Capability, Link, LINK_GRANTS, now
+from src.fabric.contracts import DeviceObservation, Capability, Link, LINK_GRANTS, now
+from src.fabric.contracts import Identifier as Identifier  # re-exported: imported from here elsewhere
 
 MAX_DEVICES = 2000
 # More specific evidence wins: a TV that also speaks HomeKit stays a TV.

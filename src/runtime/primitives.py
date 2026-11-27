@@ -662,7 +662,6 @@ class Executor:
 
     def _read_once(self, k):
         """Inner read used by the probe (already under the global lock): same runner, same timeline feed."""
-        started = _now()
         try:
             state, _, _, verified, result = self._read_facts(k, {})
             r = {'state': state, 'verified': verified, 'errors': [], 'result': result}

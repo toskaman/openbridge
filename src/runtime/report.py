@@ -35,7 +35,7 @@ def build(executor, redact=True, recovery=None):
 def markdown(rep):
     def v(f):
         return f"{f['value']}{(' ' + f['unit']) if f['unit'] else ''}"
-    out = [f"# OpenBridge diagnostic report", '', f"Generated {rep['generated_at']} · "
+    out = ["# OpenBridge diagnostic report", '', f"Generated {rep['generated_at']} · "
            f"{rep['summary']['devices_read']} device(s) read, {rep['summary']['devices_unavailable']} unavailable, "
            f"{rep['summary']['warnings']} warning(s), {rep['summary']['observed_only']} other device(s) seen without a read grant. OBSERVED = read from the device; INFERRED = OpenBridge's conclusion.", '']
     for s in rep['devices']:

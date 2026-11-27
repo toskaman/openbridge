@@ -1,6 +1,5 @@
 """Device-side voice loop: signed clip download, local STT routing, validation. No model, no network beyond loopback."""
 import hashlib
-import json
 import os
 import threading
 import unittest

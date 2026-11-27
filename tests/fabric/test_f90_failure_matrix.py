@@ -34,7 +34,6 @@ from src.runtime import route_contract as rc
 from src.runtime.api_v2 import executor, remote_controls, router
 from src.runtime.contract import TransactionReceipt
 from src.runtime.primitives import Executor
-from src.runtime.relay_health import RelayLedger
 from src.runtime.routing import INVOCATION_LEASE_S, RouteError
 from src.runtime.remote_controls import RemoteControlError
 from src.runtime.state_store import StateStore

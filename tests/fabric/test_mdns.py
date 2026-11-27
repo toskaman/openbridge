@@ -1,7 +1,6 @@
 import socket
 import struct
 import unittest
-from src.fabric import mdns
 from src.fabric.mdns import encode_name, parse_packet, assemble, discover, build_query, PTR, SRV, TXT, A
 
 

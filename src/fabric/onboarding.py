@@ -11,7 +11,6 @@ Model names come from the device itself (ADB getprop, mDNS TXT) or the gateway i
 from Bluetooth company identifiers are marked weak. Computers never guess their OS: an unlinked PC offers a
 guided OS/CPU pick and OpenBridge serves the matching agent build from the hardware matrix.
 """
-import re
 
 APPLE_PREFIX = (('iPhone', 'phone'), ('iPad', 'tablet'), ('Watch', 'watch'), ('AppleTV', 'tv'), ('Mac', 'computer'), ('iMac', 'computer'))
 PHONE_BLE = {76: 'Apple', 117: 'Samsung', 224: 'Google', 343: 'Xiaomi', 911: 'Xiaomi', 637: 'Huawei', 1177: 'OnePlus'}

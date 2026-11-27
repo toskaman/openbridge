@@ -8,7 +8,6 @@ from pathlib import Path
 from unittest import mock
 
 from src.fabric import aead as A
-from src.fabric import relay as R
 from src.fabric.relay_store import RelayStore
 from tests.runtime.test_remote_controls import FakeCompanion, KEY
 

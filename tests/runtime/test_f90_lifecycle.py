@@ -13,15 +13,12 @@ on wall-clock timing, so the suite is flake-free by construction.
 import http.client
 import json
 import secrets
-from contextlib import closing
 import socket
-import sqlite3
 import tempfile
 import threading
 import time
 import types
 import unittest
-from datetime import datetime, timezone
 from pathlib import Path
 
 from src.fabric import relay as R

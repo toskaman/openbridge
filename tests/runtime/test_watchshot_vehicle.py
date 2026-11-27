@@ -1,5 +1,4 @@
 """Watchshot vehicle tests (doubles + synthetic PNGs; no adb, no server)."""
-import hashlib
 import unittest
 from types import SimpleNamespace
 

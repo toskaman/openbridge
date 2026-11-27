@@ -16,7 +16,6 @@ import base64
 import hashlib
 import json
 import re
-import time
 import unicodedata
 from typing import Any, Optional
 
@@ -542,7 +541,6 @@ def apply_engo_watch_order(
     if order['kind'] == 'watch_panel':
         target_rid = None
         if source_relay_id:
-            relays = getattr(getattr(server, 'relays', None), 'relays', None) or {}
             det = detect_watches(server)
             if any(w['relay_id'] == source_relay_id for w in det['paired_watches']):
                 target_rid = source_relay_id

@@ -6,7 +6,7 @@ import unittest
 
 from src.fabric.diagnostics import (
     QUESTIONS, LIMIT, RECOMMENDATIONS, DiagnosticError, DeterministicStubProposer,
-    MetaProposer, analyze, diagnose,
+    MetaProposer, diagnose,
 )
 
 

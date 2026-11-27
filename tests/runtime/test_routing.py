@@ -13,7 +13,7 @@ from src.fabric.registry import Registry
 from src.fabric.relay import RelayManager
 from src.fabric.session import SessionJournal
 from src.runtime import route_contract as rc
-from src.runtime.api_v2 import executor, get, post, router
+from src.runtime.api_v2 import executor, router
 from src.runtime.primitives import Executor
 from src.runtime.relay_health import RelayLedger
 from src.runtime.routing import RouteError

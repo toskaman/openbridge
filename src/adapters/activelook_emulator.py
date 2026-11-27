@@ -52,7 +52,6 @@ from __future__ import annotations
 import asyncio
 import struct
 import threading
-import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -754,7 +753,6 @@ class HUDCanvas:
     def run(self):
         """Launch the Tkinter window (blocking)."""
         import tkinter as tk
-        from PIL import ImageTk
         self._root = tk.Tk()
         self._root.title(f"OpenBridge × {self.model} HUD Emulator — 304×256 MicroOLED")
         self._root.configure(bg="#0a0a0a")
@@ -1423,7 +1421,7 @@ class VirtualENGO:
 
         transport_str = f"tcp-server:0.0.0.0:{self.tcp_port}"
         print(f"[VirtualENGO] Starting Bumble GATT server on {transport_str}")
-        print(f"[VirtualENGO] Connect nRF Connect / bleak using TCP transport bumble-bridge")
+        print("[VirtualENGO] Connect nRF Connect / bleak using TCP transport bumble-bridge")
 
         async with await open_transport(transport_str) as (hci_source, hci_sink):
             device = Device(name="ENGO 3-OpenBridge", address="F0:F1:F2:00:00:01")
