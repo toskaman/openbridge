@@ -36,6 +36,7 @@ OpenBridge already lets you ask any screen (TV, watch, phone, PC) to control the
 - **Ask a question into the phone, read the answer in the glasses:** the Oracle's answer is paged in the large font.
 - **Every OpenBridge screen drawn for the real panel:** orientation, the 81-colour red-green palette, the real font sizes and the visible window were measured on the pair, and every screen is laid out for them. The older ENGO demo screens are converted on the fly.
 - **Navigation without the phone in hand:** double tap on the temple = next, the home menu opens by itself after 3 s, and Next / Open / Back / Home buttons and single voice words on the phone.
+- **Full ENGO 3 controls on a Wear OS watch (implemented & unit-tested):** when a Wear OS watch Companion is detected, every ENGO 3 / ActiveLook control (navigation, all 9 HUD screens, display power `0x00`, brightness `0x10`, ALS auto-luma `0x22`, tap/gestures `0x21`, 180° rotation, optical shift `0x09`, privacy, language, units) is pushed across 4 `<= 12`-control signed pages by text, voice or UI options — hidden when no watch is detected. *(Unit-tested against captured BLE frames and simulated watch relay; physical Wear OS watch + ENGO 3 session pending hardware run.)*
 
 Details and measurements: [glasses guide](../GLASSES.md) · [evidence, 26 Nov 2026](../evidence/engo3-phone-link-26nov.md).
 
