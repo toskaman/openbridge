@@ -14,6 +14,11 @@
 <p align="center"><sub><a href="README.fr.md">Lire en français</a> · <a href="https://toskaman.github.io/openbridge/">Website</a></sub></p>
 
 <p align="center">
+  <a href="https://youtu.be/4pzGeubs1A0" title="Watch the OpenBridge film on YouTube"><img src="docs/assets/readme/film-poster.jpg" width="100%" alt="Watch the OpenBridge film (3 min) on YouTube"></a>
+  <br><sub>▶ <b><a href="https://youtu.be/4pzGeubs1A0">Watch the OpenBridge film</a></b> · 3 min · opens on YouTube</sub>
+</p>
+
+<p align="center">
   <img src="docs/assets/readme/interop-demo.svg" alt="Animated demo: a watch, tablet, laptop, phone, fridge, VR headset and smart glasses gain new skills and drive lights, a coffee machine, a smart plug and a robot vacuum" width="100%">
   <br><sub><i>Some scenes are concept previews. What is verified on real hardware is listed under <a href="#proven-on-real-hardware">Proven on real hardware</a>.</i></sub>
 </p>
